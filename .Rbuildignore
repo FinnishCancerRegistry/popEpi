@@ -1,0 +1,5 @@
+^\.travis\.yml$
+inst/docs
+data_raw
+^.*\.Rproj$
+^\.Rproj\.user$

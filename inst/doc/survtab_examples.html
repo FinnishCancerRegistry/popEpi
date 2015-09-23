@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>Overview</title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+<!-- Styles for R syntax highlighter -->
+<style type="text/css">
+   pre .operator,
+   pre .paren {
+     color: rgb(104, 118, 135)
+   }
+
+   pre .literal {
+     color: #990073
+   }
+
+   pre .number {
+     color: #099;
+   }
+
+   pre .comment {
+     color: #998;
+     font-style: italic
+   }
+
+   pre .keyword {
+     color: #900;
+     font-weight: bold
+   }
+
+   pre .identifier {
+     color: rgb(0, 0, 0);
+   }
+
+   pre .string {
+     color: #d14;
+   }
+</style>
+
+<!-- R syntax highlighter -->
+<script type="text/javascript">
+var hljs=new function(){function m(p){return p.replace(/&/gm,"&amp;").replace(/</gm,"&lt;")}function f(r,q,p){return RegExp(q,"m"+(r.cI?"i":"")+(p?"g":""))}function b(r){for(var p=0;p<r.childNodes.length;p++){var q=r.childNodes[p];if(q.nodeName=="CODE"){return q}if(!(q.nodeType==3&&q.nodeValue.match(/\s+/))){break}}}function h(t,s){var p="";for(var r=0;r<t.childNodes.length;r++){if(t.childNodes[r].nodeType==3){var q=t.childNodes[r].nodeValue;if(s){q=q.replace(/\n/g,"")}p+=q}else{if(t.childNodes[r].nodeName=="BR"){p+="\n"}else{p+=h(t.childNodes[r])}}}if(/MSIE [678]/.test(navigator.userAgent)){p=p.replace(/\r/g,"\n")}return p}function a(s){var r=s.className.split(/\s+/);r=r.concat(s.parentNode.className.split(/\s+/));for(var q=0;q<r.length;q++){var p=r[q].replace(/^language-/,"");if(e[p]){return p}}}function c(q){var p=[];(function(s,t){for(var r=0;r<s.childNodes.length;r++){if(s.childNodes[r].nodeType==3){t+=s.childNodes[r].nodeValue.length}else{if(s.childNodes[r].nodeName=="BR"){t+=1}else{if(s.childNodes[r].nodeType==1){p.push({event:"start",offset:t,node:s.childNodes[r]});t=arguments.callee(s.childNodes[r],t);p.push({event:"stop",offset:t,node:s.childNodes[r]})}}}}return t})(q,0);return p}function k(y,w,x){var q=0;var z="";var s=[];function u(){if(y.length&&w.length){if(y[0].offset!=w[0].offset){return(y[0].offset<w[0].offset)?y:w}else{return w[0].event=="start"?y:w}}else{return y.length?y:w}}function t(D){var A="<"+D.nodeName.toLowerCase();for(var B=0;B<D.attributes.length;B++){var C=D.attributes[B];A+=" "+C.nodeName.toLowerCase();if(C.value!==undefined&&C.value!==false&&C.value!==null){A+='="'+m(C.value)+'"'}}return A+">"}while(y.length||w.length){var v=u().splice(0,1)[0];z+=m(x.substr(q,v.offset-q));q=v.offset;if(v.event=="start"){z+=t(v.node);s.push(v.node)}else{if(v.event=="stop"){var p,r=s.length;do{r--;p=s[r];z+=("</"+p.nodeName.toLowerCase()+">")}while(p!=v.node);s.splice(r,1);while(r<s.length){z+=t(s[r]);r++}}}}return z+m(x.substr(q))}function j(){function q(x,y,v){if(x.compiled){return}var u;var s=[];if(x.k){x.lR=f(y,x.l||hljs.IR,true);for(var w in x.k){if(!x.k.hasOwnProperty(w)){continue}if(x.k[w] instanceof Object){u=x.k[w]}else{u=x.k;w="keyword"}for(var r in u){if(!u.hasOwnProperty(r)){continue}x.k[r]=[w,u[r]];s.push(r)}}}if(!v){if(x.bWK){x.b="\\b("+s.join("|")+")\\s"}x.bR=f(y,x.b?x.b:"\\B|\\b");if(!x.e&&!x.eW){x.e="\\B|\\b"}if(x.e){x.eR=f(y,x.e)}}if(x.i){x.iR=f(y,x.i)}if(x.r===undefined){x.r=1}if(!x.c){x.c=[]}x.compiled=true;for(var t=0;t<x.c.length;t++){if(x.c[t]=="self"){x.c[t]=x}q(x.c[t],y,false)}if(x.starts){q(x.starts,y,false)}}for(var p in e){if(!e.hasOwnProperty(p)){continue}q(e[p].dM,e[p],true)}}function d(B,C){if(!j.called){j();j.called=true}function q(r,M){for(var L=0;L<M.c.length;L++){if((M.c[L].bR.exec(r)||[null])[0]==r){return M.c[L]}}}function v(L,r){if(D[L].e&&D[L].eR.test(r)){return 1}if(D[L].eW){var M=v(L-1,r);return M?M+1:0}return 0}function w(r,L){return L.i&&L.iR.test(r)}function K(N,O){var M=[];for(var L=0;L<N.c.length;L++){M.push(N.c[L].b)}var r=D.length-1;do{if(D[r].e){M.push(D[r].e)}r--}while(D[r+1].eW);if(N.i){M.push(N.i)}return f(O,M.join("|"),true)}function p(M,L){var N=D[D.length-1];if(!N.t){N.t=K(N,E)}N.t.lastIndex=L;var r=N.t.exec(M);return r?[M.substr(L,r.index-L),r[0],false]:[M.substr(L),"",true]}function z(N,r){var L=E.cI?r[0].toLowerCase():r[0];var M=N.k[L];if(M&&M instanceof Array){return M}return false}function F(L,P){L=m(L);if(!P.k){return L}var r="";var O=0;P.lR.lastIndex=0;var M=P.lR.exec(L);while(M){r+=L.substr(O,M.index-O);var N=z(P,M);if(N){x+=N[1];r+='<span class="'+N[0]+'">'+M[0]+"</span>"}else{r+=M[0]}O=P.lR.lastIndex;M=P.lR.exec(L)}return r+L.substr(O,L.length-O)}function J(L,M){if(M.sL&&e[M.sL]){var r=d(M.sL,L);x+=r.keyword_count;return r.value}else{return F(L,M)}}function I(M,r){var L=M.cN?'<span class="'+M.cN+'">':"";if(M.rB){y+=L;M.buffer=""}else{if(M.eB){y+=m(r)+L;M.buffer=""}else{y+=L;M.buffer=r}}D.push(M);A+=M.r}function G(N,M,Q){var R=D[D.length-1];if(Q){y+=J(R.buffer+N,R);return false}var P=q(M,R);if(P){y+=J(R.buffer+N,R);I(P,M);return P.rB}var L=v(D.length-1,M);if(L){var O=R.cN?"</span>":"";if(R.rE){y+=J(R.buffer+N,R)+O}else{if(R.eE){y+=J(R.buffer+N,R)+O+m(M)}else{y+=J(R.buffer+N+M,R)+O}}while(L>1){O=D[D.length-2].cN?"</span>":"";y+=O;L--;D.length--}var r=D[D.length-1];D.length--;D[D.length-1].buffer="";if(r.starts){I(r.starts,"")}return R.rE}if(w(M,R)){throw"Illegal"}}var E=e[B];var D=[E.dM];var A=0;var x=0;var y="";try{var s,u=0;E.dM.buffer="";do{s=p(C,u);var t=G(s[0],s[1],s[2]);u+=s[0].length;if(!t){u+=s[1].length}}while(!s[2]);if(D.length>1){throw"Illegal"}return{r:A,keyword_count:x,value:y}}catch(H){if(H=="Illegal"){return{r:0,keyword_count:0,value:m(C)}}else{throw H}}}function g(t){var p={keyword_count:0,r:0,value:m(t)};var r=p;for(var q in e){if(!e.hasOwnProperty(q)){continue}var s=d(q,t);s.language=q;if(s.keyword_count+s.r>r.keyword_count+r.r){r=s}if(s.keyword_count+s.r>p.keyword_count+p.r){r=p;p=s}}if(r.language){p.second_best=r}return p}function i(r,q,p){if(q){r=r.replace(/^((<[^>]+>|\t)+)/gm,function(t,w,v,u){return w.replace(/\t/g,q)})}if(p){r=r.replace(/\n/g,"<br>")}return r}function n(t,w,r){var x=h(t,r);var v=a(t);var y,s;if(v){y=d(v,x)}else{return}var q=c(t);if(q.length){s=document.createElement("pre");s.innerHTML=y.value;y.value=k(q,c(s),x)}y.value=i(y.value,w,r);var u=t.className;if(!u.match("(\\s|^)(language-)?"+v+"(\\s|$)")){u=u?(u+" "+v):v}if(/MSIE [678]/.test(navigator.userAgent)&&t.tagName=="CODE"&&t.parentNode.tagName=="PRE"){s=t.parentNode;var p=document.createElement("div");p.innerHTML="<pre><code>"+y.value+"</code></pre>";t=p.firstChild.firstChild;p.firstChild.cN=s.cN;s.parentNode.replaceChild(p.firstChild,s)}else{t.innerHTML=y.value}t.className=u;t.result={language:v,kw:y.keyword_count,re:y.r};if(y.second_best){t.second_best={language:y.second_best.language,kw:y.second_best.keyword_count,re:y.second_best.r}}}function o(){if(o.called){return}o.called=true;var r=document.getElementsByTagName("pre");for(var p=0;p<r.length;p++){var q=b(r[p]);if(q){n(q,hljs.tabReplace)}}}function l(){if(window.addEventListener){window.addEventListener("DOMContentLoaded",o,false);window.addEventListener("load",o,false)}else{if(window.attachEvent){window.attachEvent("onload",o)}else{window.onload=o}}}var e={};this.LANGUAGES=e;this.highlight=d;this.highlightAuto=g;this.fixMarkup=i;this.highlightBlock=n;this.initHighlighting=o;this.initHighlightingOnLoad=l;this.IR="[a-zA-Z][a-zA-Z0-9_]*";this.UIR="[a-zA-Z_][a-zA-Z0-9_]*";this.NR="\\b\\d+(\\.\\d+)?";this.CNR="\\b(0[xX][a-fA-F0-9]+|(\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)";this.BNR="\\b(0b[01]+)";this.RSR="!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|\\.|-|-=|/|/=|:|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~";this.ER="(?![\\s\\S])";this.BE={b:"\\\\.",r:0};this.ASM={cN:"string",b:"'",e:"'",i:"\\n",c:[this.BE],r:0};this.QSM={cN:"string",b:'"',e:'"',i:"\\n",c:[this.BE],r:0};this.CLCM={cN:"comment",b:"//",e:"$"};this.CBLCLM={cN:"comment",b:"/\\*",e:"\\*/"};this.HCM={cN:"comment",b:"#",e:"$"};this.NM={cN:"number",b:this.NR,r:0};this.CNM={cN:"number",b:this.CNR,r:0};this.BNM={cN:"number",b:this.BNR,r:0};this.inherit=function(r,s){var p={};for(var q in r){p[q]=r[q]}if(s){for(var q in s){p[q]=s[q]}}return p}}();hljs.LANGUAGES.cpp=function(){var a={keyword:{"false":1,"int":1,"float":1,"while":1,"private":1,"char":1,"catch":1,"export":1,virtual:1,operator:2,sizeof:2,dynamic_cast:2,typedef:2,const_cast:2,"const":1,struct:1,"for":1,static_cast:2,union:1,namespace:1,unsigned:1,"long":1,"throw":1,"volatile":2,"static":1,"protected":1,bool:1,template:1,mutable:1,"if":1,"public":1,friend:2,"do":1,"return":1,"goto":1,auto:1,"void":2,"enum":1,"else":1,"break":1,"new":1,extern:1,using:1,"true":1,"class":1,asm:1,"case":1,typeid:1,"short":1,reinterpret_cast:2,"default":1,"double":1,register:1,explicit:1,signed:1,typename:1,"try":1,"this":1,"switch":1,"continue":1,wchar_t:1,inline:1,"delete":1,alignof:1,char16_t:1,char32_t:1,constexpr:1,decltype:1,noexcept:1,nullptr:1,static_assert:1,thread_local:1,restrict:1,_Bool:1,complex:1},built_in:{std:1,string:1,cin:1,cout:1,cerr:1,clog:1,stringstream:1,istringstream:1,ostringstream:1,auto_ptr:1,deque:1,list:1,queue:1,stack:1,vector:1,map:1,set:1,bitset:1,multiset:1,multimap:1,unordered_set:1,unordered_map:1,unordered_multiset:1,unordered_multimap:1,array:1,shared_ptr:1}};return{dM:{k:a,i:"</",c:[hljs.CLCM,hljs.CBLCLM,hljs.QSM,{cN:"string",b:"'\\\\?.",e:"'",i:"."},{cN:"number",b:"\\b(\\d+(\\.\\d*)?|\\.\\d+)(u|U|l|L|ul|UL|f|F)"},hljs.CNM,{cN:"preprocessor",b:"#",e:"$"},{cN:"stl_container",b:"\\b(deque|list|queue|stack|vector|map|set|bitset|multiset|multimap|unordered_map|unordered_set|unordered_multiset|unordered_multimap|array)\\s*<",e:">",k:a,r:10,c:["self"]}]}}}();hljs.LANGUAGES.r={dM:{c:[hljs.HCM,{cN:"number",b:"\\b0[xX][0-9a-fA-F]+[Li]?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+(?:[eE][+\\-]?\\d*)?L\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+\\.(?!\\d)(?:i\\b)?",e:hljs.IMMEDIATE_RE,r:1},{cN:"number",b:"\\b\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\.\\d+(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"keyword",b:"(?:tryCatch|library|setGeneric|setGroupGeneric)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\.",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\d+(?![\\w.])",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\b(?:function)",e:hljs.IMMEDIATE_RE,r:2},{cN:"keyword",b:"(?:if|in|break|next|repeat|else|for|return|switch|while|try|stop|warning|require|attach|detach|source|setMethod|setClass)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"literal",b:"(?:NA|NA_integer_|NA_real_|NA_character_|NA_complex_)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"literal",b:"(?:NULL|TRUE|FALSE|T|F|Inf|NaN)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"identifier",b:"[a-zA-Z.][a-zA-Z0-9._]*\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"<\\-(?!\\s*\\d)",e:hljs.IMMEDIATE_RE,r:2},{cN:"operator",b:"\\->|<\\-",e:hljs.IMMEDIATE_RE,r:1},{cN:"operator",b:"%%|~",e:hljs.IMMEDIATE_RE},{cN:"operator",b:">=|<=|==|!=|\\|\\||&&|=|\\+|\\-|\\*|/|\\^|>|<|!|&|\\||\\$|:",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"%",e:"%",i:"\\n",r:1},{cN:"identifier",b:"`",e:"`",r:0},{cN:"string",b:'"',e:'"',c:[hljs.BE],r:0},{cN:"string",b:"'",e:"'",c:[hljs.BE],r:0},{cN:"paren",b:"[[({\\])}]",e:hljs.IMMEDIATE_RE,r:0}]}};
+hljs.initHighlightingOnLoad();
+</script>
+
+<!-- MathJax scripts -->
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<h1>Overview</h1>
+
+<p>This vignette aims to clarify the usage of the <code>survtab</code> function included in this package. <code>survtab</code> estimates various survival functions and cumulative incidence functions (CIFs) non-parametrically, and was developed with large dataset in mind. </p>
+
+<p>Two methods (<code>surv.method</code>) are currently supported: The lifetable (actuarial) method only makes use of counts when estimating any function. The default method estimates hazards and transforms them into survival function or CIF estimates.</p>
+
+<p><code>survtab</code> requires the the subjects&#39; survival intervals to be split into (small) subintervals, since the requested survival time functions are estimated in small subintervals and cumulated to yield overall estimates of the requested survival time functions. More and smaller subintervals effect higher fidelity estimates. </p>
+
+<p>For relative survival estimation <code>survtab</code> also requires the population hazard rates at the person-specific subintervals. For both splitting and merging population hazard rates one should currently use the <code>lexpand</code> (convenience) function. Esseantialy, <code>lexpand</code> makes use of <code>Lexis</code> found in <code>Epi</code>, splits with <code>lexpand</code> and merges population hazards if requested. </p>
+
+<h1>Basic usage of <code>lexpand</code> and <code>survtab</code></h1>
+
+<p>To demonstrate splitting data and merging population hazard information we use a simulated cohort of Finnish female rectal cancer patients.</p>
+
+<pre><code class="r">library(popEpi)
+
+sr &lt;- copy(popEpi::sire)
+head(sr)
+</code></pre>
+
+<pre><code>##    sex    bi_date    dg_date    ex_date status   dg_age
+## 1:   1 1952-05-27 1994-02-03 2012-12-31      0 41.68877
+## 2:   1 1959-04-04 1996-09-20 2012-12-31      0 37.46378
+## 3:   1 1958-06-15 1994-05-30 2012-12-31      0 35.95616
+## 4:   1 1957-05-10 1997-09-04 2012-12-31      0 40.32055
+## 5:   1 1957-01-20 1996-09-24 2012-12-31      0 39.67745
+## 6:   1 1962-05-25 1997-05-17 2012-12-31      0 34.97808
+</code></pre>
+
+<p><code>lexpand</code> accepts both <code>Date</code>  (see <code>?as.Date</code>) and fractional year (e.g. <code>2000.315</code>) as the time variables for time of birth, diagnosis and exit. <code>status</code> may be e.g. a numeric or factor variable.</p>
+
+<p>For splitting one can always specify the break points in any time scale as fractional years, and also as dates for splitting along calendar time (<code>per</code>). Note that if any time variable or breaks along <code>per</code> is given in the <code>Date</code> format, they are converted intenally by <code>lexpand</code> into fractional years using <code>get.yrs(x, year.length = &quot;actual&quot;)</code>.</p>
+
+<p>There are two ways to specify breaks in lexpand: via a list, e.g.</p>
+
+<pre><code class="r">x &lt;- lexpand(sr, birth=bi_date, entry=dg_date, exit=ex_date,
+             breaks = list(fot = seq(0,5, 1/12)), status = status, pophaz=popmort)
+</code></pre>
+
+<p>or via supplying breaks via the <code>...</code> argument simply by e.g.</p>
+
+<pre><code class="r">x &lt;- lexpand(sr, birth=bi_date, entry=dg_date, exit=ex_date, 
+             fot = seq(0,5, 1/12), status = status, pophaz=popmort)
+</code></pre>
+
+<p>The former can be simpler sometimes because you can pass a prepared list to the function: </p>
+
+<pre><code class="r">BL &lt;- list(fot = seq(0, 5, 1/12))
+x &lt;- lexpand(sr, birth=bi_date, entry=dg_date, exit=ex_date, 
+             breaks = BL, status = status, pophaz=popmort)
+</code></pre>
+
+<p>The methods are equivalent, but if both are used, only the <code>breaks</code> list is utilized in splitting.</p>
+
+<p><code>fot</code> used above specifies splitting breaks along the follow-up time scale. By default <code>lexpand</code> drops any observed survival time outside the time window (here 0-5 years along <code>fot</code>) specified by breaks along the three time scales, so one should supply meaningful floors and roofs for the time scales. This way, one can e.g. prepare the data for period analysis by specifying lowest and highest allowed calendar times experienced using <code>per</code>.</p>
+
+<pre><code class="r">## up to 5 years of follow-up time in month-long intervals
+x &lt;- lexpand(sr, birth=bi_date, entry=dg_date, exit=ex_date, 
+             fot = seq(0,5, 1/12), status = status, pophaz=popmort)
+</code></pre>
+
+<pre><code>## dropped 16 rows where entry == exit
+## 14 rows in expanded data had age values &gt;= 101; assumed for these the same expected hazard as for people of age 100
+</code></pre>
+
+<p>By default <code>survtab</code> estimates EdererII relative survivals via computing excess hazards for each survival interval as specified by the breaks along the <code>fot</code> time scale.</p>
+
+<pre><code class="r">st &lt;- survtab(x)
+</code></pre>
+
+<pre><code>## event.values was NULL, so chose 0 as non-event value
+</code></pre>
+
+<pre><code class="r">head(st)
+</code></pre>
+
+<pre><code>##    surv.int  Tstart   Tstop   delta  pyrs n.start   d n.cens d.exp
+## 1:        1 0.00000 0.08333 0.08333 672.4    8227 297     25 25.64
+## 2:        2 0.08333 0.16670 0.08333 647.1    7905 215     44 23.63
+## 3:        3 0.16670 0.25000 0.08333 627.6    7646 205     36 22.19
+## 4:        4 0.25000 0.33330 0.08333 608.6    7405 165     42 21.19
+## 5:        5 0.33330 0.41670 0.08333 592.4    7198 152     35 20.26
+## 6:        6 0.41670 0.50000 0.08333 578.8    7011 114     26 19.62
+##    surv.obs.lo surv.obs surv.obs.hi SE.surv.obs r.e2.lo   r.e2 r.e2.hi
+## 1:      0.9596   0.9639      0.9677    0.002059  0.9626 0.9669  0.9707
+## 2:      0.9321   0.9375      0.9426    0.002673  0.9379 0.9434  0.9484
+## 3:      0.9060   0.9124      0.9183    0.003126  0.9143 0.9208  0.9267
+## 4:      0.8850   0.8920      0.8985    0.003436  0.8958 0.9028  0.9094
+## 5:      0.8657   0.8731      0.8802    0.003688  0.8787 0.8862  0.8934
+## 6:      0.8511   0.8589      0.8663    0.003861  0.8663 0.8743  0.8818
+##     SE.r.e2
+## 1: 0.002065
+## 2: 0.002690
+## 3: 0.003155
+## 4: 0.003477
+## 5: 0.003744
+## 6: 0.003930
+</code></pre>
+
+<pre><code class="r">plot(st, y = &quot;r.e2&quot;)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk surv1"/> </p>
+
+<h1>Period analysis</h1>
+
+<p>Sometimes we are interested in the experienced survival in a time period instead of the survival of the persons diagnosed in that period. This is referred to as period analysis. It is considered to produce more up-to-date estimates of survival, when e.g. estimating survival for the latest 5-year period instead of the persons diagnosed in that period, for which follow-up can be quite short.</p>
+
+<p>In the framework of popEpi, period analysis is accommodated by splitting the data appropriately before estimation. In <code>lexpand</code> one simply adds additional splitting breaks along the <code>per</code> time scale and drops observed survival outside of it. Here we conduct a period method analysis for the years 2008-2012.</p>
+
+<pre><code class="r"> x &lt;- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
+              status = status,
+              fot=seq(0, 5, by = 1/12),
+              per = c(&quot;2008-01-01&quot;, &quot;2013-01-01&quot;), 
+              pophaz = popmort)
+</code></pre>
+
+<pre><code>## dropped 3215 rows where subjects left follow-up before earliest per breaks value
+## dropped 4 rows where entry == exit
+## 11 rows in expanded data had age values &gt;= 101; assumed for these the same expected hazard as for people of age 100
+</code></pre>
+
+<p>We may use the default settings for period method EdererII estimates as well. Note that <code>surv.method = &quot;lifetable&quot;</code> is inappropriate for period analysis is it does not handle late entry correctly.</p>
+
+<pre><code class="r">st &lt;- survtab(x)
+</code></pre>
+
+<pre><code>## event.values was NULL, so chose 0 as non-event value
+</code></pre>
+
+<pre><code class="r">head(st)
+</code></pre>
+
+<pre><code>##    surv.int  Tstart   Tstop   delta  pyrs n.start  d n.cens d.exp
+## 1:        1 0.00000 0.08333 0.08333 179.5    2174 55     25 6.057
+## 2:        2 0.08333 0.16670 0.08333 174.2    2128 49     46 5.657
+## 3:        3 0.16670 0.25000 0.08333 170.4    2059 47     34 5.388
+## 4:        4 0.25000 0.33330 0.08333 166.6    2021 36     43 5.158
+## 5:        5 0.33330 0.41670 0.08333 163.0    1972 42     35 4.930
+## 6:        6 0.41670 0.50000 0.08333 159.5    1923 32     26 4.741
+##    surv.obs.lo surv.obs surv.obs.hi SE.surv.obs r.e2.lo   r.e2 r.e2.hi
+## 1:      0.9673   0.9748      0.9806    0.003356  0.9699 0.9775  0.9833
+## 2:      0.9424   0.9522      0.9604    0.004574  0.9475 0.9575  0.9656
+## 3:      0.9190   0.9306      0.9405    0.005452  0.9264 0.9382  0.9481
+## 4:      0.9014   0.9140      0.9250    0.006016  0.9110 0.9238  0.9349
+## 5:      0.8809   0.8945      0.9067    0.006592  0.8925 0.9065  0.9187
+## 6:      0.8653   0.8797      0.8927    0.006984  0.8789 0.8937  0.9067
+##     SE.r.e2
+## 1: 0.003366
+## 2: 0.004599
+## 3: 0.005496
+## 4: 0.006081
+## 5: 0.006679
+## 6: 0.007095
+</code></pre>
+
+<pre><code class="r">plot(st, y = &quot;r.e2&quot;)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk surv2"/> </p>
+
+<h1>Standardization</h1>
+
+<p><code>survtab</code> currently enables relatively easy age standardization. The exact breaks and weights can be supplied by hand. The weights can also be so called internal weights based on the proportions of subjects in each age group at diagnosis or one of the three standard weighting schemes integrated into the programme; see <code>?ICSS</code> for the exact standard weights.</p>
+
+<h2>Internal weights</h2>
+
+<p>To use internal weights, simply leave <code>agegr.w.weights = NULL</code> and define <code>agegr.w.breaks</code> to what you want.</p>
+
+<pre><code class="r">st.as.int &lt;- survtab(x, agegr.w.breaks = c(0,45,65,75, Inf))
+</code></pre>
+
+<pre><code>## event.values was NULL, so chose 0 as non-event value
+</code></pre>
+
+<p>We may demonstrate how the internal weights are computed:</p>
+
+<pre><code class="r">## get internal weights from the data with age group breaks c(0, 45, 65, 85, Inf)
+## this means getting numbers of cases by age group at diagnosis.
+## below the method using data.table syntax.
+
+iw &lt;- x[!duplicated(lex.id), .N, keyby = cut(dg_age, c(0,45,65,75,Inf), right=FALSE)]
+iw &lt;- iw$N/sum(iw$N)
+
+iw
+</code></pre>
+
+<pre><code>## [1] 0.04012175 0.33453237 0.27061428 0.35473160
+</code></pre>
+
+<pre><code class="r">st.as.hand &lt;- survtab(x, agegr.w.breaks = c(0,45,65,75, Inf), 
+                      agegr.w.weights = iw)
+</code></pre>
+
+<pre><code>## event.values was NULL, so chose 0 as non-event value
+</code></pre>
+
+<pre><code class="r">plot(st.as.int, y = &quot;r.e2.as&quot;, conf.int = FALSE, lwd=4)
+lines(st.as.hand, y = &quot;r.e2.as&quot;, conf.int = FALSE, 
+      col = &quot;green&quot;, lty = 2, lwd=4)
+</code></pre>
+
+<p><img src="data:image/png;base64,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HvhJA1424Gkn4EUDXjTgRQNeNOBFA1404EUDXjTgRQNeNOBFawlPkWsH325RtgsLe8M8Fwa86MKAF10Y8KILA150YcCLLgx40YVxEkY04EUDXjTgRQNeNOBFA1404EUDXjTgRTOD/znko2xphouyvGG299L4bhYtzepHJ8Nl3e+F3aJulr/dlgszvZvFNyskfDLeA8VdS+0W1XyGk+VEvdIXFd7y97t0Sy8Bb3rwYXonHfdowLstLbneMgF442esls+DHJ8jzA9v/TsU83fSbVMf9nm87XoV+nm814+mkQJeNOBFA1404EUDXjTgRQNeNOBFA1404EUDXjTgRQNeNOBFA1404EUDXjTgRQNetLnh0+K/xxPlPgZTPVZT3ZnvMkYd5z8CUz1WU92Z717wz8HHf18eL116DUe+f118Iz02AO+NwPqb6fm3GR61Ce7Caelj//mSlpuC9TfS4n+3M/z9DfgxSq//pPf/r+kW31j/9eub77/N8KDNcB9Oe23i03OLnz7fek9wDP+ZAfjBeq/xtxXu57u/1vgb8EO23NRv9u958F9r/ByP2RR34qzPsfvtdWy2u6l/H8CvjwiW33we2c3xmE1xJzo3xWM2xZ3o2xwP2Rz3gooDXjTgRQNeNOBFA1404EUDXjTgRQNeNOBFA1404EUDXjTgRQNetP8TVKByeRctPQAAAABJRU5ErkJggg==" alt="plot of chunk surv.as2"/> </p>
+
+<p>So we get the same result as by using <code>agegr.w.weights = NULL</code>.</p>
+
+<p>The ICSS weights can be used simply by naming the appropriate weighting scheme in the <code>agegr.w.weights</code> argument, e.g. <code>agegr.w.weights = &quot;ICSS1&quot;</code>. See <code>?ICSS</code> for details on the weights. Note that the weights are only tabulated in no smaller than 5-year age groups, meaning the <code>agegr.w.breaks</code> argument must all except for the last break be divisible by 5. We recommend using <code>Inf</code> as the last break.</p>
+
+<pre><code class="r">## with ICSS1 weights; see ?ICSS
+st.as.icss1 &lt;- survtab(x, agegr.w.breaks = c(0,45,65,75, Inf), 
+                       agegr.w.weights = &quot;ICSS1&quot;)
+</code></pre>
+
+<pre><code>## event.values was NULL, so chose 0 as non-event value
+</code></pre>
+
+<pre><code class="r">st.as.icss2 &lt;- survtab(x, agegr.w.breaks = c(0,45,65,75, Inf), 
+                       agegr.w.weights = &quot;ICSS2&quot;)
+</code></pre>
+
+<pre><code>## event.values was NULL, so chose 0 as non-event value
+</code></pre>
+
+<pre><code class="r">plot(st.as.icss1, conf.int = FALSE, lwd = 4, col = &quot;black&quot;)
+</code></pre>
+
+<pre><code>## y was NULL; chose r.e2.as automatically
+</code></pre>
+
+<pre><code class="r">lines(st.as.icss2, conf.int = FALSE, lwd = 4, col = &quot;blue&quot;)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk surv.as3"/> </p>
+
+<p>Though we did not mention it, the age-adjusted estimates above were period analysis estimates. Combinations of different estimation schemes are straightforward to use with <code>lexpand</code> and <code>survtab</code>. Any estimate outputted by <code>survtab</code> can be age-adjusted and computed as in the period analysis framework. Counts-based (lifetable) estimates are possible to compute for non-period-analysis estimates with or without age-adjustments. </p>
+
+<h1>Other estimates of survival time functions</h1>
+
+<h2>Cause-specific survival</h2>
+
+<p>Sometimes information on the cause of death is available. This may be utilized instead of computing estimates of net survival to yield the desired estimates. The two estimation perspectives typically converge, as seen below.</p>
+
+<pre><code class="r">st.as.cause &lt;- survtab(x, agegr.w.breaks = c(0,45,65,75, Inf), 
+                       surv.type=&quot;surv.cause&quot;)
+</code></pre>
+
+<pre><code>## event.values was NULL, so chose 0 as non-event value
+</code></pre>
+
+<pre><code class="r">st.as.rel   &lt;- survtab(x, agegr.w.breaks = c(0,45,65,75, Inf), 
+                       surv.type=&quot;surv.rel&quot;)
+</code></pre>
+
+<pre><code>## event.values was NULL, so chose 0 as non-event value
+</code></pre>
+
+<pre><code class="r">plot(st.as.rel, y = &quot;r.e2.as&quot;, conf.int = FALSE, lwd=4)
+lines(st.as.cause, y = &quot;surv.obs1.as&quot;, conf.int = FALSE, 
+      lwd=4, col=&quot;red&quot;, lty=2)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk surv.cause"/> </p>
+
+<h2>Absolute (crude) risk / CIF</h2>
+
+<p>Absolute risks of dying due to cause \(k\) can be easily computed (note: still using period analysis data):</p>
+
+<pre><code class="r">st.co &lt;- survtab(x,  surv.type=&quot;cif.obs&quot;)
+</code></pre>
+
+<pre><code>## event.values was NULL, so chose 0 as non-event value
+</code></pre>
+
+<pre><code class="r">st.cr &lt;- survtab(x,  surv.type=&quot;cif.rel&quot;)
+</code></pre>
+
+<pre><code>## event.values was NULL, so chose 0 as non-event value
+</code></pre>
+
+<pre><code class="r">## the two are very similar; here CIF.rel is NA after 3 years because
+## d &lt; d.exp; could be alleviated with larger survival intervals
+plot(st.co, &quot;CIF_1&quot;, conf.int = FALSE, lwd = 4)
+lines(st.cr, &quot;CIF.rel&quot;, conf.int = FALSE, lwd = 4, col = &quot;red&quot;)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk CIF.as"/> </p>
+
+<p><code>cif.rel</code> is an indirect absolute risk estimate, where absolute risk is estimated using excess cases of death instead of cause-specific cases. This may sometimes produce <code>NA</code> results if the count of excess cases is negative even in one survival interval.</p>
+
+</body>
+
+</html>

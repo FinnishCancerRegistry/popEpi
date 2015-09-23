@@ -1,0 +1,189 @@
+---
+title: "Examples of using survtab"
+author: "Joonas Miettinen"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    fig_width: 6
+    fig_height: 6
+vignette: >
+  % \VignetteEngine{knitr::rmarkdown}
+  % \VignetteIndexEntry{survtab examples}
+  % \usepackage[utf8]{inputenc}
+---
+
+# Overview
+
+This vignette aims to clarify the usage of the `survtab` function included in this package. `survtab` estimates various survival functions and cumulative incidence functions (CIFs) non-parametrically, and was developed with large dataset in mind. 
+
+Two methods (`surv.method`) are currently supported: The lifetable (actuarial) method only makes use of counts when estimating any function. The default method estimates hazards and transforms them into survival function or CIF estimates.
+
+`survtab` requires the the subjects' survival intervals to be split into (small) subintervals, since the requested survival time functions are estimated in small subintervals and cumulated to yield overall estimates of the requested survival time functions. More and smaller subintervals effect higher fidelity estimates. 
+
+For relative survival estimation `survtab` also requires the population hazard rates at the person-specific subintervals. For both splitting and merging population hazard rates one should currently use the `lexpand` (convenience) function. Esseantialy, `lexpand` makes use of `Lexis` found in `Epi`, splits with `lexpand` and merges population hazards if requested. 
+
+# Basic usage of `lexpand` and `survtab`
+
+To demonstrate splitting data and merging population hazard information we use a simulated cohort of Finnish female rectal cancer patients.
+
+```{r sireprint}
+library(popEpi)
+
+sr <- copy(popEpi::sire)
+head(sr)
+```
+
+`lexpand` accepts both `Date`  (see `?as.Date`) and fractional year (e.g. `2000.315`) as the time variables for time of birth, diagnosis and exit. `status` may be e.g. a numeric or factor variable.
+
+For splitting one can always specify the break points in any time scale as fractional years, and also as dates for splitting along calendar time (`per`). Note that if any time variable or breaks along `per` is given in the `Date` format, they are converted intenally by `lexpand` into fractional years using `get.yrs(x, year.length = "actual")`.
+
+There are two ways to specify breaks in lexpand: via a list, e.g.
+
+```{r lexample1, eval=FALSE}
+x <- lexpand(sr, birth=bi_date, entry=dg_date, exit=ex_date,
+             breaks = list(fot = seq(0,5, 1/12)), status = status, pophaz=popmort)
+```
+
+or via supplying breaks via the `...` argument simply by e.g.
+
+```{r lexample2, eval=FALSE}
+x <- lexpand(sr, birth=bi_date, entry=dg_date, exit=ex_date, 
+             fot = seq(0,5, 1/12), status = status, pophaz=popmort)
+```
+
+The former can be simpler sometimes because you can pass a prepared list to the function: 
+
+```{r lexample3, eval=FALSE}
+BL <- list(fot = seq(0, 5, 1/12))
+x <- lexpand(sr, birth=bi_date, entry=dg_date, exit=ex_date, 
+             breaks = BL, status = status, pophaz=popmort)
+```
+
+The methods are equivalent, but if both are used, only the `breaks` list is utilized in splitting.
+
+`fot` used above specifies splitting breaks along the follow-up time scale. By default `lexpand` drops any observed survival time outside the time window (here 0-5 years along `fot`) specified by breaks along the three time scales, so one should supply meaningful floors and roofs for the time scales. This way, one can e.g. prepare the data for period analysis by specifying lowest and highest allowed calendar times experienced using `per`.
+
+
+```{r lex1}
+## up to 5 years of follow-up time in month-long intervals
+x <- lexpand(sr, birth=bi_date, entry=dg_date, exit=ex_date, 
+             fot = seq(0,5, 1/12), status = status, pophaz=popmort)
+```
+
+By default `survtab` estimates EdererII relative survivals via computing excess hazards for each survival interval as specified by the breaks along the `fot` time scale.
+
+```{r surv1}
+st <- survtab(x)
+head(st)
+plot(st, y = "r.e2")
+```
+
+
+# Period analysis
+
+Sometimes we are interested in the experienced survival in a time period instead of the survival of the persons diagnosed in that period. This is referred to as period analysis. It is considered to produce more up-to-date estimates of survival, when e.g. estimating survival for the latest 5-year period instead of the persons diagnosed in that period, for which follow-up can be quite short.
+
+In the framework of popEpi, period analysis is accommodated by splitting the data appropriately before estimation. In `lexpand` one simply adds additional splitting breaks along the `per` time scale and drops observed survival outside of it. Here we conduct a period method analysis for the years 2008-2012.
+
+```{r lex2}
+ x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
+              status = status,
+              fot=seq(0, 5, by = 1/12),
+              per = c("2008-01-01", "2013-01-01"), 
+              pophaz = popmort)
+```
+
+We may use the default settings for period method EdererII estimates as well. Note that `surv.method = "lifetable"` is inappropriate for period analysis is it does not handle late entry correctly.
+
+```{r surv2}
+st <- survtab(x)
+head(st)
+plot(st, y = "r.e2")
+```
+
+# Standardization
+
+`survtab` currently enables relatively easy age standardization. The exact breaks and weights can be supplied by hand. The weights can also be so called internal weights based on the proportions of subjects in each age group at diagnosis or one of the three standard weighting schemes integrated into the programme; see `?ICSS` for the exact standard weights.
+
+## Internal weights
+
+To use internal weights, simply leave `agegr.w.weights = NULL` and define `agegr.w.breaks` to what you want.
+
+```{r surv.as1}
+st.as.int <- survtab(x, agegr.w.breaks = c(0,45,65,75, Inf))
+```
+
+We may demonstrate how the internal weights are computed:
+
+```{r surv.as2}
+## get internal weights from the data with age group breaks c(0, 45, 65, 85, Inf)
+## this means getting numbers of cases by age group at diagnosis.
+## below the method using data.table syntax.
+
+iw <- x[!duplicated(lex.id), .N, keyby = cut(dg_age, c(0,45,65,75,Inf), right=FALSE)]
+iw <- iw$N/sum(iw$N)
+
+iw
+
+st.as.hand <- survtab(x, agegr.w.breaks = c(0,45,65,75, Inf), 
+                      agegr.w.weights = iw)
+plot(st.as.int, y = "r.e2.as", conf.int = FALSE, lwd=4)
+lines(st.as.hand, y = "r.e2.as", conf.int = FALSE, 
+      col = "green", lty = 2, lwd=4)
+```
+
+So we get the same result as by using `agegr.w.weights = NULL`.
+
+The ICSS weights can be used simply by naming the appropriate weighting scheme in the `agegr.w.weights` argument, e.g. `agegr.w.weights = "ICSS1"`. See `?ICSS` for details on the weights. Note that the weights are only tabulated in no smaller than 5-year age groups, meaning the `agegr.w.breaks` argument must all except for the last break be divisible by 5. We recommend using `Inf` as the last break.
+
+
+```{r surv.as3}
+## with ICSS1 weights; see ?ICSS
+st.as.icss1 <- survtab(x, agegr.w.breaks = c(0,45,65,75, Inf), 
+                       agegr.w.weights = "ICSS1")
+st.as.icss2 <- survtab(x, agegr.w.breaks = c(0,45,65,75, Inf), 
+                       agegr.w.weights = "ICSS2")
+
+plot(st.as.icss1, conf.int = FALSE, lwd = 4, col = "black")
+lines(st.as.icss2, conf.int = FALSE, lwd = 4, col = "blue")
+```
+
+Though we did not mention it, the age-adjusted estimates above were period analysis estimates. Combinations of different estimation schemes are straightforward to use with `lexpand` and `survtab`. Any estimate outputted by `survtab` can be age-adjusted and computed as in the period analysis framework. Counts-based (lifetable) estimates are possible to compute for non-period-analysis estimates with or without age-adjustments. 
+
+# Other estimates of survival time functions
+
+
+## Cause-specific survival
+Sometimes information on the cause of death is available. This may be utilized instead of computing estimates of net survival to yield the desired estimates. The two estimation perspectives typically converge, as seen below.
+
+```{r surv.cause}
+st.as.cause <- survtab(x, agegr.w.breaks = c(0,45,65,75, Inf), 
+                       surv.type="surv.cause")
+st.as.rel   <- survtab(x, agegr.w.breaks = c(0,45,65,75, Inf), 
+                       surv.type="surv.rel")
+
+plot(st.as.rel, y = "r.e2.as", conf.int = FALSE, lwd=4)
+lines(st.as.cause, y = "surv.obs1.as", conf.int = FALSE, 
+      lwd=4, col="red", lty=2)
+```
+
+
+## Absolute (crude) risk / CIF
+
+Absolute risks of dying due to cause $k$ can be easily computed (note: still using period analysis data):
+
+```{r CIF.as}
+st.co <- survtab(x,  surv.type="cif.obs")
+st.cr <- survtab(x,  surv.type="cif.rel")
+
+## the two are very similar; here CIF.rel is NA after 3 years because
+## d < d.exp; could be alleviated with larger survival intervals
+plot(st.co, "CIF_1", conf.int = FALSE, lwd = 4)
+lines(st.cr, "CIF.rel", conf.int = FALSE, lwd = 4, col = "red")
+```
+
+`cif.rel` is an indirect absolute risk estimate, where absolute risk is estimated using excess cases of death instead of cause-specific cases. This may sometimes produce `NA` results if the count of excess cases is negative even in one survival interval.
+
+
