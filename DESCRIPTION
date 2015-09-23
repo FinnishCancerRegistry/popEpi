@@ -27,10 +27,7 @@ Encoding: UTF-8
 License: GPL-3
 LazyData: true
 ByteCompile: true
-<<<<<<< f484e28d438e3bea2c0a85c83e9cdffd16f3925b
 VignetteBuilder: knitr
-=======
 VignetteBuilder: knitr
 URL: https://github.com/WetRobot/popEpi
 BugReports: https://github.com/WetRobot/popEpi/issues
->>>>>>> First commit to Github

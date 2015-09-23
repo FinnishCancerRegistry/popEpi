@@ -1,5 +1,9 @@
 ^\.travis\.yml$
 inst/docs
 data_raw
+tests/emptyDir
+.git
+.gitignore
 ^.*\.Rproj$
 ^\.Rproj\.user$
+.Rhistory
