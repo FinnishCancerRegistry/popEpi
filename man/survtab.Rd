@@ -14,7 +14,11 @@ survtab(data, surv.breaks = NULL, by.vars = NULL, event.values = NULL,
 \item{data}{a dataset processed by \code{\link{lexpand}}}
 
 \item{surv.breaks}{breaks as explicitly
+<<<<<<< f484e28d438e3bea2c0a85c83e9cdffd16f3925b
 left inclusive and right exclusive - e.g. [a,b).}
+=======
+left inclusive and right exclusive - e.g. \code{[a,b)}.}
+>>>>>>> First commit to Github
 
 \item{by.vars}{a character string vector; defines names of
 variables by which survivals are calculated
@@ -128,10 +132,16 @@ are supplied in addition to observed survival figures.
 to be estimated, where all unique \code{event.values}
 are seen as competing risks indicators
 (others are random censoring indicators);
+<<<<<<< f484e28d438e3bea2c0a85c83e9cdffd16f3925b
 CIFs are estimated for each competing risk and are modulated by the ** modulated on ehkä mielenkiintoinen sanavalinta? **
 used \code{surv.method}, since they are always computed based
 on an survival-interval-specific proportional hazards
 assumption as described by Chiang (1968).
+=======
+CIFs are estimated for each competing risk are computed based
+on a survival-interval-specific proportional hazards
+assumption as described by Chiang (1968) using the chosen \code{surv.method}.
+>>>>>>> First commit to Github
 With \code{surv.type = 'cif.rel'}, a CIF is estimated with using
 excess cases as the ''cause-specific'' cases.
 
@@ -158,7 +168,11 @@ is presented.
 
 The user must define the age-standardisation age
 groups and their weights with the \code{agegr.w.breaks}
+<<<<<<< f484e28d438e3bea2c0a85c83e9cdffd16f3925b
 and \code{agegr.w.weights} arguments. Number of
+=======
+and \code{agegr.w.weights} arguments. The numbers of
+>>>>>>> First commit to Github
 age groups and weights should match; e.g.
 with \code{agegr.w.breaks = c(0,45,65,75,Inf)} the weights vector
 must then have 4 elements.
