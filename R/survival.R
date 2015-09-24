@@ -199,14 +199,14 @@
 #' 
 #' @references
 #' 
-#' \href{http://dx.doi.org/10.1111/j.1541-0420.2011.01640.x}{Perme, Maja Pohar, Janez Stare, and Jacques Estève. 
-#' "On estimation in relative survival." Biometrics 68.1 (2012): 113-120.}
+#' Perme, Maja Pohar, Janez Stare, and Jacques Estève. 
+#' "On estimation in relative survival." Biometrics 68.1 (2012): 113-120.
 #' 
-#' \href{http://dx.doi.org/10.1016/j.ejca.2011.03.011}{Hakulinen, Timo, Karri Seppa, and Paul C. Lambert. 
-#' "Choosing the relative survival method for cancer survival estimation." European Journal of Cancer 47.14 (2011): 2202-2210.},
+#' Hakulinen, Timo, Karri Seppa, and Paul C. Lambert. 
+#' "Choosing the relative survival method for cancer survival estimation." European Journal of Cancer 47.14 (2011): 2202-2210.
 #'  
-#' \href{http://dx.doi.org/10.1016/j.ejca.2013.09.019}{Seppa, Karri, Timo Hakulinen, and Arun Pokhrel. 
-#' "Choosing the net survival method for cancer survival estimation." European Journal of Cancer (2013).},
+#' Seppa, Karri, Timo Hakulinen, and Arun Pokhrel. 
+#' "Choosing the net survival method for cancer survival estimation." European Journal of Cancer (2013).
 #' 
 #' CHIANG, Chin Long. Introduction to stochastic processes in biostatistics. 1968.
 #'  

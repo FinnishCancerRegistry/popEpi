@@ -14,11 +14,7 @@ survtab(data, surv.breaks = NULL, by.vars = NULL, event.values = NULL,
 \item{data}{a dataset processed by \code{\link{lexpand}}}
 
 \item{surv.breaks}{breaks as explicitly
-<<<<<<< f484e28d438e3bea2c0a85c83e9cdffd16f3925b
-left inclusive and right exclusive - e.g. [a,b).}
-=======
 left inclusive and right exclusive - e.g. \code{[a,b)}.}
->>>>>>> First commit to Github
 
 \item{by.vars}{a character string vector; defines names of
 variables by which survivals are calculated
@@ -132,16 +128,9 @@ are supplied in addition to observed survival figures.
 to be estimated, where all unique \code{event.values}
 are seen as competing risks indicators
 (others are random censoring indicators);
-<<<<<<< f484e28d438e3bea2c0a85c83e9cdffd16f3925b
-CIFs are estimated for each competing risk and are modulated by the ** modulated on ehkä mielenkiintoinen sanavalinta? **
-used \code{surv.method}, since they are always computed based
-on an survival-interval-specific proportional hazards
-assumption as described by Chiang (1968).
-=======
 CIFs are estimated for each competing risk are computed based
 on a survival-interval-specific proportional hazards
 assumption as described by Chiang (1968) using the chosen \code{surv.method}.
->>>>>>> First commit to Github
 With \code{surv.type = 'cif.rel'}, a CIF is estimated with using
 excess cases as the ''cause-specific'' cases.
 
@@ -168,11 +157,7 @@ is presented.
 
 The user must define the age-standardisation age
 groups and their weights with the \code{agegr.w.breaks}
-<<<<<<< f484e28d438e3bea2c0a85c83e9cdffd16f3925b
-and \code{agegr.w.weights} arguments. Number of
-=======
 and \code{agegr.w.weights} arguments. The numbers of
->>>>>>> First commit to Github
 age groups and weights should match; e.g.
 with \code{agegr.w.breaks = c(0,45,65,75,Inf)} the weights vector
 must then have 4 elements.
@@ -245,14 +230,14 @@ st <- survtab(x)
 Joonas Miettinen, Karri Seppa
 }
 \references{
-\href{http://dx.doi.org/10.1111/j.1541-0420.2011.01640.x}{Perme, Maja Pohar, Janez Stare, and Jacques Estève.
-"On estimation in relative survival." Biometrics 68.1 (2012): 113-120.}
+Perme, Maja Pohar, Janez Stare, and Jacques Estève.
+"On estimation in relative survival." Biometrics 68.1 (2012): 113-120.
 
-\href{http://dx.doi.org/10.1016/j.ejca.2011.03.011}{Hakulinen, Timo, Karri Seppa, and Paul C. Lambert.
-"Choosing the relative survival method for cancer survival estimation." European Journal of Cancer 47.14 (2011): 2202-2210.},
+Hakulinen, Timo, Karri Seppa, and Paul C. Lambert.
+"Choosing the relative survival method for cancer survival estimation." European Journal of Cancer 47.14 (2011): 2202-2210.
 
-\href{http://dx.doi.org/10.1016/j.ejca.2013.09.019}{Seppa, Karri, Timo Hakulinen, and Arun Pokhrel.
-"Choosing the net survival method for cancer survival estimation." European Journal of Cancer (2013).},
+Seppa, Karri, Timo Hakulinen, and Arun Pokhrel.
+"Choosing the net survival method for cancer survival estimation." European Journal of Cancer (2013).
 
 CHIANG, Chin Long. Introduction to stochastic processes in biostatistics. 1968.
 }
