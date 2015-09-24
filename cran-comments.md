@@ -15,4 +15,5 @@ NOTE:
 Maintainer: 'Joonas Miettinen <joonas.miettinen@cancer.fi>'
 New submission
 
-I cannot install qpdf on this computer. The latter I assume to be inconsequential.
+I cannot install qpdf on this computer. This passed without messages using devtools::win_build(). 
+The latter I assume to be inconsequential.
