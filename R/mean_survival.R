@@ -72,19 +72,22 @@
 #' 
 #' @examples
 #' 
-#' sire2 <- copy(sire)
-#' sire2[, agegr := cut(dg_age, c(0,45,60,Inf), right=FALSE)]
-#' x <- lexpand(sire2, breaks=list(fot=seq(0,10,1/12)), pophaz=popmort)
+#' ## take first 5000 subjects in sire data for demonstration
+#' sr <- sire[1:5000, ]
+#' sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
+#' x <- lexpand(sr, breaks=list(fot=seq(0,10,1/12)), pophaz=popmort)
 #' sm <- survmean(x, pophaz=popmort)
-#' sma<- survmean(x, pophaz=popmort, by.vars="agegr")
-#' sms<- survmean(x, pophaz=popmort, agegr.w.breaks=c(0,45,60,Inf))
+#' ## for each level of "agegr" separately:
+#' #sma<- survmean(x, pophaz=popmort, by.vars="agegr") 
+#' ## automated age-standardised results:
+#' #sms<- survmean(x, pophaz=popmort, agegr.w.breaks=c(0,45,60,Inf))
 #' 
 #' ## visual inspection of how realistic extrapolation is for each stratum;
 #' ## grey vertical line points to start of extrapolation;
 #' ## solid lines are observed and extrapolated survivals;
 #' ## dashed lines are expected survivals
 #' plot(sm)
-#' plot(sma)
+#' # plot(sma)
 #' # plot(sms) plots precisely the same as plot(sma)
 #' 
 #' @export survmean

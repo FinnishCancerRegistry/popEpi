@@ -74,18 +74,18 @@
 #' 
 #' @examples
 #' ## use the simulated rectal cancer cohort
-#' sire2 <- data.table(sire)
-#' sire2[, agegr := cut(dg_age, breaks = c(0,45,55,65,75,Inf), right=FALSE)]
+#' sr <- copy(sire)
+#' sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
 #' 
 #' ## usable straight away after splitting
 #' fb <- c(0,3/12,6/12,1,2,3,4,5)
-#' x <- lexpand(sire2, breaks = list(fot=fb), pophaz=popmort, status=status)
+#' x <- lexpand(sr, breaks = list(fot=fb), pophaz=popmort, status=status)
 #' rpm <- relpois(x, formula = lex.Xst %in% 1:2 ~ FOT + agegr)
 #'  
 #' ## some methods for glm work. e.g. test for interaction
-#' rpm2 <- relpois(x, formula = lex.Xst %in% 1:2 ~ FOT*agegr)
-#' anova(rpm, rpm2, test="LRT")
-#' AIC(rpm, rpm2)
+#' # rpm2 <- relpois(x, formula = lex.Xst %in% 1:2 ~ FOT*agegr)
+#' # anova(rpm, rpm2, test="LRT")
+#' # AIC(rpm, rpm2)
 
 relpois <- function(data, 
                      formula, 
