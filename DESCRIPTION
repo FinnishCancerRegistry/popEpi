@@ -28,6 +28,5 @@ License: GPL-3
 LazyData: true
 ByteCompile: true
 VignetteBuilder: knitr
-VignetteBuilder: knitr
 URL: https://github.com/WetRobot/popEpi
 BugReports: https://github.com/WetRobot/popEpi/issues
