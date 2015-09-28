@@ -114,7 +114,6 @@ harmonizeStatuses <- function(x, C = "lex.Cst", X = "lex.Xst") {
   clX <- class(x[[X]])
   tyC <- typeof(x[[C]])
   tyX <- typeof(x[[X]])
-  ty <- c(tyC, tyX)
   cl <- c(clC, clX)
   
   if (tyC != tyX && clC != clX) {

@@ -74,17 +74,17 @@ levels will be shown in the table.
 any of the  \code{by.vars} values was \code{NA}.
 }
 \examples{
-sire2 <- copy(sire)
-sire2[, agegroup := cut(dg_age, breaks=c(0,45,60,75,85,Inf))]
+sr <- copy(sire)
+sr$agegroup <- cut(sr$dg_age, breaks=c(0,45,60,75,85,Inf))
 ## counts by default
-ltable(sire2, "agegroup")
+ltable(sr, "agegroup")
 
 ## any expression can be given
-ltable(sire2, "agegroup", list(mage = mean(dg_age)))
-ltable(sire2, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)))
+ltable(sr, "agegroup", list(mage = mean(dg_age)))
+ltable(sr, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)))
 
 ## also returns levels where there are zero rows (expressions as NA)
-ltable(sire2, "agegroup", list(obs = .N, minage = min(dg_age), maxage = max(dg_age)),
+ltable(sr, "agegroup", list(obs = .N, minage = min(dg_age), maxage = max(dg_age)),
        subset = dg_age < 85)
 }
 \author{
