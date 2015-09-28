@@ -823,7 +823,8 @@ setaggre <- function(x, obs = "obs", pyrs = "pyrs", d.exp = NULL, by = setdiff(n
 
 p.round <- function(p, dec=3) {
   th <- eval( parse(text=paste0('1E-', dec ) ))
-  if( is.na(p) ) return( '= NA')
+  if( is.null(p)) return( '= NA') 
+  if( is.na(p))   return( '= NA') 
   if( p < th ){
     p <- paste0('< ', th  )
   }

@@ -147,7 +147,7 @@ print.sirspline <- function(x, ...) {
   } else {
     
     for(i in 1:length(x$p.values)) {
-      cat( x$spline[i] ,': p ', p.round( x$p.values[i] ), '\n', sep = '')
+      cat( x$spline[i] ,': p ', p.round( x$p.values[[i]] ), '\n', sep = '')
     }
     cat(fill=TRUE)
     

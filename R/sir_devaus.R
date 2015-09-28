@@ -1011,6 +1011,7 @@ sir_spline <- function(  table,
   
   # get p-value and anova-table
   anovas <- NULL
+  p <- NULL
   if(dependent.splines) {
     form.a <- 'Ns(get(spline[[1]]), kn=knts[[1]]) + Ns(get(spline[[2]]), kn=knts[[2]])'
     form.b <- 'get(print):Ns(get(spline[[1]]), kn=knts[[1]]) + get(print):Ns(get(spline[[2]]), kn=knts[[2]])'
@@ -1040,7 +1041,7 @@ sir_spline <- function(  table,
   }
   else {    
     lrt.uni <- function(data=sir.spline, spline.var=spline[1], print=print, knots=knts, knum = 1) {
-      if (is.na(spline.var)) return (NA)
+      if (is.na(spline.var)) return (NULL)
       data <- data.table(data)
       knots <- knots[[knum]]
       fit0 <- glm(observed ~ get(print)+Ns(get(spline.var), knots = knots), offset=log(expected), family=poisson(log), data = data[expected>0])
@@ -1053,7 +1054,9 @@ sir_spline <- function(  table,
     var2.p <- lrt.uni(spline.var = spline[2], print=print, knots=knts, knum = 2)
     var3.p <- lrt.uni(spline.var = spline[3], print=print, knots=knts, knum = 3)
     
-    p <- list(spline.a = var1.p, spline.b = var2.p, spline.c = var3.p)
+    p <- list(spline.a = var1.p[['Pr(>Chi)']][2], 
+              spline.b = var2.p[['Pr(>Chi)']][2], 
+              spline.c = var3.p[['Pr(>Chi)']][2])
     anovas <- list(spline.a = var1.p, spline.b = var2.p, spline.c = var3.p)
   }
   

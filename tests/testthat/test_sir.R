@@ -130,7 +130,7 @@ test_that("SIR spline error", {
 
 # print list --------------------------------------------------------------
 
-test_that("SIR spline error", {
+test_that("SIR print-list/subset error", {
 
   pl1 <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
               subset = year %in% 1990:2008,
