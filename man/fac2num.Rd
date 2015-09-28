@@ -30,9 +30,6 @@ as.numeric(factor(c("5","7","a"))) ## 1:3
 
 fac2num(factor(c("5","7","a"))) ## result: c(5,7,NA) with warning
 }
-\author{
-"Jealie"
-}
 \seealso{
 \code{\link{robust_values}}
 }

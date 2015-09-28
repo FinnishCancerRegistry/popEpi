@@ -28,15 +28,15 @@ setAs("list", "pe", function(from) {
 #' @S3method as.pe Lexis
 as.pe.Lexis <- function(x) {
   if (!"Lexis" %in% class(x)) stop("not a Lexis object")
-  ans = copy(x) 
+  pe <- copy(x) 
   
-  tt = class(x)
-  n=chmatch("Lexis",tt)
-  tt = c( head(tt,n-1L), "pe", "Lexis", tail(tt, length(tt)-n) )
+  cl <- class(x)
+  wh <- which(cl == "Lexis")
+  cl <- c(cl[1:(wh-1)], "pe", "Lexis",  cl[wh:length(cl)])
   
-  setattr(ans,"class",tt)
+  setattr(pe, "class", cl)
   
-  return(ans)
+  return(pe)
 }
 
 
@@ -46,14 +46,15 @@ as.pe.Lexis <- function(x) {
 #' @param x a data.table
 #' @S3method as.pe data.table
 as.pe.data.table <- function(x) {
-  ans = copy(x) 
+  pe <- copy(x) 
   
-  tt = class(x)
-  n=chmatch("data.table",tt)
-  tt = c( head(tt,n-1L), "pe","data.table", tail(tt, length(tt)-n) )
+  cl <- class(x)
+  wh <- which(cl == "data.table")
+  cl <- c(cl[1:(wh-1)], "pe","data.table",  cl[wh:length(cl)])
   
-  setattr(ans,"class",tt)
-  return(ans)
+  setattr(pe, "class", cl)
+  
+  return(pe)
 }
 
 
@@ -63,14 +64,15 @@ as.pe.data.table <- function(x) {
 #' @param x a list
 #' @S3method as.pe list
 as.pe.list <- function(x) {
-  ans = copy(x) 
+  pe <- copy(x) 
   
-  tt = class(x)
-  n=chmatch("list",tt)
-  tt = c( head(tt,n-1L), "pe","list", tail(tt, length(tt)-n) )
+  cl <- class(x)
+  wh <- which(cl == "list")
+  cl <- c(cl[1:(wh-1)], "pe","list",  cl[wh:length(cl)])
   
-  setattr(ans,"class",tt)
-  return(ans)
+  setattr(pe, "class", cl)
+  
+  return(pe)
 }
 
 
@@ -84,6 +86,8 @@ as.pe.list <- function(x) {
 #' if no other printing method found
 #' @S3method plot pe
 #' @export plot.pe
+#' @import Epi
+#' @import graphics
 plot.pe <- function(x, plot.type, ...) {
   plot.Lexis(x, ...)
   
@@ -134,6 +138,7 @@ print.sir <- function(x, ...) {
 #' @param x a \code{sir} object
 #' @param ... unused
 #' @S3method print sirspline
+#' @import grDevices
 print.sirspline <- function(x, ...) {
   if ( x$spline.dependent ) {
     if( any( !is.na(x$p.values))) {
@@ -170,6 +175,7 @@ print.sirspline <- function(x, ...) {
 #' 
 #' @S3method plot sir
 #' @export plot.sir
+#' @import graphics
 #' 
 #' @author Matti Rantanen
 #' 
@@ -325,6 +331,7 @@ plot.sir <- function(x, plot.type = 'model',
 #' 
 #' @S3method plot sirspline
 #' @export plot.sirspline
+#' @import graphics
 #' 
 #' @author Matti Rantanen
 #' 
@@ -432,6 +439,7 @@ plot.sirspline <- function(x, conf.int = TRUE ,ylab, xlab, ylim, abline = TRUE, 
 #' 
 #' @S3method plot survtab
 #' @export plot.survtab
+#' @import graphics
 #' 
 #' @author Joonas Miettinen
 #' 
@@ -543,6 +551,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
 #' 
 #' @S3method lines survtab
 #' @export lines.survtab
+#' @import graphics
 #' 
 #' @author Joonas Miettinen
 #' 
@@ -623,7 +632,7 @@ lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL,
   if (length(y.ci) > 0) y_first[, (y.ci) := get(varname) ]
   y <- rbind(y_first, y)
   
-  matlines(c(0, x$Tstop[subset]), as.data.frame(y), col=col, lty=lty, ...)
+  graphics::matlines(c(0, x$Tstop[subset]), as.data.frame(y), col=col, lty=lty, ...)
   
 }
 

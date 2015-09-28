@@ -24,6 +24,7 @@
 #' 
 #' @import data.table
 #' @import Epi
+#' @import stats
 #' 
 #' @examples
 #' \dontrun{
@@ -101,7 +102,7 @@ rpcurve <- function(object = NULL, conf.int = 0.95) {
   
   setcolsnull(umodmat, delete=c("order","uni_id","uni_n"))
   
-  modmat <- model.matrix(object, data=umodmat)
+  modmat <- stats::model.matrix(object, data=umodmat)
   mmattrs <- attributes(modmat)
   mmattrs$dimnames <- mmattrs$dim <- NULL
 
@@ -116,7 +117,7 @@ rpcurve <- function(object = NULL, conf.int = 0.95) {
   l <- lapply(l, attrsetter)
 
   epicumgetter <- function(x, ...) {
-    ci.cum(ctr.mat = x, ..., alpha = 1-conf.int)
+    Epi::ci.cum(ctr.mat = x, ..., alpha = 1-conf.int)
   }
   
   tab <- lapply(l, epicumgetter, obj=object, Exp = TRUE, intl = fb$delta); rm(l)

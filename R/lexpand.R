@@ -444,12 +444,12 @@ lexpand <- function(data,
     del_vars <- NULL
     for (k in 1:3) {
       var <- cut_vars[[k]]
-      test <- grep(paste0(", ", var, ","), testag, )
-      if (length(test) == 0) test <- grep(paste0(", ", var, ")"), testag, )
-      if (length(test) == 0) test <- grep(paste0(" = ", var, ","), testag, )
-      if (length(test) == 0) test <- grep(paste0(" = ", var, ")"), testag, )
-      if (length(test) == 0) test <- grep(paste0("list\\(", var, ","), testag, )
-      if (length(test) == 0) test <- grep(paste0("list\\(", var, "\\)"), testag, )
+      test <- grep(paste0(", ", var, ","), testag)
+      if (length(test) == 0) test <- grep(paste0(", ", var, ")"), testag)
+      if (length(test) == 0) test <- grep(paste0(" = ", var, ","), testag)
+      if (length(test) == 0) test <- grep(paste0(" = ", var, ")"), testag)
+      if (length(test) == 0) test <- grep(paste0("list\\(", var, ","), testag)
+      if (length(test) == 0) test <- grep(paste0("list\\(", var, "\\)"), testag)
       if (length(test) == 0) del_vars <- c(del_vars, var)
     }
     cut_vars <- setdiff(cut_vars, del_vars)
@@ -583,7 +583,7 @@ lexpand <- function(data,
   
   if ("lex.event" %in% names(l)) {
     if (verbose) cutt <- proc.time()
-    l <- cutLexis(l, cut = l$lex.event, timescale = "per", new.state = l$lex.Xst, precursor.states = unique(l$lex.Cst))
+    l <- Epi::cutLexis(l, cut = l$lex.event, timescale = "per", new.state = l$lex.Xst, precursor.states = unique(l$lex.Cst))
     setDT(l)
     setattr(l, "class", c("Lexis", "data.table", "data.frame"))
     if (verbose) cat("Time taken by cutLexis when defining event time points: ", timetaken(cutt), "\n")

@@ -31,6 +31,8 @@ This function is just a small interface for \code{dcast} /
 Note that all \code{data.table} objects are alos \code{data.frame}
 objects, but that each have their own \code{dcast} method.
 \code{\link[data.table]{dcast.data.table}} is faster.
+
+If any information needs to aggregated, it is aggregated using \code{sum}.
 }
 \examples{
 \dontrun{

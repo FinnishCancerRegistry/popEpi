@@ -16,6 +16,7 @@
 #' @param values a character string; the variable which will be represented
 #' on rows and columns as specified by \code{columns} and \code{rows}
 #' @import data.table
+#' @import stats
 #' @export cast_simple
 #' @details This function is just a small interface for \code{dcast} / 
 #' \code{dcast.data.table} and less flexible than the originals.
@@ -23,6 +24,9 @@
 #' Note that all \code{data.table} objects are alos \code{data.frame} 
 #' objects, but that each have their own \code{dcast} method.
 #' \code{\link[data.table]{dcast.data.table}} is faster.
+#' 
+#' If any information needs to aggregated, it is aggregated using \code{sum}.
+#' 
 #' @examples 
 #' \dontrun{
 #' ## e.g. silly counts from a long-format table to a wide format
@@ -56,7 +60,7 @@ cast_simple <- function(data=NULL, columns='year', rows=c('PrimarySite','sex'), 
   if (is.data.table(data)) {
     dcast.data.table(data, formula = form, value.var=values, drop=FALSE, fun.aggregate=sum) 
   } else {
-    dcast(data, formula = formula, value.var = values, drop = FALSE, fun.aggregate = sum)
+    dcast(data, formula = form, value.var = values, drop = FALSE, fun.aggregate = sum)
   }
   
 }
@@ -71,7 +75,7 @@ cast_simple <- function(data=NULL, columns='year', rows=c('PrimarySite','sex'), 
 #' @export na2zero
 na2zero = function(DT) { 
   DT <- data.table(DT)
-  for(k in names(DT)) {
+  for (k in names(DT)) {
     DT[is.na(get(k)), c(k) := 0L]
   }
   return(DT)
@@ -80,7 +84,6 @@ na2zero = function(DT) {
 
 #' @title Convert factor variable to numeric 
 #' @description Convert factor variable with numbers as levels into a numeric variable
-#' @author "Jealie"
 #' @param x a factor variable with numbers as levels
 #' @export fac2num
 #' @details
@@ -671,7 +674,7 @@ longDF2ratetable <- function(DF, value.var = "haz", by.vars = setdiff(names(DF),
 }
 
 
-
+#' @import stats
 makeTempVarName <- function(data=NULL, names=NULL, pre=NULL, post=NULL) {
   DN <- NULL
   DN <- c(DN, names(data))
@@ -707,11 +710,10 @@ setDFpe <- function(x) {
   ## when option("popEpi.datatable") == FALSE
   if (!is.data.table(x)) stop("only accepts data.table as input")
   
-  tt = class(x)
-  n = chmatch("data.table", tt)
-  tt = c(head(tt, n - 1L), 
-         tail(tt, length(tt) - n))
-  setattr(x, "class", tt)
+  cl <- class(x)
+  wh <- which(cl == "data.table")
+  cl = c(cl[1:(wh-1)], cl[(wh+1):length(cl)])
+  setattr(x, "class", cl)
   
   setattr(x, "sorted", NULL)
   setattr(x, ".internal.selfref", NULL)
@@ -826,8 +828,7 @@ p.round <- function(p, dec=3) {
   if( is.na(p) ) return( '= NA')
   if( p < th ){
     p <- paste0('< ', th  )
-  }
-  else {
+  } else {
     p <- paste0('= ', round(p, dec) )
   }
   p 

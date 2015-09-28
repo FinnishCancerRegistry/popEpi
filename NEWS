@@ -1,3 +1,8 @@
+popEpi 0.2.1
+======
+* fixes various issues detected in R CMD CHECK at CRAN end
+* all examples should only use data.frame syntax now (not data.table)
+
 popEpi 0.2.0
 ======
 * uses data.table 1.9.6
