@@ -354,33 +354,17 @@ sirspline <- function( coh.data,
                        knots = NULL,
                        reference.points = NULL,
                        dependent.splines = TRUE){
-  # Aggre object -----------------------------------------------------------
   
-  if( all(inherits(coh.data, 'aggre'), !is.data.table(coh.data) ) ){
-    coh.data <- coh.data[[1]]
-  }
-  if( all(inherits(ref.data, 'aggre'), !is.data.table(ref.data) ) ){
-    ref.data <- ref.data[[1]]
-  }
-  
+  coh.data <- data.table(coh.data)
   
   ## subsetting-----------------------------------------------------------------
   ## no copy taken of data!
   subset <- substitute(subset)
-  subset <- eval(subset, envir = coh.data, enclos = parent.frame())
-  if (!is.null(subset)) {
-    if (is.logical(subset)) subset <- subset & !is.na(subset)
-    
-  } else {
-    subset <- rep(TRUE, nrow(coh.data))
-  }
-  
-  if (nrow(coh.data[subset, ]) == 0) stop("no rows left after subsetting!")
+  subset <- evalLogicalSubset(data = coh.data, substiset = subset)
   coh.data <- coh.data[subset,]
   
-  
   # print list --------------------------------------------------------------
-  
+
   env1 <- environment()
   coh.data <- data_list(data = coh.data, arg.list = substitute(print), env = env1)
   
@@ -1025,7 +1009,8 @@ sir_spline <- function(  table,
     spline.est.C <- rbind(spline.est.C, est.C)
   }
   
-  # get p-value
+  # get p-value and anova-table
+  anovas <- NULL
   if(dependent.splines) {
     form.a <- 'Ns(get(spline[[1]]), kn=knts[[1]]) + Ns(get(spline[[2]]), kn=knts[[2]])'
     form.b <- 'get(print):Ns(get(spline[[1]]), kn=knts[[1]]) + get(print):Ns(get(spline[[2]]), kn=knts[[2]])'
@@ -1046,27 +1031,30 @@ sir_spline <- function(  table,
     fit.3 <- fit.fun( paste0('observed ~ ', form.b))
     fit.4 <- fit.fun( paste0('observed ~ ', 'get(print)+', form.b) )
     
-    global.p<- anova(fit.4, fit.1, test='LRT')[['Pr(>Chi)']][2]
-    level.p <- anova(fit.2, fit.1, test='LRT')[['Pr(>Chi)']][2]
-    #shape.p <- anova(fit.4, fit.3, test='LRT')[['Pr(>Chi)']][2]
+    global.p<- anova(fit.4, fit.1, test='LRT')
+    level.p <- anova(fit.2, fit.1, test='LRT')
+    #shape.p <- anova(fit.4, fit.3, test='LRT')
     
-    p <- rbind(global.p, level.p) # , shape.p, 
+    anovas <- list(global.p = global.p, level.p = level.p)
+    p <- rbind(global.p[['Pr(>Chi)']][2], level.p[['Pr(>Chi)']][2]) # , shape.p, 
   }
   else {    
     lrt.uni <- function(data=sir.spline, spline.var=spline[1], print=print, knots=knts, knum = 1) {
       if (is.na(spline.var)) return (NA)
       data <- data.table(data)
       knots <- knots[[knum]]
-      fit0 <- glm(observed ~ Ns(get(spline.var), knots = knots), offset=log(expected), family=poisson(log), data = data[expected>0])
-      fit1 <- glm(observed ~ get(print)*Ns(get(spline.var), knots = knots), offset=log(expected), family=poisson(log), data = data[expected>0])
-      anova(fit1,fit0, test='Chisq')[['Pr(>Chi)']][2]
+      fit0 <- glm(observed ~ get(print)+Ns(get(spline.var), knots = knots), offset=log(expected), family=poisson(log), data = data[expected>0])
+      fit1 <- glm(observed ~ Ns(get(spline.var), knots = knots), offset=log(expected), family=poisson(log), data = data[expected>0])
+      fit2 <- glm(observed ~ get(print)*Ns(get(spline.var), knots = knots), offset=log(expected), family=poisson(log), data = data[expected>0])
+      anova(fit2,fit1,fit0, test='Chisq') # [['Pr(>Chi)']][2]
     }
     
     var1.p <- lrt.uni(spline.var = spline[1], print=print, knots=knts, knum = 1)
     var2.p <- lrt.uni(spline.var = spline[2], print=print, knots=knts, knum = 2)
     var3.p <- lrt.uni(spline.var = spline[3], print=print, knots=knts, knum = 3)
     
-    p <- rbind(var1.p, var2.p, var3.p)
+    p <- list(spline.a = var1.p, spline.b = var2.p, spline.c = var3.p)
+    anovas <- list(spline.a = var1.p, spline.b = var2.p, spline.c = var3.p)
   }
   
   output <- list( spline.est.A = spline.est.A,
@@ -1078,6 +1066,8 @@ sir_spline <- function(  table,
                   adjust = adjust,
                   print = print,
                   spline = spline,
+                  anovas = anovas,
+                  knots = knts,
                   spline.dependent = dependent.splines,
                   p.values = p)
   output
