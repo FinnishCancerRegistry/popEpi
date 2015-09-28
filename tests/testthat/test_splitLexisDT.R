@@ -1,7 +1,7 @@
 context("Compare splitLexisDT results with splitLexis results")
 
 test_that("splitLexisDT and splitLexis are congruent", {
-  
+  skip_on_cran()
   library(Epi)
   
   sire2 <- copy(sire)

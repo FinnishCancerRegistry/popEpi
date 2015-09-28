@@ -3,7 +3,7 @@ context("test rpcurve vs. survtab congruence")
 test_that("rpcurve and survtab e2 are approximately congruent", {
   
   
-  sire2 <- copy(sire)
+  sire2 <- copy(sire)[dg_date < ex_date, ]
   sire2[, agegr := cut(dg_age, breaks = c(0,45,70,Inf))]
   
   fb <- c(0,3/12,6/12,1:8,10)

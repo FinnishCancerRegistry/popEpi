@@ -1,6 +1,7 @@
 context("Compare splitMulti results with splitLexis results")
 
 test_that("splitMulti and splitLexis are congruent", {
+  skip_on_cran()
   
   library(Epi)
   
