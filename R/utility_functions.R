@@ -27,8 +27,8 @@
 #' \dontrun{
 #' ## e.g. silly counts from a long-format table to a wide format
 #' test <- copy(sire)
-#' test[, dg_y := year(dg_date)]
-#' test[, ex_y := year(ex_date)]
+#' test$dg_y <- year(test$dg_date)
+#' test$ex_y <- year(test$ex_date)
 #' tab <- ltable(test, c("dg_y","ex_y"))
 #' cast_simple(tab, columns='dg_y', rows="ex_y", values="obs")
 #' }
@@ -149,15 +149,14 @@ fac2num <- function(x) {
 #' \code{\link[Epi]{cal.yr}}
 #' 
 #' @examples
-#' ## easily usable within a data.table
-#' test <- copy(sire)
-#' test[, dg_yrs := get.yrs(dg_date)]
 #' 
-#' \dontrun{
+#' test <- copy(sire)
+#' test$dg_yrs <- get.yrs(test$dg_date)
+#' summary(test$dg_yrs)
+#' 
 #' ## Epi's cal.yr versus get.yrs
 #' Epi::cal.yr("2000-01-01") ## 1999.999
 #' get.yrs("2000-01-01") ## 2000
-#' }
 #' 
 get.yrs <- function(dates, format = "%Y-%m-%d", year.length = "approx") {
   match.arg(year.length, c("actual", "approx"))
@@ -822,3 +821,14 @@ setaggre <- function(x, obs = "obs", pyrs = "pyrs", d.exp = NULL, by = setdiff(n
 
 
 
+p.round <- function(p, dec=3) {
+  th <- eval( parse(text=paste0('1E-', dec ) ))
+  if( is.na(p) ) return( '= NA')
+  if( p < th ){
+    p <- paste0('< ', th  )
+  }
+  else {
+    p <- paste0('= ', round(p, dec) )
+  }
+  p 
+}

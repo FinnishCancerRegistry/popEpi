@@ -34,12 +34,12 @@ in the respective period.
 \examples{
 \dontrun{
 ## use the simulated rectal cancer cohort
-sire2 <- data.table(sire)
+sr <- copy(sire)
 ab <- c(0,45,55,65,70,Inf)
-sire2[, agegr := cut(dg_age, breaks = ab, right=FALSE)]
+sr$agegr <- cut(sr$dg_age, breaks = ab, right = FALSE)
 
 BL <- list(fot= seq(0,10,1/12))
-x <- lexpand(sire2, breaks=BL, pophaz=popmort, status=status)
+x <- lexpand(sr, breaks=BL, pophaz=popmort, status=status)
 
 rpm <- relpois(x, formula = lex.Xst \%in\% 1:2 ~ -1+ FOT + agegr, fot.breaks=c(0,0.25,0.5,1:8,10))
 pmc <- rpcurve(rpm)

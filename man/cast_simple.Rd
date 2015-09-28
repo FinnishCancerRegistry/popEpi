@@ -36,8 +36,8 @@ objects, but that each have their own \code{dcast} method.
 \dontrun{
 ## e.g. silly counts from a long-format table to a wide format
 test <- copy(sire)
-test[, dg_y := year(dg_date)]
-test[, ex_y := year(ex_date)]
+test$dg_y <- year(test$dg_date)
+test$ex_y <- year(test$ex_date)
 tab <- ltable(test, c("dg_y","ex_y"))
 cast_simple(tab, columns='dg_y', rows="ex_y", values="obs")
 }

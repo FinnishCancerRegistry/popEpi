@@ -14,7 +14,10 @@ Imports:
 Suggests: 
     reshape2,
     methods,
-    epitools,
+    utils,
+    grDevices,
+    graphics,
+    stats,
     testthat,
     knitr,
     survival,

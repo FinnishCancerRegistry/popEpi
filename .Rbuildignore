@@ -7,3 +7,4 @@ tests/emptyDir
 ^.*\.Rproj$
 ^\.Rproj\.user$
 .Rhistory
+cran-comments.md

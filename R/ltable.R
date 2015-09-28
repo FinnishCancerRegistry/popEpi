@@ -66,17 +66,17 @@
 #' @export ltable
 #' 
 #' @examples
-#' sire2 <- copy(sire)
-#' sire2[, agegroup := cut(dg_age, breaks=c(0,45,60,75,85,Inf))]
+#' sr <- copy(sire)
+#' sr$agegroup <- cut(sr$dg_age, breaks=c(0,45,60,75,85,Inf))
 #' ## counts by default
-#' ltable(sire2, "agegroup")
+#' ltable(sr, "agegroup")
 #' 
 #' ## any expression can be given
-#' ltable(sire2, "agegroup", list(mage = mean(dg_age)))
-#' ltable(sire2, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)))
+#' ltable(sr, "agegroup", list(mage = mean(dg_age)))
+#' ltable(sr, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)))
 #' 
 #' ## also returns levels where there are zero rows (expressions as NA)
-#' ltable(sire2, "agegroup", list(obs = .N, minage = min(dg_age), maxage = max(dg_age)), 
+#' ltable(sr, "agegroup", list(obs = .N, minage = min(dg_age), maxage = max(dg_age)), 
 #'        subset = dg_age < 85)
 #' 
 
@@ -182,17 +182,17 @@ ltable <- function(data,
 #' data.table's brackets \code{DT[, , ...]}; see \code{\link{data.table}}
 #' @export expr.by.cj
 #' @examples
-#' sire2 <- copy(sire)
-#' sire2[, agegroup := cut(dg_age, breaks=5)]
+#' sr <- copy(sire)
+#' sr$agegroup <- cut(sr$dg_age, breaks=5)
 #' ## counts by default
-#' expr.by.cj(sire2, "agegroup")
+#' expr.by.cj(sr, "agegroup")
 #' 
 #' ## any arbitrary expression can be given
-#' expr.by.cj(sire2, "agegroup", list(mage = mean(dg_age)))
-#' expr.by.cj(sire2, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)))
+#' expr.by.cj(sr, "agegroup", list(mage = mean(dg_age)))
+#' expr.by.cj(sr, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)))
 #' 
 #' ## only uses levels of by.vars present in data
-#' expr.by.cj(sire2, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)), 
+#' expr.by.cj(sr, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)), 
 #'            subset = dg_age < 70)
 #' 
 

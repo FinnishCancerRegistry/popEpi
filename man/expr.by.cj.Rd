@@ -29,17 +29,17 @@ data.table's brackets \code{DT[, , ...]}; see \code{\link{data.table}}}
 Like \code{ltable} except faster and unrobust. For advanced users.
 }
 \examples{
-sire2 <- copy(sire)
-sire2[, agegroup := cut(dg_age, breaks=5)]
+sr <- copy(sire)
+sr$agegroup <- cut(sr$dg_age, breaks=5)
 ## counts by default
-expr.by.cj(sire2, "agegroup")
+expr.by.cj(sr, "agegroup")
 
 ## any arbitrary expression can be given
-expr.by.cj(sire2, "agegroup", list(mage = mean(dg_age)))
-expr.by.cj(sire2, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)))
+expr.by.cj(sr, "agegroup", list(mage = mean(dg_age)))
+expr.by.cj(sr, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)))
 
 ## only uses levels of by.vars present in data
-expr.by.cj(sire2, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)),
+expr.by.cj(sr, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)),
            subset = dg_age < 70)
 }
 \author{

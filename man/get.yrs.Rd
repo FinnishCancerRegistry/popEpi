@@ -44,15 +44,13 @@ Note that dates are effectively converted to fractional years at
 \code{ get.yrs("2000-01-02") = 2000 + 1/365.242199 }.
 }
 \examples{
-## easily usable within a data.table
 test <- copy(sire)
-test[, dg_yrs := get.yrs(dg_date)]
+test$dg_yrs <- get.yrs(test$dg_date)
+summary(test$dg_yrs)
 
-\dontrun{
 ## Epi's cal.yr versus get.yrs
 Epi::cal.yr("2000-01-01") ## 1999.999
 get.yrs("2000-01-01") ## 2000
-}
 }
 \author{
 Joonas Miettinen

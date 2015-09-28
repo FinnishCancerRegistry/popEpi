@@ -89,99 +89,78 @@ plot.pe <- function(x, plot.type, ...) {
   
 }
 
-#' @title Print methods for popEpi objects
+#' @title Print method for \code{sir} objects
 #' @author Matti Rantanen, Joonas Miettinen
-#' @description Prints the results of a popEpi function
-#' @export print.pe
-#' @param x a popEpi object
-#' @param ... additional arguments passed on to print.data.table
-#' if x does not have other printing methods defined
-#' @S3method print pe
-
-print.pe <- function(x, ...) {  
+#' @description Prints the results of the \code{sir} function
+#' @export print.sir
+#' @param x a \code{sir} object
+#' @param ... unused
+#' @S3method print sir
+print.sir <- function(x, ...) {
   
+  cat("SIR Standardized by: ", x[['adjusted']] , fill=TRUE)
   
-  # Function for good looking p-values
-  p.round <- function(p, dec=3) {
-    th <- eval( parse(text=paste0('1E-', dec ) ))
-    if( is.na(p) ) return( '= NA')
-    if( p < th ){
-      p <- paste0('< ', th  )
-    }
-    else {
-      p <- paste0('= ', round(p, dec) )
-    }
-    p 
+  cat('\n',"Total observed:", data.frame(x[[1]])[,'observed'], '\n',
+      "Total expected:", data.frame(x[[1]])[,'expected'], '\n',
+      #"Total SIR:", data.frame(x[[1]])[,'sir'], '\n',
+      "Total person-years:", data.frame(x[[1]])[,'pyrs'], '\n',
+      fill=TRUE)
+  
+  if ( is.null(x[['model']]) ) {
+    cat("Univariate SIR/SMR:", '\n')
+    print( x[['univariate']] )
+  } else {
+    cat("Poisson modelled SIR:", '\n')
+    print( x[['model']] )
+  }
+  cat(fill=TRUE)
+  if (is.null( x[['lrt.test']] )) {
+    cat("Couldn't test homogeneity.",'\n')
+  } 
+  else if(x[['test.type']] == 'homogeneity') {
+    cat("Test for homogeneity p", p.round( c(x$lrt.test)), '\n' )
+  }
+  else if(x[['test.type']] == 'trend') {
+    cat("Test for trend p", p.round( c(x$lrt.test)), '\n' )
   }
   
-  
-  # sir:
-  if ( inherits(x, 'sir') ) {
-    cat("SIR Standardized by: ", x[['adjusted']] , fill=TRUE)
-    
-    cat('\n',"Total observed:", data.frame(x[[1]])[,'observed'], '\n',
-        "Total expected:", data.frame(x[[1]])[,'expected'], '\n',
-        #"Total SIR:", data.frame(x[[1]])[,'sir'], '\n',
-        "Total person-years:", data.frame(x[[1]])[,'pyrs'], '\n',
-        fill=TRUE)
-    
-    if ( is.null(x[['model']]) ) {
-      cat("Univariate SIR/SMR:", '\n')
-      print( x[['univariate']] )
-    } else {
-      cat("Poisson modelled SIR:", '\n')
-      print( x[['model']] )
-    }
-    cat(fill=TRUE)
-    if (is.null( x[['lrt.test']] )) {
-      cat("Couldn't test homogeneity.",'\n')
-    } 
-    else if(x[['test.type']] == 'homogeneity') {
-      cat("Test for homogeneity p", p.round( c(x$lrt.test)), '\n' )
-    }
-    else if(x[['test.type']] == 'trend') {
-      cat("Test for trend p", p.round( c(x$lrt.test)), '\n' )
-    }
-    
-    return(invisible())
-  }
-  
-  # sirspline:
-  if ( inherits(x, 'sirspline') ) {
-    
-    if( x$spline.dependent ) {
-      if( any( !is.na(x$p.values))) {
-        cat( 'global p-value:', p.round(x$p.values[1]),'\n' )
-        cat( 'level p-value:', p.round(x$p.values[2]) , fill= TRUE)      
-      } 
-      else {
-        cat( 'No models compared.', fill= TRUE)
-      }
-      cat('---', '\n')
-      cat('Colour codes:', '\n', fill=TRUE)
-    }
-    else {
-
-      for(i in 1:length(x$p.values)) {
-        cat( x$spline[i] ,': p ', p.round( x$p.values[i] ), '\n', sep = '')
-      }
-      cat(fill=TRUE)
-      
-    }
-    # Print colour codes:
-    cols <- unique(x$spline.est.A[,1])
-    col.length <- length(cols)
-    print( data.frame(levels = cols, colour = palette()[1:col.length]), include.rownames = FALSE)
-    
-    # Print p-values
-    return(invisible())
-  }
-  
-  print(data.table(x, ...))
+  return(invisible())
 }
 
-
-
+#' @title Print method for \code{sirspline} objects
+#' @author Matti Rantanen, Joonas Miettinen
+#' @description Prints the results of the \code{sirspline} function
+#' @export print.sirspline
+#' @param x a \code{sir} object
+#' @param ... unused
+#' @S3method print sirspline
+print.sirspline <- function(x, ...) {
+  if ( x$spline.dependent ) {
+    if( any( !is.na(x$p.values))) {
+      cat( 'global p-value:', p.round(x$p.values[1]),'\n' )
+      cat( 'level p-value:', p.round(x$p.values[2]) , fill= TRUE)      
+    } else {
+      cat( 'No models compared.', fill= TRUE)
+    }
+    cat('---', '\n')
+    cat('Colour codes:', '\n', fill=TRUE)
+  } else {
+    
+    for(i in 1:length(x$p.values)) {
+      cat( x$spline[i] ,': p ', p.round( x$p.values[i] ), '\n', sep = '')
+    }
+    cat(fill=TRUE)
+    
+  }
+  # Print colour codes:
+  cols <- unique(x$spline.est.A[,1])
+  col.length <- length(cols)
+  print( data.frame(levels = cols, colour = palette()[1:col.length]), include.rownames = FALSE)
+  
+  # Print p-values
+  return(invisible())
+}
+    
 
 #' Plot method for sir-object
 #' 
