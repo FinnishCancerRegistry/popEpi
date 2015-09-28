@@ -96,6 +96,7 @@ comp.st.r.pp.lif <- comp.st.surv(surv.var = "r.pp",
 
 ## this function will calculate confidence intervals
 ## for obs & rel & net survivals
+#' @import stats
 comp.st.conf.ints <- function(tab = pp.table, al=0.05, surv="r.pp", transform ="log-log") {
   al <- 0.05
   zlo <- as.character(qnorm(al/2))

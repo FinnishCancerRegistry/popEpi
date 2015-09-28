@@ -154,6 +154,7 @@
 #' @export sir
 #' 
 #' @import data.table
+#' @import stats
 
 
 
@@ -334,6 +335,7 @@ sir <- function( coh.data,
 #' @export sirspline
 #' @import data.table 
 #' @import splines
+#' @import stats
 #' 
 #' @examples \dontrun{
 #' ## for examples see: vignette('sir')
@@ -398,6 +400,8 @@ sirspline <- function( coh.data,
 
 # Input: two data.table:s
 # output: one data.table including rates
+#' @import stats
+#' @import data.table
 sir_table <- function( coh.data, 
                        coh.obs,
                        coh.pyrs,
@@ -749,6 +753,9 @@ sir_est <- function( table,
 
 # Input: sir.table
 # Output: estimates and sequences for plotting splines
+#' @import splines
+#' @import data.table
+#' @import stats
 sir_spline <- function(  table,
                          print = NULL,
                          adjust = NULL,

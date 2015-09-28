@@ -15,6 +15,7 @@
 #' factor variables in the formula to check for negative / \code{NA} 
 #' excess cases before fitting the glm
 #' @param ... any argument passed on to \code{glm}
+#' @import stats
 #' @details
 #' 
 #' \strong{Basics}
