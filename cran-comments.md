@@ -1,9 +1,13 @@
-This is the second submission of popEpi to CRAN.
+
+# popEpi CRAN upload, v.0.2.1
+
+This is the second submission of popEpi to CRAN with fixes covering the issues discovered on the first try (v.0.2.0).
 
 ## Feedback from first upload
 
-The checks were successful for R 3.2.2 on http://win-builder.r-project.org/. However, the developer version returned the following NOTEs and an ERROR:
+The checks were successful on first upload (v.0.2.0) for R 3.2.2 on http://win-builder.r-project.org/. However, the developer version returned the following `NOTE`s and an `ERROR`:
 
+```
 * checking top-level files ... NOTE
 Non-standard file/directory found at top level:
    'cran-comments.md'
@@ -125,38 +129,20 @@ Last 13 lines of output:
    dropped 16 rows where entry == exit
    Error: file.exists(file) is not TRUE
    Execution halted
-
+```
 ## Fixes based on feedback
-- added grDevices, graphics, stats, and utils to Suggests line in DESCRIPTION to fix undefined global functions issues
-- rewrote a test that was likely causing file.exists to fail in R developer version
+- improved `.Rbuildignore`
+- added `grDevices`, `graphics`, `stats`, and `utils` to imports in `NAMESPACE`
+- rewrote a test that was causing `file.exists` to fail in R developer version
 
-## Tests on 0.2.1
+## New checks
 
-### Tested on: 
+### Checked on: 
 * http://win-builder.r-project.org/, R 3.2.2 & R-devel
-* Windows 10, R 3.2.2
+* Windows Server 2012 R2, R 3.2.2
 
-### R CMD check results on R 3.2.2
+### Checking results
 
-No NOTEs, WARNINGs or ERRORs using http://win-builder.r-project.org/.
+Finished with `Status: OK` with no `NOTE`s, `WARNING`s nor `ERROR`s using http://win-builder.r-project.org/ for both R-release (3.2.2) and R-devel.
 
-
-## Tests on 0.2.0 (first upload)
-
-### Tested on:
-* Windows 10, R 3.2.2
-* Ubuntu 15.04, R 3.2.2
-
-### R CMD check results on R 3.2.2
-
-Using devtools 1.9.1 I received the following notable messages:
-
-WARNING: 
-'qpdf' is needed for checks on size reduction of PDFs
-
-NOTE:
-Maintainer: 'Joonas Miettinen <joonas.miettinen@cancer.fi>'
-New submission
-
-I cannot install qpdf on this computer. This passed without messages using devtools::win_build(). 
-The latter I assume to be inconsequential.
+Checking on Windows Server gave a `WARNING` about the missing `qpdf` programme and a `NOTE` about a new contributor in CRAN (R 3.2.2).
