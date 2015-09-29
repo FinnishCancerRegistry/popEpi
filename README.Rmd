@@ -1,0 +1,98 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+
+```{r, echo = FALSE, results='hide', message = FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "README-"
+)
+library(popEpi)
+```
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+# popEpi: Epidemiology with population data
+
+The purpose of popEpi is to facilitate computing certain epidemiological 
+statistics where population data is used. Current main attractions:
+
+## Splitting, merging population hazards, and aggregating
+
+the `lexpand` function allows users to split their subject-level follow-up data into 
+sub-intervals along age, follow-up time and calendar time, 
+merge corresponding population hazard information to those intervals, 
+and to aggregate the resulting data by if needed.
+
+```{r lexpand}
+data(sire)
+sr <- sire[1,]
+print(sr)
+```
+
+```{r lexpand2}
+x <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
+             status = status %in% 1:2, 
+             fot = 0:5, per = 1994:2000)
+print(x)
+```
+
+```{r lexpand3}
+data(popmort)
+x <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
+             status = status %in% 1:2, 
+             fot = 0:5, per = 1994:2000, pop.haz = popmort)
+print(x)
+```
+
+```{r aggre}
+a <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
+             status = status %in% 1:2,
+             fot = 0:5, per = 1994:2000, aggre = list(fot, per))
+print(a)
+```
+
+
+## SIRs / SMRs
+
+One can make use of the `sir` function to estimate indirectly standardised incidence or
+mortality ratios (SIRs/SMRs). The data can be aggregated by `lexpand` or by other means.
+While `sir` is simple and flexible in itself, one may also use `sirspline` to estimate
+spline functions for the effect of e.g. age as a continuous variable on SIRs.
+
+```{r sir}
+data(popmort)
+data(sire)
+c <- lexpand( sire, status = status %in% 1:2, birth = bi_date, exit = ex_date, entry = dg_date,
+              breaks = list(per = 1950:2013, age = 1:100, fot = c(0,10,20,Inf)), 
+              aggre = list(fot, agegroup = age, year = per, sex) )
+
+se <- sir( coh.data = c, coh.obs = 'from0to1', coh.pyrs = 'pyrs', 
+           ref.data = popmort, ref.rate = 'haz', 
+           adjust = c('agegroup', 'year', 'sex'), print = 'fot')
+print(se)
+```
+
+
+## (Relative) survival
+
+The `survtab` function computes observed, relative and cause-specific survivals as well as 
+cumulative incidence functions. Any of the supported survival time functions can be
+easily standardised by age if necessary. `survtab` currently needs splitted subject-level data,
+but may in the future work with aggregated data for computing some estimates.
+
+```{r survtab}
+x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
+             status = status %in% 1:2,
+             fot = seq(0, 5, 1/12), pophaz = popmort)
+
+st <- survtab(x)
+head(st)
+tail(st)
+```
+
+

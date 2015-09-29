@@ -67,17 +67,25 @@ cast_simple <- function(data=NULL, columns='year', rows=c('PrimarySite','sex'), 
 
 
 #' @title Convert NA's to zero in data.table
-#' @author Matt Dowle
+#' @author Joonas Miettinen
 #' @import data.table
-#' @param DT data.table object
-#' @source
-#' \href{http://stackoverflow.com/questions/7235657/fastest-way-to-replace-nas-in-a-large-data-table}{Stackoverflow thread}
+#' @param DT \code{data.table} object
+#' @param vars a character string vector of variables names in \code{DT}
 #' @export na2zero
-na2zero = function(DT) { 
-  DT <- data.table(DT)
-  for (k in names(DT)) {
-    DT[is.na(get(k)), c(k) := 0L]
+#' @details Given a \code{data.table} object, converts \code{NA} values
+#' to numeric (double) zeroes for all variables named in \code{vars} or
+#' all variables if \code{vars = NULL}.
+na2zero = function(DT, vars = NULL) { 
+  if (!is.data.table(DT)) stop("DT must be a data.table")
+  DT <- copy(DT)
+  
+  navars <- vars
+  if (is.null(navars)) navars <- names(DT)
+  all_names_present(DT, navars)
+  for (k in navars) {
+    DT[is.na(get(k)), (k) := 0]
   }
+  
   return(DT)
 }
 
@@ -834,3 +842,5 @@ p.round <- function(p, dec=3) {
   }
   p 
 }
+
+

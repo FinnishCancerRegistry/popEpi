@@ -1,9 +1,9 @@
 
 # popEpi CRAN upload, v.0.2.1
 
-This is the second submission of popEpi to CRAN with fixes covering the issues discovered on the first try (v.0.2.0).
+This submission includes fixes to problems discovered in uploading v.0.2.0 as well as a trimming of the tests that will be run on CRAN by about 90 % in processing time (212 vs 19 seconds on one machine). These tests took about 40 seconds on http://win-builder.r-project.org/.
 
-## Feedback from first upload
+## Feedback from first upload (v.0.2.0)
 
 The checks were successful on first upload (v.0.2.0) for R 3.2.2 on http://win-builder.r-project.org/. However, the developer version returned the following `NOTE`s and an `ERROR`:
 
@@ -140,9 +140,12 @@ Last 13 lines of output:
 ### Checked on: 
 * http://win-builder.r-project.org/, R 3.2.2 & R-devel
 * Windows Server 2012 R2, R 3.2.2
+* Ubuntu 15.04, R 3.2.2
 
 ### Checking results
 
-Finished with `Status: OK` with no `NOTE`s, `WARNING`s nor `ERROR`s using http://win-builder.r-project.org/ for both R-release (3.2.2) and R-devel.
+Finished with `Status: OK` with no `NOTE`s, `WARNING`s nor `ERROR`s using http://win-builder.r-project.org/ for both R-release (3.2.2) and R-devel with the trimmed-for-CRAN test battery.
 
-Checking on Windows Server gave a `WARNING` about the missing `qpdf` programme and a `NOTE` about a new contributor in CRAN (R 3.2.2).
+Checking on Windows Server gave a `WARNING` about the missing `qpdf` programme and a `NOTE` about a new contributor in CRAN (R 3.2.2) with both the full and trimmed-for-CRAN test batteries.
+
+Ubuntu 15.04 finished with no NOTEs, WARNINGs nor ERRORs except a `NOTE` about a new contributor in CRAN (R 3.2.2) with both the full and trimmed-for-CRAN test batteries.

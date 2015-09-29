@@ -8,4 +8,5 @@ tests/emptyDir
 ^\.Rproj\.user$
 .Rhistory
 cran-comments.md
-README.md
+^README\.Rmd$
+^README-.*\.png$

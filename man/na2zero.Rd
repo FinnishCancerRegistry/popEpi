@@ -3,19 +3,23 @@
 \name{na2zero}
 \alias{na2zero}
 \title{Convert NA's to zero in data.table}
-\source{
-\href{http://stackoverflow.com/questions/7235657/fastest-way-to-replace-nas-in-a-large-data-table}{Stackoverflow thread}
-}
 \usage{
-na2zero(DT)
+na2zero(DT, vars = NULL)
 }
 \arguments{
-\item{DT}{data.table object}
+\item{DT}{\code{data.table} object}
+
+\item{vars}{a character string vector of variables names in \code{DT}}
 }
 \description{
 Convert NA's to zero in data.table
 }
+\details{
+Given a \code{data.table} object, converts \code{NA} values
+to numeric (double) zeroes for all variables named in \code{vars} or
+all variables if \code{vars = NULL}.
+}
 \author{
-Matt Dowle
+Joonas Miettinen
 }
 
