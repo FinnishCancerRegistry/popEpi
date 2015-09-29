@@ -10,3 +10,4 @@ tests/emptyDir
 cran-comments.md
 ^README\.Rmd$
 ^README-.*\.png$
+testers.R
