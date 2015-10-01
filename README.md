@@ -7,7 +7,7 @@ The purpose of popEpi is to facilitate computing certain epidemiological statist
 Splitting, merging population hazards, and aggregating
 ------------------------------------------------------
 
-the `lexpand` function allows users to split their subject-level follow-up data into sub-intervals along age, follow-up time and calendar time, merge corresponding population hazard information to those intervals, and to aggregate the resulting data by if needed.
+the `lexpand` function allows users to split their subject-level follow-up data into sub-intervals along age, follow-up time and calendar time, merge corresponding population hazard information to those intervals, and to aggregate the resulting data if needed.
 
 ``` r
 data(sire)
@@ -97,7 +97,7 @@ print(a)
 SIRs / SMRs
 -----------
 
-One can make use of the `sir` function to estimate indirectly standardised incidence or mortality ratios (SIRs/SMRs). The data can be aggregated by `lexpand` or by other means. While `sir` is simple and flexible in itself, one may also use `sirspline` to estimate spline functions for the effect of e.g. age as a continuous variable on SIRs.
+One can make use of the `sir` function to estimate indirectly standardised incidence or mortality ratios (SIRs/SMRs). The data can be aggregated by `lexpand` or by other means. While `sir` is simple and flexible in itself, one may also use `sirspline` to fit spline functions for the effect of e.g. age as a continuous variable on SIRs.
 
 ``` r
 data(popmort)
