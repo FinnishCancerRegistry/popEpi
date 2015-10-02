@@ -25,7 +25,9 @@
 #' objects, but that each have their own \code{dcast} method.
 #' \code{\link[data.table]{dcast.data.table}} is faster.
 #' 
-#' If any information needs to aggregated, it is aggregated using \code{sum}.
+#' If any values in \code{value.vars} need to be 
+#' aggregated, they are aggregated using \code{sum}.
+#' See \code{?dcast}.
 #' 
 #' @examples 
 #' \dontrun{
@@ -39,7 +41,7 @@
 
 
 cast_simple <- function(data=NULL, columns='year', rows=c('PrimarySite','sex'), values='std.incidence') {
-  
+  if (!is.data.frame(data)) stop("data needs be a data.frame or data.table")
   # make a formula
   a <- NULL
   for(i in 1:length(rows)) {

@@ -32,7 +32,9 @@ Note that all \code{data.table} objects are alos \code{data.frame}
 objects, but that each have their own \code{dcast} method.
 \code{\link[data.table]{dcast.data.table}} is faster.
 
-If any information needs to aggregated, it is aggregated using \code{sum}.
+If any values in \code{value.vars} need to be
+aggregated, they are aggregated using \code{sum}.
+See \code{?dcast}.
 }
 \examples{
 \dontrun{

@@ -444,29 +444,42 @@ plot.sirspline <- function(x, conf.int = TRUE ,ylab, xlab, ylim, abline = TRUE, 
 #' @author Joonas Miettinen
 #' 
 #' @param x a \code{survtab} output object
-#' @param y survival a character vector of variable names to plot;
-#' e.g. \code{c("surv.obs","r.e2")}
+#' @param y survival a character vector of a variable names to plot;
+#' e.g. \code{"r.e2"}
 #' @param subset a logical condition; \code{obj} is subset accordingly 
 #' before plotting
 #' @param conf.int logical; if \code{TRUE}, adds any confidence intervals
 #' present in \code{obj} for variables in \code{y}
-#' @param col line colour; one value for each survival variable; will be recycled
-#' @param lty line type; one value for each survival variable; will be recycled
+#' @param col line colour; one value for each stratum; will be recycled
+#' @param lty line type; one value for each stratum; will be recycled
 #' @param ylab label for Y-axis
 #' @param xlab label for X-axis
 #' @param ... additional arguments passed on to \code{plot} and 
 #' \code{lines.survtab}; e.g. \code{ylim} can be defined this way
-#' @examples
-#' x <- lexpand(sire, fot=seq(0,5,1/12), status=status, pophaz=popmort)
-#' st <- survtab(x)
-#' plot(st, "r.e2")
+#' @examples 
+#' data(sire)
+#' data(sibr)
+#' si <- rbind(sire, sibr)
+#' si$period <- cut(si$dg_date, as.Date(c("1993-01-01", "2004-01-01", "2013-01-01")), right = FALSE)
+#' si$cancer <- c(rep("rectal", nrow(sire)), rep("breast", nrow(sibr)))
+#' x <- lexpand(si, birth = bi_date, entry = dg_date, exit = ex_date, 
+#'              status = status %in% 1:2, pophaz = popmort,
+#'              fot = seq(0,5,1/12))
+#' st <- survtab(x, by.vars = c("cancer", "period"), event.values = 1L)
 #' 
-#' plot(st, c("surv.obs", "r.e2"), conf.int=TRUE, col=1:2, xlim=c(0,5))
+#' plot(st, "r.e2", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
+#' lines(st, "r.e2", subset = cancer == "rectal", col = "red")
+#' 
+#' ## or
+#' plot(st, "r.e2", col = c(4,2,4,2))
 plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
   ## take copy preserving attributes (unlike  <- data.table())
   x <- copy(x)
+  if (!inherits(x, "survtab")) stop("x is not a survtab object or it has been modified (e.g. subset) after survtab ")
   setDT(x)
+  
+  by.vars <- attr(x, "by.vars")
   
   surv_vars <- c("surv.obs","CIF.rel","CIF_","r.e2","r.pp")
   wh <- NULL
@@ -477,13 +490,13 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
   surv_vars <- surv_vars[!substr(surv_vars, nchar(surv_vars)-1, nchar(surv_vars)) %in% c("hi","lo")]
   if (length(surv_vars) == 0) stop("x does not appear to have any survival variables; is it an untouched output from survtab?")
   
+  
   ## getting y -----------------------------------------------------------------
   if (!is.null(y)) {
-    if (!is.character(y)) stop("please supply y as a vector of quoted names of variables in x")
+    if (!is.character(y)) stop("please supply y as a character string indicating the name of a variable in x")
+    if (length(y) > 1) stop("y must be of length 1 or NULL")
     all_names_present(x, y)
-  } 
-  
-  if (is.null(y)) {
+  } else {
     y <- surv_vars[length(surv_vars)]
     message("y was NULL; chose ", y, " automatically")
   }
@@ -491,15 +504,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
   
   ## subsetting ----------------------------------------------------------------
   subset <- substitute(subset)
-  subset <- eval(subset, envir = x, enclos = parent.frame())
-  if (!is.null(subset)) {
-    if (!is.logical(subset)) stop("subset did not evaluate as logical")
-    subset <- subset & !is.na(subset)
-  }  else {
-    subset <- rep(TRUE, nrow(x))
-  }
-  
-  
+  subset <- evalLogicalSubset(data = x, substiset = subset)
   
   ## confidence intervals ------------------------------------------------------
   y.lo <- paste0(y, ".lo")
@@ -525,21 +530,16 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
     ylab <- "Observed survival"
     if (substr(y[1], 1,4) %in% c("r.e2", "r.pp")) ylab <- "Net survival"
     if (substr(y[1], 1,4) == "CIF_") ylab <- "Absolute risk"
-    if (substr(y[1], 1,6) == "CIF.rel") ylab <- "'Relative' risk"
+    if (substr(y[1], 1,6) == "CIF.rel") ylab <- "Absolute risk"
   }
   if (is.null(xlab)) xlab <- "Years from entry"
  
   
   plot(I(c(min_y,max_y))~I(c(0,max_x)), data=x, type="n", 
        xlab = xlab, ylab = ylab, ...)
-    
-  if (!is.null(col)) col <- rep(col, length.out = length(y))
-  if (!is.null(lty)) lty <- rep(lty, length.out = length(y))
   
-  for (i in 1:length(y)) {
-    lines.survtab(x, subset = subset, y = y[i], conf.int=conf.int,
-                  col=col[i], lty=lty[i], ...)
-  }
+  lines.survtab(x, subset = subset, y = y, conf.int=conf.int,
+                col=col, lty=lty, ...)
   
  
 }
@@ -566,13 +566,38 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
 #' @param lty line type passed to \code{matlines}
 #' @param ... additional arguments passed on to to a \code{matlines} call;
 #' e.g. \code{lwd} can be defined this way
+#' @examples 
+#' data(sire)
+#' data(sibr)
+#' si <- rbind(sire, sibr)
+#' si$period <- cut(si$dg_date, as.Date(c("1993-01-01", "2004-01-01", "2013-01-01")), right = FALSE)
+#' si$cancer <- c(rep("rectal", nrow(sire)), rep("breast", nrow(sibr)))
+#' x <- lexpand(si, birth = bi_date, entry = dg_date, exit = ex_date, 
+#'              status = status %in% 1:2, pophaz = popmort,
+#'              fot = seq(0,5,1/12))
+#' st <- survtab(x, by.vars = c("cancer", "period"), event.values = 1L)
+#' 
+#' plot(st, "r.e2", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
+#' lines(st, "r.e2", subset = cancer == "rectal", col = "red")
+#' 
+#' ## or
+#' plot(st, "r.e2", col = c(4,2,4,2))
 
-lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL,lty=NULL, ...) {
+lines.survtab <- function(x, y = NULL, subset = NULL, 
+                          conf.int = TRUE, 
+                          col=NULL, lty=NULL, ...) {
   ## take copy preserving attributes (unlike data.table())
   x <- copy(x)
   setDT(x)
   
-  by_vars <- attr(x, "by.vars")
+  by.vars <- attr(x, "by.vars")
+  if (!is.null(by.vars)) {
+    all_names_present(x, by.vars)
+  } else {
+    by.vars <- makeTempVarName(x, pre = "by_")
+    x[, (by.vars) := 1L]
+    all_names_present(x, by.vars)
+  }
   
   surv_vars <- c("surv.obs","CIF.rel","CIF_","r.e2","r.pp")
   wh <- NULL
@@ -583,23 +608,21 @@ lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL,
   surv_vars <- surv_vars[!substr(surv_vars, nchar(surv_vars)-1, nchar(surv_vars)) %in% c("hi","lo")]
   if (length(surv_vars) == 0) stop("x does not appear to have any survival variables; is it an untouched output from survtab?")
   
+  
   ## subsetting ----------------------------------------------------------------
   subset <- substitute(subset)
-  subset <- eval(subset, envir = x, enclos = parent.frame())
-  if (!is.null(subset)) {
-    if (!is.logical(subset)) stop("subset did not evaluate as logical")
-    subset <- subset & !is.na(subset)
-  }  else {
-    subset <- rep(TRUE, nrow(x))
-  }
+  subset <- evalLogicalSubset(data = x, substiset = subset)
   
   
   ## getting y -----------------------------------------------------------------  
-  if (is.null(y)) {
+  if (!is.null(y)) {
+    if (!is.character(y)) stop("please supply y as a character string indicating the name of a variable in x")
+    if (length(y) > 1) stop("y must be of length 1 or NULL")
+    all_names_present(x, y)
+  } else {
     y <- surv_vars[length(surv_vars)]
-  }; rm(surv_vars)
-  
-  all_names_present(x, y)
+    message("y was NULL; chose ", y, " automatically")
+  }
   
   
   ## confidence intervals ------------------------------------------------------
@@ -614,25 +637,57 @@ lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL,
   ley <- length(c(y.ci))
   
   if (is.null(conf.int)) {
-    conf.int <- conf.int <- ifelse(ley %in% 1:2, TRUE, FALSE)
+    conf.int <- ifelse(ley %in% 1:2, TRUE, FALSE)
   }
   if (!conf.int) y.ci <- NULL
   
+  ## need to determine total number of strata; also used in casting
+  ## note: if no by.vars, created a dummy repeating 1L as by.vars
+  tmpBy <- makeTempVarName(x)
+  x[, (tmpBy) := as.integer(interaction(mget(by.vars)))]
+  Nstrata <- x[subset, uniqueN(get(tmpBy))]
+  
   if (is.null(lty)) {
-    lty <- 1
-    if (conf.int) lty <- c(1,2,2)
+    lty <- if (conf.int) c(1,2,2) else 1
+  } else {
+    lty <- if(conf.int) rep(lty, each = 3) else lty
   }
-  if (is.null(col)) col <- 1
+  if (is.null(col)) {
+    col <- if(conf.int) rep(1, 3) else 1
+  } else {
+    col <- if(conf.int) rep(col, each = 3) else col 
+  }
   
-  y <- x[subset, c(y, y.ci), with=FALSE]
+  ## cast to accommodate by.vars
   
-  ## impute values at T=0 ------------------------------------------------------
-  y_first <- y[1]
-  y_first[, c(varname) := ifelse(is_CIF, 0, 1)]
-  if (length(y.ci) > 0) y_first[, (y.ci) := get(varname) ]
-  y <- rbind(y_first, y)
+  ## impute first values (time = 0, surv = 1 / cif = 0)
+  first <- x[subset & !duplicated(get(tmpBy)), ]
+  first[, c(varname) := ifelse(is_CIF, 0, 1)]
+  first[, Tstop := 0]
   
-  graphics::matlines(c(0, x$Tstop[subset]), as.data.frame(y), col=col, lty=lty, ...)
+  
+  if (length(y.ci) > 0) first[, (y.ci) := get(varname) ]
+  x <- rbindlist(list(first, x[subset, ]), use.names = TRUE)
+  setkeyv(x, c(tmpBy, "surv.int"))
+  
+  x <- cast_simple(x, columns = tmpBy, rows = "Tstop", 
+                   values = c(y, y.ci))
+  estVars <- names(x)[1:Nstrata+1]
+  strata <- lapply(rep(y, Nstrata), gsub, replacement = "", x = estVars)
+  strata <- unique(unlist(strata))
+  newOrder <- NULL
+  
+  for (k in strata) {
+    newOrder <- c(newOrder, names(x)[grep(k, names(x))])
+  }
+  setcolorder(x, c("Tstop", newOrder))
+  setDF(x)
+  
+  ## plotting
+  graphics::matlines(x = x$Tstop, 
+                     y = x[, setdiff(names(x), "Tstop")], 
+                     col=col, lty=lty, ...)
+  
   
 }
 

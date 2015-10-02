@@ -29,6 +29,23 @@ e.g. \code{lwd} can be defined this way}
 \description{
 Plot \code{lines} from a \code{survtab} object
 }
+\examples{
+data(sire)
+data(sibr)
+si <- rbind(sire, sibr)
+si$period <- cut(si$dg_date, as.Date(c("1993-01-01", "2004-01-01", "2013-01-01")), right = FALSE)
+si$cancer <- c(rep("rectal", nrow(sire)), rep("breast", nrow(sibr)))
+x <- lexpand(si, birth = bi_date, entry = dg_date, exit = ex_date,
+             status = status \%in\% 1:2, pophaz = popmort,
+             fot = seq(0,5,1/12))
+st <- survtab(x, by.vars = c("cancer", "period"), event.values = 1L)
+
+plot(st, "r.e2", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
+lines(st, "r.e2", subset = cancer == "rectal", col = "red")
+
+## or
+plot(st, "r.e2", col = c(4,2,4,2))
+}
 \author{
 Joonas Miettinen
 }

@@ -10,8 +10,8 @@
 \arguments{
 \item{x}{a \code{survtab} output object}
 
-\item{y}{survival a character vector of variable names to plot;
-e.g. \code{c("surv.obs","r.e2")}}
+\item{y}{survival a character vector of a variable names to plot;
+e.g. \code{"r.e2"}}
 
 \item{subset}{a logical condition; \code{obj} is subset accordingly
 before plotting}
@@ -19,9 +19,9 @@ before plotting}
 \item{conf.int}{logical; if \code{TRUE}, adds any confidence intervals
 present in \code{obj} for variables in \code{y}}
 
-\item{col}{line colour; one value for each survival variable; will be recycled}
+\item{col}{line colour; one value for each stratum; will be recycled}
 
-\item{lty}{line type; one value for each survival variable; will be recycled}
+\item{lty}{line type; one value for each stratum; will be recycled}
 
 \item{ylab}{label for Y-axis}
 
@@ -34,11 +34,21 @@ present in \code{obj} for variables in \code{y}}
 Plotting for \code{survtab} objects
 }
 \examples{
-x <- lexpand(sire, fot=seq(0,5,1/12), status=status, pophaz=popmort)
-st <- survtab(x)
-plot(st, "r.e2")
+data(sire)
+data(sibr)
+si <- rbind(sire, sibr)
+si$period <- cut(si$dg_date, as.Date(c("1993-01-01", "2004-01-01", "2013-01-01")), right = FALSE)
+si$cancer <- c(rep("rectal", nrow(sire)), rep("breast", nrow(sibr)))
+x <- lexpand(si, birth = bi_date, entry = dg_date, exit = ex_date,
+             status = status \%in\% 1:2, pophaz = popmort,
+             fot = seq(0,5,1/12))
+st <- survtab(x, by.vars = c("cancer", "period"), event.values = 1L)
 
-plot(st, c("surv.obs", "r.e2"), conf.int=TRUE, col=1:2, xlim=c(0,5))
+plot(st, "r.e2", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
+lines(st, "r.e2", subset = cancer == "rectal", col = "red")
+
+## or
+plot(st, "r.e2", col = c(4,2,4,2))
 }
 \author{
 Joonas Miettinen
