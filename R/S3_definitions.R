@@ -464,8 +464,8 @@ plot.sirspline <- function(x, conf.int = TRUE ,ylab, xlab, ylim, abline = TRUE, 
 #' si$cancer <- c(rep("rectal", nrow(sire)), rep("breast", nrow(sibr)))
 #' x <- lexpand(si, birth = bi_date, entry = dg_date, exit = ex_date, 
 #'              status = status %in% 1:2, pophaz = popmort,
-#'              fot = seq(0,5,1/12))
-#' st <- survtab(x, by.vars = c("cancer", "period"), event.values = 1L)
+#'              fot = seq(0,5,1/4))
+#' st <- survtab(x, by.vars = c("cancer", "period"), event.values = 1L, surv.method = "lifetable")
 #' 
 #' plot(st, "r.e2", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
 #' lines(st, "r.e2", subset = cancer == "rectal", col = "red")
@@ -574,8 +574,8 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
 #' si$cancer <- c(rep("rectal", nrow(sire)), rep("breast", nrow(sibr)))
 #' x <- lexpand(si, birth = bi_date, entry = dg_date, exit = ex_date, 
 #'              status = status %in% 1:2, pophaz = popmort,
-#'              fot = seq(0,5,1/12))
-#' st <- survtab(x, by.vars = c("cancer", "period"), event.values = 1L)
+#'              fot = seq(0,5,1/4))
+#' st <- survtab(x, by.vars = c("cancer", "period"), event.values = 1L, surv.method = "lifetable")
 #' 
 #' plot(st, "r.e2", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
 #' lines(st, "r.e2", subset = cancer == "rectal", col = "red")

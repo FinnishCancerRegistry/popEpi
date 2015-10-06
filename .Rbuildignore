@@ -11,4 +11,5 @@ cran-comments.md
 ^README\.Rmd$
 ^README-.*\.png$
 testers.R
+.png
 .travis.yml

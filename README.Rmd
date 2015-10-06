@@ -44,7 +44,7 @@ print(x)
 data(popmort)
 x <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
              status = status %in% 1:2, 
-             fot = 0:5, per = 1994:2000, pop.haz = popmort)
+             fot = 0:5, per = 1994:2000, pophaz = popmort)
 print(x)
 ```
 
@@ -73,7 +73,7 @@ c <- lexpand( sire, status = status %in% 1:2, birth = bi_date, exit = ex_date, e
 se <- sir( coh.data = c, coh.obs = 'from0to1', coh.pyrs = 'pyrs', 
            ref.data = popmort, ref.rate = 'haz', 
            adjust = c('agegroup', 'year', 'sex'), print = 'fot')
-print(se)
+se
 ```
 
 
@@ -89,9 +89,8 @@ x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
              status = status %in% 1:2,
              fot = seq(0, 5, 1/12), pophaz = popmort)
 
-st <- survtab(x)
-head(st)
-tail(st)
+st <- survtab(x, event.values = 1)
+st[st$Tstop == 5, ]
 ```
 
 
