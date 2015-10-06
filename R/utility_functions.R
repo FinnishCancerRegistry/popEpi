@@ -806,33 +806,6 @@ setDF2DT <- function(x) {
 
 
 
-setaggre <- function(x, obs = "obs", pyrs = "pyrs", d.exp = NULL, by = setdiff(names(x), c(obs, pyrs))) {
-  ## input: aggregated data in data.frame or data.table format
-  ## intention: any user can define their data as an aggregated data set
-  ## which will be usable by survtab / sir / other
-  ## output: no need to do x <- setaggre(x); instead modifies attributes in place;
-  ## sets "aggreVars" attribute, a list of names of various variables.
-  ## survtab for aggregated data will need this attribute to work.
-  all_names_present(x, c(obs, pyrs, d.exp, by))
-  
-  if (!inherits(x, "aggre")) {
-    cl <- class(x)
-    wh <- which(cl == "pe")
-    if (length(wh) == 0) wh <- which(cl == "data.table")
-    if (length(wh) == 0) wh <- which(cl == "data.frame")
-    
-    cl <- c(cl[1:(wh-1)], "aggre", cl[wh:length(cl)])
-    setattr(x, "class", cl)
-  }
-  
-  
-  setattr(x, "aggreVars", list(obs = obs, pyrs = pyrs, by = by))
-  invisible(x)
-}
-
-
-
-
 p.round <- function(p, dec=3) {
   th <- eval( parse(text=paste0('1E-', dec ) ))
   if( is.null(p)) return( '= NA') 
