@@ -1,4 +1,5 @@
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+[![Build Status](https://travis-ci.org/WetRobot/popEpi.png?branch=master)](https://travis-ci.org/WetRobot/popEpi) [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/popEpi)](http://cran.r-project.org/package=popEpi)
+
 popEpi: Epidemiology with population data
 =========================================
 
