@@ -15,7 +15,7 @@
 #' @seealso 
 #' \code{\link{as.aggre.data.frame}}
 #' 
-#' 
+#' @export setaggre
 #' @examples 
 #' df <- data.frame(sex = rep(c("male", "female"), each = 5), 
 #'                  obs = rpois(10, rep(7,5, each=5)), 
