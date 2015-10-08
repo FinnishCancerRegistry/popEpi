@@ -11,7 +11,7 @@ survtab(data, surv.breaks = NULL, by.vars = NULL, event.values = NULL,
   verbose = FALSE)
 }
 \arguments{
-\item{data}{a dataset processed by \code{\link{lexpand}}}
+\item{data}{a dataset preferably processed by \code{\link{lexpand}}}
 
 \item{surv.breaks}{breaks as explicitly
 left inclusive and right exclusive - e.g. \code{[a,b)}.}
@@ -99,7 +99,7 @@ survival time functions as requested by the user.
 \code{survtab} creates survival tables using data split with e.g.
 \code{\link{lexpand}}. We recommend using \code{lexpand} since
 it is well tested and one usually needs to merge in population hazards
-to ocmpute relative survivals.
+to compute relative survivals.
 
  By default
 \code{survtab} makes use of the exact same breaks that were used in
@@ -115,9 +115,9 @@ e.g.
 \code{surv.breaks=0:5 -> [0,1),[1,2), ..., [4,5)}.
 
 
-Interval lengths (deltas) are also calculated based
+Interval lengths (\code{delta} in output) are also calculated based
 on \code{surv.breaks}. The upper limit of the breaks should
-be meaningful and never e.g. \code{Inf}.
+therefore be meaningful and never e.g. \code{Inf}.
 
 if \code{surv.type = 'surv.obs'}, only 'raw' observed survival
 is calculated over the chosen time intervals. With
@@ -137,6 +137,9 @@ excess cases as the ''cause-specific'' cases.
 if \code{surv.type = 'surv.cause'}, cause-specific survivals are estimated
 separately for each unique value of \code{event.values}.
 
+The vignette \href{../doc/survtab_examples.html}{survtab_examples}
+may prove valuable for learning using \code{survtab} through
+practical examples.
 
 \strong{Relative / net survival}
 
@@ -177,7 +180,7 @@ e.g.
 \code{agegr.w.breaks = c(0, 45, 65, 85, Inf)}.
 
 
-You can see the weights integrated
+You can see the international weights integrated
 into \pkg{popEpi} by typing \code{ICSS} into the console.
 See also \code{\link{ICSS}}.
 
@@ -186,9 +189,9 @@ Note that the \code{by.vars} should not be confused with age-standardisation.
 survivals are computed and outputted separately.
 
 
-\strong{Period analysis / delayed entry}
+\strong{Period analysis and other data selection schemes}
 
-If one wishes to calculate period analysis / delayed entry estimates,
+If one wishes to calculate e.g. period analysis (delayed entry estimates),
 one should limit the data accordingly
 when expanding the data; see \code{\link{lexpand}}.
 
@@ -243,6 +246,7 @@ CHIANG, Chin Long. Introduction to stochastic processes in biostatistics. 1968.
 }
 \seealso{
 \code{\link{splitMulti}}, \code{\link{lexpand}},
-\code{\link{ICSS}}, \code{\link{sire}}
+\code{\link{ICSS}}, \code{\link{sire}},
+\href{../doc/survtab_examples.html}{The survtab_examples vignette}
 }
 

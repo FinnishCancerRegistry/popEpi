@@ -185,7 +185,7 @@ of length 1 year. In both
 (and passed on to a \code{cut} call). The mandatory variable \code{haz}
 must specify the appropriate average rate at the person-year level;
 e.g. \code{haz = -log(survProb)} where \code{survProb} is a one-year conditional
-survival probability will be the correct hazard specification. **tajuan, mutta en osaa korjata!**
+survival probability will be the correct hazard specification.
 
 The corresponding \code{pophaz} population hazard value is merged by using the mid points
 of the records after splitting as reference values. E.g. if \code{age=89.9} at the start
