@@ -819,3 +819,55 @@ p.round <- function(p, dec=3) {
 }
 
 
+
+evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
+  ## input: an unevaluated AND substitute()'d argument within a function, which may be
+  ## * an expression
+  ## * a list of expressions
+  ## * a character vector of variable names (in a given data set)
+  ## output:
+  ## * vector as a result of an expression
+  ## * list as a result of a list
+  ## * character vector of names
+  ## OR with DT = TRUE, a data.table based on aforementioned results.
+  ## intention: output to be used in by argument of data.table.
+  ## a data.table output is directly usable in by.
+  e <- eval(arg, envir = data, enclos = parent.frame(n))
+  
+  if (is.null(e)) return(NULL) ## should this be stop() instead?
+  
+  if (is.character(e)) {
+    all_names_present(data, e)
+    if (DT) {
+      ## note: e contains variable names in character strings,
+      ## ergo fully named list & DT created
+      l <- lapply(e, function(x) data[[x]])
+      setattr(l, "names", e)
+      setDT(l)
+      e <- l; rm(l)
+    }
+  } 
+  else if (is.list(e)) {
+    ## note: fully unnamed list has NULL names()
+    ## partially named list has some "" names
+    ne <- names(e)
+    
+    if (is.null(ne)) {
+      names(arg)[names(arg) == ""] <- paste0("V", 1:length(e))
+    }
+    wh_bad <- which(ne == "")
+    if (length(wh_bad) > 0) {
+      ne[wh_bad] <- paste0("V", rank(wh_bad))
+      setattr(e, "names", ne)
+    }
+    if (DT) setDT(e)
+  } 
+  else if ((is.vector(e) || is.factor(e))) {
+    ## is e.g. a numeric vector or a factor
+    if (DT) {
+      e <- data.table(V1 = e)
+      setnames(e, 1, toString(arg))  # addition: set name
+    }
+  }
+  e
+}
