@@ -31,7 +31,9 @@ test_that("original total pyrs equals pyrs after splitting w/ large number of br
   x[, fot := get.yrs(ex_date, year.length = "actual") - get.yrs(dg_date, year.length = "actual")]
   totpyrs <- x[, sum(fot)]
   
-  x <- lexpand(sire, breaks=list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014)), status=status)
+  x <- lexpand(sire, birth  = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks=list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014)))
   setDT(x)
   totpyrs_splitted <- x[, sum(lex.dur)]
   
@@ -43,7 +45,9 @@ test_that("original total pyrs equals pyrs after splitting w/ large number of br
 test_that("pp not added to data if pp = FALSE but pop.haz is", {
   skip_on_cran()
   x <- lexpand(sire[dg_date < ex_date, ], 
-               breaks=list(fot=0:5), status=status, pophaz=popmort, pp = FALSE)
+               birth  = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks=list(fot=0:5), pophaz=popmort, pp = FALSE)
   expect_equal(intersect(names(x), c("pp", "pop.haz")),  "pop.haz")
   expect_true(!any(is.na(x$pop.haz)))
 })
@@ -53,9 +57,13 @@ test_that("pp not added to data if pp = FALSE but pop.haz is", {
 test_that("lexpand produces the same results with internal/external dropping", {
   skip_on_cran()
   x <- lexpand(sire[dg_date < ex_date, ], 
-               breaks=list(fot=0:5), status=status, pophaz=popmort, pp = TRUE, drop = TRUE)
+               birth  = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks=list(fot=0:5), pophaz=popmort, pp = TRUE, drop = TRUE)
   x2 <-lexpand(sire[dg_date < ex_date, ], 
-               breaks=list(fot=0:5), status=status, pophaz=popmort, pp = TRUE, drop = FALSE)
+               birth  = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks=list(fot=0:5), pophaz=popmort, pp = TRUE, drop = FALSE)
   x2 <-popEpi:::intelliDrop(x2, breaks = list(fot=0:5), dropNegDur = TRUE)
   setDT(x)
   setDT(x2)
@@ -142,6 +150,7 @@ test_that("lexpand aggre produces correct results", {
   counts <- x[, .N, by = .(status)]
   
   x <- lexpand(sire[dg_date < ex_date, ], 
+               birth = bi_date, entry = dg_date, exit = ex_date,
                breaks=list(fot=c(0,5,10,50,Inf), age=c(seq(0,85,5),Inf), per = 1993:2013), 
                status=status, aggre = list(fot, age, per))
   setDT(x)
@@ -157,6 +166,7 @@ test_that("lexpand aggre produces correct results", {
 test_that('lexpand aggre: multistate column names correct', {
   skip_on_cran()
   x <- lexpand(sire[dg_date < ex_date, ], 
+               birth = bi_date, entry = dg_date, exit = ex_date,
                breaks=list(fot=c(0,5,10,50,Inf), age=c(seq(0,85,5),Inf), per = 1993:2013), 
                status=status, aggre = list(fot, age, per))
   setDT(x)
@@ -184,11 +194,13 @@ test_that('lexpansion w/ overlapping = TRUE/FALSE produces double/undoubled pyrs
   sire2[seq(2,.N, by=2), dg_yrs := (ex_yrs + dg_yrs)/2L]
   sire2[, dg_age := dg_yrs-bi_yrs]
   
-  x <- lexpand(sire2, birth = "bi_yrs", entry = "bi_yrs", event="dg_yrs", exit = "ex_yrs", status="status", entry.status = 0L, id = "id", overlapping = TRUE)
+  x <- lexpand(sire2, birth = "bi_yrs", entry = "bi_yrs", event="dg_yrs", 
+               exit = "ex_yrs", status="status", entry.status = 0L, id = "id", overlapping = TRUE)
   setDT(x)
   expect_equal(x[, sum(lex.dur), keyby=lex.id]$V1, sire2[, sum(ex_yrs-bi_yrs), keyby=id]$V1)  
   
-  x <- lexpand(sire2, birth = "bi_yrs", entry = "bi_yrs", event="dg_yrs", exit = "ex_yrs", status="status", entry.status = 0L, id = "id", overlapping = FALSE)
+  x <- lexpand(sire2, birth = "bi_yrs", entry = "bi_yrs", event="dg_yrs", 
+               exit = "ex_yrs", status="status", entry.status = 0L, id = "id", overlapping = FALSE)
   setDT(x)
   expect_equal(x[, sum(lex.dur), keyby=lex.id]$V1, sire2[!duplicated(id), sum(ex_yrs-bi_yrs), keyby=id]$V1)  
 })

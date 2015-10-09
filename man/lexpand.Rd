@@ -4,12 +4,11 @@
 \alias{lexpand}
 \title{Split case-level observations}
 \usage{
-lexpand(data, birth = bi_date, entry = dg_date, exit = ex_date,
-  event = NULL, status = status != 0, entry.status = NULL,
-  breaks = list(fot = c(0, Inf)), id = NULL, overlapping = TRUE,
-  aggre = NULL, aggre.type = c("unique", "cross-product"), drop = TRUE,
-  pophaz = NULL, pp = TRUE, subset = NULL, merge = TRUE,
-  verbose = FALSE, ...)
+lexpand(data, birth = NULL, entry = NULL, exit = NULL, event = NULL,
+  status = status != 0, entry.status = NULL, breaks = list(fot = c(0,
+  Inf)), id = NULL, overlapping = TRUE, aggre = NULL,
+  aggre.type = c("unique", "cross-product"), drop = TRUE, pophaz = NULL,
+  pp = TRUE, subset = NULL, merge = TRUE, verbose = FALSE, ...)
 }
 \arguments{
 \item{data}{dataset of e.g. cancer cases as rows}
@@ -79,7 +78,7 @@ returns some messages along the way}
 \item{...}{e.g. \code{fot = 0:5}; instead of specifying a \code{breaks} list,
 correctly named breaks vectors can be given
 for \code{fot}, \code{age}, and \code{per}; these override any breaks in the
-\code{breaks} list}
+\code{breaks} list; see Examples}
 }
 \value{
 If \code{aggre = NULL}, returns
@@ -264,6 +263,10 @@ to only have levels \code{"a", "b"} present
 (more than zero rows have these level values), the former setting only
 computes results for \code{"a", "b"}, and the latter also for \code{"c"}
 and any combination with other variables or expression given in \code{aggre}.
+
+Additionally, with \code{overlapping = FALSE} the user may pass data to
+\code{lexpand} that contains multiple rows per subject and still only compute
+the person-years once per subject.
 }
 \examples{
 \dontrun{
@@ -291,7 +294,7 @@ x <- lexpand(sire, fot=0:5, status =  status != 0,
 x <- lexpand(sire, status = status, event = dg_date, birth=bi_date, entry=bi_date, exit=ex_date)
 
 ## aggregating with custom "event" time
-
+## (the transition to status is moved to the "event" time)
 x <- lexpand(sire, status = status, event = dg_date, birth=bi_date, entry=bi_date, exit=ex_date,
              per = 1970:2014, age = c(0:100,Inf),
              aggre = list(sex, year = per, agegroup = age))

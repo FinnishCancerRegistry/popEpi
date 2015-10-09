@@ -1,7 +1,7 @@
 popEpi 0.2.2
 ======
 * plot.survtab & lines.survtab now plot multiple strata at the same time
-
+* lexpand date arguments now NULL by default
 
 popEpi 0.2.1
 ======

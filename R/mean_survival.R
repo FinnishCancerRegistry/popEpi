@@ -75,7 +75,9 @@
 #' ## take first 5000 subjects in sire data for demonstration
 #' sr <- sire[1:5000, ]
 #' sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
-#' x <- lexpand(sr, breaks=list(fot=seq(0,10,1/12)), pophaz=popmort)
+#' x <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
+#'              status = status %in% 1:2,
+#'              breaks=list(fot=seq(0,10,1/12)), pophaz=popmort)
 #' sm <- survmean(x, pophaz=popmort)
 #' ## for each level of "agegr" separately:
 #' #sma<- survmean(x, pophaz=popmort, by.vars="agegr") 

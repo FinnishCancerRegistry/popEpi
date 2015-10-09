@@ -38,7 +38,9 @@ test_that("relative survivals about the same as relsurv's", {
   
   ## survtab
   fb <- 0:(19*12)/12
-  x <- lexpand(sire, breaks=list(fot=fb), status = status, pophaz=pm)
+  x <- lexpand(sire, birth  = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks=list(fot=fb), pophaz=pm)
   st <- survtab(x, surv.type="surv.rel", event.values=1:2, format=F, relsurv.method="pp")
   setDT(st)
   setDT(x)
@@ -88,7 +90,9 @@ test_that("relpois congruent with relsurv::rsadd", {
   
   
   sire2[, agegr := cut(dg_age/365.25, breaks = c(0,45,70,Inf))]
-  x <- lexpand(sire2, breaks=list(fot=0:5), status = status, pophaz=pm)
+  x <- lexpand(sire2, birth  = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks=list(fot=0:5), pophaz=pm)
   rp <- relpois(x, formula = lex.Xst%in%1:2 ~ -1+FOT+agegr)
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))

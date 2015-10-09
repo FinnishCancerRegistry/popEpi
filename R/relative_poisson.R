@@ -80,7 +80,9 @@
 #' 
 #' ## usable straight away after splitting
 #' fb <- c(0,3/12,6/12,1,2,3,4,5)
-#' x <- lexpand(sr, breaks = list(fot=fb), pophaz=popmort, status=status)
+#' x <- lexpand(sr, birth = bi_date, entry = dg_date,
+#'              exit = ex_date, status=status,
+#'              breaks = list(fot=fb), pophaz=popmort)
 #' rpm <- relpois(x, formula = lex.Xst %in% 1:2 ~ FOT + agegr)
 #'  
 #' ## some methods for glm work. e.g. test for interaction

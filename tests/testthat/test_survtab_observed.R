@@ -5,7 +5,10 @@ library(survival)
 test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johansen", {
   
   BL <- list(fot= seq(0,19,1/12), per=c(2008,2013))
-  x <- lexpand(sire[dg_date<ex_date, ], breaks=BL, status = status)
+  x <- lexpand(sire[dg_date<ex_date, ], 
+               birth  = bi_date, entry = dg_date, exit = ex_date,
+               status = status,
+               breaks=BL)
   st <- survtab(x, surv.type="cif.obs")
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
@@ -17,7 +20,9 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
   
   sire2 <- copy(sire)
   sire2 <- lexpand(sire2[dg_date<ex_date, ], 
-                   breaks=list(per = c(2008,2013)), status=status)
+                   birth  = bi_date, entry = dg_date, exit = ex_date,
+                   status = status %in% 1:2,
+                   breaks=list(per = c(2008,2013)))
   
   fb <- setdiff(BL$fot, 0)
   su.km  <- survfit(Surv(time=fot, time2=fot+lex.dur, status!=0) ~ 1, data = sire2)
@@ -40,7 +45,10 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
 test_that("survtab works with factor status variable", {
   skip_on_cran()
   BL <- list(fot= seq(0,19,1/12), per=c(2008,2013))
-  x <- lexpand(sire[dg_date<ex_date, ], breaks=BL, status = status)
+  x <- lexpand(sire[dg_date<ex_date, ],  
+               birth  = bi_date, entry = dg_date, exit = ex_date,
+               status = status,
+               breaks=BL)
   
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))

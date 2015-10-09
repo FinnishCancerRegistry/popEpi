@@ -11,7 +11,9 @@ test_that("removing consecutively bad surv.ints is logical w/ & w/out agegr.w.br
   BL <- list(fot= seq(0,10,1/12), per=c(2008,2013))
   
   ## consecutively bad surv.ints -------------------------------------------------
-  x <- lexpand(sire2, breaks=BL, status = status)
+  x <- lexpand(sire2, birth  = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks=BL)
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   sta <-  survtab(x, surv.type="surv.obs", format=F, by.vars="agegr") ## should not give warning
@@ -33,7 +35,9 @@ test_that("messages & results by age group w/ consecutively & non-consecutively 
   sire2[, agegr := cut(dg_age, c(0,45,60,Inf), right=FALSE, labels=FALSE)]
   sire2 <- sire2[!(dg_age > 60 & as.integer(as.integer(ex_date-dg_date)/365.25) %in% 5:6)]
   BL <- list(fot= seq(0,10,1/12), per=c(2008,2013))
-  x <- lexpand(sire2, breaks=BL, status = status)
+  x <- lexpand(sire2, birth  = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks=BL)
   tf1 <- expression(
     st1 <-  survtab(x, surv.type="surv.obs", format=F, by.vars="agegr", 
                     subset=!(agegr==3 & fot >= 5 & fot < 7)) ## should not give warning
