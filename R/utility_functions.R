@@ -846,8 +846,7 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
       setDT(l)
       e <- l; rm(l)
     }
-  } 
-  else if (is.list(e)) {
+  } else if (is.list(e)) {
     ## note: fully unnamed list has NULL names()
     ## partially named list has some "" names
     ne <- names(e)
@@ -861,13 +860,29 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
       setattr(e, "names", ne)
     }
     if (DT) setDT(e)
-  } 
-  else if ((is.vector(e) || is.factor(e))) {
+  } else if ((is.vector(e) || is.factor(e))) {
     ## is e.g. a numeric vector or a factor
     if (DT) {
       e <- data.table(V1 = e)
       setnames(e, 1, toString(arg))  # addition: set name
     }
-  }
+  } 
+  ## note: e may be an expression at this point due to double substitution
   e
 }
+
+
+popArgType <- function(arg) {
+  ## input: a substitute()'d expression / argument
+  ## output: type of thingie that was substitute()'d
+  ##  * list (of expressions)
+  ##  * character string vector
+  ##  * an expression
+  a <- deparse(arg)
+  if (sum(grep('\\"', a))) "character" else
+    if (substr(a, 1, 4) == "list") "list" else
+      "expression"
+}
+
+
+

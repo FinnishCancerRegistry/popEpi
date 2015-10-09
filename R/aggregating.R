@@ -89,3 +89,107 @@ as.aggre.default <- function(x, ...) {
   stop(gettextf("cannot coerce class \"%s\" to 'aggre'", deparse(class(x))), 
        domain = NA)
 }
+
+
+
+laggre <- function(lex, aggre = list(sex, agegroup = age), breaks = NULL, type = c("non-empty", "unique", "full"), substituted = FALSE) {
+  ## a generalized aggregator for splitted Lexis objects
+  ## input: lex: a Lexis object that has been split somehow; 
+  ##        aggre: an expression / list of expressions / a character vector of names;
+  ##        may have been substituted, but user must use substitued = TRUE then
+  ##        some way to define style of aggregation
+  ## output: a long-format data.frame or data.table, where transitions and person-time is tabulated.
+  
+  ## TODO: 
+  ## - usage of time scales (aggregate automatically into intervals)
+  ##   * this requires detection of variables in aggre intelligently
+  ##     BEFORE evaluating!
+  ## - aggre might be substitute()'d before using this function?
+  
+  type <- match.arg(type[1], c("non-empty", "unique", "full"))
+  
+  allScales <- attr(lex, "time.scales")
+  if (is.null(breaks)) breaks <- attr(lex, "breaks") 
+  checkBreaksList(lex, breaks)
+  
+  ## non-empty and unique only need the substituted argument to pass to DT[, by]
+  ## full needs to evaluate and compile CJ
+  
+  if (!substituted) ags <- substitute(aggre)
+  
+  argType <- popArgType(ags)
+  
+  if (argType == "character") {
+    av <- aggre
+  } else {
+    av <- all.vars(ags)
+  }
+  ## more convenient with only list or char
+  if (argType == "expression") ags <- substitute(list(aggre))
+  
+  if (!any(av %in% names(lex))) {
+    ags <- deparse(ags)
+    stop("none of the variables used in aggre were found in lex; the aggre expression was ", ags)
+  }
+  
+  aggScales <- intersect(allScales, av)
+  ## need to cut() time scales for aggregating?
+  cut_ts <- if (length(allScales) > 1 && length(aggScales) > 0) TRUE else FALSE
+  if (cut_ts) {
+    ## change names of cuttable time scales temporarily to avoid using them;
+    ## instead temp cutted vars will be used (with tmpdt)
+    whNames <- sapply(aggScales, function(x) which(x == names(lex)))
+    on.exit({
+      setnames(lex, whNames, names(whNames))
+    })
+    
+    tmpdt <- list()
+    for (k in aggScales) {
+      tmpdt[[k]] <- lex[[k]]
+    }
+    setDT(tmpdt)
+    setnames(lex, whNames, makeTempVarName(lex, pre =  names(whNames)))
+    for (k in aggScales) {
+      set(tmpdt, j = k, value = cut(tmpdt[[k]] + .Machine$double.eps^0.5,
+                                    breaks = breaks[[k]], right = FALSE,
+                                    labels = breaks[[k]][-length(breaks[[k]])]))
+      set(tmpdt, j = k, value = try2int(fac2num(tmpdt[[k]])))
+    }
+    
+  } else {
+    tmpdt <- NULL
+  }
+  
+  pyrs <- with(tmpdt,{
+    lex[, .(pyrs = sum(lex.dur)), keyby = ags]
+  })
+  mv <- names(pyrs)[-length(names(pyrs))] ## for merging etc.
+  
+  pyrs[is.na(pyrs), pyrs := 0]
+  if (type == "non-empty") pyrs <- pyrs[pyrs > 0]
+  
+  ## need to modify call to get lex.Cst & lex.Xst transitions
+  if (argType == "character") {
+    ags <- unique(c(aggre, "lex.Cst", "lex.Xst"))
+  } else {
+    ags$lex.Cst <- quote(lex.Cst)
+    ags$lex.Xst <- quote(lex.Xst) 
+  }
+  
+  trans <- with(tmpdt,{
+    lex[, list(obs = .N), keyby = ags]
+  })
+  tmpTr <- makeTempVarName(trans, pre = "trans_")
+  trans[, (tmpTr) := paste0("from", lex.Cst, "to", lex.Xst)]
+  transitions <- trans[, unique(get(tmpTr))]
+  trans[, c("lex.Cst", "lex.Xst") := NULL]
+  trans <- cast_simple(trans, columns = tmpTr, rows = mv, values = "obs")
+  
+  setkeyv(trans, mv); setkeyv(pyrs, mv)
+  trans <- trans[pyrs]
+  
+  setaggre(trans, obs = transitions, pyrs = "pyrs", by = mv, obs.exp = NULL)
+  trans  
+}
+
+

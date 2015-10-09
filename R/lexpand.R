@@ -220,10 +220,8 @@
 #' (more than zero rows have these level values), the former setting only
 #' computes results for \code{"a", "b"}, and the latter also for \code{"c"}
 #' and any combination with other variables or expression given in \code{aggre}.
-#' 
-#' Additionally, with \code{overlapping = FALSE} the user may pass data to
-#' \code{lexpand} that contains multiple rows per subject and still only compute
-#' the person-years once per subject. 
+#' Both may return rows with zero person-time if there are many variables
+#' in aggre.
 #' 
 #' @return
 #' If \code{aggre = NULL}, returns 
