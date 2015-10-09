@@ -879,10 +879,18 @@ popArgType <- function(arg) {
   ##  * character string vector
   ##  * an expression
   a <- deparse(arg)
-  if (sum(grep('\\"', a))) "character" else
-    if (substr(a, 1, 4) == "list") "list" else
-      "expression"
+  if (a == "NULL") return("NULL")
+  if (substr(a, 1, 4) == "list") return("list")
+  if (sum(grep('\\"', a))) return("character")
+  "expression"
 }
 
-
+cutLow <- function(x, breaks, tol =  .Machine$double.eps^0.5) {
+  ## a cut function that returns the lower bounds of the cut intervals (as numeric) as levels
+  
+  breaks <- sort(breaks)
+  x <- cut(x + tol, right = FALSE, breaks = breaks, labels = FALSE)
+  x <- breaks[-length(breaks)][x]
+  x
+}
 

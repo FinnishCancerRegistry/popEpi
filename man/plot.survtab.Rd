@@ -49,7 +49,7 @@ plot(st, "r.e2", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
 lines(st, "r.e2", subset = cancer == "rectal", col = "red")
 
 ## or
-plot(st, "r.e2", col = c(4,2,4,2), lty = c(1, 1, 2, 2))
+plot(st, "r.e2", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 }
 \author{
 Joonas Miettinen

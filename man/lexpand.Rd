@@ -257,16 +257,15 @@ last record (subject possibly defined by \code{id}).
 
 If \code{aggre.type = "unique"}, the above results are computed for existing
 combinations of expressions given in \code{aggre}, but also for non-existing
-combinations if \code{aggre.type = "cross-product"}. E.g. if a
+combinations if \code{aggre.type = "cross-product"} or \code{"full"}. E.g. if a
 factor variable has levels \code{"a", "b", "c"} but the data is limited
 to only have levels \code{"a", "b"} present
 (more than zero rows have these level values), the former setting only
 computes results for \code{"a", "b"}, and the latter also for \code{"c"}
 and any combination with other variables or expression given in \code{aggre}.
-
-Additionally, with \code{overlapping = FALSE} the user may pass data to
-\code{lexpand} that contains multiple rows per subject and still only compute
-the person-years once per subject.
+Both may return rows with zero person-time if there are many variables
+in aggre. Wtih \code{aggre.type = "non-empty"} only non-empty rows,
+i.e. rows with \code{pyrs > 0} are returned.
 }
 \examples{
 \dontrun{

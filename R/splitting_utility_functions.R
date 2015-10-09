@@ -1,10 +1,13 @@
 
 checkBreaksList <- function(x, breaks = list(fot = 0:5)) {
+  if (is.null(breaks)) stop("breaks is NULL")
   if (!is.list(breaks)) stop("breaks needs to be a list")
   if (!is.data.frame(x)) stop("x needs to be a data.frame")
   timeScales <- names(breaks)
   if (length(timeScales) != length(breaks)) stop("breaks needs to be a fully named list")
-  if (any(!timeScales %in% names(x))) stop("at least one breaks list name wasn't a variable in data; list names: ", paste0(timeScales, collapse = ", "))
+  
+  bad_scales <- setdiff(timeScales, names(x))
+  if (length(bad_scales) > 0) stop("at least one breaks list name wasn't a variable in data; bad names: ", paste0("'", bad_scales, "'", collapse = ", "))
 }
 
 globalVariables(c("lex.dur", "lex.Xst", "lex.Cst"))

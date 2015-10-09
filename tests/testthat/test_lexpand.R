@@ -119,7 +119,7 @@ test_that("lexpanding and aggregating to years works", {
                  breaks = list(per=2000:2014), status = status,
                  birth = bi_date, entry = dg_date, exit = ex_date)
   setDT(ag1)
-  ag1[, `:=`(per = as.integer(lower_bound(cut(per, 2000:2014, right = FALSE))))]
+  ag1[, `:=`(per = as.integer(cutLow(per, 2000:2014)))]
   ag1 <- ag1[, list(pyrs = sum(lex.dur), from0to1 = sum(lex.Xst == 1L)), keyby = per]
   
   ag2 <- lexpand(sire[dg_date < ex_date, ], 

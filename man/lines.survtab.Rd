@@ -38,14 +38,14 @@ si$cancer <- c(rep("rectal", nrow(sire)), rep("breast", nrow(sibr)))
 x <- lexpand(si, birth = bi_date, entry = dg_date, exit = ex_date,
              status = status \%in\% 1:2, pophaz = popmort,
              fot = 0:5)
-st <- survtab(x, by.vars = c("cancer", "period", "agegr"),
+st <- survtab(x, by.vars = c("cancer", "period"),
               event.values = 1L, surv.method = "lifetable")
 
 plot(st, "r.e2", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
 lines(st, "r.e2", subset = cancer == "rectal", col = "red")
 
 ## or
-plot(st, "r.e2", col = c(4,2,4,2))
+plot(st, "r.e2", col = c(2,2,4,4))
 }
 \author{
 Joonas Miettinen

@@ -214,14 +214,15 @@
 #' 
 #' If \code{aggre.type = "unique"}, the above results are computed for existing
 #' combinations of expressions given in \code{aggre}, but also for non-existing
-#' combinations if \code{aggre.type = "cross-product"}. E.g. if a
+#' combinations if \code{aggre.type = "cross-product"} or \code{"full"}. E.g. if a
 #' factor variable has levels \code{"a", "b", "c"} but the data is limited
 #' to only have levels \code{"a", "b"} present 
 #' (more than zero rows have these level values), the former setting only
 #' computes results for \code{"a", "b"}, and the latter also for \code{"c"}
 #' and any combination with other variables or expression given in \code{aggre}.
 #' Both may return rows with zero person-time if there are many variables
-#' in aggre.
+#' in aggre. Wtih \code{aggre.type = "non-empty"} only non-empty rows, 
+#' i.e. rows with \code{pyrs > 0} are returned.
 #' 
 #' @return
 #' If \code{aggre = NULL}, returns 
@@ -433,37 +434,23 @@ lexpand <- function(data,
   }
   
   ## aggregating checks --------------------------------------------------------
-  aggre <- substitute(aggre)
-  testag <- deparse(aggre)
-  if (length(testag) > 1) {
-    testag <- paste0(testag, collapse = "")
-    testag <- gsub("(?<=[\\s])\\s*|^\\s+$", "", testag, perl=TRUE) ## replaces multiple whitespaces with one whitespace
-  }
-  if (testag != "NULL" && substr(testag, 1,4) != "list") {
-    stop("aggre has to be a list; e.g. list(sex)")
+  aggSub <- substitute(aggre)
+  agTy <- popArgType(aggSub)
+  if (agTy != "NULL") {
+    if (agTy == "character") {
+      bad_vars <- setdiff(aggre, c(if (merge) names(data), c("fot", "per", "age")))
+    } else if (agTy == "expression") {
+      aggSub <- substitute(list(aggre))
+      bad_vars <- setdiff(all.vars(aggSub), c(if (merge) names(data), c("fot", "per", "age")))
+    } else if (agTy == "list") {
+      bad_vars <- setdiff(all.vars(aggSub), c(if (merge) names(data), c("fot", "per", "age")))
+    }
+    if (length(bad_vars) > 0) {
+      bad_vars <- paste0("'", bad_vars, "'", collapse = ", ")
+      stop("you used the following variable(s) in 'aggre' not available in splitted data: ", bad_vars)
+    }
   }
   
-  ## bad method: determine from character string if 
-  ## list contains a time scale variable, e.g. list(sex, fot, var) / list(sex, var, fot)
-  if (testag != "NULL") {
-    
-    cut_vars <- c("fot","per","age")
-    del_vars <- NULL
-    for (k in 1:3) {
-      var <- cut_vars[[k]]
-      test <- grep(paste0(", ", var, ","), testag)
-      if (length(test) == 0) test <- grep(paste0(", ", var, ")"), testag)
-      if (length(test) == 0) test <- grep(paste0(" = ", var, ","), testag)
-      if (length(test) == 0) test <- grep(paste0(" = ", var, ")"), testag)
-      if (length(test) == 0) test <- grep(paste0("list\\(", var, ","), testag)
-      if (length(test) == 0) test <- grep(paste0("list\\(", var, "\\)"), testag)
-      if (length(test) == 0) del_vars <- c(del_vars, var)
-    }
-    cut_vars <- setdiff(cut_vars, del_vars)
-    rm(del_vars)
-    
-    if (any(!cut_vars %in% brna)) stop("you used some time scale variables in aggre without splitting along them")
-  }
   # convert to fractional years ------------------------------------------------
   
   char2date <- function(obj) {
@@ -859,130 +846,10 @@ lexpand <- function(data,
   
   
   # aggregating if appropriate -------------------------------------------------
-  if (testag != "NULL") {
+  if (agTy != "NULL") {
     
-    ## turn time scales mentioned in aggre argument
-    ## into intervals defined by breaks 
-    ## (instead of current values which may fall in between breaks) 
-    if (length(cut_vars) > 0) {
-      for (k in cut_vars) {
-        brks <- breaks[[k]]
-        set(l, j = k, value = cut(l[[k]] + .Machine$double.eps^(0.5), brks, right = FALSE, labels = brks[-length(brks)]))
-        if (aggre.type == "unique") set(l, j = k, value = try2int(fac2num(l[[k]])) ) 
-        ## note: cross-product needs time scales to remain as 
-        ## factor & keep levels() info for including zero-row levels in tables
-      }
-    }
+    l <- laggre(l, aggre = aggSub, breaks = breaks, type = aggre.type, verbose = FALSE, substituted = TRUE)
     
-    ## WIP: en expression to evaluate that avoids computing pyrs and transitions
-    ## separately
-#     lastRows <- !duplicated(l, by=c("lex.id"), fromLast=T)
-#     mutaRows <- l[, lex.Xst != lex.Cst]
-#     exitTypes <- l[lastRows | mutaRows, unique(lex.Xst)]
-#     obsTypes <- l[lastRows | mutaRows, unique(paste0("from", lex.Cst, "to", lex.Xst))]
-#     agExpr <- "list( pyrs = sum(lex.dur), "
-#     agExpr <- paste0(agExpr, )
-    
-    ## compute pyrs first in a separate table;
-    ## cannot easily compute transitions as well here, since
-    ## need to limit data to transitions and end-points of follow-up only
-    ## for transition computations
-    if (aggre.type == "unique") {
-      pyrsDT <- l[, list(pyrs = sum(lex.dur)), keyby = eval(aggre)]
-      nAggreFacs <- length(setdiff(names(pyrsDT), "pyrs"))
-      
-      if (verbose) cat("aggre.type = 'unique'; producing a table with ", nrow(pyrsDT), " rows \n")
-    } else {
-      
-      ## these will be used to detect the factor where time scale variables were used
-      ## (which may have any arbitrary name but fixed levels)
-      tsFacLevs <- lapply(l[, cut_vars, with = FALSE], levels)
-      
-      ## factor-like variables to aggregate by made into temporary variables
-      nAggreFacs <- ncol(l)
-      l <- cbind(setDT(eval(aggre, envir = l, enclos = environment())), l)
-      nAggreFacs <- ncol(l) - nAggreFacs
-      tempNames <- makeTempVarName(l, pre = "temp_")
-      tempNames <- paste0(tempNames, 1:nAggreFacs)
-      setnames(l, 1:nAggreFacs, tempNames) ## this will avoid name collisions down the road
-      
-      
-      aggre.by.unilevs <- function(x) {
-        if (is.factor(x)) {
-          levels(x)
-        } else {
-          unique(x)
-        }
-      }
-      ceejay <- lapply(l[, tempNames, with=FALSE], aggre.by.unilevs)
-      ceejay <- do.call(CJ, c(ceejay, sorted=FALSE, unique=FALSE))
-      
-      if (verbose) cat("aggre.type = 'cross-product'; producing a table with ", nrow(ceejay), " rows \n")
-      
-      setkeyv(l, tempNames)
-      ## evaluate sum of lex.durs in each level in 'ceejay', a cross-product table
-      ## of factor-like variables created via 'aggre'
-      pyrsDT <- l[ceejay, list(pyrs = sum(lex.dur)), by = .EACHI]
-      setcolsnull(l, delete = tempNames, soft = FALSE)
-      rm(ceejay, tempNames); gc()
-    }
-    
-    ## compute counts of transitions and merge with above;
-    ## compute a long-format table and cast to wide format
-    aggre$lex.Cst <- quote(lex.Cst)
-    aggre$lex.Xst <- quote(lex.Xst)
-    lastRows <- !duplicated(l, by=c("lex.id"), fromLast=T)
-    mutaRows <- l[, lex.Xst != lex.Cst]
-    obsDT  <- l[lastRows | mutaRows, list(obs=.N), keyby = eval(aggre)]
-    
-    mutate <- NULL ## to appease R CMD CHECK
-    obsDT[, mutate := factor(paste0("from",lex.Cst,"to",lex.Xst))]
-    setcolsnull(obsDT, c("lex.Cst", "lex.Xst"))
-    obsDT <- cast_simple(obsDT, columns = "mutate", 
-                         rows = setdiff(names(obsDT), c("obs","mutate")), 
-                         values = "obs")
-    
-    mergeVars <- names(obsDT)[1:nAggreFacs]
-    setnames(pyrsDT, 1:nAggreFacs, mergeVars)
-    setDT(pyrsDT); setDT(obsDT)
-    l <- merge(pyrsDT, obsDT, all.x=TRUE, all.y=TRUE, by = mergeVars, sort = FALSE)
-    
-    rm(pyrsDT, obsDT, mergeVars)
-    if (!is.data.table(l)) setDT(l, key = names(l)) ## sometimes merge.data.table not called somehow
-    gc() ## sometimes problems with releasing memory
-    
-    ## cross-product results in factor variables corresponding to
-    ## the time scales. we want them as numeric variables with
-    ## starts of intervals as levels.
-    if (aggre.type == "cross-product") {
-      whFac <- which(unlist(l[, lapply(.SD, is.factor)]))
-      facVars <- names(l)[whFac]
-      for (k in seq_along(tsFacLevs)) {
-        testLevs <- tsFacLevs[[k]]
-        for (var in facVars) {
-          allLevsTest <- all(levels(l[[var]]) %in% testLevs)
-          allLevsTest <- allLevsTest & all(testLevs %in% levels(l[[var]]))
-                             
-          if (allLevsTest) {
-            set(l, j = var, value = try2int(fac2num(l[[var]])))
-          }
-        }
-      }
-    }
-   
-    
-    ## NA pyrs / observations should be zero
-    whMod <- which(names(l) == "pyrs")
-    whMod <- names(l)[whMod:length(names(l))] ## since transition vars always after "pyrs" var
-    for (v in whMod) {
-      l[is.na(get(v)), (v) := 0]
-    }
-    
-    setattr(l, "class", c("pe","data.table","data.frame"))
-    setattr(l, "breaks", breaks)
-#     setaggre(l, obs = names(l)[substr(names(l),1,4) == "from"], 
-#              pyrs = "pyrs", by = names(l)[1:nAggreFacs], 
-#              d.exp = if("d.exp" %in% names(l)) "d.exp" else NULL)
     if (!getOption("popEpi.datatable")) setDFpe(l)
     
   } else {

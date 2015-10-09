@@ -92,30 +92,30 @@ as.aggre.default <- function(x, ...) {
 
 
 
-laggre <- function(lex, aggre = list(sex, agegroup = age), breaks = NULL, type = c("non-empty", "unique", "full"), substituted = FALSE) {
+laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "unique", "full"), subset = NULL, substituted = FALSE, verbose = T) {
   ## a generalized aggregator for splitted Lexis objects
   ## input: lex: a Lexis object that has been split somehow; 
   ##        aggre: an expression / list of expressions / a character vector of names;
   ##        may have been substituted, but user must use substitued = TRUE then
   ##        some way to define style of aggregation
   ## output: a long-format data.frame or data.table, where transitions and person-time is tabulated.
+  ## TODO: "full" type aggregating
+  allTime <- proc.time()
   
-  ## TODO: 
-  ## - usage of time scales (aggregate automatically into intervals)
-  ##   * this requires detection of variables in aggre intelligently
-  ##     BEFORE evaluating!
-  ## - aggre might be substitute()'d before using this function?
-  
-  type <- match.arg(type[1], c("non-empty", "unique", "full"))
+  type <- match.arg(type[1], c("non-empty", "unique", "full", "cross-product"))
+  if (type == "cross-product") type <- "full"
   
   allScales <- attr(lex, "time.scales")
-  if (is.null(breaks)) breaks <- attr(lex, "breaks") 
+  if (is.null(breaks)) breaks <- attr(lex, "breaks")
   checkBreaksList(lex, breaks)
+  
+  subset <- substitute(subset)
+  subset <- evalLogicalSubset(lex, subset)
   
   ## non-empty and unique only need the substituted argument to pass to DT[, by]
   ## full needs to evaluate and compile CJ
   
-  if (!substituted) ags <- substitute(aggre)
+  ags <- if (!substituted) substitute(aggre) else aggre
   
   argType <- popArgType(ags)
   
@@ -129,13 +129,17 @@ laggre <- function(lex, aggre = list(sex, agegroup = age), breaks = NULL, type =
   
   if (!any(av %in% names(lex))) {
     ags <- deparse(ags)
-    stop("none of the variables used in aggre were found in lex; the aggre expression was ", ags)
+    stop("none of the variables used in aggre were found in lex; the aggre expression was '", ags, "'")
   }
   
-  aggScales <- intersect(allScales, av)
   ## need to cut() time scales for aggregating?
-  cut_ts <- if (length(allScales) > 1 && length(aggScales) > 0) TRUE else FALSE
-  if (cut_ts) {
+  aggScales <- intersect(allScales, av)
+  if (any(!aggScales %in% names(breaks))) {
+    aggScales <- paste0("'", setdiff(aggScales, names(breaks)), "'", collapse = ", ")
+    stop("requested aggregating by time scale(s) by which data has not been split: ", aggScales)
+  }
+  if (length(aggScales) > 0) {
+    cutTime <- proc.time()
     ## change names of cuttable time scales temporarily to avoid using them;
     ## instead temp cutted vars will be used (with tmpdt)
     whNames <- sapply(aggScales, function(x) which(x == names(lex)))
@@ -145,51 +149,120 @@ laggre <- function(lex, aggre = list(sex, agegroup = age), breaks = NULL, type =
     
     tmpdt <- list()
     for (k in aggScales) {
-      tmpdt[[k]] <- lex[[k]]
+      tmpdt[[k]] <- lex[subset, ][[k]]
     }
     setDT(tmpdt)
-    setnames(lex, whNames, makeTempVarName(lex, pre =  names(whNames)))
+    tmpScales <- makeTempVarName(lex, pre =  names(whNames))
+    setnames(lex, whNames, tmpScales)
     for (k in aggScales) {
-      set(tmpdt, j = k, value = cut(tmpdt[[k]] + .Machine$double.eps^0.5,
-                                    breaks = breaks[[k]], right = FALSE,
-                                    labels = breaks[[k]][-length(breaks[[k]])]))
-      set(tmpdt, j = k, value = try2int(fac2num(tmpdt[[k]])))
+      set(tmpdt, j = k, value = cutLow(tmpdt[[k]], breaks = breaks[[k]]))
     }
     
+    if (verbose) cat("Time taken by cut()'ting time scales: ", timetaken(cutTime), "\n")
   } else {
     tmpdt <- NULL
   }
   
-  pyrs <- with(tmpdt,{
-    lex[, .(pyrs = sum(lex.dur)), keyby = ags]
-  })
-  mv <- names(pyrs)[-length(names(pyrs))] ## for merging etc.
+  if (type != "full") {
+    pyrsTime <- proc.time()
+    pyrs <- with(tmpdt,{
+      lex[subset, .(pyrs = sum(lex.dur)), keyby = ags]
+    })
+    if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
+    mv <- names(pyrs)[-length(names(pyrs))] ## for merging etc.
+    
+    pyrs[is.na(pyrs), pyrs := 0]
+    if (type == "non-empty") pyrs <- pyrs[pyrs > 0]
+    
+  } else {
+    pyrsTime <- proc.time()
+    
+    if (is.null(tmpdt)) tmpdt <- list()
+    for (k in setdiff(av, names(tmpdt))) {
+      tmpdt[[k]] <- lex[subset,][[k]]
+    }
+    setDT(tmpdt)
+    
+    tmpdt <- evalPopArg(tmpdt, arg = ags, DT = TRUE)
+    mv <- copy(names(tmpdt))
+    
+    cj <- lapply(tmpdt, function(x) {if (is.factor(x)) levels(x) else unique(x)})
+    cj <- do.call(CJ, cj)
+    setDT(cj)
+    
+    for (k in c("lex.Cst", "lex.Xst", "lex.dur")) {
+      set(tmpdt, j = k, value = lex[subset,][[k]])
+    }
+    
+    setkeyv(tmpdt, mv); setkeyv(cj, mv)
+    pyrs <- tmpdt[cj, .(pyrs = sum(lex.dur)), keyby = .EACHI]
+    pyrs[is.na(pyrs), pyrs := 0]
+    
+    if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
+    
+  }
   
-  pyrs[is.na(pyrs), pyrs := 0]
-  if (type == "non-empty") pyrs <- pyrs[pyrs > 0]
   
   ## need to modify call to get lex.Cst & lex.Xst transitions
   if (argType == "character") {
     ags <- unique(c(aggre, "lex.Cst", "lex.Xst"))
   } else {
+    ags <- ags
     ags$lex.Cst <- quote(lex.Cst)
     ags$lex.Xst <- quote(lex.Xst) 
   }
   
+  transTime <- proc.time()
+  print(ags)
+  print(tmpdt)
   trans <- with(tmpdt,{
-    lex[, list(obs = .N), keyby = ags]
+    lex[subset, list(obs = .N), keyby = ags]
   })
+  rm(tmpdt)
+  
   tmpTr <- makeTempVarName(trans, pre = "trans_")
   trans[, (tmpTr) := paste0("from", lex.Cst, "to", lex.Xst)]
   transitions <- trans[, unique(get(tmpTr))]
   trans[, c("lex.Cst", "lex.Xst") := NULL]
   trans <- cast_simple(trans, columns = tmpTr, rows = mv, values = "obs")
+  if (verbose) cat("Time taken by aggregating transitions: ", timetaken(transTime), "\n")
   
+  mergeTime <- proc.time()
   setkeyv(trans, mv); setkeyv(pyrs, mv)
   trans <- trans[pyrs]
+  if (verbose) cat("Time taken by merging pyrs & transitions: ", timetaken(mergeTime), "\n")
   
+  if (verbose) cat("Time taken by laggre(): ", timetaken(allTime), "\n")
   setaggre(trans, obs = transitions, pyrs = "pyrs", by = mv, obs.exp = NULL)
+  setattr(trans, "breaks", breaks)
   trans  
 }
+
+
+# 
+# makeAggreExpr <- function(lex) {
+#   
+#   e <- "pyrs = sum(lex.dur)"
+#   t <- paste0("from", unique(lex$lex.Cst))
+#   t <- merge(t, paste0("to", unique(lex$lex.Xst)))
+#   t <- apply(t, 1, paste0, collapse = "")
+#   
+#   e <- paste0()
+#   e <- paste0(c(e, t), collapse = ", ")
+#   e <- paste0("list(", )
+#   
+# }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
