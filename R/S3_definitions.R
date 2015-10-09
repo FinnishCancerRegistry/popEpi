@@ -472,7 +472,7 @@ plot.sirspline <- function(x, conf.int = TRUE ,ylab, xlab, ylim, abline = TRUE, 
 #' lines(st, "r.e2", subset = cancer == "rectal", col = "red")
 #' 
 #' ## or
-#' plot(st, "r.e2", col = c(4,2,4,2))
+#' plot(st, "r.e2", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
   ## take copy preserving attributes (unlike  <- data.table())
@@ -583,7 +583,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
 #' lines(st, "r.e2", subset = cancer == "rectal", col = "red")
 #' 
 #' ## or
-#' plot(st, "r.e2", col = c(4,2,4,2))
+#' plot(st, "r.e2", col = c(2,2,4,4))
 
 lines.survtab <- function(x, y = NULL, subset = NULL, 
                           conf.int = TRUE, 
@@ -646,7 +646,10 @@ lines.survtab <- function(x, y = NULL, subset = NULL,
   ## need to determine total number of strata; also used in casting
   ## note: if no by.vars, created a dummy repeating 1L as by.vars
   tmpBy <- makeTempVarName(x)
-  x[, (tmpBy) := as.integer(interaction(mget(by.vars)))]
+  x[, (tmpBy) := interaction(mget(rev(by.vars)))]
+  x[, (tmpBy) := factor(get(tmpBy), labels = 1:uniqueN(get(tmpBy)))]
+  x[, (tmpBy) := robust_values(get(tmpBy))]
+  
   Nstrata <- x[subset, uniqueN(get(tmpBy))]
   
   if (is.null(lty)) {
@@ -678,6 +681,7 @@ lines.survtab <- function(x, y = NULL, subset = NULL,
   strata <- lapply(rep(y, Nstrata), gsub, replacement = "", x = estVars)
   strata <- unique(unlist(strata))
   newOrder <- NULL
+  
   
   for (k in strata) {
     newOrder <- c(newOrder, names(x)[grep(k, names(x))])

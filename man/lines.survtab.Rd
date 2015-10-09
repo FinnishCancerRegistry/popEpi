@@ -38,7 +38,7 @@ si$cancer <- c(rep("rectal", nrow(sire)), rep("breast", nrow(sibr)))
 x <- lexpand(si, birth = bi_date, entry = dg_date, exit = ex_date,
              status = status \%in\% 1:2, pophaz = popmort,
              fot = 0:5)
-st <- survtab(x, by.vars = c("cancer", "period"),
+st <- survtab(x, by.vars = c("cancer", "period", "agegr"),
               event.values = 1L, surv.method = "lifetable")
 
 plot(st, "r.e2", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
