@@ -107,6 +107,11 @@ test_that("lexpanding with aggre.type = 'cross-product' works", {
                  breaks = list(fot = 0:5, age = seq(0,100, 5)), status = status,
                  birth = bi_date, entry = dg_date, exit = ex_date,
                  aggre = list(fot, age), aggre.type = "cross-product")
+  
+  ag2 <- lexpand(sire[dg_date < ex_date, ], 
+                 breaks = list(fot = 0:5, age = seq(0,100, 5)), status = status,
+                 birth = bi_date, entry = dg_date, exit = ex_date,
+                 aggre = list(fot, age), aggre.type = "unique")
   setDT(ag2)
   expect_equal(ag1$pyrs, ag2$pyrs)
   expect_equal(ag1$from0to1, ag2$from0to1)

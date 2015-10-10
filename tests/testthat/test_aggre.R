@@ -34,4 +34,7 @@ test_that("laggre produces meaningful results", {
   
   expect_equal(sum(x2$pyrs), sum(x3$pyrs), tolerance = 1e-05)
   expect_equal(sum(x2$from0to1), sum(x3$from0to1), tolerance = 1e-05)
+  
+  expect_equal(sum(x2$pyrs), sum(x4$pyrs), tolerance = 1e-05)
+  expect_equal(sum(x2$from0to1), sum(x4$from0to1), tolerance = 1e-05)
 })

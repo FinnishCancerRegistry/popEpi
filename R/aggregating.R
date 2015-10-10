@@ -92,7 +92,7 @@ as.aggre.default <- function(x, ...) {
 
 
 
-laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "unique", "full"), subset = NULL, substituted = FALSE, verbose = T) {
+laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "unique", "full"), subset = NULL, substituted = FALSE, verbose = FALSE) {
   ## a generalized aggregator for splitted Lexis objects
   ## input: lex: a Lexis object that has been split somehow; 
   ##        aggre: an expression / list of expressions / a character vector of names;
@@ -106,6 +106,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
   if (type == "cross-product") type <- "full"
   
   allScales <- attr(lex, "time.scales")
+  if (length(allScales) == 0 ) stop("attr(lex, 'time.scales') of length zero; is this a Lexis object?")
   if (is.null(breaks)) breaks <- attr(lex, "breaks")
   checkBreaksList(lex, breaks)
   
@@ -174,7 +175,6 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
   }
   
   if (type != "full") {
-    
     ## unique / non-empty pyrs -------------------------------------------------
     pyrsTime <- proc.time()
     pyrs <- with(tmpdt,{
@@ -187,7 +187,6 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
     if (type == "non-empty") pyrs <- pyrs[pyrs > 0]
     
   } else {
-    
     ## cross-product pyrs ------------------------------------------------------
     pyrsTime <- proc.time()
     
@@ -200,9 +199,16 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
     bytab <- evalPopArg(tmpdt, arg = ags, DT = TRUE)
     mv <- copy(names(bytab))
     
+    print(bytab)
+    
     cj <- lapply(bytab, function(x) {if (is.factor(x)) levels(x) else unique(x)})
     cj <- do.call(CJ, cj)
     setDT(cj)
+    
+    
+    if (verbose) cat("Table of levels of variables for which pyrs are computed: \n")
+    if (verbose) print(cj)
+    print(mv)
     
     for (k in c("lex.Cst", "lex.Xst", "lex.dur")) {
       set(bytab, j = k, value = lex[subset,][[k]])
@@ -212,9 +218,18 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
     pyrs <- bytab[cj, .(pyrs = sum(lex.dur)), keyby = .EACHI]
     pyrs[is.na(pyrs), pyrs := 0]
     
-    rm(bytab)
+    rm(bytab, cj)
+    
     
     if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
+    
+  }
+  
+  
+  if (verbose) {
+    pyrsDiff <- pyrs[, sum(pyrs)] - sum(lex[subset, ]$lex.dur)
+    if (isTRUE(all.equal(pyrsDiff, 0L))) cat("Looks good, aggregated pyrs sum to same result as sum(lex$lex.dur) \n") else
+      cat("O-oh, found discrepancy in total pyrs compared to sum(lex$lex.dur); compare results by hand and make sure settings are right \n")
     
   }
   
@@ -230,7 +245,6 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
     ags$lex.Xst <- quote(lex.Xst) 
   }
   
-  
   trans <- with(tmpdt,{
     lex[subset, list(obs = .N), keyby = ags]
   })
@@ -239,22 +253,25 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
   mv <- names(trans)[0:length(mv)] ## old might include e.g. V1, while this won't
   setnames(pyrs, setdiff(names(pyrs), "pyrs"), mv)
   
-  tmpTr <- makeTempVarName(trans, pre = "trans_")
-  trans[, (tmpTr) := paste0("from", lex.Cst, "to", lex.Xst)]
-  transitions <- trans[, unique(get(tmpTr))]
-  trans[, c("lex.Cst", "lex.Xst") := NULL]
-  
   if (verbose) cat("Time taken by aggregating transitions: ", timetaken(transTime), "\n")
   
   ## casting &merging ----------------------------------------------------------
   
   mergeTime <- proc.time()
   
+  ## tmpTr to be used in casting
+  tmpTr <- makeTempVarName(trans, pre = "trans_")
+  trans[, (tmpTr) := paste0("from", lex.Cst, "to", lex.Xst)]
+  transitions <- trans[, unique(get(tmpTr))]
+  trans[, c("lex.Cst", "lex.Xst") := NULL]
+  
+  
   ## note: need tmpDum if aggre = NULL for correct casting & merging
   tmpDum <- makeTempVarName(trans)
   mv <- c(mv, tmpDum)
   trans[, (tmpDum) := 1L]
   pyrs[, (tmpDum) := 1L]
+  
   trans <- cast_simple(trans, columns = tmpTr, rows = mv, values = "obs")
   
   setkeyv(trans, mv); setkeyv(pyrs, mv)
@@ -268,8 +285,11 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
   ## final touch ---------------------------------------------------------------
   setaggre(trans, obs = transitions, pyrs = "pyrs", by = mv, obs.exp = NULL)
   setattr(trans, "breaks", breaks)
-  
+  if (!getOption("popEpi.datatable")) setDFpe(trans)
   if (verbose) cat("Time taken by laggre(): ", timetaken(allTime), "\n")
+  
+  
+  
   trans[]
 }
 

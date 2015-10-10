@@ -844,7 +844,8 @@ lexpand <- function(data,
   # aggregating if appropriate -------------------------------------------------
   if (agTy != "NULL") {
     
-    l <- laggre(l, aggre = aggSub, breaks = breaks, type = aggre.type, verbose = FALSE, substituted = TRUE)
+    setattr(l, "time.scales", c("fot", "per", "age"))
+    l <- laggre(l, aggre = aggSub, breaks = breaks, type = aggre.type, verbose = T, substituted = TRUE)
     
     if (!getOption("popEpi.datatable")) setDFpe(l)
     

@@ -48,7 +48,7 @@ a list of unquoted variables and/or expressions thereof,
 which are interpreted as factors; data events and person-years will
 be aggregated by the unique combinations of these; see Details}
 
-\item{aggre.type}{one of \code{c("non-empty","unique","cross-product"};
+\item{aggre.type}{one of \code{c("non-empty","unique","cross-product")};
 can be abbreviated; see Details}
 
 \item{drop}{logical; if \code{TRUE}, drops all resulting rows
@@ -232,7 +232,7 @@ e.g.
 \code{cut(fot, breaks$fot, right=FALSE)}.
 
 This only works if
-the corresponding breaks are defined in \code{breaks} or via \code{...}.
+the corresponding breaks are defined in \code{breaks} or via "\code{...}".
 E.g.
 
 \code{aggre = list(sex, fot.int = fot)} with
