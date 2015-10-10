@@ -30,12 +30,8 @@
 #' a list of unquoted variables and/or expressions thereof,
 #' which are interpreted as factors; data events and person-years will
 #' be aggregated by the unique combinations of these; see Details
-#' @param aggre.type either \code{"unique"} or \code{"cross-product"};
-#' can be abbreviated;
-#' state transitions and person-year will be calculated either for all
-#' existing levels of expressions in \code{aggre}, or
-#' for the cross-product of all possible existing levels (with some 
-#' possibly having zero person-years and transitions); see Details
+#' @param aggre.type one of \code{c("non-empty","unique","cross-product")};
+#' can be abbreviated; see Details
 #' @param breaks a named list of vectors of time breaks; 
 #' e.g. \code{breaks = list(fot=0:5, age=c(0,45,65,Inf))}; see Details
 #' @param drop logical; if \code{TRUE}, drops all resulting rows 
@@ -193,7 +189,7 @@
 #' \code{cut(fot, breaks$fot, right=FALSE)}. 
 #' 
 #' This only works if
-#' the corresponding breaks are defined in \code{breaks} or via \code{...}.
+#' the corresponding breaks are defined in \code{breaks} or via "\code{...}".
 #' E.g. 
 #' 
 #' \code{aggre = list(sex, fot.int = fot)} with 

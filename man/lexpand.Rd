@@ -48,12 +48,8 @@ a list of unquoted variables and/or expressions thereof,
 which are interpreted as factors; data events and person-years will
 be aggregated by the unique combinations of these; see Details}
 
-\item{aggre.type}{either \code{"unique"} or \code{"cross-product"};
-can be abbreviated;
-state transitions and person-year will be calculated either for all
-existing levels of expressions in \code{aggre}, or
-for the cross-product of all possible existing levels (with some
-possibly having zero person-years and transitions); see Details}
+\item{aggre.type}{one of \code{c("non-empty","unique","cross-product"};
+can be abbreviated; see Details}
 
 \item{drop}{logical; if \code{TRUE}, drops all resulting rows
 after splitting that reside outside

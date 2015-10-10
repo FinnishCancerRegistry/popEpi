@@ -879,9 +879,11 @@ popArgType <- function(arg) {
   ##  * character string vector
   ##  * an expression
   a <- deparse(arg)
+  a <- paste0(a, collapse = "") ## lists may somehow produce length > 1 here
+  
   if (a == "NULL") return("NULL")
   if (substr(a, 1, 4) == "list") return("list")
-  if (sum(grep('\\"', a))) return("character")
+  char <- if (sum(grep('\\"', a)) && length(all.names(a)) == 0) TRUE else FALSE
   "expression"
 }
 
