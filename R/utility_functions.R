@@ -459,14 +459,17 @@ setclass <- function(obj, cl, add=FALSE, add.place="first") {
 #' @param obj a numeric vector
 #' @export try2int
 #' @source \href{http://stackoverflow.com/questions/3476782/how-to-check-if-the-number-is-integer}{Stackoverflow thread}
-try2int <- function(obj) {
+try2int <- function(obj, tol = .Machine$double.eps^0.5) {
   if (!is.numeric(obj)) stop("obj needs to be integer or double (numeric)")
   if (is.integer(obj)) return(obj)
   
-  #   tol = .Machine$double.eps^0.5
-  #   test <- all(abs(min(obj%%1, obj%%1-1)) < tol)
+  # test <- all(abs(min(obj%%1, obj%%1-1)) < tol)
+  if (min(obj) == -Inf | max(obj) == Inf) {
+    return(obj)
+  } else {
+    test <- all( obj %% 1 == 0, na.rm = FALSE)
+  }
   
-  test <- all( obj %% 1 == 0, na.rm = TRUE )
   
   if (test) return(as.integer(obj))
   
@@ -832,9 +835,24 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
   ## OR with DT = TRUE, a data.table based on aforementioned results.
   ## intention: output to be used in by argument of data.table.
   ## a data.table output is directly usable in by.
-  e <- eval(arg, envir = data, enclos = parent.frame(n))
   
-  if (is.null(e)) return(NULL) ## should this be stop() instead?
+  ## all variables used in arg should be within data
+  av <- all.vars(arg)
+  all_names_present(data, av)
+  
+  ## byNames: names of columns resulting from aggre argument, by which
+  ## pyrs and such are aggregated. same functionality
+  ## as in results seen in e.g.DT[ .N, by = list(factor(x), y)]
+  ## note: first object in ags with list or expression aggre is "list"
+  argType <- popArgType(arg)
+  if (argType == "NULL") return(NULL) ## should this be stop() instead?
+  
+  if (argType == "character") byNames <- arg else
+    if (argType == "list") byNames <-sapply(arg[-1], function(x) all.names(x)[1]) else
+      if (argType == "expression") byNames <- all.names(arg)[1]
+  
+  
+  e <- eval(arg, envir = data, enclos = parent.frame(n))
   
   if (is.character(e)) {
     all_names_present(data, e)
@@ -852,11 +870,11 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
     ne <- names(e)
     
     if (is.null(ne)) {
-      names(arg)[names(arg) == ""] <- paste0("V", 1:length(e))
+      setattr(e, "names", byNames)
     }
     wh_bad <- which(ne == "")
     if (length(wh_bad) > 0) {
-      ne[wh_bad] <- paste0("V", rank(wh_bad))
+      ne[wh_bad] <- byNames[wh_bad]
       setattr(e, "names", ne)
     }
     if (DT) setDT(e)
@@ -864,7 +882,7 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
     ## is e.g. a numeric vector or a factor
     if (DT) {
       e <- data.table(V1 = e)
-      setnames(e, 1, toString(arg))  # addition: set name
+      setnames(e, 1, byNames)
     }
   } 
   ## note: e may be an expression at this point due to double substitution
@@ -883,7 +901,12 @@ popArgType <- function(arg) {
   
   if (a == "NULL") return("NULL")
   if (substr(a, 1, 4) == "list") return("list")
-  char <- if (sum(grep('\\"', a)) && length(all.names(a)) == 0) TRUE else FALSE
+  ## character: substituted string always has \" to quote names;
+  ## may also have function c() used, but no other function!
+  ## (all.names detects variable and function names, and only c() can be
+  ## detected in a character string vector)
+  char <- if (sum(grep('\\"', a)) && length(setdiff(all.names(a), "c")) == 0) TRUE else FALSE
+  if (char) return("character")
   "expression"
 }
 

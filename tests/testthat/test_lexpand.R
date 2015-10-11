@@ -90,29 +90,32 @@ test_that("lexpanding with aggre.type = 'unique' works", {
 })
 
 test_that("lexpanding with aggre.type = 'cross-product' works", {
-  skip_on_cran()
+  # skip_on_cran()
+  BL <- list(fot = 0:5, age = seq(0,100, 5))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
-                 breaks = list(fot = 0:5, age = seq(0,100, 5)), status = status,
+                 breaks = BL, status = status, entry.status = 0L,
                  birth = bi_date, entry = dg_date, exit = ex_date)
   setDT(ag1)
-  ag1[, `:=`(fot = as.integer(lower_bound(cut(fot, 0:5, right = FALSE))), 
-             age = as.integer(lower_bound(cut(age, seq(0,100,5), right=FALSE))))]
-  ceejay <- CJ(fot = 0:4, age = seq(0, 95, 5))
+  ag1[, `:=`(fot = try2int(cutLow(fot, c(BL$fot, Inf))), 
+             age = try2int(cutLow(age, c(BL$age, Inf))))]
+  ceejay <- CJ(fot = BL$fot, age = BL$age)
   setkey(ceejay, fot, age); setkey(ag1, fot, age)
-  ag1 <- ag1[ceejay, list(pyrs = sum(lex.dur), from0to1 = sum(lex.Xst == 1L)), by = .EACHI]
+  ag1 <- ag1[ceejay, list(pyrs = sum(lex.dur), 
+                          from0to1 = sum(lex.Xst == 1L)), by = .EACHI]
   ag1[is.na(pyrs), pyrs := 0]
   ag1[is.na(from0to1), from0to1 := 0]
   
-  ag2 <- lexpand(sire[dg_date < ex_date, ], 
-                 breaks = list(fot = 0:5, age = seq(0,100, 5)), status = status,
+  ag2 <- lexpand(sire[dg_date < ex_date, ],
+                 breaks = list(fot = 0:5, age = seq(0,100, 5)), 
+                 status = status, entry.status = 0L,
                  birth = bi_date, entry = dg_date, exit = ex_date,
                  aggre = list(fot, age), aggre.type = "cross-product")
   
-  ag2 <- lexpand(sire[dg_date < ex_date, ], 
-                 breaks = list(fot = 0:5, age = seq(0,100, 5)), status = status,
-                 birth = bi_date, entry = dg_date, exit = ex_date,
-                 aggre = list(fot, age), aggre.type = "unique")
   setDT(ag2)
+  setkeyv(ag1, c("fot", "age"))
+  setkeyv(ag2, c("fot", "age"))
+  expect_equal(sum(ag1$pyrs), sum(ag2$pyrs))
+  expect_equal(sum(ag1$from0to1), sum(ag2$from0to1))
   expect_equal(ag1$pyrs, ag2$pyrs)
   expect_equal(ag1$from0to1, ag2$from0to1)
   

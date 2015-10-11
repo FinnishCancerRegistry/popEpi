@@ -307,7 +307,7 @@ lexpand <- function(data,
   }
   rm(added_vars, conflicted_vars)
   
-  aggre.type <- match.arg(aggre.type[1L], c("cross-product", "unique"))
+  aggre.type <- match.arg(aggre.type[1L], c("cross-product", "non-empty", "unique"))
   
   ## subsetting-----------------------------------------------------------------
   ## no copy taken of data!
@@ -845,7 +845,8 @@ lexpand <- function(data,
   if (agTy != "NULL") {
     
     setattr(l, "time.scales", c("fot", "per", "age"))
-    l <- laggre(l, aggre = aggSub, breaks = breaks, type = aggre.type, verbose = T, substituted = TRUE)
+    l <- laggre(l, aggre = aggSub, breaks = breaks, type = aggre.type, 
+                verbose = T, substituted = TRUE)
     
     if (!getOption("popEpi.datatable")) setDFpe(l)
     

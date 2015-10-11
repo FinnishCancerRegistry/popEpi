@@ -7,7 +7,7 @@
 \href{http://stackoverflow.com/questions/3476782/how-to-check-if-the-number-is-integer}{Stackoverflow thread}
 }
 \usage{
-try2int(obj)
+try2int(obj, tol = .Machine$double.eps^0.5)
 }
 \arguments{
 \item{obj}{a numeric vector}
