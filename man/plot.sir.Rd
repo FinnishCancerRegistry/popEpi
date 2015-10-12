@@ -63,13 +63,8 @@ settings. This works only when \code{plot.type} is 'splines'.
 \examples{
 \dontrun{
 # Plot SIR estimates
-# plot(sir.by.gender, plot.type = 'model', col = c(4,2), log=FALSE, eps=0.2, lty=1, lwd=2, pch=19,
+# plot(sir.by.gender, col = c(4,2), log=FALSE, eps=0.2, lty=1, lwd=2, pch=19,
 #      main = 'SIR by gender', abline=TRUE)
-#
-# # plot SIR splines gender in same plot
-# plot(sir.male, plot.type = 'splines', col = c(4), lwd=2,
-#      main = 'SIR by gender', abline=TRUE)
-# lines(sir.female, col = 2)
 }
 }
 \author{

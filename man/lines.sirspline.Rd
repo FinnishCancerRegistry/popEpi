@@ -2,30 +2,28 @@
 % Please edit documentation in R/S3_definitions.R
 \name{lines.sirspline}
 \alias{lines.sirspline}
-\title{\code{lines} method for sirspline-object}
+\title{lines method for sirspline-object}
 \usage{
 \method{lines}{sirspline}(x, conf.int = TRUE, print.levels = NA,
   select.spline, ...)
 }
 \arguments{
-\item{x}{an object returned by function \code{sirspline}}
+\item{x}{an object returned by function sirspline}
 
-\item{conf.int}{logical; default TRUE draws also the 95% confidence intervals}
+\item{conf.int}{logical; default TRUE draws also the 95 confidence intervals}
 
 \item{print.levels}{name(s) to be plottet. Default plots all levels.}
 
-\item{select.spline}{select which spline variable (a number or a name)
-is plotted.}
+\item{select.spline}{select which spline variable (a number or a name) is plotted.}
 
 \item{...}{arguments passed on to lines()}
 }
 \description{
-Plot SIR spline lines wtih R base graphics.
+Plot SIR spline lines wtih R base graphics
 }
 \details{
 In \code{lines.sirspline} most of graphical parameters is user
 adjustable.
-
 Desired spline variable can be selected with \code{select.spline} and only one
 can be plotted at a time. The spline variable can include
 several levels, e.g. gender (these are the levels of \code{print}

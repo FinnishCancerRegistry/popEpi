@@ -8,13 +8,15 @@
   type, ylab, xlab, ...)
 }
 \arguments{
-\item{x}{an object returned by function \code{sirspline}}
+\item{x}{an object returned by function sirspline}
 
-\item{conf.int}{logical; default TRUE draws also the 95% confidence intervals}
+\item{conf.int}{logical; default TRUE draws also the 95 confidence intervals}
 
 \item{abline}{logical; draws a reference line where SIR = 1}
 
 \item{log}{logical; default FALSE. Should the y-axis be in log scale}
+
+\item{type}{select \code{type = 'n'} to plot only figure frames}
 
 \item{ylab}{overwrites default y-axis label; can be a vector if multiple splines fitted}
 
