@@ -240,7 +240,10 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
     }
     setDT(tmpdt)
     
+    
     bytab <- evalPopArg(tmpdt, arg = ags, DT = TRUE)
+    ## sometimes arg to eval is basically the whole DT, resulting in an alias apparently
+    bytab <- copy(bytab) 
     
     cj <- lapply(bytab, function(x) {if (is.factor(x)) levels(x) else unique(x)})
     
@@ -265,16 +268,17 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
     for (k in c("lex.Cst", "lex.Xst", "lex.dur")) {
       set(bytab, j = k, value = lex[subset,][[k]])
     }
-    
     ## this will always be what intended thanks to data.table
     byNames <- setdiff(names(bytab), c("pyrs", "lex.dur", "lex.Cst", "lex.Xst")) 
     
     setkeyv(bytab, byNames); setkeyv(cj, byNames)
     pyrs <- bytab[cj, .(pyrs = sum(lex.dur)), keyby = .EACHI]
     pyrs[is.na(pyrs), pyrs := 0]
+  
+    ## need only cut()'d time scales in transitions phase
+    setcolsnull(tmpdt, delete = setdiff(av, names(tmpdt)), soft = FALSE) 
     
     rm(bytab, cj)
-    
     
     if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
     
@@ -307,29 +311,42 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
   ## tmplex only an alias for lex
   ## note: all this is due to avoiding using set() to modify the original
   ## data in place. that may actually be a pretty good idea...
+  
+  if (!exists("tmpScales") || length(tmpScales) == 0 ) tmpScales <- NULL
+  firstScale <- intersect(c(tmpScales[1], foundScales[1]), names(lex))[1]
+  
+  
   tmplex <- if (!is.data.table(lex)) {
-    as.data.table(lex[, which(names(lex) %in% c("lex.id", tmpScales[1], "lex.Cst", "lex.Xst"))])
+    as.data.table(lex[, which(names(lex) %in% c(av, "lex.id", firstScale, "lex.Cst", "lex.Xst"))])
   } else lex
   
   tmpOrder <- makeTempVarName(tmplex, pre = "order_")
   tmplex[, (tmpOrder) := 1:.N]
+  
+  on.exit({
+    if (exists("tmplex")) setcolsnull(tmplex, c(tmpTrans, tmpOrder))
+  }, add = TRUE)
+  
   old_key <- key(tmplex) ## note: as.data.table(DF) makes no key
-  setkeyv(tmplex, c("lex.id", tmpScales[1]))
+  setkeyv(tmplex, c("lex.id", firstScale))
+  
   tmpTrans <- makeTempVarName(tmplex, pre = "trans_")
   tmplex[, (tmpTrans) := lex.Cst != lex.Xst | !duplicated(lex.id, fromLast = TRUE)]
-  setorderv(tmplex, tmpOrder)
-  if (length(old_key) > 0) setkeyv(tmplex, old_key)
+  
+  if (is.data.table(lex)) {
+    setorderv(tmplex, tmpOrder)
+    if (length(old_key) > 0) setkeyv(tmplex, old_key)
+  }
+  
+  
   tmpdt <- tmpdt[subset & tmplex[[tmpTrans]]]
-  
-  print(tmpdt)
-  print(tmplex)
-  print(ags)
-  
   trans <- with(tmpdt,{
       tmplex[subset & tmplex[[tmpTrans]], list(obs = .N), keyby = ags]
   })
-  rm(tmpdt, tmplex)
   
+  
+  setcolsnull(tmplex, c(tmpTrans, tmpOrder))
+  rm(tmpdt, tmplex)
   
   if (verbose) cat("Time taken by aggregating transitions: ", timetaken(transTime), "\n")
   
@@ -356,7 +373,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
   
   trans[, (tmpDum) := NULL]
   byNames <- setdiff(byNames, tmpDum)
-  setcolorder(trans, c(byNames, "pyrs", transitions))
+  setcolorder(trans, c(byNames, "pyrs", sort(transitions)))
   
   for (t in transitions) {
     trans[is.na(get(t)), (t) := 0L]

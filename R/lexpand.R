@@ -844,9 +844,11 @@ lexpand <- function(data,
   # aggregating if appropriate -------------------------------------------------
   if (agTy != "NULL") {
     
+    if (verbose) cat("Starting aggregation of splitted data... \n")
     setattr(l, "time.scales", c("fot", "per", "age"))
     l <- laggre(l, aggre = aggSub, breaks = breaks, type = aggre.type, 
-                verbose = T, substituted = TRUE)
+                verbose = verbose, substituted = TRUE)
+    if (verbose) cat("Aggregation done. \n")
     
     if (!getOption("popEpi.datatable")) setDFpe(l)
     
