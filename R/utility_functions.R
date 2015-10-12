@@ -464,7 +464,7 @@ try2int <- function(obj, tol = .Machine$double.eps^0.5) {
   if (is.integer(obj)) return(obj)
   
   # test <- all(abs(min(obj%%1, obj%%1-1)) < tol)
-  if (min(obj) == -Inf | max(obj) == Inf) {
+  if (min(obj, na.rm = TRUE) == -Inf || max(obj, na.rm = TRUE) == Inf) {
     return(obj)
   } else {
     test <- all( obj %% 1 == 0, na.rm = FALSE)
