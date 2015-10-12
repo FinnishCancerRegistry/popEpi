@@ -73,14 +73,15 @@ test_that("lexpand produces the same results with internal/external dropping", {
 
 test_that("lexpanding with aggre.type = 'unique' works", {
   skip_on_cran()
+  BL <- list(fot = 0:5, age = seq(0,100, 5))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
-                 breaks = list(fot = 0:5, age = seq(0,100, 5)), status = status,
+                 breaks = BL, status = status,
                  birth = bi_date, entry = dg_date, exit = ex_date)
   setDT(ag1)
   ag1 <- ag1[, list(pyrs = sum(lex.dur), from0to1 = sum(lex.Xst == 1L)), 
-           keyby = list(fot = cut(fot, 0:5, right = FALSE), age = cut(age, seq(0,100,5), right=FALSE))]
+           keyby = list(fot = cutLow(fot, BL$fot), age = cutLow(age, BL$age))]
   ag2 <- lexpand(sire[dg_date < ex_date, ], 
-                 breaks = list(fot = 0:5, age = seq(0,100, 5)), status = status,
+                 breaks = BL, status = status,
                  birth = bi_date, entry = dg_date, exit = ex_date,
                  aggre = list(fot, age), aggre.type = "unique")
   setDT(ag2)
@@ -89,13 +90,55 @@ test_that("lexpanding with aggre.type = 'unique' works", {
   
 })
 
-test_that("lexpanding with aggre.type = 'cross-product' works", {
-  # skip_on_cran()
+test_that("lexpanding with aggre.type = 'cross-product' works; no time scales used", {
+  skip_on_cran()
+  BL <- list(fot = c(0,Inf))
+  ag1 <- lexpand(sire[dg_date < ex_date, ], 
+                 breaks = BL, status = status, entry.status = 0L,
+                 birth = bi_date, entry = dg_date, exit = ex_date)
+  setDT(ag1)
+  
+  e <- quote(list(sex = factor(sex, 0:1, c("m", "f")),
+            period = cut(get.yrs(dg_date), get.yrs(as.Date(paste0(seq(1970, 2015, 5), "-01-01"))))))
+  ag1[, c("sex", "period") := eval(e)]
+  ceejay <- do.call(CJ, lapply(ag1[, list(sex, period)], function(x) {if (is.factor(x)) levels(x) else unique(x)}))
+  setkey(ceejay, sex, period); setkey(ag1, sex, period)
+  ag1 <- ag1[ceejay, list(pyrs = sum(lex.dur), 
+                          from0to1 = sum(lex.Xst == 1L)), by = .EACHI]
+  ag1[is.na(pyrs), pyrs := 0]
+  ag1[is.na(from0to1), from0to1 := 0]
+  
+  ag2 <- lexpand(sire[dg_date < ex_date, ],
+                 breaks = BL, 
+                 status = status, entry.status = 0L,
+                 birth = bi_date, entry = dg_date, exit = ex_date,
+                 aggre = list(sex = factor(sex, 0:1, c("m", "f")),
+                              period = cut(get.yrs(dg_date), get.yrs(as.Date(paste0(seq(1970, 2015, 5), "-01-01"))))), 
+                 aggre.type = "cross-product")
+  
+  setDT(ag2)
+  setkeyv(ag1, c("sex", "period"))
+  setkeyv(ag2, c("sex", "period"))
+  expect_equal(sum(ag1$pyrs), sum(ag2$pyrs))
+  expect_equal(sum(ag1$from0to1), sum(ag2$from0to1))
+  expect_equal(ag1$pyrs, ag2$pyrs)
+  expect_equal(ag1$from0to1, ag2$from0to1)
+  
+})
+test_that("lexpanding with aggre.type = 'cross-product' works; only time scales used", {
+  skip_on_cran()
   BL <- list(fot = 0:5, age = seq(0,100, 5))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
                  breaks = BL, status = status, entry.status = 0L,
                  birth = bi_date, entry = dg_date, exit = ex_date)
   setDT(ag1)
+  
+  ag3 <- laggre(ag1, aggre = list(fot, age), type = "full")
+  setDT(ag3)
+  
+  ag4 <- laggre(ag1, aggre = list(fot, age), type = "non-empty")
+  setDT(ag4)
+  
   ag1[, `:=`(fot = try2int(cutLow(fot, c(BL$fot, Inf))), 
              age = try2int(cutLow(age, c(BL$age, Inf))))]
   ceejay <- CJ(fot = BL$fot, age = BL$age)
@@ -114,6 +157,12 @@ test_that("lexpanding with aggre.type = 'cross-product' works", {
   setDT(ag2)
   setkeyv(ag1, c("fot", "age"))
   setkeyv(ag2, c("fot", "age"))
+  setkeyv(ag3, c("fot", "age"))
+  expect_equal(sum(ag1$pyrs), sum(ag3$pyrs))
+  expect_equal(sum(ag1$from0to1), sum(ag3$from0to1))
+  expect_equal(ag1$pyrs, ag3$pyrs)
+  expect_equal(ag1$from0to1, ag3$from0to1)
+  
   expect_equal(sum(ag1$pyrs), sum(ag2$pyrs))
   expect_equal(sum(ag1$from0to1), sum(ag2$from0to1))
   expect_equal(ag1$pyrs, ag2$pyrs)
@@ -177,8 +226,8 @@ test_that('lexpand aggre: multistate column names correct', {
                birth = bi_date, entry = dg_date, exit = ex_date,
                breaks=list(fot=c(0,5,10,50,Inf), age=c(seq(0,85,5),Inf), per = 1993:2013), 
                status=status, aggre = list(fot, age, per))
-  setDT(x)
-  expect_equal( names(x)[c(5,6,7)], c('from0to0','from0to1','from0to2'))  
+  
+  expect_equal(intersect(names(x), c('from0to0','from0to1','from0to2')), c('from0to0','from0to1','from0to2'))  
 })
 
 
