@@ -103,11 +103,11 @@ test_that("SIR spline throws errors correctly", {
   
   
 
-  sp1 <- try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
+  sp1 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
                       subset = year %in% 1990:2008,
                       ref.data = popmort, ref.rate = 'haz', 
                       adjust = c('agegroup','year','sex'), print =c('cause'),
-                      mstate = 'cause', spline=c('agegroup','year','fot') ))
+                      mstate = 'cause', spline=c('agegroup','year','fot') )))
   sp2 <- try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
                         subset = year %in% 1990:2008,
                         ref.data = popmort, ref.rate = 'haz', dependent.spline=FALSE,

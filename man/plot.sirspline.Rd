@@ -2,35 +2,42 @@
 % Please edit documentation in R/S3_definitions.R
 \name{plot.sirspline}
 \alias{plot.sirspline}
-\title{Plot method for sirspline-object}
+\title{\code{plot} method for sirspline-object}
 \usage{
-\method{plot}{sirspline}(x, conf.int = TRUE, ylab, xlab, ylim,
-  abline = TRUE, log = FALSE, ...)
+\method{plot}{sirspline}(x, conf.int = TRUE, abline = TRUE, log = FALSE,
+  type, ylab, xlab, ...)
 }
 \arguments{
 \item{x}{an object returned by function \code{sirspline}}
 
-\item{conf.int}{default TRUE draws confidence intervals}
+\item{conf.int}{logical; default TRUE draws also the 95% confidence intervals}
 
-\item{ylab}{overwrites default y-axis label}
+\item{abline}{logical; draws a reference line where SIR = 1}
 
-\item{xlab}{overwrites default x-axis label}
+\item{log}{logical; default FALSE. Should the y-axis be in log scale}
 
-\item{ylim}{y-axis minimum and maximum values}
+\item{ylab}{overwrites default y-axis label; can be a vector if multiple splines fitted}
 
-\item{abline}{logical; draws a gray line in SIR = 1}
-
-\item{log}{if TRUE, the SIR is in log scale}
+\item{xlab}{overwrites default x-axis label; can be a vector if multiple splines fitted}
 
 \item{...}{arguments passed on to plot()}
 }
 \description{
 Plot SIR splines using R base graphics.
 }
+\details{
+In \code{plot.sirspline} almost every graphical parameter is user
+adjustable, such as \code{ylim}, \code{xlim}.
+\code{plot.sirsplines} calls \code{lines.splines} to add lines.
+
+The plot axis without lines can be plotted using option \code{type = 'n'}.
+On top of the frame it's then possible to add a \code{grid},
+\code{abline} or text before plotting the lines (see: \code{sirspline}).
+}
 \author{
 Matti Rantanen
 }
 \seealso{
-\code{\link{sir}},  \code{\link{sirspline}}
+\code{\link{sir}},  \code{\link{sirspline}}, \code{\link{lines.sirspline}}
 }
 

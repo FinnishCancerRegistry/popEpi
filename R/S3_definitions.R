@@ -495,7 +495,6 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
     print.levels <- pl
   }
   pl <- pl[ pl %in% print.levels]
-  print(pl)
   
   ## get conf.int
   if( !is.logical(conf.int) ) stop('conf.int is not logical')
