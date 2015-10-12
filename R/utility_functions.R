@@ -459,17 +459,23 @@ setclass <- function(obj, cl, add=FALSE, add.place="first") {
 #' @param obj a numeric vector
 #' @export try2int
 #' @source \href{http://stackoverflow.com/questions/3476782/how-to-check-if-the-number-is-integer}{Stackoverflow thread}
-try2int <- function(obj, tol = .Machine$double.eps^0.5) {
+try2int <- function(obj) { # , tol = .Machine$double.eps^0.5
   if (!is.numeric(obj)) stop("obj needs to be integer or double (numeric)")
   if (is.integer(obj)) return(obj)
   
   # test <- all(abs(min(obj%%1, obj%%1-1)) < tol)
-  if (min(obj, na.rm = TRUE) == -Inf || max(obj, na.rm = TRUE) == Inf) {
+  
+  test <- FALSE
+  
+  bad <- if (length(na.omit(obj)) == 0) TRUE else 
+    min(obj, na.rm = TRUE) == -Inf || max(obj, na.rm = TRUE) == Inf
+  if (bad) {
     return(obj)
   } else {
     test <- all( obj %% 1 == 0, na.rm = FALSE)
   }
   
+  if (is.na(test) || is.null(test)) test <- FALSE
   
   if (test) return(as.integer(obj))
   
