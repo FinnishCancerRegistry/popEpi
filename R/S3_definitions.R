@@ -323,11 +323,11 @@ plot.sir <- function(x, plot.type = 'model',
   }
 }
 
-#' Plot method for sirspline-object
+#' \code{plot} method for sirspline-object
 #' 
 #' Plot SIR splines using R base graphics.
 #' 
-#' @seealso \code{\link{sir}},  \code{\link{sirspline}}
+#' @seealso \code{\link{sir}},  \code{\link{sirspline}}, \code{\link{lines.sirspline}}
 #' 
 #' @S3method plot sirspline
 #' @export plot.sirspline
@@ -336,100 +336,182 @@ plot.sir <- function(x, plot.type = 'model',
 #' @author Matti Rantanen
 #' 
 #' @param x an object returned by function \code{sirspline}
-#' @param conf.int default TRUE draws confidence intervals
-#' @param xlab overwrites default x-axis label
-#' @param ylab overwrites default y-axis label
-#' @param ylim y-axis minimum and maximum values
-#' @param log if TRUE, the SIR is in log scale
-#' @param abline logical; draws a gray line in SIR = 1
+#' @param conf.int logical; default TRUE draws also the 95% confidence intervals
+#' @param xlab overwrites default x-axis label; can be a vector if multiple splines fitted
+#' @param ylab overwrites default y-axis label; can be a vector if multiple splines fitted
+#' @param log logical; default FALSE. Should the y-axis be in log scale
+#' @param abline logical; draws a reference line where SIR = 1
 #' @param ... arguments passed on to plot()
+#' 
+#' @details
+#' In \code{plot.sirspline} almost every graphical parameter is user
+#' adjustable, such as \code{ylim}, \code{xlim}.
+#' \code{plot.sirsplines} calls \code{lines.splines} to add lines.
+#' 
+#' The plot axis without lines can be plotted using option \code{type = 'n'}. 
+#' On top of the frame it's then possible to add a \code{grid}, 
+#' \code{abline} or text before plotting the lines (see: \code{sirspline}).
+#' 
 
-plot.sirspline <- function(x, conf.int = TRUE ,ylab, xlab, ylim, abline = TRUE, log = FALSE, ...) {
-  if (is.null(x$spline.seq.A)) {
-    stop('No splines fitted: spline.seq is NULL.')
+plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, ylab, xlab,  ...) {
+
+  #print(list(...))
+  
+  ## premilinary checks  
+  if (is.null(x$spline.seq.A)) stop('No splines found.')
+  
+  ## prepare dimension and par
+  plotdim <- as.numeric(c( !is.null( x$spline.seq.A ),
+                           !is.null( x$spline.seq.B ),
+                           !is.null( x$spline.seq.C ) ))
+  if(sum(plotdim) > 1) {
+    save_par <- par(no.readonly = TRUE)
+    par(mfrow=c(1,sum(plotdim)))
+    type <- 'l'
   }
-  x.label <- x[['spline']]
-  a <- as.numeric(c( !is.null( x$spline.seq.A ),
-                     !is.null( x$spline.seq.B ),
-                     !is.null( x$spline.seq.C ) ))
-  if ( missing(ylab) ) {
-    ylab <- 'SIR'
-  }
   
-  ratio <- ''
-  if (x$spline.dependent) {
-    # If ratio or separately modelled SIR's
-    ratio <- ' ratio'
-  } 
-  
-  
+  ## set labels
   if ( missing(xlab) ) {
-    xlab <- NULL
-    for(ii in 1:sum(a)) {
-      xlab[ii] <- x.label[ii]
+    xlab <- x$spline
+  }
+  
+  if ( missing(ylab) ) {
+    ylab <- rep('SIR',sum(plotdim))
+    if(log){
+      ylab <- rep('log(SIR)', sum(plotdim))
+    }
+    if(x$spline.dependent & sum(plotdim) > 1) {
+      ylab <- c(ylab[1], paste(ylab[2:sum(plotdim)], 'ratio'))
+    }
+  }
+  else{
+    if( length(ylab) < sum(plotdim))
+      ylab <- rep(ylab, sum(plotdim))
+    if(length(ylab) > sum(plotdim)) {
+      warning('set ylabs in a vector length of num of plots (',sum(plotdim),')')
     }
   }
   
-  op <- par(no.readonly = TRUE)
-  if(sum(a)>1){
-    par(mfrow=c(1,sum(a)))
-  }
-  
+  ## set scale
+  if(!is.logical(log)) stop('log should be a logical value.')
   log.bin <- ifelse(log, 'y', '')
   
-  y.range <- function(est) {    
-    mi <- min(min(x[[est]][,3]))
-    ma <- max(max(x[[est]][,4]))
-    c(mi,ma)
-  }
+  ## remove infinite values
+  #rm_inf <- function(est){
+  #  x[[est]][ is.finite(x[[est]][[2]]) & is.finite(x[[est]][[3]]) & is.finite(x[[est]][[4]]), ]
+  #}
   
-  x.range <- function(est) {
-    range(x[[est]])
-  }
-  # remove Inf values
-  rm_inf <- function(est){
-    x[[est]][ is.finite(x[[est]][[2]]) & is.finite(x[[est]][[3]]) & is.finite(x[[est]][[4]]), ]
-  }
+  spl <- c('spline.seq.A', 'spline.seq.B', 'spline.seq.C')[1:sum(plotdim)]
+  est <- gsub("seq", "est", spl)
   
-  draw.plot <- function(num = 1, abline=abline, conf.int = conf.int, col, lwd, ylim, log.bin, ...) {
-    g <- c('spline.seq.A', 'spline.seq.B', 'spline.seq.C')[num]
-    h <- gsub("seq", "est", g)
-    x[[h]] <- rm_inf(est=h)    
-    if(num>1) ylab <- paste0(ylab, ratio)
+  for (i in 1:sum(plotdim)) {  # age, per, fot, 
+    # empty plot
+    max_x <- range(x[[spl[i]]])
+    max_y <- range( x[[est[i]]][, 2:4] )
+    plot(max_x, max_y, type = 'n', ylab = ylab[i], xlab = xlab[i], log = log.bin, ...) 
+    if(abline) abline(h = 1)
     
-    if(missing(ylim)){
-      yr <- y.range(h)
+    # plot lines
+    if (missing(type) || type != 'n') {
+      lines.sirspline(x, conf.int = conf.int, select.spline = i, ...)
     }
-    else { yr <- ylim}
-    plot(x = x.range(g), y = yr, type='n', ylab = ylab, xlab = xlab[num], log = log.bin)
-    if(abline) abline(h=1, col='darkgrey')
-    
-    strata <- unique( x[[h]][,1] )
-    
-    if( missing(col) ){
-      col <- as.numeric(factor(strata))
+  }
+  if(sum(plotdim) > 1) {
+    par(save_par)
+  }
+  return(invisible())
+}
+
+
+
+#' \code{lines} method for sirspline-object
+#' 
+#' Plot SIR spline lines wtih R base graphics.
+#' 
+#' @seealso \code{\link{sir}},  \code{\link{sirspline}}, \code{\link{plot.sirspline}}
+#' 
+#' @S3method lines sirspline
+#' @export lines.sirspline
+#' @import graphics
+#' 
+#' @author Matti Rantanen
+#' 
+#' @param x an object returned by function \code{sirspline}
+#' @param conf.int logical; default TRUE draws also the 95% confidence intervals
+#' @param print.levels name(s) to be plottet. Default plots all levels.
+#' @param select.spline select which spline variable (a number or a name)
+#' is plotted.
+#' @param ... arguments passed on to lines()
+#' 
+#' @details 
+#' In \code{lines.sirspline} most of graphical parameters is user 
+#' adjustable.
+#' 
+#' Desired spline variable can be selected with \code{select.spline} and only one
+#' can be plotted at a time. The spline variable can include 
+#' several levels, e.g. gender (these are the levels of \code{print}
+#' from \code{sirspline}). All levels are printed by default, but a
+#' specific level can be selected using argument
+#' \code{print.levels}. Printing the levels seperately enables  e.g. to
+#' give different colours for each level.
+#' 
+
+
+lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline, ... ){
+  ## input: sirspline object, with only one spline var (spline.est.A)
+  ## input: print levels can be > 1.
+  
+  ## subset splines
+  if( length(x$spline) > 1 ) {
+    if ( missing(select.spline) ) {
+      stop(paste('select what spline to plot in select.spline:', paste(x$spline, collapse = ', ')))
     }
-    
-    if( missing(lwd) ){
-      lwd <- c(2,1)
-    }
-    ci <- 1
-    for(i in strata) {
-      colour <- col[ci]
-      lines(x[[g]], x[[h]][ x[[h]]$i == i,2], col=colour, lwd=lwd[1], ...)
-      if(conf.int) {
-        lines(x[[g]], x[[h]][ x[[h]]$i == i,3], col=colour, lwd=lwd[2], ...)
-        lines(x[[g]], x[[h]][ x[[h]]$i == i,4], col=colour, lwd=lwd[2], ...)
+    else {
+      if(is.numeric(select.spline)) {
+        k <- select.spline
       }
-      ci <- sum(ci,1)
+      else {
+        k <- which(x$spline == select.spline)
+      }
+      if(length(k) == 0 | length(x$spline) < k) stop('select.spline name/number is incorrect')
     }
+  } 
+  else {
+    k <- 1
   }
   
-  for(p in 1:sum(a)){
-    draw.plot(num=p, abline=abline, conf.int=conf.int, log.bin = log.bin,...)  
+  spl <- c('spline.seq.A', 'spline.seq.B', 'spline.seq.C')[k]
+  est <- gsub("seq", "est", spl)
+  
+  ## remove infinite values
+  # x[[h]] <- rm_inf(est=h)
+  
+  # get print levels
+  if(missing(print.levels)) {
+    print.levels <- NA
   }
-  # restore par
-  par(op)
+  pl <- unique(x$spline.est.A[,1])
+  if(any( is.null(print.levels), is.na(print.levels))) {
+    print.levels <- pl
+  }
+  pl <- pl[ pl %in% print.levels]
+  print(pl)
+  
+  ## get conf.int
+  if( !is.logical(conf.int) ) stop('conf.int is not logical')
+  n <- c(2,4)[c(!conf.int, conf.int)]
+  
+  
+  ## draw lines
+  for( l in pl ){
+    # loop through print.levels
+    index <- which(x$spline.est.A$i == l)
+    
+    for(m in 2:n) {
+      # loop through estiamte and confidence intervals
+      lines(x = x[[spl]], y = x[[est]][index, m], ...)
+    }
+  }
 }
 
 
