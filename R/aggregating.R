@@ -118,7 +118,7 @@ as.aggre.default <- function(x, ...) {
 #' returning all possible combinations of variables given in \code{aggre} even
 #' if those combinations are not represented in data (\code{"full"}); see Details
 #' @param subset a logical condition to subset by before computations;
-#' e.g. \code{subset = area %in% c("A", "B")}
+#' e.g. \code{subset = area \%in\% c("A", "B")}
 #' @param substituted \code{logical}, advanced; if \code{TRUE}, the supplied
 #' \code{aggre} is a \code{call} object as a result of using \code{substitute}
 #' or \code{quote}; useful for when using this function within another function
@@ -141,8 +141,8 @@ as.aggre.default <- function(x, ...) {
 #' censorings (end-point) as well as events in a multi-state setting
 #' (state transitions).
 #' 
-#' The result is a long-format (\code{data.frame} or \code{data.table}
-#' depending on \code{options("popEpi.datatable")}; see \code{?popEpi})
+#' The result is a long-format \code{data.frame} or \code{data.table}
+#' (depending on \code{options("popEpi.datatable")}; see \code{?popEpi})
 #' with the columns \code{pyrs} and the appropriate transitions named as
 #' \code{fromXtoY}, e.g. \code{from0to0} and \code{from0to1} depending
 #' on the values of \code{lex.Cst} and \code{lex.Xst}.
@@ -156,7 +156,7 @@ as.aggre.default <- function(x, ...) {
 #' 
 #' \itemize{
 #'  \item{a character string vector, e.g. \code{c("sex", "area")}, naming variables existing in \code{lex}}
-#'  \item{an expression, e.g. \code{factor(sex, 0:1, c("m", "f")) using any variable found in \code{lex}}}
+#'  \item{an expression, e.g. \code{factor(sex, 0:1, c("m", "f"))} using any variable found in \code{lex}}
 #'  \item{a list (fully or partially named) of expressions, e.g. \code{list(gender = factor(sex, 0:1, c("m", "f"), area)}}
 #' }
 #' 
@@ -171,9 +171,9 @@ as.aggre.default <- function(x, ...) {
 #' \code{c(0, 50, Inf)}, mentioning \code{age} in \code{aggre} leads to
 #' creating the \code{age} intervals \code{[0, 50)} and \code{[50, Inf)}
 #' and aggregating to them. The intervals are identified in the output
-#' with the lower bounds of the appropriate intervals.
+#' as the lower bounds of the appropriate intervals.
 #' 
-#' It is possible but not recommended to also supply \code{breaks}, 
+#' It is possible but not recommended to also supply the argument \code{breaks}, 
 #' a list of breaks as in \code{splitMulti}, but this may go wrong;
 #' It is mainly included for when the meta information about the 
 #' breaks used to split the data is lost due to modifying \code{lex}
@@ -186,15 +186,16 @@ as.aggre.default <- function(x, ...) {
 #' (default \code{aggre = "non-empty"}). For certain uses it may be useful
 #' to have also "empty" levels represented (resulting in some rows in output
 #' with zero person-years and events); in these cases supplying
-#' \code{aggre = "full"} (alias \code{"cross-product"}) causes \code{aggre}
-#' to determine the cross-product of all the levels of the supplied \code{aggre}
-#' variables or expressions and aggregate to them. An example of cross-products is
+#' \code{aggre = "full"} (alias \code{"cartesian"}) causes \code{aggre}
+#' to determine the Cartesian product of all the levels of the supplied \code{aggre}
+#' variables or expressions and aggregate to them. As an example
+#' of a Cartesian product, try
 #' 
 #' \code{merge(1:2, 1:5)}.
 #' 
-#' Also empty levesl of factors are used. 
+#' The empty levels of factors are used in this case as well. 
 #' Alternatively, \code{aggre = "unique"} works the same was as 
-#' \code{data.table}'s \code{by} argument (and uses it), i.e. uses only
+#' \code{data.table}'s \code{by} argument (and uses it), i.e. it uses only
 #' the found unique values based on \code{aggre} to tabulate aggregation results.
 #' 
 #' @examples 
@@ -208,16 +209,18 @@ as.aggre.default <- function(x, ...) {
 #'            entry = list(AGE = dg_age, CAL = get.yrs(dg_date)),
 #'            exit = list(CAL = get.yrs(ex_date)),
 #'            entry.status=0, exit.status = status)
-#' x <- splitMulti(x, breaks = list(CAL = seq(1993, 2013, 5), AGE = seq(0, 100, 50)))
+#' x <- splitMulti(x, breaks = list(CAL = seq(1993, 2013, 5), 
+#'                                  AGE = seq(0, 100, 50)))
 #' 
-#' a1 <- laggre(x, aggre = list(gender = factor(sex, 0:1, c("m", "f")), agegroup = AGE, period = CAL))
+#' ## these produce the same results (with differing ways of determining aggre)
+#' a1 <- laggre(x, aggre = list(gender = factor(sex, 0:1, c("m", "f")), 
+#'              agegroup = AGE, period = CAL))
 #' 
 #' a2 <- laggre(x, aggre = c("sex", "AGE", "CAL"))
 #' 
 #' a3 <- laggre(x, aggre = list(sex, agegroup = AGE, CAL))
 #' 
 #' ## returning also empty levels
-#' 
 #' a4 <- laggre(x, aggre = c("sex", "AGE", "CAL"), type = "full")
 #' 
 #' a5 <- laggre(x, aggre = c("sex", "AGE", "CAL"), type = "unique")
@@ -231,8 +234,8 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
   ## TODO: "full" type aggregating
   allTime <- proc.time()
   
-  type <- match.arg(type[1], c("non-empty", "unique", "full", "cross-product"))
-  if (type == "cross-product") type <- "full"
+  type <- match.arg(type[1], c("non-empty", "unique", "full", "cartesian"))
+  if (type == "cartesian") type <- "full"
   
   if (is.null(breaks)) breaks <- copy(attr(lex, "breaks"))
   checkBreaksList(lex, breaks)
@@ -334,7 +337,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
     if (type == "non-empty") pyrs <- pyrs[pyrs > 0]
     
   } else {
-    ## cross-product pyrs ------------------------------------------------------
+    ## cartesian pyrs ------------------------------------------------------
     pyrsTime <- proc.time()
     
     ## tmpdt will now contain both cut()'d time scales and any other variables

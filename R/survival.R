@@ -57,6 +57,10 @@
 #'  returns some messages and timings along the process
 #' 
 #' @details
+#' 
+#' \strong{survtab may change in significant ways in future releases and
+#' should not be considered to be stable.}
+#' 
 #' \strong{Basics}
 #' 
 #' \code{survtab} creates survival tables using data split with e.g. 

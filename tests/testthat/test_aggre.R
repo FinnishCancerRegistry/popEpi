@@ -19,7 +19,7 @@ test_that("laggre and lexpand produce the same results", {
                 status = status %in% 1:2, aggre.type = "non-empty",
                 breaks=BL, aggre = list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
   x5 <- lexpand(sr, birth  = bi_date, entry = dg_date, exit = ex_date,
-                status = status %in% 1:2, aggre.type = "cross-product",
+                status = status %in% 1:2, aggre.type = "cartesian",
                 breaks=BL, aggre = list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
   
   x[, fot := cutLow(fot, BL$fot)]

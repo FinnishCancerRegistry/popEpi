@@ -94,6 +94,9 @@ Given a data set processed by \code{lexpand}, estimates various
 survival time functions as requested by the user.
 }
 \details{
+\strong{survtab may change in significant ways in future releases and
+should not be considered to be stable.}
+
 \strong{Basics}
 
 \code{survtab} creates survival tables using data split with e.g.

@@ -90,7 +90,7 @@ test_that("lexpanding with aggre.type = 'unique' works", {
   
 })
 
-test_that("lexpanding with aggre.type = 'cross-product' works; no time scales used", {
+test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used", {
   skip_on_cran()
   BL <- list(fot = c(0,Inf))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
@@ -114,7 +114,7 @@ test_that("lexpanding with aggre.type = 'cross-product' works; no time scales us
                  birth = bi_date, entry = dg_date, exit = ex_date,
                  aggre = list(sex = factor(sex, 0:1, c("m", "f")),
                               period = cut(get.yrs(dg_date), get.yrs(as.Date(paste0(seq(1970, 2015, 5), "-01-01"))))), 
-                 aggre.type = "cross-product")
+                 aggre.type = "cartesian")
   
   setDT(ag2)
   setkeyv(ag1, c("sex", "period"))
@@ -125,7 +125,7 @@ test_that("lexpanding with aggre.type = 'cross-product' works; no time scales us
   expect_equal(ag1$from0to1, ag2$from0to1)
   
 })
-test_that("lexpanding with aggre.type = 'cross-product' works; only time scales used", {
+test_that("lexpanding with aggre.type = 'cartesian' works; only time scales used", {
   skip_on_cran()
   BL <- list(fot = 0:5, age = seq(0,100, 5))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
@@ -152,7 +152,7 @@ test_that("lexpanding with aggre.type = 'cross-product' works; only time scales 
                  breaks = list(fot = 0:5, age = seq(0,100, 5)), 
                  status = status, entry.status = 0L,
                  birth = bi_date, entry = dg_date, exit = ex_date,
-                 aggre = list(fot, age), aggre.type = "cross-product")
+                 aggre = list(fot, age), aggre.type = "cartesian")
   
   setDT(ag2)
   setkeyv(ag1, c("fot", "age"))

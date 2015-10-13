@@ -49,7 +49,7 @@ vanilla \code{\link{table}} by giving a long format table of values
 Make use of e.g. \code{\link{cast_simple}} if data needs to be
 presented in a wide format (e.g. a two-way table).
 
-The rows of the long-format table are effectively cross-products
+The rows of the long-format table are effectively Cartesian products
 of the levels of each variable in  \code{by.vars},
 e.g. with  \code{by.vars = c("sex", "area")} all levels of
 \code{area} are repeated for both levels of  \code{sex}

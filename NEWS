@@ -2,6 +2,7 @@ popEpi 0.2.2
 ======
 * plot.survtab & lines.survtab now plot multiple strata at the same time
 * lexpand date arguments now NULL by default
+* lexpand / laggre argument value "cross-product" actually alluded to a Cartesian product and is henceforth "cartesian"
 
 popEpi 0.2.1
 ======

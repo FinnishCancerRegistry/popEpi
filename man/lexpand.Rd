@@ -7,7 +7,7 @@
 lexpand(data, birth = NULL, entry = NULL, exit = NULL, event = NULL,
   status = status != 0, entry.status = NULL, breaks = list(fot = c(0,
   Inf)), id = NULL, overlapping = TRUE, aggre = NULL,
-  aggre.type = c("unique", "cross-product"), drop = TRUE, pophaz = NULL,
+  aggre.type = c("unique", "cartesian"), drop = TRUE, pophaz = NULL,
   pp = TRUE, subset = NULL, merge = TRUE, verbose = FALSE, ...)
 }
 \arguments{
@@ -48,7 +48,7 @@ a list of unquoted variables and/or expressions thereof,
 which are interpreted as factors; data events and person-years will
 be aggregated by the unique combinations of these; see Details}
 
-\item{aggre.type}{one of \code{c("non-empty","unique","cross-product")};
+\item{aggre.type}{one of \code{c("non-empty","unique","cartesian")};
 can be abbreviated; see Details}
 
 \item{drop}{logical; if \code{TRUE}, drops all resulting rows
@@ -253,7 +253,7 @@ last record (subject possibly defined by \code{id}).
 
 If \code{aggre.type = "unique"}, the above results are computed for existing
 combinations of expressions given in \code{aggre}, but also for non-existing
-combinations if \code{aggre.type = "cross-product"} or \code{"full"}. E.g. if a
+combinations if \code{aggre.type = "cartesian"} or \code{"full"}. E.g. if a
 factor variable has levels \code{"a", "b", "c"} but the data is limited
 to only have levels \code{"a", "b"} present
 (more than zero rows have these level values), the former setting only
