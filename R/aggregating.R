@@ -93,15 +93,22 @@ as.aggre.default <- function(x, ...) {
 
 
 #' @export
-#' @title Aggregation of splitted \code{Lexis} data
+#' @title Aggregation of split \code{Lexis} data
 #' @author Joonas Miettinen
-#' @param lex a \code{Lexis} object splitted with e.g. 
+#' @description Aggregates a split \code{Lexis} object by given variables 
+#' and / or expressions into a long-format table of person-years and 
+#' transitions / end-points. Automatic aggregation over time scales
+#' by which data has been split if the respective time scales are mentioned
+#' in the aggregation argument to e.g. intervals of calendar time, follow-up time
+#' and/or age.
+#' @param lex a \code{Lexis} object split with e.g. 
 #' \code{\link[Epi]{splitLexis}} or \code{\link{splitMulti}}
 #' @param aggre expression(s) or variables to aggregate by; can be 
 #' 1) a character string vector of variable names (e.g. \code{aggre = c("sex", "area")});
 #' 2) an expression or symbol (e.g. \code{aggre = sex} or 
 #' \code{aggre = factor(sex, 0:1, c("m", "f"))});
-#' 3) a list of expressions or symbols (e.g. \code{aggre = list(gender = sex, area)}); 
+#' 3) a list of expressions or symbols (e.g. \code{aggre = list(gender = sex, area)});
+#' automatic aggregation over Lexis time scales mentioned here; 
 #' see Details and Examples
 #' @param breaks if \code{NULL}, uses the breaks that were used to split the data
 #' to categorize time scales mentioned in \code{aggre} using \code{cut}; otherwise
@@ -110,14 +117,112 @@ as.aggre.default <- function(x, ...) {
 #' from returning only rows with \code{pyrs > 0} (\code{"non-empty"}) to
 #' returning all possible combinations of variables given in \code{aggre} even
 #' if those combinations are not represented in data (\code{"full"}); see Details
-#' @param subset a logical condition to subset by before computations
+#' @param subset a logical condition to subset by before computations;
+#' e.g. \code{subset = area %in% c("A", "B")}
 #' @param substituted \code{logical}, advanced; if \code{TRUE}, the supplied
 #' \code{aggre} is a \code{call} object as a result of using \code{substitute}
 #' or \code{quote}; useful for when using this function within another function
 #' @param verbose \code{logical}; if \code{TRUE}, the function returns timings
 #' and some information useful for debugging along the aggregation process
+#' @details 
+#' 
+#' \strong{Basics}
+#' 
+#' \code{laggre} is intented for aggregation of split \code{Lexis} data only.
+#' See \code{\link[Epi]{Lexis}} for forming \code{Lexis} objects by hand
+#' and e.g. \code{\link[Epi]{splitLexis}}, \code{\link{splitLexisDT}}, and
+#' \code{\link{splitMulti}} for splitting the data. \code{\link{lexpand}}
+#' may be used for simple data sets to do both steps as well as aggregation
+#' in the same function call.
+#' 
+#' Here aggregation refers to computing person-years and the appropriate events
+#' (state transitions and end points in status) for the subjects in the data.
+#' Hence, it computes e.g. deaths (end-point and state transition) and 
+#' censorings (end-point) as well as events in a multi-state setting
+#' (state transitions).
+#' 
+#' The result is a long-format (\code{data.frame} or \code{data.table}
+#' depending on \code{options("popEpi.datatable")}; see \code{?popEpi})
+#' with the columns \code{pyrs} and the appropriate transitions named as
+#' \code{fromXtoY}, e.g. \code{from0to0} and \code{from0to1} depending
+#' on the values of \code{lex.Cst} and \code{lex.Xst}.
+#' 
+#' 
+#' \strong{The aggre argument}
+#' 
+#' The \code{aggre} argument determines the length of the table, i.e.
+#' the combinations of variables to which data is aggregated.  
+#' \code{aggre} is relatively flexible, as it can be supplied as
+#' 
+#' \itemize{
+#'  \item{a character string vector, e.g. \code{c("sex", "area")}, naming variables existing in \code{lex}}
+#'  \item{an expression, e.g. \code{factor(sex, 0:1, c("m", "f")) using any variable found in \code{lex}}}
+#'  \item{a list (fully or partially named) of expressions, e.g. \code{list(gender = factor(sex, 0:1, c("m", "f"), area)}}
+#' }
+#' 
+#' Note that expressions effectively allow a variable to be supplied simply as
+#' e.g. \code{aggre = sex} (as a symbol/name in R lingo).
+#' 
+#' The data is then aggregated to the levels of the given variables 
+#' or expression(s). Variables defined to be time scales in the supplied 
+#' \code{Lexis} are processed in a special way: If any are mentioned in the
+#' \code{aggre} argument, intervals of them are formed based on the breaks
+#' used to split the data: e.g. if \code{age} was split using the breaks 
+#' \code{c(0, 50, Inf)}, mentioning \code{age} in \code{aggre} leads to
+#' creating the \code{age} intervals \code{[0, 50)} and \code{[50, Inf)}
+#' and aggregating to them. The intervals are identified in the output
+#' with the lower bounds of the appropriate intervals.
+#' 
+#' It is possible but not recommended to also supply \code{breaks}, 
+#' a list of breaks as in \code{splitMulti}, but this may go wrong;
+#' It is mainly included for when the meta information about the 
+#' breaks used to split the data is lost due to modifying \code{lex}
+#' in certain ways after splitting.
+#' 
+#' \strong{Aggregation types (styles)}
+#' 
+#' It is almost always enough to aggregate the data to variable levels
+#' that are actually represented in the data 
+#' (default \code{aggre = "non-empty"}). For certain uses it may be useful
+#' to have also "empty" levels represented (resulting in some rows in output
+#' with zero person-years and events); in these cases supplying
+#' \code{aggre = "full"} (alias \code{"cross-product"}) causes \code{aggre}
+#' to determine the cross-product of all the levels of the supplied \code{aggre}
+#' variables or expressions and aggregate to them. An example of cross-products is
+#' 
+#' \code{merge(1:2, 1:5)}.
+#' 
+#' Also empty levesl of factors are used. 
+#' Alternatively, \code{aggre = "unique"} works the same was as 
+#' \code{data.table}'s \code{by} argument (and uses it), i.e. uses only
+#' the found unique values based on \code{aggre} to tabulate aggregation results.
+#' 
+#' @examples 
+#' 
+#' ## form a Lexis object
+#' library(Epi)
+#' data(sibr)
+#' x <- sibr[1:10,]
+#' x[1:5,]$sex <- 0 ## pretend some are male
+#' x <- Lexis(data = x,
+#'            entry = list(AGE = dg_age, CAL = get.yrs(dg_date)),
+#'            exit = list(CAL = get.yrs(ex_date)),
+#'            entry.status=0, exit.status = status)
+#' x <- splitMulti(x, breaks = list(CAL = seq(1993, 2013, 5), AGE = seq(0, 100, 50)))
+#' 
+#' a1 <- laggre(x, aggre = list(gender = factor(sex, 0:1, c("m", "f")), agegroup = AGE, period = CAL))
+#' 
+#' a2 <- laggre(x, aggre = c("sex", "AGE", "CAL"))
+#' 
+#' a3 <- laggre(x, aggre = list(sex, agegroup = AGE, CAL))
+#' 
+#' ## returning also empty levels
+#' 
+#' a4 <- laggre(x, aggre = c("sex", "AGE", "CAL"), type = "full")
+#' 
+#' a5 <- laggre(x, aggre = c("sex", "AGE", "CAL"), type = "unique")
 laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "unique", "full"), subset = NULL, substituted = FALSE, verbose = FALSE) {
-  ## a generalized aggregator for splitted Lexis objects
+  ## a generalized aggregator for split Lexis objects
   ## input: lex: a Lexis object that has been split somehow; 
   ##        aggre: an expression / list of expressions / a character vector of names;
   ##        may have been substituted, but user must use substitued = TRUE then
@@ -136,7 +241,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "uniq
   if (length(foundScales) == 0) foundScales <- names(breaks)
   if (length(foundScales) == 0 ) stop("could not determine names of time scales; is the data a Lexis object?")
   
-  
+  ## subset & drop -------------------------------------------------------------
   subset <- substitute(subset)
   subset <- evalLogicalSubset(lex, subset)
   
