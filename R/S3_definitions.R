@@ -219,13 +219,8 @@ print.sirspline <- function(x, ...) {
 #' @examples 
 #' \dontrun{
 #' # Plot SIR estimates
-#'# plot(sir.by.gender, plot.type = 'model', col = c(4,2), log=FALSE, eps=0.2, lty=1, lwd=2, pch=19,  
+#'# plot(sir.by.gender, col = c(4,2), log=FALSE, eps=0.2, lty=1, lwd=2, pch=19,  
 #'#      main = 'SIR by gender', abline=TRUE)
-#'# 
-#'# # plot SIR splines gender in same plot
-#'# plot(sir.male, plot.type = 'splines', col = c(4), lwd=2,
-#'#      main = 'SIR by gender', abline=TRUE)
-#'# lines(sir.female, col = 2)
 #' }
 
 plot.sir <- function(x, plot.type = 'model', 
@@ -323,9 +318,9 @@ plot.sir <- function(x, plot.type = 'model',
   }
 }
 
-#' \code{plot} method for sirspline-object
+#' @title \code{plot} method for sirspline-object
 #' 
-#' Plot SIR splines using R base graphics.
+#' @description Plot SIR splines using R base graphics.
 #' 
 #' @seealso \code{\link{sir}},  \code{\link{sirspline}}, \code{\link{lines.sirspline}}
 #' 
@@ -335,12 +330,13 @@ plot.sir <- function(x, plot.type = 'model',
 #' 
 #' @author Matti Rantanen
 #' 
-#' @param x an object returned by function \code{sirspline}
-#' @param conf.int logical; default TRUE draws also the 95% confidence intervals
+#' @param x an object returned by function sirspline
+#' @param conf.int logical; default TRUE draws also the 95 confidence intervals
 #' @param xlab overwrites default x-axis label; can be a vector if multiple splines fitted
 #' @param ylab overwrites default y-axis label; can be a vector if multiple splines fitted
 #' @param log logical; default FALSE. Should the y-axis be in log scale
 #' @param abline logical; draws a reference line where SIR = 1
+#' @param type select \code{type = 'n'} to plot only figure frames 
 #' @param ... arguments passed on to plot()
 #' 
 #' @details
@@ -424,29 +420,20 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 
 
 
-#' \code{lines} method for sirspline-object
+#' @title lines method for sirspline-object
+#' @description Plot SIR spline lines wtih R base graphics
 #' 
-#' Plot SIR spline lines wtih R base graphics.
-#' 
-#' @seealso \code{\link{sir}},  \code{\link{sirspline}}, \code{\link{plot.sirspline}}
-#' 
-#' @S3method lines sirspline
-#' @export lines.sirspline
-#' @import graphics
 #' 
 #' @author Matti Rantanen
 #' 
-#' @param x an object returned by function \code{sirspline}
-#' @param conf.int logical; default TRUE draws also the 95% confidence intervals
+#' @param x an object returned by function sirspline
+#' @param conf.int logical; default TRUE draws also the 95 confidence intervals
 #' @param print.levels name(s) to be plottet. Default plots all levels.
-#' @param select.spline select which spline variable (a number or a name)
-#' is plotted.
+#' @param select.spline select which spline variable (a number or a name) is plotted.
 #' @param ... arguments passed on to lines()
 #' 
-#' @details 
-#' In \code{lines.sirspline} most of graphical parameters is user 
+#' @details  In \code{lines.sirspline} most of graphical parameters is user 
 #' adjustable.
-#' 
 #' Desired spline variable can be selected with \code{select.spline} and only one
 #' can be plotted at a time. The spline variable can include 
 #' several levels, e.g. gender (these are the levels of \code{print}
@@ -455,6 +442,11 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 #' \code{print.levels}. Printing the levels seperately enables  e.g. to
 #' give different colours for each level.
 #' 
+#' @seealso \code{\link{sir}},  \code{\link{sirspline}}, \code{\link{plot.sirspline}}
+#' 
+#' @S3method lines sirspline
+#' @export lines.sirspline
+#' @import graphics
 
 
 lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline, ... ){
