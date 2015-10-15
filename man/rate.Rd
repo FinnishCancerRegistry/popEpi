@@ -8,7 +8,7 @@ rate(data, obs, pyrs, print = NULL, adjust = NULL, weights = NULL,
   weight.data = "world66_5", subset = NULL)
 }
 \arguments{
-\item{data}{aggregated data (see: \code{\link{lexband}})}
+\item{data}{aggregated data (see: \code{\link{lexpand}})}
 
 \item{obs}{observations variable name in data, quoted or unquoted.}
 
@@ -42,7 +42,7 @@ preloaded weights data or user specified weights.
 }
 \details{
 Input data needs to be in aggregated format with observations
-and person-years. For individual data use \code{\link{lexband}}. Or
+and person-years. For individual data use \code{\link{lexpand}}. Or
 \code{\link{ltable}} and merge person-years manually.
 
 \strong{Weights}
@@ -87,7 +87,7 @@ Note that age group variable should naturally have a correct number of
 levels for the rate you want to calculate.
 }
 \examples{
-## Prepare data with lexband and then reformat agegroup.
+## Prepare data with lexpand and then reformat agegroup.
 x <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,
              breaks = list(per = c(1990,2000,2010,2020), age = c(0:17*5,Inf)),
              aggre = list(agegroup = age, year.cat = per),

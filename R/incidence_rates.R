@@ -4,7 +4,7 @@
 #' @description \code{rate} calculates adjusted rates using
 #' preloaded weights data or user specified weights.
 #'
-#' @param data aggregated data (see: \code{\link{lexband}})
+#' @param data aggregated data (see: \code{\link{lexpand}})
 #' @param pyrs person-years variable name in data, quoted or unquoted
 #' @param obs observations variable name in data, quoted or unquoted.
 #' @param adjust variable for adjusting the rates, quoted or unquoted
@@ -18,7 +18,7 @@
 #' @param subset a logical expression to subset data.
 #' 
 #' @details Input data needs to be in aggregated format with observations 
-#' and person-years. For individual data use \code{\link{lexband}}. Or
+#' and person-years. For individual data use \code{\link{lexpand}}. Or
 #' \code{\link{ltable}} and merge person-years manually.
 #' 
 #' \strong{Weights}
@@ -86,7 +86,7 @@
 #' @seealso \code{\link{lexpand}}, \code{\link{ltable}}
 #' 
 #' @examples 
-#' ## Prepare data with lexband and then reformat agegroup.
+#' ## Prepare data with lexpand and then reformat agegroup.
 #' x <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,  
 #'              breaks = list(per = c(1990,2000,2010,2020), age = c(0:17*5,Inf)),
 #'              aggre = list(agegroup = age, year.cat = per),
