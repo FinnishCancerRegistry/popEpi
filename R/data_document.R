@@ -57,9 +57,9 @@ NULL
 
 
 # International standard weights ------------------------------------------
-#' Age standardization weights from the ICSS scheme.
+#' Age standardisation weights from the ICSS scheme.
 #'
-#' Contains three sets age-standardization weights for age-standardized survival (net, relative or observed).
+#' Contains three sets age-standardisation weights for age-standardized survival (net, relative or observed).
 #' 
 #'
 #' @source 
@@ -94,3 +94,42 @@ NULL
 #' }
 #' @name popmort
 NULL
+
+
+
+
+# stdpop18 ------------------------------------------------------------------
+
+#' Standard populations from 2000: world, europe and nordic.
+#'
+#' World, europe, nordic standard populations by 18 age categories. Sums to 100000.
+#'
+#' @source Nordcan, 2000
+#' @format data.table with columns
+#' \itemize{
+#'  \item agegroup (character)
+#'  \item world std (numeric)
+#'  \item europe std (numeric)
+#'  \item nordic std (numeric)
+#' }
+#' @name stdpop18
+NULL
+
+
+# stdpop101 -----------------------------------------------------------------
+
+#' World standard population by 1 year agegroups from 1 to 101. Sums to 100 000.
+#'
+#'
+#' @source Standard population is from:
+#' \href{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}{world standard pop "101of1"}
+#' 
+#' @format data.table with columns
+#' \itemize{
+#'  \item \code{world_std} weight in 100000 years (numeric)
+#'  \item \code{agegroup} age group from 1 to 101 (numeric)
+#' }
+#' @name stdpop101
+NULL
+
+

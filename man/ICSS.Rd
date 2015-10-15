@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_document.R
 \name{ICSS}
 \alias{ICSS}
-\title{Age standardization weights from the ICSS scheme.}
+\title{Age standardisation weights from the ICSS scheme.}
 \format{data.table with columns
 \itemize{
  \item agegroup - coded from 1 to 16
@@ -18,6 +18,6 @@
 Corazziari, Isabella, Mike Quinn, and Riccardo Capocaccia. "Standard cancer patient population for age standardising survival ratios." European Journal of Cancer 40.15 (2004): 2307-2316.
 }
 \description{
-Contains three sets age-standardization weights for age-standardized survival (net, relative or observed).
+Contains three sets age-standardisation weights for age-standardized survival (net, relative or observed).
 }
 
