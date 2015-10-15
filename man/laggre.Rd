@@ -4,8 +4,8 @@
 \alias{laggre}
 \title{Aggregation of split \code{Lexis} data}
 \usage{
-laggre(lex, aggre = NULL, breaks = NULL, type = c("non-empty", "unique",
-  "full"), subset = NULL, substituted = FALSE, verbose = FALSE)
+laggre(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
+  subset = NULL, substituted = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{lex}{a \code{Lexis} object split with e.g.
@@ -24,7 +24,7 @@ to categorize time scales mentioned in \code{aggre} using \code{cut}; otherwise
 uses the supplied named list of breaks; see Details}
 
 \item{type}{determines outputted levels to which data is aggregated varying
-from returning only rows with \code{pyrs > 0} (\code{"non-empty"}) to
+from returning only rows with \code{pyrs > 0} (\code{"unique"}) to
 returning all possible combinations of variables given in \code{aggre} even
 if those combinations are not represented in data (\code{"full"}); see Details}
 
@@ -104,7 +104,8 @@ in certain ways after splitting.
 
 It is almost always enough to aggregate the data to variable levels
 that are actually represented in the data
-(default \code{aggre = "non-empty"}). For certain uses it may be useful
+(default \code{aggre = "unique"}; alias \code{"non-empty"}).
+For certain uses it may be useful
 to have also "empty" levels represented (resulting in some rows in output
 with zero person-years and events); in these cases supplying
 \code{aggre = "full"} (alias \code{"cartesian"}) causes \code{aggre}
@@ -113,11 +114,6 @@ variables or expressions and aggregate to them. As an example
 of a Cartesian product, try
 
 \code{merge(1:2, 1:5)}.
-
-The empty levels of factors are used in this case as well.
-Alternatively, \code{aggre = "unique"} works the same was as
-\code{data.table}'s \code{by} argument (and uses it), i.e. it uses only
-the found unique values based on \code{aggre} to tabulate aggregation results.
 }
 \examples{
 ## form a Lexis object
@@ -142,8 +138,6 @@ a3 <- laggre(x, aggre = list(sex, agegroup = AGE, CAL))
 
 ## returning also empty levels
 a4 <- laggre(x, aggre = c("sex", "AGE", "CAL"), type = "full")
-
-a5 <- laggre(x, aggre = c("sex", "AGE", "CAL"), type = "unique")
 }
 \author{
 Joonas Miettinen
