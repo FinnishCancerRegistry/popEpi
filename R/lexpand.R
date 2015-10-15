@@ -307,7 +307,11 @@ lexpand <- function(data,
   }
   rm(added_vars, conflicted_vars)
   
-  aggre.type <- match.arg(aggre.type[1L], c("cartesian", "non-empty", "unique"))
+  aggre.type <- match.arg(aggre.type[1L], c("cartesian", "non-empty", "unique", "cross-product", "full"))
+  if (aggre.type == "cross-product") {
+    aggre.type <- "full"
+    warning("aggre.type value 'cross-product' deprecated and renamed to 'cartesian'; please use that in the future")
+  }
   
   ## subsetting-----------------------------------------------------------------
   ## no copy taken of data!
