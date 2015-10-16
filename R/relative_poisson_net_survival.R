@@ -56,7 +56,7 @@
 #' 
 #' 
 
-rpcurve <- function(object = NULL, conf.int = 0.95) {
+rpcurve <- function(object = NULL) {
   
   FOT <- uni_id <- uni_n <- uni_w <- lo <- hi <- NULL
   ## sanity checks -------------------------------------------------------------
@@ -123,7 +123,7 @@ rpcurve <- function(object = NULL, conf.int = 0.95) {
   l <- lapply(l, attrsetter)
 
   epicumgetter <- function(x, ...) {
-    Epi::ci.cum(ctr.mat = x, ..., alpha = 1-conf.int, Exp = TRUE, ci.Exp = TRUE)
+    Epi::ci.cum(ctr.mat = x, ..., alpha = 1-0.95, Exp = TRUE, ci.Exp = TRUE)
   }
   
   tab <- lapply(l, epicumgetter, obj=object, intl = fb$delta); rm(l)
