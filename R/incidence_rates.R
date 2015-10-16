@@ -118,8 +118,8 @@ rate <- function( data,
 ) {
   data <- copy(data)
   setDT(data)
-  ## subsetting ------------------------------------------------------------
-  ## no copy taken of data!
+  
+  ## subsetting -----------------------------------------------------------
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = data, substiset = subset)
   data <- data[subset,]
@@ -151,6 +151,7 @@ rate <- function( data,
   
   ## user specified weights
   if (popArgType(substitute(weights)) == 'list' ) {
+    if( is.null(adjust) ) stop('Weights given without adjust variable. Assign adjust.')
     if (length(names(inc.adj)) > 1 | length(eval(weights)) > 1  ) { 
       stop('Only one weigth currently supported')
     }
@@ -223,7 +224,7 @@ stdr.weights <- function(wp = 'world00_1'){
   }
   sr[]
 }
-
+globalVariables(c('stdpop18','stdpop101','agegroup','world_std'))
 
 
 rate_table <- function(data, 
@@ -243,7 +244,12 @@ rate_table <- function(data,
   data <- data.table(data)
   if (!is.null(weights) && all(weights %in% colnames(data)) ) {
     ## use predefined weights
-    data[, reference := colsum1(.SD), .SDcols = weights, by = c(print)]
+    if( !is.null(print)) {
+      data[, reference := colsum1(.SD), .SDcols = weights, by = c(print)]
+    }
+    else {
+      data[, reference := colsum1(.SD), .SDcols = weights]
+    }
     data[, (weights) := NULL]
   }
   else if ( !is.null(adjust) ) { # add: if ( !is.null(adjust) )
@@ -265,19 +271,15 @@ rate_table <- function(data,
       setnames(wd, 'agegroup', adjust)
     }
   
-    else if ( (is.null(weight.data) || weight.data=='cohort')  && is.null(weights)) {
+    else if (is.null(weight.data) || weight.data=='cohort') {
       # get cohort std
       p1 <- paste0('sum(',pyrs,', na.rm=TRUE)')
       p1 <- parse(text = p1)
       wd <- data[,list( pyrs = eval(p1)), by = c(unique(adjust))]
-       # expr.by.cj(data = data, by.vars = unique(adjust), expr = list(pyrs = sum(eval(p1))))
-       # removed for easier syntax...
       wd[, reference := colsum1(.SD), .SDcols = 'pyrs']
       wd[,c('pyrs') := NULL]
     }
-    else {
-      return(data)
-    }
+
     data <- merge(x  = data, y  = wd[, c('reference', adjust) , with=FALSE],
                   by = adjust, all.x = TRUE)
   }
@@ -290,6 +292,7 @@ rate_table <- function(data,
   return(data)
 }
 
+globalVariables(('reference'))
 
 rate_est <- function(data = data, 
                      obs = 'obs', 
@@ -335,7 +338,7 @@ rate_est <- function(data = data,
                  'rate.adj=sum(rate.adj,na.rm=TRUE),' ,'lam.temp=sum(lam.temp,na.rm=TRUE), var.temp=sum(var.temp,na.rm=TRUE))') 
     l <- parse(text = ie)
 
-    data <- data[, eval(l), by=c(print)]
+    data <- data[, eval(l), by=print]
     # rate.adj: S.E.
     data[, SE.rate.adj := exp( sqrt((1/lam.temp)^2 * var.temp)) ]
     # rate.adj: CI
@@ -360,4 +363,4 @@ rate_est <- function(data = data,
   return(data[])
 }
 
-
+globalVariables(c('var.temp','lam.temp','rate.adj','SE.rate.adj','SE.rate'))

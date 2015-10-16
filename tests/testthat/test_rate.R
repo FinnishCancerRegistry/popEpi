@@ -75,11 +75,14 @@ test_that("names dont cause problems", {
 
 
 test_that("rate works with different weights an subset", {
+  s0 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = NULL, adjust = 'AGEGROUP', weights = list(1:18))
+  s0 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = NULL, adjust = 'AGEGROUP', weights = list(1:18), subset = COV==1)
   s1 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = list(1:18), weight.data = NULL, subset = COV==1)
   s2 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = NULL, weight.data = 'world00_20of5', subset = COV == 2)
   s3 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = NULL, weight.data = 'cohort', subset = COV==1)
   s4 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = NULL, weights = NULL, weight.data = NULL, subset = AGEGROUP != 1)
   s5 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = NULL, adjust = NULL, weights = NULL, weight.data = NULL, subset = COV == 1)
+  
   
   expect_equal(sum(s1$PYRS), p18[COV==1,sum(PYRS)])
   expect_equal(sum(s2$OBS), p20[COV==2,sum(OBS)])
@@ -88,6 +91,23 @@ test_that("rate works with different weights an subset", {
   expect_equal(s5$rate, p20[COV==1,list(sum(OBS)/sum(PYRS))][, V1])
   expect_is(s3, 'rate')
   expect_is(s4, 'pe')
+})
+
+
+test_that("warnings and stops works properly", {
+  expect_error(
+    rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = list(1:18, 2:19), weight.data = NULL)
+    )
+  expect_error( stdr.weights(c('wold00_1','world66_5')) )
+  expect_error( stdr.weights(c('wold00_20of5')) )
+  expect_error(
+    rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = list(1:18, 2:19), weight.data = NULL),
+    'Only one weigth currently supported'
+  )
+  expect_error(
+    rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = NULL, weights = list(1:18)),
+    'Weights given without adjust variable. Assign adjust.'
+  )
 })
 
 

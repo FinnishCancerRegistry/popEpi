@@ -93,6 +93,15 @@ test_that("SIR works with multistate aggregated lexpand data", {
 })
 
 
+
+# SIR utils ---------------------------------------------------------------
+
+test_that('Util functions work', {
+  expect_equal( poisson.ci(5,5)$rate, 1)
+})
+
+
+
 # sir splines -------------------------------------------------------------
 
 #library(reshape2)

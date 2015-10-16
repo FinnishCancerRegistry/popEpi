@@ -571,8 +571,6 @@ poisson.ci <- function(x, pt = 1, conf.level = 0.95) {
 }
 
 
-
-
 #' @title Delete \code{data.table} columns if there
 #' @author Joonas Miettinen
 #' @param DT a \code{data.table}
