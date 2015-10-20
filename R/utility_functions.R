@@ -178,6 +178,10 @@ get.yrs <- function(dates, format = "%Y-%m-%d", year.length = "approx") {
   orle <- length(dates)
   nale <- sum(is.na(dates))
   
+  if (is.null(orle)) stop("dates vector is NULL; did you supply the right data?")
+  
+  if (orle == 0) stop("length of dates vector is zero; did you supply the right data?")
+  
   dat <- data.table(dates=dates)
   if (is.character(dates)) {
     dat[, dates := as.IDate(dates, format = format)]
