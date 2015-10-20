@@ -110,7 +110,8 @@ ltable <- function(data,
   }
   
   ## collect levels of by.vars in list
-  levs <- list()
+  levs <- vector(mode = "list", length = length(by.vars))
+  setattr(levs, "names", by.vars)
   for (k in by.vars) {
     levs[[k]] <- levsfun(data[[k]])
   }
