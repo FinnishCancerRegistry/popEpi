@@ -95,9 +95,6 @@ ltable <- function(data,
   
   if (!is.data.frame(data)) stop("only data.frame or data.table allowed as data")
   
-  ## subsetting: no copy of data -----------------------------------------------
-  subset <- substitute(subset)
-  subset <- evalLogicalSubset(data = data, substiset = subset)
   
   ## use either original levels or simply unique values
   if (use.levels) {
@@ -120,25 +117,24 @@ ltable <- function(data,
   cj <- do.call(CJ, levs)
   
   ## treatment of NA values in by.vars
-  if (na.rm & !use.levels) {
-    na_cj <- na.omit(cj)
-    drop_rows<- nrow(cj) - nrow(na_cj)
-    if (drop_rows >0) {
-      hav <- nrow(data)
-      na_hav <- data.table(data[subset,], key=by.vars)[na_cj, .N, by=.EACHI]
-      na_hav <- sum(na_hav$N)
-      message(paste("NOTE:", hav-na_hav,"observations in original data ignored due to missingness, resulting in", 
-                    drop_rows, "fewer rows in the table"))
-      cj <- na_cj
-    }
+  na_cj <- na.omit(cj)
+  if (na.rm && nrow(na_cj) < nrow(cj)) {
+    message("NOTE: Some rows in data were ignored in creating output due to NA values in by.vars, resulting in ", nrow(cj)-nrow(na_cj), " fewer rows in output")
+    cj <- na_cj
   }
+  rm(na_cj)
   
   ## make the table
   e <- substitute(expr)
   if (!is.data.table(data)) {
     ## data.frame needs to take a copy unfortunately...
     ## setDT & setDF possible but unrobust
-    data <- data.table(data)[subset, ]
+    
+    subset <- substitute(subset)
+    subset <- evalLogicalSubset(data = data, substiset = subset)
+    
+    data <- data[subset,]
+    setDT(data)
     setkeyv(data, by.vars)
     tab <- data[cj, eval(e, envir = .SD), by =.EACHI]
     rm(data)
@@ -152,11 +148,16 @@ ltable <- function(data,
       on.exit(setcolsnull(data, tmpOrder), add = TRUE)
     }
     on.exit(setkeyv(data, old_key), add = TRUE)
-    tmpSubset <- makeTempVarName(data, pre = "subset_")
-    on.exit(setcolsnull(data, tmpSubset), add = TRUE)
-    data[, (tmpSubset) := subset]
+#     tmpSubset <- makeTempVarName(data, pre = "subset_")
+#     on.exit(setcolsnull(data, tmpSubset), add = TRUE)
+#     data[, (tmpSubset) := subset]
+    
     setkeyv(data, by.vars)
-    tab <- data[data[[tmpSubset]],][cj, eval(e, envir = .SD), by = .EACHI]
+    
+    subset <- substitute(subset)
+    subset <- evalLogicalSubset(data = data, substiset = subset)
+    
+    tab <- data[subset,][cj, eval(e, envir = .SD), by = .EACHI]
   }
   
   ## robust values output where possible ---------------------------------------
@@ -215,12 +216,13 @@ expr.by.cj <- function(data,
                        ...) {
   if (!is.data.table(data)) stop("data must be a data.table; try ltable instead?")
   
-  ## subsetting: no copy of data -----------------------------------------------
-  subset <- substitute(subset)
-  subset <- evalLogicalSubset(data = data, substiset = subset)
   
   old_key <- key(data)
   setkeyv(data, by.vars)
+  
+  ## subsetting: no copy of data -----------------------------------------------
+  subset <- substitute(subset)
+  subset <- evalLogicalSubset(data = data, substiset = subset)
   
   levs <- lapply(data[subset, c(by.vars), with=F], unique)
   
