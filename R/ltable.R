@@ -138,15 +138,25 @@ ltable <- function(data,
   if (!is.data.table(data)) {
     ## data.frame needs to take a copy unfortunately...
     ## setDT & setDF possible but unrobust
-    data <- as.data.table(data)
+    data <- data.table(data)[subset, ]
     setkeyv(data, by.vars)
-    tab <- data[subset, ][cj, eval(e, envir = .SD), by =.EACHI]
+    tab <- data[cj, eval(e, envir = .SD), by =.EACHI]
     rm(data)
   } else {
     old_key <- key(data)
+    if (length(old_key) == 0) {
+      old_key <- NULL
+      tmpOrder <- makeTempVarName(data, pre = "order_")
+      data[, (tmpOrder) := 1:.N]
+      on.exit(setorderv(data, tmpOrder))
+      on.exit(setcolsnull(data, tmpOrder), add = TRUE)
+    }
+    on.exit(setkeyv(data, old_key), add = TRUE)
+    tmpSubset <- makeTempVarName(data, pre = "subset_")
+    on.exit(setcolsnull(data, tmpSubset), add = TRUE)
+    data[, (tmpSubset) := subset]
     setkeyv(data, by.vars)
-    tab <- data[subset,][cj, eval(e, envir = .SD), by = .EACHI]
-    if (length(old_key) > 0) setkeyv(data, old_key)
+    tab <- data[data[[tmpSubset]],][cj, eval(e, envir = .SD), by = .EACHI]
   }
   
   ## robust values output where possible ---------------------------------------
