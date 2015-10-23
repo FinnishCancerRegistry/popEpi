@@ -1,3 +1,49 @@
+
+
+makeWeightsDT <- function(data, weights, adjust) {
+  ## input: data and substitute()'d weights and adjust arguments
+  ## output: a prepared data.table for merging with aggregated or other data
+  ## to compute weighted results with
+  ## 'adjust' argument for defining adjusting vars
+  ## and 'weights' as: 
+  ## * character string name of weights variable in data;
+  ## * character string naming ICSS1-3;
+  ## * a data.frame that has lower bounds of categories and weights;
+  ## * a list of named weights vectors which will be collated into a data.frame of weights.
+  ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
+  
+  
+  ## TODO: not sure if adjust should already be in DT format when supplied
+  ## weights might also be pre-evaluated.
+  
+  weights <- copy(eval(weights, envir = data, enclos = parent.frame(1L)))
+  if (!is.data.frame(weights)) adjust <- copy(eval(adjust, envir = data, enclos = parent.frame(1L)))
+  
+  ## Need: 1) weights in DT format; 2) cuts for harmonizing weights and data adjust variables
+  if (is.data.frame(weights)) {
+    setDT(weights)
+    weVars <- setdiff(names(weights), "weights")
+    cuts <- lapply(weights[, mget(weVars)], function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
+    
+  } else if (is.list(weights)) {
+    weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
+    
+    
+    
+    weights[, weights := 1L]
+    for (k in weVars) {
+      set(weights, j = (weVars), value = weights$weights * weights[[k]])
+    }
+    weights[, (weVars) := NULL]
+    
+  }
+  
+}
+
+
+
+
+
 #' @title Survival tables
 #' @author Joonas Miettinen, Karri Seppa
 #' @description Given a data set processed by \code{lexpand}, estimates various 
@@ -222,22 +268,30 @@
 #' @examples
 #' ## see more examples with explanations in vignette("survtab_examples")
 #' 
+#' x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
+#'              status = status %in% 1:2, fot = seq(0, 5, 1/12),
+#'              aggre = list(fot, agegroup = cut(dg_age,4,lab=FALSE)))
+#' 
 
 survtab_aggre <- function(data, 
-                    surv.breaks=NULL, 
-                    by.vars = NULL,
-                    
-                    event.values = NULL,  
-                    surv.type="surv.rel", 
-                    surv.method="hazard", 
-                    relsurv.method="e2",  
-                    
-                    subset = NULL,
-                    
-                    agegr.w.breaks=NULL, agegr.w.weights=NULL, 
-                    
-                    conf.level = 0.95, conf.type = "log-log",
-                    format=TRUE ,verbose=FALSE) {
+                          surv.breaks=NULL, 
+                          surv.scale=NULL,
+                          
+                          print = NULL,
+                          adjust = NULL,
+                          weights = NULL,
+                          
+                          event.values = NULL,  
+                          surv.type="surv.rel", 
+                          surv.method="hazard", 
+                          relsurv.method="e2",  
+                          
+                          subset = NULL,
+                          
+                          conf.level = 0.95, 
+                          conf.type = "log-log",
+                          format=TRUE,
+                          verbose=FALSE) {
   
   
   # check data -----------------------------------------------------------------
@@ -282,64 +336,29 @@ survtab_aggre <- function(data,
   
   # handle breaks in attributes ------------------------------------------------
   
+  found_breaks <- NULL
   attrs <- attributes(data)
-  if (is.null(attrs$breaks)) {
-    stop("Data not output from lexpand or was modified
-         after using lexpand, which will usually destroy the metadata. Only modify
-         data before using lexpand")
+  if (is.null(attrs$breaks) && is.null(surv.breaks)) {
+    stop("Data does not have breaks information and surv.breaks not defined; the former would hold if data is output from laggre or lexpand")
+  } else {
+    checkBreaksList(data, breaks = attrs$breaks)
+    breaks_names <- names(attrs$breaks)
+    
+    if (!surv.scale %in% breaks_names) {
+      stop(paste0("no breaks information found for given surv.scale '", surv.scale, "'"))
+    }
+    
+    found_breaks <- attrs$breaks[[ surv.scale ]]
   }
-  breaks_names <- names(attrs$breaks)
+
   
-  if (length(breaks_names) == 0 | is.null(breaks_names)) {
-    stop("no kind of breaks information was found in data attributes; is the data output from lexpand()?")
-  }
   
-  ## for now time.var = "fot". might be generalized in the future.
-  time.var <- "fot"
-  if (!time.var %in% breaks_names) {
-    stop(paste0("no breaks information found for given time.var '", time.var, "'"))
-  }
-  
-  found_breaks <- attrs$breaks[[ time.var ]]
-  
-  if (is.null(surv.breaks)) {
+  if (is.null(surv.breaks) && !is.null(found_breaks)) {
     surv.breaks <- found_breaks
   } else if (any(!surv.breaks %in% found_breaks)) {
-    stop("given surv.breaks is not a subset of the breaks used in lexpand(); cannot proceed.")
+    stop("given surv.breaks is not a subset of the breaks used to split data; cannot proceed.")
   }
   
-  # handle agegr.w. arguments --------------------------------------------------
-  
-  ICSS_names <- c("ICSS1", "ICSS2","ICSS3")
-  if (!is.null(agegr.w.breaks)) {
-    if (!is.numeric(agegr.w.breaks)) {
-      stop("agegr.w.breaks in bad format; must be either numeric, or one of the ICSS types as a string, or NULL; see ?survtab")
-    }
-  }
-  
-  if (is.null(agegr.w.breaks)&!is.null(agegr.w.weights)) {
-    stop("agegr.w.breaks is NULL but agegr.w.weights isn't.")
-  }
-  
-  if (!is.null(agegr.w.breaks) && !is.null(agegr.w.weights) && 
-      is.numeric(agegr.w.breaks) && is.numeric(agegr.w.weights) && 
-      length(agegr.w.breaks) != 1+length(agegr.w.weights)) {
-    stop("bad number of weights or breaks: there has to be one more break than there are weights.")
-  }
-  
-  if (!is.null(agegr.w.weights) && is.character(agegr.w.weights)) {
-    if (agegr.w.weights %in% ICSS_names) {
-      w <- copy(ICSS)
-      if (any(!agegr.w.breaks %in% c(w$ageint_start,Inf) )) {
-        stop("given agegr.w.breaks are not a subset of possible ICSS agegroup breaks; see ?survtab")
-      }
-      
-      w[, agegr := cut(ageint_start, breaks=agegr.w.breaks, right=FALSE)]
-      agegr.w.weights <- w[, sum(get(agegr.w.weights)), by=agegr]$V1/sum(w[[agegr.w.weights]])
-    } else {
-      stop("agegr.w.weights was a string but not one of 'ICSS1', 'ICSS2', and 'ICSS3'")
-    }
-  }
   
   # data prep & subsetting -----------------------------------------------------
   ## todo: make survtab work without taking copy
@@ -358,15 +377,18 @@ survtab_aggre <- function(data,
   
   ## limit data to given surv.ints ---------------------------------------------
   tmpSI <- makeTempVarName(data, pre = "surv.int_")
-  data <- data[, tmpSI := cutLow(fot, breaks = surv.breaks)]
+  data[, tmpSI := cutLow(fot, breaks = surv.breaks)]
   data <- data[!is.na(get(tmpSI))]
   
   # variables to print by ------------------------------------------------------
-  ps <- substitute(print)
-  pr <- evalPopArg(data = data, arg = ps, DT = TRUE)
-  byVars <- names(pr)
-  data <- cbind(pr, data)
-  rm(pr, print, ps)
+  print <- evalPopArg(data = data, arg = substitute(print), DT = TRUE)
+  if (ncol(print) > 0) {
+    prVars <- makeTempVarName(data, pre = names(print))
+    data[, (prVars) := print]
+  } else {
+    prVars <- NULL
+  }
+  rm(print)
   
   # standardization ------------------------------------------------------------
   ## have 'adjust' argument for defining adjusting vars
@@ -375,50 +397,70 @@ survtab_aggre <- function(data,
   ## * character string naming ICSS1-3;
   ## * a data.frame that has lower bounds of categories and weights;
   ## * a list of named weights vectors which will be collated into a data.frame of weights.
-  adj.vars <- "names of variables by which to adjust"
+  ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
+  adjust <- evalPopArg(data = data, arg = substitute(adjust), DT = TRUE)
+  if (ncol(adjust) > 0) {
+    adVars <- makeTempVarName(data, pre = names(adjust))
+    data[, (adVars) := adjust]
+  } else {
+    adVars <- NULL
+  }
+  rm(adjust)
   
-  ws <- substitute(weights)
-  wType <- popArgType(ws) ## maybe just test 'we' directly...
-  we <- evalPopArg(data, we, DT = FALSE)
+  weights <- evalPopArg(data, substitute(weights), DT = FALSE)
   
  
-  if (wType == "list") {
-    all_names_present(data)
+  if (!is.data.frame(weights) && is.list(weights)) {
     
-    we <- do.call(CJ, we, args = list(unique = FALSE, sorted = FALSE))
-    ## need to think how this multiplication works...
-    we[, we := 1]
-    for (k in setdiff(names(we), "we")) {
-      set(we, j = "we", value = we$we * we[[k]])
+    ## need to think if cartesian multiplication is correct...
+    weights <- do.call(CJ, weights, args = list(unique = FALSE, sorted = FALSE))
+    weVars <- names(weights)
+    
+    weights[, weights := 1]
+    for (k in setdiff(names(weights), "weights")) {
+      set(weights, j = "weights", value = weights$weights * weights[[k]])
     }
-    we[, we := we / sum(we)]
+    weights[, weights := weights / sum(weights)]
     
-    ## need to turn old we weights to levels of adjust variables here...
+    weCuts <- data[, lapply(.SD, function(x) if (is.factor(x)) levels(x) else sort(unique(x))), .SDCols = weVars]
     
-  } else if (wType == "character") {
-    if (we %in% paste0("ICSS", 1:3)) {
-      ## note: this will require a known name for the age scale...
+    ## need to turn old weights to levels of adjust variables here for merging...
+    
+  } else if (is.data.frame) {
+    weights <- copy(weights); setDT(weights)
+    weVars <- setdiff(names(weights), "weights")
+    weCuts <- weights[, lapply(.SD, function(x) sort(unique(x))), .SDcols = weVars]
+    
+  } else if (is.character(weights)) {
+    if (weights %in% paste0("ICSS", 1:3)) {
+      ## note: this will require a known name for the age group variable...
       ## possibly this should only be part of survtab.as
-      wena <- we
-      we <- copy(ICSS)
-      setnames(we, c(wena, "ageint_start"), c("we", "age"))
-      setcolsnull(we, keep = c("age", "we"), colorder = TRUE, soft = FALSE)
+      wena <- weights
+      weights <- copy(ICSS)
+      weights[, age := c(0, seq(15,85, 5))]
+      setnames(weights, c(wena), c("weights"))
+      setcolsnull(weights, keep = c("age", "weights"), colorder = TRUE, soft = FALSE)
+    } else {
+      weVars <- weights
     }
   }
   
+  
+  ## in essence:
+  data[, mv1 := cutLow(v1, ...)]
+  data <- merge(data, weigths, by = weVars, all.x = TRUE, all.y = TRUE)
   
   ## this only after evaluating print and adjust!
   # keep only necessary columns ------------------------------------------------
   reqVars <- "obs"
   reqVars <- c(reqVars, if (surv.method == "lifetable") "n" else "pyrs")
   reqVars <- c(reqVars, if (relsurv.method == "e2") "d.exp" else "d.pp")
-  setcolsnull(data, keep=c(tmpSI, reqVars), colorder = TRUE, soft = FALSE)
-  all_names_present(data, c(tmpSI, reqVars))
+  ## etc.
+  setcolsnull(data, keep=c(prVars, adVars, tmpSI, reqVars), colorder = TRUE, soft = FALSE)
+  all_names_present(data, c(prVars, adVars, tmpSI, reqVars))
   
-  ## in essence:
-  ## data[, mv1 := cutLow(v1, ...)]; data <- merge(data, weigths)
   
-  setkeyv(data, c(byVars, tmpSI))
+  setkeyv(data, c(prVars, adVars, tmpSI))
   
   # compute observed survivals  ------------------------------------------------
   if (verbose) ostime <- proc.time()
@@ -823,6 +865,9 @@ survtab_aggre <- function(data,
   if (verbose) {cat("Time taken by whole process: ", timetaken(starttime), "\n")}
   sutab[]
 }
+
+
+
 
 
 globalVariables(c("lex.Xst", "lex.Cst", "lex.dur", "agegr", "ageint_start", "lex.id", "lex.multi", "entry_age", "age", "fot", "per", "agegr.w", "surv.int",
