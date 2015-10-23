@@ -3,7 +3,7 @@ context("lexpand sanity checks")
 
 test_that("lexpand arguments can be passed as symbol, expression, character name of variable, and symbol of a character variable", {
   skip_on_cran()
-  sr <- copy(sire)[dg_date < ex_date, ]
+  sr <- copy(sire)[dg_date < ex_date, ][1:100,]
   sr[, id := as.character(1:.N)]
   
   x <- lexpand(sr, fot = c(0, Inf), 
@@ -261,5 +261,82 @@ test_that('lexpansion w/ overlapping = TRUE/FALSE produces double/undoubled pyrs
   setDT(x)
   expect_equal(x[, sum(lex.dur), keyby=lex.id]$V1, sire2[!duplicated(id), sum(ex_yrs-bi_yrs), keyby=id]$V1)  
 })
+
+
+
+test_that("different specifications of time vars work with event defined and overlapping=FALSE", {
+  
+  dt <- data.table(bi_date = as.Date('1949-01-01'), 
+                   dg_date = as.Date(paste0(1999:2000, "-01-01")), 
+                   start = as.Date("1997-01-01"),
+                   end = as.Date('2002-01-01'), 
+                   status = c(1,2), id=1)
+  
+  ## birth -> entry -> event -> exit
+  x1 <- lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = start, exit = end, event = dg_date, 
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE)
+  expect_equal(x1$lex.dur, c(2,1,2))
+  expect_equal(x1$age, c(48,50,51))
+  expect_equal(x1$lex.Cst, 0:2)
+  expect_equal(x1$lex.Xst, c(1,2,2))
+  
+  ## birth -> entry = event -> exit
+  ## BROKEN (due to overlapping = FALSE with or without event defined)
+  x2 <- lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = dg_date, exit = end, event = dg_date,
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE)
+  expect_equal(x2$lex.dur, c(1,2))
+  expect_equal(x2$age, c(50,51))
+  expect_equal(x2$lex.Cst, c(1,1))
+  expect_equal(x2$lex.Xst, c(1,2))
+  
+  ## birth = entry -> event -> exit
+  x3 <- lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = bi_date, exit = end, event = dg_date,
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE)
+  expect_equal(x3$lex.dur, c(50,1,2))
+  expect_equal(x3$age, c(0,50,51))
+  expect_equal(x3$lex.Cst, 0:2)
+  expect_equal(x3$lex.Xst, c(1,2,2))
+  
+  ## birth = entry = event -> exit
+  x4 <- lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = bi_date, exit = end, event = bi_date, 
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE)
+  expect_equal(x4$lex.dur, c(53))
+  expect_equal(x4$age, c(0))
+  expect_equal(x4$lex.Cst, 1)
+  expect_equal(x4$lex.Xst, 1)
+  
+  ## birth -> entry -> event = exit
+  ## BROKEN (due to overlapping = FALSE with or without event defined)
+  ## I think this shouldn't even work. two events cannot be simultaneous for one subject? 
+  x5 <- lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = dg_date, exit = end, event = end,
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE)
+  expect_equal(x5$lex.dur, c(3,0))
+  expect_equal(x5$age, c(50,50))
+  expect_equal(x5$lex.Cst, c(0,1))
+  expect_equal(x5$lex.Xst, c(1,2))
+  
+  ## birth = entry -> event -> exit
+  x6 <- lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = bi_date, exit = end, event = dg_date,
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE)
+  expect_equal(x6$lex.dur, c(50,1,2))
+  expect_equal(x6$age, c(0,50,51))
+  expect_equal(x6$lex.Cst, 0:2)
+  expect_equal(x6$lex.Xst, c(1,2,2))
+  
+})
+
+
 
 

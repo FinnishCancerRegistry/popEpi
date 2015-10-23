@@ -8,29 +8,30 @@
 #' given \code{breaks} and additionally processed if requested.
 #' @param data dataset of e.g. cancer cases as rows
 #' @param birth birth time in date format 
-#' or fractional years; quoted or unquoted
+#' or fractional years; string, symbol or expression
 #' @param entry entry time in date format 
-#' or fractional years; quoted or unquoted
+#' or fractional years; string, symbol or expression
 #' @param exit exit from follow-up time in date 
-#' format or fractional years; quoted or unquoted
+#' format or fractional years; string, symbol or expression
 #' @param event advanced: time of possible event differing from \code{exit};
 #' typically only used in certain SIR/SMR calculations - see Details; 
-#' keep \code{NULL} if \code{exit} is the time of the event; quoted or unquoted
+#' string, symbol or expression
 #' @param status variable indicating type of event at \code{exit} or \code{event}; 
 #' e.g. \code{status = status != 0}; expression or quoted variable name
 #' @param entry.status input in the same way as \code{status}; 
 #' status at \code{entry}; see Details
-#' @param id an id variable; e.g. \code{id = my_id};  quoted or unquoted
+#' @param id optional; an id variable; e.g. \code{id = my_id};  
+#' string, symbol or expression
 #' @param overlapping advanced, logical; if \code{FALSE} AND if \code{data} contains
-#' multiple rows per subject AND \code{event} is defined, 
-#' ensures that the timelines \code{lex.id}-specific rows do not overlap;
+#' multiple rows per subject, 
+#' ensures that the timelines of \code{id}-specific rows do not overlap;
 #' this ensures e.g. that person-years are only computed once per subject 
 #' in a multi-state paradigm
 #' @param aggre e.g. \code{aggre = list(sex, fot)}; 
 #' a list of unquoted variables and/or expressions thereof,
 #' which are interpreted as factors; data events and person-years will
 #' be aggregated by the unique combinations of these; see Details
-#' @param aggre.type one of \code{c("non-empty","unique","cartesian")};
+#' @param aggre.type one of \code{c("unique","cartesian")};
 #' can be abbreviated; see Details
 #' @param breaks a named list of vectors of time breaks; 
 #' e.g. \code{breaks = list(fot=0:5, age=c(0,45,65,Inf))}; see Details
@@ -71,6 +72,10 @@
 #' You may take a look at a simulated cohort 
 #' \code{\link{sire}} as an example of the
 #' minimum required information for processing data with \code{lexpand}.
+#' 
+#' Many arguments can be supplied as a character string naming the appropriate
+#' variable (e.g. \code{"sex"}), as a symbol (e.g. \code{sex}) or as an expression
+#' (e.g. \code{factor(sex, 0:1, c("m", "f"))}) for flexibility.
 #' 
 #' \strong{Breaks}
 #' 
@@ -166,6 +171,19 @@
 #' and then over the remaining distance to the mid-point (first to 0.4, then to
 #' 0.5). This ensures that more accurately merged population hazards are fully
 #' used.
+#' 
+#' \strong{Event not at end of follow-up & overlapping time lines}
+#' 
+#' \code{event} may be used if the event indicated by \code{status} should
+#' occur at a time differing from \code{exit}. If \code{event} is defined,
+#' \code{cutLexis} is used on the data set after coercing it to the \code{Lexis}
+#' format and before splitting.
+#' 
+#' Additionally, setting \code{overlapping = FALSE} ensures that (irrespective
+#' of using \code{event}) the each subject defined by \code{id} only has one
+#' continuous time line instead of possibly overlapping time lines if
+#' there are multiple rows in \code{data} by \code{id}.
+#' 
 #' 
 #' \strong{Aggregating}
 #' 
@@ -292,21 +310,27 @@ lexpand <- function(data,
                     ...) {
   start_time <- proc.time()
   
-  ## to instate global variables to appease R CMD CHECK
-  .EACHI <- lex.status <- lexpand.id <- lex.exit <- lex.birth <- lex.entry <- lex.event <- temp.id <- NULL
-  
+  ## data checks
   if ( missing(data) || nrow(data) == 0) stop("no data found")
   
   if (!is.data.frame(data)) stop("data must be a data.frame or data.table")
   
+  ## to instate global variables to appease R CMD CHECK 
+  .EACHI <- lex.status <- lexpand.id <- lex.exit <- lex.birth <- lex.entry <- lex.event <- temp.id <- cd <- NULL
+  
+  
+  ## test conflicting variable names -------------------------------------------
   added_vars <- c("fot", "per", "age", "lex.id", "lex.dur", "lex.Xst", "lex.Cst")
+  if (!is.null(pophaz)) added_vars <- if (pp) c(added_vars, "pp", "pop.haz") else c(added_vars, "pop.haz")
   conflicted_vars <- intersect(added_vars, names(data))
-  if (length(conflicted_vars) > 0) {
+  
+  if (merge && length(conflicted_vars) > 0) {
     conflicted_vars <- paste0("'", conflicted_vars, "'", collapse = ", ")
-    warning("'data' already had variable(s) named ", conflicted_vars, "which lexpand will create; this may result in unexpected problems. Rename the variable(s)?")
+    warning("'data' already had variable(s) named ", conflicted_vars, " which lexpand will create, and you have merge = TRUE; this may result in unexpected problems. Rename the variable(s)?")
   }
   rm(added_vars, conflicted_vars)
   
+  ## test aggre type -----------------------------------------------------------
   aggre.type <- match.arg(aggre.type[1L], c("cartesian", "non-empty", "unique", "cross-product", "full"))
   if (aggre.type == "cross-product") {
     aggre.type <- "full"
@@ -333,7 +357,7 @@ lexpand <- function(data,
   l[-wh] <- NULL
   
   
-  ## vars can be given as quoted names
+  ## vars can be given as character strings of variable names
   isChar  <- sapply(l, is.character, simplify = TRUE)
   if (any(isChar)) {
     isShort <- sapply(l, function(x) {length(x) == 1L}, simplify = TRUE)
@@ -576,43 +600,89 @@ lexpand <- function(data,
   # event not at exit time -----------------------------------------------------
   
   if ("lex.event" %in% names(l)) {
+    
+    if (!overlapping) {
+      
+      ## using lex.event time, ensure coherence of lex.Cst & lex.Xst
+      ## before cutLexis()
+      tmpFE <- makeTempVarName(l, pre = "fot_end_")
+      l[, (tmpFE) := fot + lex.dur]
+      setkeyv(l, c("lex.id", "lex.event", tmpFE))
+      tmpLX <- makeTempVarName(l, pre = "lag_lex.Xst_")
+      l[, (tmpLX) := shift(lex.Xst, n = 1, type = "lag"), by = lex.id]
+      l[!is.na(get(tmpLX)), lex.Cst := get(tmpLX)]
+      l[, c(tmpFE, tmpLX) := NULL]
+      rm(tmpFE, tmpLX)
+      
+    }
+    
     if (verbose) cutt <- proc.time()
     l <- Epi::cutLexis(l, cut = l$lex.event, timescale = "per", new.state = l$lex.Xst, precursor.states = unique(l$lex.Cst))
     setDT(l)
     setattr(l, "class", c("Lexis", "data.table", "data.frame"))
     if (verbose) cat("Time taken by cutLexis when defining event time points: ", timetaken(cutt), "\n")
+    
+    if (verbose) cat("Data just after using cutLexis: \n")
+    if (verbose) print(l[])
+    
   }
   
   
   # overlapping timelines? -----------------------------------------------------
   
   if (!overlapping && any(duplicated(l$lex.id))) {
-    if ("lex.event" %in% names(l)) {
-      
-      fot_end <- NULL
-      
-      l[, fot_end := fot + lex.dur]
-      setkey(l, lex.id, fot_end) ## order of time of event
-      l <- unique(l)
-      if (verbose) cat("data just before fixing overlapping time lines \n")
-      if (verbose) print(l)
-      l[, lex.dur := fot_end - c(min(fot), fot_end[-.N]), by = lex.id]
-      l[, fot := fot_end - lex.dur]
-      l[, age := age + c(0, cumsum(lex.dur)[-.N]), by = lex.id]
-      l[, per := per + c(0, cumsum(lex.dur)[-.N]), by = lex.id]
-      l[, fot_end := NULL]
-      
-    } else {
-      stop("requested non-overlapping timelines, but no 'event' is defined; hence did nothing")
-    }
+    tmpFE <- makeTempVarName(l, pre = "fot_end_")
+    l[, (tmpFE) := fot + lex.dur]
+    ## don't keep duplicated rows:
+    ## same end points imply fully overlapping time lines
+    ## e.g. 
+    ## --->
+    ## ->
+    ##  -->
+    ## results in 
+    ## ->
+    ## --->
+    ## we only keep the longest time line with a unique end point.
+
+    # setkeyv(l,  c("lex.id", tmpFE, "fot"))
+    tmpLE <- intersect(names(l), "lex.event")
+    LEval <- if (length(tmpLE) == 0) NULL else -1
+
+    setorderv(l, c("lex.id", tmpFE, tmpLE, "fot"), c(1,1,LEval,1))
+    l <- unique(l, by = c("lex.id", tmpFE, "lex.Xst"))
+    
+    ## end points are kept but starting points are "rolled"
+    ## from first to last row by lex.id to ensure non-overlappingness; e.g.
+    ## ->
+    ## --->
+    ## results in 
+    ## ->
+    ##   ->
+    # setkeyv(l, c("lex.id", tmpFE))
+    # setorderv(l, c("lex.id", tmpLE, tmpFE), c(1, LEval, 1))
+    setkeyv(l, c("lex.id", tmpLE, tmpFE))
+    
+    if (verbose) cat("data just before fixing overlapping time lines \n")
+    if (verbose) print(l)
+    l[, lex.dur := get(tmpFE) - c(min(fot), get(tmpFE)[-.N]), by = lex.id]
+    l[, fot := get(tmpFE) - lex.dur]
+    cumDur <- l[,  list(age = min(age), per = min(per), cd = c(0, cumsum(lex.dur)[-.N])), by = lex.id]
+    cumDur[, age := age+cd]
+    cumDur[, per := per+cd]
+    l[, age := cumDur$age]
+    l[, per := cumDur$per]
+    l[, (tmpFE) := NULL]; rm(cumDur)
+    
     
     ## if event used, first row up to event, second row from first event to etc...
   }
-  setcolsnull(l, "lex.event", soft = TRUE)
+  
+  setcolsnull(l, "lex.event", soft = TRUE) ## note: lex.event needed in overlapping procedures
   
   if (verbose) cat("time and status variables before splitting: \n")
   if (verbose) print(l)
   if (exists("id")) rm("id")
+  
   
   # splitting ------------------------------------------------------------------
   
