@@ -241,7 +241,7 @@ test_that('lexpand aggre: multistate column names correct', {
 test_that('lexpansion w/ overlapping = TRUE/FALSE produces double/undoubled pyrs', {
   skip_on_cran()
   
-  sire2 <- copy(sire)[dg_date < ex_date, ]
+  sire2 <- copy(sire)[dg_date < ex_date, ][1:100]
   sire2[, dg_yrs := get.yrs(dg_date, "actual")]
   sire2[, ex_yrs := get.yrs(ex_date, "actual")]
   sire2[, bi_yrs := get.yrs(bi_date, "actual")]
@@ -283,15 +283,11 @@ test_that("different specifications of time vars work with event defined and ove
   expect_equal(x1$lex.Xst, c(1,2,2))
   
   ## birth -> entry = event -> exit
-  ## BROKEN (due to overlapping = FALSE with or without event defined)
-  x2 <- lexpand(data = dt, subset = NULL, 
+  expect_error(lexpand(data = dt, subset = NULL, 
                 birth = bi_date, entry = dg_date, exit = end, event = dg_date,
                 id = id, overlapping = FALSE,  entry.status = 0, status = status,
-                merge = FALSE)
-  expect_equal(x2$lex.dur, c(1,2))
-  expect_equal(x2$age, c(50,51))
-  expect_equal(x2$lex.Cst, c(1,1))
-  expect_equal(x2$lex.Xst, c(1,2))
+                merge = FALSE), 
+               regexp = "some rows have simultaneous 'entry' and 'event', which is not supported; perhaps separate them by one day?")
   
   ## birth = entry -> event -> exit
   x3 <- lexpand(data = dt, subset = NULL, 
@@ -303,27 +299,12 @@ test_that("different specifications of time vars work with event defined and ove
   expect_equal(x3$lex.Cst, 0:2)
   expect_equal(x3$lex.Xst, c(1,2,2))
   
-  ## birth = entry = event -> exit
-  x4 <- lexpand(data = dt, subset = NULL, 
-                birth = bi_date, entry = bi_date, exit = end, event = bi_date, 
-                id = id, overlapping = FALSE,  entry.status = 0, status = status,
-                merge = FALSE)
-  expect_equal(x4$lex.dur, c(53))
-  expect_equal(x4$age, c(0))
-  expect_equal(x4$lex.Cst, 1)
-  expect_equal(x4$lex.Xst, 1)
-  
   ## birth -> entry -> event = exit
-  ## BROKEN (due to overlapping = FALSE with or without event defined)
-  ## I think this shouldn't even work. two events cannot be simultaneous for one subject? 
-  x5 <- lexpand(data = dt, subset = NULL, 
+  expect_error(lexpand(data = dt, subset = NULL, 
                 birth = bi_date, entry = dg_date, exit = end, event = end,
                 id = id, overlapping = FALSE,  entry.status = 0, status = status,
-                merge = FALSE)
-  expect_equal(x5$lex.dur, c(3,0))
-  expect_equal(x5$age, c(50,50))
-  expect_equal(x5$lex.Cst, c(0,1))
-  expect_equal(x5$lex.Xst, c(1,2))
+                merge = FALSE), 
+               regexp = "subject\\(s\\) had several rows where 'event' time had the same value, which is not supported; perhaps separate them by one day?")
   
   ## birth = entry -> event -> exit
   x6 <- lexpand(data = dt, subset = NULL, 

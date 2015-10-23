@@ -285,30 +285,39 @@ i.e. rows with \code{pyrs > 0} are returned.
 \dontrun{
 ## prepare data for e.g. 5-year cohort survival calculation
 x <- lexpand(sire, breaks=list(fot=seq(0, 5, by = 1/12)),
+             birth = bi_date, entry = dg_date, exit = ex_date,
              status =  status != 0, pophaz=popmort)
 
 ## prepare data for e.g. 5-year "period analysis" for 2008-2012
 BL <- list(fot = seq(0, 5, by = 1/12), per = c("2008-01-01", "2013-01-01"))
-x <- lexpand(sire, breaks = BL, pophaz=popmort, status =  status != 0)
+x <- lexpand(sire, breaks = BL,
+             birth = bi_date, entry = dg_date, exit = ex_date,
+             pophaz=popmort, status =  status != 0)
 
 ## aggregating
 BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
 ag <- lexpand(sire, breaks = BL, status = status != 0,
+             birth = bi_date, entry = dg_date, exit = ex_date,
               aggre=list(sex, period = per, surv.int = fot))
 
 ## using "..."
-x <- lexpand(sire, fot=0:5, pophaz=popmort, status =  status != 0)
+x <- lexpand(sire, fot=0:5, status =  status != 0,
+             birth = bi_date, entry = dg_date, exit = ex_date,
+             pophaz=popmort)
 
 x <- lexpand(sire, fot=0:5, status =  status != 0,
+             birth = bi_date, entry = dg_date, exit = ex_date,
              aggre=list(sex, surv.int = fot))
 
 ## using the "event" argument: it just places the transition to given "status"
 ## at the "event" time instead of at the end, if possible using cutLexis
-x <- lexpand(sire, status = status, event = dg_date, birth=bi_date, entry=bi_date, exit=ex_date)
+x <- lexpand(sire, status = status, event = dg_date,
+             birth = bi_date, entry = dg_date, exit = ex_date,)
 
 ## aggregating with custom "event" time
 ## (the transition to status is moved to the "event" time)
-x <- lexpand(sire, status = status, event = dg_date, birth=bi_date, entry=bi_date, exit=ex_date,
+x <- lexpand(sire, status = status, event = dg_date,
+             birth = bi_date, entry = dg_date, exit = ex_date,
              per = 1970:2014, age = c(0:100,Inf),
              aggre = list(sex, year = per, agegroup = age))
 

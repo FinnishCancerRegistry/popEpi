@@ -258,30 +258,39 @@
 #' \dontrun{
 #' ## prepare data for e.g. 5-year cohort survival calculation
 #' x <- lexpand(sire, breaks=list(fot=seq(0, 5, by = 1/12)), 
+#'              birth = bi_date, entry = dg_date, exit = ex_date,
 #'              status =  status != 0, pophaz=popmort)
 #' 
 #' ## prepare data for e.g. 5-year "period analysis" for 2008-2012
 #' BL <- list(fot = seq(0, 5, by = 1/12), per = c("2008-01-01", "2013-01-01"))
-#' x <- lexpand(sire, breaks = BL, pophaz=popmort, status =  status != 0)
+#' x <- lexpand(sire, breaks = BL, 
+#'              birth = bi_date, entry = dg_date, exit = ex_date,
+#'              pophaz=popmort, status =  status != 0)
 #' 
 #' ## aggregating
 #' BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
 #' ag <- lexpand(sire, breaks = BL, status = status != 0, 
+#'              birth = bi_date, entry = dg_date, exit = ex_date,
 #'               aggre=list(sex, period = per, surv.int = fot))
 #' 
 #' ## using "..."
-#' x <- lexpand(sire, fot=0:5, pophaz=popmort, status =  status != 0) 
+#' x <- lexpand(sire, fot=0:5, status =  status != 0,
+#'              birth = bi_date, entry = dg_date, exit = ex_date,
+#'              pophaz=popmort) 
 #' 
 #' x <- lexpand(sire, fot=0:5, status =  status != 0, 
+#'              birth = bi_date, entry = dg_date, exit = ex_date,
 #'              aggre=list(sex, surv.int = fot))
 #'              
 #' ## using the "event" argument: it just places the transition to given "status"
 #' ## at the "event" time instead of at the end, if possible using cutLexis
-#' x <- lexpand(sire, status = status, event = dg_date, birth=bi_date, entry=bi_date, exit=ex_date) 
+#' x <- lexpand(sire, status = status, event = dg_date,
+#'              birth = bi_date, entry = dg_date, exit = ex_date,) 
 #' 
 #' ## aggregating with custom "event" time
 #' ## (the transition to status is moved to the "event" time)
-#' x <- lexpand(sire, status = status, event = dg_date, birth=bi_date, entry=bi_date, exit=ex_date,
+#' x <- lexpand(sire, status = status, event = dg_date, 
+#'              birth = bi_date, entry = dg_date, exit = ex_date,
 #'              per = 1970:2014, age = c(0:100,Inf),
 #'              aggre = list(sex, year = per, agegroup = age)) 
 #' 
@@ -502,6 +511,26 @@ lexpand <- function(data,
   if (verbose) cat("given birth, entry, exit, status etc. variables after coercion to numeric \n")
   if (verbose) print(l)
   
+  # check data consistency for overlapping = FALSE -----------------------------
+  ## not allowed: for any one unique subject to be true for 
+  ## multiple rows (if overlapping = TRUE):
+  ## * same event values
+  ## * same entry values
+  if (!overlapping) {
+    if ("lex.event" %in% names(l) && any(duplicated(l, by = c("lexpand.id", "lex.event")))) {
+      stop("subject(s) had several rows where 'event' time had the same value, which is not supported; perhaps separate them by one day?")
+    } 
+    if (!"lex.event" %in% names(l) && any(duplicated(l, by = c("lexpand.id", "lex.exit")))) {
+      stop("subject(s) had several rows where 'exit' time had the same value, which is not supported; perhaps separate them by one day?")
+    }
+    
+    if ("lex.event" %in% names(l) && any(l$lex.entry == l$lex.event)) {
+      stop("some rows have simultaneous 'entry' and 'event', which is not supported; perhaps separate them by one day?")
+    }
+    
+  }
+  
+  
   # dropping unuseful records --------------------------------------------------
   test_times <- function(condition, msg, old_subset=l_subset, DT=l) {
     
@@ -582,7 +611,7 @@ lexpand <- function(data,
   
   ## crop time scale values to obey breaks limits and drop if necessary
   ## NOTE: goes wrong if need to compute pp weights!
-  #   if (drop && is.null(pp)) {
+  #   if (drop && !pp) {
   #     intelliCrop(x = l, breaks = breaks, allScales = c("fot", "per", "age"), cropStatuses = TRUE)
   #     l <- intelliDrop(x = l, breaks = breaks, dropNegDur = TRUE)
   #   }
@@ -649,7 +678,7 @@ lexpand <- function(data,
     LEval <- if (length(tmpLE) == 0) NULL else -1
 
     setorderv(l, c("lex.id", tmpFE, tmpLE, "fot"), c(1,1,LEval,1))
-    l <- unique(l, by = c("lex.id", tmpFE, "lex.Xst"))
+    l <- unique(l, by = c("lex.id", tmpFE))
     
     ## end points are kept but starting points are "rolled"
     ## from first to last row by lex.id to ensure non-overlappingness; e.g.
