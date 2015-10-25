@@ -16,10 +16,9 @@
 #' \strong{Adjust and print}
 #' 
 #' A SIR can be adjusted by the covariates found in both \code{coh.data} and \code{ref.data}.
-#' Variables to adjust by are supplied as character 
-#' strings of the names of variables to \code{adjust}. Variable names needs to 
-#' match in both \code{coh.data} and \code{ref.data}. Typical variables to adjust by are
-#' gender, age group and calendar period.
+#' Variable to adjust are given in \code{adjust}.
+#' Variable names needs to match in both \code{coh.data} and \code{ref.data}. 
+#' Typical variables to adjust by are gender, age group and calendar period.
 #' 
 #' \code{print} is used to stratify the SIR output. In other words, the variables 
 #' assigned to \code{print} are the covariates of the Poisson model.
@@ -108,19 +107,18 @@
 #' }
 #' 
 #' 
-#' 
 #' @param coh.data aggregated cohort data, see e.g. \code{\link{lexpand}}
-#' @param coh.pyrs variable name for person years in cohort data (in quotes)
-#' @param coh.obs variable name for observed cases
+#' @param coh.pyrs variable name for person years in cohort data; quoted or unquoted
+#' @param coh.obs variable name for observed cases; quoted or unquoted
 #' @param ref.data population data. Can be left NULL if \code{coh.data} is stratified in \code{print}.
 #' @param ref.rate population rate variable (cases/person-years). Overwrites arguments
-#' \code{ref.pyrs} and \code{ref.obs}.
-#' @param ref.pyrs variable name for person-years in population data
-#' @param ref.obs variable name for observed cases
+#' \code{ref.pyrs} and \code{ref.obs}; quoted or unquoted
+#' @param ref.pyrs variable name for person-years in population data; quoted or unquoted
+#' @param ref.obs variable name for observed cases; quoted or unquoted
 #' @param subset logical condition to select data from \code{coh.data} before any computations
-#' @param adjust variable names for adjusting without stratifying output
-#' @param print variable names for computing and outputting results separately
-#' @param mstate set column names for cause specific observations. Relevant only
+#' @param adjust variable names for adjusting without stratifying output; quoted vector or unquoted list
+#' @param print variable names to stratify results; quoted vector or unquoted named list with functions
+#' @param mstate set column names for cause specific observations; quoted or unquoted. Relevant only
 #' when \code{coh.obs} length is two or more. See details.
 #' @param test.type Test for equal SIRs. Test available are 'homogeneity' and 'trend'.
 #' @param EAR logical; TRUE calculates Excess Absolute Risks for univarite SIRs.
@@ -178,7 +176,7 @@ sir <- function( coh.data,
 
   coh.data <- data.table(coh.data)
   
-  ## subsetting-----------------------------------------------------------------
+  ## subsetting---------------------------------------------------------------
   ## no copy taken of data!
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = coh.data, substiset = subset)
@@ -186,11 +184,52 @@ sir <- function( coh.data,
   
   
   # print list --------------------------------------------------------------
+  
+  # env1 <- environment() # set environment where to assign new print
+  # coh.data <- data_list(data = coh.data, arg.list = substitute(print), env = env1)
+  
+  mstate <- as.character(substitute(mstate))
+  if(length(mstate) == 0) {
+    mstate <- NULL
+  }
+  if(!is.null(mstate)) {
+    coh.data[,(mstate) := 0L] 
+  }
+  
+  # evalPopArg
+  coh.obs <- substitute(coh.obs)
+  c.obs <- evalPopArg(data = coh.data, arg = coh.obs)
+  coh.obs <- names(c.obs)
+  
+  coh.pyrs <- substitute(coh.pyrs)
+  c.pyr <- evalPopArg(data = coh.data, arg = coh.pyrs)
+  coh.pyrs <- names(c.pyr)
+  
+  print <- substitute(print)
+  c.pri <- evalPopArg(data = coh.data, arg = print)
+  print <- names(c.pri)
 
-  env1 <- environment() # set environment where to assign new print
-  coh.data <- data_list(data = coh.data, arg.list = substitute(print), env = env1)
+  adjust <- substitute(adjust)
+  c.adj <- evalPopArg(data = coh.data, arg = adjust)
+  adjust <- names(c.adj)
+  
+  # collect data
+  coh.data <- cbind(c.obs, c.pyr)
+  if(!is.null(print))  coh.data <- cbind(coh.data, c.pri) 
+  if(!is.null(adjust)) coh.data <- cbind(coh.data, c.adj)
+  
+  if( !is.null(ref.data) ){
+    ref.obs <- as.character(substitute(ref.obs))
+    ref.pyrs <- as.character(substitute(ref.pyrs))
+    ref.rate <- as.character(substitute(ref.rate))
+    
+    if (length(ref.obs) == 0) ref.obs <- NULL
+    if (length(ref.pyrs) == 0) ref.pyrs <- NULL
+    if (length(ref.rate) == 0) ref.rate <- NULL
+  }
 
-  # hae print listan nimet: print <- uudet nimet
+
+  # print(coh.data)
   
   st <- sir_table( coh.data = coh.data, 
                    coh.obs = coh.obs,
@@ -370,6 +409,55 @@ sirspline <- function( coh.data,
   env1 <- environment()
   coh.data <- data_list(data = coh.data, arg.list = substitute(print), env = env1)
   
+  mstate <- as.character(substitute(mstate))
+  if(length(mstate) == 0) {
+    mstate <- NULL
+  }
+  if(!is.null(mstate)) {
+    coh.data[,(mstate) := 0L] 
+  }
+  
+  # evalPopArg
+  
+  spline <- substitute(spline)
+  c.spl <- evalPopArg(data = coh.data, arg = spline)
+  spline <- names(c.spl)
+  
+  coh.obs <- substitute(coh.obs)
+  c.obs <- evalPopArg(data = coh.data, arg = coh.obs)
+  coh.obs <- names(c.obs)
+  
+  coh.pyrs <- substitute(coh.pyrs)
+  c.pyr <- evalPopArg(data = coh.data, arg = coh.pyrs)
+  coh.pyrs <- names(c.pyr)
+  
+  print <- substitute(print)
+  c.pri <- evalPopArg(data = coh.data, arg = print)
+  print <- names(c.pri)
+  
+  adjust <- substitute(adjust)
+  c.adj <- evalPopArg(data = coh.data, arg = adjust)
+  adjust <- names(c.adj)
+
+  # collect data
+  coh.data <- cbind(c.obs, c.pyr, c.spl)
+  if(!is.null(print))  {
+    coh.data <- cbind(coh.data, c.pri[, print[!print %in% spline], with=FALSE])
+  }
+  if(!is.null(adjust)) {
+    coh.data <- cbind(coh.data, c.adj[, adjust[!adjust %in% spline], with=FALSE])
+  }
+  
+  if( !is.null(ref.data) ){
+    ref.obs <- as.character(substitute(ref.obs))
+    ref.pyrs <- as.character(substitute(ref.pyrs))
+    ref.rate <- as.character(substitute(ref.rate))
+    
+    if (length(ref.obs) == 0) ref.obs <- NULL
+    if (length(ref.pyrs) == 0) ref.pyrs <- NULL
+    if (length(ref.rate) == 0) ref.rate <- NULL
+  }
+  
   st <- sir_table( coh.data = coh.data, 
                    coh.obs = coh.obs,
                    coh.pyrs = coh.pyrs,
@@ -380,7 +468,7 @@ sirspline <- function( coh.data,
                    adjust = adjust,
                    mstate = mstate,
                    spline = spline)
-  
+
   results <- sir_spline( table = st, 
                          print = print,
                          adjust = adjust,
@@ -452,7 +540,9 @@ sir_table <- function( coh.data,
     aggre <- unique(c(adjust, print, spline, coh.pyrs))
     aggre <- aggre[which(aggre != mstate)]
 
-    coh.data <- melt( data = coh.data, id.vars = aggre, measure.vars = coh.obs, value.name = 'coh.observations', variable.name = mstate, variable.factor = FALSE)
+    coh.data <- melt( data = coh.data, id.vars = aggre, measure.vars = coh.obs, 
+                      value.name = 'coh.observations', 
+                      variable.name = mstate, variable.factor = FALSE)
     coh.obs <- 'coh.observations'
   
     # parse Y name form string 'formXtoY'

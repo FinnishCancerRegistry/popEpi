@@ -110,21 +110,21 @@ print.sir <- function(x, ...) {
       "Total person-years:", data.frame(x[[1]])[,'pyrs'], '\n',
       fill=TRUE)
   
-  if ( is.null(x[['model']]) ) {
+  if ( is.null(x$model) ) {
     cat("Univariate SIR/SMR:", '\n')
-    print( x[['univariate']] )
+    print( x$univariate[] )
   } else {
     cat("Poisson modelled SIR:", '\n')
-    print( x[['model']] )
+    print( x$model[] )
   }
   cat(fill=TRUE)
   if (is.null( x[['lrt.test']] )) {
     cat("Couldn't test homogeneity.",'\n')
   } 
-  else if(x[['test.type']] == 'homogeneity') {
+  else if(x$test.type == 'homogeneity') {
     cat("Test for homogeneity p", p.round( c(x$lrt.test)), '\n' )
   }
-  else if(x[['test.type']] == 'trend') {
+  else if(x$test.type == 'trend') {
     cat("Test for trend p", p.round( c(x$lrt.test)), '\n' )
   }
   

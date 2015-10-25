@@ -148,13 +148,17 @@ splitMulti <- function(data,
   IDT <- data.table(lex.id = data$lex.id, temp.id = 1:nrow(data), key = "temp.id")
   
   set(data, j = "lex.id", value = 1:nrow(data))
-  l <- list()
+  on.exit(set(data, j = "lex.id", value = IDT[, ]$lex.id))
+  
+  l <- vector(mode = "list", length = length(splitScales))
+  setattr(l, "names", splitScales)
   for (v in splitScales) {
     l[[v]] <- splitLexisDT(data, breaks = breaks[[v]], 
                            merge = TRUE, drop = FALSE, timeScale = v)
     breaks[[v]] <- attr(l[[v]], "breaks")[[v]]
   }
   l <- rbindlist(l)
+  on.exit()
   set(data, j = "lex.id", value = IDT[, ]$lex.id)
   
   ## lex.id is here 1:nrow(data)

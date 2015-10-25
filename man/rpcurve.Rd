@@ -14,7 +14,7 @@ Fit a marginal relative survival curve based on a \code{relpois} fit
 }
 \details{
 \pkg{popEpi} version 0.2.1 supported confidence intervals but due to lack
-of testing this is disabled until the intervals are proven to be correct.
+of testing this is disabled until the intervals are subjected to more rigorous testing.
 
 Currently only estimates a marginal curve, i.e. the average of all
 possible individual curves.

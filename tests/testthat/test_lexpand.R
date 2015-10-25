@@ -3,7 +3,7 @@ context("lexpand sanity checks")
 
 test_that("lexpand arguments can be passed as symbol, expression, character name of variable, and symbol of a character variable", {
   skip_on_cran()
-  sr <- copy(sire)[dg_date < ex_date, ]
+  sr <- copy(sire)[dg_date < ex_date, ][1:100,]
   sr[, id := as.character(1:.N)]
   
   x <- lexpand(sr, fot = c(0, Inf), 
@@ -241,7 +241,7 @@ test_that('lexpand aggre: multistate column names correct', {
 test_that('lexpansion w/ overlapping = TRUE/FALSE produces double/undoubled pyrs', {
   skip_on_cran()
   
-  sire2 <- copy(sire)[dg_date < ex_date, ]
+  sire2 <- copy(sire)[dg_date < ex_date, ][1:100]
   sire2[, dg_yrs := get.yrs(dg_date, "actual")]
   sire2[, ex_yrs := get.yrs(ex_date, "actual")]
   sire2[, bi_yrs := get.yrs(bi_date, "actual")]
@@ -261,5 +261,63 @@ test_that('lexpansion w/ overlapping = TRUE/FALSE produces double/undoubled pyrs
   setDT(x)
   expect_equal(x[, sum(lex.dur), keyby=lex.id]$V1, sire2[!duplicated(id), sum(ex_yrs-bi_yrs), keyby=id]$V1)  
 })
+
+
+
+test_that("different specifications of time vars work with event defined and overlapping=FALSE", {
+  
+  dt <- data.table(bi_date = as.Date('1949-01-01'), 
+                   dg_date = as.Date(paste0(1999:2000, "-01-01")), 
+                   start = as.Date("1997-01-01"),
+                   end = as.Date('2002-01-01'), 
+                   status = c(1,2), id=1)
+  
+  ## birth -> entry -> event -> exit
+  x1 <- lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = start, exit = end, event = dg_date, 
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE)
+  expect_equal(x1$lex.dur, c(2,1,2))
+  expect_equal(x1$age, c(48,50,51))
+  expect_equal(x1$lex.Cst, 0:2)
+  expect_equal(x1$lex.Xst, c(1,2,2))
+  
+  ## birth -> entry = event -> exit
+  expect_error(lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = dg_date, exit = end, event = dg_date,
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE), 
+               regexp = "some rows have simultaneous 'entry' and 'event', which is not supported; perhaps separate them by one day?")
+  
+  ## birth = entry -> event -> exit
+  x3 <- lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = bi_date, exit = end, event = dg_date,
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE)
+  expect_equal(x3$lex.dur, c(50,1,2))
+  expect_equal(x3$age, c(0,50,51))
+  expect_equal(x3$lex.Cst, 0:2)
+  expect_equal(x3$lex.Xst, c(1,2,2))
+  
+  ## birth -> entry -> event = exit
+  expect_error(lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = dg_date, exit = end, event = end,
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE), 
+               regexp = "subject\\(s\\) had several rows where 'event' time had the same value, which is not supported; perhaps separate them by one day?")
+  
+  ## birth = entry -> event -> exit
+  x6 <- lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = bi_date, exit = end, event = dg_date,
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE)
+  expect_equal(x6$lex.dur, c(50,1,2))
+  expect_equal(x6$age, c(0,50,51))
+  expect_equal(x6$lex.Cst, 0:2)
+  expect_equal(x6$lex.Xst, c(1,2,2))
+  
+})
+
+
 
 

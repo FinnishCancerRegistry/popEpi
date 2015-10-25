@@ -178,6 +178,10 @@ get.yrs <- function(dates, format = "%Y-%m-%d", year.length = "approx") {
   orle <- length(dates)
   nale <- sum(is.na(dates))
   
+  if (is.null(orle)) stop("dates vector is NULL; did you supply the right data?")
+  
+  if (orle == 0) stop("length of dates vector is zero; did you supply the right data?")
+  
   dat <- data.table(dates=dates)
   if (is.character(dates)) {
     dat[, dates := as.IDate(dates, format = format)]
@@ -839,24 +843,39 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
   ## OR with DT = TRUE, a data.table based on aforementioned results.
   ## intention: output to be used in by argument of data.table.
   ## a data.table output is directly usable in by.
+  ## if column names cannot be easily found, BV1, BV2, ... are imputed
+  ## for missing names (unrobustly: such names may already exist, resulting in duplicates)
   
-  ## all variables used in arg should be within data
-  av <- all.vars(arg)
-  all_names_present(data, av)
   
-  ## byNames: names of columns resulting from aggre argument, by which
-  ## pyrs and such are aggregated. same functionality
-  ## as in results seen in e.g.DT[ .N, by = list(factor(x), y)]
-  ## note: first object in ags with list or expression aggre is "list"
   argType <- popArgType(arg)
   if (argType == "NULL") return(NULL) ## should this be stop() instead?
   
-  if (argType == "character") byNames <- arg else
-    if (argType == "list") byNames <-sapply(arg[-1], function(x) all.names(x)[1]) else
-      if (argType == "expression") byNames <- all.names(arg)[1]
+  ## all variables used in arg should be within data
+  av <- all.vars(arg)
+  byNames <- NULL
+  if (argType == "expression" && !all_names_present(data, av, stops = FALSE) && length(all.names(arg)) == 1L) {
+    ## assume to be a preset object containing character strings of variable names
+    ## or a list instead of being a symbol
+    
+    if (argType == "character") byNames <- arg 
+  
+  } else {
+    
+    ## byNames: names of columns resulting from aggre argument, by which
+    ## pyrs and such are aggregated. same functionality
+    ## as in results seen in e.g.DT[ .N, by = list(factor(x), y)]
+    ## note: first object in ags with list or expression aggre is "list"
+    
+    if (argType == "character") byNames <- eval(arg)
+    else if (argType == "list") byNames <- sapply(arg[-1], function(x) all.names(x)[1]) 
+    else if (argType == "expression") byNames <- all.names(arg)[1]
+    
+    byNames[byNames %in% "$"] <- paste0("BV", 1:length(byNames))[byNames %in% "$"]
+  }
   
   
   e <- eval(arg, envir = data, enclos = parent.frame(n))
+  
   
   if (is.character(e)) {
     all_names_present(data, e)
@@ -873,14 +892,21 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
     ## partially named list has some "" names
     ne <- names(e)
     
-    if (is.null(ne)) {
-      setattr(e, "names", byNames)
-    }
+    if (DT && any(sapply(e, is.null))) stop("at least one object in list arg is NULL; cannot form data.table with such list")
+    
+    if (is.null(ne)) ne <- rep("", length(e))
+    
+    
     wh_bad <- which(ne == "")
     if (length(wh_bad) > 0) {
+      if (is.null(byNames)) {
+        byNames <- paste0("BV", 1:length(e))
+      }
+      
       ne[wh_bad] <- byNames[wh_bad]
       setattr(e, "names", ne)
     }
+    
     if (DT) setDT(e)
   } else if ((is.vector(e) || is.factor(e))) {
     ## is e.g. a numeric vector or a factor
@@ -888,7 +914,10 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
       e <- data.table(V1 = e)
       setnames(e, 1, byNames)
     }
-  } 
+  }
+  
+  if (DT && any(duplicated(names(e)))) warning("Some column names are duplicated in output")
+  
   ## note: e may be an expression at this point due to double substitution
   e
 }

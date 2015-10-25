@@ -58,6 +58,8 @@ c2 <- lexpand( sire[dg_date<ex_date,], status = status, birth = bi_date, exit = 
                breaks = list(per = 1990:2010, age = 0:100, fot = c(0,10,20,Inf)), 
                aggre = list(fot, agegroup = age, year = per, sex) )
 
+
+
 test_that("SIR works with multistate aggregated lexpand data", {
   ## don't skip on CRAN
   
@@ -111,29 +113,32 @@ test_that("SIR spline throws errors correctly", {
   library(splines)
   
   
-
+  sp0 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = 'from0to2', coh.pyrs = 'pyrs',
+                                         subset = year %in% 1990:2008,
+                                         ref.data = popmort, ref.rate = 'haz', 
+                                         adjust = c('agegroup','year','sex'), print = NULL,
+                                         spline=c('agegroup','year','fot') )))
   sp1 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
-                      subset = year %in% 1990:2008,
-                      ref.data = popmort, ref.rate = 'haz', 
-                      adjust = c('agegroup','year','sex'), print =c('cause'),
-                      mstate = 'cause', spline=c('agegroup','year','fot') )))
-  sp2 <- try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
-                        subset = year %in% 1990:2008,
-                        ref.data = popmort, ref.rate = 'haz', dependent.spline=FALSE,
-                        adjust = c('agegroup','year','sex'), print =c('cause'), 
-                        mstate = 'cause', spline=c('agegroup','year','fot') ))
-  sp3 <- try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
-                        subset = year %in% 1990:2008,
-                        ref.data = popmort, ref.rate = 'haz', 
-                        adjust = c('agegroup','year','sex'), print =c('cause'), 
-                        mstate = 'cause', spline='agegroup') )
+                                         subset = year %in% 1990:2008,
+                                         ref.data = popmort, ref.rate = 'haz', 
+                                         adjust = c('agegroup','year','sex'), print =c('cause'),
+                                         mstate = 'cause', spline=c('agegroup','year','fot') )))
+  sp2 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
+                                         subset = year %in% 1990:2008,
+                                         ref.data = popmort, ref.rate = 'haz', dependent.spline=FALSE,
+                                         adjust = c('agegroup','year','sex'), print =c('cause'), 
+                                         mstate = 'cause', spline=c('agegroup','year','fot') )))
+  sp3 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
+                                         subset = year %in% 1990:2008,
+                                         ref.data = popmort, ref.rate = 'haz', 
+                                         adjust = c('agegroup','year','sex'), print =c('cause'), 
+                                         mstate = 'cause', spline='agegroup') ))
   
-  sp4 <- try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
-                        subset = year %in% 1990:2008,
-                        ref.data = popmort, ref.rate = 'haz', reference.points = c(2000, 4),
-                        adjust = c('agegroup','year','sex'), print =c('cause'), 
-                        mstate = 'cause', spline=c('agegroup','year','fot') ))
-  
+  sp4 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
+                                         subset = year %in% 1990:2008,
+                                         ref.data = popmort, ref.rate = 'haz', reference.points = c(2000,4),
+                                         adjust = c('agegroup','year','sex'), print =c('cause'), 
+                                         mstate = 'cause', spline=c('agegroup','year','fot') )))
   expect_is( object = sp1, class = 'sirspline')
   expect_is( object = sp2, class = 'sirspline')
   expect_is( object = sp3, class = 'sirspline')
@@ -141,11 +146,7 @@ test_that("SIR spline throws errors correctly", {
 })
 
 
-
-
-# print list --------------------------------------------------------------
-
-test_that("SIR print-list/subset error", {
+test_that("print accepts a function and subset works", {
   skip_on_cran()
 
   pl1 <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
