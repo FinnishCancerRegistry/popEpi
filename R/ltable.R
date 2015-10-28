@@ -156,7 +156,7 @@ ltable <- function(data,
     
   }
   
-  
+  setDT(tab)
   setkeyv(tab,by.vars)
   if (!getOption("popEpi.datatable")) setDFpe(tab)
   tab
@@ -218,6 +218,7 @@ expr.by.cj <- function(data,
   e = substitute(expr)
   tab <- data[subset, ][cj, eval(e, envir = .SD), keyby=.EACHI, .SDcols = .SDcols, ...]
   
+  setDT(tab)
   if (length(old_key) > 0) setkeyv(data, old_key)
   tab
 }
