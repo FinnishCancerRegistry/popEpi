@@ -99,7 +99,7 @@ makeWeightsDT <- function(data, weights = NULL, adjust = NULL) {
   } 
   
 }
-
+globalVariables("weights")
 
 survtab_aggre <- function(data, 
                           surv.breaks=NULL, 
@@ -275,8 +275,8 @@ survtab_aggre <- function(data,
   
   
   ## in essence:
-  data[, mv1 := cutLow(v1, ...)]
-  data <- merge(data, weigths, by = weVars, all.x = TRUE, all.y = TRUE)
+  # data[, mv1 := cutLow(v1, ...)]
+  data <- merge(data, weights, by = weVars, all.x = TRUE, all.y = TRUE)
   
   ## this only after evaluating print and adjust!
   # keep only necessary columns ------------------------------------------------
@@ -698,8 +698,12 @@ survtab_aggre <- function(data,
 
 
 
-globalVariables(c("lex.Xst", "lex.Cst", "lex.dur", "agegr", "ageint_start", "lex.id", "lex.multi", "entry_age", "age", "fot", "per", "agegr.w", "surv.int",
-                  "Tstart", "Tstop", "delta", "entered_late", "entered_int_late"))
+globalVariables(c("lex.Xst", "lex.Cst", "lex.dur", "agegr", "ageint_start", 
+                  "lex.id", "lex.multi", "entry_age", "age", "fot", "per", "agegr.w", "surv.int",
+                  "Tstart", "Tstop", "delta", "entered_late", "entered_int_late", 
+                  "mv1", "v1", "weights", "byVars", "tabw", "w", "ints", "agegr.w.breaks", "agegr.w.weights"))
 
-globalVariables(c("n.start", "d", "lex.Xst", "n.cens", "surv.int", "d.exp", "pop.haz", "d.exp.pp", "d.exp", "pp", "d.pp", "d.pp.2", "n.eff.pp", "pyrs.pp"))
-globalVariables(c("ICSS", "n.eff", "pyrs", "test_pyrs", "surv.obs", "lag1_surv.obs", "p.obs", "surv.obs", "CIF.rel", "p.exp", "surv.exp", "obs", "agestd"))
+globalVariables(c("n.start", "d", "lex.Xst", "n.cens", "surv.int", 
+                  "d.exp", "pop.haz", "d.exp.pp", "d.exp", "pp", "d.pp", "d.pp.2", "n.eff.pp", "pyrs.pp"))
+globalVariables(c("ICSS", "n.eff", "pyrs", "test_pyrs", "surv.obs", 
+                  "lag1_surv.obs", "p.obs", "surv.obs", "CIF.rel", "p.exp", "surv.exp", "obs", "agestd"))
