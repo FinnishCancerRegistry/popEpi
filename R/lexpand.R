@@ -478,6 +478,7 @@ lexpand <- function(data,
     } else if (agTy == "list") {
       bad_vars <- setdiff(all.vars(aggSub), c(if (merge) names(data), c("fot", "per", "age")))
     }
+    bad_vars <- setdiff(bad_vars, c("F", "$"))
     if (length(bad_vars) > 0) {
       bad_vars <- paste0("'", bad_vars, "'", collapse = ", ")
       stop("you used the following variable(s) in 'aggre' not available in splitted data: ", bad_vars)
