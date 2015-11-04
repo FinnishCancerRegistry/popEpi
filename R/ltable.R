@@ -137,14 +137,19 @@ ltable <- function(data,
   if (!is.data.table(data)) {
     ## data.frame needs to take a copy unfortunately...
     ## setDT & setDF possible but unrobust
-    data <- as.data.table(data)
+    data <- data[subset,]
+    setDT(data)
     setkeyv(data, by.vars)
-    tab <- data[subset, ][cj, eval(e, envir = .SD), by =.EACHI]
+    tab <- data[cj, eval(e, envir = .SD), by =.EACHI]
     rm(data)
   } else {
     old_key <- key(data)
+    tmpSSV <- makeTempVarName(data, pre = "subset_")
+    on.exit(setcolsnull(data, delete = tmpSSV, soft = TRUE))
+    data[, c(tmpSSV) := subset]
+    rm(subset)
     setkeyv(data, by.vars)
-    tab <- data[subset,][cj, eval(e, envir = .SD), by = .EACHI]
+    tab <- data[data[[tmpSSV]], ][cj, eval(e, envir = .SD), by = .EACHI]
     if (length(old_key) > 0) setkeyv(data, old_key)
   }
   
@@ -209,14 +214,18 @@ expr.by.cj <- function(data,
   subset <- evalLogicalSubset(data = data, substiset = subset)
   
   old_key <- key(data)
-  setkeyv(data, by.vars)
   
   levs <- lapply(data[subset, c(by.vars), with=F], unique)
-  
   cj <- do.call(CJ, levs)
   
+  tmpSSV <- makeTempVarName(data, pre = "subset_")
+  on.exit(setcolsnull(data, delete = tmpSSV, soft = TRUE))
+  data[, c(tmpSSV) := subset]
+  rm(subset)
+  
+  setkeyv(data, by.vars)
   e = substitute(expr)
-  tab <- data[subset, ][cj, eval(e, envir = .SD), keyby=.EACHI, .SDcols = .SDcols, ...]
+  tab <- data[data[[tmpSSV]], ][cj, eval(e, envir = .SD), keyby=.EACHI, .SDcols = .SDcols, ...]
   
   setDT(tab)
   if (length(old_key) > 0) setkeyv(data, old_key)
