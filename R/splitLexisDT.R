@@ -68,7 +68,7 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   
   ## quick data expansion ------------------------------------------------------
   
-  l <- list()
+  l <- vector(mode = "list", length = N_expand)
   l[[1]] <- data.table(lex)
   
   ## ALTERNATE METHOD

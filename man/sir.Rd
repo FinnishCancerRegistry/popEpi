@@ -12,26 +12,26 @@ sir(coh.data, coh.obs, coh.pyrs, ref.data = NULL, ref.obs = NULL,
 \arguments{
 \item{coh.data}{aggregated cohort data, see e.g. \code{\link{lexpand}}}
 
-\item{coh.obs}{variable name for observed cases}
+\item{coh.obs}{variable name for observed cases; quoted or unquoted}
 
-\item{coh.pyrs}{variable name for person years in cohort data (in quotes)}
+\item{coh.pyrs}{variable name for person years in cohort data; quoted or unquoted}
 
 \item{ref.data}{population data. Can be left NULL if \code{coh.data} is stratified in \code{print}.}
 
-\item{ref.obs}{variable name for observed cases}
+\item{ref.obs}{variable name for observed cases; quoted or unquoted}
 
-\item{ref.pyrs}{variable name for person-years in population data}
+\item{ref.pyrs}{variable name for person-years in population data; quoted or unquoted}
 
 \item{ref.rate}{population rate variable (cases/person-years). Overwrites arguments
-\code{ref.pyrs} and \code{ref.obs}.}
+\code{ref.pyrs} and \code{ref.obs}; quoted or unquoted}
 
 \item{subset}{logical condition to select data from \code{coh.data} before any computations}
 
-\item{print}{variable names for computing and outputting results separately}
+\item{print}{variable names to stratify results; quoted vector or unquoted named list with functions}
 
-\item{adjust}{variable names for adjusting without stratifying output}
+\item{adjust}{variable names for adjusting without stratifying output; quoted vector or unquoted list}
 
-\item{mstate}{set column names for cause specific observations. Relevant only
+\item{mstate}{set column names for cause specific observations; quoted or unquoted. Relevant only
 when \code{coh.obs} length is two or more. See details.}
 
 \item{test.type}{Test for equal SIRs. Test available are 'homogeneity' and 'trend'.}
@@ -69,10 +69,9 @@ can be stratified (with \code{print}) and compared to total.
 \strong{Adjust and print}
 
 A SIR can be adjusted by the covariates found in both \code{coh.data} and \code{ref.data}.
-Variables to adjust by are supplied as character
-strings of the names of variables to \code{adjust}. Variable names needs to
-match in both \code{coh.data} and \code{ref.data}. Typical variables to adjust by are
-gender, age group and calendar period.
+Variable to adjust are given in \code{adjust}.
+Variable names needs to match in both \code{coh.data} and \code{ref.data}.
+Typical variables to adjust by are gender, age group and calendar period.
 
 \code{print} is used to stratify the SIR output. In other words, the variables
 assigned to \code{print} are the covariates of the Poisson model.

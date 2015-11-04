@@ -14,17 +14,17 @@ lexpand(data, birth = NULL, entry = NULL, exit = NULL, event = NULL,
 \item{data}{dataset of e.g. cancer cases as rows}
 
 \item{birth}{birth time in date format
-or fractional years; quoted or unquoted}
+or fractional years; string, symbol or expression}
 
 \item{entry}{entry time in date format
-or fractional years; quoted or unquoted}
+or fractional years; string, symbol or expression}
 
 \item{exit}{exit from follow-up time in date
-format or fractional years; quoted or unquoted}
+format or fractional years; string, symbol or expression}
 
 \item{event}{advanced: time of possible event differing from \code{exit};
 typically only used in certain SIR/SMR calculations - see Details;
-keep \code{NULL} if \code{exit} is the time of the event; quoted or unquoted}
+string, symbol or expression}
 
 \item{status}{variable indicating type of event at \code{exit} or \code{event};
 e.g. \code{status = status != 0}; expression or quoted variable name}
@@ -35,11 +35,12 @@ status at \code{entry}; see Details}
 \item{breaks}{a named list of vectors of time breaks;
 e.g. \code{breaks = list(fot=0:5, age=c(0,45,65,Inf))}; see Details}
 
-\item{id}{an id variable; e.g. \code{id = my_id};  quoted or unquoted}
+\item{id}{optional; an id variable; e.g. \code{id = my_id};
+string, symbol or expression}
 
 \item{overlapping}{advanced, logical; if \code{FALSE} AND if \code{data} contains
-multiple rows per subject AND \code{event} is defined,
-ensures that the timelines \code{lex.id}-specific rows do not overlap;
+multiple rows per subject,
+ensures that the timelines of \code{id}-specific rows do not overlap;
 this ensures e.g. that person-years are only computed once per subject
 in a multi-state paradigm}
 
@@ -48,7 +49,7 @@ a list of unquoted variables and/or expressions thereof,
 which are interpreted as factors; data events and person-years will
 be aggregated by the unique combinations of these; see Details}
 
-\item{aggre.type}{one of \code{c("non-empty","unique","cartesian")};
+\item{aggre.type}{one of \code{c("unique","cartesian")};
 can be abbreviated; see Details}
 
 \item{drop}{logical; if \code{TRUE}, drops all resulting rows
@@ -114,6 +115,10 @@ as the time variables.
 You may take a look at a simulated cohort
 \code{\link{sire}} as an example of the
 minimum required information for processing data with \code{lexpand}.
+
+Many arguments can be supplied as a character string naming the appropriate
+variable (e.g. \code{"sex"}), as a symbol (e.g. \code{sex}) or as an expression
+(e.g. \code{factor(sex, 0:1, c("m", "f"))}) for flexibility.
 
 \strong{Breaks}
 
@@ -210,6 +215,19 @@ and then over the remaining distance to the mid-point (first to 0.4, then to
 0.5). This ensures that more accurately merged population hazards are fully
 used.
 
+\strong{Event not at end of follow-up & overlapping time lines}
+
+\code{event} may be used if the event indicated by \code{status} should
+occur at a time differing from \code{exit}. If \code{event} is defined,
+\code{cutLexis} is used on the data set after coercing it to the \code{Lexis}
+format and before splitting.
+
+Additionally, setting \code{overlapping = FALSE} ensures that (irrespective
+of using \code{event}) the each subject defined by \code{id} only has one
+continuous time line instead of possibly overlapping time lines if
+there are multiple rows in \code{data} by \code{id}.
+
+
 \strong{Aggregating}
 
 Certain analyses such as SIR/SMR calculations require tables of events and
@@ -267,30 +285,39 @@ i.e. rows with \code{pyrs > 0} are returned.
 \dontrun{
 ## prepare data for e.g. 5-year cohort survival calculation
 x <- lexpand(sire, breaks=list(fot=seq(0, 5, by = 1/12)),
+             birth = bi_date, entry = dg_date, exit = ex_date,
              status =  status != 0, pophaz=popmort)
 
 ## prepare data for e.g. 5-year "period analysis" for 2008-2012
 BL <- list(fot = seq(0, 5, by = 1/12), per = c("2008-01-01", "2013-01-01"))
-x <- lexpand(sire, breaks = BL, pophaz=popmort, status =  status != 0)
+x <- lexpand(sire, breaks = BL,
+             birth = bi_date, entry = dg_date, exit = ex_date,
+             pophaz=popmort, status =  status != 0)
 
 ## aggregating
 BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
 ag <- lexpand(sire, breaks = BL, status = status != 0,
+             birth = bi_date, entry = dg_date, exit = ex_date,
               aggre=list(sex, period = per, surv.int = fot))
 
 ## using "..."
-x <- lexpand(sire, fot=0:5, pophaz=popmort, status =  status != 0)
+x <- lexpand(sire, fot=0:5, status =  status != 0,
+             birth = bi_date, entry = dg_date, exit = ex_date,
+             pophaz=popmort)
 
 x <- lexpand(sire, fot=0:5, status =  status != 0,
+             birth = bi_date, entry = dg_date, exit = ex_date,
              aggre=list(sex, surv.int = fot))
 
 ## using the "event" argument: it just places the transition to given "status"
 ## at the "event" time instead of at the end, if possible using cutLexis
-x <- lexpand(sire, status = status, event = dg_date, birth=bi_date, entry=bi_date, exit=ex_date)
+x <- lexpand(sire, status = status, event = dg_date,
+             birth = bi_date, entry = dg_date, exit = ex_date,)
 
 ## aggregating with custom "event" time
 ## (the transition to status is moved to the "event" time)
-x <- lexpand(sire, status = status, event = dg_date, birth=bi_date, entry=bi_date, exit=ex_date,
+x <- lexpand(sire, status = status, event = dg_date,
+             birth = bi_date, entry = dg_date, exit = ex_date,
              per = 1970:2014, age = c(0:100,Inf),
              aggre = list(sex, year = per, agegroup = age))
 

@@ -1,8 +1,18 @@
 
 
-makeWeightsDT <- function(data, weights, adjust) {
+
+## ok, here's how it goes:
+## aggregate data to smallest number of rows according to adjust and print
+## merge in weights
+## compute weighted estimate
+## ???
+## profit
+
+
+makeWeightsDT <- function(data, weights = NULL, adjust = NULL) {
   ## input: data and substitute()'d weights and adjust arguments
   ## output: a prepared data.table for merging with aggregated or other data
+  ## OR a character string vector naming the weights variable already in data
   ## to compute weighted results with
   ## 'adjust' argument for defining adjusting vars
   ## and 'weights' as: 
@@ -12,23 +22,73 @@ makeWeightsDT <- function(data, weights, adjust) {
   ## * a list of named weights vectors which will be collated into a data.frame of weights.
   ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
   
+  if (!is.data.table(data)) stop("makeWeightsDT() data must be a data.table; if you see this, blame the maintainer")
   
-  ## TODO: not sure if adjust should already be in DT format when supplied
-  ## weights might also be pre-evaluated.
+  if (is.character(weights) && all_names_present(data, weights)) return(weights)
   
-  weights <- copy(eval(weights, envir = data, enclos = parent.frame(1L)))
-  if (!is.data.frame(weights)) adjust <- copy(eval(adjust, envir = data, enclos = parent.frame(1L)))
+  weights <- evalPopArg(data = data, arg = substitute(weights), DT = FALSE)
+  
+  adjust <- evalPopArg(data = data, arg = substitute(adjust), DT = TRUE)
+  adVars <- NULL
+  
+  if (length(adjust) > 0) {
+    adVars <- makeTempVarName(data, pre = names(adjust))
+    on.exit(setcolsnull(data, adVars, soft = TRUE), add = TRUE)
+    data[, (adVars) := adjust]
+  }
+  rm(adjust)
+  
+  
   
   ## Need: 1) weights in DT format; 2) cuts for harmonizing weights and data adjust variables
+  tmpWE <- makeTempVarName(data, pre = "weights_")
   if (is.data.frame(weights)) {
+    ## data.frame requirements:
+    ## - one variable named "weights"
+    ## - other variables have corresponding variables in data (the same names)
+    ## --> cutting merge will be performed
+    all_names_present(weights, "weights")
     setDT(weights)
-    weVars <- setdiff(names(weights), "weights")
-    cuts <- lapply(weights[, mget(weVars)], function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
     
+    weVars <- setdiff(names(weights), "weights")
+    all_names_present(data, weVars)
+    
+    tmpWV <- makeTempVarName(data, pre = weVars)
+    whNumVars <- weights[, sapply(.SD, is.numeric), .SDcols = weVars]
+    numVars <- weVars[whNumVars]
+    tmpNumVars <- tmpWV[whNumVars]
+    
+    ## now numVars e.g. c("fot", "age") & 
+    ## tmpNumVars e.g. paste0(c("fot", "age"), "V123456789")
+    
+    on.exit(setcolsnull(data, setdiff(tmpWV, tmpNumVars), soft = TRUE))
+    
+    if (length(numVars) > 0) {
+      setnames(data, numVars, tmpNumVars)
+      
+      
+      on.exit({
+        setcolsnull(data, numVars, soft = TRUE)
+        setnames(data, tmpNumVars, numVars)
+      }, add = TRUE)
+      ## create cutLow()'d variables of numeric vars to merge by
+      ## (ensures equivalence of variable levels)
+      cuts <- lapply(weights[, mget(numVars)], function(x) sort(unique(x)))
+      cuts <- lapply(cuts, function(x) unique(c(x, Inf)))
+      
+      for (k in 1:length(tmpNumVars)) {
+        TNV <- tmpNumVars[k]
+        NV <- numVars[k]
+        set(data, j = NV, value = cutLow(data[[TNV]], cuts[[NV]]))
+      }
+      rm(cuts)
+    }
+    
+    data <- merge(data, weights, all.x = TRUE, all.y = FALSE, by = weVars)
+    
+    return(data[])
   } else if (is.list(weights)) {
     weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
-    
-    
     
     weights[, weights := 1L]
     for (k in weVars) {
@@ -36,7 +96,7 @@ makeWeightsDT <- function(data, weights, adjust) {
     }
     weights[, (weVars) := NULL]
     
-  }
+  } 
   
 }
 

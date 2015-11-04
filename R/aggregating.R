@@ -291,7 +291,8 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
     
     ## tmpdt: contains cut()'d time scales if appropriate
     
-    tmpdt <- list()
+    tmpdt <- vector(mode = "list", length = length(aggScales))
+    setattr(tmpdt, "names", aggScales)
     for (k in aggScales) {
       tmpdt[[k]] <- lex[subset, ][[k]]
     }
@@ -338,15 +339,19 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
     
     ## tmpdt will now contain both cut()'d time scales and any other variables
     ## from all.vars(aggre); tmpdt already may have contained cut()'d time scales!
-    if (is.null(tmpdt)) tmpdt <- list()
-    for (k in setdiff(av, names(tmpdt))) {
+    addVars <- setdiff(av, names(tmpdt))
+    if (is.null(tmpdt)) {
+      tmpdt <- vector(mode = "list", length = length(addVars))
+      setattr(tmpdt, "names", addVars)
+    }
+    for (k in addVars) {
       tmpdt[[k]] <- lex[subset,][[k]]
     }
     setDT(tmpdt)
     
-    
     bytab <- evalPopArg(tmpdt, arg = ags, DT = TRUE)
-    ## sometimes arg to eval is basically the whole DT, resulting in an alias apparently
+    ## sometimes arg to eval is basically the whole DT
+    ## resulting in an alias apparently instead of a copy
     bytab <- copy(bytab) 
     
     cj <- lapply(bytab, function(x) {if (is.factor(x)) levels(x) else unique(x)})
