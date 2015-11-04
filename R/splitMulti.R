@@ -214,7 +214,7 @@ splitMulti <- function(data,
   setattr(l, "class", c("Lexis","data.table","data.frame"))
   if (!getOption("popEpi.datatable")) setDFpe(l)
   
-  l
+  l[]
   
 }
 

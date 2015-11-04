@@ -80,7 +80,7 @@ as.aggre <- function(x, ...) {
 as.aggre.data.frame <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...) {
   x <- copy(x)
   setaggre(x, obs = obs, pyrs = pyrs, obs.exp = obs.exp, by = by, ...)
-  x
+  x[]
 }
 
 #' @export

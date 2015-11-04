@@ -60,9 +60,9 @@ cast_simple <- function(data=NULL, columns='year', rows=c('PrimarySite','sex'), 
   ## note: dcast probably usually finds the methods for data.frame / data.table,
   ## but this method is more certain
   if (is.data.table(data)) {
-    dcast.data.table(data, formula = form, value.var=values, drop=FALSE, fun.aggregate=sum) 
+    dcast.data.table(data, formula = form, value.var=values, drop=FALSE, fun.aggregate=sum)[]
   } else {
-    dcast(data, formula = form, value.var = values, drop = FALSE, fun.aggregate = sum)
+    dcast(data, formula = form, value.var = values, drop = FALSE, fun.aggregate = sum)[]
   }
   
 }
@@ -88,7 +88,7 @@ na2zero = function(DT, vars = NULL) {
     DT[is.na(get(k)), (k) := 0]
   }
   
-  return(DT)
+  return(DT[])
 }
 
 
@@ -527,7 +527,7 @@ shift.var <- function(data, id.vars = NULL, shift.var = NULL, value.vars=NULL, s
 
   data[, (merge_var) := NULL]
   setkeyv(data, old_key)
-  return(data)
+  return(data[])
 }
 
 
@@ -634,7 +634,7 @@ as.data.frame.ratetable <- function(x, ...) {
   dimids <- attr(x, "dimid")
   x <- as.data.frame.table(as.table(as.array(x)))
   names(x) <- c(dimids, "haz")
-  x
+  x[]
 }
 
 
@@ -664,7 +664,7 @@ as.data.table.ratetable <- function(x, ...) {
   x <- as.data.table(as.table(as.array(x)), ...)
   x[, names(x) := lapply(.SD, robust_values, messages = FALSE, force = FALSE)]
   setnames(x, c(dimids, "haz"))
-  x
+  x[]
 }
 
 

@@ -183,7 +183,7 @@ rate <- function( data,
     setDFpe(data)
   }
   
-  return(data)
+  return(data[])
 }
 
 
@@ -289,7 +289,7 @@ rate_table <- function(data,
       setnames(data, c('obs','pyrs'), c(obs, pyrs))
     }
   }
-  return(data)
+  return(data[])
 }
 
 globalVariables(('reference'))

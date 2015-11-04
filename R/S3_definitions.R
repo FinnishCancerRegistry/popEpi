@@ -36,7 +36,7 @@ as.pe.Lexis <- function(x) {
   
   setattr(pe, "class", cl)
   
-  return(pe)
+  return(pe[])
 }
 
 
@@ -54,7 +54,7 @@ as.pe.data.table <- function(x) {
   
   setattr(pe, "class", cl)
   
-  return(pe)
+  return(pe[])
 }
 
 

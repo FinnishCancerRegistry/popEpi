@@ -153,7 +153,7 @@ rpcurve <- function(object = NULL) {
   
   setattr(tab, "class", c("pe", "data.table", "data.frame"))
   if (!getOption("popEpi.datatable")) setDFpe(tab)
-  tab
+  tab[]
 }
 
 #' @title Relative Poisson family object

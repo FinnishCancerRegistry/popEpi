@@ -156,7 +156,7 @@ intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = 
     
   }
   
-  x
+  x[]
 }
 
 

@@ -319,7 +319,7 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
   setattr(data, "class", c("meansurv","pe","data.table", "data.frame"))
   if (!getOption("popEpi.datatable")) setDFpe(data)
   setattr(data, "curves", bkup)
-  return(data)
+  return(data[])
 }
 
 

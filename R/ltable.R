@@ -164,7 +164,7 @@ ltable <- function(data,
   setDT(tab)
   setkeyv(tab,by.vars)
   if (!getOption("popEpi.datatable")) setDFpe(tab)
-  tab
+  tab[]
 }
 
 
@@ -229,6 +229,6 @@ expr.by.cj <- function(data,
   
   setDT(tab)
   if (length(old_key) > 0) setkeyv(data, old_key)
-  tab
+  tab[]
 }
 

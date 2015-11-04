@@ -138,6 +138,6 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   setattr(l, "class", c("Lexis","data.table","data.frame"))
   if (!getOption("popEpi.datatable")) setDFpe(l)
   
-  l
+  l[]
 }
 
