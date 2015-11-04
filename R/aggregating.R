@@ -251,7 +251,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   if (verbose) cat("Type of aggre argument:", argType, "\n")
   if (argType != "NULL") {
     if (argType == "character") {
-      av <- aggre
+      av <- eval(aggre)
     } else {
       av <- all.vars(ags)
     } 
@@ -405,9 +405,10 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   transTime <- proc.time()
   ## need to modify call to get lex.Cst & lex.Xst transitions
   if (argType == "character") {
-    ags <- unique(c(aggre, "lex.Cst", "lex.Xst"))
+    ags <- eval(ags)
+    ags <- c(ags, "lex.Cst", "lex.Xst")
+    ags <- unique(ags)
   } else {
-    ags <- ags
     ags$lex.Cst <- quote(lex.Cst)
     ags$lex.Xst <- quote(lex.Xst) 
   }
