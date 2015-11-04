@@ -928,7 +928,7 @@ popArgType <- function(arg) {
   ## output: type of thingie that was substitute()'d
   ##  * list (of expressions)
   ##  * character string vector
-  ##  * an expression
+  ##  * an expression (includes symbol)
   a <- deparse(arg)
   a <- paste0(a, collapse = "") ## lists may somehow produce length > 1 here
   
