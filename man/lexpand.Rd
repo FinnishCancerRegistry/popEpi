@@ -137,6 +137,16 @@ Breaks for \code{per} can also be given in
 \code{Date}/\code{IDate}/\code{date} format, whereupon
 they are converted to fractional years before used in splitting.
 
+The \code{age} time scale can additionally
+be automatically split into common age grouping schemes
+by naming the scheme with an appropriate character string:
+
+\itemize{
+  \item \code{"18of5"}: age groups 0-4, 5-9, 10-14, ..., 75-79, 80-84, 85+
+  \item \code{"20of5"}: age groups 0-4, 5-9, 10-14, ..., 85-89, 90-94, 95+
+  \item \code{"101of1"}: age groups 0, 1, 2, ..., 98, 99, 100+
+}
+
 \strong{Time variables}
 
 If any of the given time variables

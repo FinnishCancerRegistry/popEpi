@@ -94,6 +94,16 @@
 #' \code{Date}/\code{IDate}/\code{date} format, whereupon
 #' they are converted to fractional years before used in splitting.
 #' 
+#' The \code{age} time scale can additionally 
+#' be automatically split into common age grouping schemes
+#' by naming the scheme with an appropriate character string:
+#' 
+#' \itemize{
+#'   \item \code{"18of5"}: age groups 0-4, 5-9, 10-14, ..., 75-79, 80-84, 85+
+#'   \item \code{"20of5"}: age groups 0-4, 5-9, 10-14, ..., 85-89, 90-94, 95+
+#'   \item \code{"101of1"}: age groups 0, 1, 2, ..., 98, 99, 100+
+#' }
+#' 
 #' \strong{Time variables}
 #' 
 #' If any of the given time variables
@@ -462,6 +472,16 @@ lexpand <- function(data,
   if (length(brna) == 0) {
     breaks$fot <- c(0,Inf)
   }
+  
+  if ("age" %in% brna && is.character(breaks$age)) {
+    schemeNames <- c("18of5", "20of5", "101of1")
+    if (!breaks$age %in% schemeNames) stop("You supplied '", breaks$age, "' as breaks for the age scale, but allowed character strings are: ", paste0("'", schemeNames, "'", collapse = ","))
+    brSchemes <- list(c(seq(0, 85, 5)), c(seq(0, 95, 5), Inf), c(0:100, Inf))
+    names(brSchemes) <- paste0("age_", schemeNames)
+    breaks$age <- brSchemes[paste0("age_",breaks$age)]
+  } 
+  
+  
   if (any(sapply(breaks, length) == 1L)) {
     stop("any given non-null vector of breaks must have more than one break!")
   }
