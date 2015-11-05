@@ -17,15 +17,15 @@ check_some <- function() {
   
 }
 
-test_some <- function()  {
+test_some <- function(filter = NULL)  {
   ## runs only the tests that CRAN will run
   old <- Sys.getenv("NOT_CRAN")
   on.exit(Sys.setenv("NOT_CRAN" = old))
   Sys.setenv("NOT_CRAN" = "false")
-  devtools::test(".")
+  devtools::test(".", filter = filter)
 }
 
-test_all <- function(filter = filter)  {
+test_all <- function(filter = NULL)  {
   ## runs all possible tests; only with options("popEpi.datatable" = TRUE)
   old <- Sys.getenv("NOT_CRAN")
   on.exit(Sys.setenv("NOT_CRAN" = old))
