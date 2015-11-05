@@ -119,17 +119,8 @@ ltable <- function(data,
   cj <- do.call(CJ, levs)
   
   ## treatment of NA values in by.vars
-  if (na.rm & !use.levels) {
-    na_cj <- na.omit(cj)
-    drop_rows<- nrow(cj) - nrow(na_cj)
-    if (drop_rows >0) {
-      hav <- nrow(data)
-      na_hav <- data.table(data[subset,], key=by.vars)[na_cj, .N, by=.EACHI]
-      na_hav <- sum(na_hav$N)
-      message(paste("NOTE:", hav-na_hav,"observations in original data ignored due to missingness, resulting in", 
-                    drop_rows, "fewer rows in the table"))
-      cj <- na_cj
-    }
+  if (na.rm) {
+    cj <- na.omit(cj)
   }
   
   ## make the table
