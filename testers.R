@@ -25,15 +25,15 @@ test_some <- function()  {
   devtools::test(".")
 }
 
-test_all <- function()  {
+test_all <- function(filter = filter)  {
   ## runs all possible tests; only with options("popEpi.datatable" = TRUE)
   old <- Sys.getenv("NOT_CRAN")
   on.exit(Sys.setenv("NOT_CRAN" = old))
   Sys.setenv("NOT_CRAN" = "true")
-  devtools::test(".")
+  devtools::test(".", filter = filter)
 }
 
-test_full <- function() {
+test_full <- function(filter = NULL) {
   ## runs all possible tests with both TRUE/FALSE for options("popEpi.datatable")
   old <- Sys.getenv("NOT_CRAN")
   on.exit(Sys.setenv("NOT_CRAN" = old))
@@ -41,11 +41,11 @@ test_full <- function() {
   Sys.setenv("NOT_CRAN" = "true")
   options("popEpi.datatable" = TRUE)
   cat("Starting checking with popEpi.datatable = TRUE \n")
-  devtools::test(".")
+  devtools::test(".", filter = filter)
   
   cat("Finished checking with popEpi.datatable = TRUE; starting with popEpi.datatable = FALSE \n")
   options("popEpi.datatable" = FALSE)
-  devtools::test(".")
+  devtools::test(".", filter = filter)
   
   cat("Finished checking with popEpi.datatable = FALSE \n")
   
