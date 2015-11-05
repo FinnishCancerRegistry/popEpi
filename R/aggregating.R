@@ -233,6 +233,8 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   if (type == "cartesian") type <- "full"
   if (type == "non-empty") type <- "unique"
   
+  if (verbose) cat("Aggregation type: ", type, " \n")
+  
   if (is.null(breaks)) breaks <- copy(attr(lex, "breaks"))
   checkBreaksList(lex, breaks)
   
@@ -260,8 +262,8 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
     if (argType == "expression") ags <- substitute(list(aggre))
     
     if (!any(av %in% names(lex))) {
-      ags <- deparse(ags)
-      stop("none of the variables used in aggre were found in lex; the aggre expression was '", ags, "'")
+      badAggre <- deparse(ags)
+      stop("none of the variables used in aggre were found in lex; the aggre expression was '", badAggre, "'")
     }
     
   } else {
@@ -279,35 +281,27 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   }
   if (length(aggScales) > 0) {
     cutTime <- proc.time()
+    
     catAggScales <- paste0("'", aggScales, "'", collapse = ", ")
     if (verbose) cat("Following time scales mentioned in aggre argument and will be categorized for aggregation:", catAggScales, "\n")
     
-    ## change names of cuttable time scales temporarily to avoid using them;
-    ## instead temp cutted vars will be used (with tmpdt)
-    whNames <- sapply(aggScales, function(x) which(x == names(lex)))
+    ## NEW METHOD: modify time scales in place 
+    ## (while taking copies of old values and returning them at exit)
+    oldScaleValues <- if (is.data.table(lex)) copy(lex[, mget(aggScales)]) else lex[,c(aggScales)]
+    setDT(oldScaleValues)
+    
     on.exit({
-      setnames(lex, whNames, names(whNames))
-    })
+      for (sc in aggScales) {
+        set(lex, j = sc, value = oldScaleValues[[sc]])
+      }
+    }, add = TRUE)
     
-    ## tmpdt: contains cut()'d time scales if appropriate
+    for (sc in aggScales) {
+      set(lex, j = sc, value = cutLow(lex[[sc]], breaks = breaks[[sc]]))
+    }
     
-    tmpdt <- vector(mode = "list", length = length(aggScales))
-    setattr(tmpdt, "names", aggScales)
-    for (k in aggScales) {
-      tmpdt[[k]] <- lex[subset, ][[k]]
-    }
-    setDT(tmpdt)
-    tmpScales <- makeTempVarName(lex, pre =  names(whNames))
-    setnames(lex, whNames, tmpScales)
-    for (k in aggScales) {
-      br_k <- unique(c(-Inf, breaks[[k]], Inf))
-      set(tmpdt, j = k, value = cutLow(tmpdt[[k]], breaks = br_k))
-    }
     if (verbose) cat("Time taken by cut()'ting time scales: ", timetaken(cutTime), "\n")
-  } else {
-    tmpdt <- NULL
   }
-  
   
   othVars <- setdiff(av, aggScales)
   if (verbose && length(othVars) > 0) {
@@ -315,120 +309,98 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
     cat("Detected the following non-time-scale variables to be utilized in aggregating:", catOthVars, "\n")
   }
   
-  if (type != "full") {
-    ## unique / non-empty pyrs -------------------------------------------------
-    pyrsTime <- proc.time()
-    pyrs <- with(tmpdt,{
-      if (!is.data.table(lex)) {
-        ## for some reason calling by string variable names does not work directly
-        as.data.table(lex[, which(names(lex) %in% c(av, "lex.dur"))])[subset, .(pyrs = sum(lex.dur)), keyby = ags]
-      } else {
-        lex[subset, .(pyrs = sum(lex.dur)), keyby = ags]
-      }
-    })
-    if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
-    
-    byNames <- setdiff(names(pyrs), "pyrs") ## this will always be as intended
-    
-    pyrs[is.na(pyrs), pyrs := 0]
-    pyrs <- pyrs[pyrs > 0]
-    
-  } else {
-    ## cartesian pyrs ------------------------------------------------------
-    pyrsTime <- proc.time()
-    
-    ## tmpdt will now contain both cut()'d time scales and any other variables
-    ## from all.vars(aggre); tmpdt already may have contained cut()'d time scales!
-    addVars <- setdiff(av, names(tmpdt))
-    if (is.null(tmpdt)) {
-      tmpdt <- vector(mode = "list", length = length(addVars))
-      setattr(tmpdt, "names", addVars)
-    }
-    for (k in addVars) {
-      tmpdt[[k]] <- lex[subset,][[k]]
-    }
-    setDT(tmpdt)
-    
-    bytab <- evalPopArg(tmpdt, arg = ags, DT = TRUE)
-    ## sometimes arg to eval is basically the whole DT
-    ## resulting in an alias apparently instead of a copy
-    bytab <- copy(bytab) 
-    
-    cj <- lapply(bytab, function(x) {if (is.factor(x)) levels(x) else unique(x)})
-    
-    ## we want to use the breaks of cut()'d time scales for full utilization
-    ## (cj above does not contain levels not present in data)
-    if (argType == "character") {
-      whUseScales <- NULL
-      usedScales <- varsUsingScales <- intersect(aggre, aggScales)
-      
-    } else if (argType != "NULL") {
-      whUseScales <- sapply(ags[-1], function(x) any(all.vars(x) %in% aggScales))
-      usedScales <- names(bytab)[whUseScales]
-    }
-    
-    cj[usedScales] <- lapply(breaks[aggScales], function(x) unique(c(x)))
-    
-    cj <- do.call(CJ, cj)
-    
-    if (verbose) cat("Table of variable levels for which pyrs are computed looks like this: \n")
-    if (verbose) print(cj, topn = 2, nrows = 4)
-    
-    for (k in c("lex.Cst", "lex.Xst", "lex.dur")) {
-      set(bytab, j = k, value = lex[subset,][[k]])
-    }
-    ## this will always be what intended thanks to data.table
-    byNames <- setdiff(names(bytab), c("pyrs", "lex.dur", "lex.Cst", "lex.Xst")) 
-    
-    setkeyv(bytab, byNames); setkeyv(cj, byNames)
-    pyrs <- bytab[cj, .(pyrs = sum(lex.dur)), keyby = .EACHI]
-    pyrs[is.na(pyrs), pyrs := 0]
   
-    ## need only cut()'d time scales in transitions phase
-    setcolsnull(tmpdt, delete = setdiff(av, names(tmpdt)), soft = FALSE) 
-    
-    rm(bytab, cj)
-    
-    if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
-    
-  }
+  ## computing pyrs ------------------------------------------------------------
+  pyrsTime <- proc.time()
+  pyrs <- if (!is.data.table(lex)) {
+      ## for some reason calling by string variable names does not work directly
+      as.data.table(lex[, which(names(lex) %in% c(av, "lex.dur"))])[subset, .(pyrs = sum(lex.dur)), keyby = ags]
+    } else {
+      lex[subset, .(pyrs = sum(lex.dur)), keyby = ags]
+    }
+  
+  if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
+  
+  byNames <- setdiff(names(pyrs), "pyrs") ## this will always be as intended
+  
+  pyrs[is.na(pyrs), pyrs := 0]
+  pyrs <- pyrs[pyrs > 0]
   
   
   pyrsDiff <- pyrs[, sum(pyrs)] - sum(lex[subset, ]$lex.dur)
   if (!isTRUE(all.equal(pyrsDiff, 0L))) {
     warning("Found discrepancy in total aggregated pyrs compared to sum(lex$lex.dur); compare results by hand and make sure settings are right \n")
   }
+  
+  ## cartesian output ----------------------------------------------------------
+  if (type == "full") {
+    carTime <- proc.time()
     
-  
-  ## transitions ---------------------------------------------------------------
-  
-  transTime <- proc.time()
-  ## need to modify call to get lex.Cst & lex.Xst transitions
-  if (argType == "character") {
-    ags <- eval(ags)
-    ags <- c(ags, "lex.Cst", "lex.Xst")
-    ags <- unique(ags)
-  } else {
-    ags$lex.Cst <- quote(lex.Cst)
-    ags$lex.Xst <- quote(lex.Xst) 
+    varsUsingScales <- NULL
+    
+    ## which variables used one time scale? and which one?
+    ## will only be used in cartesian stuff.
+    if (argType == "character") {
+      varsUsingScales <- intersect(aggre, aggScales)
+      whScaleUsed <- varsUsingScales
+    } else if (argType != "NULL") {
+      ## note: ags a substitute()'d list at this point always if not char
+      whScaleUsed <- lapply(ags[-1], function(x) intersect(all.vars(x), aggScales))
+      ## only one time scale should be used in a variable!
+      oneScaleTest <- any(sapply(whScaleUsed, function(x) length(x) > 1L))
+      if (oneScaleTest) stop("Only one Lexis time scale can be used in any one variable in aggre argument!")
+      varsUsingScales <- byNames[sapply(whScaleUsed, function (x) length(x) == 1L)]
+      whScaleUsed <- unlist(whScaleUsed)
+    }
+    
+    ceejay <- evalPopArg(data = lex[subset, ], arg = ags, DT = TRUE)
+    
+    ceejay <- lapply(ceejay, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
+    if (length(aggScales) > 0) {
+      ## which variables in ceejay used the Lexis time scales from lex?
+      
+      ceejay[varsUsingScales] <- lapply(breaks[whScaleUsed], function(x) x[-length(x)])
+    }
+    
+    ceejay <- do.call(CJ, ceejay)
+    setkeyv(ceejay, byNames)
+    setkeyv(pyrs, byNames)
+    
+    pyrs <- pyrs[ceejay]
+    rm(ceejay)
+    
+    if (verbose) cat("Time taken by making aggregated data large in the cartesian product sense: ", timetaken(carTime), "\n")
   }
   
-  ## sadly, transition computations requires information about
+  
+  ## computing events ----------------------------------------------------------
+  
+  transTime <- proc.time()
+  ## need to modify call to get lex.Cst & lex.Xst events
+  agsEv <- ags
+  if (argType == "character") {
+    agsEv <- eval(agsEv)
+    agsEv <- c(agsEv, "lex.Cst", "lex.Xst")
+    agsEv <- unique(agsEv)
+  } else {
+    agsEv$lex.Cst <- quote(lex.Cst)
+    agsEv$lex.Xst <- quote(lex.Xst) 
+  }
+  
+  ## sadly, event computations requires information about
   ## 1) transitions (easy) and 2) end points (harder).
   ## end points requires sorting at some point!
   
   ## note: following takes copy of some columns if data was DF; else
   ## tmplex only an alias for lex
-  ## note: all this is due to avoiding using set() to modify the original
-  ## data in place. that may actually be a pretty good idea...
+  ## note: unfortunately need to take copy of DF here
   
-  if (!exists("tmpScales") || length(tmpScales) == 0 ) tmpScales <- NULL
-  firstScale <- intersect(c(tmpScales[1], foundScales[1]), names(lex))[1]
-  
-  
-  tmplex <- if (!is.data.table(lex)) {
-    as.data.table(lex[, which(names(lex) %in% c(av, "lex.id", firstScale, "lex.Cst", "lex.Xst"))])
-  } else lex
+  firstScale <- attr(lex, "time.scales")[1]
+  if (!is.data.table(lex)) {
+    copyVars <- which(names(lex) %in% c(av, "lex.id", unique(c(firstScale, aggScales)), "lex.Cst", "lex.Xst"))
+    tmplex <- lex[, c(copyVars)]
+    setDT(tmplex)
+  } else tmplex <- lex
   
   tmpOrder <- makeTempVarName(tmplex, pre = "order_")
   tmplex[, (tmpOrder) := 1:.N]
@@ -443,24 +415,20 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   tmpTrans <- makeTempVarName(tmplex, pre = "trans_")
   tmplex[, (tmpTrans) := lex.Cst != lex.Xst | !duplicated(lex.id, fromLast = TRUE)]
   
-  if (is.data.table(lex)) {
+  if (length(old_key) > 0) {
+    setkeyv(tmplex, old_key) 
+  } else {
     setorderv(tmplex, tmpOrder)
-    if (length(old_key) > 0) setkeyv(tmplex, old_key)
   }
   
-  
-  tmpdt <- tmpdt[subset & tmplex[[tmpTrans]]]
-  trans <- with(tmpdt,{
-      tmplex[subset & tmplex[[tmpTrans]], list(obs = .N), keyby = ags]
-  })
-  
+  trans <- tmplex[subset & tmplex[[tmpTrans]], list(obs = .N), keyby = agsEv]
   
   setcolsnull(tmplex, c(tmpTrans, tmpOrder))
-  rm(tmpdt, tmplex)
+  rm(tmplex)
   
-  if (verbose) cat("Time taken by aggregating transitions: ", timetaken(transTime), "\n")
+  if (verbose) cat("Time taken by aggregating events: ", timetaken(transTime), "\n")
   
-  ## casting &merging ----------------------------------------------------------
+  ## casting & merging ---------------------------------------------------------
   
   mergeTime <- proc.time()
   
@@ -479,17 +447,20 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   trans <- cast_simple(trans, columns = tmpTr, rows = byNames, values = "obs")
   
   setkeyv(trans, byNames); setkeyv(pyrs, byNames)
-  trans <- trans[pyrs]
+  trans <- trans[pyrs]; rm(pyrs)
   
   trans[, (tmpDum) := NULL]
   byNames <- setdiff(byNames, tmpDum)
   setcolorder(trans, c(byNames, "pyrs", sort(transitions)))
   
-  for (t in transitions) {
-    trans[is.na(get(t)), (t) := 0L]
-  }
-  
   if (verbose) cat("Time taken by merging pyrs & transitions: ", timetaken(mergeTime), "\n")
+  
+  
+  for (var in c(transitions)) {
+    trans[is.na(get(var)), (var) := 0L]
+  }
+  trans[is.na(pyrs), pyrs := 0]
+  
   
   ## final touch ---------------------------------------------------------------
   setaggre(trans, obs = transitions, pyrs = "pyrs", by = byNames, obs.exp = NULL)
