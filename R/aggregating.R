@@ -312,11 +312,15 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   
   ## computing pyrs ------------------------------------------------------------
   pyrsTime <- proc.time()
-  pyrs <- if (!is.data.table(lex)) {
-      ## for some reason calling by string variable names does not work directly
-      as.data.table(lex[, which(names(lex) %in% c(av, "lex.dur"))])[subset, .(pyrs = sum(lex.dur)), keyby = ags]
+  if (!is.data.table(lex)) {
+    ## need to take copy of DF... might do this in the beginning of the function?
+    ## for some reason calling by string variable names does not work directly
+    DFtemp <- lex[subset, which(names(lex) %in% c(av, "lex.dur"))]
+    setDT(DFtemp)
+    pyrs <- DFtemp[ .(pyrs = sum(lex.dur)), keyby = ags]
+    rm(DFtemp)
     } else {
-      lex[subset, .(pyrs = sum(lex.dur)), keyby = ags]
+      pyrs <- lex[subset, .(pyrs = sum(lex.dur)), keyby = ags]
     }
   
   if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
