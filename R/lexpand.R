@@ -226,17 +226,17 @@
 #' (\code{lex.Cst != lex.Xst}) or the \code{lex.Xst} value at a subject's 
 #' last record (subject possibly defined by \code{id}).
 #' 
-#' If \code{aggre.type = "unique"}, the above results are computed for existing
+#' If \code{aggre.type = "unique"} (alias \code{"non-empty"}), 
+#' the above results are computed for existing
 #' combinations of expressions given in \code{aggre}, but also for non-existing
-#' combinations if \code{aggre.type = "cartesian"} or \code{"full"}. E.g. if a
+#' combinations if \code{aggre.type = "cartesian"} (alias \code{"full"}). E.g. if a
 #' factor variable has levels \code{"a", "b", "c"} but the data is limited
 #' to only have levels \code{"a", "b"} present 
 #' (more than zero rows have these level values), the former setting only
 #' computes results for \code{"a", "b"}, and the latter also for \code{"c"}
 #' and any combination with other variables or expression given in \code{aggre}.
-#' Both may return rows with zero person-time if there are many variables
-#' in aggre. Wtih \code{aggre.type = "non-empty"} only non-empty rows, 
-#' i.e. rows with \code{pyrs > 0} are returned.
+#' In essence, \code{"cartesian"} forces also combinations of variables used
+#' in \code{aggre} that have no match in data to be shown in the result.
 #' 
 #' @return
 #' If \code{aggre = NULL}, returns 
@@ -342,7 +342,7 @@ lexpand <- function(data,
   ## test aggre type -----------------------------------------------------------
   aggre.type <- match.arg(aggre.type[1L], c("cartesian", "non-empty", "unique", "cross-product", "full"))
   if (aggre.type == "cross-product") {
-    aggre.type <- "full"
+    aggre.type <- "cartesian"
     warning("aggre.type value 'cross-product' deprecated and renamed to 'cartesian'; please use that in the future")
   }
   
