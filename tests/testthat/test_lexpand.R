@@ -133,15 +133,15 @@ test_that("lexpanding with aggre.type = 'cartesian' works; only time scales used
                  birth = bi_date, entry = dg_date, exit = ex_date)
   setDT(ag1)
   
-  ag3 <- laggre(ag1, aggre = list(fot, age), type = "full")
+  ag3 <- laggre(ag1, aggre = list(fot, age), type = "cartesian")
   setDT(ag3)
   
-  ag4 <- laggre(ag1, aggre = list(fot, age), type = "non-empty")
+  ag4 <- laggre(ag1, aggre = list(fot, age), type = "unique")
   setDT(ag4)
   
   ag1[, `:=`(fot = try2int(cutLow(fot, c(BL$fot, Inf))), 
              age = try2int(cutLow(age, c(BL$age, Inf))))]
-  ceejay <- CJ(fot = BL$fot, age = BL$age)
+  ceejay <- do.call(CJ, lapply(BL, function(x) x[-length(x)]))
   setkey(ceejay, fot, age); setkey(ag1, fot, age)
   ag1 <- ag1[ceejay, list(pyrs = sum(lex.dur), 
                           from0to1 = sum(lex.Xst == 1L)), by = .EACHI]

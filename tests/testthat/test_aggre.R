@@ -1,5 +1,25 @@
 context("laggre")
 
+test_that("laggre leaves original data untouched", {
+  
+  x <- sire[1:100,]
+  BL <- list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014))
+  x <- lexpand(x, birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2, breaks=BL)
+  
+  ## scramble order
+  set.seed(1L)
+  x <- x[sample(x = .N, size = .N, replace = FALSE)]
+  setattr(x, "breaks", BL)
+  setattr(x, "time.scales", c("fot", "per", "age"))
+  
+  xor <- copy(x)
+  
+  ag1 <- laggre(x, aggre = list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
+  
+  expect_identical(x, xor)
+})
+
 test_that("laggre and lexpand produce the same results", {
   # skip_on_cran()
   

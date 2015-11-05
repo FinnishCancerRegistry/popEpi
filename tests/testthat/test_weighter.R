@@ -2,7 +2,7 @@ context("makeWeightsDT")
 
 
 test_that("makeWeightsDT works with various weights & adjust spesifications", {
-  
+  skip("makeWeightsDT tests not yet implemented")
   sibr <- popEpi::sibr[1:100]
   sibr[1:50, sex := 0L]
   dt <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,
