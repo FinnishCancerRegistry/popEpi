@@ -84,8 +84,8 @@ ltable <- function(data,
                    by.vars='sex',
                    expr=list(obs=.N),
                    subset = NULL,
-                   use.levels=TRUE,
-                   na.rm=FALSE,
+                   use.levels = TRUE,
+                   na.rm = FALSE,
                    robust = TRUE) {
   if (is.null(by.vars)) {
     message('No category variables given!')
@@ -125,23 +125,29 @@ ltable <- function(data,
   
   ## make the table
   e <- substitute(expr)
-  if (!is.data.table(data)) {
-    ## data.frame needs to take a copy unfortunately...
-    ## setDT & setDF possible but unrobust
+  
+  ## if any subset defined, need to always take copy;
+  ## same if not data.table
+  if (!all(subset) || !is.data.table(data)) {
     data <- data[subset,]
     setDT(data)
     setkeyv(data, by.vars)
     tab <- data[cj, eval(e, envir = .SD), by =.EACHI]
     rm(data)
   } else {
-    old_key <- key(data)
-    tmpSSV <- makeTempVarName(data, pre = "subset_")
-    on.exit(setcolsnull(data, delete = tmpSSV, soft = TRUE))
-    data[, c(tmpSSV) := subset]
+    ## otherwise can get away with sorting in place
     rm(subset)
+    old_key <- key(data)
+    tmpORDER <- makeTempVarName(data, pre = "order_")
+    set(data, j = tmpORDER, value = 1:nrow(data))
+    on.exit(setcolsnull(data, delete = tmpORDER, soft = TRUE), add = TRUE)
     setkeyv(data, by.vars)
-    tab <- data[data[[tmpSSV]], ][cj, eval(e, envir = .SD), by = .EACHI]
-    if (length(old_key) > 0) setkeyv(data, old_key)
+    tab <- data[cj, eval(e, envir = .SD), by = .EACHI]
+    if (length(old_key) > 0) {
+      setkeyv(data, old_key)
+    } else {
+      setorderv(data, cols = tmpORDER)
+    }
   }
   
   ## robust values output where possible ---------------------------------------
@@ -209,17 +215,31 @@ expr.by.cj <- function(data,
   levs <- lapply(data[subset, c(by.vars), with=F], unique)
   cj <- do.call(CJ, levs)
   
-  tmpSSV <- makeTempVarName(data, pre = "subset_")
-  on.exit(setcolsnull(data, delete = tmpSSV, soft = TRUE))
-  data[, c(tmpSSV) := subset]
-  rm(subset)
+  e <- substitute(expr)
   
-  setkeyv(data, by.vars)
-  e = substitute(expr)
-  tab <- data[data[[tmpSSV]], ][cj, eval(e, envir = .SD), keyby=.EACHI, .SDcols = .SDcols, ...]
+  if (!all(subset)) {
+    data <- data[subset,]
+    setDT(data)
+    setkeyv(data, by.vars)
+    tab <- data[cj, eval(e, envir = .SD), by =.EACHI,  .SDcols = .SDcols, ...]
+  } else {
+    ## otherwise can get away with sorting in place
+    rm(subset)
+    old_key <- key(data)
+    tmpORDER <- makeTempVarName(data, pre = "order_")
+    set(data, j = tmpORDER, value = 1:nrow(data))
+    on.exit(setcolsnull(data, delete = tmpORDER, soft = TRUE), add = TRUE)
+    setkeyv(data, by.vars)
+    tab <- data[cj, eval(e, envir = .SD), by = .EACHI,  .SDcols = .SDcols, ...]
+    if (length(old_key) > 0) {
+      setkeyv(data, old_key)
+    } else {
+      setorderv(data, cols = tmpORDER)
+    }
+  }
   
   setDT(tab)
-  if (length(old_key) > 0) setkeyv(data, old_key)
+  if (!getOption("popEpi.datatable")) setDFpe(tab)
   tab[]
 }
 
