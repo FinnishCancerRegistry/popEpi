@@ -317,7 +317,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
     ## for some reason calling by string variable names does not work directly
     DFtemp <- lex[subset, which(names(lex) %in% c(av, "lex.dur"))]
     setDT(DFtemp)
-    pyrs <- DFtemp[ .(pyrs = sum(lex.dur)), keyby = ags]
+    pyrs <- DFtemp[, .(pyrs = sum(lex.dur)), keyby = ags]
     rm(DFtemp)
     } else {
       pyrs <- lex[subset, .(pyrs = sum(lex.dur)), keyby = ags]
