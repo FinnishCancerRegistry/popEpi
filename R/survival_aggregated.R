@@ -129,8 +129,9 @@ survtab_aggre <- function(data,
   
   surv.type <- match.arg(surv.type, c("surv.obs","surv.rel","surv.cause", "cif.obs", "cif.rel"))
   surv.method <- match.arg(surv.method, c("lifetable","hazard"))
-  if (relsurv.method == "EdererII") relsurv.method <- "e2"
-  if (relsurv.method == "Pohar-Perme") relsurv.method <- "pp"
+  relsurv.method <- match.arg(relsurv.method, c("e2", "pp", "EdererII", "Pohar-Perme", "pohar-perme", "edererII", "ederer2"))
+  if (relsurv.method %in% c("EdererII", "edererII", "ederer2")) relsurv.method <- "e2"
+  if (relsurv.method %in% c("Pohar-Perme", "pohar-perme")) relsurv.method <- "pp"
   relsurv.method <- match.arg(relsurv.method, c("e2", "pp"))
   conf.type <- match.arg(conf.type, c("log","log-log","plain"))
   if (verbose) {starttime <- proc.time()}
