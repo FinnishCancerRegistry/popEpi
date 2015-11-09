@@ -194,6 +194,14 @@ as.aggre.default <- function(x, ...) {
 #' 
 #' \code{merge(1:2, 1:5)}.
 #' 
+#' @return 
+#' A long \code{data.frame} or \code{data.table} of aggregated person-years 
+#' (\code{pyrs}), numbers of subjects at risk (\code{at.risk}), and events
+#' formatted \code{fromXtoY}, where \code{X} and \code{X} are states transitioning
+#' from and to or states at the end of each \code{lex.id}'s follow-up 
+#' (implying \code{X} = \code{Y}). Subjects at risk are computed in the beginning
+#' of an interval defined by any Lexis time scales and mentioned in \code{aggre},
+#' but events occur at any point within an interval.
 #' @examples 
 #' 
 #' ## form a Lexis object
@@ -315,17 +323,17 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   if (!is.data.table(lex)) {
     ## need to take copy of DF... might do this in the beginning of the function?
     ## for some reason calling by string variable names does not work directly
-    DFtemp <- lex[subset, which(names(lex) %in% c(av, "lex.dur"))]
+    DFtemp <- lex[subset, which(names(lex) %in% c(av, "lex.dur", "lex.id"))]
     setDT(DFtemp)
-    pyrs <- DFtemp[ .(pyrs = sum(lex.dur)), keyby = ags]
+    pyrs <- DFtemp[, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = ags]
     rm(DFtemp)
     } else {
-      pyrs <- lex[subset, .(pyrs = sum(lex.dur)), keyby = ags]
+      pyrs <- lex[subset, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = ags]
     }
   
   if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
   
-  byNames <- setdiff(names(pyrs), "pyrs") ## this will always be as intended
+  byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
   
   pyrs[is.na(pyrs), pyrs := 0]
   pyrs <- pyrs[pyrs > 0]
@@ -455,7 +463,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   
   trans[, (tmpDum) := NULL]
   byNames <- setdiff(byNames, tmpDum)
-  setcolorder(trans, c(byNames, "pyrs", sort(transitions)))
+  setcolorder(trans, c(byNames, "pyrs", "at.risk", sort(transitions)))
   
   if (verbose) cat("Time taken by merging pyrs & transitions: ", timetaken(mergeTime), "\n")
   
