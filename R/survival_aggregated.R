@@ -205,7 +205,7 @@ survtab_aggre <- function(data,
   
   ## limit data to given surv.ints ---------------------------------------------
   tmpSI <- makeTempVarName(data, pre = "surv.int_")
-  data[, tmpSI := cutLow(fot, breaks = surv.breaks)]
+  data[, (tmpSI) := cutLow(fot, breaks = surv.breaks)]
   data <- data[!is.na(get(tmpSI))]
   
   # variables to print by ------------------------------------------------------
@@ -234,6 +234,13 @@ survtab_aggre <- function(data,
     adVars <- NULL
   }
   rm(adjust)
+  
+  # aggregate data to smallest number of rows according to print & adjust ------
+  ## NOTE: valVars not yet defined; should contain:
+  ##  * always: pyrs OR n, d
+  ##  * EdererII: d.exp
+  ##  * pp: pyrs.pp OR n.pp, d.exp.pp, d.pp, ...
+  data <- data[, lapply(.SD, sum), keyby = c(prVars, adVars), .SDcols = valVars]
   
   weights <- evalPopArg(data, substitute(weights), DT = FALSE)
   
@@ -705,5 +712,5 @@ globalVariables(c("lex.Xst", "lex.Cst", "lex.dur", "agegr", "ageint_start",
 
 globalVariables(c("n.start", "d", "lex.Xst", "n.cens", "surv.int", 
                   "d.exp", "pop.haz", "d.exp.pp", "d.exp", "pp", "d.pp", "d.pp.2", "n.eff.pp", "pyrs.pp"))
-globalVariables(c("ICSS", "n.eff", "pyrs", "test_pyrs", "surv.obs", 
+globalVariables(c("ICSS", "n.eff", "pyrs", "test_pyrs", "surv.obs", "valVars",
                   "lag1_surv.obs", "p.obs", "surv.obs", "CIF.rel", "p.exp", "surv.exp", "obs", "agestd"))
