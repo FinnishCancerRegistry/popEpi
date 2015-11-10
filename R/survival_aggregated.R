@@ -101,29 +101,44 @@ makeWeightsDT <- function(data, weights = NULL, adjust = NULL) {
 }
 globalVariables("weights")
 
-survtab_aggre <- function(data, 
-                          surv.breaks=NULL, 
-                          surv.scale=NULL,
-                          
-                          print = NULL,
-                          adjust = NULL,
-                          weights = NULL,
-                          
-                          event.values = NULL,  
-                          surv.type="surv.rel", 
-                          surv.method="hazard", 
-                          relsurv.method="e2",  
-                          
-                          subset = NULL,
-                          
-                          conf.level = 0.95, 
-                          conf.type = "log-log",
-                          format=TRUE,
-                          verbose=FALSE) {
+#' @examples 
+#' \dontrun{
+#' ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
+#'               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
+#'               aggre = list(sex, fot), fot = seq(0, 5, 1/12))
+#' 
+#' st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard")
+#' }
+survtab_ag <- function(data, 
+                       surv.breaks=NULL, 
+                       surv.scale="fot",
+                       
+                       print = NULL,
+                       adjust = NULL,
+                       weights = NULL,
+                       
+                       d = "from0to1",
+                       n = "at.risk",
+                       pyrs = "pyrs",
+                       d.exp = NULL,
+                       
+                       surv.type="surv.rel", 
+                       surv.method="hazard", 
+                       relsurv.method="e2",  
+                       
+                       subset = NULL,
+                       
+                       conf.level = 0.95, 
+                       conf.type = "log-log",
+                       format=TRUE,
+                       verbose=FALSE) {
   
   
   # check data -----------------------------------------------------------------
   if (missing(data) || nrow(data) == 0) stop("data missing or has no rows")
+  
+  if (inherits(data, "aggre") && is.null(attr(data, "aggre")))
+    stop("data is an aggre object, but no meta-information about event indicators etc. is present; did you modify data after setting the data to be an aggre object? You may set it again using e.g. as.aggre")
   
   # check arguments ------------------------------------------------------------
   
@@ -136,41 +151,14 @@ survtab_aggre <- function(data,
   conf.type <- match.arg(conf.type, c("log","log-log","plain"))
   if (verbose) {starttime <- proc.time()}
   
-  ## if event.values is not defined, use first level
-  pot.event.values <- unique(data$lex.Xst)
-  if (is.numeric(data$lex.Cst)) {
-    pot.entry.value <- intersect(0, unique(data$lex.Cst))
-    if (length(pot.entry.value) == 0) pot.entry.value  <- unique(data$lex.Cst)[1L]
-    pot.event.values <- robust_values(pot.event.values, force = FALSE, messages = FALSE)
-    pot.entry.value <- robust_values(pot.entry.value, force = FALSE, messages = FALSE)
-  } else {
-    if (is.factor(data$lex.Cst)) pot.entry.value <- factor(levels(data$lex.Cst)[1], levels = levels(data$lex.Cst))
-    if (length(pot.entry.value) == 0) pot.entry.value  <- unique(data$lex.Cst)[1L]
-  }
-  
-  
-  
-  
-  if (is.null(event.values)) {
-    event.values <- setdiff(pot.event.values, pot.entry.value)
-    message("event.values was NULL, so chose ", pot.entry.value, " as non-event value")
-  } else {
-    event.values <- intersect(event.values, pot.event.values)
-    
-    if (length(event.values) == 0) {
-      stop("none of the given event.values were present in data's lex.Xst")
-    }
-  }
-  rm(pot.event.values, pot.entry.value)
   
   # handle breaks in attributes ------------------------------------------------
   
   found_breaks <- NULL
   attrs <- attributes(data)
   if (is.null(attrs$breaks) && is.null(surv.breaks)) {
-    stop("Data does not have breaks information and surv.breaks not defined; the former would hold if data is output from laggre or lexpand")
+    stop("Data does not have breaks information and surv.breaks not defined; this would hold if data is output from laggre or lexpand")
   } else {
-    checkBreaksList(data, breaks = attrs$breaks)
     breaks_names <- names(attrs$breaks)
     
     if (!surv.scale %in% breaks_names) {
@@ -188,16 +176,28 @@ survtab_aggre <- function(data,
     stop("given surv.breaks is not a subset of the breaks used to split data; cannot proceed.")
   }
   
+  # handle count etc. variables ------------------------------------------------
+  valVars <- c("d")
+  valVars <- c(valVars, if (surv.method == "hazard")  "pyrs" else "n")
+  
+  valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "e2")  "d.exp" else NULL)
+  ## todo: variables for pp estimates
+  valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "pp")  c("d.exp.pp", "pp2") else NULL)
+
+  mc <- as.list(environment())
+  mc <- mc[which(names(mc) %in% valVars)]
+  mc <- lapply(mc, eval, envir = data, enclos = parent.frame(1L))
+  mc[sapply(mc, is.null)] <- NULL
+  
+  lackVars <- setdiff(valVars, names(mc))
+  if (length(lackVars) > 0) stop("following variables needed but missing in specs: ", paste0("'", lackVars, "'", collapse = ", "))
   
   # data prep & subsetting -----------------------------------------------------
   ## todo: make survtab work without taking copy
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data, subset)
-  
-  all_names_present(data, c("lex.multi","surv.int","delta","Tstart","Tstop"))
-  
-  
-  data <- data[subset, ]
+
+  data <- if (!all(subset)) data[subset, ] else copy(data)
   setDT(data)
   
   rm("subset", pos=-1L, inherits = FALSE)
@@ -205,15 +205,15 @@ survtab_aggre <- function(data,
   sutab <- NULL
   
   ## limit data to given surv.ints ---------------------------------------------
-  tmpSI <- makeTempVarName(data, pre = "surv.int_")
-  data[, (tmpSI) := cutLow(fot, breaks = surv.breaks)]
-  data <- data[!is.na(get(tmpSI))]
+  data[, (surv.scale) := cutLow(get(surv.scale), breaks = surv.breaks)]
+  data <- data[!is.na(get(surv.scale))]
   
   # variables to print by ------------------------------------------------------
   print <- evalPopArg(data = data, arg = substitute(print), DT = TRUE)
-  if (ncol(print) > 0) {
-    prVars <- makeTempVarName(data, pre = names(print))
-    data[, (prVars) := print]
+  if (length(print) > 0) {
+    prVars <- names(print)
+    tmpPrVars <- makeTempVarName(data, pre = names(print))
+    data[, (tmpPrVars) := print]
   } else {
     prVars <- NULL
   }
@@ -228,75 +228,48 @@ survtab_aggre <- function(data,
   ## * a list of named weights vectors which will be collated into a data.frame of weights.
   ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
   adjust <- evalPopArg(data = data, arg = substitute(adjust), DT = TRUE)
-  if (ncol(adjust) > 0) {
-    adVars <- makeTempVarName(data, pre = names(adjust))
-    data[, (adVars) := adjust]
+  if (length(adjust) > 0) {
+    adVars <- names(adjust)
+    tmpAdVars <- makeTempVarName(data, pre = adVars)
+    data[, (tmpAdVars) := adjust]
   } else {
     adVars <- NULL
   }
   rm(adjust)
+  
+  setcolsnull(data, keep = c())
   
   # aggregate data to smallest number of rows according to print & adjust ------
   ## NOTE: valVars not yet defined; should contain:
   ##  * always: pyrs OR n, d
   ##  * EdererII: d.exp
   ##  * pp: pyrs.pp OR n.pp, d.exp.pp, d.pp, ...
-  data <- data[, lapply(.SD, sum), keyby = c(prVars, adVars), .SDcols = valVars]
+  print(data)
+  print(prVars)
+  print(adVars)
+  print(valVars)
+  data <- data[, lapply(.SD, sum), keyby = c(prVars, adVars, surv.scale), .SDcols = valVars]
+  print(data)
+  stop("test")
   
-  weights <- evalPopArg(data, substitute(weights), DT = FALSE)
+  weights <- substitute(weights)
+  weType <- popArgType(weights)
+  if (weType != "NULL") {
+    weights <- eval(weights, data, parent.frame(1L))
+    data <- makeWeightsDT(data, weights = weights, adjust = adVars)
+    
+  }
+  ## at this point weights merged in
   
  
-  if (!is.data.frame(weights) && is.list(weights)) {
-    
-    ## need to think if cartesian multiplication is correct...
-    weights <- do.call(CJ, weights, args = list(unique = FALSE, sorted = FALSE))
-    weVars <- names(weights)
-    
-    weights[, weights := 1]
-    for (k in setdiff(names(weights), "weights")) {
-      set(weights, j = "weights", value = weights$weights * weights[[k]])
-    }
-    weights[, weights := weights / sum(weights)]
-    
-    weCuts <- data[, lapply(.SD, function(x) if (is.factor(x)) levels(x) else sort(unique(x))), .SDCols = weVars]
-    
-    ## need to turn old weights to levels of adjust variables here for merging...
-    
-  } else if (is.data.frame) {
-    weights <- copy(weights); setDT(weights)
-    weVars <- setdiff(names(weights), "weights")
-    weCuts <- weights[, lapply(.SD, function(x) sort(unique(x))), .SDcols = weVars]
-    
-  } else if (is.character(weights)) {
-    if (weights %in% paste0("ICSS", 1:3)) {
-      ## note: this will require a known name for the age group variable...
-      ## possibly this should only be part of survtab.as
-      wena <- weights
-      weights <- copy(ICSS)
-      weights[, age := c(0, seq(15,85, 5))]
-      setnames(weights, c(wena), c("weights"))
-      setcolsnull(weights, keep = c("age", "weights"), colorder = TRUE, soft = FALSE)
-    } else {
-      weVars <- weights
-    }
-  }
-  
-  
-  ## in essence:
-  # data[, mv1 := cutLow(v1, ...)]
-  data <- merge(data, weights, by = weVars, all.x = TRUE, all.y = TRUE)
-  
   ## this only after evaluating print and adjust!
   # keep only necessary columns ------------------------------------------------
-  reqVars <- "obs"
-  reqVars <- c(reqVars, if (surv.method == "lifetable") "n" else "pyrs")
-  reqVars <- c(reqVars, if (relsurv.method == "e2") "d.exp" else "d.pp")
-  ## etc.
-  setcolsnull(data, keep=c(prVars, adVars, tmpSI, reqVars), colorder = TRUE, soft = FALSE)
-  all_names_present(data, c(prVars, adVars, tmpSI, reqVars))
+  
+  setcolsnull(data, keep=c(prVars, adVars, surv.scale, valVars), colorder = TRUE, soft = FALSE)
+  all_names_present(data, c(prVars, adVars, surv.scale, valVars))
   
   
-  setkeyv(data, c(prVars, adVars, tmpSI))
+  setkeyv(data, c(prVars, adVars, surv.scale))
   
   # compute observed survivals  ------------------------------------------------
   if (verbose) ostime <- proc.time()
