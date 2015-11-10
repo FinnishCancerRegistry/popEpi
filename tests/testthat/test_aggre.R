@@ -82,17 +82,19 @@ test_that("laggre and lexpand produce the same results", {
 test_that("laggre's aggre argument works flexibly", {
   # skip_on_cran()
   
+  library(Epi)
+  BL <- list(fot = 0:5, per = c(1995,2015))
   for (cond in c(FALSE, TRUE)) {
-    library(Epi)
     x <- Lexis(data = sire[dg_date < ex_date,][1:500, ], entry = list(fot = 0, age = dg_age, per = get.yrs(dg_date)),
                exit = list(per = get.yrs(ex_date)), exit.status = status, 
                entry.status = 0)
-    x <- splitLexis(x, breaks = 0:5, time.scale = "fot")
-    x <- splitLexis(x, breaks = c(1995), time.scale = "per")
+    x <- splitLexis(x, breaks = BL$fot, time.scale = "fot")
+    x <- splitLexis(x, breaks = BL$per, time.scale = "per")
     x$agegr <- cut(x$dg_age, 2)
     if (cond) {
       setDT(x)
       setattr(x, "class", c("Lexis", "data.table", "data.frame"))
+      setattr(x, "breaks", BL)
     }
     
     a <- laggre(x, aggre = list(agegr = cut(dg_age, 2), sex, fot, per = per), type = "unique")

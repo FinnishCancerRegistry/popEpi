@@ -398,6 +398,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
     agsEv$lex.Cst <- quote(lex.Cst)
     agsEv$lex.Xst <- quote(lex.Xst) 
   }
+  agsEv <- evalPopArg(if (all(subset)) lex else lex[subset,], arg = agsEv, DT = TRUE)
   
   ## sadly, event computations requires information about
   ## 1) transitions (easy) and 2) end points (harder).
@@ -409,7 +410,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   
   firstScale <- attr(lex, "time.scales")[1]
   if (!is.data.table(lex)) {
-    copyVars <- which(names(lex) %in% c(av, "lex.id", unique(c(firstScale, aggScales)), "lex.Cst", "lex.Xst"))
+    copyVars <- which(names(lex) %in% c(av, "lex.id", "lex.dur", unique(c(firstScale, aggScales)), "lex.Cst", "lex.Xst"))
     tmplex <- lex[, c(copyVars)]
     setDT(tmplex)
   } else tmplex <- lex
@@ -427,16 +428,30 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   tmpTrans <- makeTempVarName(tmplex, pre = "trans_")
   tmplex[, (tmpTrans) := lex.Cst != lex.Xst | !duplicated(lex.id, fromLast = TRUE)]
   
+  ## only an event if time line not cut short due to splitting or otherwise
+  if (length(aggScales) > 0) {
+    tmpCens <- tmplex[, lapply(mget(aggScales), function(x) x + lex.dur)]
+    for (k in aggScales) {
+      if (length(breaks[[k]]) < 2) stop("length of breaks less 0 or 1 for following time scale by which aggregation was requested: '", k, "'")
+      set(tmpCens, j = k, value = tmpCens[[k]] + .Machine$double.eps^0.5 < max(breaks[[k]]))
+    }
+    tmpCens <- rowSums(tmpCens)
+    tmpCens <- tmpCens > 0 & !is.na(tmpCens)
+    tmplex[, (tmpTrans) := tmpCens & get(tmpTrans)]
+    rm(tmpCens)
+  }
   if (length(old_key) > 0) {
     setkeyv(tmplex, old_key) 
   } else {
     setorderv(tmplex, tmpOrder)
   }
+  tmplex[, (tmpTrans) := get(tmpTrans) & subset]
+  agsEv <- agsEv[tmplex[[tmpTrans]]]
   
-  trans <- tmplex[subset & tmplex[[tmpTrans]], list(obs = .N), keyby = agsEv]
+  trans <- tmplex[tmplex[[tmpTrans]], list(obs = .N), keyby = agsEv]
   
   setcolsnull(tmplex, c(tmpTrans, tmpOrder))
-  rm(tmplex)
+  rm(tmplex, agsEv)
   
   if (verbose) cat("Time taken by aggregating events: ", timetaken(transTime), "\n")
   
