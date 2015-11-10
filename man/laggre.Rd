@@ -38,6 +38,15 @@ or \code{quote}; useful for when using this function within another function}
 \item{verbose}{\code{logical}; if \code{TRUE}, the function returns timings
 and some information useful for debugging along the aggregation process}
 }
+\value{
+A long \code{data.frame} or \code{data.table} of aggregated person-years
+(\code{pyrs}), numbers of subjects at risk (\code{at.risk}), and events
+formatted \code{fromXtoY}, where \code{X} and \code{X} are states transitioning
+from and to or states at the end of each \code{lex.id}'s follow-up
+(implying \code{X} = \code{Y}). Subjects at risk are computed in the beginning
+of an interval defined by any Lexis time scales and mentioned in \code{aggre},
+but events occur at any point within an interval.
+}
 \description{
 Aggregates a split \code{Lexis} object by given variables
 and / or expressions into a long-format table of person-years and
