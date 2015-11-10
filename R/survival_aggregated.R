@@ -119,6 +119,7 @@ survtab_ag <- function(data,
                        
                        d = "from0to1",
                        n = "at.risk",
+                       n.cens = "from0to0",
                        pyrs = "pyrs",
                        d.exp = NULL,
                        
@@ -175,22 +176,7 @@ survtab_ag <- function(data,
   } else if (any(!surv.breaks %in% found_breaks)) {
     stop("given surv.breaks is not a subset of the breaks used to split data; cannot proceed.")
   }
-  
-  # handle count etc. variables ------------------------------------------------
-  valVars <- c("d")
-  valVars <- c(valVars, if (surv.method == "hazard")  "pyrs" else "n")
-  
-  valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "e2")  "d.exp" else NULL)
-  ## todo: variables for pp estimates
-  valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "pp")  c("d.exp.pp", "pp2") else NULL)
-
-  mc <- as.list(environment())
-  mc <- mc[which(names(mc) %in% valVars)]
-  mc <- lapply(mc, eval, envir = data, enclos = parent.frame(1L))
-  mc[sapply(mc, is.null)] <- NULL
-  
-  lackVars <- setdiff(valVars, names(mc))
-  if (length(lackVars) > 0) stop("following variables needed but missing in specs: ", paste0("'", lackVars, "'", collapse = ", "))
+  surv.breaks <- sort(unique(surv.breaks))
   
   # data prep & subsetting -----------------------------------------------------
   ## todo: make survtab work without taking copy
@@ -202,7 +188,32 @@ survtab_ag <- function(data,
   
   rm("subset", pos=-1L, inherits = FALSE)
   
-  sutab <- NULL
+  # handle count etc. variables ------------------------------------------------
+  valVars <- c("d")
+  valVars <- c(valVars, if (surv.method == "hazard")  "pyrs" else c("n", "n.cens"))
+  
+  valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "e2")  "d.exp" else NULL)
+  ## todo: variables for pp estimates
+  valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "pp")  c("d.exp.pp", "pp2") else NULL)
+  
+  fo <- formals("survtab_ag")
+  mc <- as.list(match.call())[-1]
+  mc <- c(mc, fo[!names(fo) %in% names(mc)])
+  
+  mc <- mc[which(names(mc) %in% valVars)]
+  
+  mc <- lapply(mc, function(x) evalPopArg(data = data, arg = x, DT = TRUE))
+  mc[sapply(mc, is.null)] <- NULL
+  mc <- lapply(mc, function(x) x[[1]])
+  setDT(mc)
+  
+  lackVars <- setdiff(valVars, names(mc))
+  if (length(lackVars) > 0) stop("following variables needed but missing in specs: ", paste0("'", lackVars, "'", collapse = ", "))
+  
+  tmpValVars <- makeTempVarName(data, pre = valVars)
+  
+  data[, (tmpValVars) := mc]
+  rm(mc)
   
   ## limit data to given surv.ints ---------------------------------------------
   data[, (surv.scale) := cutLow(get(surv.scale), breaks = surv.breaks)]
@@ -215,7 +226,7 @@ survtab_ag <- function(data,
     tmpPrVars <- makeTempVarName(data, pre = names(print))
     data[, (tmpPrVars) := print]
   } else {
-    prVars <- NULL
+    prVars <- tmpPrVars <- NULL
   }
   rm(print)
   
@@ -230,27 +241,34 @@ survtab_ag <- function(data,
   adjust <- evalPopArg(data = data, arg = substitute(adjust), DT = TRUE)
   if (length(adjust) > 0) {
     adVars <- names(adjust)
-    tmpAdVars <- makeTempVarName(data, pre = adVars)
-    data[, (tmpAdVars) := adjust]
+    tmpadVars <- makeTempVarName(data, pre = adVars)
+    data[, (tmpadVars) := adjust]
   } else {
-    adVars <- NULL
+    adVars <- tmpadVars <- NULL
   }
   rm(adjust)
   
-  setcolsnull(data, keep = c())
-  
   # aggregate data to smallest number of rows according to print & adjust ------
-  ## NOTE: valVars not yet defined; should contain:
-  ##  * always: pyrs OR n, d
-  ##  * EdererII: d.exp
-  ##  * pp: pyrs.pp OR n.pp, d.exp.pp, d.pp, ...
-  print(data)
-  print(prVars)
-  print(adVars)
-  print(valVars)
-  data <- data[, lapply(.SD, sum), keyby = c(prVars, adVars, surv.scale), .SDcols = valVars]
-  print(data)
-  stop("test")
+  
+  ## NOTE: have to do CJ by hand: some levels of adjust or something may not
+  ## have each level of e.g. fot repeated!
+  cj <- list()
+  if (length(c(tmpPrVars, tmpadVars)) > 0) {
+    cj <- data[, lapply(.SD, function(x) if (is.factor(x)) levels(x) else sort(unique(x))), .SDcols = c(tmpPrVars, tmpadVars)]
+    setattr(cj, "class", "list")
+  }
+  
+  cj[[surv.scale]] <- surv.breaks[-length(surv.breaks)]
+  cj <- do.call(CJ, cj)
+  
+  setkeyv(data, c(tmpPrVars, tmpadVars, surv.scale))
+  data <- data[cj, lapply(.SD, sum), .SDcols = tmpValVars, by = .EACHI]
+  
+  for (k in tmpValVars) {
+    data[is.na(get(k)), (k) := 0]
+  }
+  
+  ## merge in weights ----------------------------------------------------------
   
   weights <- substitute(weights)
   weType <- popArgType(weights)
@@ -261,15 +279,29 @@ survtab_ag <- function(data,
   }
   ## at this point weights merged in
   
- 
-  ## this only after evaluating print and adjust!
   # keep only necessary columns ------------------------------------------------
+  ## this only after evaluating print, weights and adjust!
+  ## also use useful names from now on.
+  byVars <- c(prVars, adVars)
+  setnames(data, c(tmpPrVars, tmpadVars, tmpValVars), c(byVars, valVars))
   
-  setcolsnull(data, keep=c(prVars, adVars, surv.scale, valVars), colorder = TRUE, soft = FALSE)
-  all_names_present(data, c(prVars, adVars, surv.scale, valVars))
+  setcolsnull(data, keep=c(byVars, surv.scale, valVars), colorder = TRUE, soft = FALSE)
+  all_names_present(data, c(byVars, surv.scale, valVars))
   
+  setkeyv(data, c(byVars, surv.scale))
   
-  setkeyv(data, c(prVars, adVars, surv.scale))
+  # formulate some needed variables --------------------------------------------
+  delta <- NULL
+  data[, delta := surv.breaks[-1] - surv.breaks[-length(surv.breaks)]]
+  data[, surv.int := 1:.N, by = byVars]
+  
+  data[, n.cens.check := n- shift(n, n = 1, type = "lead", fill = NA) - d, by = byVars]
+  data[!is.na(n.cens.check), n.cens.check := n.cens - n.cens.check]
+  if (data[, sum(n.cens.check, na.rm = TRUE)]) warning("given n.cens and d do not sum to total number of events and transitions based on n alone; check your variables?")
+  data[, n.cens.check := NULL]
+  
+  data[, n.eff := n - n.cens/2L]
+  
   
   # compute observed survivals  ------------------------------------------------
   if (verbose) ostime <- proc.time()
@@ -285,7 +317,6 @@ survtab_ag <- function(data,
   
   if (verbose) cat("Time taken by computing observed survivals:", timetaken(ostime), "\n")
   
-  return(data)
   
   ## empty surv.int checking ---------------------------------------------------
   
@@ -293,14 +324,14 @@ survtab_ag <- function(data,
   ## otherwise estimated survival should just end if no one left in an interval
   
   ## test for consecutively empty surv.ints summed over all age groups ---------
-  if ("agegr.w" %in% survtab_by_vars) {
+  if (length(adVars) > 0) {
     ## with age group weighting, if all age groups have 0 pyrs in some
     ## strata-surv.ints, drop those only
     
     ## first check empty surv.ints are all consecutive...
-    setkeyv(sutab, c(survtab_by_vars, "surv.int"))
-    conse_test <- sutab[, list(test_pyrs=sum(pyrs)), by=c("surv.int", setdiff(survtab_by_vars, "agegr.w"))]
-    conse_test <- conse_test[test_pyrs>0, list(diff=diff(surv.int)), by=setdiff(survtab_by_vars, "agegr.w")]
+    setkeyv(data, c(byVars, "surv.int"))
+    conse_test <- data[, list(test_pyrs=sum(pyrs)), by=c("surv.int", prVars)]
+    conse_test <- conse_test[test_pyrs>0, list(diff=diff(surv.int)), by=prVars]
     conse_test <- conse_test[diff>1]
     ## keep non-consecutively bad surv.int stratas in entirety for inspection
     if (nrow(conse_test) > 0) {
@@ -309,22 +340,21 @@ survtab_ag <- function(data,
               some estimates as NA; for closer inspection manually create age
               groups to supply to by.vars")
     } else {
-      sutab[, test_pyrs := sum(pyrs), by=c("surv.int", setdiff(survtab_by_vars, "agegr.w"))]
-      sutab <- sutab[test_pyrs > 0]
-      setcolsnull(sutab, "test_pyrs")
+      data[, test_pyrs := sum(pyrs), by=c("surv.int", prVars)]
+      data <- data[test_pyrs > 0]
+      setcolsnull(data, "test_pyrs")
     }
     rm(conse_test)
   }
   
-  
   ## other non-consecutive empty surv.ints -------------------------------------
-  setkeyv(sutab, c(survtab_by_vars, "surv.int"))
-  conse_test <- sutab[pyrs > 0][, list(diff=diff(surv.int)), by= survtab_by_vars]
+  setkeyv(data, c(byVars, "surv.int"))
+  conse_test <- data[pyrs > 0][, list(diff=diff(surv.int)), by= byVars]
   conse_test <- conse_test[diff > 1]
   
   ## keep non-consecutively bad surv.int stratas in entirety for inspection
   if (nrow(conse_test) > 0) {
-    if ("agegr.w" %in% survtab_by_vars) {
+    if (length(adVars) > 0) {
       
       message("Some survival intervals were empty non-consecutively 
               in at least one agegroup-by.vars combination; this 
@@ -338,44 +368,45 @@ survtab_ag <- function(data,
               this will lead to NA cumulative estimates; please check 
               function output (for e.g. zero person-years in survival 
               intervals) and rethink function arguments")
-      if (length(survtab_by_vars) > 0) {
-        setkeyv(sutab, survtab_by_vars)
-        setkeyv(conse_test, survtab_by_vars)
-        keep_bad <- conse_test[sutab]
+      if (length(byVars) > 0) {
+        setkeyv(data, byVars)
+        setkeyv(conse_test, byVars)
+        keep_bad <- conse_test[data]
         keep_bad[, diff := NULL]
       } else {
-        keep_bad <- sutab[pyrs == 0]
+        keep_bad <- data[pyrs == 0]
       }
       
-      keep_good <- sutab[pyrs > 0]
-      setcolorder(keep_bad, names(sutab))
-      setcolorder(keep_good, names(sutab))
-      sutab <- rbindlist(list(keep_bad, keep_good))
-      setkeyv(sutab, c(survtab_by_vars, "surv.int"))
-      sutab <- unique(sutab)
+      keep_good <- data[pyrs > 0]
+      setcolorder(keep_bad, names(data))
+      setcolorder(keep_good, names(data))
+      data <- rbindlist(list(keep_bad, keep_good))
+      setkeyv(data, c(byVars, "surv.int"))
+      data <- unique(data)
       rm(keep_bad, keep_good)
       
     }
     
   } else {
-    if (!"agegr.w" %in% survtab_by_vars) sutab <- sutab[pyrs>0]
+    if (length(adVars) == 0) data <- data[pyrs>0]
   }
   rm(conse_test)
   
   
+  
   # create and print table of bad surv.ints ------------------------------------
-  if (!is.null(survtab_by_vars)) {
-    if (sutab[surv.obs == 0 | is.na(surv.obs), .N] > 0) {
+  if (!is.null(byVars)) {
+    if (data[surv.obs == 0 | is.na(surv.obs), .N] > 0) {
       
-      zerotab <- sutab[surv.obs == 0 | is.na(surv.obs), 
+      zerotab <- data[surv.obs == 0 | is.na(surv.obs), 
                        list(first.bad.surv.int = min(as.integer(surv.int)), 
                             last.bad.surv.int = max(as.integer(surv.int)), 
-                            surv.obs=min(surv.obs)), keyby = survtab_by_vars]
+                            surv.obs=min(surv.obs)), keyby = byVars]
       
       
       message("Some cumulative surv.obs were zero or NA in the following strata:")
       print(zerotab)
-      if (surv.method == "lifetable" && sutab[surv.obs == 0, .N] > 0) {
+      if (surv.method == "lifetable" && data[surv.obs == 0, .N] > 0) {
         message("Zero surv.obs leads to zero relative survivals as well.")
         message("Age group weighting WILL use the zero surv.obs / relative survival values.")
       }
@@ -383,6 +414,12 @@ survtab_ag <- function(data,
     }
     
   }
+  
+  
+  print(data)
+  stop("test")
+  return(data)
+  
   
   # compute cause-specific survivals  ------------------------------------------
   if (surv.type == "surv.cause") {
