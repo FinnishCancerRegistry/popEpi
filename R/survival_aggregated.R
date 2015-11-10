@@ -101,14 +101,11 @@ makeWeightsDT <- function(data, weights = NULL, adjust = NULL) {
 }
 globalVariables("weights")
 
-#' @examples 
-#' \dontrun{
-#' ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
-#'               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
-#'               aggre = list(sex, fot), fot = seq(0, 5, 1/12))
-#' 
-#' st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard")
-#' }
+# ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
+#               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
+#               aggre = list(sex, fot), fot = seq(0, 5, 1/12))
+# 
+# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard")
 survtab_ag <- function(data, 
                        surv.breaks=NULL, 
                        surv.scale="fot",
@@ -295,6 +292,7 @@ survtab_ag <- function(data,
   data[, delta := surv.breaks[-1] - surv.breaks[-length(surv.breaks)]]
   data[, surv.int := 1:.N, by = byVars]
   
+  n.cens.check <- NULL ## appease R CMD CHECK
   data[, n.cens.check := n- shift(n, n = 1, type = "lead", fill = NA) - d, by = byVars]
   data[!is.na(n.cens.check), n.cens.check := n.cens - n.cens.check]
   if (data[, sum(n.cens.check, na.rm = TRUE)]) warning("given n.cens and d do not sum to total number of events and transitions based on n alone; check your variables?")
@@ -427,6 +425,7 @@ survtab_ag <- function(data,
       #       gs.data[, n.eff := n.start - n.cens/2 + n.de/2 + n.de.cens/4] # + d.de/2
       # n.cens_1 := n.cens + (d-d_1)
       # n.de.cens := n.de.cens + (d.de - d.de_1)
+      event.values <- NULL
       for (k in event.values) {
         d_k <- paste0("d", k)
         #         d.de_k <- paste0("d.de",k)
@@ -716,7 +715,7 @@ survtab_ag <- function(data,
 
 
 
-globalVariables(c("lex.Xst", "lex.Cst", "lex.dur", "agegr", "ageint_start", 
+globalVariables(c("lex.Xst", "lex.Cst", "lex.dur", "agegr", "ageint_start", "event.values",
                   "lex.id", "lex.multi", "entry_age", "age", "fot", "per", "agegr.w", "surv.int",
                   "Tstart", "Tstop", "delta", "entered_late", "entered_int_late", 
                   "mv1", "v1", "weights", "byVars", "tabw", "w", "ints", "agegr.w.breaks", "agegr.w.weights"))
