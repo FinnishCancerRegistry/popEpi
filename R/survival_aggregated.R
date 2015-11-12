@@ -114,8 +114,8 @@ survtab_ag <- function(data,
                        adjust = NULL,
                        weights = NULL,
                        
-                       d = "from0to1",
                        n = "at.risk",
+                       d = "from0to1",
                        n.cens = "from0to0",
                        pyrs = "pyrs",
                        d.exp = "d.exp",
@@ -191,7 +191,9 @@ survtab_ag <- function(data,
   
   valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "e2")  "d.exp" else NULL)
   ## todo: variables for pp estimates
-  valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "pp")  c("d.exp.pp", "pp2") else NULL)
+  valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "pp")  
+    c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else "n.eff.pp") else NULL)
+  
   
   fo <- formals("survtab_ag")
   mc <- as.list(match.call())[-1]
@@ -536,7 +538,7 @@ survtab_ag <- function(data,
         comp.st.r.e2.lif(surv.table = rs.table, surv.by.vars = rs.by.vars)
         
         if (rs.table[, min(surv.obs, na.rm=T) == 0]) {
-          rs.table[surv.obs == 0, c("surv.exp","r.e2","SE.r.e2","r.e2.lo","r.e2.hi") := 0]
+          rs.table[surv.obs == 0, intersect(c("surv.exp","r.e2","SE.r.e2","r.e2.lo","r.e2.hi"), names(rs.table)) := 0]
         }
       }
       
@@ -567,7 +569,7 @@ survtab_ag <- function(data,
         comp.st.r.pp.lif(surv.table = pp.table, surv.by.vars = by.vars)
         
         if (pp.table[, min(surv.obs, na.rm=T) == 0]) {
-          pp.table[surv.obs == 0, c("r.pp","SE.r.pp","r.pp.lo","r.pp.hi") := 0]
+          pp.table[surv.obs == 0, intersect(c("r.pp","SE.r.pp","r.pp.lo","r.pp.hi"), names(pp.table)) := 0]
         }
       }
       
