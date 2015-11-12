@@ -952,3 +952,64 @@ cutLow <- function(x, breaks, tol =  .Machine$double.eps^0.5) {
   x
 }
 
+
+
+
+cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.y = all, all = FALSE, mid.scale = TRUE, old.nums = TRUE) {
+  ## INTENTION: merges y to x by by.x & by.y after cutLow()'ing appropriate
+  ## variables in x so that y's values match with x's values
+  ## requirements;
+  ## * numeric variables in y correspond to lower limits of some intervals OR
+  ##   are group variables (e.g. sex = c(0,1))
+  ## inputs: two datas as in merge, preferably both data.table, and other args
+  ## to merge()
+  ## output: a data.table where y has been merged to x after cutLow()
+  ## example: merging popmort to a split Lexis object, where popmort's variables
+  ## correspond to at least some Lexis time scales
+  ## old.nums: return old numeric variable values used in cutLow()'ing?
+  ## mid.scale: use mid-point of interval when merging by Lexis time scales?
+  ## NOTE: the order of the data is likely to change due to merging
+  
+  if ((is.null(by.x) && !is.null(by.y)) || (!is.null(by.x) && is.null(by.y))) stop("one but not both of by.x / by.y is NULL")
+  if (!is.null(by)) by.x <- by.y <- by 
+  
+  if (length(by.x) != length(by.y)) stop("lengths differ for by.y & by.x")
+  all_names_present(x, by.x)
+  all_names_present(y, by.y)
+  names(by.x) <- by.y
+  names(by.y) <- by.x
+  
+  whNum <- by.y %in% names(y)[sapply(with(y, mget(by.y)), is.numeric)]
+  xNum <- by.x[whNum]
+  yNum <- by.y[whNum]
+  
+  if (length(yNum) > 0) {
+    
+    oldVals <- copy(with(x, mget(by.x)))
+    on.exit(set(x, j = xNum, value = oldVals))
+    setattr(oldVals, "names", yNum)
+    
+    for (yVar in yNum) {
+      xVar <- xNum[yVar]
+      xBr <- sort(unique(y[[yVar]]))
+      xBr <- unique(c(xBr, Inf))
+      set(x, j = xVar, value = cutLow(x[[xVar]] + if(mid.scale) x$lex.dur*0.5 else 0L, breaks = xBr))
+    }
+    
+  }
+  xKey <- key(x)
+  if (length(xKey) == 0 && is.data.table(x)) {
+    xKey <- makeTempVarName(x, pre = "sort_")
+    on.exit(setcolsnull(x, delete = xKey, soft = TRUE), add = TRUE)
+    on.exit(setcolsnull(z, delete = xKey, soft = TRUE), add = TRUE)
+    x[, (xKey) := 1:.N]
+  }
+  z <- merge(x, y, by.x = by.x, by.y = by.y, all.x = all.x, all.y = all.y, all = all, sort = FALSE)
+  setDT(z)
+  setcolorder(z, c(names(x), setdiff(names(z), names(x))))
+  if (old.nums) set(z, j = xNum, value = oldVals)
+  if (length(xKey) > 0) setkeyv(z, xKey)
+  z[]
+  
+}
+

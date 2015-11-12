@@ -93,3 +93,36 @@ test_that("evalPopArg produces intended results",{
   expect_equal(t12, t13)
   
 })
+
+
+test_that("cutLowMerge merges succesfully what is intended", {
+  all_names_present(popEpi::popmort, c("sex", "year", "agegroup", "haz"))
+  all_names_present(popEpi::sire, c("sex", "bi_date", "dg_date", "ex_date", "status"))
+  
+  pm <- copy(popEpi::popmort)
+  pm[, haz := rbinom(.N, 100, 0.5)/1e5L]
+  
+  sr <- popEpi::sire[1:100,]
+  setDT(sr)
+  sr1 <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
+                status = status, fot = seq(0, 5, 1/12))
+  setattr(sr1, "class", c("Lexis", "data.table", "data.frame"))
+  alloc.col(sr1)
+  
+  sr2 <- cutLowMerge(sr1, pm,
+                     by.x = c("sex", "per", "age"), 
+                     by.y = c("sex", "year", "agegroup"),
+                     all.x = TRUE, all.y = FALSE, old.nums = TRUE)
+  
+  sr3 <- copy(sr2)
+  sr3[, haz := NULL]
+  
+  sr4 <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
+                 status = status, fot = seq(0, 5, 1/12), pophaz = pm, pp = FALSE)
+  expect_equal(sr1, sr3, check.attributes = FALSE)
+  expect_equal(sr2$haz*1e5L, sr4$pop.haz*1e5L, check.attributes = FALSE)
+})
+
+
+
+
