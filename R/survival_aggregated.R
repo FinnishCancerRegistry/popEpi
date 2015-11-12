@@ -219,7 +219,7 @@ survtab_ag <- function(data,
   data <- data[!is.na(get(surv.scale))]
   
   # variables to print by ------------------------------------------------------
-  prSub <- subsitute(print)
+  prSub <- substitute(print)
   print <- evalPopArg(data = data, arg = prSub, DT = TRUE)
   if (length(print) > 0) {
     prVars <- names(print)
@@ -239,7 +239,7 @@ survtab_ag <- function(data,
   ## * a list of named weights vectors which will be collated into a data.frame of weights.
   ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
   adSub <- substitute(adjust)
-  adjust <- evalPopArg(data = data, arg = adjSub, DT = TRUE)
+  adjust <- evalPopArg(data = data, arg = adSub, DT = TRUE)
   if (length(adjust) > 0) {
     adVars <- names(adjust)
     tmpadVars <- makeTempVarName(data, pre = adVars)
