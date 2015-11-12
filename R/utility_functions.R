@@ -980,7 +980,7 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
   names(by.y) <- by.x
   
   
-  if (!inherits(x, "Lexis")) stop("x is not a Lexis object, but mid.scales requested")
+  if (!inherits(x, "Lexis")) stop("x is not a Lexis object")
   xScales <- attr(x, "time.scales")
   if (length(xScales) == 0) stop("no Lexis time scales found in data!")
   all_names_present(x, c(xScales))

@@ -804,73 +804,42 @@ lexpand <- function(data,
     
     # handle pophaz data -------------------------------------------------------
     ## determine merging factor variables
-    pophaz <- data.table(pophaz)
-    tmpMA <- makeTempVarName(names = c(names(l), names(pophaz)), pre = "merge_age")
-    tmpMP <- makeTempVarName(names = c(names(l), names(pophaz)), pre = "merge_per")
-    setnames(pophaz, c("agegroup", "year"), c(tmpMA, tmpMP))
+    # pophaz <- data.table(pophaz)
+    if (!"haz" %in% names(pophaz)) stop("no 'haz' variable in pophaz; please rename you hazard variable to 'haz'")
+    yBy <- xBy <- setdiff(names(pophaz), c("haz"))
+    if (c("year") %in% yBy) xBy[yBy == "year"] <- "per"
+    if (c("agegroup") %in% yBy) xBy[yBy == "agegroup"] <- "age"
+    yByOth <- setdiff(yBy, c("year", "agegroup"))
     
-    merge_vars <- setdiff(names(pophaz), c("haz"))
-    merge_vars <- unique(c(merge_vars, tmpMA, tmpMP))
+    if (any(!yByOth %in% names(l))) 
+      stop("Following variable names not common between pophaz and data: ", paste0("'", yByOth[!yByOth %in% names(l)], "'", collapse = ", "))
+    setattr(l, "class", c("Lexis", "data.table", "data.frame"))
+    setattr(l, "time.scales", c("fot", "per", "age"))
+    l <- cutLowMerge(x = l, y = pophaz, by.x = xBy, by.y = yBy, all.x = TRUE,
+                     all.y = FALSE, mid.scale = TRUE, old.nums = TRUE)
+    setnames(l, "haz", "pop.haz")
     
-    pophaz_max_per <- max(pophaz[[tmpMP]], na.rm=T)
-    pophaz_max_age <- max(pophaz[[tmpMA]], na.rm=T)
+    ## check if l's merging time variables were within pophaz's limits ---------
+    nNA <- l[is.na(pop.haz), .N]
+    if (nNA > 0) message("WARNING: after merging pophaz, ", nNA, " rows in split data have NA hazard values!")
     
-    
-    al <- pophaz[, sort(unique(get(tmpMA)))]
-    ab <- sort(unique(c(-Inf, al, Inf)))
-    pl <- pophaz[, sort(unique(get(tmpMP)))]
-    pb <- sort(unique(c(-Inf, pl, Inf)))
-    
-    set(l, j = tmpMP, value = l$per)
-    set(l, j = tmpMA, value = l$age)
-    
-    
-    ## merge per / age till midpoint of record
-    set(l, j = tmpMP, value = l[[tmpMP]] + l$lex.dur*0.5)
-    set(l, j = tmpMA, value = l[[tmpMA]] + l$lex.dur*0.5)    
-    
-    ## check if l's merging time variables are within pophaz's limits
-    n_too_old <- l[get(tmpMA) > pophaz_max_age+1, .N]
-    if (n_too_old > 0) {
-      l[get(tmpMA) > pophaz_max_age+1, (tmpMA) := pophaz_max_age]
-      message(paste0(n_too_old," rows in expanded data had age values >= ", 
-                     pophaz_max_age+1 ,"; assumed for these the same expected hazard as for people of age ", pophaz_max_age))
+    names(yBy) <- xBy
+    names(xBy) <- yBy
+    for (k in intersect(c("per", "age"), xBy)) {
+      yVar <- yBy[k]
+      kLo <- min(pophaz[[yVar]])
+      kHi <- max(pophaz[[yVar]])
+      mid <- l[, get(k) + lex.dur]
+      nLo <- sum(mid < kLo - .Machine$double.eps^0.5)
+      nHi <- sum(mid > kHi - .Machine$double.eps^0.5)
+      if (nLo > 0) message("WARNING: ", nLo, " rows in split data have NA values due their mid-points residing below the minimum value of '", yVar, "' in pophaz!")
+      if (nHi > 0) message("NOTE: ", nLo, " rows in split data had '", k, "' values higher than max of pophaz's '", yVar, "', so the hazard values at the highest-value-rows in pophaz were used for these")
     }
-    
-    n_too_late <- l[get(tmpMP) > pophaz_max_per+1, .N]
-    if (n_too_late > 0) {
-      l[get(tmpMP) > pophaz_max_per+1, (tmpMP) := pophaz_max_per]
-      message(paste0(n_too_late, " rows in expanded data had calendar time values >= ", 
-                     pophaz_max_per+1 ,"; assumed for these the same expected hazard as for people at time ", pophaz_max_per))
+    rm(mid)
+    for (k in yByOth) {
+      levsNotOth <- setdiff(unique(pophaz[[k]]), unique(l[[k]]))
+      if (length(levsNotOth) > 0) message("WARNING: following levels (first five) of variable '", k, "' no in pophaz but exists in split data: ", paste0("'",levsNotOth,"'", collapse = ", "))
     }
-    
-    l[, (tmpMP) := cut(get(tmpMP), breaks = pb, right=FALSE, labels = c(-Inf,pl))]
-    set(l, j = tmpMP, value = fac2num(l[[tmpMP]]))
-    l[, (tmpMA) := cut(get(tmpMA), breaks = ab, right=FALSE, labels = c(-Inf,al))]
-    set(l, j = tmpMA, value = fac2num(l[[tmpMA]]))
-    
-    ## test for missing merging variable names
-    missing_vars <- intersect(merge_vars, names(l))
-    missing_vars <- setdiff(merge_vars, missing_vars)
-    if (length(missing_vars) != 0) {
-      missing_vars <- paste0(missing_vars, collapse = ", ")
-      stop("missing following variables in data that are present in pophaz: ", missing_vars, "; is merge = TRUE?")
-    }
-    rm(missing_vars)
-    
-    ## do merge, reorder columns
-    old_order <- names(l)
-    
-    setkeyv(l, merge_vars); setkeyv(pophaz, merge_vars)
-    l <- pophaz[l]
-    rm(pophaz)
-    
-    new_names <- setdiff(names(l), old_order)
-    new_order <- c(old_order, new_names)
-    setcolorder(l, new_order)
-    setnames(l, c("haz"), c("pop.haz"))
-    
-    setcolsnull(l, c(tmpMA, tmpMP), soft = FALSE)
     
     
     # pohar-perme weighting ----------------------------------------------------
