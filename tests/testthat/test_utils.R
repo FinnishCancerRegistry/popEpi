@@ -109,6 +109,9 @@ test_that("cutLowMerge merges succesfully what is intended", {
   setattr(sr1, "class", c("Lexis", "data.table", "data.frame"))
   alloc.col(sr1)
   
+  sr1[, year := per + 0.5*lex.dur]
+  sr1[, agegroup := age + 0.5*lex.dur]
+  
   sr2 <- cutLowMerge(sr1, pm,
                      by.x = c("sex", "per", "age"), 
                      by.y = c("sex", "year", "agegroup"),
@@ -121,6 +124,15 @@ test_that("cutLowMerge merges succesfully what is intended", {
                  status = status, fot = seq(0, 5, 1/12), pophaz = pm, pp = FALSE)
   expect_equal(sr1, sr3, check.attributes = FALSE)
   expect_equal(sr2$haz*1e5L, sr4$pop.haz*1e5L, check.attributes = FALSE)
+  
+  sr1[, year := cutLow(year, breaks = sort(unique(pm$year)))]
+  sr1[, agegroup := cutLow(agegroup, breaks = sort(unique(pm$agegroup)))]
+  
+  sr5 <- merge(sr1, pm, by = c("sex", "year", "agegroup"))
+  setDT(sr5)
+  setkey(sr5, lex.id, fot)
+  
+  expect_equal(sr4$haz*1e5L, sr5$pop.haz*1e5L, check.attributes = FALSE)
 })
 
 
