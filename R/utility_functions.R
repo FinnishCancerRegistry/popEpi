@@ -984,7 +984,7 @@ cutLow <- function(x, breaks, tol =  .Machine$double.eps^0.5) {
 
 
 
-cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.y = all, all = FALSE, mid.scale = TRUE, old.nums = TRUE) {
+cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.y = all, all = FALSE, mid.scales = c("per", "age"), old.nums = TRUE) {
   ## INTENTION: merges y to x by by.x & by.y after cutLow()'ing appropriate
   ## variables in x so that y's values match with x's values
   ## requirements;
@@ -996,8 +996,8 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
   ## example: merging popmort to a split Lexis object, where popmort's variables
   ## correspond to at least some Lexis time scales
   ## old.nums: return old numeric variable values used in cutLow()'ing?
-  ## mid.scale: use mid-point of interval when merging by Lexis time scales?
-  ## NOTE: the order of the data is likely to change due to merging
+  ## mid.scales: use mid-point of interval when merging by these Lexis time scales
+  ## computed by adding + 0.5*lex.dur, which must exist
   
   if ((is.null(by.x) && !is.null(by.y)) || (!is.null(by.x) && is.null(by.y))) stop("one but not both of by.x / by.y is NULL")
   if (!is.null(by)) by.x <- by.y <- by 
@@ -1008,29 +1008,23 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
   names(by.x) <- by.y
   names(by.y) <- by.x
   
+  if (length(mid.scales)>0) all_names_present(x, c("lex.dur", mid.scales))
   
-  if (!inherits(x, "Lexis")) stop("x is not a Lexis object")
-  xScales <- attr(x, "time.scales")
-  if (length(xScales) == 0) stop("no Lexis time scales found in data!")
-  all_names_present(x, c(xScales))
-  if (mid.scale) all_names_present(x, "lex.dur")
+  whScale <- by.x %in% mid.scales
+  xScales <- by.x[whScale]
+  yScales <- by.y[whScale]
   
-  whNum <- by.y %in% names(y)[sapply(with(y, mget(by.y)), is.numeric)]
-  whNum <- whNum & by.x %in% xScales
-  xNum <- by.x[whNum]
-  yNum <- by.y[whNum]
-  
-  if (length(yNum) > 0) {
+  if (length(yScales) > 0) {
     
-    oldVals <- copy(with(x, mget(xNum)))
-    on.exit(set(x, j = xNum, value = oldVals))
-    setattr(oldVals, "names", yNum)
+    oldVals <- copy(with(x, mget(xScales)))
+    on.exit(set(x, j = xScales, value = oldVals))
+    setattr(oldVals, "names", yScales)
     
-    for (yVar in yNum) {
-      xVar <- xNum[yVar]
+    for (yVar in yScales) {
+      xVar <- xScales[yVar]
       xBr <- sort(unique(y[[yVar]]))
       xBr <- unique(c(xBr, Inf))
-      set(x, j = xVar, value = cutLow(x[[xVar]] + if(mid.scale) x$lex.dur*0.5 else 0L, breaks = xBr))
+      set(x, j = xVar, value = cutLow(x[[xVar]] + x$lex.dur*0.5, breaks = xBr))
     }
     
   }
@@ -1041,10 +1035,15 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
     on.exit(setcolsnull(z, delete = xKey, soft = TRUE), add = TRUE)
     x[, (xKey) := 1:.N]
   }
+  
+  xClass <- class(x)
+  on.exit(setattr(x, "class", xClass), add = TRUE)
+  if (is.data.table(x)) setattr(x, "class", c("data.table", "data.frame"))
   z <- merge(x, y, by.x = by.x, by.y = by.y, all.x = all.x, all.y = all.y, all = all, sort = FALSE)
+  
   setDT(z)
   setcolorder(z, c(names(x), setdiff(names(z), names(x))))
-  if (old.nums) set(z, j = xNum, value = oldVals)
+  if (old.nums) set(z, j = xScales, value = oldVals)
   if (length(xKey) > 0) setkeyv(z, xKey)
   z[]
   

@@ -803,8 +803,7 @@ lexpand <- function(data,
     l <- ints[l]   
     
     # handle pophaz data -------------------------------------------------------
-    ## determine merging factor variables
-    # pophaz <- data.table(pophaz)
+    
     if (!"haz" %in% names(pophaz)) stop("no 'haz' variable in pophaz; please rename you hazard variable to 'haz'")
     yBy <- xBy <- setdiff(names(pophaz), c("haz"))
     if (c("year") %in% yBy) xBy[yBy == "year"] <- "per"
@@ -813,10 +812,9 @@ lexpand <- function(data,
     
     if (any(!yByOth %in% names(l))) 
       stop("Following variable names not common between pophaz and data: ", paste0("'", yByOth[!yByOth %in% names(l)], "'", collapse = ", "))
-    setattr(l, "class", c("Lexis", "data.table", "data.frame"))
-    setattr(l, "time.scales", c("fot", "per", "age"))
+    
     l <- cutLowMerge(x = l, y = pophaz, by.x = xBy, by.y = yBy, all.x = TRUE,
-                     all.y = FALSE, mid.scale = TRUE, old.nums = TRUE)
+                     all.y = FALSE, mid.scales = c("per", "age"), old.nums = TRUE)
     setnames(l, "haz", "pop.haz")
     
     ## check if l's merging time variables were within pophaz's limits ---------
@@ -832,13 +830,13 @@ lexpand <- function(data,
       mid <- l[, get(k) + lex.dur]
       nLo <- sum(mid < kLo - .Machine$double.eps^0.5)
       nHi <- sum(mid > kHi - .Machine$double.eps^0.5)
-      if (nLo > 0) message("WARNING: ", nLo, " rows in split data have NA values due their mid-points residing below the minimum value of '", yVar, "' in pophaz!")
-      if (nHi > 0) message("NOTE: ", nLo, " rows in split data had '", k, "' values higher than max of pophaz's '", yVar, "', so the hazard values at the highest-value-rows in pophaz were used for these")
+      if (nLo > 0) message("WARNING: ", nLo, " rows in split data have NA values due to their mid-points residing below the minimum value of '", yVar, "' in pophaz!")
+      if (nHi > 0) message("NOTE: ", nHi, " rows in split data had values of '", k, "' higher than max of pophaz's '", yVar, "'; the hazard values at '", yVar, "' == ", kHi, " were used for these")
     }
     rm(mid)
     for (k in yByOth) {
-      levsNotOth <- setdiff(unique(pophaz[[k]]), unique(l[[k]]))
-      if (length(levsNotOth) > 0) message("WARNING: following levels (first five) of variable '", k, "' no in pophaz but exists in split data: ", paste0("'",levsNotOth,"'", collapse = ", "))
+      levsNotOth <- setdiff(unique(l[[k]]), unique(pophaz[[k]]))
+      if (length(levsNotOth) > 0) message("WARNING: following levels (first five) of variable '", k, "' not in pophaz but exist in split data: ", paste0("'",levsNotOth[1:5],"'", collapse = ", "))
     }
     
     
