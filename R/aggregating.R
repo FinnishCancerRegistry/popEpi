@@ -1,6 +1,10 @@
 
 #' @title Set 'aggre' attributes to an object by modifying in place
 #' @author Joonas Miettinen
+#' @description Coerces an R object to an \code{aggre} object, identifying
+#' the object as one containing aggregated counts, person-years and other
+#' information. \code{setaggre} modifies in place without taking any copies
+#' and retaining all other attributes.
 #' @param x a \code{data.frame} or \code{data.table}
 #' @param obs a character string; the name of the event counts variable
 #' @param pyrs a character string; the name of the person-time
@@ -13,7 +17,7 @@
 #' as e.g. \code{as.data.frame.XXX} functions do; see e.g. \code{\link[data.table]{setDT}}.
 #' 
 #' @seealso 
-#' \code{\link{as.aggre.data.frame}}
+#' \code{\link{as.aggre}}
 #' 
 #' @export setaggre
 #' @examples 
@@ -47,6 +51,9 @@ setaggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff
 
 #' @title Coercion to class \code{aggre}
 #' @author Joonas Miettinen
+#' @description Coerces an R object to an \code{aggre} object, identifying
+#' the object as one containing aggregated counts, person-years and other
+#' information. 
 #' @param x an R object to coerce to \code{aggre}; must be a \code{data.frame} or \code{data.table}
 #' @param obs a character string; the name of the event counts variable
 #' @param pyrs a character string; the name of the person-time
@@ -71,7 +78,7 @@ setaggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff
 #' class(dt)
 #' 
 #' @export as.aggre
-as.aggre <- function(x, ...) {
+as.aggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...) {
   UseMethod("as.aggre", x)
 }
 

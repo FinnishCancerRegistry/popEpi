@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility_functions.R
 \name{try2int}
 \alias{try2int}
-\title{Attempts to convert a numeric object to integer, but won't if loss of information is imminent}
+\title{Attempt coercion to integer}
 \source{
 \href{http://stackoverflow.com/questions/3476782/how-to-check-if-the-number-is-integer}{Stackoverflow thread}
 }
@@ -11,6 +11,11 @@ try2int(obj)
 }
 \arguments{
 \item{obj}{a numeric vector}
+}
+\description{
+Attempts to convert a numeric object to integer, 
+but won't if loss of information is imminent (if values after decimal
+are not zero for even one value in \code{obj})
 }
 \author{
 James Arnold

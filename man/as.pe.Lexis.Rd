@@ -9,6 +9,11 @@
 \arguments{
 \item{x}{a Lexis object}
 }
+\description{
+Coerces an R \code{Lexis} object to a \code{Lexis} object 
+with the class
+\code{pe}.
+}
 \author{
 Joonas Miettinen
 }

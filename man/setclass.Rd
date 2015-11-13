@@ -18,6 +18,10 @@ classes of the \code{obj}; otherwise replaces the class information}
 \item{add.place}{\code{"first"} or \code{"last"}; adds \code{cl}
 to the front or to the back of the \code{obj}'s class vector}
 }
+\description{
+Sets the class of an object in place to \code{cl}
+by replacing or adding
+}
 \author{
 Joonas Miettinen
 }

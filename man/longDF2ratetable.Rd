@@ -14,6 +14,12 @@ longDF2ratetable(DF, value.var = "haz", by.vars = setdiff(names(DF),
 
 \item{by.vars}{names vector of variables by which to create (array) dimensions}
 }
+\description{
+Coerces a long-format \code{data.frame} of population hazards
+to an array, and in turn to a \code{\link[survival]{ratetable}},
+which can be used in e.g. \pkg{survival}'s expected survival computations
+and \pkg{relsurv}'s relative survival computations.
+}
 \author{
 Joonas Miettinen
 }

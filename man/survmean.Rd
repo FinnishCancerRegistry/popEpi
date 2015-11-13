@@ -39,6 +39,12 @@ subsets the data before computations}
 \item{...}{any other arguments passed on to \code{survtab} such as
 \code{surv.method = "lifetable"} for actuarial estimates of observed survival}
 }
+\description{
+Computes mean survival times based on survival estimation up to
+a point in follow-up time (e.g. 10 years), after which survival is extrapolated
+using an appropriate hazard data file (\code{pophaz}) to yield the "full"
+survival curve. The area under the full survival curve is the mean survival.
+}
 \details{
 \code{survmean} computes mean survival times. 
 This is done using a) observed survival estimates computed with \code{survtab}

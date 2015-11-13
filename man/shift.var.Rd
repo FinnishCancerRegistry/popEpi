@@ -2,13 +2,13 @@
 % Please edit documentation in R/utility_functions.R
 \name{shift.var}
 \alias{shift.var}
-\title{Shifts a variable to create lag or lead values}
+\title{Shift a variable to create lag or lead values}
 \usage{
 shift.var(data, id.vars = NULL, shift.var = NULL, value.vars = NULL,
   shift.value = -1L)
 }
 \arguments{
-\item{data}{a data,frame or data.table}
+\item{data}{a \code{data.frame} or \code{data.table}}
 
 \item{id.vars}{a character string vector of variable names; \code{id.vars} are used to identify unique subjects,
 for which shifting is done separately; e.g. with a panel data where \code{region} refers to different regions that
@@ -21,6 +21,14 @@ are shifted; e.g. \code{id.vars = "year"} means shifting forward or backward in 
 
 \item{shift.value}{an integer; specifies the direction and extent of shifting; e.g. \code{shift.value = -1L} shifts
 one row backwards (a lag of one row) and \code{shift.value = 2L} creates a two-row lead}
+}
+\description{
+\strong{DEPRECATED}: 
+Intended to do what \code{\link[data.table]{shift}} from
+\pkg{data.table} does better since \pkg{data.table} 1.9.6. 
+Shifts the values of a variable forwards or 
+backwards to create lag or lead values. Takes a copy of the whole data
+and returns a new copy with the shifted variable.
 }
 \author{
 Joonas Miettinen

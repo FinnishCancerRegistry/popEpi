@@ -2,6 +2,10 @@
 
 
 #' @title Compute mean survival times using extrapolation
+#' @description Computes mean survival times based on survival estimation up to
+#' a point in follow-up time (e.g. 10 years), after which survival is extrapolated
+#' using an appropriate hazard data file (\code{pophaz}) to yield the "full"
+#' survival curve. The area under the full survival curve is the mean survival.
 #' @author Joonas Miettinen, Karri Seppa
 #' @param data a data set of splitted records; e.g. output of \code{\link{lexpand}}
 #' @param surv.breaks passed on to \code{\link{survtab}}; see that help

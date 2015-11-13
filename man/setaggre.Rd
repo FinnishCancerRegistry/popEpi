@@ -19,6 +19,12 @@ setaggre(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL,
 \item{by}{a character string vector; the names of variables by which \code{obs} and \code{pyrs}
 have been tabulated; optional, since the default value usually works}
 }
+\description{
+Coerces an R object to an \code{aggre} object, identifying
+the object as one containing aggregated counts, person-years and other
+information. \code{setaggre} modifies in place without taking any copies
+and retaining all other attributes.
+}
 \details{
 \code{setaggre} sets \code{x} to the \code{aggre} class in place without taking a copy
 as e.g. \code{as.data.frame.XXX} functions do; see e.g. \code{\link[data.table]{setDT}}.
@@ -33,6 +39,6 @@ setaggre(df, obs = "obs", pyrs = "pyrs", by = "sex")
 Joonas Miettinen
 }
 \seealso{
-\code{\link{as.aggre.data.frame}}
+\code{\link{as.aggre}}
 }
 

@@ -4,12 +4,11 @@
 \alias{as.aggre}
 \title{Coercion to class \code{aggre}}
 \usage{
-as.aggre(x, ...)
+as.aggre(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL,
+  by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...)
 }
 \arguments{
 \item{x}{an R object to coerce to \code{aggre}; must be a \code{data.frame} or \code{data.table}}
-
-\item{...}{arguments passed to or from methods}
 
 \item{obs}{a character string; the name of the event counts variable}
 
@@ -19,6 +18,13 @@ as.aggre(x, ...)
 
 \item{by}{a character string vector; the names of variables by which \code{obs} and \code{pyrs}
 have been tabulated; optional, since the default value usually works}
+
+\item{...}{arguments passed to or from methods}
+}
+\description{
+Coerces an R object to an \code{aggre} object, identifying
+the object as one containing aggregated counts, person-years and other
+information.
 }
 \examples{
 df <- data.frame(sex = rep(c("male", "female"), each = 5), 

@@ -9,6 +9,11 @@
 \arguments{
 \item{x}{a data.table}
 }
+\description{
+Coerces a \code{data.table} object to a \code{data.table} 
+with the class
+\code{pe}.
+}
 \author{
 Joonas Miettinen
 }

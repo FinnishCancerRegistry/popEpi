@@ -70,9 +70,13 @@ cast_simple <- function(data=NULL, columns='year', rows=c('PrimarySite','sex'), 
 
 #' @title Convert NA's to zero in data.table
 #' @author Joonas Miettinen
+#' @description Given a \code{data.table DT}, replaces any \code{NA} values
+#' in the variables given in \code{vars} in \code{DT}. Takes a copy of the 
+#' original data and returns the modified copy.
 #' @import data.table
 #' @param DT \code{data.table} object
-#' @param vars a character string vector of variables names in \code{DT}
+#' @param vars a character string vector of variables names in \code{DT};
+#' if \code{NULL}, uses all variable names in \code{DT}
 #' @export na2zero
 #' @details Given a \code{data.table} object, converts \code{NA} values
 #' to numeric (double) zeroes for all variables named in \code{vars} or
@@ -247,7 +251,11 @@ is_leap_year <- function(years) {
   isLeap
   
 }
-#' @title Test if object is a Date object
+#' @title Test if object is a \code{Date} object
+#' @description Tests if an object is a \code{Date} object and returns
+#' a logical vector of length 1. \code{IDate} objects are also 
+#' \code{Date} objects, but \code{date} objects from package \pkg{date}
+#' are not. 
 #' @author Joonas Miettinen
 #' @param obj object to test on
 #' @export is.Date
@@ -430,7 +438,8 @@ cut_bound <- function(t, factor=TRUE) {
 
 #' @title Set the class of an object (convencience function for
 #'  \code{setattr(obj, "class", CLASS)}); can add instead of replace
-#'  
+#' @description Sets the class of an object in place to \code{cl}
+#' by replacing or adding
 #' @param obj and object for which to set class
 #' @param cl class to set
 #' @param add if \code{TRUE}, adds \code{cl} to the 
@@ -458,8 +467,11 @@ setclass <- function(obj, cl, add=FALSE, add.place="first") {
 
 
 
-#' @title Attempts to convert a numeric object to integer, but won't if loss of information is imminent
+#' @title Attempt coercion to integer
 #' @author James Arnold
+#' @description Attempts to convert a numeric object to integer, 
+#' but won't if loss of information is imminent (if values after decimal
+#' are not zero for even one value in \code{obj})
 #' @param obj a numeric vector
 #' @export try2int
 #' @source \href{http://stackoverflow.com/questions/3476782/how-to-check-if-the-number-is-integer}{Stackoverflow thread}
@@ -488,10 +500,17 @@ try2int <- function(obj) { # , tol = .Machine$double.eps^0.5
 }
 
 
-#' @title Shifts a variable to create lag or lead values
+#' @title Shift a variable to create lag or lead values
 #' @author Joonas Miettinen
+#' @description 
+#' \strong{DEPRECATED}: 
+#' Intended to do what \code{\link[data.table]{shift}} from
+#' \pkg{data.table} does better since \pkg{data.table} 1.9.6. 
+#' Shifts the values of a variable forwards or 
+#' backwards to create lag or lead values. Takes a copy of the whole data
+#' and returns a new copy with the shifted variable.
 #' @export shift.var
-#' @param data a data,frame or data.table
+#' @param data a \code{data.frame} or \code{data.table}
 #' @param id.vars a character string vector of variable names; \code{id.vars} are used to identify unique subjects,
 #' for which shifting is done separately; e.g. with a panel data where \code{region} refers to different regions that
 #' all have their own time series, using \code{id.vars = "region"} shifts the time series for each region separately
@@ -501,6 +520,8 @@ try2int <- function(obj) { # , tol = .Machine$double.eps^0.5
 #' @param shift.value an integer; specifies the direction and extent of shifting; e.g. \code{shift.value = -1L} shifts
 #' one row backwards (a lag of one row) and \code{shift.value = 2L} creates a two-row lead
 shift.var <- function(data, id.vars = NULL, shift.var = NULL, value.vars=NULL, shift.value=-1L) {
+  .Deprecated(new = "shift", msg = "popEpi's shift.var is deprecated in 0.3.0 and will be removed in the next release; please use e.g. data.table's shift() function")
+  
   merge_var <- makeTempVarName(data, pre = "merge_var")
   if (is.null(shift.var)||is.null(value.vars)) stop("shift.var and value.vars cannot be NULL")
   all_names_present(data, c(id.vars, shift.var, value.vars))
@@ -538,6 +559,7 @@ shift.var <- function(data, id.vars = NULL, shift.var = NULL, value.vars=NULL, s
 
 #' @title Get rate and exact Poisson confidence intervals
 #' @author epitools
+#' @description Computes confidence intervals for Poisson rates
 #' @param x observed
 #' @param pt expected
 #' @param conf.level alpha level
@@ -577,6 +599,9 @@ poisson.ci <- function(x, pt = 1, conf.level = 0.95) {
 
 #' @title Delete \code{data.table} columns if there
 #' @author Joonas Miettinen
+#' @description Deletes columns in a \code{data.table} conveniently.
+#' May only delete columns that are found silently. Somestimes useful in e.g.
+#' \code{on.exit} expressions.
 #' @param DT a \code{data.table}
 #' @param delete a character vector of column names to be deleted
 #' @param keep a character vector of column names to keep; 
@@ -674,6 +699,10 @@ as.data.table.ratetable <- function(x, ...) {
 
 #' @title \strong{Experimental}: Coerce a long-format \code{data.frame} to a \code{ratetable} object
 #' @author Joonas Miettinen
+#' @description Coerces a long-format \code{data.frame} of population hazards
+#' to an array, and in turn to a \code{\link[survival]{ratetable}},
+#' which can be used in e.g. \pkg{survival}'s expected survival computations
+#' and \pkg{relsurv}'s relative survival computations.
 #' @param DF a \code{data.frame}
 #' @param value.var name of values variable in quotes
 #' @param by.vars names vector of variables by which to create (array) dimensions

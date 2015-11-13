@@ -23,7 +23,9 @@ setAs("list", "pe", function(from) {
 
 #' @title Add class \code{'pe'} to a \code{Lexis} object.
 #' @author Joonas Miettinen
-#' @export as.pe.Lexis
+#' @description Coerces an R \code{Lexis} object to a \code{Lexis} object 
+#' with the class
+#' \code{pe}.
 #' @param x a Lexis object
 #' @S3method as.pe Lexis
 as.pe.Lexis <- function(x) {
@@ -42,7 +44,9 @@ as.pe.Lexis <- function(x) {
 
 #' @title Add class \code{'pe'} to a \code{data.table} object.
 #' @author Joonas Miettinen
-#' @export as.pe.data.table
+#' @description Coerces a \code{data.table} object to a \code{data.table} 
+#' with the class
+#' \code{pe}.
 #' @param x a data.table
 #' @S3method as.pe data.table
 as.pe.data.table <- function(x) {
@@ -60,7 +64,8 @@ as.pe.data.table <- function(x) {
 
 #' @title Add class \code{'pe'} to a \code{list} object.
 #' @author Joonas Miettinen
-#' @export as.pe.list
+#' @description Coerces an R \code{list} object to a \code{list} with the class
+#' \code{pe}.
 #' @param x a list
 #' @S3method as.pe list
 as.pe.list <- function(x) {

@@ -22,6 +22,11 @@ the rest will be removed; \code{keep} overrides \code{delete}}
 name in \code{keep} or \code{delete} is missing; \code{soft = FALSE} useful 
 for programming sometimes}
 }
+\description{
+Deletes columns in a \code{data.table} conveniently.
+May only delete columns that are found silently. Somestimes useful in e.g.
+\code{on.exit} expressions.
+}
 \author{
 Joonas Miettinen
 }

@@ -13,6 +13,9 @@ poisson.ci(x, pt = 1, conf.level = 0.95)
 
 \item{conf.level}{alpha level}
 }
+\description{
+Computes confidence intervals for Poisson rates
+}
 \examples{
 
 poisson.ci(x = 4, pt = 5, conf.level = 0.95)

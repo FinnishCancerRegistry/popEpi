@@ -9,6 +9,10 @@
 \arguments{
 \item{x}{a list}
 }
+\description{
+Coerces an R \code{list} object to a \code{list} with the class
+\code{pe}.
+}
 \author{
 Joonas Miettinen
 }
