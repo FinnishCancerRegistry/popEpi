@@ -753,8 +753,9 @@ survtab <- function(data,
   # compute cause-specifc/excess-case CIFs -------------------------------------
   if (surv.type %in% c("cif.obs", "cif.rel")) {
     comp.st.cif <- function(cif.table, cif.by.vars=survtab_by_vars) {
-      cif.table <- shift.var(cif.table, id.vars = c(cif.by.vars), shift.var = "surv.int", value.vars = "surv.obs", shift.value=-1L)
-      cif.table[is.na(lag1_surv.obs), lag1_surv.obs := 1]
+      setkeyv(cif.table, c(cif.by.vars, "surv.int"))
+      cif.table[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = cif.by.vars]
+      
       cif.table[, p.obs := surv.obs/lag1_surv.obs]
       
       if (surv.type == "cif.obs") {        

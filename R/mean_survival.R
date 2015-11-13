@@ -251,8 +251,9 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
     setcolsnull(st,   keep = c(by.vars, "surv.int","surv.obs","delta"), colorder=TRUE, soft=FALSE)
         
     ## roll back cumulative surv.obs to cumulate later properly
-    st <- shift.var(st, id.vars = by.vars, shift.var = "surv.int", value.vars = "surv.obs",shift.value = -1L)
-    st[is.na(lag1_surv.obs), lag1_surv.obs := 1]
+    setkeyv(st, c(by.vars, "surv.int"))
+    st[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = by.vars]
+    
     st[, surv.obs := surv.obs/lag1_surv.obs]
     st[, lag1_surv.obs := NULL]
 
@@ -270,9 +271,8 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
   
   ## integrating by trapezoid areas --------------------------------------------
   ## need lag1 values
-  data <- shift.var(data, id.vars = by.vars, shift.var = "surv.int", 
-                    value.vars = "surv.obs", shift.value=-1L)
   setkeyv(data, c(by.vars, "surv.int"))
+  data[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = by.vars]
   
   data[, dum := 1L]
   data[!duplicated(data, by=c(by.vars,"dum"), fromLast=TRUE), surv.obs := 0]
