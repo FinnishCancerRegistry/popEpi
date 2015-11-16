@@ -166,7 +166,7 @@ survtab_ag <- function(data,
     
     found_breaks <- attrs$breaks[[ surv.scale ]]
   }
-
+  
   
   
   if (is.null(surv.breaks) && !is.null(found_breaks)) {
@@ -180,7 +180,7 @@ survtab_ag <- function(data,
   ## todo: make survtab work without taking copy
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data, subset)
-
+  
   data <- if (!all(subset)) data[subset, ] else copy(data)
   setDT(data)
   
@@ -338,7 +338,7 @@ survtab_ag <- function(data,
   
   # compute observed survivals  ------------------------------------------------
   if (verbose) ostime <- proc.time()
-    
+  
   if (surv.method=="lifetable") {
     comp.st.surv.obs.lif(surv.table = data, surv.by.vars = byVars)
   }
@@ -441,9 +441,9 @@ survtab_ag <- function(data,
     if (data[surv.obs == 0 | is.na(surv.obs), .N] > 0) {
       
       zerotab <- data[surv.obs == 0 | is.na(surv.obs), 
-                       list(first.bad.surv.int = min(as.integer(surv.int)), 
-                            last.bad.surv.int = max(as.integer(surv.int)), 
-                            surv.obs=min(surv.obs)), keyby = byVars]
+                      list(first.bad.surv.int = min(as.integer(surv.int)), 
+                           last.bad.surv.int = max(as.integer(surv.int)), 
+                           surv.obs=min(surv.obs)), keyby = byVars]
       
       
       message("Some cumulative surv.obs were zero or NA in the following strata:")
@@ -481,7 +481,7 @@ survtab_ag <- function(data,
         
       }
     }
-
+    
     
     surv_names <- names(data)[grep("surv.obs", names(data))]
     surv_names <- c("d", "n.eff", surv_names)
@@ -627,59 +627,51 @@ survtab_ag <- function(data,
   
   
   # clean-up -------------------------------------------------------------------
-    if (format) {
-      
-      
-      ## reorder table
-      order <- c("surv.int", "Tstart", "Tstop","delta","pyrs","pyrs.pp","n","d","n.cens","d.pp","d.exp","d.exp.pp",
-                 "surv.obs.lo","surv.obs","surv.obs.hi","SE.surv.obs",
-                 "r.e2.lo","r.e2","r.e2.hi","SE.r.e2",
-                 "r.pp.lo","r.pp","r.pp.hi","SE.r.pp",
-                 "surv.obs.as.lo","surv.obs.as","surv.obs.as.hi","SE.surv.obs.as",
-                 "r.e2.as.lo","r.e2.as","r.e2.as.hi","SE.r.e2.as",
-                 "r.pp.as.lo","r.pp.as","r.pp.as.hi","SE.r.pp.as")
-      order <- unique(c(prVars, order))
-      CIF_vars <- names(tab)[substr(names(tab),1,3)=="CIF"]
-      order <- c(order, CIF_vars)
-      surv.obs.vars <- names(tab)[substr(names(tab), 1,8) == "surv.obs"]
-      order <- c(order, surv.obs.vars)
-      
-      order <- unique(order)
-      order <- intersect(order, names(tab))
-      
-      setcolsnull(tab, setdiff(names(tab), order))
-      setcolorder(tab,order)
-      
-      
-      setkeyv(tab, c(prVars, "surv.int"))
-      
-      #       tab[, surv.int :=paste("[", format(round(Tstart,2)),", ", format(round(Tstop,2)),"[", sep="")]
-      
-      
-      signif_vars <- setdiff(order, c("surv.int", prVars, "n", "n.eff", "n.cens", "d"))
-      signif_vars <- union(signif_vars, c("Tstart", "Tstop"))
-      signif_vars <- intersect(signif_vars, names(tab))
-      signiff <- function(x) {
-        if (is.numeric(x)) {
-          signif(x, digits=4)
-        } else {
-          x
-        }
-        
+  ## reorder table
+  if (format) {
+    order <- c("surv.int", "Tstart", "Tstop","delta","pyrs","pyrs.pp","n","d","n.cens","d.pp","d.exp","d.exp.pp",
+               "surv.obs.lo","surv.obs","surv.obs.hi","SE.surv.obs",
+               "r.e2.lo","r.e2","r.e2.hi","SE.r.e2",
+               "r.pp.lo","r.pp","r.pp.hi","SE.r.pp",
+               "surv.obs.as.lo","surv.obs.as","surv.obs.as.hi","SE.surv.obs.as",
+               "r.e2.as.lo","r.e2.as","r.e2.as.hi","SE.r.e2.as",
+               "r.pp.as.lo","r.pp.as","r.pp.as.hi","SE.r.pp.as")
+    order <- unique(c(prVars, order))
+    CIF_vars <- names(data)[substr(names(data),1,3)=="CIF"]
+    order <- c(order, CIF_vars)
+    surv.obs.vars <- names(data)[substr(names(data), 1,8) == "surv.obs"]
+    order <- c(order, surv.obs.vars)
+    
+    order <- unique(order)
+    order <- intersect(order, names(data))
+    
+    setcolsnull(data, setdiff(names(data), order))
+    setcolorder(data,order)
+    
+    
+    setkeyv(data, c(prVars, "surv.int"))
+    
+    #       data[, surv.int :=paste("[", format(round(Tstart,2)),", ", format(round(Tstop,2)),"[", sep="")]
+    
+    
+    ## rounding & formatting
+    signif_vars <- setdiff(order, c("surv.int", prVars, "n", "n.eff", "n.cens", "d"))
+    signif_vars <- union(signif_vars, c("Tstart", "Tstop"))
+    signif_vars <- intersect(signif_vars, names(data))
+    signiff <- function(x) {
+      if (is.numeric(x)) {
+        signif(x, digits=4)
+      } else {
+        x
       }
       
-      ## format surv.int into intervals
-      tab[, c(signif_vars) := lapply(.SD, signiff), .SDcols = c(signif_vars)]
-      
-      NWO <- c(prVars, "surv.int","Tstart", "Tstop", setdiff(names(tab), c(prVars,  "surv.int","Tstart", "Tstop")))
-      setcolorder(tab, NWO)
     }
     
+    data[, c(signif_vars) := lapply(.SD, signiff), .SDcols = c(signif_vars)]
     
-    
-    tab
+    NWO <- c(prVars, "surv.int","Tstart", "Tstop", setdiff(names(data), c(prVars,  "surv.int","Tstart", "Tstop")))
+    setcolorder(data, NWO)
   }
-  data <- post.tab(data)
   
   # attributes -----------------------------------------------------------------
   setkeyv(data, c(prVars, "surv.int"))
