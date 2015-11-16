@@ -192,6 +192,8 @@ survtab_ag <- function(data,
   
   valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "e2")  "d.exp" else NULL)
   
+  valVars <- c(valVars, if (surv.type == "cif.rel")  "d.exp" else NULL)
+  
   valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "pp")  
     c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else "n.eff.pp") else NULL)
   
@@ -508,46 +510,40 @@ survtab_ag <- function(data,
     setnames(data, paste0(surv_names, ".orig"), surv_names)
   }
   
-#   # compute cause-specifc/excess-case CIFs -------------------------------------
-#   if (surv.type %in% c("cif.obs", "cif.rel")) {
-#     comp.st.cif <- function(cif.table, cif.by.vars=byVars) {
-  # cif.table[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = cif.by.vars]
-  
-  
-#       cif.table[is.na(lag1_surv.obs), lag1_surv.obs := 1]
-#       cif.table[, p.obs := surv.obs/lag1_surv.obs]
-#       
-#       if (surv.type == "cif.obs") {        
-#         d_k <- paste0("d", event.values)
-#         for (k in event.values) {
-#           d_var <- paste0("d",k)
-#           q_var <- paste0("q_", k)
-#           CIF_var <- paste0("CIF_", k)
-#           cif.table[, (q_var)   := (1-p.obs)*get(d_var)/d]
-#           cif.table[get(d_var) == 0L | d == 0L, (q_var) := 0]
-#           cif.table[, (CIF_var) := cumsum(lag1_surv.obs*get(q_var)), by = cif.by.vars]
-#         }
-#       }
-#       
-#       if (surv.type == "cif.rel") {
-#         ## assuming d.exp in cif.table
-#         cif.table[, CIF.rel := (1-p.obs)*(d-d.exp)/d]
-#         cif.table[d.exp>d, CIF.rel := NA]
-#         cif.table[, CIF.rel := cumsum(lag1_surv.obs*CIF.rel), by = cif.by.vars]
-#       }
-#       
-#       ## SEs currently not known for CIFs; impute 0 to make comp.st.as() to work
-#       CIF_vars <- names(cif.table)[substr(names(cif.table),1,3) == "CIF"]
-#       cif.table[, c(paste0("SE.", CIF_vars)) := 0L]
-#       
-#       return(cif.table)
-#       
-#     }
-#     
-#     
-#     
-#     data <- comp.st.cif(data)
-#   }
+  # compute cause-specifc/excess-case CIFs -------------------------------------
+  if (surv.type %in% c("cif.obs", "cif.rel")) {
+    
+    data[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = byVars]
+    data[, p.obs := surv.obs/lag1_surv.obs]
+    
+    if (surv.type == "cif.obs") {
+      for (k in eventVars) {
+        
+        k <- gsub("d_", "", x = k)
+        d_k <- paste0("d_", k)
+        
+        d_var <- paste0("d_",k)
+        q_var <- paste0("q_", k)
+        CIF_var <- paste0("CIF_", k)
+        data[, (q_var)   := (1-p.obs)*get(d_var)/d]
+        data[get(d_var) == 0L | d == 0L, (q_var) := 0]
+        data[, (CIF_var) := cumsum(lag1_surv.obs*get(q_var)), by = byVars]
+      }
+    }
+    
+    if (surv.type == "cif.rel") {
+      ## assuming d.exp in data
+      data[, CIF.rel := (1-p.obs)*(d-d.exp)/d]
+      data[d.exp>d, CIF.rel := NA]
+      data[, CIF.rel := cumsum(lag1_surv.obs*CIF.rel), by = byVars]
+    }
+    
+    ## SEs currently not known for CIFs; impute 0 to make adjusting work
+    CIF_vars <- names(data)[substr(names(data),1,3) == "CIF"]
+    data[, c(paste0("SE.", CIF_vars)) := 0L]
+    
+    
+  }
   
   
   # relative survivals ---------------------------------------------------------
@@ -631,7 +627,6 @@ survtab_ag <- function(data,
   
   
   # clean-up -------------------------------------------------------------------
-  post.tab <- function(tab) {
     if (format) {
       
       
