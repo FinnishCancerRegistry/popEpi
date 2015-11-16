@@ -936,7 +936,11 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
       setattr(e, "names", ne)
     }
     
-    if (DT) setDT(e)
+    if (DT) {
+      ## NOTE: used to be setDT, but length of different elements
+      ## in list may differ, which as.data.table handles correctly
+      e <- as.data.table(e)
+    }
   } else if ((is.vector(e) || is.factor(e))) {
     ## is e.g. a numeric vector or a factor
     if (DT) {
