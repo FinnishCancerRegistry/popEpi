@@ -190,7 +190,7 @@ survtab_ag <- function(data,
   valVars <- c(valVars, if (surv.method == "hazard")  "pyrs" else c("n", "n.cens"))
   
   valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "e2")  "d.exp" else NULL)
-  ## todo: variables for pp estimates
+  
   valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "pp")  
     c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else "n.eff.pp") else NULL)
   
@@ -203,12 +203,33 @@ survtab_ag <- function(data,
   
   mc <- lapply(mc, function(x) evalPopArg(data = data, arg = x, DT = TRUE))
   mc[sapply(mc, is.null)] <- NULL
-  mc <- lapply(mc, function(x) x[[1]])
-  setDT(mc)
   
   lackVars <- setdiff(valVars, names(mc))
   if (length(lackVars) > 0) stop("following variables needed but missing in specs: ", paste0("'", lackVars, "'", collapse = ", "))
   
+  eventVars <- NULL
+  ## NOTE: not sure if other arguments than 'd' should be allowed to be of 
+  ## length > 1 (cause-specific 'd'); restricted for now to 'd' but easy to
+  ## allow in the procedure below.
+  for (k in 1:length(mc)) {
+    jay <- argName <- names(mc[k])
+    cn <- names(mc[[k]])
+    
+    if (length(cn) > 1) jay <- paste0(jay, "_", cn) ## e.g. d_1, d_2, ...
+    if (argName == "d") eventVars <- jay else 
+      if (length(cn) > 1) stop("'", argName, "' is of length ", length(cn), "; only 'd' may be of length > 1 of the value arguments")
+    setnames(mc[[k]], cn, jay)
+    set(mc[[1]], j = jay, value = mc[[k]])
+  }
+  mc <- mc[[1]]
+  
+  if (!is.null(eventVars)) {
+    set(mc, j = "d", value = rowSums(mc[, mget(eventVars)]))
+    valVars <- unique(c(valVars, "d", eventVars))
+  }
+  
+  all_names_present(mc, valVars)
+  setcolorder(mc, valVars)
   tmpValVars <- makeTempVarName(data, pre = valVars)
   
   data[, (tmpValVars) := mc]
@@ -432,7 +453,6 @@ survtab_ag <- function(data,
     }
     
   }
-  
   
 #   # compute cause-specific survivals  ------------------------------------------
 #   if (surv.type == "surv.cause") {
