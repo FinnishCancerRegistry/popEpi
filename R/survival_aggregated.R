@@ -106,6 +106,7 @@ globalVariables("weights")
 #               aggre = list(sex, fot), fot = seq(0, 5, 1/12))
 # ag[, d.exp := pmax(0L, from0to1 - 3L)]
 # st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard")
+# st <- survtab_ag(ag, surv.type = "surv.cause", surv.method = "hazard", d = list(a = from0to1-3, b = 3))
 survtab_ag <- function(data, 
                        surv.breaks=NULL, 
                        surv.scale="fot",
@@ -454,54 +455,58 @@ survtab_ag <- function(data,
     
   }
   
-#   # compute cause-specific survivals  ------------------------------------------
-#   if (surv.type == "surv.cause") {
-#     comp.st.cs <- function(cs.table, cs.by.vars = byVars) {
-#       #       gs.data[, n.eff := n.start - n.cens/2 + n.de/2 + n.de.cens/4] # + d.de/2
-#       # n.cens_1 := n.cens + (d-d_1)
-#       # n.de.cens := n.de.cens + (d.de - d.de_1)
-#       event.values <- NULL
-#       for (k in event.values) {
-#         d_k <- paste0("d", k)
-#         #         d.de_k <- paste0("d.de",k)
-#         
-#         n.eff_k <- paste0("n.eff",k)
-#         
-#         ## old: " := n.start - (n.cens + (d-", d_k,")/2 + n.de/2 + (n.de.cens + d.de - ", d.de_k,")/4 )"
-#         expr <- paste0(n.eff_k, " := n.start - (n.cens + (d-", d_k,")/2 )")
-#         
-#         cs.table[,  eval(parse(text= expr))] # + d.de/2
-#         
-#       }
-#       
-#       surv_names <- names(cs.table)[grep("surv.obs", names(cs.table))]
-#       surv_names <- c("d", "n.eff", surv_names)
-#       setnames(cs.table, surv_names, paste0(surv_names, ".orig"))
-#       
-#       for (k in event.values) {
-#         setnames(cs.table, paste0(c("d", "n.eff"),k), c("d", "n.eff"))
-#         
-#         if (surv.method=="lifetable") {
-#           comp.st.surv.obs.lif(surv.table = cs.table, surv.by.vars = cs.by.vars)
-#         }
-#         if (surv.method=="hazard") {
-#           comp.st.surv.obs.haz(surv.table = cs.table, surv.by.vars = cs.by.vars)
-#         }
-#         os.table <- comp.st.conf.ints(cs.table, al=1-conf.level, surv="surv.obs", transform = conf.type)
-#         
-#         new_surv_names <- setdiff(surv_names, c("d", "n.eff"))
-#         new_surv_names <- gsub("surv.obs", paste0("surv.obs", k), new_surv_names)
-#         new_surv_names <- c(paste0(c("d", "n.eff"), k), new_surv_names)
-#         setnames(cs.table, surv_names, new_surv_names)
-#         
-#         
-#       }
-#       setnames(cs.table, paste0(surv_names, ".orig"), surv_names)
-#     }
-#     
-#     data <- comp.st.cs(data)
-#   }
-  
+  # compute cause-specific survivals  ------------------------------------------
+  if (surv.type == "surv.cause") {
+    
+    ## NOTE: these related to adjusting life-table estimates for delayed entry...
+    #       data[, n.eff := n - n.cens/2 + n.de/2 + n.de.cens/4] # + d.de/2
+    #       n.cens_1 := n.cens + (d-d_1)
+    #       n.de.cens := n.de.cens + (d.de - d.de_1)
+    
+    if (surv.method == "lifetable") {
+      for (k in eventVars) {
+        k <- gsub(pattern = "d_", replacement = "", x = k)
+        d_k <- paste0("d_", k)
+        # d.de_k <- paste0("d.de_",k)
+        
+        n.eff_k <- paste0("n.eff_",k)
+        
+        ## old: " := n - (n.cens + (d-", d_k,")/2 + n.de/2 + (n.de.cens + d.de - ", d.de_k,")/4 )"
+        # expr <- paste0(n.eff_k, " := n - (n.cens + (d-", d_k,")/2 )")
+        
+        set(data, j = c(n.eff_k), value = data$n.eff + (data$d - data[[d_k]])/2L ) # + d.de/2
+        # data[,  eval(parse(text = expr), envir = .SD)]
+        
+      }
+    }
+
+    
+    surv_names <- names(data)[grep("surv.obs", names(data))]
+    surv_names <- c("d", "n.eff", surv_names)
+    setnames(data, surv_names, paste0(surv_names, ".orig"))
+    
+    for (k in eventVars) {
+      
+      k <- gsub(pattern = "d_", replacement = "", x = k)
+      setnames(data, paste0("d_",k), "d")
+      
+      if (surv.method=="hazard") {
+        comp.st.surv.obs.haz(surv.table = data, surv.by.vars = byVars)
+      } else {
+        setnames(data, paste0("n.eff_", k), "n.eff")
+        comp.st.surv.obs.lif(surv.table = data, surv.by.vars = byVars)
+      }
+      os.table <- comp.st.conf.ints(data, al=1-conf.level, surv="surv.obs", transform = conf.type)
+      
+      new_surv_names <- setdiff(surv_names, c("d", "n.eff"))
+      new_surv_names <- gsub("surv.obs", paste0("surv.obs.", k), new_surv_names)
+      new_surv_names <- c(paste0(c("d.", "n.eff."), k), new_surv_names)
+      setnames(data, surv_names, new_surv_names)
+      
+      
+    }
+    setnames(data, paste0(surv_names, ".orig"), surv_names)
+  }
   
 #   # compute cause-specifc/excess-case CIFs -------------------------------------
 #   if (surv.type %in% c("cif.obs", "cif.rel")) {
@@ -631,7 +636,7 @@ survtab_ag <- function(data,
       
       
       ## reorder table
-      order <- c("surv.int", "Tstart", "Tstop","delta","pyrs","pyrs.pp","n.start","d","n.cens","d.pp","d.exp","d.exp.pp",
+      order <- c("surv.int", "Tstart", "Tstop","delta","pyrs","pyrs.pp","n","d","n.cens","d.pp","d.exp","d.exp.pp",
                  "surv.obs.lo","surv.obs","surv.obs.hi","SE.surv.obs",
                  "r.e2.lo","r.e2","r.e2.hi","SE.r.e2",
                  "r.pp.lo","r.pp","r.pp.hi","SE.r.pp",
@@ -656,7 +661,7 @@ survtab_ag <- function(data,
       #       tab[, surv.int :=paste("[", format(round(Tstart,2)),", ", format(round(Tstop,2)),"[", sep="")]
       
       
-      signif_vars <- setdiff(order, c("surv.int", prVars, "n.start", "n.eff", "n.cens", "d"))
+      signif_vars <- setdiff(order, c("surv.int", prVars, "n", "n.eff", "n.cens", "d"))
       signif_vars <- union(signif_vars, c("Tstart", "Tstop"))
       signif_vars <- intersect(signif_vars, names(tab))
       signiff <- function(x) {
@@ -702,7 +707,7 @@ globalVariables(c("lex.Xst", "lex.Cst", "lex.dur", "agegr", "ageint_start", "eve
                   "Tstart", "Tstop", "delta", "entered_late", "entered_int_late", 
                   "mv1", "v1", "weights", "byVars", "tabw", "w", "ints", "agegr.w.breaks", "agegr.w.weights"))
 
-globalVariables(c("n.start", "d", "lex.Xst", "n.cens", "surv.int", 
+globalVariables(c("n", "d", "lex.Xst", "n.cens", "surv.int", 
                   "d.exp", "pop.haz", "d.exp.pp", "d.exp", "pp", "d.pp", "d.pp.2", "n.eff.pp", "pyrs.pp"))
 globalVariables(c("ICSS", "n.eff", "pyrs", "test_pyrs", "surv.obs", "valVars",
                   "lag1_surv.obs", "p.obs", "surv.obs", "CIF.rel", "p.exp", "surv.exp", "obs", "agestd"))
