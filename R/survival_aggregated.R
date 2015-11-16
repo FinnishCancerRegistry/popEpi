@@ -332,44 +332,53 @@ survtab_ag <- function(data,
   ## age group weighting should go wrong (NA) sometimes, but
   ## otherwise estimated survival should just end if no one left in an interval
   
-  ## test for consecutively empty surv.ints summed over all age groups ---------
+  ## test for consecutively empty surv.ints summed over all adVars -------------
   if (length(adVars) > 0) {
-    ## with age group weighting, if all age groups have 0 pyrs in some
+    ## with e.g. age group weighting, if all age groups have 0 pyrs/n in some
     ## strata-surv.ints, drop those only
     
+    tmpTV <- makeTempVarName(data, pre = "testValues_")
+    tmpDiff <- makeTempVarName(data, pre = "diff_")
+    
     ## first check empty surv.ints are all consecutive...
+    testVar <- if (surv.method == "lifetable") "n" else "pyrs"
     setkeyv(data, c(byVars, "surv.int"))
-    conse_test <- data[, list(test_pyrs=sum(pyrs)), by=c("surv.int", prVars)]
-    conse_test <- conse_test[test_pyrs>0, list(diff=diff(surv.int)), by=prVars]
-    conse_test <- conse_test[diff>1]
+    ## note: by used to be c("surv.int", prVars) for some reason, lets see if that was intentional
+    conse_test <- data[, sum(get(testVar)), keyby = c(prVars, "surv.int")]
+    setnames(conse_test, length(conse_test), tmpTV)
+    conse_test <- conse_test[get(tmpTV) > 0, diff(surv.int), keyby = prVars]
+    setnames(conse_test, length(conse_test), tmpDiff)
+    conse_test <- conse_test[get(tmpDiff)>1]
     ## keep non-consecutively bad surv.int stratas in entirety for inspection
     if (nrow(conse_test) > 0) {
       message("Some survival intervals summed over age groups were empty 
-              non-consecutively; returning all survival intervals with 
-              some estimates as NA; for closer inspection manually create age
-              groups to supply to by.vars")
+              non-consecutively; keeping all survival intervals with 
+              some estimates as NA for inspection")
     } else {
-      data[, test_pyrs := sum(pyrs), by=c("surv.int", prVars)]
-      data <- data[test_pyrs > 0]
-      setcolsnull(data, "test_pyrs")
+      ## note: by used to be c("surv.int", prVars) for some reason, lets see if that was intentional
+      data[, (tmpTV) := sum(get(tmpTV)), by=c(prVars, "surv.int")]
+      data <- data[get(tmpTV) > 0]
+      setcolsnull(data, tmpTV)
     }
     rm(conse_test)
   }
   
   ## other non-consecutive empty surv.ints -------------------------------------
+  tmpTV <- makeTempVarName(data, pre = "testValues_")
+  tmpDiff <- makeTempVarName(data, pre = "diff_")
   setkeyv(data, c(byVars, "surv.int"))
-  conse_test <- data[pyrs > 0][, list(diff=diff(surv.int)), by= byVars]
-  conse_test <- conse_test[diff > 1]
+  conse_test <- data[get(tmpTV) > 0][, diff(surv.int), by = byVars]
+  setnames(conse_test, length(conse_test), tmpDiff)
+  conse_test <- conse_test[get(tmpDiff) > 1]
   
   ## keep non-consecutively bad surv.int stratas in entirety for inspection
   if (nrow(conse_test) > 0) {
     if (length(adVars) > 0) {
       
       message("Some survival intervals were empty non-consecutively 
-              in at least one agegroup-by.vars combination; this 
+              in at least one combination of print and adjust variables; this 
               will lead to NA cumulative estimates; for a closer 
-              look you may e.g. create your own agegroup variable
-              and supply it to by.vars")
+              look you may e.g. supply what is in adjust to print and check that output")
       
     } else {
       
@@ -377,16 +386,16 @@ survtab_ag <- function(data,
               this will lead to NA cumulative estimates; please check 
               function output (for e.g. zero person-years in survival 
               intervals) and rethink function arguments")
-      if (length(byVars) > 0) {
-        setkeyv(data, byVars)
-        setkeyv(conse_test, byVars)
+      if (length(prVars) > 0) {
+        setkeyv(data, prVars)
+        setkeyv(conse_test, prVars)
         keep_bad <- conse_test[data]
-        keep_bad[, diff := NULL]
+        keep_bad[, (tmpDiff) := NULL]
       } else {
-        keep_bad <- data[pyrs == 0]
+        keep_bad <- data[get(tmpTV) == 0]
       }
       
-      keep_good <- data[pyrs > 0]
+      keep_good <- data[get(tmpTV) > 0]
       setcolorder(keep_bad, names(data))
       setcolorder(keep_good, names(data))
       data <- rbindlist(list(keep_bad, keep_good))
@@ -397,7 +406,7 @@ survtab_ag <- function(data,
     }
     
   } else {
-    if (length(adVars) == 0) data <- data[pyrs>0]
+    if (length(adVars) == 0) data <- data[get(tmpTV) > 0]
   }
   rm(conse_test)
   
@@ -417,7 +426,7 @@ survtab_ag <- function(data,
       print(zerotab)
       if (surv.method == "lifetable" && data[surv.obs == 0, .N] > 0) {
         message("Zero surv.obs leads to zero relative survivals as well.")
-        message("Age group weighting WILL use the zero surv.obs / relative survival values.")
+        message("Adjusting with weights WILL use the zero surv.obs / relative survival values.")
       }
       
     }
