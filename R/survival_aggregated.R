@@ -242,10 +242,10 @@ survtab_ag <- function(data,
   adjust <- evalPopArg(data = data, arg = adSub, DT = TRUE)
   if (length(adjust) > 0) {
     adVars <- names(adjust)
-    tmpadVars <- makeTempVarName(data, pre = adVars)
-    data[, (tmpadVars) := adjust]
+    tmpAdVars <- makeTempVarName(data, pre = adVars)
+    data[, (tmpAdVars) := adjust]
   } else {
-    adVars <- tmpadVars <- NULL
+    adVars <- tmpAdVars <- NULL
   }
   rm(adjust)
   
@@ -254,15 +254,16 @@ survtab_ag <- function(data,
   ## NOTE: have to do CJ by hand: some levels of adjust or something may not
   ## have each level of e.g. fot repeated!
   cj <- list()
-  if (length(c(tmpPrVars, tmpadVars)) > 0) {
-    cj <- data[, lapply(.SD, function(x) if (is.factor(x)) levels(x) else sort(unique(x))), .SDcols = c(tmpPrVars, tmpadVars)]
-    setattr(cj, "class", "list")
+  if (length(c(tmpPrVars, tmpAdVars)) > 0) {
+    cj <- lapply(data[, mget(c(tmpPrVars, tmpAdVars))], 
+                 function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
   }
   
   cj[[surv.scale]] <- surv.breaks[-length(surv.breaks)]
   cj <- do.call(CJ, cj)
   
-  setkeyv(data, c(tmpPrVars, tmpadVars, surv.scale))
+  
+  setkeyv(data, c(tmpPrVars, tmpAdVars, surv.scale))
   data <- data[cj, lapply(.SD, sum), .SDcols = tmpValVars, by = .EACHI]
   
   for (k in tmpValVars) {
@@ -284,7 +285,7 @@ survtab_ag <- function(data,
   ## this only after evaluating print, weights and adjust!
   ## also use useful names from now on.
   byVars <- c(prVars, adVars)
-  setnames(data, c(tmpPrVars, tmpadVars, tmpValVars), c(byVars, valVars))
+  setnames(data, c(tmpPrVars, tmpAdVars, tmpValVars), c(byVars, valVars))
   
   data[, Tstop := surv.breaks[-1L]]
   setnames(data, surv.scale, "Tstart")
