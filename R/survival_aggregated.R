@@ -199,7 +199,7 @@ survtab_ag <- function(data,
   mc <- as.list(match.call())[-1]
   mc <- c(mc, fo[!names(fo) %in% names(mc)])
   
-  mc <- mc[which(names(mc) %in% valVars)]
+  mc <- mc[valVars]
   
   mc <- lapply(mc, function(x) evalPopArg(data = data, arg = x, DT = TRUE))
   mc[sapply(mc, is.null)] <- NULL
@@ -301,12 +301,12 @@ survtab_ag <- function(data,
   
   # formulate some needed variables --------------------------------------------
   
-  n.cens.check <- NULL ## appease R CMD CHECK
   if (surv.method == "lifetable") {
-    data[, n.cens.check := n- shift(n, n = 1, type = "lead", fill = NA) - d, by = byVars]
-    data[!is.na(n.cens.check), n.cens.check := n.cens - n.cens.check]
-    if (data[, sum(n.cens.check, na.rm = TRUE)]) warning("given n.cens and d do not sum to total number of events and transitions based on n alone; check your variables?")
-    data[, n.cens.check := NULL]
+    testEvents <- data[, n - shift(n, n = 1, type = "lead", fill = NA), by = byVars ]
+    testEvents <- data$n.cens + data$d - testEvents
+    
+    if (sum(abs(testEvents), na.rm = TRUE)) warning("given n.cens and d do not sum to total number of events and transitions based on n alone; check your variables?")
+    rm(testEvents)
     data[, n.eff := n - n.cens/2L]
   }
   
@@ -332,13 +332,15 @@ survtab_ag <- function(data,
   ## age group weighting should go wrong (NA) sometimes, but
   ## otherwise estimated survival should just end if no one left in an interval
   
+  testVar <- if (surv.method == "lifetable") "n" else "pyrs"
+  tmpTV <- makeTempVarName(data, pre = "testValues_")
+  tmpDiff <- makeTempVarName(data, pre = "diff_")
+  
   ## test for consecutively empty surv.ints summed over all adVars -------------
   if (length(adVars) > 0) {
     ## with e.g. age group weighting, if all age groups have 0 pyrs/n in some
     ## strata-surv.ints, drop those only
     
-    tmpTV <- makeTempVarName(data, pre = "testValues_")
-    tmpDiff <- makeTempVarName(data, pre = "diff_")
     
     ## first check empty surv.ints are all consecutive...
     testVar <- if (surv.method == "lifetable") "n" else "pyrs"
@@ -364,10 +366,8 @@ survtab_ag <- function(data,
   }
   
   ## other non-consecutive empty surv.ints -------------------------------------
-  tmpTV <- makeTempVarName(data, pre = "testValues_")
-  tmpDiff <- makeTempVarName(data, pre = "diff_")
   setkeyv(data, c(byVars, "surv.int"))
-  conse_test <- data[get(tmpTV) > 0][, diff(surv.int), by = byVars]
+  conse_test <- data[get(testVar) > 0][, diff(surv.int), by = byVars]
   setnames(conse_test, length(conse_test), tmpDiff)
   conse_test <- conse_test[get(tmpDiff) > 1]
   
@@ -406,7 +406,7 @@ survtab_ag <- function(data,
     }
     
   } else {
-    if (length(adVars) == 0) data <- data[get(tmpTV) > 0]
+    if (length(adVars) == 0) data <- data[get(testVar) > 0]
   }
   rm(conse_test)
   
