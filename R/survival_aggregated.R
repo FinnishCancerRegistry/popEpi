@@ -330,14 +330,18 @@ survtab_ag <- function(data,
     weights <- evalPopArg(data  = origData, arg = weSub, n = 2L, DT = FALSE)
     
     if (is.character(weights)) {
-      all_names_present(weights, origData)
-      weVars <- weights
+      if (length(weights) > 1) stop("When given as a character string naming a variable in data, the weights argument can only be of length one.")
+      all_names_present(origData, weights)
+      weights <- with(origData, get(weights))
+      ## now as if weights was an expression or symbol, and handled below.
       
-    } else if (!is.data.frame(weights) && is.vector(weights)) {
+    } 
+    
+    if (!is.data.frame(weights) && is.vector(weights)) {
       ## note: lists are vectors
       if (!is.list(weights)) {
         weights <- list(weights) ## was a vector of values
-        if (length(adjust) != 1) stop("Weights were given as a vector of values, but adjust is not one element; make sure adjust is a character vector of length one naming an adjusting variable in data, an expression, or a list of expressions of length one.")
+        if (length(adjust) != 1) stop("Argument 'weights' is a vector of weights, but there are more than one variables to adjust by; make sure 'adjust' is a character vector of length one naming an adjusting variable in data, an expression, or a list of expressions of length one.")
         setattr(weights, "names", adVars[1])
       }
       
