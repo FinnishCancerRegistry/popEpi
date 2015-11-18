@@ -1,16 +1,19 @@
+# ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
+#               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
+#               aggre = list(sex, agegr = cut(dg_age, c(0,50,75,Inf)), fot), 
+#               fot = seq(0, 5, 1/12))
+# ps <- substitute(list(sex, fot))
+# as <- substitute(list(agegr))
+# vs <- substitute(list(pyrs, at.risk))
+# ws <- substitute(list(agegr = c(0.2,0.4,0.4)))
+# dt <- makeWeightsDT(ag, print = ps, adjust = as, values = vs, weights = ws, custom.levels = list(fot = (0:59)/12))
 
-
-
-## ok, here's how it goes:
-## aggregate data to smallest number of rows according to adjust and print
-## merge in weights
-## compute weighted estimate
-## ???
-## profit
-
-
-makeWeightsDT <- function(data, weights = NULL, adjust = NULL, n = 3L) {
+makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, custom.levels = NULL, weights = NULL, n = 1L) {
   ## input: data and substitute()'d weights and adjust arguments
+  ## custom.levels: for when in CJ expansion a variable should use levels other than
+  ## the ones found in data (such as a time scale of survival, for which each
+  ## break used to split data should be represented by a row), supply a named list
+  ## referring to variables named in print and/or adjust
   ## output: a prepared data.table for merging with aggregated or other data
   ## OR a character string vector naming the weights variable already in data
   ## to compute weighted results with
@@ -22,81 +25,152 @@ makeWeightsDT <- function(data, weights = NULL, adjust = NULL, n = 3L) {
   ## * a list of named weights vectors which will be collated into a data.frame of weights.
   ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
   
-  if (!is.data.table(data)) stop("makeWeightsDT() data must be a data.table; if you see this, blame the package maintainer")
+#   if (!is.language(print)) stop("print must be substituted!")
+#   if (!is.language(adjust)) stop("adjust must be substituted!")
+#   if (!is.language(weights)) stop("weights must be substituted!")
   
-  if (is.character(weights)) return(weights)
+  origData <- data
+  tmpDum <- makeTempVarName(origData, pre = "dummy_")
+  data <- data.table(rep(1L, nrow(origData)))
+  setnames(data, 1, tmpDum)
   
-  weights <- evalPopArg(data = data, arg = substitute(weights), DT = FALSE, n = n)
-  
-  adjust <- evalPopArg(data = data, arg = substitute(adjust), DT = TRUE, n = n)
-  adVars <- NULL
-  
-  if (length(adjust) > 0) {
-    adVars <- makeTempVarName(data, pre = names(adjust))
-    on.exit(setcolsnull(data, adVars, soft = TRUE), add = TRUE)
-    data[, (adVars) := adjust]
+  # variables to print by ------------------------------------------------------
+  prSub <- print
+  print <- evalPopArg(data = origData, arg = prSub, DT = TRUE, n = n + 1L)
+  if (length(print) > 0) {
+    prVars <- names(print)
+    data[, (prVars) := print]
+    data[, (tmpDum) := NULL]
+  } else {
+    prVars <- tmpDum
   }
-  rm(adjust)
+  rm(print)
+  
+  # variables to sum -----------------------------------------------------------
+  vaSub <- values
+  values <- evalPopArg(data = origData, arg = vaSub, DT = TRUE, n = n + 1L)
+  if (length(values) > 0) {
+    vaVars <- names(values)
+    data[, (vaVars) := values]
+  } else {
+    stop("no values given to sum!")
+  }
+  rm(values)
+  
+  # standardization ------------------------------------------------------------
+  ## have 'adjust' argument for defining adjusting vars
+  ## and 'weights' as: 
+  ## * character string name of weights variable in data;
+  ## * character string naming ICSS1-3;
+  ## * a data.frame that has lower bounds of categories and weights;
+  ## * a list of named weights vectors which will be collated into a data.frame of weights.
+  ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
+  adSub <- adjust
+  adjust <- evalPopArg(data = origData, arg = adSub, DT = TRUE, n = n + 1L)
+  if (length(adjust) > 0) {
+    adVars <- names(adjust)
+    data[, (adVars) := adjust]
+  } else {
+    adVars <- NULL
+  }
+  # rm(adjust)
+  
+  # aggregate data to smallest number of rows according to print & adjust ------
+  
+  ## NOTE: have to do CJ by hand: some levels of adjust or something may not
+  ## have each level of e.g. fot repeated!
+  cj <- list()
+  cj <- lapply(data[, mget(c(prVars, adVars))], 
+               function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
+  
+  if (length(custom.levels) > 0) cj[names(custom.levels)] <- custom.levels
+  cj <- do.call(CJ, cj)
   
   
+  setkeyv(data, c(prVars, adVars))
+  data <- data[cj, lapply(.SD, sum), .SDcols = vaVars, by = .EACHI]
   
-  ## Need: 1) weights in DT format; 2) cuts for harmonizing weights and data adjust variables
-  tmpWE <- makeTempVarName(data, pre = "weights_")
-  if (is.data.frame(weights)) {
-    ## data.frame requirements:
-    ## - one variable named "weights"
-    ## - other variables have corresponding variables in data (the same names)
-    ## --> cutting merge will be performed
-    all_names_present(weights, "weights")
-    setDT(weights)
+  for (k in vaVars) {
+    data[is.na(get(k)), (k) := 0]
+  }
+  
+  setcolsnull(data, tmpDum)
+  
+  
+  ## merge in weights ----------------------------------------------------------
+  
+  weSub <- weights
+  weType <- popArgType(weSub)
+  if (weType != "NULL") {
     
-    weVars <- setdiff(names(weights), "weights")
-    all_names_present(data, weVars)
+    weights <- evalPopArg(data  = origData, arg = weSub, n = 2L, DT = FALSE)
     
-    tmpWV <- makeTempVarName(data, pre = weVars)
-    whNumVars <- weights[, sapply(.SD, is.numeric), .SDcols = weVars]
-    numVars <- weVars[whNumVars]
-    tmpNumVars <- tmpWV[whNumVars]
-    
-    ## now numVars e.g. c("fot", "age") & 
-    ## tmpNumVars e.g. paste0(c("fot", "age"), "V123456789")
-    
-    on.exit(setcolsnull(data, setdiff(tmpWV, tmpNumVars), soft = TRUE))
-    
-    if (length(numVars) > 0) {
-      setnames(data, numVars, tmpNumVars)
+    if (is.character(weights)) {
+      if (length(weights) > 1) stop("When given as a character string naming a variable in data, the weights argument can only be of length one.")
+      all_names_present(origData, weights)
+      weights <- with(origData, get(weights))
+      ## now as if weights was an expression or symbol, and handled below.
       
-      
-      on.exit({
-        setcolsnull(data, numVars, soft = TRUE)
-        setnames(data, tmpNumVars, numVars)
-      }, add = TRUE)
-      ## create cutLow()'d variables of numeric vars to merge by
-      ## (ensures equivalence of variable levels)
-      cuts <- lapply(weights[, mget(numVars)], function(x) sort(unique(x)))
-      cuts <- lapply(cuts, function(x) unique(c(x, Inf)))
-      
-      for (k in 1:length(tmpNumVars)) {
-        TNV <- tmpNumVars[k]
-        NV <- numVars[k]
-        set(data, j = NV, value = cutLow(data[[TNV]], cuts[[NV]]))
+    } 
+    
+    if (!is.data.frame(weights) && is.vector(weights)) {
+      ## note: lists are vectors
+      if (!is.list(weights)) {
+        weights <- list(weights) ## was a vector of values
+        if (length(adjust) != 1) stop("Argument 'weights' is a vector of weights, but there are more than one variables to adjust by; make sure 'adjust' is a character vector of length one naming an adjusting variable in data, an expression, or a list of expressions of length one.")
+        setattr(weights, "names", adVars[1])
       }
-      rm(cuts)
+      
+      adjust <- lapply(adjust, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
+      
+      if (length(adjust) != length(weights)) 
+        stop("Mismatch in numbers of elements (variables) in adjust (", length(adjust), ") and weights (", length(weights),"); make sure each given weights has a corresponding variable in adjust and vice versa.")
+      weLen <- sapply(weights, length)
+      adLen <- sapply(adjust, length)
+      badLen <- names(adjust)[weLen != adLen]
+      if (length(badLen) > 0) 
+        stop("Mismatch in lengths of following adjust and weights arguments' element(s). Names of adjust elements not matching in length with weigths: ", paste0("'", badLen, "'", collapse = ", "))
+      
+      weVars <- names(weights)
+      
+      badAdVars <- setdiff(adVars, weVars)
+      badWeVars <- setdiff(weVars, adVars)
+      if (length(badAdVars) > 0)
+        stop("Mismatch in names of elements in adjust and weights; following adjust elements not mentioned in weights: ", paste0("'", badAdVars, "'", collapse = ", "))
+      if (length(badWeVars) > 0)
+        stop("Mismatch in names of elements in adjust and weights; following weights elements not mentioned in adjust: ", paste0("'", badWeVars, "'", collapse = ", "))
+      
+      weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
+      adjust <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), adjust)
+      
+      weVars <- paste0(weVars, ".w")
+      setnames(weights, adVars, weVars)
+      weights[, (adVars) := adjust]
+      
+      weights[, weights := 1L]
+      for (k in weVars) {
+        set(weights, j = "weights", value = weights$weights * weights[[k]])
+      }
+      setcolsnull(weights, delete = weVars, soft = FALSE)
+      
+      ## NOTE: weights will be repeated for each level of print,
+      ## and for each level of print the weights must sum to one for things
+      ## to work.
+      weights[, weights := weights/sum(weights)]
+      
     }
     
-    data <- merge(data, weights, all.x = TRUE, all.y = FALSE, by = weVars)
-    
-    return(data[])
-  } else if (is.list(weights)) {
-    weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
-    
-    weights[, weights := 1L]
-    for (k in weVars) {
-      set(weights, j = (weVars), value = weights$weights * weights[[k]])
+    if (is.data.frame(weights)) {
+      ## it's a data.frame of weights and corresponding vars to merge by
+      data <- merge(data, weights, by = adVars, all.x = TRUE, all.y = TRUE)
+    } else {
+      stop("Something went wrong: 'weights' was not collated into a data.frame to merge with data. Blame the package maintainer please!")
     }
-    weights[, (weVars) := NULL]
     
-  } 
+    
+  }
+  
+  return(data[])
   
 }
 globalVariables("weights")
