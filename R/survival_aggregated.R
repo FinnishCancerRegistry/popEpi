@@ -9,7 +9,7 @@
 ## profit
 
 
-makeWeightsDT <- function(data, weights = NULL, adjust = NULL) {
+makeWeightsDT <- function(data, weights = NULL, adjust = NULL, n = 3L) {
   ## input: data and substitute()'d weights and adjust arguments
   ## output: a prepared data.table for merging with aggregated or other data
   ## OR a character string vector naming the weights variable already in data
@@ -22,13 +22,13 @@ makeWeightsDT <- function(data, weights = NULL, adjust = NULL) {
   ## * a list of named weights vectors which will be collated into a data.frame of weights.
   ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
   
-  if (!is.data.table(data)) stop("makeWeightsDT() data must be a data.table; if you see this, blame the maintainer")
+  if (!is.data.table(data)) stop("makeWeightsDT() data must be a data.table; if you see this, blame the package maintainer")
   
-  if (is.character(weights) && all_names_present(data, weights)) return(weights)
+  if (is.character(weights)) return(weights)
   
-  weights <- evalPopArg(data = data, arg = substitute(weights), DT = FALSE)
+  weights <- evalPopArg(data = data, arg = substitute(weights), DT = FALSE, n = n)
   
-  adjust <- evalPopArg(data = data, arg = substitute(adjust), DT = TRUE)
+  adjust <- evalPopArg(data = data, arg = substitute(adjust), DT = TRUE, n = n)
   adVars <- NULL
   
   if (length(adjust) > 0) {
@@ -106,6 +106,13 @@ globalVariables("weights")
 #               aggre = list(sex, fot), fot = seq(0, 5, 1/12))
 # ag[, d.exp := pmax(0L, from0to1 - 3L)]
 # st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard")
+# st <- survtab_ag(ag, surv.type = "surv.cause", surv.method = "hazard", d = list(a = from0to1-3, b = 3))
+
+# ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
+#               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
+#               aggre = list(sex, agegr = cut(dg_age, c(0,60,70,80, Inf)), fot), fot = seq(0, 5, 1/12))
+# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard", adjust = "agegr", weights = c(0.2, 0.4, 0.3, 0.1))
+
 survtab_ag <- function(data, 
                        surv.breaks=NULL, 
                        surv.scale="fot",
@@ -165,7 +172,7 @@ survtab_ag <- function(data,
     
     found_breaks <- attrs$breaks[[ surv.scale ]]
   }
-
+  
   
   
   if (is.null(surv.breaks) && !is.null(found_breaks)) {
@@ -179,7 +186,9 @@ survtab_ag <- function(data,
   ## todo: make survtab work without taking copy
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data, subset)
-
+  
+  origData <- data
+  
   data <- if (!all(subset)) data[subset, ] else copy(data)
   setDT(data)
   
@@ -190,6 +199,8 @@ survtab_ag <- function(data,
   valVars <- c(valVars, if (surv.method == "hazard")  "pyrs" else c("n", "n.cens"))
   
   valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "e2")  "d.exp" else NULL)
+  
+  valVars <- c(valVars, if (surv.type == "cif.rel")  "d.exp" else NULL)
   
   valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "pp")  
     c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else "n.eff.pp") else NULL)
@@ -268,7 +279,7 @@ survtab_ag <- function(data,
   } else {
     adVars <- tmpAdVars <- NULL
   }
-  rm(adjust)
+  # rm(adjust)
   
   # aggregate data to smallest number of rows according to print & adjust ------
   
@@ -291,16 +302,6 @@ survtab_ag <- function(data,
     data[is.na(get(k)), (k) := 0]
   }
   
-  ## merge in weights ----------------------------------------------------------
-  
-  weSub <- substitute(weights)
-  weType <- popArgType(weSub)
-  if (weType != "NULL") {
-    
-    data <- makeWeightsDT(data, weights = weSub, adjust = adSub)
-    
-  }
-  ## at this point weights merged in
   
   # keep only necessary columns ------------------------------------------------
   ## this only after evaluating print, weights and adjust!
@@ -320,6 +321,79 @@ survtab_ag <- function(data,
   
   setkeyv(data, c(byVars, "surv.int"))
   
+  ## merge in weights ----------------------------------------------------------
+  
+  weSub <- substitute(weights)
+  weType <- popArgType(weSub)
+  if (weType != "NULL") {
+    
+    weights <- evalPopArg(data  = origData, arg = weSub, n = 2L, DT = FALSE)
+    
+    if (is.character(weights)) {
+      if (length(weights) > 1) stop("When given as a character string naming a variable in data, the weights argument can only be of length one.")
+      all_names_present(origData, weights)
+      weights <- with(origData, get(weights))
+      ## now as if weights was an expression or symbol, and handled below.
+      
+    } 
+    
+    if (!is.data.frame(weights) && is.vector(weights)) {
+      ## note: lists are vectors
+      if (!is.list(weights)) {
+        weights <- list(weights) ## was a vector of values
+        if (length(adjust) != 1) stop("Argument 'weights' is a vector of weights, but there are more than one variables to adjust by; make sure 'adjust' is a character vector of length one naming an adjusting variable in data, an expression, or a list of expressions of length one.")
+        setattr(weights, "names", adVars[1])
+      }
+      
+      adjust <- lapply(adjust, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
+      
+      if (length(adjust) != length(weights)) 
+        stop("Mismatch in numbers of elements (variables) in adjust (", length(adjust), ") and weights (", length(weights),"); make sure each given weights has a corresponding variable in adjust and vice versa.")
+      weLen <- sapply(weights, length)
+      adLen <- sapply(adjust, length)
+      badLen <- names(adjust)[weLen != adLen]
+      if (length(badLen) > 0) 
+        stop("Mismatch in lengths of following adjust and weights arguments' element(s). Names of adjust elements not matching in length with weigths: ", paste0("'", badLen, "'", collapse = ", "))
+      
+      weVars <- names(weights)
+      
+      badAdVars <- setdiff(adVars, weVars)
+      badWeVars <- setdiff(weVars, adVars)
+      if (length(badAdVars) > 0)
+        stop("Mismatch in names of elements in adjust and weights; following adjust elements not mentioned in weights: ", paste0("'", badAdVars, "'", collapse = ", "))
+      if (length(badWeVars) > 0)
+        stop("Mismatch in names of elements in adjust and weights; following weights elements not mentioned in adjust: ", paste0("'", badWeVars, "'", collapse = ", "))
+      
+      weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
+      adjust <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), adjust)
+      
+      weVars <- paste0(weVars, ".w")
+      setnames(weights, adVars, weVars)
+      weights[, (adVars) := adjust]
+      
+      weights[, weights := 1L]
+      for (k in weVars) {
+        set(weights, j = "weights", value = weights$weights * weights[[k]])
+      }
+      setcolsnull(weights, delete = weVars, soft = FALSE)
+      
+      ## NOTE: weights will be repeated for each level of print,
+      ## and for each level of print the weights must sum to one for things
+      ## to work.
+      weights[, weights := weights/sum(weights)]
+      
+    }
+    
+    if (is.data.frame(weights)) {
+      ## it's a data.frame of weights and corresponding vars to merge by
+      data <- merge(data, weights, by = adVars, all.x = TRUE, all.y = TRUE)
+    } else {
+      stop("Something went wrong: 'weights' was not collated into a data.frame to merge with data. Blame the package maintainer please!")
+    }
+    
+    
+  }
+  
   # formulate some needed variables --------------------------------------------
   
   if (surv.method == "lifetable") {
@@ -335,7 +409,7 @@ survtab_ag <- function(data,
   
   # compute observed survivals  ------------------------------------------------
   if (verbose) ostime <- proc.time()
-    
+  
   if (surv.method=="lifetable") {
     comp.st.surv.obs.lif(surv.table = data, surv.by.vars = byVars)
   }
@@ -379,7 +453,7 @@ survtab_ag <- function(data,
               some estimates as NA for inspection")
     } else {
       ## note: by used to be c("surv.int", prVars) for some reason, lets see if that was intentional
-      data[, (tmpTV) := sum(get(tmpTV)), by=c(prVars, "surv.int")]
+      data[, (tmpTV) := sum(get(testVar)), by=c(prVars, "surv.int")]
       data <- data[get(tmpTV) > 0]
       setcolsnull(data, tmpTV)
     }
@@ -438,9 +512,9 @@ survtab_ag <- function(data,
     if (data[surv.obs == 0 | is.na(surv.obs), .N] > 0) {
       
       zerotab <- data[surv.obs == 0 | is.na(surv.obs), 
-                       list(first.bad.surv.int = min(as.integer(surv.int)), 
-                            last.bad.surv.int = max(as.integer(surv.int)), 
-                            surv.obs=min(surv.obs)), keyby = byVars]
+                      list(first.bad.surv.int = min(as.integer(surv.int)), 
+                           last.bad.surv.int = max(as.integer(surv.int)), 
+                           surv.obs=min(surv.obs)), keyby = byVars]
       
       
       message("Some cumulative surv.obs were zero or NA in the following strata:")
@@ -454,95 +528,93 @@ survtab_ag <- function(data,
     
   }
   
-#   # compute cause-specific survivals  ------------------------------------------
-#   if (surv.type == "surv.cause") {
-#     comp.st.cs <- function(cs.table, cs.by.vars = byVars) {
-#       #       gs.data[, n.eff := n.start - n.cens/2 + n.de/2 + n.de.cens/4] # + d.de/2
-#       # n.cens_1 := n.cens + (d-d_1)
-#       # n.de.cens := n.de.cens + (d.de - d.de_1)
-#       event.values <- NULL
-#       for (k in event.values) {
-#         d_k <- paste0("d", k)
-#         #         d.de_k <- paste0("d.de",k)
-#         
-#         n.eff_k <- paste0("n.eff",k)
-#         
-#         ## old: " := n.start - (n.cens + (d-", d_k,")/2 + n.de/2 + (n.de.cens + d.de - ", d.de_k,")/4 )"
-#         expr <- paste0(n.eff_k, " := n.start - (n.cens + (d-", d_k,")/2 )")
-#         
-#         cs.table[,  eval(parse(text= expr))] # + d.de/2
-#         
-#       }
-#       
-#       surv_names <- names(cs.table)[grep("surv.obs", names(cs.table))]
-#       surv_names <- c("d", "n.eff", surv_names)
-#       setnames(cs.table, surv_names, paste0(surv_names, ".orig"))
-#       
-#       for (k in event.values) {
-#         setnames(cs.table, paste0(c("d", "n.eff"),k), c("d", "n.eff"))
-#         
-#         if (surv.method=="lifetable") {
-#           comp.st.surv.obs.lif(surv.table = cs.table, surv.by.vars = cs.by.vars)
-#         }
-#         if (surv.method=="hazard") {
-#           comp.st.surv.obs.haz(surv.table = cs.table, surv.by.vars = cs.by.vars)
-#         }
-#         os.table <- comp.st.conf.ints(cs.table, al=1-conf.level, surv="surv.obs", transform = conf.type)
-#         
-#         new_surv_names <- setdiff(surv_names, c("d", "n.eff"))
-#         new_surv_names <- gsub("surv.obs", paste0("surv.obs", k), new_surv_names)
-#         new_surv_names <- c(paste0(c("d", "n.eff"), k), new_surv_names)
-#         setnames(cs.table, surv_names, new_surv_names)
-#         
-#         
-#       }
-#       setnames(cs.table, paste0(surv_names, ".orig"), surv_names)
-#     }
-#     
-#     data <- comp.st.cs(data)
-#   }
+  # compute cause-specific survivals  ------------------------------------------
+  if (surv.type == "surv.cause") {
+    
+    ## NOTE: these related to adjusting life-table estimates for delayed entry...
+    #       data[, n.eff := n - n.cens/2 + n.de/2 + n.de.cens/4] # + d.de/2
+    #       n.cens_1 := n.cens + (d-d_1)
+    #       n.de.cens := n.de.cens + (d.de - d.de_1)
+    
+    if (surv.method == "lifetable") {
+      for (k in eventVars) {
+        k <- gsub(pattern = "d_", replacement = "", x = k)
+        d_k <- paste0("d_", k)
+        # d.de_k <- paste0("d.de_",k)
+        
+        n.eff_k <- paste0("n.eff_",k)
+        
+        ## old: " := n - (n.cens + (d-", d_k,")/2 + n.de/2 + (n.de.cens + d.de - ", d.de_k,")/4 )"
+        # expr <- paste0(n.eff_k, " := n - (n.cens + (d-", d_k,")/2 )")
+        
+        set(data, j = c(n.eff_k), value = data$n.eff + (data$d - data[[d_k]])/2L ) # + d.de/2
+        # data[,  eval(parse(text = expr), envir = .SD)]
+        
+      }
+    }
+    
+    
+    surv_names <- names(data)[grep("surv.obs", names(data))]
+    surv_names <- c("d", "n.eff", surv_names)
+    setnames(data, surv_names, paste0(surv_names, ".orig"))
+    
+    for (k in eventVars) {
+      
+      k <- gsub(pattern = "d_", replacement = "", x = k)
+      setnames(data, paste0("d_",k), "d")
+      
+      if (surv.method=="hazard") {
+        comp.st.surv.obs.haz(surv.table = data, surv.by.vars = byVars)
+      } else {
+        setnames(data, paste0("n.eff_", k), "n.eff")
+        comp.st.surv.obs.lif(surv.table = data, surv.by.vars = byVars)
+      }
+      os.table <- comp.st.conf.ints(data, al=1-conf.level, surv="surv.obs", transform = conf.type)
+      
+      new_surv_names <- setdiff(surv_names, c("d", "n.eff"))
+      new_surv_names <- gsub("surv.obs", paste0("surv.obs.", k), new_surv_names)
+      new_surv_names <- c(paste0(c("d.", "n.eff."), k), new_surv_names)
+      setnames(data, surv_names, new_surv_names)
+      
+      
+    }
+    setnames(data, paste0(surv_names, ".orig"), surv_names)
+  }
   
-  
-#   # compute cause-specifc/excess-case CIFs -------------------------------------
-#   if (surv.type %in% c("cif.obs", "cif.rel")) {
-#     comp.st.cif <- function(cif.table, cif.by.vars=byVars) {
-  # cif.table[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = cif.by.vars]
-  
-  
-#       cif.table[is.na(lag1_surv.obs), lag1_surv.obs := 1]
-#       cif.table[, p.obs := surv.obs/lag1_surv.obs]
-#       
-#       if (surv.type == "cif.obs") {        
-#         d_k <- paste0("d", event.values)
-#         for (k in event.values) {
-#           d_var <- paste0("d",k)
-#           q_var <- paste0("q_", k)
-#           CIF_var <- paste0("CIF_", k)
-#           cif.table[, (q_var)   := (1-p.obs)*get(d_var)/d]
-#           cif.table[get(d_var) == 0L | d == 0L, (q_var) := 0]
-#           cif.table[, (CIF_var) := cumsum(lag1_surv.obs*get(q_var)), by = cif.by.vars]
-#         }
-#       }
-#       
-#       if (surv.type == "cif.rel") {
-#         ## assuming d.exp in cif.table
-#         cif.table[, CIF.rel := (1-p.obs)*(d-d.exp)/d]
-#         cif.table[d.exp>d, CIF.rel := NA]
-#         cif.table[, CIF.rel := cumsum(lag1_surv.obs*CIF.rel), by = cif.by.vars]
-#       }
-#       
-#       ## SEs currently not known for CIFs; impute 0 to make comp.st.as() to work
-#       CIF_vars <- names(cif.table)[substr(names(cif.table),1,3) == "CIF"]
-#       cif.table[, c(paste0("SE.", CIF_vars)) := 0L]
-#       
-#       return(cif.table)
-#       
-#     }
-#     
-#     
-#     
-#     data <- comp.st.cif(data)
-#   }
+  # compute cause-specifc/excess-case CIFs -------------------------------------
+  if (surv.type %in% c("cif.obs", "cif.rel")) {
+    
+    data[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = byVars]
+    data[, p.obs := surv.obs/lag1_surv.obs]
+    
+    if (surv.type == "cif.obs") {
+      for (k in eventVars) {
+        
+        k <- gsub("d_", "", x = k)
+        d_k <- paste0("d_", k)
+        
+        d_var <- paste0("d_",k)
+        q_var <- paste0("q_", k)
+        CIF_var <- paste0("CIF_", k)
+        data[, (q_var)   := (1-p.obs)*get(d_var)/d]
+        data[get(d_var) == 0L | d == 0L, (q_var) := 0]
+        data[, (CIF_var) := cumsum(lag1_surv.obs*get(q_var)), by = byVars]
+      }
+    }
+    
+    if (surv.type == "cif.rel") {
+      ## assuming d.exp in data
+      data[, CIF.rel := (1-p.obs)*(d-d.exp)/d]
+      data[d.exp>d, CIF.rel := NA]
+      data[, CIF.rel := cumsum(lag1_surv.obs*CIF.rel), by = byVars]
+    }
+    
+    ## SEs currently not known for CIFs; impute 0 to make adjusting work
+    CIF_vars <- names(data)[substr(names(data),1,3) == "CIF"]
+    data[, c(paste0("SE.", CIF_vars)) := 0L]
+    
+    
+  }
   
   
   # relative survivals ---------------------------------------------------------
@@ -618,68 +690,64 @@ survtab_ag <- function(data,
     adEsts <- intersect(adEsts, names(data))
     adSEs <- paste0("SE.", adEsts)
     
-    data <- data[, lapply(mget(c(adEsts, adSEs)), function(x) x*weights), by = c(prVars, surv.scale)]
+    data.w <- data[, lapply(mget(c(adEsts, adSEs)), function(x) sum(x*weights)), keyby = c(prVars, "surv.int")]
+    data <- data[, lapply(mget(valVars), sum), keyby = c(prVars, "surv.int", "Tstart", "Tstop", "delta")]
+    data <- merge(data, data.w, by = c(prVars, "surv.int"), all = TRUE)
+    setnames(data, c(adEsts, adSEs), paste0(c(adEsts, adSEs), ".as"))
     
-  }
-  byVars <- setdiff(byVars, adVars)
-  
-  
-  
-  # clean-up -------------------------------------------------------------------
-  post.tab <- function(tab) {
-    if (format) {
-      
-      
-      ## reorder table
-      order <- c("surv.int", "Tstart", "Tstop","delta","pyrs","pyrs.pp","n.start","d","n.cens","d.pp","d.exp","d.exp.pp",
-                 "surv.obs.lo","surv.obs","surv.obs.hi","SE.surv.obs",
-                 "r.e2.lo","r.e2","r.e2.hi","SE.r.e2",
-                 "r.pp.lo","r.pp","r.pp.hi","SE.r.pp",
-                 "surv.obs.as.lo","surv.obs.as","surv.obs.as.hi","SE.surv.obs.as",
-                 "r.e2.as.lo","r.e2.as","r.e2.as.hi","SE.r.e2.as",
-                 "r.pp.as.lo","r.pp.as","r.pp.as.hi","SE.r.pp.as")
-      order <- unique(c(prVars, order))
-      CIF_vars <- names(tab)[substr(names(tab),1,3)=="CIF"]
-      order <- c(order, CIF_vars)
-      surv.obs.vars <- names(tab)[substr(names(tab), 1,8) == "surv.obs"]
-      order <- c(order, surv.obs.vars)
-      
-      order <- unique(order)
-      order <- intersect(order, names(tab))
-      
-      setcolsnull(tab, setdiff(names(tab), order))
-      setcolorder(tab,order)
-      
-      
-      setkeyv(tab, c(prVars, "surv.int"))
-      
-      #       tab[, surv.int :=paste("[", format(round(Tstart,2)),", ", format(round(Tstop,2)),"[", sep="")]
-      
-      
-      signif_vars <- setdiff(order, c("surv.int", prVars, "n.start", "n.eff", "n.cens", "d"))
-      signif_vars <- union(signif_vars, c("Tstart", "Tstop"))
-      signif_vars <- intersect(signif_vars, names(tab))
-      signiff <- function(x) {
-        if (is.numeric(x)) {
-          signif(x, digits=4)
-        } else {
-          x
-        }
-        
-      }
-      
-      ## format surv.int into intervals
-      tab[, c(signif_vars) := lapply(.SD, signiff), .SDcols = c(signif_vars)]
-      
-      NWO <- c(prVars, "surv.int","Tstart", "Tstop", setdiff(names(tab), c(prVars,  "surv.int","Tstart", "Tstop")))
-      setcolorder(tab, NWO)
+    for (var in paste0(adEsts, ".as")) {
+      data <- comp.st.conf.ints(data, al=1-conf.level, surv=var, transform =conf.type)
     }
     
     
-    
-    tab
   }
-  data <- post.tab(data)
+  
+  # clean-up -------------------------------------------------------------------
+  ## reorder table
+  if (format) {
+    order <- c("surv.int", "Tstart", "Tstop","delta","pyrs","pyrs.pp","n","d","n.cens","d.pp","d.exp","d.exp.pp",
+               "surv.obs.lo","surv.obs","surv.obs.hi","SE.surv.obs",
+               "r.e2.lo","r.e2","r.e2.hi","SE.r.e2",
+               "r.pp.lo","r.pp","r.pp.hi","SE.r.pp",
+               "surv.obs.as.lo","surv.obs.as","surv.obs.as.hi","SE.surv.obs.as",
+               "r.e2.as.lo","r.e2.as","r.e2.as.hi","SE.r.e2.as",
+               "r.pp.as.lo","r.pp.as","r.pp.as.hi","SE.r.pp.as")
+    order <- unique(c(prVars, order))
+    CIF_vars <- names(data)[substr(names(data),1,3)=="CIF"]
+    order <- c(order, CIF_vars)
+    surv.obs.vars <- names(data)[substr(names(data), 1,8) == "surv.obs"]
+    order <- c(order, surv.obs.vars)
+    
+    order <- unique(order)
+    order <- intersect(order, names(data))
+    
+    setcolsnull(data, setdiff(names(data), order))
+    setcolorder(data,order)
+    
+    
+    setkeyv(data, c(prVars, "surv.int"))
+    
+    #       data[, surv.int :=paste("[", format(round(Tstart,2)),", ", format(round(Tstop,2)),"[", sep="")]
+    
+    
+    ## rounding & formatting
+    signif_vars <- setdiff(order, c("surv.int", prVars, "n", "n.eff", "n.cens", "d"))
+    signif_vars <- union(signif_vars, c("Tstart", "Tstop"))
+    signif_vars <- intersect(signif_vars, names(data))
+    signiff <- function(x) {
+      if (is.numeric(x)) {
+        signif(x, digits=4)
+      } else {
+        x
+      }
+      
+    }
+    
+    data[, c(signif_vars) := lapply(.SD, signiff), .SDcols = c(signif_vars)]
+    
+    NWO <- c(prVars, "surv.int","Tstart", "Tstop", setdiff(names(data), c(prVars,  "surv.int","Tstart", "Tstop")))
+    setcolorder(data, NWO)
+  }
   
   # attributes -----------------------------------------------------------------
   setkeyv(data, c(prVars, "surv.int"))
@@ -702,7 +770,7 @@ globalVariables(c("lex.Xst", "lex.Cst", "lex.dur", "agegr", "ageint_start", "eve
                   "Tstart", "Tstop", "delta", "entered_late", "entered_int_late", 
                   "mv1", "v1", "weights", "byVars", "tabw", "w", "ints", "agegr.w.breaks", "agegr.w.weights"))
 
-globalVariables(c("n.start", "d", "lex.Xst", "n.cens", "surv.int", 
+globalVariables(c("n", "d", "lex.Xst", "n.cens", "surv.int", 
                   "d.exp", "pop.haz", "d.exp.pp", "d.exp", "pp", "d.pp", "d.pp.2", "n.eff.pp", "pyrs.pp"))
 globalVariables(c("ICSS", "n.eff", "pyrs", "test_pyrs", "surv.obs", "valVars",
                   "lag1_surv.obs", "p.obs", "surv.obs", "CIF.rel", "p.exp", "surv.exp", "obs", "agestd"))
