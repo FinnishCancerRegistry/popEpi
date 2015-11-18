@@ -861,10 +861,13 @@ p.round <- function(p, dec=3) {
 
 
 evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
-  ## input: an unevaluated AND substitute()'d argument within a function, which may be
+  ## arg: an unevaluated AND substitute()'d argument within a function, which may be
   ## * an expression
   ## * a list of expressions
   ## * a character vector of variable names (in a given data set)
+  ## n: steps upstream as in parent.frame(n); 0L refers to calling environment
+  ## of evalPopArg, 1L to calling environment of e.g. sir which uses evalPopArg, etc.
+  ## hence n = 1L should be almost always the right way to go.
   ## output:
   ## * vector as a result of an expression
   ## * list as a result of a list
@@ -903,7 +906,7 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
   }
   
   
-  e <- eval(arg, envir = data, enclos = parent.frame(n))
+  e <- eval(arg, envir = data, enclos = parent.frame(n + 1L))
   
   
   if (is.character(e)) {
