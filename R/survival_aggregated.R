@@ -8,7 +8,7 @@
 # ws <- substitute(list(agegr = c(0.2,0.4,0.4)))
 # dt <- makeWeightsDT(ag, print = ps, adjust = as, values = vs, weights = ws, custom.levels = list(fot = (0:59)/12))
 
-makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, custom.levels = NULL, weights = NULL, n = 1L) {
+makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.other = NULL, custom.levels = NULL, weights = NULL, n = 1L) {
   ## input: data and substitute()'d weights and adjust arguments
   ## custom.levels: for when in CJ expansion a variable should use levels other than
   ## the ones found in data (such as a time scale of survival, for which each
@@ -75,19 +75,31 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, cust
   }
   # rm(adjust)
   
+  
+  # other category vars to keep ------------------------------------------------
+  boSub <- by.other
+  by.other <- evalPopArg(data = origData, arg = boSub, DT = TRUE, n = n + 1L)
+  if (length(print) > 0) {
+    boVars <- names(by.other)
+    data[, (boVars) := by.other]
+  } else {
+    boVars <- NULL
+  }
+  rm(by.other)
+  
   # aggregate data to smallest number of rows according to print & adjust ------
   
   ## NOTE: have to do CJ by hand: some levels of adjust or something may not
   ## have each level of e.g. fot repeated!
   cj <- list()
-  cj <- lapply(data[, mget(c(prVars, adVars))], 
+  cj <- lapply(data[, mget(c(prVars, adVars, boVars))], 
                function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
   
   if (length(custom.levels) > 0) cj[names(custom.levels)] <- custom.levels
   cj <- do.call(CJ, cj)
   
   
-  setkeyv(data, c(prVars, adVars))
+  setkeyv(data, c(prVars, adVars, boVars))
   data <- data[cj, lapply(.SD, sum), .SDcols = vaVars, by = .EACHI]
   
   for (k in vaVars) {
@@ -95,6 +107,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, cust
   }
   
   setcolsnull(data, tmpDum)
+  prVars <- setdiff(prVars, tmpDum); if (length(prVars) == 0) prVars <- NULL
   
   
   ## merge in weights ----------------------------------------------------------
@@ -169,6 +182,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, cust
     
     
   }
+  setattr(data, "makeWeightsDT", list(prVars = prVars, adVars = adVars, boVars = boVars, vaVars = vaVars))
   
   return(data[])
   
@@ -315,160 +329,43 @@ survtab_ag <- function(data,
   
   all_names_present(mc, valVars)
   setcolorder(mc, valVars)
-  tmpValVars <- makeTempVarName(data, pre = valVars)
   
-  data[, (tmpValVars) := mc]
-  rm(mc)
-  
-  ## limit data to given surv.ints ---------------------------------------------
-  data[, (surv.scale) := cutLow(get(surv.scale), breaks = surv.breaks)]
-  data <- data[!is.na(get(surv.scale))]
-  
-  # variables to print by ------------------------------------------------------
+  # making weighted table of aggregated values ---------------------------------
   prSub <- substitute(print)
-  print <- evalPopArg(data = data, arg = prSub, DT = TRUE)
-  if (length(print) > 0) {
-    prVars <- names(print)
-    tmpPrVars <- makeTempVarName(data, pre = names(print))
-    data[, (tmpPrVars) := print]
-  } else {
-    prVars <- tmpPrVars <- NULL
-  }
-  rm(print)
-  
-  # standardization ------------------------------------------------------------
-  ## have 'adjust' argument for defining adjusting vars
-  ## and 'weights' as: 
-  ## * character string name of weights variable in data;
-  ## * character string naming ICSS1-3;
-  ## * a data.frame that has lower bounds of categories and weights;
-  ## * a list of named weights vectors which will be collated into a data.frame of weights.
-  ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
   adSub <- substitute(adjust)
-  adjust <- evalPopArg(data = data, arg = adSub, DT = TRUE)
-  if (length(adjust) > 0) {
-    adVars <- names(adjust)
-    tmpAdVars <- makeTempVarName(data, pre = adVars)
-    data[, (tmpAdVars) := adjust]
-  } else {
-    adVars <- tmpAdVars <- NULL
-  }
-  # rm(adjust)
-  
-  # aggregate data to smallest number of rows according to print & adjust ------
-  
-  ## NOTE: have to do CJ by hand: some levels of adjust or something may not
-  ## have each level of e.g. fot repeated!
-  cj <- list()
-  if (length(c(tmpPrVars, tmpAdVars)) > 0) {
-    cj <- lapply(data[, mget(c(tmpPrVars, tmpAdVars))], 
-                 function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
-  }
-  
-  cj[[surv.scale]] <- surv.breaks[-length(surv.breaks)]
-  cj <- do.call(CJ, cj)
-  
-  
-  setkeyv(data, c(tmpPrVars, tmpAdVars, surv.scale))
-  data <- data[cj, lapply(.SD, sum), .SDcols = tmpValVars, by = .EACHI]
-  
-  for (k in tmpValVars) {
-    data[is.na(get(k)), (k) := 0]
-  }
-  
-  
-  # keep only necessary columns ------------------------------------------------
-  ## this only after evaluating print, weights and adjust!
-  ## also use useful names from now on.
-  byVars <- c(prVars, adVars)
-  setnames(data, c(tmpPrVars, tmpAdVars, tmpValVars), c(byVars, valVars))
-  
-  data[, Tstop := surv.breaks[-1L]]
-  setnames(data, surv.scale, "Tstart")
-  
-  setkeyv(data, c(byVars, "Tstart"))
-  delta <- surv.int  <- Tstop <- Tstart <- NULL
-  data[, delta := surv.breaks[-1] - surv.breaks[-length(surv.breaks)]]
-  data[, surv.int := 1:.N, by = byVars]
-  
-  setcolsnull(data, keep=c(byVars, "surv.int", "Tstart", "Tstop", "delta", valVars), colorder = TRUE, soft = FALSE)
-  
-  setkeyv(data, c(byVars, "surv.int"))
-  
-  ## merge in weights ----------------------------------------------------------
-  
+  vaSub <- substitute(mc)
   weSub <- substitute(weights)
-  weType <- popArgType(weSub)
-  if (weType != "NULL") {
-    
-    weights <- evalPopArg(data  = origData, arg = weSub, n = 2L, DT = FALSE)
-    
-    if (is.character(weights)) {
-      if (length(weights) > 1) stop("When given as a character string naming a variable in data, the weights argument can only be of length one.")
-      all_names_present(origData, weights)
-      weights <- with(origData, get(weights))
-      ## now as if weights was an expression or symbol, and handled below.
-      
-    } 
-    
-    if (!is.data.frame(weights) && is.vector(weights)) {
-      ## note: lists are vectors
-      if (!is.list(weights)) {
-        weights <- list(weights) ## was a vector of values
-        if (length(adjust) != 1) stop("Argument 'weights' is a vector of weights, but there are more than one variables to adjust by; make sure 'adjust' is a character vector of length one naming an adjusting variable in data, an expression, or a list of expressions of length one.")
-        setattr(weights, "names", adVars[1])
-      }
-      
-      adjust <- lapply(adjust, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
-      
-      if (length(adjust) != length(weights)) 
-        stop("Mismatch in numbers of elements (variables) in adjust (", length(adjust), ") and weights (", length(weights),"); make sure each given weights has a corresponding variable in adjust and vice versa.")
-      weLen <- sapply(weights, length)
-      adLen <- sapply(adjust, length)
-      badLen <- names(adjust)[weLen != adLen]
-      if (length(badLen) > 0) 
-        stop("Mismatch in lengths of following adjust and weights arguments' element(s). Names of adjust elements not matching in length with weigths: ", paste0("'", badLen, "'", collapse = ", "))
-      
-      weVars <- names(weights)
-      
-      badAdVars <- setdiff(adVars, weVars)
-      badWeVars <- setdiff(weVars, adVars)
-      if (length(badAdVars) > 0)
-        stop("Mismatch in names of elements in adjust and weights; following adjust elements not mentioned in weights: ", paste0("'", badAdVars, "'", collapse = ", "))
-      if (length(badWeVars) > 0)
-        stop("Mismatch in names of elements in adjust and weights; following weights elements not mentioned in adjust: ", paste0("'", badWeVars, "'", collapse = ", "))
-      
-      weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
-      adjust <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), adjust)
-      
-      weVars <- paste0(weVars, ".w")
-      setnames(weights, adVars, weVars)
-      weights[, (adVars) := adjust]
-      
-      weights[, weights := 1L]
-      for (k in weVars) {
-        set(weights, j = "weights", value = weights$weights * weights[[k]])
-      }
-      setcolsnull(weights, delete = weVars, soft = FALSE)
-      
-      ## NOTE: weights will be repeated for each level of print,
-      ## and for each level of print the weights must sum to one for things
-      ## to work.
-      weights[, weights := weights/sum(weights)]
-      
-    }
-    
-    if (is.data.frame(weights)) {
-      ## it's a data.frame of weights and corresponding vars to merge by
-      data <- merge(data, weights, by = adVars, all.x = TRUE, all.y = TRUE)
-    } else {
-      stop("Something went wrong: 'weights' was not collated into a data.frame to merge with data. Blame the package maintainer please!")
-    }
-    
-    
-  }
+  ssSub <- list(origData[[surv.scale]])
+  setattr(ssSub, "names", surv.scale)
+  ssSub[[surv.scale]] <- cutLow(ssSub[[surv.scale]], breaks = surv.breaks)
+  ssSub <- substitute(ssSub)
+  
+  ## NOTE: while ssSub will pass the whole column of e.g. fot values, which will
+  ## not limit the data to e.g. up 5 years of follow-up if original data went 
+  ## further, surv.breaks may be only up to 5 years and will limit the data
+  ## in makeWeightsDT using a CJ-merge-trick appropriately (via custom.levels).
+  bl <- list(surv.breaks[-length(surv.breaks)])
+  setattr(bl, "names", surv.scale)
+  
+  data <- makeWeightsDT(data = origData, values = vaSub, n = 0L,
+                        print = prSub, adjust = adSub, 
+                        by.other = ssSub,
+                        custom.levels = bl, weights = weSub)
+  allVars <- attr(data, "makeWeightsDT")
+  prVars <- allVars$prVars
+  adVars <- allVars$adVars
+  # boVars <- allVars$boVars ## this is surv.scale
+  valVars <- allVars$vaVars
+  
+  byVars <- c(prVars, adVars)
   
   # formulate some needed variables --------------------------------------------
+  setkeyv(data, c(byVars, surv.scale))
+  data[, Tstop := surv.breaks[-1]]
+  setnames(data, surv.scale, "Tstart")
+  data[, delta := Tstop - Tstart]
+  data[, surv.int := 1:.N, by = byVars]
+  setcolorder(data, c(byVars, "surv.int", "Tstart", "Tstop", "delta", valVars, intersect(names(data), "weights")))
   
   if (surv.method == "lifetable") {
     testEvents <- data[, n - shift(n, n = 1, type = "lead", fill = NA), by = byVars ]
@@ -478,7 +375,6 @@ survtab_ag <- function(data,
     rm(testEvents)
     data[, n.eff := n - n.cens/2L]
   }
-  
   
   
   # compute observed survivals  ------------------------------------------------
