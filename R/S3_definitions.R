@@ -510,6 +510,18 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
   }
 }
 
+## subsetting for aggre objects that retains attributes
+`[.aggre` <- function(x, ...) {
+  structure(NextMethod(), aggreVars = attr(x, "aggreVars"), breaks = attr(x, "breaks"))
+}
+
+
+
+## subsetting for survtab objects that retains attributes
+`[.survtab` <- function(x, ...) {
+  structure(NextMethod(), surv.breaks = attr(x, "surv.breaks"))
+}
+
 
 #' \code{plot} method for survtab objects
 #' 
