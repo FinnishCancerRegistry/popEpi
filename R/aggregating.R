@@ -99,7 +99,7 @@ as.aggre.default <- function(x, ...) {
 
 
 
-#' @export
+#' @export laggre
 #' @title Aggregation of split \code{Lexis} data
 #' @author Joonas Miettinen
 #' @description Aggregates a split \code{Lexis} object by given variables 
@@ -261,25 +261,26 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   subset <- substitute(subset)
   subset <- evalLogicalSubset(lex, subset)
   
+  ## aggre argument ------------------------------------------------------------
   ags <- if (!substituted) substitute(aggre) else aggre
+  aggre <- evalPopArg(lex[1,], arg = ags, DT = TRUE) ## for checking aggre argument type
   
-  argType <- popArgType(ags)
+  argType <- if (!is.null(aggre)) attr(aggre, "evalPopArg") else "NULL"
   if (verbose) cat("Used aggre argument:", deparse(ags),"\n")
   if (verbose) cat("Type of aggre argument:", argType, "\n")
   if (argType != "NULL") {
     if (argType == "character") {
-      av <- eval(aggre)
+      av <- eval(ags, envir = parent.frame(1L))
     } else {
       av <- all.vars(ags)
     } 
     
-    ## more convenient with only list or char
-    if (argType == "expression") ags <- substitute(list(aggre))
-    
-    if (!any(av %in% names(lex))) {
-      badAggre <- deparse(ags)
-      stop("none of the variables used in aggre were found in lex; the aggre expression was '", badAggre, "'")
-    }
+    ## maybe below is a bad idea to check, might use only variables from
+    ## global env instead of data...
+#     if (any(!av %in% names(lex))) {
+#       badAggre <- deparse(ags)
+#       stop("none of the variables used in aggre were found in lex; the aggre expression was '", badAggre, "'")
+#     }
     
   } else {
     av <- NULL
@@ -302,13 +303,10 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
     
     ## NEW METHOD: modify time scales in place 
     ## (while taking copies of old values and returning them at exit)
-    oldScaleValues <- if (is.data.table(lex)) copy(lex[, mget(aggScales)]) else lex[,c(aggScales)]
-    setDT(oldScaleValues)
+    oldScaleValues <- with(lex, mget(aggScales))
     
     on.exit({
-      for (sc in aggScales) {
-        set(lex, j = sc, value = oldScaleValues[[sc]])
-      }
+      set(lex, j = aggScales, value = oldScaleValues)
     }, add = TRUE)
     
     for (sc in aggScales) {
@@ -325,6 +323,8 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   }
   
   
+  aggre <- evalPopArg(if (all(subset)) lex else lex[subset, ], arg = ags, DT = TRUE)
+  
   ## computing pyrs ------------------------------------------------------------
   pyrsTime <- proc.time()
   if (!is.data.table(lex)) {
@@ -332,10 +332,10 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
     ## for some reason calling by string variable names does not work directly
     DFtemp <- lex[subset, which(names(lex) %in% c(av, "lex.dur", "lex.id"))]
     setDT(DFtemp)
-    pyrs <- DFtemp[, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = ags]
+    pyrs <- DFtemp[, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = aggre]
     rm(DFtemp)
     } else {
-      pyrs <- lex[subset, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = ags]
+      pyrs <- lex[subset, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = aggre]
     }
   
   if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
@@ -346,7 +346,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   pyrs <- pyrs[pyrs > 0]
   
   
-  pyrsDiff <- pyrs[, sum(pyrs)] - sum(lex[subset, ]$lex.dur)
+  pyrsDiff <- pyrs[, sum(pyrs)] - sum(lex$lex.dur[subset])
   if (!isTRUE(all.equal(pyrsDiff, 0L))) {
     warning("Found discrepancy in total aggregated pyrs compared to sum(lex$lex.dur); compare results by hand and make sure settings are right \n")
   }
@@ -372,9 +372,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
       whScaleUsed <- unlist(whScaleUsed)
     }
     
-    ceejay <- evalPopArg(data = lex[subset, ], arg = ags, DT = TRUE)
-    
-    ceejay <- lapply(ceejay, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
+    ceejay <- lapply(aggre, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
     if (length(aggScales) > 0) {
       ## which variables in ceejay used the Lexis time scales from lex?
       
@@ -395,17 +393,10 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   ## computing events ----------------------------------------------------------
   
   transTime <- proc.time()
-  ## need to modify call to get lex.Cst & lex.Xst events
-  agsEv <- ags
-  if (argType == "character") {
-    agsEv <- eval(agsEv)
-    agsEv <- c(agsEv, "lex.Cst", "lex.Xst")
-    agsEv <- unique(agsEv)
-  } else {
-    agsEv$lex.Cst <- quote(lex.Cst)
-    agsEv$lex.Xst <- quote(lex.Xst) 
+  
+  for (var in c("lex.Cst", "lex.Xst")) {
+    set(aggre, j = var, value = lex[[var]][subset])
   }
-  agsEv <- evalPopArg(if (all(subset)) lex else lex[subset,], arg = agsEv, DT = TRUE)
   
   ## sadly, event computations requires information about
   ## 1) transitions (easy) and 2) end points (harder).
@@ -429,7 +420,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
     if (exists("tmplex")) setcolsnull(tmplex, c(tmpTrans, tmpOrder))
   }, add = TRUE)
   
-  old_key <- key(tmplex) ## note: as.data.table(DF) makes no key
+  old_key <- key(tmplex) ## note: if lex was data.frame, tmplex no key
   setkeyv(tmplex, c("lex.id", firstScale))
   
   tmpTrans <- makeTempVarName(tmplex, pre = "trans_")
@@ -453,12 +444,12 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
     setorderv(tmplex, tmpOrder)
   }
   tmplex[, (tmpTrans) := get(tmpTrans) & subset]
-  agsEv <- agsEv[tmplex[[tmpTrans]]]
+  aggre <- aggre[tmplex[[tmpTrans]]]
   
-  trans <- tmplex[tmplex[[tmpTrans]], list(obs = .N), keyby = agsEv]
+  trans <- tmplex[tmplex[[tmpTrans]], list(obs = .N), keyby = aggre]
   
   setcolsnull(tmplex, c(tmpTrans, tmpOrder))
-  rm(tmplex, agsEv)
+  rm(tmplex, aggre)
   
   if (verbose) cat("Time taken by aggregating events: ", timetaken(transTime), "\n")
   

@@ -102,15 +102,16 @@ test_that("laggre's aggre argument works flexibly", {
     
     expect_equal(a, b)
     
-    
     a <- laggre(x, aggre = cut(dg_age, 2), type = "unique")
     setnames(a, "cut", "agegr")
     attr(a, "aggreVars")$by <- "agegr"
     b <- laggre(x, aggre = c("agegr"), type = "unique")
     c <- laggre(x, aggre = list(agegr = cut(dg_age, 2)), type = "unique")
+    d<- laggre(x, aggre = agegr, type = "unique")
     
     expect_equal(a, b)
     expect_equal(b, c)
+    expect_equal(c, d)
   }
   
   
