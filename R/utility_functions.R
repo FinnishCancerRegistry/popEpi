@@ -917,6 +917,7 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
       l <- lapply(e, function(x) data[[x]])
       setattr(l, "names", e)
       setDT(l)
+      setattr(l, "evalPopArg", "character")
       e <- l; rm(l)
     }
   } else if (is.list(e)) {
@@ -943,12 +944,14 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
       ## NOTE: used to be setDT, but length of different elements
       ## in list may differ, which as.data.table handles correctly
       e <- as.data.table(e)
+      setattr(e, "evalPopArg", "list")
     }
   } else if ((is.vector(e) || is.factor(e))) {
     ## is e.g. a numeric vector or a factor
     if (DT) {
       e <- data.table(V1 = e)
       setnames(e, 1, byNames)
+      setattr(e, "evalPopArg", "expression")
     }
   }
   
@@ -959,24 +962,37 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
 }
 
 
-popArgType <- function(arg) {
+popArgType <- function(arg, data = NULL, n = 1L) {
   ## input: a substitute()'d expression / argument
   ## output: type of thingie that was substitute()'d
   ##  * list (of expressions)
   ##  * character string vector
   ##  * an expression (includes symbol)
+  av <- all.vars(arg, unique = TRUE) ## all variables
+  av <- setdiff(av, c("$", "T", "F"))
+  an <- all.names(arg, unique = TRUE) ## all variables and functions
+  af <- setdiff(an, av) ## all functions used
+  
   a <- deparse(arg)
   a <- paste0(a, collapse = "") ## lists may somehow produce length > 1 here
-  
-  if (a == "NULL") return("NULL")
   if (substr(a, 1, 4) == "list") return("list")
-  ## character: substituted string always has \" to quote names;
-  ## may also have function c() used, but no other function!
-  ## (all.names detects variable and function names, and only c() can be
-  ## detected in a character string vector)
-  char <- if (sum(grep('\\"', a)) && length(setdiff(all.names(a), "c")) == 0) TRUE else FALSE
-  if (char) return("character")
+  if (a == "NULL") return("NULL")
+  ## detection of character arguments is not easy and should not be considered
+  ## fool proof since user may pass e.g. a vector of character strings as a 
+  ## symbol, which can only really be interpreted as an expression
+  if (sum(grep('\\"', a)) && length(setdiff(af, "c")) == 0) return("character")
+  
+  if (is.data.frame(data)) {
+    if (is.symbol(arg) && a %in% names(data)) return("expression")
+    if (length(av) == 1L && av %in% names(data)) return("expression")
+    e <- eval(arg, envir = data[1:min(nrow(data), 20L), ], enclos = parent.frame(n + 1L))
+    if (is.list(e)) return("list")
+    if (is.character(e) && all(e %in% names(data))) return("character")
+    if (is.vector(e) || is.factor(e)) return("expression")
+  }
+  
   "expression"
+  
 }
 
 cutLow <- function(x, breaks, tol =  .Machine$double.eps^0.5) {
