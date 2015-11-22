@@ -113,7 +113,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   ## merge in weights ----------------------------------------------------------
   
   weSub <- weights
-  weType <- popArgType(weSub)
+  weType <- popArgType(weSub, data = origData)
   if (weType != "NULL") {
     
     weights <- evalPopArg(data  = origData, arg = weSub, n = 2L, DT = FALSE)
