@@ -793,12 +793,12 @@ subsetGently <- function(dt, subset=NULL, select=NULL) {
   ## intended for sparing memory, may be slower due to evaluating subset
   ## multiple times
   
-  ## - dt must be a data.table
+  ## - dt must be a data.table or a data.frame
   ## - subset must be already evaluated into a logical vector using e.g.
   ##   substitute & evalLogicalSubset
   ## - retains attributes
   
-  if (!is.data.table(dt)) stop("dt must be a data.table")
+  if (!is.data.frame(dt)) stop("dt must be a data.table/data.frame")
   if (!is.logical(subset)) stop("subset must be logical condition, e.g. var1 > 0")
   
   if (is.null(select)) {
@@ -807,7 +807,8 @@ subsetGently <- function(dt, subset=NULL, select=NULL) {
     all_names_present(dt, select)
   }
   
-  sdt <- dt[subset, (select[1]), with = FALSE]
+  sdt <- data.table(dt[[select[1]]][subset])
+  setnames(sdt, 1, select[1])
   if (length(select) > 1) {
     alloc.col(sdt, n = length(select) + 100L)
     for (k in select[-1]) {
