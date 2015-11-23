@@ -124,6 +124,9 @@ as.aggre.default <- function(x, ...) {
 #' from returning only rows with \code{pyrs > 0} (\code{"unique"}) to
 #' returning all possible combinations of variables given in \code{aggre} even
 #' if those combinations are not represented in data (\code{"full"}); see Details
+#' @param expr a (preferably named) list of expressions which will be computed in addition
+#' to person-time and events; e.g. \code{list(d.exp = lex.dur*pop.haz)};
+#' see Examples
 #' @param subset a logical condition to subset by before computations;
 #' e.g. \code{subset = area \%in\% c("A", "B")}
 #' @param substituted \code{logical}, advanced; if \code{TRUE}, the supplied
@@ -234,7 +237,18 @@ as.aggre.default <- function(x, ...) {
 #' ## returning also empty levels
 #' a4 <- laggre(x, aggre = c("sex", "AGE", "CAL"), type = "full")
 #' 
-laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"), subset = NULL, substituted = FALSE, verbose = FALSE) {
+#' ## computing also expected numbers of cases
+#' x <- lexpand(sibr[1:10,], birth = bi_date, entry = dg_date,
+#'              exit = ex_date, status = status %in% 1:2, 
+#'              pophaz = popmort, fot = 0:5, age = c(0, 50, 100))
+#' a5 <- laggre(x, aggre = c("sex", "age", "fot"), 
+#'              expr = list(d.exp = sum(lex.dur*pop.haz)))
+#'              
+#' ## computing pohar-perme weighted figures
+#' a6 <- laggre(x, aggre = c("sex", "age", "fot"), 
+#'              expr = list(d.exp.pp = sum(lex.dur*pop.haz*pp)))
+#' 
+laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"), expr = NULL, subset = NULL, substituted = FALSE, verbose = FALSE) {
   ## a generalized aggregator for split Lexis objects
   ## input: lex: a Lexis object that has been split somehow; 
   ##        aggre: an expression / list of expressions / a character vector of names;
@@ -260,6 +274,12 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   ## subset & drop -------------------------------------------------------------
   subset <- substitute(subset)
   subset <- evalLogicalSubset(lex, subset)
+  
+  ## check expr ----------------------------------------------------------------
+  expr <- substitute(expr)
+  exprType <- popArgType(expr, data = lex)
+  if (exprType != "list") stop("expr must be a list of expressions, e.g. list(d.exp = lex.dur*pop.haz)")
+  
   
   ## aggre argument ------------------------------------------------------------
   ags <- if (!substituted) substitute(aggre) else aggre
@@ -333,18 +353,33 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
     DFtemp <- lex[subset, which(names(lex) %in% c(av, "lex.dur", "lex.id"))]
     setDT(DFtemp)
     pyrs <- DFtemp[, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = aggre]
+    byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
+    
+    if (exprType != "NULL") {
+      expr <- DFtemp[, eval(expr), keyby = aggre]
+      pyrs <- merge(pyrs, expr, all = T)
+      rm(expr)
+    }
+    
     rm(DFtemp)
     } else {
       pyrs <- lex[subset, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = aggre]
+      setDT(pyrs)
+      byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
+      if (exprType != "NULL") {
+        expr <- lex[subset, eval(expr), keyby = aggre]
+        setDT(expr)
+        pyrs <- merge(pyrs, expr, all = T)
+        rm(expr)
+      }
     }
   
   if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
   
-  byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
+  valVars <- setdiff(names(pyrs), byNames) ## includes pyrs and anything created by expr
   
   pyrs[is.na(pyrs), pyrs := 0]
   pyrs <- pyrs[pyrs > 0]
-  
   
   pyrsDiff <- pyrs[, sum(pyrs)] - sum(lex$lex.dur[subset])
   if (!isTRUE(all.equal(pyrsDiff, 0L))) {
@@ -469,6 +504,8 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   trans[, (tmpDum) := 1L]
   pyrs[, (tmpDum) := 1L]
   
+  valVars <- unique(c(valVars, transitions))
+  
   trans <- cast_simple(trans, columns = tmpTr, rows = byNames, values = "obs")
   
   setkeyv(trans, byNames); setkeyv(pyrs, byNames)
@@ -476,15 +513,14 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   
   trans[, (tmpDum) := NULL]
   byNames <- setdiff(byNames, tmpDum)
-  setcolorder(trans, c(byNames, "pyrs", "at.risk", sort(transitions)))
+  setcolorder(trans, c(byNames, valVars))
   
   if (verbose) cat("Time taken by merging pyrs & transitions: ", timetaken(mergeTime), "\n")
   
   
-  for (var in c(transitions)) {
-    trans[is.na(get(var)), (var) := 0L]
+  for (var in valVars) {
+    trans[is.na(get(var)), (var) := 0]
   }
-  trans[is.na(pyrs), pyrs := 0]
   
   
   ## final touch ---------------------------------------------------------------
