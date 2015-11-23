@@ -782,26 +782,7 @@ lexpand <- function(data,
       NULL_FOT <- TRUE
     }
     
-    le_fot <- length(breaks$fot)
-    
-    ## bunch of temporary variable names to avoid overwriting anything
-    tmpSI <- makeTempVarName(names = c(names(pophaz), names(l)), pre = "surv.int")
-    tmpSIL <- makeTempVarName(names = c(names(pophaz), names(l)), pre = "surv.int.start")
-    tmpSIR <- makeTempVarName(names = c(names(pophaz), names(l)), pre = "surv.int.stop")
-    tmpSILE <- makeTempVarName(names = c(names(pophaz), names(l)), pre = "surv.int.length")
-    
-    ints <- data.table(V1 = 1:(le_fot-1))
-    setnames(ints, "V1", tmpSI)
-    ints[, (tmpSIL) := sort(breaks$fot[1:(le_fot-1)]) ]
-    ints[, (tmpSIR)  := sort(breaks$fot[2:(le_fot  )]) ]
-    ints[, (tmpSILE) := get(tmpSIR) - get(tmpSIL) ]
-    
-    l[, (tmpSI) := cut(fot, breaks = breaks$fot, right=FALSE, labels=F)]
-    if (NULL_FOT) breaks$fot <- NULL
-    
-    setkeyv(l, tmpSI); setkeyv(ints, tmpSI)
-    l <- ints[l]   
-    
+    breaks$fot <- sort(unique(breaks$fot))
     # handle pophaz data -------------------------------------------------------
     
     if (!"haz" %in% names(pophaz)) stop("no 'haz' variable in pophaz; please rename you hazard variable to 'haz'")
@@ -842,84 +823,14 @@ lexpand <- function(data,
     
     # pohar-perme weighting ----------------------------------------------------
     if (comp_pp) {
-      ## cumulative survivals needed for pp weighting.
-      setkeyv(l, c("lex.id","lex.multi"))
-      setkeyv(l, c("lex.id"))
-      
-      ## need a bunch of temporary variable names to compute pp weights
-      ## inside the data set without overwriting anything existing.
-      tmpPS <- makeTempVarName(data = l, pre = "pop.surv")
-      tmpPCS <- makeTempVarName(data = l, pre = "pop.cumsurv")
-      tmpPCSM <- makeTempVarName(data = l, pre = "pop.cumsurv.mid")
-      ## conditional survs
-      l[, (tmpPS) := exp(-pop.haz*lex.dur)] 
-      ## till end of each interval...
-      l[, (tmpPCS) := cumprod(get(tmpPS)), by = lex.id]
-      ## till start of each interval
-      l[, (tmpPCS) := get(tmpPCS) / (get(tmpPS))]    
-      
-      ## pohar-perme weighting by expected cumulative survival. approximation:
-      ## cumulative survival up to either middle of remaining surv.int (not individual-specific)
-      ## or up to middle of subject's follow-up in each row (individual-specific)
-      ## difference: e.g. 2 rows within a surv.int have either the same or different pp-weights
-      if (pp == "actual") {
-        l[, (tmpPCSM) := get(tmpPCS)*(get(tmpPS)^(1/2))]
-      }
-      if (pp == "delta") {
-        if (verbose) deltaTime <- proc.time()
-        setkeyv(l, c(tmpSI,"lex.id","lex.multi"))
-        setkeyv(l, c(tmpSI,"lex.id"))
-        ## expected survival up to middle of remaining time in surv.int
-        ## cumulation starting from first record for subject in each surv.int
-        
-        ## some records are the only one for a lex.id in a surv.int; these are easy
-        first_in_surv.int <- !duplicated(l, fromLast = FALSE)
-        last_in_surv.int <- !duplicated(l, fromLast = TRUE)
-        only_in_surv.int <- first_in_surv.int & last_in_surv.int
-        
-        #         last_in_surv.int <- last_in_surv.int & !first_in_surv.int
-        #         first_in_surv.int <- first_in_surv.int & !first_in_surv.int
-        
-        l[only_in_surv.int, (tmpPCSM) := get(tmpPCS) * exp(-pop.haz*(get(tmpSIR) - fot)/2)]
-        ## more complicated with many records in a surv.int per lex.id
-        if (any(!only_in_surv.int)) {
-          
-          
-          fdTmp <- makeTempVarName(l, pre = "fot.dist")
-          
-          ## distance from remaining surv.int mid-point starting from start of record, or lex.dur; for integration
-          l[, (fdTmp) := pmin((get(tmpSIR) - fot)/2, lex.dur)]
-          ## some records after mid-point can have negative fot.dist at this point
-          l[, (fdTmp) := pmax(get(fdTmp), 0)]
-          
-          ## some lex.id are censored / die before mid of surv.int; last record
-          ## must reach its fot.dist at least up to the mid (or be zero due to above)
-          l[last_in_surv.int, (fdTmp) := pmax((get(tmpSIR) - fot)/2, 0)]
-          
-          ## from start of first in surv.int till mid point
-          l[!only_in_surv.int, (tmpPCSM) := get(tmpPCS)[1L] * exp(-sum(pop.haz*get(fdTmp))), by = c(tmpSI, "lex.id")]
-          
-          ## todo: alternate faster method for integration!
-          setcolsnull(l, delete = c(fdTmp))
-        }
-        
-        rm(first_in_surv.int, last_in_surv.int, only_in_surv.int)
-        if (verbose) cat("Time taken by 'delta' integration of cumsurv: ", timetaken(deltaTime), "\n")
-      }
-      
-      
-      l[, pp := 1/(get(tmpPCSM))]
-      
-      setcolsnull(l, delete = c(tmpPS, tmpPCS, tmpPCSM), soft = FALSE)
+      comp_pp_weights(l, surv.scale = "fot", breaks = breaks$fot, haz = "pop.haz", 
+                      style = "delta", verbose = verbose)
     }
     merge_msg <- "Time taken by merging pophaz"
     if (comp_pp) merge_msg <- paste0(merge_msg, " and computing pp")
     merge_msg <- paste0(merge_msg, ": ")
     if (verbose) cat(paste0(merge_msg, timetaken(pophaztime), "\n"))
     
-    
-    
-    setcolsnull(l, c(tmpSI, tmpSILE, tmpSIL, tmpSIR), soft = FALSE)
     
   }
   
