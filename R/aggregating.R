@@ -125,7 +125,7 @@ as.aggre.default <- function(x, ...) {
 #' returning all possible combinations of variables given in \code{aggre} even
 #' if those combinations are not represented in data (\code{"full"}); see Details
 #' @param expr a (preferably named) list of expressions which will be computed in addition
-#' to person-time and events; e.g. \code{list(d.exp = lex.dur*pop.haz)};
+#' to person-time and events; e.g. \code{list(d.exp = sum(lex.dur*pop.haz))};
 #' see Examples
 #' @param subset a logical condition to subset by before computations;
 #' e.g. \code{subset = area \%in\% c("A", "B")}
@@ -280,8 +280,8 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   
   ## check expr ----------------------------------------------------------------
   exprSub <- substitute(expr)
-  exprType <- popArgType(exprSub, data = lex)
-  if (!exprType %in% c("NULL","list")) stop("expr must be a list of expressions, e.g. list(d.exp = lex.dur*pop.haz)")
+  exprType <- popArgType(exprSub, data = lex, enclos = PF)
+  if (!exprType %in% c("NULL","list")) stop("expr must be a list of expressions, e.g. list(d.exp = sum(lex.dur*pop.haz))")
   
   
   ## aggre argument ------------------------------------------------------------

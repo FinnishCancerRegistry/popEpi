@@ -29,7 +29,7 @@ returning all possible combinations of variables given in \code{aggre} even
 if those combinations are not represented in data (\code{"full"}); see Details}
 
 \item{expr}{a (preferably named) list of expressions which will be computed in addition
-to person-time and events; e.g. \code{list(d.exp = lex.dur*pop.haz)};
+to person-time and events; e.g. \code{list(d.exp = sum(lex.dur*pop.haz))};
 see Examples}
 
 \item{subset}{a logical condition to subset by before computations;
