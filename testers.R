@@ -55,3 +55,25 @@ check_none <- function() {
   ## runs R CMD CHECK without running any tests
   devtools::check(".", args = "--test-dir=tests/emptyDir/")
 }
+
+resaveAllDatas <- function(folder = "data/", ext = ".rdata") {
+  ## INTENDED USE: when package data.table is updated
+  ## and datas need to be resaved using the new data.table version.
+  n <- nchar(ext)
+  fn <- dir(folder)
+  fn <- fn[substr(fn, nchar(fn) - n+1, nchar(fn)) == ext]
+  
+  te <- new.env()
+  for (k in fn) {
+    path <- paste0(folder, if(substr(folder, nchar(folder), nchar(folder)) == "/") NULL else "/", k)
+    cat("loading data file: '", path, "'... \n", sep = "")
+    dtn <- load(file = path, envir = te)
+    te[[dtn]] <- data.table(te[[dtn]])
+    cat("saving data file: '", path, "'... \n", sep = "")
+    save(list = dtn, envir = te, file = path)
+    
+  }
+  
+  invisible()
+  
+}
