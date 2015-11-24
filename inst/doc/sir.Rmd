@@ -138,7 +138,7 @@ In dependent spline the `fot` is the ratio with zero time as reference point. Re
 Splines can also be stratified using the `print` argument. For example we split the death time in two time periods and test if the agegroup splines are equal.
 
 ```{r, results='hide', fig.height=5, fig.width=6}
-c[, year.cat := ifelse(year < 2002, 1, 2)]
+c$year.cat <- ifelse(c$year < 2002, 1, 2)
 sy <- sirspline( coh.data = c, coh.obs = 'from0to1', coh.pyrs = 'pyrs', 
                  ref.data = popmort, ref.rate = 'haz', 
                  adjust = c('agegroup','year','sex'),

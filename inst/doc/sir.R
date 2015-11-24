@@ -51,7 +51,7 @@ plot(st, col=4, log=TRUE)
 title('Splines are dependent')
 
 ## ---- results='hide', fig.height=5, fig.width=6--------------------------
-c[, year.cat := ifelse(year < 2002, 1, 2)]
+c$year.cat <- ifelse(c$year < 2002, 1, 2)
 sy <- sirspline( coh.data = c, coh.obs = 'from0to1', coh.pyrs = 'pyrs', 
                  ref.data = popmort, ref.rate = 'haz', 
                  adjust = c('agegroup','year','sex'),

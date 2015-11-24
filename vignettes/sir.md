@@ -1,7 +1,7 @@
 ---
 title: "SMR Vignette"
 author: "Matti Rantanen"
-date: "`r Sys.Date()`"
+date: "2015-11-24"
 output: 
   html_document:
     fig_caption: yes
@@ -15,7 +15,8 @@ vignette: >
 
 
 
-```{r, echo=TRUE, warning=FALSE, message=FALSE}
+
+```r
 library(popEpi)
 library(Epi)
 library(splines)
@@ -68,17 +69,47 @@ Death rates for each age, period and sex is available in `popmort` dataset.
 
 For more information about the dataset see `help(popmort)` and `help(sire)`.
 
-```{r}
+
+```r
 data(sire)
 data(popmort)
 c <- lexpand( sire, status = status, birth = bi_date, exit = ex_date, entry = dg_date,
               breaks = list(per = 1950:2013, age = 1:100, fot = c(0,10,20,Inf)), 
               aggre = list(fot, agegroup = age, year = per, sex) )
+```
 
+```
+## dropped 16 rows where entry == exit
+```
+
+```r
 se <- sir( coh.data = c, coh.obs = 'from0to2', coh.pyrs = 'pyrs',
            ref.data = popmort, ref.rate = 'haz', 
            adjust = c('agegroup','year','sex'), print ='fot')
+```
+
+```
+## Confidence intervals calculated from profile-likelihood.
+```
+
+```r
 se
+```
+
+```
+## SIR Standardized by:  agegroup year sex
+## 
+##  Total observed: 1490 
+##  Total expected: 1482.13 
+##  Total person-years: 
+## 39905.92 
+## 
+## Poisson modelled SIR: 
+##    fot observed expected     pyrs  sir 2.5 % 97.5 % p_value
+## 1:   0     1226  1214.54 34445.96 1.01  0.95   1.07  0.7423
+## 2:  10      264   267.59  5459.96 0.99  0.87   1.11  0.8262
+## 
+## Test for homogeneity p = 0.735
 ```
 
 SMR's for other causes is 1 for both follow-up intervals. Also the p-value suggest that there is no heterogenity between SMR estimates (p=0.735).
@@ -86,23 +117,56 @@ SMR's for other causes is 1 for both follow-up intervals. Also the p-value sugge
 
 The total mortality can be estimated by modifying the `status` argument. Now we want to account all deaths, i.e. status is 1 or 2.
 
-```{r}
+
+```r
 c <- lexpand( sire, status = status %in% 1:2, birth = bi_date, exit = ex_date, entry = dg_date,
               breaks = list(per = 1950:2013, age = 1:100, fot = c(0,10,20,Inf)), 
               aggre = list(fot, agegroup = age, year = per, sex) )
+```
 
+```
+## dropped 16 rows where entry == exit
+```
+
+```r
 se <- sir( coh.data = c, coh.obs = 'from0to1', coh.pyrs = 'pyrs',
            ref.data = popmort, ref.rate = 'haz', 
            adjust = c('agegroup','year','sex'), print ='fot')
+```
+
+```
+## Confidence intervals calculated from profile-likelihood.
+```
+
+```r
 se
+```
+
+```
+## SIR Standardized by:  agegroup year sex
+## 
+##  Total observed: 4559 
+##  Total expected: 1482.13 
+##  Total person-years: 
+## 39905.92 
+## 
+## Poisson modelled SIR: 
+##    fot observed expected     pyrs  sir 2.5 % 97.5 % p_value
+## 1:   0     4264  1214.54 34445.96 3.51  3.41   3.62   0.000
+## 2:  10      295   267.59  5459.96 1.10  0.98   1.23   0.094
+## 
+## Test for homogeneity p < 0.001
 ```
 
 Now the estimates for follow-up intervals seems to differ significantly, p = 0. Plotting SMR (S3-method for `sir`-object) is easily done using default plot-function.
 
-```{r, fig.height=3, fig.width=6}
+
+```r
 plot(se, col = 2:3)
 title('SMR for follow-up categories')
 ```
+
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
 
 
 ## splines
@@ -110,11 +174,18 @@ title('SMR for follow-up categories')
 
 Lets fit splines for the follow-up time and agegroup using two different options: the splines are fitted in different model and in same model, `dependent.splines`.
 
-```{r, fig.height=5, fig.width=6}
+
+```r
 c <- lexpand( sire, status = status %in% 1:2, birth = bi_date, exit = ex_date, entry = dg_date,
               breaks = list(per = 1950:2013, age = 1:100, fot = 0:50), 
               aggre = list(fot, agegroup = age, year = per, sex) )
+```
 
+```
+## dropped 16 rows where entry == exit
+```
+
+```r
 sf <- sirspline( coh.data = c, coh.obs = 'from0to1', coh.pyrs = 'pyrs', 
                  ref.data = popmort, ref.rate = 'haz', 
                  adjust = c('agegroup','year','sex'),
@@ -127,33 +198,21 @@ st <- sirspline( coh.data = c, coh.obs = 'from0to1', coh.pyrs = 'pyrs',
 
 plot(sf, col=2, log=TRUE)
 title('Splines fitted in different models')
+```
 
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png) 
+
+```r
 plot(st, col=4, log=TRUE)
 title('Splines are dependent')
 ```
+
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-2.png) 
 
 In dependent spline the `fot` is the ratio with zero time as reference point. Reference points can be alterned. Here agegroup profile is assumed to be same for every follow-up time. SMR is 0.2 times from 0 to 10 years of follow-up. 
 
 
 Splines can also be stratified using the `print` argument. For example we split the death time in two time periods and test if the agegroup splines are equal.
-
-```{r, results='hide', fig.height=5, fig.width=6}
-c$year.cat <- ifelse(c$year < 2002, 1, 2)
-sy <- sirspline( coh.data = c, coh.obs = 'from0to1', coh.pyrs = 'pyrs', 
-                 ref.data = popmort, ref.rate = 'haz', 
-                 adjust = c('agegroup','year','sex'),
-                 spline = c('agegroup'), print = 'year.cat')
-plot(sy, log=TRUE)
-legend('topright', c('before 2002','after 2002'), lty=1, col=c(1,2))
-```
-
-For category before 2002 the SMR seems to be higher after the age of 50. Also the p-value (<0.0001) indicates that there is a difference in age group trends before and after year 2002. P-value is a likelihood ratio test that compares models where splines are fitted together and separately.
-
-```{r}
-print(sy)
-```
-
-
 
 
 

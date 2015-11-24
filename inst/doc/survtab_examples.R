@@ -6,21 +6,22 @@ head(sr)
 
 ## ----lexample1, eval=FALSE-----------------------------------------------
 #  x <- lexpand(sr, birth=bi_date, entry=dg_date, exit=ex_date,
-#               breaks = list(fot = seq(0,5, 1/12)), status = status, pophaz=popmort)
+#               breaks = list(fot = seq(0,5, 1/12)), status = status)
 
 ## ----lexample2, eval=FALSE-----------------------------------------------
 #  x <- lexpand(sr, birth=bi_date, entry=dg_date, exit=ex_date,
-#               fot = seq(0,5, 1/12), status = status, pophaz=popmort)
+#               fot = seq(0,5, 1/12), status = status)
 
 ## ----lexample3, eval=FALSE-----------------------------------------------
 #  BL <- list(fot = seq(0, 5, 1/12))
 #  x <- lexpand(sr, birth=bi_date, entry=dg_date, exit=ex_date,
-#               breaks = BL, status = status, pophaz=popmort)
+#               breaks = BL, status = status)
 
 ## ----lex1----------------------------------------------------------------
 ## up to 5 years of follow-up time in month-long intervals
 x <- lexpand(sr, birth=bi_date, entry=dg_date, exit=ex_date, 
-             fot = seq(0,5, 1/12), status = status, pophaz=popmort)
+             fot = seq(0,5, 1/12),
+             status = status, pophaz=popmort)
 
 ## ----surv1---------------------------------------------------------------
 st <- survtab(x)
