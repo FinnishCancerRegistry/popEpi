@@ -1085,3 +1085,19 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
   
 }
 
+
+getOrigin <- function(x) {
+  ## input: Date, IDate, or date variable
+  ## output: the origin date in Date format,
+  ## the origin date being the date where the underlying index is zero.
+  if (inherits(x, "Date") || inherits(x, "IDate")) {
+    as.Date("1970-01-01")
+  } else if (inherits(x, "date")) {
+    as.Date("1960-01-01")
+  } else if (inherits(x, "dates")) {
+    as.Date(paste0(attr(x, "origin"), collapse = "-"), format = "%d-%m-%Y")
+  } else {
+    stop("class '", class(x), "' not supported; usage of Date recommended - see ?as.Date")
+  }
+  
+}
