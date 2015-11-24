@@ -476,13 +476,15 @@ setclass <- function(obj, cl, add=FALSE, add.place="first") {
 #' but won't if loss of information is imminent (if values after decimal
 #' are not zero for even one value in \code{obj})
 #' @param obj a numeric vector
+#' @param tol tolerance; if each numeric value in \code{obj} deviate from
+#' the corresponding integers at most the value of \code{tol}, they are considered
+#' to be integers; e.g. by default \code{1 + .Machine$double.eps} is considered
+#' to be an integer but \code{1 + .Machine$double.eps^0.49} is not.
 #' @export try2int
 #' @source \href{http://stackoverflow.com/questions/3476782/how-to-check-if-the-number-is-integer}{Stackoverflow thread}
-try2int <- function(obj) { # , tol = .Machine$double.eps^0.5
+try2int <- function(obj, tol = .Machine$double.eps^0.5) {
   if (!is.numeric(obj)) stop("obj needs to be integer or double (numeric)")
   if (is.integer(obj)) return(obj)
-  
-  # test <- all(abs(min(obj%%1, obj%%1-1)) < tol)
   
   test <- FALSE
   
@@ -491,7 +493,7 @@ try2int <- function(obj) { # , tol = .Machine$double.eps^0.5
   if (bad) {
     return(obj)
   } else {
-    test <- all( obj %% 1 == 0, na.rm = FALSE)
+    test <- max(abs(obj) %% 1, na.rm = TRUE) < tol
   }
   
   if (is.na(test) || is.null(test)) test <- FALSE
