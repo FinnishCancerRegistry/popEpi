@@ -258,6 +258,9 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   ## TODO: "full" type aggregating
   allTime <- proc.time()
   
+  PF <- parent.frame(1L)
+  TF <- environment()
+  
   type <- match.arg(type[1], c("non-empty", "unique", "full", "cartesian"))
   if (type == "cartesian") type <- "full"
   if (type == "non-empty") type <- "unique"
@@ -276,14 +279,14 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   subset <- evalLogicalSubset(lex, subset)
   
   ## check expr ----------------------------------------------------------------
-  expr <- substitute(expr)
-  exprType <- popArgType(expr, data = lex)
+  exprSub <- substitute(expr)
+  exprType <- popArgType(exprSub, data = lex)
   if (!exprType %in% c("NULL","list")) stop("expr must be a list of expressions, e.g. list(d.exp = lex.dur*pop.haz)")
   
   
   ## aggre argument ------------------------------------------------------------
   ags <- if (!substituted) substitute(aggre) else aggre
-  aggre <- evalPopArg(lex[1,], arg = ags, DT = TRUE) ## for checking aggre argument type
+  aggre <- evalPopArg(lex[1,], arg = ags, DT = TRUE, enclos = PF) ## for checking aggre argument type
   
   argType <- if (!is.null(aggre)) attr(aggre, "evalPopArg") else "NULL"
   if (verbose) cat("Used aggre argument:", deparse(ags),"\n")
@@ -343,7 +346,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   }
   
   
-  aggre <- evalPopArg(if (all(subset)) lex else lex[subset, ], arg = ags, DT = TRUE)
+  aggre <- evalPopArg(if (all(subset)) lex else lex[subset, ], arg = ags, DT = TRUE, enclos = PF)
   
   ## computing pyrs ------------------------------------------------------------
   pyrsTime <- proc.time()
@@ -356,7 +359,8 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
     byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
     
     if (exprType != "NULL") {
-      expr <- DFtemp[, eval(expr), keyby = aggre]
+      eVars <- intersect(all.vars(exprSub), names(lex))
+      expr <- DFtemp[, eval(exprSub, envir = .SD, enclos = PF), keyby = aggre, .SDcols = eVars]
       pyrs <- merge(pyrs, expr, all = T)
       rm(expr)
     }
@@ -367,7 +371,8 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
       setDT(pyrs)
       byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
       if (exprType != "NULL") {
-        expr <- lex[subset, eval(expr), keyby = aggre]
+        eVars <- intersect(all.vars(exprSub), names(lex))
+        expr <- lex[subset, eval(exprSub, envir = .SD, enclos = PF), keyby = aggre, .SDcols = eVars]
         setDT(expr)
         pyrs <- merge(pyrs, expr, all = T)
         rm(expr)

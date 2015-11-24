@@ -34,9 +34,12 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   data <- data.table(rep(1L, nrow(origData)))
   setnames(data, 1, tmpDum)
   
+  TF <- environment()
+  PF <- parent.frame(2L)
+  
   # variables to print by ------------------------------------------------------
   prSub <- print
-  print <- evalPopArg(data = origData, arg = prSub, DT = TRUE, n = n + 1L)
+  print <- evalPopArg(data = origData, arg = prSub, DT = TRUE, enclos = PF)
   if (length(print) > 0) {
     prVars <- names(print)
     data[, (prVars) := print]
@@ -48,7 +51,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   
   # variables to sum -----------------------------------------------------------
   vaSub <- values
-  values <- evalPopArg(data = origData, arg = vaSub, DT = TRUE, n = n + 1L)
+  values <- evalPopArg(data = origData, arg = vaSub, DT = TRUE, enclos = PF)
   if (length(values) > 0) {
     vaVars <- names(values)
     data[, (vaVars) := values]
@@ -66,7 +69,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   ## * a list of named weights vectors which will be collated into a data.frame of weights.
   ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
   adSub <- adjust
-  adjust <- evalPopArg(data = origData, arg = adSub, DT = TRUE, n = n + 1L)
+  adjust <- evalPopArg(data = origData, arg = adSub, DT = TRUE, enclos = PF)
   if (length(adjust) > 0) {
     adVars <- names(adjust)
     data[, (adVars) := adjust]
@@ -78,7 +81,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   
   # other category vars to keep ------------------------------------------------
   boSub <- by.other
-  by.other <- evalPopArg(data = origData, arg = boSub, DT = TRUE, n = n + 1L)
+  by.other <- evalPopArg(data = origData, arg = boSub, DT = TRUE, enclos = PF)
   if (length(print) > 0) {
     boVars <- names(by.other)
     data[, (boVars) := by.other]
@@ -113,10 +116,9 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   ## merge in weights ----------------------------------------------------------
   
   weSub <- weights
-  weType <- popArgType(weSub, data = origData)
-  if (weType != "NULL") {
-    
-    weights <- evalPopArg(data  = origData, arg = weSub, n = 2L, DT = FALSE)
+  # weType <- popArgType(weSub, data = origData)
+  weights <- evalPopArg(data  = origData, arg = weSub, enclos = PF, DT = FALSE)
+  if (!is.null(weights)) {
     
     if (is.character(weights)) {
       if (length(weights) > 1) stop("When given as a character string naming a variable in data, the weights argument can only be of length one.")
@@ -283,6 +285,9 @@ survtab_ag <- function(data,
   rm("subset", pos=-1L, inherits = FALSE)
   
   # handle count etc. variables ------------------------------------------------
+  TF <- environment()
+  PF <- parent.frame(1L)
+  
   valVars <- c("d")
   valVars <- c(valVars, if (surv.method == "hazard")  "pyrs" else c("n", "n.cens"))
   
@@ -300,7 +305,7 @@ survtab_ag <- function(data,
   
   mc <- mc[valVars]
   
-  mc <- lapply(mc, function(x) evalPopArg(data = data, arg = x, DT = TRUE))
+  mc <- lapply(mc, function(x) evalPopArg(data = data, arg = x, DT = TRUE, enclos = PF))
   mc[sapply(mc, is.null)] <- NULL
   
   lackVars <- setdiff(valVars, names(mc))
@@ -333,8 +338,10 @@ survtab_ag <- function(data,
   # making weighted table of aggregated values ---------------------------------
   prSub <- substitute(print)
   adSub <- substitute(adjust)
+  adType <- popArgType(adSub, data = origData)
   vaSub <- substitute(mc)
   weSub <- substitute(weights)
+  weType <- popArgType(weSub, data = origData)
   ssSub <- list(origData[[surv.scale]])
   setattr(ssSub, "names", surv.scale)
   ssSub[[surv.scale]] <- cutLow(ssSub[[surv.scale]], breaks = surv.breaks)
