@@ -7,10 +7,15 @@
 \href{http://stackoverflow.com/questions/3476782/how-to-check-if-the-number-is-integer}{Stackoverflow thread}
 }
 \usage{
-try2int(obj)
+try2int(obj, tol = .Machine$double.eps^0.5)
 }
 \arguments{
 \item{obj}{a numeric vector}
+
+\item{tol}{tolerance; if each numeric value in \code{obj} deviate from
+the corresponding integers at most the value of \code{tol}, they are considered
+to be integers; e.g. by default \code{1 + .Machine$double.eps} is considered
+to be an integer but \code{1 + .Machine$double.eps^0.49} is not.}
 }
 \description{
 Attempts to convert a numeric object to integer, 
