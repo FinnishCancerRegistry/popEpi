@@ -171,7 +171,7 @@ matchBreakTypes <- function(lex, breaks, timeScale, modify.lex = FALSE) {
   
   if (clb != cts) {
     if (is.Date(breaks) && !is.Date(lex[[timeScale]])) {
-      breaks <- as.integer(breaks)
+      breaks <- try2int(as.double(breaks))
     } else if (is.integer(breaks) && is.double(lex[[timeScale]])) {
       breaks <- as.double(breaks)
     } else if (is.double(breaks) && is.integer(lex[[timeScale]])) {
@@ -199,8 +199,8 @@ matchBreakTypes <- function(lex, breaks, timeScale, modify.lex = FALSE) {
 
 protectFromDrop <- function(breaks, lower = FALSE) {
   if (is.Date(breaks)) {
-    breaks <- c(breaks, as.IDate("3000-01-01"))
-    if (lower) breaks <- c(as.IDate("1000-01-01"), breaks)
+    breaks <- c(breaks, max(breaks) + 1e4L)
+    if (lower) breaks <- c(min(breaks) - 1e4L, breaks)
     
   } else if (is.integer(breaks))  {
     breaks <- c(breaks, 1e6L)
