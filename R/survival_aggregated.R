@@ -60,15 +60,21 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   }
   rm(values)
   
+  # pre-check of weights argument ----------------------------------------------
+  weightsTest <- eval(envir  = origData[1,], expr = weights, enclos = PF)
+  if (is.data.frame(weightsTest) && length(adjust) == 0) {
+    if (!"weights" %in% names(weightsTest)) stop("column 'weights' not found in weights data.frame; if you supplied a data.frame of weights, please check that it has a column named 'weights'; otherwise contact the package maintainer because this was supposed to work.")
+    
+    adjust <- setdiff(names(weightsTest), "weights")
+    badAdjust <- setdiff(adjust, names(origData))
+    if (length(badAdjust) > 0) stop("adjust was NULL and weights was a data.frame, but following variables present in weights DF not present in data: ", paste0("'", badAdjust, "'", collapse = ", "))
+  } else if (is.character(weightsTest)) {
+    stop("argument 'weights' cannot currently be supplied as a character string naming a column in data to ensure correct scaling of weights (to one by every combination of variables in 'print'); please use a list, a vector of weights, or a data.frame of weights instead.")
+  }
+  rm(weightsTest)
+  
   # standardization ------------------------------------------------------------
-  ## have 'adjust' argument for defining adjusting vars
-  ## and 'weights' as: 
-  ## * character string name of weights variable in data;
-  ## * character string naming ICSS1-3;
-  ## * a data.frame that has lower bounds of categories and weights;
-  ## * a list of named weights vectors which will be collated into a data.frame of weights.
-  ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
-  adSub <- adjust
+    adSub <- adjust
   adjust <- evalPopArg(data = origData, arg = adSub, DT = TRUE, enclos = PF)
   if (length(adjust) > 0) {
     adVars <- names(adjust)
@@ -116,7 +122,6 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   ## merge in weights ----------------------------------------------------------
   
   weSub <- weights
-  # weType <- popArgType(weSub, data = origData)
   weights <- evalPopArg(data  = origData, arg = weSub, enclos = PF, DT = FALSE)
   if (!is.null(weights)) {
     
@@ -200,8 +205,18 @@ globalVariables("weights")
 
 # ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
 #               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
-#               aggre = list(sex, agegr = cut(dg_age, c(0,60,70,80, Inf)), fot), fot = seq(0, 5, 1/12))
-# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard", adjust = "agegr", weights = c(0.2, 0.4, 0.3, 0.1))
+#               aggre = list(sex, agegr = cut(dg_age, c(0,60,70,80, Inf), labels = FALSE), fot), fot = seq(0, 5, 1/12))
+# wdt <- data.table(agegr = 1:4, weights = c(0.2, 0.4, 0.3, 0.1))
+# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard", adjust = "agegr", weights = wdt$weights)
+# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard", adjust = "agegr", weights = wdt)
+# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard", adjust = NULL, weights = wdt)
+# ag2 <- merge(ag, wdt, by = "agegr")
+# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard", adjust = NULL, weights = "weights")
+
+## probably cannot allow pre-merging weights into data and supplying name of weights
+## column in data since data may not contain all the rows that a cross-join
+## (cartesian product, e.g. CJ(var1, var2)) would contain; hence the weights
+## will not always sum to one in the right way.
 
 survtab_ag <- function(data, 
                        surv.breaks=NULL, 
