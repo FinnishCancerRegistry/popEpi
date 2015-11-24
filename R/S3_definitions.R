@@ -510,6 +510,16 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
   }
 }
 
+print.yrs <- function(x, ...) {
+  print(as.numeric(x))
+}
+
+## yrs objects, from get.yrs
+`[.yrs` <- function(x, ...) {
+  yl <- attr(x, "year.length")
+  structure(NextMethod(), year.length = yl, class = c("yrs", "numeric"))
+}
+
 ## subsetting for aggre objects that retains attributes
 `[.aggre` <- function(x, ...) {
   structure(NextMethod(), aggreVars = attr(x, "aggreVars"), breaks = attr(x, "breaks"))

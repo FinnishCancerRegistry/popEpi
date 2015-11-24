@@ -212,6 +212,9 @@ get.yrs <- function(dates, format = "%Y-%m-%d", year.length = "approx") {
   if (nale3 == orle) warning(paste0("ALL dates values were coerced to NA by get.yrs"))
   if (nale3 >  nale) warning(paste0(nale3-nale, "values were coerced to NA by get.yrs"))
   
+  setattr(dat$yrs, "year.length", year.length)
+  setattr(dat$yrs, "class", c("yrs", "numeric"))
+  
   return(dat$yrs)
 }
 
