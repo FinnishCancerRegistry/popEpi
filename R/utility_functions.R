@@ -861,7 +861,7 @@ p.round <- function(p, dec=3) {
 
 
 
-evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
+evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL) {
   ## arg: an unevaluated AND substitute()'d argument within a function, which may be
   ## * an expression
   ## * a list of expressions
@@ -869,6 +869,8 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
   ## n: steps upstream as in parent.frame(n); 0L refers to calling environment
   ## of evalPopArg, 1L to calling environment of e.g. sir which uses evalPopArg, etc.
   ## hence n = 1L should be almost always the right way to go.
+  ## ALTERNATIVELY supply an environment by hand via enclos.
+  ## enclos will override n.
   ## output:
   ## * vector as a result of an expression
   ## * list as a result of a list
@@ -906,8 +908,11 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE) {
     byNames[byNames %in% "$"] <- paste0("BV", 1:length(byNames))[byNames %in% "$"]
   }
   
-  
-  e <- eval(arg, envir = data, enclos = parent.frame(n + 1L))
+  if (is.environment(enclos)) {
+    e <- eval(arg, envir = data, enclos = enclos)
+  } else {
+    e <- eval(arg, envir = data, enclos = parent.frame(n + 1L))
+  }
   
   
   if (is.character(e)) {
