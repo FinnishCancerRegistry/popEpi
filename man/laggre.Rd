@@ -5,7 +5,7 @@
 \title{Aggregation of split \code{Lexis} data}
 \usage{
 laggre(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
-  subset = NULL, substituted = FALSE, verbose = FALSE)
+  expr = NULL, subset = NULL, substituted = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{lex}{a \code{Lexis} object split with e.g. 
@@ -27,6 +27,10 @@ uses the supplied named list of breaks; see Details}
 from returning only rows with \code{pyrs > 0} (\code{"unique"}) to
 returning all possible combinations of variables given in \code{aggre} even
 if those combinations are not represented in data (\code{"full"}); see Details}
+
+\item{expr}{a (preferably named) list of expressions which will be computed in addition
+to person-time and events; e.g. \code{list(d.exp = lex.dur*pop.haz)};
+see Examples}
 
 \item{subset}{a logical condition to subset by before computations;
 e.g. \code{subset = area \%in\% c("A", "B")}}
@@ -148,6 +152,17 @@ a3 <- laggre(x, aggre = list(sex, agegroup = AGE, CAL))
 
 ## returning also empty levels
 a4 <- laggre(x, aggre = c("sex", "AGE", "CAL"), type = "full")
+
+## computing also expected numbers of cases
+x <- lexpand(sibr[1:10,], birth = bi_date, entry = dg_date,
+             exit = ex_date, status = status \%in\% 1:2, 
+             pophaz = popmort, fot = 0:5, age = c(0, 50, 100))
+a5 <- laggre(x, aggre = c("sex", "age", "fot"), 
+             expr = list(d.exp = sum(lex.dur*pop.haz)))
+             
+## computing pohar-perme weighted figures
+a6 <- laggre(x, aggre = c("sex", "age", "fot"), 
+             expr = list(d.exp.pp = sum(lex.dur*pop.haz*pp)))
 
 }
 \author{

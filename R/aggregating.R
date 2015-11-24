@@ -278,7 +278,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   ## check expr ----------------------------------------------------------------
   expr <- substitute(expr)
   exprType <- popArgType(expr, data = lex)
-  if (exprType != "list") stop("expr must be a list of expressions, e.g. list(d.exp = lex.dur*pop.haz)")
+  if (!exprType %in% c("NULL","list")) stop("expr must be a list of expressions, e.g. list(d.exp = lex.dur*pop.haz)")
   
   
   ## aggre argument ------------------------------------------------------------
