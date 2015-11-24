@@ -667,6 +667,8 @@ lexpand <- function(data,
     }
     
     if (verbose) cutt <- proc.time()
+    setDF(l)
+    setattr(l, "class", c("Lexis", "data.frame"))
     l <- Epi::cutLexis(l, cut = l$lex.event, timescale = "per", new.state = l$lex.Xst, precursor.states = unique(l$lex.Cst))
     setDT(l)
     setattr(l, "class", c("Lexis", "data.table", "data.frame"))
