@@ -500,7 +500,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   ## tmpTr to be used in casting
   tmpTr <- makeTempVarName(trans, pre = "trans_")
   trans[, (tmpTr) := paste0("from", lex.Cst, "to", lex.Xst)]
-  transitions <- trans[, unique(get(tmpTr))]
+  transitions <- trans[, sort(unique(get(tmpTr)))]
   trans[, c("lex.Cst", "lex.Xst") := NULL]
   
   ## note: need tmpDum if aggre = NULL for correct casting & merging
