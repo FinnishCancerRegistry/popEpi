@@ -48,10 +48,17 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   allScales <- attr(lex, "time.scales")
   allBreaks <- attr(lex, "breaks")
   
-  if (!timeScale %in% allScales) stop("invalid timeScale")
+  if (!timeScale %in% allScales) stop("timeScale not among following existing time scales: ", paste0("'", allScales, "'", collapse = ", "))
   
-  breaks <- setdiff(breaks, allBreaks[[timeScale]]) ## remove any existing breaks already split by
-  breaks <- matchBreakTypes(lex, breaks, timeScale, modify.lex = TRUE)
+  ## remove any existing breaks already split by;
+  ## NOTE: setdiff would break Date format breaks!
+  breaks <- breaks[!breaks %in% allBreaks[[timeScale]]]
+  
+  breaks <- matchBreakTypes(lex, breaks, timeScale, modify.lex = FALSE) 
+  lexVals <- lex[[timeScale]]
+  ## Date objects are based on doubles and therefore keep the most information
+  if (inherits(lexVals, c("IDate", "date", "dates"))) lexVals <- as.Date(lexVals)
+  
   breaks <- sort(breaks)
   if (!drop)  breaks <- protectFromDrop(breaks)
   
@@ -95,13 +102,13 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   ## time scale value determination --------------------------------------------
   set(l, j = tmpIE,  value = c(rep(breaks, each = N_subjects)) )
   set(l, j = tmpIE,  value = pmin(l[[tmpIE]], l[[timeScale]] + l$lex.dur) )
-  set(l, j = timeScale, value = c(lex[[timeScale]], pmax(lex[[timeScale]], rep(breaks[-length(breaks)], each = N_subjects))) )
+  set(l, j = timeScale, value = c(lexVals, pmax(lexVals, rep(breaks[-length(breaks)], each = N_subjects))) )
   
   
   ## status determination ------------------------------------------------------
   ## note: lex.dur still the original value (maximum possible)
   harmonizeStatuses(x = l, C = "lex.Cst", X = "lex.Xst")
-  not_event <- l[lex[[timeScale]]+lex.dur != get(tmpIE), which = TRUE]
+  not_event <- l[lexVals+lex.dur != get(tmpIE), which = TRUE]
   l[not_event, lex.Xst := lex.Cst]
   
   set(l, j = "lex.dur", value = l[[tmpIE]] - l[[timeScale]] )
@@ -111,7 +118,7 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   otherScales <- setdiff(allScales, timeScale)
   if (length(otherScales) > 0) {
     for (k in otherScales) {
-      set(l, j = k, value = lex[[k]] + l[[tmpIE]] - lex[[timeScale]] - l$lex.dur)
+      set(l, j = k, value = lex[[k]] + l[[tmpIE]] - lexVals - l$lex.dur)
     }
   }
   
@@ -124,6 +131,18 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   setkeyv(l, c(tmpID, timeScale))
   #   l <- unique(l) ## unsure if needed. probably highly unlikely?
   set(l, j = c(tmpIE, tmpID), value = NULL)
+  
+  ## ensure time scales and lex.dur have same (ish) class as before ------------
+  for (k in c(allScales, "lex.dur")) {
+    
+    if (inherits(lex[[k]], "difftime") && !inherits(l[[k]], "difftime")) {
+      setattr(l[[k]], "class", "difftime")
+      setattr(l[[k]], "units", attr(lex[[k]], "units"))
+    } else if (is.numeric(lex[[k]]) && inherits(l[[k]], "difftime")) {
+      set(l, j = k, value = as.numeric(l[[k]]))
+    }
+    
+  }
   
   
   ## final touch & attributes --------------------------------------------------
