@@ -968,7 +968,7 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL) {
 }
 
 
-popArgType <- function(arg, data = NULL, n = 1L) {
+popArgType <- function(arg, data = NULL, n = 1L, enclos = NULL) {
   ## input: a substitute()'d expression / argument
   ## output: type of thingie that was substitute()'d
   ##  * list (of expressions)
@@ -991,7 +991,9 @@ popArgType <- function(arg, data = NULL, n = 1L) {
   if (is.data.frame(data)) {
     if (is.symbol(arg) && a %in% names(data)) return("expression")
     if (length(av) == 1L && av %in% names(data)) return("expression")
-    e <- eval(arg, envir = data[1:min(nrow(data), 20L), ], enclos = parent.frame(n + 1L))
+    e <- eval(arg, envir = data[1:min(nrow(data), 20L), ], 
+              enclos = if (is.environment(enclos)) enclos else parent.frame(n + 1L))
+    if (is.null(e)) return("NULL")
     if (is.list(e)) return("list")
     if (is.character(e) && all(e %in% names(data))) return("character")
     if (is.vector(e) || is.factor(e)) return("expression")
