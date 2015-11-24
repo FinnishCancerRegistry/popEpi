@@ -737,17 +737,3 @@ survtab_ag <- function(data,
   if (verbose) cat("Time taken by whole process: ", timetaken(starttime), "\n")
   data[]
 }
-
-
-
-
-
-globalVariables(c("lex.Xst", "lex.Cst", "lex.dur", "agegr", "ageint_start", "event.values",
-                  "lex.id", "lex.multi", "entry_age", "age", "fot", "per", "agegr.w", "surv.int",
-                  "Tstart", "Tstop", "delta", "entered_late", "entered_int_late", 
-                  "mv1", "v1", "weights", "byVars", "tabw", "w", "ints", "agegr.w.breaks", "agegr.w.weights"))
-
-globalVariables(c("n", "d", "lex.Xst", "n.cens", "surv.int", 
-                  "d.exp", "pop.haz", "d.exp.pp", "d.exp", "pp", "d.pp", "d.pp.2", "n.eff.pp", "pyrs.pp"))
-globalVariables(c("ICSS", "n.eff", "pyrs", "test_pyrs", "surv.obs", "valVars",
-                  "lag1_surv.obs", "p.obs", "surv.obs", "CIF.rel", "p.exp", "surv.exp", "obs", "agestd"))

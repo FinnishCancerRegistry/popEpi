@@ -58,7 +58,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   ## still need to compute pp-weighted figures below. they all have to be done
   ## on the level of the splitted observations!
   # c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else "n.eff.pp") else NULL)
-  
+  haz <- NULL ## appease R CMD CHECK
   x <- laggre(x, aggre = c(print, adjust, names(breaks)[1]), verbose = FALSE,
               expr = if (surv.type %in% c("surv.rel", "cif.rel") && "haz" %in% names(x)) list(d.exp = sum(haz*lex.dur)) else NULL)
   
