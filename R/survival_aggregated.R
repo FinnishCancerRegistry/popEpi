@@ -305,11 +305,11 @@ survtab_ag <- function(data,
   
   mc <- mc[valVars]
   
-  mc <- lapply(mc, function(x) evalPopArg(data = data, arg = x, DT = TRUE, enclos = PF))
-  mc[sapply(mc, is.null)] <- NULL
+  mc <- lapply(mc, function(x) try(evalPopArg(data = data, arg = x, DT = TRUE, enclos = PF), silent = TRUE))
+  mc[sapply(mc, function(x) is.null(x) || is.language(x) || inherits(x, "try-error"))] <- NULL
   
   lackVars <- setdiff(valVars, names(mc))
-  if (length(lackVars) > 0) stop("following variables needed but missing in specs: ", paste0("'", lackVars, "'", collapse = ", "))
+  if (length(lackVars) > 0) stop("Following arguments were NULL or could not be evaluated but are required: ", paste0("'", lackVars, "'", collapse = ", "), ". Usual suspects: arguments are NULL or refer to variables that cannot be found in data or elsewhere.")
   
   eventVars <- NULL
   ## NOTE: not sure if other arguments than 'd' should be allowed to be of 
