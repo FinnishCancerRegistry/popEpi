@@ -110,39 +110,11 @@ splitMulti <- function(data,
                        verbose=FALSE) {
   ## basic checks --------------------------------------------------------------
   if (verbose) {stime <- proc.time()}
-  if (!inherits(data, "Lexis")) stop("data not a Lexis object")
+  
+  breaks <- splitMultiPreCheck(data = data, breaks = breaks, ...)
+  
   allScales <- attr(data, "time.scales")
-  if (length(allScales) == 0) stop("no time scales appear to be defined; is data a Lexis object?")
-  
-  if (!is.null(breaks) && !is.list(breaks)) stop("breaks must be a list; see examples in ?splitMulti")
-  if (is.null(breaks)) {
-    breaks <- list(...)
-    breaks <- breaks[intersect(names(breaks), allScales)]
-  }
-  
-  if (length(breaks) == 0) stop("no breaks defined!")
-  
   splitScales <- names(breaks)
-  ## NULL breaks imply not used
-  for (k in splitScales) {
-    if (is.null(breaks[[k]])) {
-      breaks[[k]] <- NULL
-    }
-  } 
-  
-  checkBreaksList(x = data, breaks = breaks)
-  
-  splitScales <- names(breaks)
-  
-  if (!all(splitScales %in% allScales)) {
-    stop("breaks must be a list with at least one named vector corresponding to used time scales \n
-         e.g. breaks = list(fot = 0:5)")
-  }
-  
-  if (!all(splitScales %in% names(data))) {
-    stop("At least one vector name in breaks list is not a variable name in the data")
-  }
-  
   
   tmpID <- makeTempVarName(data = data, pre = "TEMP_SPLITMULTI_ID_")
   IDT <- data.table(lex.id = data$lex.id, temp.id = 1:nrow(data), key = "temp.id")

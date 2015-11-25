@@ -305,6 +305,256 @@ setLexisDT <- function(data, entry, exit, entry.status, exit.status, id = NULL, 
 }
 
 
+splitMultiPreCheck <- function(data = lex, breaks = NULL, ...) {
+  
+  ## INTENTION: checks for discrepancies between data and breaks, etc.
+  ## OUTPUT: cleaned-up list of breaks
+  
+  if (!inherits(data, "Lexis")) stop("data not a Lexis object")
+  allScales <- attr(data, "time.scales")
+  if (length(allScales) == 0) stop("no time scales appear to be defined; is data a Lexis object?")
+  
+  if (!is.null(breaks) && !is.list(breaks)) stop("breaks must be a list; see examples in ?splitMulti")
+  if (is.null(breaks)) {
+    breaks <- list(...)
+    breaks <- breaks[intersect(names(breaks), allScales)]
+  }
+  
+  if (length(breaks) == 0) stop("no breaks defined!")
+  
+  splitScales <- names(breaks)
+  ## NULL breaks imply not used
+  for (k in splitScales) {
+    if (length(breaks[[k]]) == 0) {
+      breaks[k] <- NULL
+    }
+  } 
+  
+  checkBreaksList(x = data, breaks = breaks)
+  
+  splitScales <- names(breaks)
+  
+  if (!all(splitScales %in% allScales)) {
+    stop("breaks must be a list with at least one named vector corresponding to used time scales \n
+         e.g. breaks = list(fot = 0:5)")
+  }
+  
+  if (!all(splitScales %in% names(data))) {
+    stop("At least one vector name in breaks list is not a variable name in the data")
+  }
+  breaks
+}
+
+
+#' @title Prepare Exposure Data for Aggregation
+#' @description \code{prepExpo} uses a \code{Lexis} object of periods of exposure
+#' to fill gaps between the periods and overall entry and exit times without
+#' accumulating exposure time in periods of no exposure, and splits the
+#' result if requested.
+#' @param lex a \code{\link[Epi]{Lexis}} object with ONLY periods of exposure
+#' as rows; one or multiple rows per subject allowed
+#' @param freezeScales a character vector naming \code{Lexis} time scales of exposure
+#' which should be frozen in periods where no exposure occurs (in the gap
+#' time periods) 
+#' @param cutScale the \code{Lexis} time scale along which the subject-specific
+#' ultimate entry and exit times are specified
+#' @param entry an expression; the time of entry to follow-up which may be earlier, at, or after
+#' the first time of exposure in \code{freezeScales}; evaluated separately
+#' for each unique combination of \code{by}, so e.g. with 
+#' \code{entry = min(Var1)} and \code{by = "lex.id"} it 
+#' sets the \code{lex.id}-specific minima of \code{Var1} to be the original times
+#' of entry for each \code{lex.id}
+#' @param exit the same as \code{entry} but for the ultimate exit time per unique
+#' combination of \code{by}
+#' @param by a character vector indicating variable names in \code{lex},
+#' the unique combinations of which identify separate subjects for which
+#' to fill gaps in the records from \code{entry} to \code{exit};
+#' for novices of \code{{\link{data.table}}}, this is passed to a 
+#' \code{data.table}'s \code{by} argument.
+#' @param breaks a named list of breaks; 
+#' e.g. \code{list(work = 0:20,per = 1995:2015)}; passed on to 
+#' \code{\link{splitMulti}} so see that function's help for more details
+#' @param ... additional arguments passed on to \code{\link{splitMulti}}
+#' @details 
+#' 
+#' \code{prepExpo} is a convenience function for the purpose of eventually aggregating 
+#' person-time and events in categories of not only normally progressing 
+#' \code{Lexis} time scales but also some time scales which should not
+#' progress sometimes. For example a person may work at a production facility
+#' only intermittently, meaning exposure time (to work-related substances 
+#' for example) should not progress outside of periods of work. This allows for
+#' e.g. a correct aggregation of person-time and events by categories of cumulative
+#' time of exposure.
+#' 
+#' Given a \code{Lexis} object containing rows (time lines)
+#' where a subject is exposed to something (and NO periods without exposure),
+#' fills any gaps between exposure periods for each unique combination of \code{by}
+#' and the subject-specific "ultimate" \code{entry} and \code{exit} times,
+#' "freezes" the cumulative exposure times in periods of no exposure,
+#' and splits data using \code{breaks} passed to \code{\link{splitMulti}}
+#' if requested. Results in a (split) \code{Lexis} object where \code{freezeScales}
+#' do not progress in time periods where no exposure was recorded in \code{lex}.
+#' 
+#' This function assumes that \code{entry} and \code{exit} arguments are the
+#' same for each row within a unique combination of variables named in \code{by}.
+#' E.g. with \code{by = "lex.id"} only each \code{lex.id} has a unique value
+#' for \code{entry} and \code{exit} at most.
+#' 
+#' @export prepExpo
+#' @import data.table
+prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(get(cutScale)),
+                      exit = max(get(cutScale)), by = "lex.id", breaks = NULL, subset = NULL, ...) {
+  
+  ## check breaks & data -------------------------------------------------------
+  breaks <- evalq(breaks)
+  dumBreaks <- structure(list(c(-Inf, Inf)), names = cutScale)
+  if (is.null(breaks)) breaks <- dumBreaks
+  breaks <- splitMultiPreCheck(data = lex, breaks = evalq(breaks))
+  if (length(breaks) == 1L && all.equal(breaks, dumBreaks)) breaks <- NULL
+  
+  
+  ## data ----------------------------------------------------------------------
+  
+  subset <- evalLogicalSubset(data = lex, substitute(subset))
+  x <- if (!all(subset)) lex[subset, ] else copy(lex)
+  
+  setDT(x)
+  
+  allScales <- attr(lex, "time.scales")
+  linkScales <- setdiff(allScales, freezeScales)
+  othScales <- setdiff(linkScales, cutScale)
+  
+  setkeyv(x, c(by, cutScale))
+  
+  tmp <- list() ## will hold temp var names; this avoids collisions with names of vars in x
+  
+  ## args ----------------------------------------------------------------------
+  
+  tol <- .Machine$double.eps^0.75
+  
+  if (!is.character(by)) stop("by must be given as a vector of character strings naming columns in lex")
+  all_names_present(lex, by)
+  
+  enSub <- substitute(entry)
+  exSub <- substitute(exit)
+  
+  PF <- parent.frame(1L)
+  tmp$en <- makeTempVarName(x, pre = "entry_")
+  tmp$ex <- makeTempVarName(x, pre = "exit_")
+  x[, c(tmp$ex, tmp$en) := list(eval(exSub, envir = .SD, enclos = PF), 
+                                eval(enSub, envir = .SD, enclos = PF)), by = by]
+  
+  if(any(x[[cutScale]] + x$lex.dur > x[[tmp$ex]] + tol)) stop("exit must currently be higher than or equal to the maximum of cutScale (on subject basis defined using by); you may use breaks instead to limit the data")
+  if(any(x[[cutScale]] + tol < x[[tmp$en]])) stop("entry must currently be lower than or equal to the minimum of cutScale (on subject basis defined using by); you may use breaks instead to limit the data")
+  
+  ## create rows to fill gaps --------------------------------------------------
+  x2 <- copy(x)
+  x2[, (freezeScales) := NA]
+  x2 <- rbind(x2, unique(x2, by = by, fromLast = TRUE))
+  
+  tmp$delta <- makeTempVarName(x2, pre = "delta_")
+  x2[, (tmp$delta) := c(get(tmp$en)[1], get(cutScale)[-c(1,.N)], max(get(cutScale)+lex.dur)) - get(cutScale), by = by]
+  x2[, c(linkScales) := lapply(mget(linkScales), function(x) x + get(tmp$delta)), by = by]
+  
+  setcolsnull(x2, tmp$delta)
+  
+  tmp$order <- makeTempVarName(x, pre = "order_")
+  x[, (tmp$order) := (1:.N)*2, by = by]
+  x2[, (tmp$order) := (1:.N)*2-1, by = by]
+  
+  x <- rbindlist(list(x, x2))
+  rm(x2)
+  setkeyv(x, c(by, cutScale, tmp$order))
+  setkeyv(x, c(by))
+  set(x, j = tmp$order, value = as.integer(x[[tmp$order]]))
+  x[, (tmp$order) := 1:.N, by = by]
+  
+  print(x)
+  
+  ## handle time scale values --------------------------------------------------
+  
+  
+  tmp$CSE <- makeTempVarName(x, pre = paste0(cutScale, "_end_"))
+  tmp$LCS <- makeTempVarName(x, pre = paste0("lead1_",cutScale, "_"))
+  x[, (tmp$CSE) := lex.dur + get(cutScale)]
+  x[, (tmp$LCS)  := shift(get(cutScale), n = 1L, type = c("lead"), fill = NA), by = by]
+  
+  
+  x[!duplicated(x, fromLast = TRUE), c(tmp$LCS, tmp$CSE) := get(tmp$ex)]
+  x[, (tmp$CSE) := pmin(get(tmp$LCS), get(tmp$CSE))]
+  x[, (cutScale) := sort(c(get(tmp$en)[1L],shift(get(tmp$CSE), n = 1L, type = "lag", fill = NA)[-1])), by = by]
+  x[, lex.dur := get(tmp$CSE) - get(cutScale)]
+  
+  ## bring up other than frozen and cut scales to bear -------------------------
+  x[, (othScales) := lapply(mget(othScales), function(x) {min(x) + c(0, cumsum(lex.dur)[-.N])}), by = by]
+  
+  ## dropping ------------------------------------------------------------------
+  # some original rows may have ended before or at given entry argument, or 
+  # begun after the exit argument. need to remove these rows.
+  ## NOTE: this has to be 
+  x <- x[get(cutScale)+tol < get(tmp$ex) & get(cutScale)-tol > get(tmp$en)]
+  
+  
+  ## frozen scales should make sense cumulatively ------------------------------
+  ## indicates frozenness: 0 = not frozen, 1 = frozen
+  tmp$frz <- makeTempVarName(x, pre = "frozen_")
+  x[, (tmp$frz) := 0L]
+  frozens <- x[,is.na(get(freezeScales[1]))]
+  x[frozens, (tmp$frz) := 1L]
+  
+  
+  ## alternate method: just use lex.durs and only cumulate in non-frozen rows
+  x[, (freezeScales) := lapply(mget(freezeScales), function(x) {
+    x <- max(0, min(x-lex.dur, na.rm=TRUE))
+    x <- x + c(0, as.double(cumsum(as.integer(!get(tmp$frz))*lex.dur))[-.N])
+  }), by = by]
+  
+  
+#   lagFreeze <- x[, shift(mget(freezeScales), n = 1L, type = "lag", fill = NA), by = by]
+#   setDT(lagFreeze)
+#   setcolsnull(lagFreeze, delete = by)
+#   x[frozens, (freezeScales) := lagFreeze[frozens,]]
+#   print(x)
+#   ## first row: exposure starts from at least zero but possible something larger than zero
+#   # firstRows <- which(!duplicated(x, by = by))
+#   x[, (freezeScales) := lapply(mget(freezeScales), function(x) {
+#     x[1] <- min(c(0, x[2]-lex.dur[1]), na.rm = TRUE)
+#     x
+#   }), by = by]
+#   
+  x <- x[lex.dur > .Machine$double.eps^0.5, ]
+  
+  ## splitting separately ------------------------------------------------------
+  if (!is.null(breaks)) {
+    setattr(x, "class", c("Lexis", "data.table", "data.frame"))
+    x_frozen <- x[get(tmp$frz) == 1L,]
+    x <- x[get(tmp$frz) == 0L]
+    
+    setattr(x_frozen, "time.scales", setdiff(allScales, freezeScales))
+    frzBreaks <- breaks[setdiff(names(breaks), freezeScales)]
+    
+    if (length(frzBreaks) > 0) x_frozen <- splitMulti(x_frozen, breaks = frzBreaks, ...)
+    
+    setattr(x, "time.scales", allScales)
+    x <- splitMulti(x, breaks = breaks, ...)
+    
+    x <- rbind(x, x_frozen); rm(x_frozen)
+  }
+  
+  
+  ## final touch ---------------------------------------------------------------
+  setkeyv(x, c(by, tmp$order))
+  setcolsnull(x, unlist(tmp))
+  
+  setattr(x, "time.scales", allScales)
+  setattr(x, "breaks", breaks)
+  setattr(x, "time.since", rep("", length(allScales)))
+  setattr(x, "class", c("Lexis", "data.table", "data.frame"))
+  if (getOption("popEpi.datatable") == FALSE) setDFpe(x)
+  
+  
+  x[]
+}
 
 
 
