@@ -495,6 +495,7 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
 }
 
 print.yrs <- function(x, ...) {
+  # NextMethod() ## this still prints attributes
   print(as.numeric(x))
 }
 
@@ -509,6 +510,14 @@ print.yrs <- function(x, ...) {
   structure(NextMethod(), aggreVars = attr(x, "aggreVars"), breaks = attr(x, "breaks"))
 }
 
+subset.aggre <- function(x, ...) {
+  y <- NextMethod()
+  if (is.data.table(x)) setDT(y)
+  setattr(y, "class", class(x))
+  setattr(y, "aggreVars", attr(x, "aggreVars"))
+  if ("breaks" %in% names(attributes(y))) setattr(y, "breaks", attr(x, "breaks"))
+  y
+}
 
 
 ## subsetting for survtab objects that retains attributes
@@ -516,6 +525,14 @@ print.yrs <- function(x, ...) {
   structure(NextMethod(), surv.breaks = attr(x, "surv.breaks"))
 }
 
+subset.survtab <- function(x, ...) {
+  y <- NextMethod()
+  if (is.data.table(x)) setDT(y)
+  setattr(y, "class", class(x))
+  setattr(y, "surv.breaks", attr(x, "surv.breaks"))
+  setattr(y, "byVars", attr(x, "byVars"))
+  y
+}
 
 #' \code{plot} method for survtab objects
 #' 
