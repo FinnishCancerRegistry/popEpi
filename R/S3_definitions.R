@@ -82,22 +82,6 @@ as.pe.list <- function(x) {
 
 
 
-#' @title Plot methods for popEpi objects
-#' @author Matti Rantanen, Joonas Miettinen
-#' @description Plots the results of a popEpi function
-#' @param x a popEpi object
-#' @param plot.type 'obs' or 'pyrs'
-#' @param ... additional arguments passed on to plot.Lexis 
-#' if no other printing method found
-#' @S3method plot pe
-#' @export plot.pe
-#' @import Epi
-#' @import graphics
-plot.pe <- function(x, plot.type, ...) {
-  plot.Lexis(x, ...)
-  
-}
-
 #' @title Print method for \code{sir} objects
 #' @author Matti Rantanen, Joonas Miettinen
 #' @description Prints the results of the \code{sir} function
