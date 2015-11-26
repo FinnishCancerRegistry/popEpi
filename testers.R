@@ -15,7 +15,6 @@ versionStep <- function() {
   # eg "doIncrement=FALSE git commit -m "commit message"". 
   # This is useful when you change the major version number for example.
   
-  # requireNamespace("git2r")
   
   doIncrement <- TRUE # default
   
@@ -30,8 +29,10 @@ versionStep <- function() {
   
   # if ((length(fileDiff) > 0) && doIncrement){
   if (doIncrement){
+    # requireNamespace("git2r")
     
     currDir <- getwd() # this should be the top level directory of the git repo
+    # repo <- repository(currDir)
     currDCF <- read.dcf("DESCRIPTION")
     currVersion <- currDCF[1,"Version"]
     splitVersion <- strsplit(currVersion, ".", fixed=TRUE)[[1]]
@@ -43,8 +44,10 @@ versionStep <- function() {
     currDCF[1,"Version"] <- newVersion
     currDCF[1, "Date"] <- strftime(as.POSIXlt(Sys.Date()), "%Y-%m-%d")
     write.dcf(currDCF, "DESCRIPTION")
-    # system("git add DESCRIPTION")
-    cat("Incremented package version to ", currDCF[1, "Version"], "\n")
+    # git2r::add(repo, "DESCRIPTION")
+    # git2r::tag(repo, newVersion, message = paste0("Package version ", newVersion))
+    
+    cat("Incremented package version to", newVersion, "\n")
   }
 }
 
