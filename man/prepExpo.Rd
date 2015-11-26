@@ -6,7 +6,7 @@
 \usage{
 prepExpo(lex, freezeScales = "work", cutScale = "per",
   entry = min(get(cutScale)), exit = max(get(cutScale)), by = "lex.id",
-  breaks = NULL, subset = NULL, ...)
+  breaks = NULL, subset = NULL, verbose = FALSE, ...)
 }
 \arguments{
 \item{lex}{a \code{\link[Epi]{Lexis}} object with ONLY periods of exposure
@@ -38,6 +38,12 @@ for novices of \code{{\link{data.table}}}, this is passed to a
 \item{breaks}{a named list of breaks; 
 e.g. \code{list(work = 0:20,per = 1995:2015)}; passed on to 
 \code{\link{splitMulti}} so see that function's help for more details}
+
+\item{subset}{a logical condition to subset data by before computations;
+e.g. \code{subset = sex == "male"}}
+
+\item{verbose}{logical; if \code{TRUE}, the function is chatty and returns
+some messages and timings during its run.}
 
 \item{...}{additional arguments passed on to \code{\link{splitMulti}}}
 }

@@ -374,6 +374,10 @@ splitMultiPreCheck <- function(data = NULL, breaks = NULL, ...) {
 #' @param breaks a named list of breaks; 
 #' e.g. \code{list(work = 0:20,per = 1995:2015)}; passed on to 
 #' \code{\link{splitMulti}} so see that function's help for more details
+#' @param subset a logical condition to subset data by before computations;
+#' e.g. \code{subset = sex == "male"}
+#' @param verbose logical; if \code{TRUE}, the function is chatty and returns
+#' some messages and timings during its run.
 #' @param ... additional arguments passed on to \code{\link{splitMulti}}
 #' @details 
 #' 
@@ -403,7 +407,10 @@ splitMultiPreCheck <- function(data = NULL, breaks = NULL, ...) {
 #' @export prepExpo
 #' @import data.table
 prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(get(cutScale)),
-                      exit = max(get(cutScale)), by = "lex.id", breaks = NULL, subset = NULL, ...) {
+                     exit = max(get(cutScale)), by = "lex.id", breaks = NULL, subset = NULL,
+                     verbose = FALSE, ...) {
+  
+  if (verbose) allTime <- proc.time()
   
   ## check breaks & data -------------------------------------------------------
   breaks <- evalq(breaks)
@@ -416,7 +423,7 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   ## data ----------------------------------------------------------------------
   
   subset <- evalLogicalSubset(data = lex, substitute(subset))
-  x <- if (!all(subset)) lex[subset, ] else copy(lex)
+  x <- if (!all(subset)) evalq(lex)[subset, ] else copy(evalq(lex))
   
   setDT(x)
   
@@ -426,106 +433,108 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   
   setkeyv(x, c(by, cutScale))
   
-  tmp <- list() ## will hold temp var names; this avoids collisions with names of vars in x
+  l <- list() ## will hold temp var names; this avoids collisions with names of vars in x
+  l$cutScale <- cutScale
+  l$freezeScales <- freezeScales
+  l$by <- by
+  rm(cutScale, freezeScales, by)
   
   ## args ----------------------------------------------------------------------
-  
+  if (verbose) argTime <- proc.time()
   tol <- .Machine$double.eps^0.75
   
-  if (!is.character(by)) stop("by must be given as a vector of character strings naming columns in lex")
-  all_names_present(lex, by)
+  if (!is.character(l$by)) stop("by must be given as a vector of character strings naming columns in lex")
+  all_names_present(lex, l$by)
   
   enSub <- substitute(entry)
   exSub <- substitute(exit)
   
   PF <- parent.frame(1L)
-  tmp$en <- makeTempVarName(x, pre = "entry_")
-  tmp$ex <- makeTempVarName(x, pre = "exit_")
-  x[, c(tmp$ex, tmp$en) := list(eval(exSub, envir = .SD, enclos = PF), 
-                                eval(enSub, envir = .SD, enclos = PF)), by = by]
+  l$en <- makeTempVarName(x, pre = "entry_")
+  l$ex <- makeTempVarName(x, pre = "exit_")
+  x[, c(l$ex, l$en) := list(eval(exSub, envir = .SD, enclos = PF), 
+                                eval(enSub, envir = .SD, enclos = PF)), by = c(l$by)]
   
-  if(any(x[[cutScale]] + x$lex.dur > x[[tmp$ex]] + tol)) stop("exit must currently be higher than or equal to the maximum of cutScale (on subject basis defined using by); you may use breaks instead to limit the data")
-  if(any(x[[cutScale]] + tol < x[[tmp$en]])) stop("entry must currently be lower than or equal to the minimum of cutScale (on subject basis defined using by); you may use breaks instead to limit the data")
+  ## tests disabled for now...
+#   testTime <- proc.time()
+#   
+#   test <- x[, .N, by = list(r = get(l$cutScale) + lex.dur > get(l$ex) - tol)]
+#   if(test[r == TRUE, .N] > 0) stop("exit must currently be higher than or equal to the maximum of cutScale (on subject basis defined using by); you may use breaks instead to limit the data")
+#   
+#   test <- x[, .N, by = list(r = get(l$cutScale) + tol < get(l$en))]
+#   if(test[r == TRUE, .N] > 0) stop("entry must currently be lower than or equal to the minimum of cutScale (on subject basis defined using by); you may use breaks instead to limit the data")
+#   if (verbose) cat("Finished checking entry and exit. Time taken: ", timetaken(argTime), "\n")
+  if (verbose) cat("Finished evaluating entry and exit and checking args. Time taken: ", timetaken(argTime), "\n")
   
   ## create rows to fill gaps --------------------------------------------------
+  if (verbose) fillTime <- proc.time()
   x2 <- copy(x)
-  x2[, (freezeScales) := NA]
-  x2 <- rbind(x2, unique(x2, by = by, fromLast = TRUE))
+  x2[, (l$freezeScales) := NA]
+  x2 <- rbind(x2, unique(x2, by = c(l$by), fromLast = TRUE))
   
-  tmp$delta <- makeTempVarName(x2, pre = "delta_")
-  x2[, (tmp$delta) := c(get(tmp$en)[1], get(cutScale)[-c(1,.N)], max(get(cutScale)+lex.dur)) - get(cutScale), by = by]
-  x2[, c(linkScales) := lapply(mget(linkScales), function(x) x + get(tmp$delta)), by = by]
+  l$delta <- makeTempVarName(x2, pre = "delta_")
+  x2[, (l$delta) := c(get(l$en)[1], get(l$cutScale)[-c(1,.N)], max(get(l$cutScale)+lex.dur)) - get(l$cutScale), by = c(l$by)]
+  x2[, c(linkScales) := lapply(mget(linkScales), function(x) x + get(l$delta)), by = c(l$by)]
   
-  setcolsnull(x2, tmp$delta)
+  setcolsnull(x2, l$delta)
   
-  tmp$order <- makeTempVarName(x, pre = "order_")
-  x[, (tmp$order) := (1:.N)*2, by = by]
-  x2[, (tmp$order) := (1:.N)*2-1, by = by]
+  l$order <- makeTempVarName(x, pre = "order_")
+  x[, (l$order) := (1:.N)*2, by = c(l$by)]
+  x2[, (l$order) := (1:.N)*2-1, by = c(l$by)]
   
   x <- rbindlist(list(x, x2))
   rm(x2)
-  setkeyv(x, c(by, cutScale, tmp$order))
-  setkeyv(x, c(by))
-  set(x, j = tmp$order, value = as.integer(x[[tmp$order]]))
-  x[, (tmp$order) := 1:.N, by = by]
+  setkeyv(x, c(l$by, l$cutScale, l$order))
+  setkeyv(x, c(l$by))
+  set(x, j = l$order, value = as.integer(x[[l$order]]))
+  x[, (l$order) := 1:.N, by = c(l$by)]
   
-  # print(x)
-  
+  if (verbose) cat("Finished expanding data to accommodate filling gaps. Time taken: ", timetaken(fillTime), "\n")
   ## handle time scale values --------------------------------------------------
+  if (verbose) valueTime <- proc.time()
+  
+  l$CSE <- makeTempVarName(x, pre = paste0(l$cutScale, "_end_"))
+  l$LCS <- makeTempVarName(x, pre = paste0("lead1_",l$cutScale, "_"))
+  x[, (l$CSE) := lex.dur + get(l$cutScale)]
+  x[, (l$LCS)  := shift(get(l$cutScale), n = 1L, type = c("lead"), fill = NA), by = c(l$by)]
   
   
-  tmp$CSE <- makeTempVarName(x, pre = paste0(cutScale, "_end_"))
-  tmp$LCS <- makeTempVarName(x, pre = paste0("lead1_",cutScale, "_"))
-  x[, (tmp$CSE) := lex.dur + get(cutScale)]
-  x[, (tmp$LCS)  := shift(get(cutScale), n = 1L, type = c("lead"), fill = NA), by = by]
-  
-  
-  x[!duplicated(x, fromLast = TRUE), c(tmp$LCS, tmp$CSE) := get(tmp$ex)]
-  x[, (tmp$CSE) := pmin(get(tmp$LCS), get(tmp$CSE))]
-  x[, (cutScale) := sort(c(get(tmp$en)[1L],shift(get(tmp$CSE), n = 1L, type = "lag", fill = NA)[-1])), by = by]
-  x[, lex.dur := get(tmp$CSE) - get(cutScale)]
+  x[!duplicated(x, fromLast = TRUE), c(l$LCS, l$CSE) := get(l$ex)]
+  x[, (l$CSE) := pmin(get(l$LCS), get(l$CSE))]
+  x[, (l$cutScale) := sort(c(get(l$en)[1L],shift(get(l$CSE), n = 1L, type = "lag", fill = NA)[-1])), by = c(l$by)]
+  x[, lex.dur := get(l$CSE) - get(l$cutScale)]
   
   ## bring up other than frozen and cut scales to bear -------------------------
-  x[, (othScales) := lapply(mget(othScales), function(x) {min(x) + c(0, cumsum(lex.dur)[-.N])}), by = by]
+  x[, (othScales) := lapply(mget(othScales), function(x) {min(x) + c(0, cumsum(lex.dur)[-.N])}), by = c(l$by)]
   
   
   ## frozen scales should make sense cumulatively ------------------------------
   ## indicates frozenness: 0 = not frozen, 1 = frozen
-  tmp$frz <- makeTempVarName(x, pre = "frozen_")
-  x[, (tmp$frz) := 0L]
-  frozens <- x[,is.na(get(freezeScales[1]))]
-  x[frozens, (tmp$frz) := 1L]
+  l$frz <- makeTempVarName(x, pre = "frozen_")
+  x[, (l$frz) := 0L]
+  frozens <- x[,is.na(get(l$freezeScales[1]))]
+  x[frozens, (l$frz) := 1L]
   
   
   ## alternate method: just use lex.durs and only cumulate in non-frozen rows
-  x[, (freezeScales) := lapply(mget(freezeScales), function(x) {
+  x[, (l$freezeScales) := lapply(mget(l$freezeScales), function(x) {
     x <- max(0, min(x-lex.dur, na.rm=TRUE))
-    x <- x + c(0, as.double(cumsum(as.integer(!get(tmp$frz))*lex.dur))[-.N])
-  }), by = by]
+    x <- x + c(0, as.double(cumsum(as.integer(!get(l$frz))*lex.dur))[-.N])
+  }), by = c(l$by)]
   
-  
-#   lagFreeze <- x[, shift(mget(freezeScales), n = 1L, type = "lag", fill = NA), by = by]
-#   setDT(lagFreeze)
-#   setcolsnull(lagFreeze, delete = by)
-#   x[frozens, (freezeScales) := lagFreeze[frozens,]]
-#   print(x)
-#   ## first row: exposure starts from at least zero but possible something larger than zero
-#   # firstRows <- which(!duplicated(x, by = by))
-#   x[, (freezeScales) := lapply(mget(freezeScales), function(x) {
-#     x[1] <- min(c(0, x[2]-lex.dur[1]), na.rm = TRUE)
-#     x
-#   }), by = by]
-#   
   x <- x[lex.dur > .Machine$double.eps^0.5, ]
+  
+  if (verbose) cat("Finished computing correct values for time scales. Time taken: ", timetaken(valueTime), "\n")
   
   ## splitting separately ------------------------------------------------------
   if (!is.null(breaks)) {
+    if (verbose) splitTime <- proc.time()
     setattr(x, "class", c("Lexis", "data.table", "data.frame"))
-    x_frozen <- x[get(tmp$frz) == 1L,]
-    x <- x[get(tmp$frz) == 0L]
+    x_frozen <- x[get(l$frz) == 1L,]
+    x <- x[get(l$frz) == 0L]
     
-    setattr(x_frozen, "time.scales", setdiff(allScales, freezeScales))
-    frzBreaks <- breaks[setdiff(names(breaks), freezeScales)]
+    setattr(x_frozen, "time.scales", setdiff(allScales, l$freezeScales))
+    frzBreaks <- breaks[setdiff(names(breaks), l$freezeScales)]
     
     if (length(frzBreaks) > 0) x_frozen <- splitMulti(x_frozen, breaks = frzBreaks, ...)
     
@@ -533,12 +542,13 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
     x <- splitMulti(x, breaks = breaks, ...)
     
     x <- rbind(x, x_frozen); rm(x_frozen)
+    if (verbose) cat("Finished splitting data. Time taken: ", timetaken(splitTime), "\n")
   }
   
   
   ## final touch ---------------------------------------------------------------
-  setkeyv(x, c(by, tmp$order))
-  setcolsnull(x, unlist(tmp))
+  setkeyv(x, c(l$by, l$order))
+  setcolsnull(x, unlist(l[setdiff(names(l), c("by", "cutScale", "freezeScales", "linkScales", "allScales", "othScales"))]))
   
   setattr(x, "time.scales", allScales)
   setattr(x, "breaks", breaks)
@@ -546,6 +556,7 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   if (getOption("popEpi.datatable") == FALSE) setDFpe(x)
   
+  if (verbose) cat("Finished prepExpo run. Time taken: ", timetaken(allTime), "\n")
   
   x[]
 }

@@ -1,7 +1,7 @@
 context("Testing aggregation by categories of exposure")
 
 test_that("prepExpo works in the simple case", {
-  # skip()
+  skip_on_cran()
   library(Epi)
   
   df <- data.frame(id = "A", birth  = c(1952.4534), 
@@ -27,6 +27,7 @@ test_that("prepExpo works in the simple case", {
   x2 <- prepExpo(x, freezeScales = "work", 
                  cutScale = "per", 
                  entry = 1964, 
+                 # verbose = TRUE,
                  exit = 2012, by = "lex.id", 
                  breaks = BL)
   ag <- laggre(x2, aggre = list(lex.id, per, age))
