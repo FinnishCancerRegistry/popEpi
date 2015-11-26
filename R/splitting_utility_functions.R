@@ -469,7 +469,7 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   set(x, j = tmp$order, value = as.integer(x[[tmp$order]]))
   x[, (tmp$order) := 1:.N, by = by]
   
-  print(x)
+  # print(x)
   
   ## handle time scale values --------------------------------------------------
   
@@ -487,12 +487,6 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   
   ## bring up other than frozen and cut scales to bear -------------------------
   x[, (othScales) := lapply(mget(othScales), function(x) {min(x) + c(0, cumsum(lex.dur)[-.N])}), by = by]
-  
-  ## dropping ------------------------------------------------------------------
-  # some original rows may have ended before or at given entry argument, or 
-  # begun after the exit argument. need to remove these rows.
-  ## NOTE: this has to be 
-  x <- x[get(cutScale)+tol < get(tmp$ex) & get(cutScale)-tol > get(tmp$en)]
   
   
   ## frozen scales should make sense cumulatively ------------------------------
