@@ -305,11 +305,11 @@ setLexisDT <- function(data, entry, exit, entry.status, exit.status, id = NULL, 
 }
 
 
-splitMultiPreCheck <- function(data = lex, breaks = NULL, ...) {
+splitMultiPreCheck <- function(data = NULL, breaks = NULL, ...) {
   
   ## INTENTION: checks for discrepancies between data and breaks, etc.
   ## OUTPUT: cleaned-up list of breaks
-  
+  if (is.null(data) || nrow(data) == 0) stop("Data is NULL or has zero rows")
   if (!inherits(data, "Lexis")) stop("data not a Lexis object")
   allScales <- attr(data, "time.scales")
   if (length(allScales) == 0) stop("no time scales appear to be defined; is data a Lexis object?")
