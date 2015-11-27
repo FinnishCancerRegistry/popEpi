@@ -374,6 +374,11 @@ splitMultiPreCheck <- function(data = NULL, breaks = NULL, ...) {
 #' @param breaks a named list of breaks; 
 #' e.g. \code{list(work = 0:20,per = 1995:2015)}; passed on to 
 #' \code{\link{splitMulti}} so see that function's help for more details
+#' @param freezeDummy a character string; specifies the name for a dummy variable
+#' that this function will create and add to output which 
+#' identifies rows where the \code{freezeScales} are frozen and where not
+#' (\code{0} implies not frozen, \code{1} implies frozen);
+#' if \code{NULL}, no dummy is created
 #' @param subset a logical condition to subset data by before computations;
 #' e.g. \code{subset = sex == "male"}
 #' @param verbose logical; if \code{TRUE}, the function is chatty and returns
@@ -404,27 +409,39 @@ splitMultiPreCheck <- function(data = NULL, breaks = NULL, ...) {
 #' E.g. with \code{by = "lex.id"} only each \code{lex.id} has a unique value
 #' for \code{entry} and \code{exit} at most.
 #' 
+#' The supplied \code{breaks} split the data using \code{splitMulti}, with
+#' the exception that breaks supplied concerning any frozen time scales
+#' ONLY split the rows where the time scales are not frozen. E.g.
+#' with \code{freezeScales = "work"}, 
+#' \code{breaks = list(work = 0:10, cal = 1995:2010)} splits all rows over
+#' \code{"cal"} but only non-frozen rows over \code{"work}.
+#' 
 #' Only supports frozen time scales that advance and freeze contemporaneously:
 #' e.g. it would not currently be possible to take into account the cumulative
 #' time working at a facility and the cumulative time doing a single task
 #' at the facility, if the two are not exactly the same. On the other hand
-#' one might use the same time scale for multiple exposures and supply them
-#' as separate rows and identify the different exposures using a dummy variable.
+#' one might use the same time scale for different exposure types, supply them
+#' as separate rows, and identify the different exposures using a dummy variable.
+#' @return 
+#' 
+#' Returns a \code{Lexis} object that has been split if \code{breaks} is specified.
+#' The resulting time is also a \code{data.table} if 
+#' \code{options("popEpi.datatable") == TRUE} (see: \code{?popEpi})
 #' 
 #' @export prepExpo
 #' @import data.table
 prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(get(cutScale)),
-                     exit = max(get(cutScale)), by = "lex.id", breaks = NULL, subset = NULL,
+                     exit = max(get(cutScale)), by = "lex.id", breaks = NULL, freezeDummy = NULL, subset = NULL,
                      verbose = FALSE, ...) {
   
   if (verbose) allTime <- proc.time()
   
   ## check breaks & data -------------------------------------------------------
   breaks <- evalq(breaks)
-  dumBreaks <- structure(list(c(-Inf, Inf)), names = cutScale)
+  dumBreaks <- structure(list(c(-Inf, Inf)), names = cutScale, internal_prepExpo_dummy = TRUE)
   if (is.null(breaks)) breaks <- dumBreaks
   breaks <- splitMultiPreCheck(data = lex, breaks = evalq(breaks))
-  if (length(breaks) == 1L && all.equal(breaks, dumBreaks)) breaks <- NULL
+  if (!is.null(attr(breaks, "internal_prepExpo_dummy"))) breaks <- NULL
   
   
   ## data ----------------------------------------------------------------------
@@ -449,6 +466,8 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   ## args ----------------------------------------------------------------------
   if (verbose) argTime <- proc.time()
   tol <- .Machine$double.eps^0.75
+  
+  if (is.character(freezeDummy) && freezeDummy %in% names(lex)) stop("Variable named in freezeDummy already exists in data; freezeDummy is inteded for creating a new dummy for identifying the rows where freezeScales are frozen. Please supply an original variable name to freezeDummy")
   
   if (!is.character(l$by)) stop("by must be given as a vector of character strings naming columns in lex")
   all_names_present(lex, l$by)
@@ -554,6 +573,9 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   
   
   ## final touch ---------------------------------------------------------------
+  
+  if (is.character(freezeDummy)) setnames(x, l$frz, freezeDummy)
+  
   setkeyv(x, c(l$by, l$order))
   setcolsnull(x, unlist(l[setdiff(names(l), c("by", "cutScale", "freezeScales", "linkScales", "allScales", "othScales"))]))
   

@@ -6,7 +6,8 @@
 \usage{
 prepExpo(lex, freezeScales = "work", cutScale = "per",
   entry = min(get(cutScale)), exit = max(get(cutScale)), by = "lex.id",
-  breaks = NULL, subset = NULL, verbose = FALSE, ...)
+  breaks = NULL, freezeDummy = NULL, subset = NULL, verbose = FALSE,
+  ...)
 }
 \arguments{
 \item{lex}{a \code{\link[Epi]{Lexis}} object with ONLY periods of exposure
@@ -39,6 +40,12 @@ for novices of \code{{\link{data.table}}}, this is passed to a
 e.g. \code{list(work = 0:20,per = 1995:2015)}; passed on to 
 \code{\link{splitMulti}} so see that function's help for more details}
 
+\item{freezeDummy}{a character string; specifies the name for a dummy variable
+that this function will create and add to output which 
+identifies rows where the \code{freezeScales} are frozen and where not
+(\code{0} implies not frozen, \code{1} implies frozen);
+if \code{NULL}, no dummy is created}
+
 \item{subset}{a logical condition to subset data by before computations;
 e.g. \code{subset = sex == "male"}}
 
@@ -46,6 +53,11 @@ e.g. \code{subset = sex == "male"}}
 some messages and timings during its run.}
 
 \item{...}{additional arguments passed on to \code{\link{splitMulti}}}
+}
+\value{
+Returns a \code{Lexis} object that has been split if \code{breaks} is specified.
+The resulting time is also a \code{data.table} if 
+\code{options("popEpi.datatable") == TRUE} (see: \code{?popEpi})
 }
 \description{
 \code{prepExpo} uses a \code{Lexis} object of periods of exposure
@@ -77,11 +89,18 @@ same for each row within a unique combination of variables named in \code{by}.
 E.g. with \code{by = "lex.id"} only each \code{lex.id} has a unique value
 for \code{entry} and \code{exit} at most.
 
+The supplied \code{breaks} split the data using \code{splitMulti}, with
+the exception that breaks supplied concerning any frozen time scales
+ONLY split the rows where the time scales are not frozen. E.g.
+with \code{freezeScales = "work"}, 
+\code{breaks = list(work = 0:10, cal = 1995:2010)} splits all rows over
+\code{"cal"} but only non-frozen rows over \code{"work}.
+
 Only supports frozen time scales that advance and freeze contemporaneously:
 e.g. it would not currently be possible to take into account the cumulative
 time working at a facility and the cumulative time doing a single task
 at the facility, if the two are not exactly the same. On the other hand
-one might use the same time scale for multiple exposures and supply them
-as separate rows and identify the different exposures using a dummy variable.
+one might use the same time scale for different exposure types, supply them
+as separate rows, and identify the different exposures using a dummy variable.
 }
 
