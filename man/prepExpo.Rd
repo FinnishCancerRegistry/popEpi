@@ -94,7 +94,7 @@ the exception that breaks supplied concerning any frozen time scales
 ONLY split the rows where the time scales are not frozen. E.g.
 with \code{freezeScales = "work"}, 
 \code{breaks = list(work = 0:10, cal = 1995:2010)} splits all rows over
-\code{"cal"} but only non-frozen rows over \code{"work}.
+\code{"cal"} but only non-frozen rows over \code{"work"}.
 
 Only supports frozen time scales that advance and freeze contemporaneously:
 e.g. it would not currently be possible to take into account the cumulative
