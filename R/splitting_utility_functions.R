@@ -404,6 +404,13 @@ splitMultiPreCheck <- function(data = NULL, breaks = NULL, ...) {
 #' E.g. with \code{by = "lex.id"} only each \code{lex.id} has a unique value
 #' for \code{entry} and \code{exit} at most.
 #' 
+#' Only supports frozen time scales that advance and freeze contemporaneously:
+#' e.g. it would not currently be possible to take into account the cumulative
+#' time working at a facility and the cumulative time doing a single task
+#' at the facility, if the two are not exactly the same. On the other hand
+#' one might use the same time scale for multiple exposures and supply them
+#' as separate rows and identify the different exposures using a dummy variable.
+#' 
 #' @export prepExpo
 #' @import data.table
 prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(get(cutScale)),
