@@ -1,6 +1,6 @@
 
 
-versionStep <- function() {
+versionStep <- function(newVersion = NULL) {
   # License: CC0 (just be nice and point others to where you got this)
   # Author: Robert M Flight <rflight79@gmail.com>, github.com/rmflight
   #
@@ -40,7 +40,7 @@ versionStep <- function() {
     currEndVersion <- as.integer(splitVersion[nVer])
     newEndVersion <- as.character(currEndVersion + 1)
     splitVersion[nVer] <- newEndVersion
-    newVersion <- paste(splitVersion, collapse=".")
+    if (is.null(newVersion)) newVersion <- paste(splitVersion, collapse=".")
     currDCF[1,"Version"] <- newVersion
     currDCF[1, "Date"] <- strftime(as.POSIXlt(Sys.Date()), "%Y-%m-%d")
     write.dcf(currDCF, "DESCRIPTION")
