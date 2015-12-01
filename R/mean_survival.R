@@ -106,11 +106,23 @@
 survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL, 
                      r = 1.00,
                      agegr.w.breaks=NULL, agegr.w.weights=NULL, ext.breaks = NULL,
-                     subset = NULL, ...) {
+                     subset = NULL, verbose = FALSE, ...) {
   
   if (is.null(pophaz)) stop("need a pophaz data set")
   all_names_present(data, by.vars)
   all_names_present(data, c("lex.id", "lex.dur", "lex.Xst", "lex.Cst", "fot", "per", "age"))
+  
+  ## prep & subset data --------------------------------------------------------
+  ## take copy of data for now... need to rewrite this whole mess at some point
+  attrs <- attributes(data)
+  attrs <- attrs[intersect(names(attrs), c("breaks","time.scales"))]
+  
+  subset <- substitute(subset)
+  subset <- evalLogicalSubset(data, subset)
+  
+  data <- if (all(subset)) copy(data) else data[subset,]
+  setDT(data)
+  setattr(data, "class", c("Lexis", "data.table", "data.frame"))
   
   ## age group weighting -------------------------------------------------------
   if (!is.null(agegr.w.breaks)) {
@@ -127,34 +139,25 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
     agetab[, agr.w := agegr.w.weights/(sum(agegr.w.weights))]
     
   }
-  ## prep & subset data --------------------------------------------------------
-  ## no copy of data
-  attrs <- attributes(data)
-  attrs <- attrs[intersect(names(attrs), c("breaks","time.scales"))]
   
-  subset <- substitute(subset)
-  subset <- evalLogicalSubset(data, subset)
-  
-#   if (!"lex.multi" %in% names(data)) {
-#     setkey(data, lex.id, fot)
-#     data[, lex.multi := 1:.N, by = lex.id]
-#   }
-#   setkey(data, lex.id, lex.multi)
-  setDT(data) ## for now need to require DT
-  N_subjects <- data[subset & !duplicated(lex.id) & fot == 0, list(obs=.N), keyby=by.vars]
+  N_subjects <- data[!duplicated(lex.id) & fot == 0, list(obs=.N), keyby=by.vars]
   
   ## compute survivals ---------------------------------------------------------
   st <- survtab(data, surv.breaks=surv.breaks, 
                 surv.type = "surv.rel", by.vars=by.vars, 
-                subset = subset,
                 relsurv.method = "e2",
                 format = FALSE,
                 ...)
+  
   subr <- attr(st, "surv.breaks")
   n_si <- length(subr) - 1 ## maximum surv.int value
+  setDT(st)
+  
+  if (verbose) cat("Table of estimated observed survivals: \n")
+  if (verbose) print(st)
   
   ## melt: surv.exp will be used to determine disease-free mean survival
-  setDT(st)
+  
   ft <- st[, c("surv.int", by.vars, "Tstart", "Tstop", "delta"), with=FALSE]
   ft <- rbindlist(list(ft, ft))
   ft[, meansurv_type := rep(c("est", "exp"), each = nrow(ft)/2L)]
@@ -180,7 +183,11 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
   ## now nrow(data) == 0. meaning we do not extrapolate
   
   if (nrow(data) > 0) {
+    if (verbose) cat("Computing EdererI expected (extrapolated) survivals for ", nrow(data), "subjects... \n")
+    
     ## extrapolate and add expected survivals after observed survivals
+    
+    setcolsnull(data, keep = c("lex.id", "fot", "per", "age", "lex.dur", by.vars, names(pophaz)))
     
     ## preparations for extrapolation ------------------------------------------
     ## more values at the end of known follow-up
@@ -190,27 +197,41 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
     ## compute values in 100 years or up to 125th birthday
     ## this elongates observations
     ## TODO: use temporary variable names to avoid conflicts
-    BL <- list(fot = c(0:6/12, 0.75, 1:100), age = c(0, 125))
+    BL <- list(fot = c(0:6/12, 0.75, 1:100), age = c(0, 125), per = c(-Inf, Inf))
     if (!is.null(ext.breaks)) BL <- ext.breaks
-    ageRoof <- max(BL$age)
-    fotRoof <- max(BL$fot)
-    data[, lex.dur := pmin(pmax(ageRoof, age) - age, fotRoof)]
-    data[, per.end := lex.dur + per]
-    data[, ms_bi_yrs := per-age]
-    data[, ms_stat := 0L]
+    for (k in c("per", "age", "fot")) {
+      if (is.null(BL[[k]])) BL[[k]] <- c(if (k == "per") -Inf else 0, Inf)
+    }
     
-    setcolsnull(data, c("fot","age","lex.id","lex.multi", 
-                        "lex.Cst", "lex.Xst","lex.dur","pop.haz","pp"))
-    setnames(data, "per", "ms_per")
+    expRange <- lapply(BL, range)
+    expRange <- lapply(expRange, function(x) paste0(x, collapse = " - "))
+    expRange <- mapply(function(x,y) paste0(y, ": ", x, ";"), x = expRange, y = names(expRange), SIMPLIFY = TRUE)
+    if (verbose) cat("Extrapolation range:", paste0(expRange, collapse = " "),"\n")
+
+    ## NOTE: e.g. age value here at the end of interval (i.e. age + lex.dur)
+    ## NOTE: from here on fot will be considered to be zero for everyone 
+    data[, lex.dur := pmin(pmax(max(BL$age) - age, 0L), pmax(max(BL$per) - per, 0L), max(BL$fot))]
+    data <- data[lex.dur > 0L]
+    data[, MS_BIRTH_YRS_ := per-age]
+    
+    setnames(data, "per", "MS_ENTRY_YRS_")
+    setcolsnull(data, keep = c("MS_BIRTH_YRS_", "MS_ENTRY_YRS_", by.vars, names(pophaz)), colorder = TRUE)
+    if (verbose) cat("extrapolation data just before splitting: \n")
+    if (verbose) print(data)
     
     ## split & merge elongated observations ------------------------------------
+    pophaz <- copy(pophaz)
     set(pophaz, j = "haz", value = pophaz$haz * r)
-    data <- lexpand(data, birth = "ms_bi_yrs", entry = "ms_per", exit = "per.end", 
-                status = ms_stat, 
-                breaks = BL,
-                pophaz = pophaz, pp = FALSE, merge= TRUE, drop = TRUE)
+    
+    data <- lexpand(data, birth = "MS_BIRTH_YRS_", entry = "MS_ENTRY_YRS_", exit = 1e6L, 
+                    status = 0L, entry.status = 0L,
+                    breaks = BL,
+                    pophaz = pophaz, pp = FALSE, merge= TRUE, drop = TRUE)
     setDT(data)
-    set(pophaz, j = "haz", value = pophaz$haz / r)
+    rm(pophaz)
+    
+    if (verbose) cat("Extrapolation data just after splitting: \n")
+    if (verbose) print(data)
     
     setcolsnull(data, keep = c(by.vars, "fot","lex.dur","lex.id","lex.multi","pop.haz"))
     setkey(data, lex.id, fot)
@@ -218,13 +239,16 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
     setkey(data, lex.id, lex.multi)
     
     ## compute subject-specific expected survival curves for EdererI method ----
-    ## meansurv_type not in data
+    ## NOTE: meansurv_type not in data
     by.vars <- setdiff(by.vars, "meansurv_type")
     if (length(by.vars)==0) by.vars <- NULL
-    
-    data[, surv.int := cut(fot, 0:100,right=FALSE,labels=FALSE)]
+    data[, surv.int := cut(fot, BL$fot,right=FALSE,labels=FALSE)]
     setkeyv(data, c(by.vars, "surv.int", "lex.id", "lex.multi"))
-    data[, pop.haz  := sum(pop.haz*lex.dur), by = c(by.vars, "surv.int", "lex.id")] ## surv.int level for each subject
+    
+    
+    
+    ## NOTE: following repeats cumulative hazard within surv.int for each row there by id
+    data[, pop.haz  := sum(pop.haz*lex.dur), by = c(by.vars, "surv.int", "lex.id")]
     data[, p.exp    := exp(-pop.haz)] ## surv.int level for each subject
     data <- unique(data, by = c("surv.int", "lex.id"))
     data[, surv.exp := cumprod(p.exp)/p.exp, by = list(lex.id)] ## till start of interval
@@ -233,19 +257,23 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
     setkeyv(data, c(by.vars, "surv.int"))
     setnames(data, "p.exp.e1", "surv.obs") ## cumulative computed later
     
+    
     ## prepare to add after actual surv.obs estimates / expected survivals
     by.vars <- c("meansurv_type", by.vars)
     data <- rbindlist(list(data, data))
     data[, meansurv_type := factor(rep(c("est", "exp"), each = nrow(data)/2L))]
     
-    new_si_levs <- st[, max(surv.int)+1L]
-    new_si_levs <- new_si_levs:(new_si_levs+99L)
+#     new_si_levs <- st[, max(surv.int)+1L]
+#     new_si_levs <- new_si_levs:(new_si_levs+99L)
     
-    data[, surv.int := factor(surv.int, levels = 1:100, labels = new_si_levs)]
-    data[, surv.int := fac2num(surv.int)]
+#     data[, surv.int := factor(surv.int, levels = sort(unique(surv.int)), labels = new_si_levs)]
+#     data[, surv.int := fac2num(surv.int)]
+    setorderv(st, c(by.vars, "Tstop"))
+    st[, surv.int := 1:.N, by = by.vars]
+    data[, surv.int := surv.int + max(st$surv.int)]
     
-    data[, delta := 1L]
-#     data[, SE.surv.obs := 0]
+    SItab <- data.table(surv.int = max(st$surv.int) + 1:(length(BL$fot)-1), delta = diff(BL$fot))
+    data <- merge(data, SItab, by = "surv.int", all.x=TRUE, all.y=FALSE)
 
     setcolsnull(data, keep = c(by.vars, "surv.int","surv.obs","delta"), colorder=TRUE, soft=FALSE)
     setcolsnull(st,   keep = c(by.vars, "surv.int","surv.obs","delta"), colorder=TRUE, soft=FALSE)
@@ -262,7 +290,9 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
     
     setkeyv(data, c(by.vars,"surv.int"))
     data[, surv.obs := cumprod(surv.obs), by=by.vars]
+    if (verbose) cat("EdererI extrapolation done. \n")
   } else {
+    cat("No extrapolation done since all subjects exited follow-up within the range of surv.breaks used to compute observed survivals. \n")
     data <- st
     rm(st)
     setcolsnull(data, keep = c(by.vars, "surv.int","surv.obs","delta",
@@ -273,6 +303,7 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
   ## need lag1 values
   setkeyv(data, c(by.vars, "surv.int"))
   data[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = by.vars]
+  
   
   data[, dum := 1L]
   data[!duplicated(data, by=c(by.vars,"dum"), fromLast=TRUE), surv.obs := 0]
@@ -315,7 +346,7 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
     data <- agetab[data]
     data <- data[, list(est.as = sum(est*agr.w), exp.as = sum(exp*agr.w), obs = sum(obs), YPLL.as = sum(YPLL*agr.w)), keyby = by.vars]
   }
-  
+  if (verbose) cat("survmean computations finished. \n")
 
   
   setattr(bkup, "by.vars", by.vars)
