@@ -345,6 +345,14 @@ splitMultiPreCheck <- function(data = NULL, breaks = NULL, ...) {
   breaks
 }
 
+forceLexisDT <- function(x, breaks = NULL, allScales = NULL, key = TRUE) {
+  setDT(x)
+  if (key) setkeyv(x, c("lex.id", names(breaks)[1L]))
+  setattr(x, "breaks", breaks)
+  setattr(x, "time.scales", allScales)
+  setattr(x, "class", c("Lexis", "data.table", "data.frame"))
+  invisible(x)
+}
 
 #' @title Prepare Exposure Data for Aggregation
 #' @description \code{prepExpo} uses a \code{Lexis} object of periods of exposure
