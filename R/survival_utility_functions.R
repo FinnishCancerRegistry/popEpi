@@ -165,7 +165,7 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
   this_env_ <- environment()
   
   g <- function(x, e = .SD) {
-    x <- deparse(substitute(x)) ## e.g. x = x-> x = "surv.scale"
+    x <- deparse(substitute(x)) ## e.g. x = y-> x = "surv.scale"
     x <- this_env_[[x]] ## e.g. this_env_[["surv.scale"]]
     
     eval(as.symbol(x), envir = e)

@@ -18,7 +18,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   event.values <- setdiff(event.values, unique(data$lex.Cst))
   cens.values <- setdiff(unique(data$lex.Cst), event.values)
   if (length(cens.values) == 0) stop("could not determine which values of lex.Cst / lex.Xst imply censoring; supply event.values by hand and make sure data has meaningful lex.Cst and lex.Xst values")
-  if (length(cens.values) == 0) stop("could not determine which values of lex.Xst imply events; supply event.values by hand and make sure data has meaningful lex.Cst and lex.Xst values")
+  if (length(event.values) == 0) stop("could not determine which values of lex.Xst imply events; supply event.values by hand and make sure data has meaningful lex.Cst and lex.Xst values")
   
   ## ensure breaks make sense --------------------------------------------------
   checkBreaksList(x, breaks = breaks)
