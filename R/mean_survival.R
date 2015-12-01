@@ -8,7 +8,8 @@
 #' survival curve. The area under the full survival curve is the mean survival.
 #' @author Joonas Miettinen, Karri Seppa
 #' @param data a data set of splitted records; e.g. output of \code{\link{lexpand}}
-#' @param surv.breaks passed on to \code{\link{survtab}}; see that help
+#' @param surv.breaks passed on to \code{\link{survtab}}; if \code{NULL}, uses
+#' the existing breaks along time scale \code{"fot"} in \code{data}
 #' @param by.vars a character vector of variables names;
 #'  e.g. \code{by.vars = "sex"} will calculate 
 #' mean survival separately for each unique combination of these variables
@@ -23,11 +24,15 @@
 #' breaks as in \code{survtab}; will be used to standardize by age group
 #' @param subset a logical condition; e.g. \code{subset = sex == 1}; 
 #' subsets the data before computations
+#' @param verbose \code{logical}; if \code{TRUE}, the function is returns
+#' some messages and results along the run, which may be useful in debugging
 #' @param ... any other arguments passed on to \code{survtab} such as
 #' \code{surv.method = "lifetable"} for actuarial estimates of observed survival
 #' @param ext.breaks advanced; a list of breaks (see \code{\link{lexpand}});
 #' used as breaks for extrapolation; see Details
 #' @details
+#' \strong{Basics}
+#' 
 #' \code{survmean} computes mean survival times. 
 #' This is done using a) observed survival estimates computed with \code{survtab}
 #' and b) extrapolated survival probabilities using EdererI method expected
@@ -74,10 +79,13 @@
 #' would ensure a smooth extrapolation and perfect usage of \code{pophaz}.
 #' This will probably not produce results much different from the default, though.
 #' 
+#' Note that \code{ext.breaks} should always include some meaningful definitions
+#' of survival intervals (over \code{fot}) to correctly integrate the survival curve.
+#' 
 #' @examples
 #' 
-#' ## take first 5000 subjects in sire data for demonstration
-#' sr <- sire[1:5000, ]
+#' ## take first 3000 subjects in sire data for demonstration
+#' sr <- sire[1:3000, ]
 #' sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
 #' x <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
 #'              status = status %in% 1:2,
@@ -210,6 +218,7 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
 
     ## NOTE: e.g. age value here at the end of interval (i.e. age + lex.dur)
     ## NOTE: from here on fot will be considered to be zero for everyone 
+    MS_BIRTH_YRS_ <- NULL ## this appeases R CMD CHECK
     data[, lex.dur := pmin(pmax(max(BL$age) - age, 0L), pmax(max(BL$per) - per, 0L), max(BL$fot))]
     data <- data[lex.dur > 0L]
     data[, MS_BIRTH_YRS_ := per-age]

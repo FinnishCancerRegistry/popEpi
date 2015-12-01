@@ -6,12 +6,13 @@
 \usage{
 survmean(data, surv.breaks = NULL, by.vars = NULL, pophaz = NULL, r = 1,
   agegr.w.breaks = NULL, agegr.w.weights = NULL, ext.breaks = NULL,
-  subset = NULL, ...)
+  subset = NULL, verbose = FALSE, ...)
 }
 \arguments{
 \item{data}{a data set of splitted records; e.g. output of \code{\link{lexpand}}}
 
-\item{surv.breaks}{passed on to \code{\link{survtab}}; see that help}
+\item{surv.breaks}{passed on to \code{\link{survtab}}; if \code{NULL}, uses
+the existing breaks along time scale \code{"fot"} in \code{data}}
 
 \item{by.vars}{a character vector of variables names;
  e.g. \code{by.vars = "sex"} will calculate 
@@ -36,6 +37,9 @@ used as breaks for extrapolation; see Details}
 \item{subset}{a logical condition; e.g. \code{subset = sex == 1}; 
 subsets the data before computations}
 
+\item{verbose}{\code{logical}; if \code{TRUE}, the function is returns
+some messages and results along the run, which may be useful in debugging}
+
 \item{...}{any other arguments passed on to \code{survtab} such as
 \code{surv.method = "lifetable"} for actuarial estimates of observed survival}
 }
@@ -46,6 +50,8 @@ using an appropriate hazard data file (\code{pophaz}) to yield the "full"
 survival curve. The area under the full survival curve is the mean survival.
 }
 \details{
+\strong{Basics}
+
 \code{survmean} computes mean survival times. 
 This is done using a) observed survival estimates computed with \code{survtab}
 and b) extrapolated survival probabilities using EdererI method expected
@@ -91,11 +97,14 @@ accurate extrapolations. E.g.
 
 would ensure a smooth extrapolation and perfect usage of \code{pophaz}.
 This will probably not produce results much different from the default, though.
+
+Note that \code{ext.breaks} should always include some meaningful definitions
+of survival intervals (over \code{fot}) to correctly integrate the survival curve.
 }
 \examples{
 
-## take first 5000 subjects in sire data for demonstration
-sr <- sire[1:5000, ]
+## take first 3000 subjects in sire data for demonstration
+sr <- sire[1:3000, ]
 sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
 x <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
              status = status \%in\% 1:2,
