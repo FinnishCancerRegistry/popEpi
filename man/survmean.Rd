@@ -43,6 +43,21 @@ some messages and results along the run, which may be useful in debugging}
 \item{...}{any other arguments passed on to \code{survtab} such as
 \code{surv.method = "lifetable"} for actuarial estimates of observed survival}
 }
+\value{
+Returns a \code{data.frame} or \code{data.table} (depending on 
+\code{getOptions("popEpi.datatable")}; see \code{?popEpi}) containing the
+following columns:
+\itemize{
+  \item{est}{The estimated mean survival time}
+  \item{exp}{The computed expected survival time}
+  \item{obs}{Counts of subjects in data}
+  \item{YPLL}{Years of Potential Life Lost, computed as (\code{(exp-est)*obs})}
+}
+The data may also have columns specifying the levels of \code{by.vars}
+if any are used. Additionally, when age-adjusted estimates were requested,
+the output values that have been age-adjusted include the suffix \code{.as}
+in the appropriate column names.
+}
 \description{
 Computes mean survival times based on survival estimation up to
 a point in follow-up time (e.g. 10 years), after which survival is extrapolated

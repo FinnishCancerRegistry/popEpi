@@ -82,6 +82,22 @@
 #' Note that \code{ext.breaks} should always include some meaningful definitions
 #' of survival intervals (over \code{fot}) to correctly integrate the survival curve.
 #' 
+#' @return 
+#' Returns a \code{data.frame} or \code{data.table} (depending on 
+#' \code{getOptions("popEpi.datatable")}; see \code{?popEpi}) containing the
+#' following columns:
+#' \itemize{
+#'   \item{est}{The estimated mean survival time}
+#'   \item{exp}{The computed expected survival time}
+#'   \item{obs}{Counts of subjects in data}
+#'   \item{YPLL}{Years of Potential Life Lost, computed as (\code{(exp-est)*obs})}
+#' }
+#' The data may also have columns specifying the levels of \code{by.vars}
+#' if any are used. Additionally, when age-adjusted estimates were requested,
+#' the output values that have been age-adjusted include the suffix \code{.as}
+#' in the appropriate column names. 
+#' 
+#' 
 #' @examples
 #' 
 #' ## take first 3000 subjects in sire data for demonstration
