@@ -417,12 +417,11 @@ lexpand <- function(data,
   ## checks for merging style --------------------------------------------------
   if (!is.null(pophaz)) {
     all_names_present(pophaz, c("agegroup","year","haz"))
-    merge_vars <- setdiff(names(pophaz), c("agegroup","year","haz"))
-    test_merge_vars <- intersect(merge_vars, names(data))
-    if (length(test_merge_vars) == 0) {
-      stop("pophaz contains following merging variables not in data: ", 
-           paste0(test_merge_vars, collapse = ", "),
-           "; make sure data contains identical merging variables as pophaz, and that pophaz does not contain any extra variables!")
+    othMergeVars <- setdiff(names(pophaz), c("agegroup","year","haz"))
+    badOthMergeVars <- setdiff(othMergeVars, names(data))
+    if (length(badOthMergeVars) > 0) {
+      badOthMergeVars <- paste0("'", badOthMergeVars, "'", collapse = ", ")
+      stop("Following variables exist in pophaz but do not exist in data: ", badOthMergeVars, ". Make sure data and pophaz contain variables with the same names that you intend to merge by.")
     }
   }
   
