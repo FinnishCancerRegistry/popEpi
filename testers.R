@@ -76,12 +76,13 @@ test_some <- function(filter = NULL)  {
   devtools::test(".", filter = filter)
 }
 
-test_all <- function(filter = NULL)  {
+test_all <- function(filter = NULL, examples = FALSE)  {
   ## runs all possible tests; only with options("popEpi.datatable" = TRUE)
   old <- Sys.getenv("NOT_CRAN")
   on.exit(Sys.setenv("NOT_CRAN" = old))
   Sys.setenv("NOT_CRAN" = "true")
   devtools::test(".", filter = filter)
+  if (examples) devtools::run_examples(".", run = TRUE, fresh = TRUE)
 }
 
 test_full <- function(filter = NULL) {
