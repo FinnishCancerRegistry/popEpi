@@ -304,15 +304,44 @@ setLexisDT <- function(data, entry, exit, entry.status, exit.status, id = NULL, 
   
 }
 
+checkLexisData <- function(lex, check.breaks = FALSE) {
+  ## INTENTION: checks Lexis attributes
+  ## OUTPUT: nothing
+  
+  if (is.null(data) || nrow(data) == 0) stop("Data is NULL or has zero rows")
+  if (!inherits(data, "Lexis")) stop("Data not a Lexis object")
+  allScales <- attr(data, "time.scales")
+  if (length(allScales) == 0) stop("no time scales appear to be defined; is data a Lexis object?")
+  
+  badScales <- setdiff(allScales, names(lex))
+  if (length(badScales) > 0) {
+    badScales <- paste0("'", badScales, "'", collapse = ", ")
+    stop("Following time scales found in data's attributes but not present in data: ", badScales)
+  }
+  
+  lexVars <- c("lex.dur", "lex.id", "lex.Cst", "lex.Xst")
+  blv <- setdiff(lexVars, names(lex))
+  if (length(blv) > 0) {
+    blv <- paste0("'", blv, "'", collapse = ", ")
+    stop("Following Lexis variables not found in data: ", blv)
+  }
+  
+  if (check.breaks) {
+    BL <- attr(lex, "breaks")
+    if (is.null(BL)) stop("No breaks list in data attributes")
+    checkBreaksList(lex, breaks = BL)
+  }
+  
+  invisible()
+}
+
 
 splitMultiPreCheck <- function(data = NULL, breaks = NULL, ...) {
   
   ## INTENTION: checks for discrepancies between data and breaks, etc.
   ## OUTPUT: cleaned-up list of breaks
-  if (is.null(data) || nrow(data) == 0) stop("Data is NULL or has zero rows")
-  if (!inherits(data, "Lexis")) stop("data not a Lexis object")
+  checkLexisData(data)
   allScales <- attr(data, "time.scales")
-  if (length(allScales) == 0) stop("no time scales appear to be defined; is data a Lexis object?")
   
   if (!is.null(breaks) && !is.list(breaks)) stop("breaks must be a list; see examples in ?splitMulti")
   if (is.null(breaks)) {
@@ -344,6 +373,101 @@ splitMultiPreCheck <- function(data = NULL, breaks = NULL, ...) {
   }
   breaks
 }
+
+
+
+doCutLexisDT <- function(lex, cut = dg_date, timeScale = "per", by = "lex.id", n = 1L) {
+  
+  checkLexisData(lex, check.breaks = FALSE)
+  
+  x <- unique(lex, by = by)
+  cut <- evalq(cut, envir = lex, enclos = parent.frame(n = n + 1L))
+  delta <- cut - x[[timeScale]]
+  
+  allScales <- attr(lex, "time.scales")
+  
+  setDT(x)
+  for (v in allScales) {
+    set(x, j = v, value = x[[v]] + delta)
+  }
+  
+  set(x, j = "lex.dur", value = 0)
+  
+  tmp <- list()
+  tmp$isCut <- makeTempVarName(lex, pre = "isCut_")
+  
+  set(x, j = tmp$isCut, value = 1L)
+  on.exit(setcolsnull(x, unlist(tmp)))
+  
+  x <- rbindlist(list(lex, x), use.names = TRUE, fill = TRUE)
+  x[1:nrow(lex), (tmp$isCut) := 0L]
+  
+  ## NOTE: new cut row being the first or last row
+  ## implies it resides outside old observations
+  ## OR it is equal to lowest/highest value
+  setkeyv(x, c(by, allScales))
+  setkeyv(x, by)
+  x <- x[!((duplicated(x) | duplicated(x, fromLast = TRUE)) & get(tmp$isCut) == 0L)]
+  stop("not ready")
+}
+
+# data <- data.table(birth = 2000:2000, entry=2002:2003, 
+#                    exit=2011:2012, event=c(2010,2011), 
+#                    status=1:0)
+# 
+# lex <- lexpand(data = data, birth = birth, entry = entry, 
+#                exit = exit, event = event, 
+#                id = 1L, entry.status = 99L,
+#                status = status, overlapping = T)
+
+lexpile <- function(lex) {
+  if (!inherits(lex, "Lexis")) stop("lex must be a Lexis object")
+  if (!is.data.table(lex)) stop("lex must be a data.table")
+  
+  allScales <- attr(lex, "time.scales")
+  sc <- allScales[1L]
+  
+  all_names_present(lex, c(allScales, "lex.dur", "lex.id"))
+  
+  ## avoiding side effects -----------------------------------------------------
+  oldKey <- key(lex)
+  tmp <- list()
+  tmp$order<- makeTempVarName(lex, pre = "order_")
+  
+  on.exit({
+    setcolsnull(lex, unlist(tmp$order), soft = TRUE)
+  }, add = TRUE)
+  
+  on.exit({
+    if (length(oldKey) > 0) setkeyv(lex, oldKey) else 
+      setorderv(lex, tmp$order)
+  }, add = TRUE)
+  
+  lex[, (tmp$order) := 1:.N]
+  
+  ## check for need for lexpiling ----------------------------------------------
+  setkeyv(lex, "lex.id")
+  if (sum(duplicated(lex)) == 0L) return(lex)
+  
+  
+  ## ensure status 
+  tmp$scEnds <- paste0(allScales, "_end")
+  tmp$scEnds <- makeTempVarName(lex, pre = tmp$scEnds)
+  lex[, (tmp$scEnds) := lapply(.SD, function(x) x + lex$lex.dur), .SDcols = allScales]
+  
+  ## NOTE: if interval ends AND status are the very same for M rows,
+  ## then the M rows are necessarily nested with one or more covering
+  ## the whole time line. Only need to keep the one.
+  setkeyv(lex, c(tmp$scEnds, "lex.Cst", "lex.Xst"))
+  setorderv(lex, c(allScales,tmp$scEnds, "lex.Cst", "lex.Xst"))
+  
+  lex <- unique(lex)
+  stop("unfinished")
+  
+}
+
+
+
 
 
 #' @title Prepare Exposure Data for Aggregation
