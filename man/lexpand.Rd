@@ -230,7 +230,9 @@ used.
 \code{event} may be used if the event indicated by \code{status} should
 occur at a time differing from \code{exit}. If \code{event} is defined,
 \code{cutLexis} is used on the data set after coercing it to the \code{Lexis}
-format and before splitting.
+format and before splitting. Note that some values of \code{event} are allowed
+to be \code{NA} as with \code{cutLexis} to accommodate observations
+without an event occurring.
 
 Additionally, setting \code{overlapping = FALSE} ensures that (irrespective
 of using \code{event}) the each subject defined by \code{id} only has one

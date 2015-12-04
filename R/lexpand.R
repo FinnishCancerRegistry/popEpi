@@ -187,7 +187,9 @@
 #' \code{event} may be used if the event indicated by \code{status} should
 #' occur at a time differing from \code{exit}. If \code{event} is defined,
 #' \code{cutLexis} is used on the data set after coercing it to the \code{Lexis}
-#' format and before splitting.
+#' format and before splitting. Note that some values of \code{event} are allowed
+#' to be \code{NA} as with \code{cutLexis} to accommodate observations
+#' without an event occurring.
 #' 
 #' Additionally, setting \code{overlapping = FALSE} ensures that (irrespective
 #' of using \code{event}) the each subject defined by \code{id} only has one
@@ -537,16 +539,19 @@ lexpand <- function(data,
   ## * same event values
   ## * same entry values
   if (!overlapping) {
-    if ("lex.event" %in% names(l) && any(duplicated(l, by = c("lexpand.id", "lex.event")))) {
-      stop("subject(s) had several rows where 'event' time had the same value, which is not supported; perhaps separate them by one day?")
-    } 
-    if (!"lex.event" %in% names(l) && any(duplicated(l, by = c("lexpand.id", "lex.exit")))) {
-      stop("subject(s) had several rows where 'exit' time had the same value, which is not supported; perhaps separate them by one day?")
+    if ("lex.event" %in% names(l)) {
+      if (all(is.na(l$lex.event))) stop("ALL 'event' values are NA; if this is as intended, please use event = NULL instead")
+      
+      if (any(duplicated(l, by = c("lexpand.id", "lex.event")))) {
+        stop("subject(s) defined by lex.id had several rows where 'event' time had the same value, which is not supported; perhaps separate them by one day?")
+      } 
+      if (any(l[!is.na(lex.event), lex.event == lex.exit])) {
+        stop("some rows have simultaneous 'entry' and 'event', which is not supported; perhaps separate them by one day?")
+      }
+    } else if (any(duplicated(l, by = c("lexpand.id", "lex.exit")))) {
+      stop("subject(s) defined by lex.id had several rows where 'exit' time had the same value, which is not supported; perhaps separate them by one day?")
     }
     
-    if ("lex.event" %in% names(l) && any(l$lex.entry == l$lex.event)) {
-      stop("some rows have simultaneous 'entry' and 'event', which is not supported; perhaps separate them by one day?")
-    }
     
   }
   
@@ -572,6 +577,10 @@ lexpand <- function(data,
   }
   
   l_subset <- rep(TRUE, nrow(l))
+  
+  l_subset <- test_times(is.na(lex.birth), "birth values are missing")
+  l_subset <- test_times(is.na(lex.entry), "entry values are missing")
+  l_subset <- test_times(is.na(lex.exit), "exit values are missing")
   
   if (!is.null(breaks$per)) {
     l_subset <- test_times(lex.exit < min(breaks$per), "subjects left follow-up before earliest per breaks value")
