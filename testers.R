@@ -51,6 +51,22 @@ versionStep <- function(newVersion = NULL) {
   }
 }
 
+versionTag <- function(version = NULL) {
+  requireNamespace("git2r")
+  
+  if (!git2r::in_repository()) stop("current wd is not a repository")
+  
+  if (is.null(version)) {
+    if (!file.exists("DESCRIPTION")) stop("DESCRIPTION not found; this function can only really be used if the working directory is the root dir of the package")
+    version <- read.dcf("DESCRIPTION")[1,"Version"]
+  }
+  
+  repo <- git2r::repository()
+  
+  git2r::tag(repo, name = version, message = paste0("Version ", version))
+  
+}
+
 check_all <- function() {
   ## runs R CMD CHECK with all possible tests; only with options("popEpi.datatable" = TRUE)
   old <- Sys.getenv("NOT_CRAN")
