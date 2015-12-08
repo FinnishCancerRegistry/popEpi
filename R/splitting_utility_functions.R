@@ -374,6 +374,14 @@ splitMultiPreCheck <- function(data = NULL, breaks = NULL, ...) {
   breaks
 }
 
+forceLexisDT <- function(x, breaks = NULL, allScales = NULL, key = TRUE) {
+  setDT(x)
+  if (key) setkeyv(x, c("lex.id", names(breaks)[1L]))
+  setattr(x, "breaks", breaks)
+  setattr(x, "time.scales", allScales)
+  setattr(x, "class", c("Lexis", "data.table", "data.frame"))
+  invisible(x)
+}
 
 
 doCutLexisDT <- function(lex, cut = dg_date, timeScale = "per", by = "lex.id", n = 1L) {

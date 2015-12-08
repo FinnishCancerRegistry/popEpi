@@ -3,7 +3,7 @@
 # s <- dt[, Surv(time = rep(0, nrow(dt)), time2 = fot, event = status %in% 1:2)]
 
 
-survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz = NULL, weights = NULL, event.values = NULL, surv.type = "surv.rel", ...) {
+survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz = NULL, weights = NULL, event.values = NULL, surv.type = "surv.rel", relsurv.method = "e2", subset = NULL, ...) {
   
   ## checks --------------------------------------------------------------------
   if (!inherits(data, "Lexis")) stop("data is not a Lexis object")
@@ -18,25 +18,40 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   event.values <- setdiff(event.values, unique(data$lex.Cst))
   cens.values <- setdiff(unique(data$lex.Cst), event.values)
   if (length(cens.values) == 0) stop("could not determine which values of lex.Cst / lex.Xst imply censoring; supply event.values by hand and make sure data has meaningful lex.Cst and lex.Xst values")
-  if (length(cens.values) == 0) stop("could not determine which values of lex.Xst imply events; supply event.values by hand and make sure data has meaningful lex.Cst and lex.Xst values")
+  if (length(event.values) == 0) stop("could not determine which values of lex.Xst imply events; supply event.values by hand and make sure data has meaningful lex.Cst and lex.Xst values")
   
   ## ensure breaks make sense --------------------------------------------------
-  checkBreaksList(x, breaks = breaks)
+  checkBreaksList(data, breaks = breaks)
   ## match break types to time scale types
   ## (don't try to match time scales to breaks)
   for (k in allScales) {
-    breaks[[k]] <- matchBreakTypes(x, breaks = breaks[[k]], timeScale = k)
+    breaks[[k]] <- matchBreakTypes(data, breaks = breaks[[k]], timeScale = k)
   }
   
-  x <- splitMulti(data, breaks = breaks, drop = TRUE, merge = TRUE)
+  comp_pp <- FALSE
+  drop <- TRUE
+  if (surv.type == "surv.rel" && relsurv.method == "pp") comp_pp <- TRUE
+  if (comp_pp) drop <- FALSE
+  
+  ## data & subset -------------------------------------------------------------
+  subset <- evalLogicalSubset(data, substitute(subset))
+  
+  x <- if (all(subset)) copy(data) else data[subset,]
+  forceLexisDT(x, breaks = attr(data, "breaks"), allScales = allScales, key = TRUE)
+  
   print <- evalPopArg(x, substitute(print), DT = TRUE)
   adjust <- evalPopArg(x, substitute(adjust), DT = TRUE)
+  
   setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", setdiff(names(pophaz), "haz")))
+  
   if (!is.null(print)) x[, names(print) := print]
   if (!is.null(adjust)) x[, names(adjust) := adjust]
   print <- names(print) ## note: names(NULL) equals NULL
   adjust <- names(adjust)
+  av <- c(print, adjust, names(breaks)[1L])
   
+  x <- splitMulti(x, breaks = breaks, drop = drop, merge = TRUE)
+  forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
   
 #   ## date time scales? ---------------------------------------------------------
 #   ## this actually needs to also handle breaks in an intellgent way!
@@ -48,15 +63,32 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   if (!is.null(pophaz)) {
     x <- cutLowMerge(x, pophaz, by = setdiff(names(pophaz), "haz"), 
                      mid.scales = intersect(names(pophaz), allScales))
+    forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
   }
- 
-  setattr(x, "breaks", breaks)
-  setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   
   
-  av <- c(print, adjust, names(breaks)[1])
   ## still need to compute pp-weighted figures below. they all have to be done
   ## on the level of the splitted observations!
+  
+  if (comp_pp) {
+    comp_pp_weights(x, surv.scale = names(breaks)[1L], 
+                    breaks = breaks[[1L]], haz = "haz", 
+                    style = "delta", verbose = FALSE)
+    forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
+    
+    intelliCrop(x = x, breaks = breaks, allScales = allScales, cropStatuses = TRUE)
+    x <- intelliDrop(x, breaks = breaks, dropNegDur = TRUE, check = TRUE)
+    forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
+    pp <- vector("list", 4)
+    names(pp) <- c("d.pp", "d.exp.pp", "d.pp.2", if (surv.method == "hazard") "pyrs.pp" else "n.eff.pp")
+    
+    #### TODO ############
+    ## - find out which rows are events (transitions)
+    ## - find out which rows are censorings (NOTE: exit time < max(breaks))
+    ## - multiply d, d.exp, etc. with pp and aggregate.
+    
+  }
+  
   # c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else "n.eff.pp") else NULL)
   haz <- NULL ## appease R CMD CHECK
   x <- laggre(x, aggre = c(print, adjust, names(breaks)[1]), verbose = FALSE,
@@ -83,6 +115,12 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
 # st <- survtab_lex(dt, print = NULL, #adjust = "agegr", 
 #                   # pophaz = pm,
 #                   surv.type = "surv.obs",
+#                   # weights = list(agegr = c(0.2,0.4,0.4)),
+#                   breaks = list(FUT = seq(0,5,1/12)))
+# st <- survtab_lex(dt, print = NULL, #adjust = "agegr", 
+#                   pophaz = pm,
+#                   surv.type = "surv.rel",
+#                   relsurv.method = "pp",
 #                   # weights = list(agegr = c(0.2,0.4,0.4)),
 #                   breaks = list(FUT = seq(0,5,1/12)))
 
