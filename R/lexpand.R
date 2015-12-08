@@ -543,13 +543,13 @@ lexpand <- function(data,
       if (all(is.na(l$lex.event))) stop("ALL 'event' values are NA; if this is as intended, please use event = NULL instead")
       
       if (any(duplicated(l, by = c("lexpand.id", "lex.event")))) {
-        stop("subject(s) defined by lex.id had several rows where 'event' time had the same value, which is not supported; perhaps separate them by one day?")
+        stop("subject(s) defined by lex.id had several rows where 'event' time had the same value, which is not supported with overlapping = FALSE; perhaps separate them by one day?")
       } 
-      if (any(l[!is.na(lex.event), lex.event == lex.exit])) {
-        stop("some rows have simultaneous 'entry' and 'event', which is not supported; perhaps separate them by one day?")
+      if (any(l[!is.na(lex.event), lex.entry == lex.event])) {
+        stop("some rows have simultaneous 'entry' and 'event', which is not supported with overlapping = FALSE; perhaps separate them by one day?")
       }
     } else if (any(duplicated(l, by = c("lexpand.id", "lex.exit")))) {
-      stop("subject(s) defined by lex.id had several rows where 'exit' time had the same value, which is not supported; perhaps separate them by one day?")
+      stop("subject(s) defined by lex.id had several rows where 'exit' time had the same value, which is not supported without 'event' defined; use 'event' or perhaps separate them by one day?")
     }
     
     

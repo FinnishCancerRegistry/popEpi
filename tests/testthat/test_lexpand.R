@@ -287,7 +287,7 @@ test_that("different specifications of time vars work with event defined and ove
                 birth = bi_date, entry = dg_date, exit = end, event = dg_date,
                 id = id, overlapping = FALSE,  entry.status = 0, status = status,
                 merge = FALSE), 
-               regexp = "some rows have simultaneous 'entry' and 'event', which is not supported; perhaps separate them by one day?")
+               regexp = "some rows have simultaneous 'entry' and 'event', which is not supported with overlapping = FALSE; perhaps separate them by one day?")
   
   ## birth = entry -> event -> exit
   x3 <- lexpand(data = dt, subset = NULL, 
@@ -304,7 +304,7 @@ test_that("different specifications of time vars work with event defined and ove
                 birth = bi_date, entry = dg_date, exit = end, event = end,
                 id = id, overlapping = FALSE,  entry.status = 0, status = status,
                 merge = FALSE), 
-               regexp = "subject\\(s\\) had several rows where 'event' time had the same value, which is not supported; perhaps separate them by one day?")
+               regexp = "subject\\(s\\) defined by lex.id had several rows where 'event' time had the same value, which is not supported with overlapping = FALSE; perhaps separate them by one day?")
   
   ## birth = entry -> event -> exit
   x6 <- lexpand(data = dt, subset = NULL, 

@@ -308,9 +308,9 @@ checkLexisData <- function(lex, check.breaks = FALSE) {
   ## INTENTION: checks Lexis attributes
   ## OUTPUT: nothing
   
-  if (is.null(data) || nrow(data) == 0) stop("Data is NULL or has zero rows")
-  if (!inherits(data, "Lexis")) stop("Data not a Lexis object")
-  allScales <- attr(data, "time.scales")
+  if (is.null(lex) || nrow(lex) == 0) stop("Data is NULL or has zero rows")
+  if (!inherits(lex, "Lexis")) stop("Data not a Lexis object")
+  allScales <- attr(lex, "time.scales")
   if (length(allScales) == 0) stop("no time scales appear to be defined; is data a Lexis object?")
   
   badScales <- setdiff(allScales, names(lex))
