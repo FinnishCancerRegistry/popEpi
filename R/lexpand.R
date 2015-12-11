@@ -857,7 +857,7 @@ lexpand <- function(data,
   if (agTy != "NULL") {
     
     if (verbose) cat("Starting aggregation of splitted data... \n")
-    setattr(l, "time.scales", c("fot", "per", "age"))
+    forceLexisDT(l, allScales = c("fot", "per", "age"), breaks = breaks)
     l <- laggre(l, aggre = aggSub, breaks = breaks, type = aggre.type, 
                 verbose = verbose, substituted = TRUE)
     if (verbose) cat("Aggregation done. \n")

@@ -10,8 +10,9 @@ test_that("laggre leaves original data untouched", {
   ## scramble order
   set.seed(1L)
   x <- x[sample(x = .N, size = .N, replace = FALSE)]
-  setattr(x, "breaks", BL)
-  setattr(x, "time.scales", c("fot", "per", "age"))
+  setkeyv(x, NULL)
+  
+  forceLexisDT(x, breaks = BL, allScales = c("fot", "per", "age"), key = FALSE)
   
   xor <- copy(x)
   
@@ -33,6 +34,7 @@ test_that("laggre and lexpand produce the same results", {
   e <- quote(list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
   v <- c("gender", "sex", "sex", "surv.int", "per", "agegr")
   
+  forceLexisDT(x, breaks = BL, allScales = c("fot", "per", "age"))
   x2 <- laggre(x, aggre = e, substituted = T, verbose = FALSE)
   x3 <- laggre(x, aggre = e, substituted = T, type = "full", verbose = FALSE)
   x4 <- lexpand(sr, birth  = bi_date, entry = dg_date, exit = ex_date,
@@ -88,13 +90,12 @@ test_that("laggre's aggre argument works flexibly", {
     x <- Lexis(data = sire[dg_date < ex_date,][1:500, ], entry = list(fot = 0, age = dg_age, per = get.yrs(dg_date)),
                exit = list(per = get.yrs(ex_date)), exit.status = status, 
                entry.status = 0)
-    x <- splitLexis(x, breaks = BL$fot, time.scale = "fot")
-    x <- splitLexis(x, breaks = BL$per, time.scale = "per")
+    x <- splitMulti(x, breaks = BL)
+    setDF(x)
+    setattr(x, "class", c("Lexis", "data.frame"))
     x$agegr <- cut(x$dg_age, 2)
     if (cond) {
-      setDT(x)
-      setattr(x, "class", c("Lexis", "data.table", "data.frame"))
-      setattr(x, "breaks", BL)
+      forceLexisDT(x, breaks = BL, allScales = c("fot", "per", "age"))
     }
     
     a <- laggre(x, aggre = list(agegr = cut(dg_age, 2), sex, fot, per = per), type = "unique")

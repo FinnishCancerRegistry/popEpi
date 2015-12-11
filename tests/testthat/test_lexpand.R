@@ -96,7 +96,7 @@ test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used",
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
                  breaks = BL, status = status, entry.status = 0L,
                  birth = bi_date, entry = dg_date, exit = ex_date)
-  setDT(ag1)
+  forceLexisDT(ag1, breaks = BL, allScales = c("fot", "per", "age"))
   
   e <- quote(list(sex = factor(sex, 0:1, c("m", "f")),
             period = cut(get.yrs(dg_date), get.yrs(as.Date(paste0(seq(1970, 2015, 5), "-01-01"))))))

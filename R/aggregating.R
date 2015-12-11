@@ -267,12 +267,19 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   
   if (verbose) cat("Aggregation type: ", type, " \n")
   
+  checkLexisData(lex)
+  
   if (is.null(breaks)) breaks <- copy(attr(lex, "breaks"))
   checkBreaksList(lex, breaks)
   
-  foundScales <- copy(attr(lex, "time.scales"))
-  if (length(foundScales) == 0) foundScales <- names(breaks)
-  if (length(foundScales) == 0 ) stop("could not determine names of time scales; is the data a Lexis object?")
+  allScales <- copy(attr(lex, "time.scales"))
+  if (length(allScales) == 0 ) stop("could not determine names of time scales; is the data a Lexis object?")
+  
+  if (is.data.table(lex)) {
+    oldKey <- key(lex)
+    if (length(oldKey) == 0L) oldKey <- NULL
+    on.exit(setkeyv(lex, oldKey), add = TRUE)
+  }
   
   ## subset & drop -------------------------------------------------------------
   subset <- substitute(subset)
