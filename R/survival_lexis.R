@@ -3,13 +3,14 @@
 # s <- dt[, Surv(time = rep(0, nrow(dt)), time2 = fot, event = status %in% 1:2)]
 
 
-survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz = NULL, weights = NULL, event.values = NULL, surv.type = "surv.rel", relsurv.method = "e2", subset = NULL, ...) {
+survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz = NULL, weights = NULL, event.values = NULL, surv.type = "surv.rel", surv.method = "hazard", relsurv.method = "e2", subset = NULL, ...) {
   
   ## checks --------------------------------------------------------------------
-  if (!inherits(data, "Lexis")) stop("data is not a Lexis object")
+  checkLexisData(data)
   
-  allScales <- attr(data, "time.scales")
-  splitScales <- names(breaks)
+  l <- list() ## list of temp vars to avoid conflicts
+  l$allScales <- attr(data, "time.scales")
+  l$splitScales <- names(breaks)
   
   if (is.null(event.values)) {
     event.values <- if (is.factor(data$lex.Xst)) levels(data$lex.Xst) else sort(unique(data$lex.Xst))
@@ -24,7 +25,8 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   checkBreaksList(data, breaks = breaks)
   ## match break types to time scale types
   ## (don't try to match time scales to breaks)
-  for (k in allScales) {
+  l$splitScales <- names(breaks)
+  for (k in l$splitScales) {
     breaks[[k]] <- matchBreakTypes(data, breaks = breaks[[k]], timeScale = k)
   }
   
@@ -37,21 +39,27 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   subset <- evalLogicalSubset(data, substitute(subset))
   
   x <- if (all(subset)) copy(data) else data[subset,]
-  forceLexisDT(x, breaks = attr(data, "breaks"), allScales = allScales, key = TRUE)
+  forceLexisDT(x, breaks = attr(data, "breaks"), allScales = l$allScales, key = TRUE)
+  alloc.col(x)
+  
+  # isCens <- 
   
   print <- evalPopArg(x, substitute(print), DT = TRUE)
   adjust <- evalPopArg(x, substitute(adjust), DT = TRUE)
+  l$pophazVars <- setdiff(names(pophaz), "haz")
   
-  setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", setdiff(names(pophaz), "haz")))
+  setcolsnull(x, keep = c("lex.id", "lex.dur", l$allScales, "lex.Cst", "lex.Xst", l$pophazVars))
   
   if (!is.null(print)) x[, names(print) := print]
   if (!is.null(adjust)) x[, names(adjust) := adjust]
-  print <- names(print) ## note: names(NULL) equals NULL
-  adjust <- names(adjust)
-  av <- c(print, adjust, names(breaks)[1L])
+  l$print <- names(print) ## note: names(NULL) equals NULL
+  l$adjust <- names(adjust)
+  rm(print, adjust)
+  ## includes time scale to compute survivals over
+  l$aggreVars <- c(print, adjust, names(breaks)[1L]) 
   
   x <- splitMulti(x, breaks = breaks, drop = drop, merge = TRUE)
-  forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
+  forceLexisDT(x, breaks = breaks, allScales = l$allScales, key = TRUE)
   
 #   ## date time scales? ---------------------------------------------------------
 #   ## this actually needs to also handle breaks in an intellgent way!
@@ -61,9 +69,9 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
 #   if (any(areDifftimes)) x[, (allScales[areDifftimes]) := lapply(.SD, function(x) x/365.242199), .SDcols = allScales[areDifftimes]]
   
   if (!is.null(pophaz)) {
-    x <- cutLowMerge(x, pophaz, by = setdiff(names(pophaz), "haz"), 
-                     mid.scales = intersect(names(pophaz), allScales))
-    forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
+    x <- cutLowMerge(x, pophaz, by = l$pophazVars, 
+                     mid.scales = intersect(l$pophazVars, l$allScales))
+    forceLexisDT(x, breaks = breaks, allScales =l$allScales, key = TRUE)
   }
   
   
@@ -71,14 +79,19 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   ## on the level of the splitted observations!
   
   if (comp_pp) {
-    comp_pp_weights(x, surv.scale = names(breaks)[1L], 
+    comp_pp_weights(x, surv.scale = l$splitScales[1L], 
                     breaks = breaks[[1L]], haz = "haz", 
                     style = "delta", verbose = FALSE)
-    forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
+    forceLexisDT(x, breaks = breaks, allScales = l$allScales, key = TRUE)
     
-    intelliCrop(x = x, breaks = breaks, allScales = allScales, cropStatuses = TRUE)
+    intelliCrop(x = x, breaks = breaks, allScales = l$allScales, cropStatuses = TRUE)
     x <- intelliDrop(x, breaks = breaks, dropNegDur = TRUE, check = TRUE)
-    forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
+    forceLexisDT(x, breaks = breaks, allScales = l$allScales, key = TRUE)
+    
+    l$evInd <- detectEvents(x, breaks = breaks, by = "lex.id")
+    l$cens <- as.integer(l$evInd == 2L)
+    l$tran <- as.integer(l$evInd == 1L)
+    
     pp <- vector("list", 4)
     names(pp) <- c("d.pp", "d.exp.pp", "d.pp.2", if (surv.method == "hazard") "pyrs.pp" else "n.eff.pp")
     
@@ -91,7 +104,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   
   # c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else "n.eff.pp") else NULL)
   haz <- NULL ## appease R CMD CHECK
-  x <- laggre(x, aggre = c(print, adjust, names(breaks)[1]), verbose = FALSE,
+  x <- laggre(x, aggre = l$aggreVars, verbose = FALSE,
               expr = if (surv.type %in% c("surv.rel", "cif.rel") && "haz" %in% names(x)) list(d.exp = sum(haz*lex.dur)) else NULL)
   
   dn <- CJ(C = cens.values, X = event.values)
@@ -142,8 +155,12 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
   ## 1: transition within breaks
   ## 2: original end-point within breaks and no transition occured (i.e. censoring)
   if (!is.data.table(x)) stop("x must be a data.table; if you see this, send the package maintainer an email")
-  checkLexisData(x)
-  if (!is.null(breaks)) checkBreaksList(x, breaks = breaks)
+  # checkLexisData(x)
+  if (!inherits(x, "Lexis")) stop("data not a Lexis object")
+  if (!is.null(breaks)) {
+    if (!is.list(breaks)) stop("breaks must be a named list of breaks vectors")
+    if (length(breaks) != length(setdiff(names(breaks), ""))) stop("all elements in breaks list are not named")
+  }
   
   tmp <- list()
   oldKey <- key(x)
@@ -152,8 +169,8 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
     on.exit(setorderv(x, tmp$order), add = TRUE)
     on.exit(setcolsnull(x, tmp$order, soft = TRUE), add = TRUE)
     set(x, j = tmp$order, value = 1:nrow(x))
-  } else 
-    on.exit(setkeyv(x, oldKey), add = TRUE)
+  } else on.exit(setkeyv(x, oldKey), add = TRUE)
+    
   
   setkeyv(x, c(by, attr(x, "time.scales")[1L]))
   setkeyv(x, by)
@@ -194,14 +211,18 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
   set(x, j = tmp$ind, value = evInd)
   
   if (length(oldKey) == 0L) {
+    setkeyv(x, NULL)
     setorderv(x, tmp$order)
     set(x, j = tmp$order, value = NULL)
-  } else 
-    setkeyv(x, oldKey)
+  } else setkeyv(x, oldKey)
+  
   
   evInd <- x[[tmp$ind]]
   set(x, j = tmp$ind, value = NULL)
   on.exit(expr = {}, add = FALSE) ## removes on.exit expressions from earlier
+  
+  
+  if (!identical(oldKey, key(x))) stop("keys do not match at function end; send an email to package maintainer if you see this")
   
   evInd
 }
