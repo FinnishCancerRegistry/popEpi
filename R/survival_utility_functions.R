@@ -262,3 +262,16 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
   
   invisible(lex[])
 }
+
+comp_pp_weighted_figures <- function(lex, pp = "pp") {
+  
+  checkLexisData(lex, check.breaks = TRUE)
+  if (!is.data.table(lex)) stop("lex must be a data.table")
+  
+  l <- list()
+  l$pp <- pp
+  
+}
+
+
+
