@@ -320,7 +320,7 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
 
   
   ## need to cut() time scales for aggregating?
-  aggScales <- intersect(foundScales, av)
+  aggScales <- intersect(allScales, av)
   if (any(!aggScales %in% names(breaks))) {
     aggScales <- paste0("'", setdiff(aggScales, names(breaks)), "'", collapse = ", ")
     stop("requested aggregating by time scale(s) by which data has not been split: ", aggScales)
@@ -453,50 +453,30 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   ## tmplex only an alias for lex
   ## note: unfortunately need to take copy of DF here
   
-  firstScale <- attr(lex, "time.scales")[1]
+  firstScale <- allScales[1]
   if (!is.data.table(lex)) {
-    copyVars <- which(names(lex) %in% c(av, "lex.id", "lex.dur", unique(c(firstScale, aggScales)), "lex.Cst", "lex.Xst"))
+    copyVars <- which(names(lex) %in% c(av, "lex.id", "lex.dur", names(breaks), "lex.Cst", "lex.Xst"))
     tmplex <- lex[, c(copyVars)]
     setDT(tmplex)
+    forceLexisDT(tmplex, breaks = breaks, allScales = allScales, key = FALSE)
   } else tmplex <- lex
   
-  tmpOrder <- makeTempVarName(tmplex, pre = "order_")
-  tmplex[, (tmpOrder) := 1:.N]
   
-  on.exit({
-    if (exists("tmplex")) setcolsnull(tmplex, c(tmpTrans, tmpOrder))
-  }, add = TRUE)
-  
-  old_key <- key(tmplex) ## note: if lex was data.frame, tmplex no key
-  setkeyv(tmplex, c("lex.id", firstScale))
   
   tmpTrans <- makeTempVarName(tmplex, pre = "trans_")
-  tmplex[, (tmpTrans) := lex.Cst != lex.Xst | !duplicated(lex.id, fromLast = TRUE)]
+  on.exit({
+    if (exists("tmplex")) setcolsnull(tmplex, c(tmpTrans), soft = TRUE)
+  }, add = TRUE)
+  tmplex[, c(tmpTrans) := detectEvents(tmplex, breaks = breaks, by = "lex.id") %in% 1:2]
   
-  ## only an event if time line not cut short due to splitting or otherwise
-  if (length(aggScales) > 0) {
-    tmpCens <- tmplex[, lapply(mget(aggScales), function(x) x + lex.dur)]
-    for (k in aggScales) {
-      if (length(breaks[[k]]) < 2) stop("length of breaks less 0 or 1 for following time scale by which aggregation was requested: '", k, "'")
-      set(tmpCens, j = k, value = tmpCens[[k]] + .Machine$double.eps^0.5 < max(breaks[[k]]))
-    }
-    tmpCens <- rowSums(tmpCens)
-    tmpCens <- tmpCens > 0 & !is.na(tmpCens)
-    tmplex[, (tmpTrans) := tmpCens & get(tmpTrans)]
-    rm(tmpCens)
-  }
-  if (length(old_key) > 0) {
-    setkeyv(tmplex, old_key) 
-  } else {
-    setorderv(tmplex, tmpOrder)
-  }
   tmplex[, (tmpTrans) := get(tmpTrans) & subset]
   aggre <- aggre[tmplex[[tmpTrans]]]
   
   trans <- tmplex[tmplex[[tmpTrans]], list(obs = .N), keyby = aggre]
   
-  setcolsnull(tmplex, c(tmpTrans, tmpOrder))
+  setcolsnull(tmplex, c(tmpTrans), soft = TRUE)
   rm(tmplex, aggre)
+  
   
   if (verbose) cat("Time taken by aggregating events: ", timetaken(transTime), "\n")
   
