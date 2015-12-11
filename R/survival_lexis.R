@@ -124,7 +124,87 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
 #                   # weights = list(agegr = c(0.2,0.4,0.4)),
 #                   breaks = list(FUT = seq(0,5,1/12)))
 
-
+detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id") {
+  ## INTENTION: given a Lexis object, determines which rows
+  ## have an event (a transition or end-point) within the window
+  ## determined by breaks (a list of breaks as supplied to e.g. splitMulti).
+  ## Usable with split and unsplit data, though it is best to do this
+  ## before splitting for efficiency.
+  ## NOTE: by should be a character vector specifying variables that identify
+  ## unique subjects; the idea is that each subject only has one end-point
+  ## and some transitions
+  ## NOTE: breaks should be a list of breaks or NULL; if it is NULL,
+  ## it is NOT checked whether observations were cut short by the breaks used.
+  ## observations cut short are not any kind of events.
+  ## OUTPUT: an integer vector coding events as follows:
+  ## 0: no event within breaks (row cut short by breaks or subject 
+  ##    has multiple rows, of which this is not an event)
+  ## 1: transition within breaks
+  ## 2: original end-point within breaks and no transition occured (i.e. censoring)
+  if (!is.data.table(x)) stop("x must be a data.table; if you see this, send the package maintainer an email")
+  checkLexisData(x)
+  if (!is.null(breaks)) checkBreaksList(x, breaks = breaks)
+  
+  tmp <- list()
+  oldKey <- key(x)
+  if (length(oldKey) == 0L) {
+    tmp$order <- makeTempVarName(x, pre = "order_")
+    on.exit(setorderv(x, tmp$order), add = TRUE)
+    on.exit(setcolsnull(x, tmp$order, soft = TRUE), add = TRUE)
+    set(x, j = tmp$order, value = 1:nrow(x))
+  } else 
+    on.exit(setkeyv(x, oldKey), add = TRUE)
+  
+  setkeyv(x, c(by, attr(x, "time.scales")[1L]))
+  setkeyv(x, by)
+  ## rows that actually can be events: transitions and last rows by subject
+  whTr <- x[, lex.Cst != lex.Xst]
+  whLa <- !duplicated(x, fromLast = TRUE)
+  whEv <- whTr | whLa
+  
+  if (!is.null(breaks)) {
+    
+    splitScales <- names(breaks)
+    
+    brmax <- lapply(breaks, max)
+    brmin <- lapply(breaks, min)
+    
+    ## detect rows residing within breaks window
+    for (sc in splitScales) {
+      z <- (x$lex.dur + x[[sc]])[whEv]
+      tol_sc <- if (is.double(z)) tol else 0L
+      
+      ## NOTE: if max of orig values within breaks window, then all may be events
+      if (!(max(z) + tol_sc < brmax[[sc]])) whEv[whEv] <- z < brmax[[sc]] - tol_sc
+      if (!(min(z) - tol_sc > brmin[[sc]])) whEv[whEv] <- z > brmin[[sc]] + tol_sc
+      
+    }
+    ## whEv now indicates rows that may be events AND which reside within breaks window. 
+  }
+  
+  ## censorings are not transitions, but must reside within breaks window.
+  whCe <- whLa & !whTr & whEv
+  
+  ## need to add event indicator to data since it has been reordered,
+  ## reorder back old order, and return the event indicator.
+  tmp$ind <- makeTempVarName(x, pre = "event_indicator_")
+  on.exit(setcolsnull(x, delete = tmp$ind, soft = TRUE), add = TRUE)
+  evInd <- as.integer(whEv)
+  evInd <- ifelse(whCe, 2L, evInd)
+  set(x, j = tmp$ind, value = evInd)
+  
+  if (length(oldKey) == 0L) {
+    setorderv(x, tmp$order)
+    set(x, j = tmp$order, value = NULL)
+  } else 
+    setkeyv(x, oldKey)
+  
+  evInd <- x[[tmp$ind]]
+  set(x, j = tmp$ind, value = NULL)
+  on.exit(expr = {}, add = FALSE) ## removes on.exit expressions from earlier
+  
+  evInd
+}
 
 
 
