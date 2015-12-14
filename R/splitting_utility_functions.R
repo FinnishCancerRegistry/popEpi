@@ -428,48 +428,71 @@ doCutLexisDT <- function(lex, cut = dg_date, timeScale = "per", by = "lex.id", n
 #                id = 1L, entry.status = 99L,
 #                status = status, overlapping = T)
 
-lexpile <- function(lex) {
-  if (!inherits(lex, "Lexis")) stop("lex must be a Lexis object")
-  if (!is.data.table(lex)) stop("lex must be a data.table")
+lexpile <- function(lex, by = "lex.id", subset = NULL) {
+  ## PURPOSE: given several rows per id in a Lexis object,
+  ## collate data into form where
+  ## - no subject has any overlapping time lines
+  ## - lex.Cst and lex.Xst are logical, i.e. 0 -> 1, 1 -> 1, 1 -> 2
+  ## this should be made to work with both split and unsplit Lexis data.
+  
+  checkLexisData(lex, check.breaks = FALSE)
   
   allScales <- attr(lex, "time.scales")
   sc <- allScales[1L]
+
+  all_names_present(lex, by)
   
-  all_names_present(lex, c(allScales, "lex.dur", "lex.id"))
+  ## need to take copy eventually ----------------------------------------------
+  attrs <- attributes(lex)
+  subset <- evalLogicalSubset(data, substitute(subset))
+  x <- lex[subset,]
+  forceLexisDT(x, breaks = attrs$breaks, allScales = attrs$time.scales)
+  alloc.col(x)
   
   ## avoiding side effects -----------------------------------------------------
   oldKey <- key(lex)
   tmp <- list()
-  tmp$order<- makeTempVarName(lex, pre = "order_")
+  tmp$order<- makeTempVarName(x, pre = "order_")
   
   on.exit({
-    setcolsnull(lex, unlist(tmp$order), soft = TRUE)
+    if (length(oldKey) > 0) setkeyv(x, oldKey) else 
+      setorderv(x, tmp$order)
   }, add = TRUE)
   
   on.exit({
-    if (length(oldKey) > 0) setkeyv(lex, oldKey) else 
-      setorderv(lex, tmp$order)
+    setcolsnull(x, unlist(tmp$order), soft = TRUE)
   }, add = TRUE)
   
-  lex[, (tmp$order) := 1:.N]
+  x[, c(tmp$order) := 1:.N]
   
   ## check for need for lexpiling ----------------------------------------------
-  setkeyv(lex, "lex.id")
-  if (sum(duplicated(lex)) == 0L) return(lex)
+  setkeyv(x, by)
+  if (sum(duplicated(x)) == 0L) return(lex)
   
   
-  ## ensure status 
+  ## figure out what statuses are used -----------------------------------------
+  
+  tmp$ev <- makeTempVarName(x, pre = "event_")
+  x[, c(tmp$ev) := detectEvents(x, breaks = attrs$breaks, by = by)]
+  
   tmp$scEnds <- paste0(allScales, "_end")
   tmp$scEnds <- makeTempVarName(lex, pre = tmp$scEnds)
-  lex[, (tmp$scEnds) := lapply(.SD, function(x) x + lex$lex.dur), .SDcols = allScales]
+  x[, c(tmp$scEnds) := lapply(.SD, function(x) x + lex$lex.dur), .SDcols = allScales]
   
+  ## NOTE: rows for a given subject ending in simultaneously with at least
+  ## one being a transition will not be allowed.
+  setkeyv(x, c(by, tmp$scEnds, tmp$ev))
+  l <- vector(mode = "list", length = length(by) + length(tmp$scEnds))
+  l$ev <- 1L
+  dupTest <- x[l, duplicated(.SD)]
+  if (any(dupTest)) stop("At least one subject had at least two simultaneous transitions, which is not supported.")
   ## NOTE: if interval ends AND status are the very same for M rows,
   ## then the M rows are necessarily nested with one or more covering
   ## the whole time line. Only need to keep the one.
-  setkeyv(lex, c(tmp$scEnds, "lex.Cst", "lex.Xst"))
-  setorderv(lex, c(allScales,tmp$scEnds, "lex.Cst", "lex.Xst"))
+  setkeyv(x, c(tmp$scEnds, "lex.Cst", "lex.Xst"))
+  setorderv(x, c(allScales,tmp$scEnds, "lex.Cst", "lex.Xst"))
   
-  lex <- unique(lex)
+  x <- unique(x)
   stop("unfinished")
   
 }
