@@ -131,7 +131,7 @@ test_that("lexpanding with aggre.type = 'cartesian' works; only time scales used
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
                  breaks = BL, status = status, entry.status = 0L,
                  birth = bi_date, entry = dg_date, exit = ex_date)
-  setDT(ag1)
+  forceLexisDT(ag1, breaks = BL, allScales = c("fot", "per", "age"))
   
   ag3 <- laggre(ag1, aggre = list(fot, age), type = "cartesian")
   setDT(ag3)
