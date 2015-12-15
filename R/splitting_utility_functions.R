@@ -116,20 +116,14 @@ harmonizeFactors <- function(x, v1="lex.Cst", v2="lex.Xst") {
   
 }
 
-intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = FALSE, tol = .Machine$double.eps^0.5, roundDig = NULL)  {
+intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = FALSE, tol = .Machine$double.eps^0.5, subset = NULL)  {
   
+  if (!is.data.table(x)) stop("x needs to be a data.table; if you see this message, complain to the package maintainer")
   checkBreaksList(x = x, breaks = breaks)
   timeScales <- names(breaks)
   
   if (check) {
-    if (!inherits(x, "Lexis")) stop("x needs to be a Lexis object")
-    
-    for (k in timeScales) {
-      if (is.null(attr(x, "breaks")[[k]])) stop("x isnt a product of splitting it seems")
-      if (any(!breaks[[k]] %in% attr(x, "breaks")[[k]])) {
-        stop("given breaks not a subset of breaks used to split x")
-      }
-    }
+    checkLexisData(x)
   }
   
   ra <- lapply(breaks, range)
@@ -138,25 +132,25 @@ intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = 
   mi <- lapply(breaks, min)
   ma <- lapply(breaks, max)
   
-  x <- data.table(x)
-  if (dropNegDur) x <- x[lex.dur > 0L]
+  subset <- evalLogicalSubset(x, substiset = substitute(subset))
+  subset <- rep(TRUE, nrow(x))
+  
+  if (dropNegDur) subset[subset] <- subset[subset] & x$lex.dur[subset] > 0L
+  
+  e <- environment()
   
   for (k in ts) {
     mik <- mi[[k]]
     mak <- ma[[k]]
-    if (!is.null(roundDig)) {
-      
-      x <- x[round(get(k) + lex.dur, roundDig) <=  round(mak + tol, roundDig), ]
-      x <- x[round(get(k) + tol, roundDig) > round(mik, roundDig), ]
-    } else {
-      
-      x <- x[get(k) + lex.dur <=  mak + tol, ]
-      x <- x[get(k) + tol > mik, ]
-    }
+    
+    subset[subset] <- x[e$subset, rowSums(.SD) <=  e$mak + e$tol, .SDcols = c(e$k, "lex.dur")]
+    subset[subset] <- x[e$subset, .SD[[e$k]]  > e$mik - e$tol, .SDcols = c(e$k)]
     
   }
   
-  x[]
+  if (sum(subset) == 0L) stop("Dropped all rows from data")
+  
+  x[e$subset, ]
 }
 
 
@@ -442,12 +436,23 @@ lexpile <- function(lex, by = "lex.id", subset = NULL) {
 
   all_names_present(lex, by)
   
+  if (is.character(lex$lex.Cst) || is.character(lex$lex.Xst)) {
+    stop("This function requires lex.Cst and lex.Xst to be integer, double (i.e. numeric) or factor variables to determine the order of possible statuses!")
+  }
+  
   ## need to take copy eventually ----------------------------------------------
   attrs <- attributes(lex)
   subset <- evalLogicalSubset(data, substitute(subset))
   x <- lex[subset,]
   forceLexisDT(x, breaks = attrs$breaks, allScales = attrs$time.scales)
   alloc.col(x)
+  
+  
+  ## ensure status harmony -----------------------------------------------------
+  harmonizeStatuses(x = x, X = "lex.Xst", C = "lex.Cst")
+  exStat <- if (is.factor(x$lex.Xst)) levels(x$lex.Xst) else sort(unique(x$lex.Xst))
+  enStat <- if (is.factor(x$lex.Cst)) levels(x$lex.Cst) else sort(unique(x$lex.Cst))
+  allStat <- c(setdiff(enStat, exStat), exStat) ## enStat & exStat equal if factors used
   
   ## avoiding side effects -----------------------------------------------------
   oldKey <- key(lex)
@@ -481,11 +486,13 @@ lexpile <- function(lex, by = "lex.id", subset = NULL) {
   
   ## NOTE: rows for a given subject ending in simultaneously with at least
   ## one being a transition will not be allowed.
-  setkeyv(x, c(by, tmp$scEnds, tmp$ev))
-  l <- vector(mode = "list", length = length(by) + length(tmp$scEnds))
-  l$ev <- 1L
-  dupTest <- x[l, duplicated(.SD)]
-  if (any(dupTest)) stop("At least one subject had at least two simultaneous transitions, which is not supported.")
+  setkeyv(x, c(by, tmp$scEnds[1L]))
+  
+  whDup <- duplicated(x, fromLast = FALSE) | duplicated(x, fromLast = TRUE)
+  dupTest <- x[whDup, 1L %in% unique(.SD), .SDcols = tmp$ev]
+  rm(whDup)
+  
+  if (dupTest) stop("At least one subject had at least two simultaneous events.")
   ## NOTE: if interval ends AND status are the very same for M rows,
   ## then the M rows are necessarily nested with one or more covering
   ## the whole time line. Only need to keep the one.
