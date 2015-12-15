@@ -96,6 +96,7 @@ test_that("laggre's aggre argument works flexibly", {
     x$agegr <- cut(x$dg_age, 2)
     if (cond) {
       forceLexisDT(x, breaks = BL, allScales = c("fot", "per", "age"))
+      alloc.col(x)
     }
     
     a <- laggre(x, aggre = list(agegr = cut(dg_age, 2), sex, fot, per = per), type = "unique")

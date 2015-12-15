@@ -11,7 +11,7 @@ test_that("splitLexisDT and splitLexis are congruent", {
   sire2[, id := 1:.N]
   
   BL <- list(fot = 0:5, fot = 2:6, fot = c(10,Inf), fot = c(0, Inf),
-             per = 1990:1995, per = 1950:1990, per = c(1900, 2100), 
+             per = 1990:1995, per = seq(1950,2010,10), per = c(1900, 2100), 
              age = seq(0,150,5), age = c(25,100), age = c(0, 60))
   
   x <- Lexis(data=sire2[dg_date < ex_date], entry=list(fot=0, per=dg_yrs, age=dg_age),
