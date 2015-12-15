@@ -11,7 +11,7 @@ test_that("splitMulti and splitLexis are congruent", {
   sire2[, bi_yrs := get.yrs(bi_date, "actual")]
   sire2[, id := 1:.N]
   
-  BL1 <- list(fot = 0:5, per = 1990:1995, age = c(0, 60))
+  BL1 <- list(fot = 0:5, per = 1990:1995, age = c(0, 60, Inf))
   
   BL2 <- list(fot = c(10,Inf), age = seq(0,150,5))
   
@@ -60,11 +60,11 @@ test_that("splitMulti and splitLexis are congruent", {
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   
-  test_that("splitLexisDT and splitLexis congruent with multiple rows per id", {
-    for (sc in seq_along(BL)) {
+  for (sc in seq_along(BL)) {
+    test_that(paste0("splitLexisDT and splitLexis congruent with multiple rows per id with breaks no. ", sc), {
       compareSMWithEpi(x, BL[[sc]])
-    }
-  })
+    })
+  }
   
   # multistate using Lexis -----------------------------------------------------
   
@@ -79,13 +79,13 @@ test_that("splitMulti and splitLexis are congruent", {
   setDT(x)   
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   
+  BL[[1L]] <- NULL ## this would drop all rows in split data
   
-  
-  test_that("splitLexisDT and splitLexis congruent with multiple Lexis states per id", {
-    for (sc in seq_along(BL)) {
+  for (sc in seq_along(BL)) {
+    test_that(paste0("splitLexisDT and splitLexis congruent with multiple Lexis states per id using breaks list no. ", sc), {
       compareSMWithEpi(x, BL[[sc]])
-    }
-  })
+    })
+  }
   
   # multistate using mstate ----------------------------------------------------
   
