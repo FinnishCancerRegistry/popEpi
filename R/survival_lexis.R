@@ -8,9 +8,9 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   ## checks --------------------------------------------------------------------
   checkLexisData(data)
   
-  l <- list() ## list of temp vars to avoid conflicts
-  l$allScales <- attr(data, "time.scales")
-  l$splitScales <- names(breaks)
+  l <- environment() ## will refer to this explicitly in DT[] to avoid conflicts
+  allScales <- attr(data, "time.scales")
+  splitScales <- names(breaks)
   
   if (is.null(event.values)) {
     event.values <- if (is.factor(data$lex.Xst)) levels(data$lex.Xst) else sort(unique(data$lex.Xst))
