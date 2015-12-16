@@ -413,7 +413,7 @@ globalVariables(c('ms_agegr_w',
 #' such as \code{lty} and \code{col} will not work
 #' @details 
 #' 
-#' For examples see \code{\link{meansurv}}. This function is intended only
+#' For examples see \code{\link{survmean}}. This function is intended only
 #' for graphically inspecting that the observed survival curves with extrapolation
 #' and the expected survival curves have been sensibly computed in \code{survmean}.
 #' 

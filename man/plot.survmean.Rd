@@ -18,7 +18,7 @@ Plots the observed (with extrapolation) and expected survival
 curves for all strata in an object created by \code{\link{survmean}}
 }
 \details{
-For examples see \code{\link{meansurv}}. This function is intended only
+For examples see \code{\link{survmean}}. This function is intended only
 for graphically inspecting that the observed survival curves with extrapolation
 and the expected survival curves have been sensibly computed in \code{survmean}.
 
