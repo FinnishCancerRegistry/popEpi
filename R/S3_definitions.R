@@ -534,6 +534,24 @@ subset.survtab <- function(x, ...) {
   y
 }
 
+## subsetting for meansurv objects that retains attributes
+`[.survmean` <- function(x, ...) {
+  structure(NextMethod(), curves = attr(x, "curves"), 
+            by.vars = attr(x, "by.vars"), surv.breaks = attr(x, "surv.breaks"))
+}
+
+subset.survmean <- function(x, ...) {
+  y <- NextMethod()
+  if (is.data.table(x)) setDT(y)
+  setattr(y, "class", class(x))
+  setattr(y, "surv.breaks", attr(x, "surv.breaks"))
+  setattr(y, "by.vars", attr(x, "by.vars"))
+  setattr(y, "curvse", attr(x, "curves"))
+  y
+}
+
+
+
 #' \code{plot} method for survtab objects
 #' 
 #' Plotting for \code{survtab} objects
