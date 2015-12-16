@@ -137,4 +137,21 @@ test_that("cutLowMerge merges succesfully what is intended", {
 
 
 
-
+test_that("comp_pp_weighted_figures produces intended results", {
+  set.seed(1L)
+  x <- sire[dg_date<ex_date,][sample(x = .N, size = 5L, replace = FALSE),]
+  x <- lexpand(x, birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2, pophaz = popmort,
+               breaks = list(fot = seq(0,20,1/12), per = 1993:2013, age = 0:200))
+  x[, event := detectEvents(x, breaks = attr(x, "breaks"), by = "lex.id")]
+  
+  l <- comp_pp_weighted_figures(lex = x, haz = "pop.haz", pp = "pp", event.ind = "event", by = "lex.id")
+  x[, names(l) := l]
+  
+  expect_equal(x[event %in% 1:2, pp], x[event %in% 1:2, from0to0.pp + from0to1.pp])
+  expect_equal(x[event %in% 1:2, sum(pp)], x[, sum(from0to0.pp + from0to1.pp)])
+  expect_equal(x[, lex.dur*pp], x$ptime.pp)
+  expect_equal(x[, lex.dur*pp*pop.haz], x$d.exp.pp)
+  expect_equal(x[event == 1L, pp^2], x[event == 1L,]$from0to1.pp.2)
+  
+})

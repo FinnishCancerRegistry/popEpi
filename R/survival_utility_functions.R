@@ -263,15 +263,96 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
   invisible(lex[])
 }
 
-comp_pp_weighted_figures <- function(lex, pp = "pp") {
+comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NULL, by = "lex.id") {
+  ## PURPOSE: given a split Lexis object with a column of pre-computed
+  ## pohar-perme weights, computes pp-weighted:
+  ## * person-time (lex.dur*pp)
+  ## * event counts
+  ## * event counts multiplied with pp^2
+  ## * expected event counts
+  ## events are transitions and end points as detected by detectEvents,
+  ## and include censorings.
+  ## OUTPUT: a DT of pp-weighted things.
   
   checkLexisData(lex, check.breaks = TRUE)
   if (!is.data.table(lex)) stop("lex must be a data.table")
   
-  l <- list()
-  l$pp <- pp
+  all_names_present(lex, c(pp, haz, event.ind, by))
+  
+  ## NOTE: we want to avoid conflicts with possible variable names in lex
+  ## (e.g. an existing column named ptime.pp might conflict with ptime.pp char vec)
+  e <- environment()
+  
+  if (is.null(event.ind)) {
+    event.ind <- makeTempVarName(lex, pre = "event_indicator_")
+    on.exit(setcolsnull(lex, delete = event.ind, soft = TRUE), add = TRUE)
+    set(lex, j = event.ind, value = detectEvents(lex, breaks = attr(lex, "breaks"), by = by))
+    all_names_present(lex, event.ind)
+  }
+  ## data.table is probably faster in this than simply using vectors
+  idt <- data.table(1:2)
+  names(idt) <- event.ind
+  haveEvents <- sort(lex[idt, on = event.ind, which = TRUE])
+  evtab <- lex[haveEvents, .(obs = .N), by = list(lex.Cst, lex.Xst)]
+  set(evtab, j = "obs", value = NULL)
+  
+  events <- paste0("from", evtab$lex.Cst, "to", evtab$lex.Xst)
+  ppVars <- c(paste0(events, ".pp"), "ptime.pp", "d.exp.pp")
+  
+  
+#   ## build table to join with lex to limit to rows with events -----------------
+#   ## non-event-rows have zero valued pp-weighted event counts, naturally
+#   set(evtab, j = event.ind, value = NULL)
+#   evtab <- rbindlist(list(evtab, evtab))
+#   set(evtab, j = event.ind, value = rep(1:2, each = nrow(evtab)/2L))
+#   setkeyv(evtab, c("lex.Cst", "lex.Xst", event.ind))
+  
+  ## pp-weighted events --------------------------------------------------------
+  ## NOTE: a pp-weighted event is simply the pp weight where the event occurs
+  ## and zero otherwise (0L/1L times pp-weight)
+  
+  evN <- length(events)
+  evdt <- data.table(rn = rep(1:nrow(lex), times = evN))
+  set(evdt, j = "eventType", value = factor(rep(1:evN, each = nrow(lex)), levels = 1:evN, labels = events))
+  set(evdt, j = "pp", value = lex[[pp]])
+  
+  
+  ## need to still determine which rows are not their eventType's events -------
+  
+  rnVar <- makeTempVarName(lex, pre = "rowNum_")
+  on.exit(setcolsnull(lex, delete = rnVar, soft = TRUE), add = TRUE)
+  set(lex, j = rnVar, value = 1:nrow(lex))
+  
+  ## row numbers in lex by event type
+  rowNums <- lex[haveEvents][evtab, .(rowNum = .SD[[e$rnVar]]), by = .EACHI, on = c("lex.Cst", "lex.Xst"), .SDcols = rnVar]
+  ## multiply to accommodate expanded evdt data
+  
+  rowNums[, rowNum := rowNum+(.GRP-1L)*nrow(lex), by = list(lex.Cst, lex.Xst)]
+  noEvents <- setdiff(1:nrow(evdt), rowNums$rowNum)
+  
+  set(evdt, i = noEvents, j = "pp", value = 0)
+  
+  evdt <- dcast.data.table(evdt, rn ~ eventType, value.var = "pp")
+  
+  setorderv(evdt, "rn")
+  set(evdt, j = "rn", value = NULL)
+  
+  ## ptime.pp & d.exp.pp -------------------------------------------------------
+  set(evdt, j = "ptime.pp", value = lex$lex.dur * lex[[pp]])
+  set(evdt, j = "d.exp.pp", value = lex$lex.dur * lex[[haz]] * lex[[pp]])
+  
+  setcolorder(evdt, c("ptime.pp", "d.exp.pp", sort(events)))
+  setnames(evdt, events, paste0(events, ".pp"))
+  
+  ## events multiplied with pp-weight again ------------------------------------
+  ## (i.e. event times pp squared)
+  
+  set(evdt, j = paste0(events, ".pp.2"), value = evdt[, .SD, .SDcols = paste0(events, ".pp")]*lex[[pp]])
+  
+  return(evdt)
   
 }
+
 
 
 
