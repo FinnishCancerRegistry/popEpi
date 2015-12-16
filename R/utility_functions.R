@@ -1001,6 +1001,8 @@ popArgType <- function(arg, data = NULL, n = 1L, enclos = NULL) {
     if (is.list(e)) return("list")
     if (is.character(e) && all(e %in% names(data))) return("character")
     if (is.vector(e) || is.factor(e)) return("expression")
+    
+    if (is.language(e)) return(popArgType(e, data = data, n = n + 1L, enclos = enclos))
   }
   
   "expression"
