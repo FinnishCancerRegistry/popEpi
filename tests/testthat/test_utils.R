@@ -30,7 +30,7 @@ test_that("evalPopArg produces intended results",{
   tf <- function(x=dt, arg) {
     
     as <- substitute(arg)
-    byTab <- evalPopArg(x, arg = as)
+    byTab <- evalPopArg(x, arg = as, enclos = parent.frame(1L))
     
     x[, list(sum = sum(a)), by = byTab]
     
@@ -92,6 +92,28 @@ test_that("evalPopArg produces intended results",{
   t13 <- tf(arg=byList)
   expect_equal(t12, t13)
   
+  ## pre-substituted list
+  bl <- substitute(byList)
+  t14 <- tf(arg = bl)
+  expect_equal(t12, t14)
+  
+  ## pre-substituted vector of names
+  nv <- c("a", "b")
+  nvs <- substitute(nv)
+  t15a <- tf(arg = nv)
+  t15b <- tf(arg = nvs)
+  expect_equal(t15a, t15b)
+  
+  ## nested functions
+  tf2 <- function(a, x = dt) {
+    tf(x = x, arg = a)
+  }
+  
+  nv <- c("a", "b")
+  nvs <- substitute(nv)
+  t15a <- tf2(a = nv)
+  t15b <- tf2(a = nvs)
+  expect_equal(t15a, t15b)
 })
 
 
