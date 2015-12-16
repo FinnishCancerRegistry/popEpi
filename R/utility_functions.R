@@ -644,7 +644,7 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
 
 
 
-#' @title Coerce a \code{ratetable} object to \code{data.frame}
+#' @title Coerce a \code{ratetable} Object to Class \code{data.frame}
 #' @description
 #' \code{ratatable} objects used in e.g. \pkg{survival} and \pkg{relsurv}
 #' can be conveniently coerced to a long-format \code{data.frame}.
@@ -654,7 +654,7 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
 #' @param x a \code{ratetable}
 #' @param ... unused but added for compatibility with \code{as.data.frame}
 #' @export as.data.frame.ratetable
-#' @S3method as.data.frame ratetable
+# #' @S3method as.data.frame ratetable
 #' @examples
 #' library(relsurv)
 #' data(slopop)
@@ -664,6 +664,11 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
 #' \code{\link[survival]{ratetable}}, 
 #' \code{\link{as.data.table.ratetable}}
 #'
+#' @examples
+#' library(relsurv)
+#' data(slopop)
+#' dt <- as.data.frame.ratetable(slopop)
+#' head(dt)
 as.data.frame.ratetable <- function(x, ...) {
   dimids <- attr(x, "dimid")
   x <- as.data.frame.table(as.table(as.array(x)))
@@ -672,7 +677,7 @@ as.data.frame.ratetable <- function(x, ...) {
 }
 
 
-#' @title Coerce a \code{ratetable} object to \code{data.table}
+#' @title Coerce a \code{ratetable} Object to Class \code{data.table}
 #' @author Joonas Miettinen
 #' 
 #' @description
@@ -683,7 +688,7 @@ as.data.frame.ratetable <- function(x, ...) {
 #' @param x a \code{ratetable}
 #' @param ... other arguments passed on to \code{as.data.table}
 #' @export as.data.table.ratetable
-#' @S3method as.data.table ratetable
+# #' @S3method as.data.table ratetable
 #' @seealso 
 #' \code{\link[survival]{ratetable}}, 
 #' \code{\link{as.data.frame.ratetable}}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility_functions.R
 \name{as.data.table.ratetable}
 \alias{as.data.table.ratetable}
-\title{Coerce a \code{ratetable} object to \code{data.table}}
+\title{Coerce a \code{ratetable} Object to Class \code{data.table}}
 \usage{
 \method{as.data.table}{ratetable}(x, ...)
 }
