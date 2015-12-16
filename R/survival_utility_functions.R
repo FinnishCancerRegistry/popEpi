@@ -327,6 +327,7 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
   rowNums <- lex[haveEvents][evtab, .(rowNum = .SD[[e$rnVar]]), by = .EACHI, on = c("lex.Cst", "lex.Xst"), .SDcols = rnVar]
   ## multiply to accommodate expanded evdt data
   
+  rowNum <- NULL ## appease R CMD CHECK
   rowNums[, rowNum := rowNum+(.GRP-1L)*nrow(lex), by = list(lex.Cst, lex.Xst)]
   noEvents <- setdiff(1:nrow(evdt), rowNums$rowNum)
   
