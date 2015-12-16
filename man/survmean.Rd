@@ -138,6 +138,12 @@ plot(sm)
 # plot(sma)
 # plot(sms) plots precisely the same as plot(sma)
 
+## for finer control of plotting these curves, you may extract
+## from the survmean object using
+attr(sm, "curves")
+## or
+attributes(sm)$curves
+
 }
 \author{
 Joonas Miettinen, Karri Seppa

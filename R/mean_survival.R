@@ -120,6 +120,12 @@
 #' # plot(sma)
 #' # plot(sms) plots precisely the same as plot(sma)
 #' 
+#' ## for finer control of plotting these curves, you may extract
+#' ## from the survmean object using
+#' attr(sm, "curves")
+#' ## or
+#' attributes(sm)$curves
+#' 
 #' @export survmean
 #' 
 #' 
@@ -184,13 +190,13 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
   
   ft <- st[, c("surv.int", by.vars, "Tstart", "Tstop", "delta"), with=FALSE]
   ft <- rbindlist(list(ft, ft))
-  ft[, meansurv_type := rep(c("est", "exp"), each = nrow(ft)/2L)]
-  ft[, meansurv_type := factor(meansurv_type)]
+  ft[, survmean_type := rep(c("est", "exp"), each = nrow(ft)/2L)]
+  ft[, survmean_type := factor(survmean_type)]
   
   st <- melt(st, id.vars=by.vars, measure.vars=c("surv.obs", "surv.exp"), 
-             variable.name = "meansurv_type", value.name="surv.obs", variable.factor = TRUE)
-  st[, meansurv_type := factor(meansurv_type, levels=c("surv.obs","surv.exp"), labels=c("est","exp"))]
-  by.vars <- c("meansurv_type", by.vars)
+             variable.name = "survmean_type", value.name="surv.obs", variable.factor = TRUE)
+  st[, survmean_type := factor(survmean_type, levels=c("surv.obs","surv.exp"), labels=c("est","exp"))]
+  by.vars <- c("survmean_type", by.vars)
   
   setkeyv(st, by.vars); setkeyv(ft, by.vars)
   st <- cbind(ft, st[, list(surv.obs)])
@@ -264,8 +270,8 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
     setkey(data, lex.id, lex.multi)
     
     ## compute subject-specific expected survival curves for EdererI method ----
-    ## NOTE: meansurv_type not in data
-    by.vars <- setdiff(by.vars, "meansurv_type")
+    ## NOTE: survmean_type not in data
+    by.vars <- setdiff(by.vars, "survmean_type")
     if (length(by.vars)==0) by.vars <- NULL
     data[, surv.int := cut(fot, BL$fot,right=FALSE,labels=FALSE)]
     setkeyv(data, c(by.vars, "surv.int", "lex.id", "lex.multi"))
@@ -284,9 +290,9 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
     
     
     ## prepare to add after actual surv.obs estimates / expected survivals
-    by.vars <- c("meansurv_type", by.vars)
+    by.vars <- c("survmean_type", by.vars)
     data <- rbindlist(list(data, data))
-    data[, meansurv_type := factor(rep(c("est", "exp"), each = nrow(data)/2L))]
+    data[, survmean_type := factor(rep(c("est", "exp"), each = nrow(data)/2L))]
     
 #     new_si_levs <- st[, max(surv.int)+1L]
 #     new_si_levs <- new_si_levs:(new_si_levs+99L)
@@ -346,12 +352,12 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
 
   setkeyv(data, by.vars)
   
-  by.vars <- setdiff(by.vars, "meansurv_type")
+  by.vars <- setdiff(by.vars, "survmean_type")
   if (length(by.vars) == 0) {
     by.vars <- "temp_dummy"
     data[, temp_dummy := 1L]
   }
-  data <- cast_simple(data, columns = "meansurv_type", rows=by.vars, values = "survmean")
+  data <- cast_simple(data, columns = "survmean_type", rows=by.vars, values = "survmean")
   setcolsnull(data, "temp_dummy")
   by.vars <- setdiff(by.vars, "temp_dummy")
   if (length(by.vars) == 0) by.vars <- NULL
@@ -376,7 +382,7 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
   
   setattr(bkup, "by.vars", by.vars)
   setattr(bkup, "surv.breaks", subr)
-  setattr(data, "class", c("meansurv","pe","data.table", "data.frame"))
+  setattr(data, "class", c("survmean","data.table", "data.frame"))
   if (!getOption("popEpi.datatable")) setDFpe(data)
   setattr(data, "curves", bkup)
   return(data[])
@@ -385,7 +391,7 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
 
 globalVariables(c('ms_agegr_w',
                   'agr.w',
-                  'meansurv_type',
+                  'survmean_type',
                   'per.end',
                   'ms_bi_yrs',
                   'ms_stat',
@@ -396,32 +402,72 @@ globalVariables(c('ms_agegr_w',
                   'YPLL',
                   'est'))
 
-plot.meansurv <- function(obj, ...) {
-  curves <- attr(obj, "curves")
-  if (is.null(curves)) stop("no curves information in obj; usually lost if obj altered after using meansurv")
+#' @title Graphically Inspect Curves Used in Mean Survival Computation
+#' @description Plots the observed (with extrapolation) and expected survival
+#' curves for all strata in an object created by \code{\link{survmean}}
+#' @author Joonas Miettinen
+#' @export plot.survmean
+#' @param x a \code{survmean} object
+#' @param ... arguments passed (ultimately) to \code{matlines}; you
+#' may, therefore, supply e.g. \code{xlab} through this, though arguments
+#' such as \code{lty} and \code{col} will not work
+#' @details 
+#' 
+#' For examples see \code{\link{meansurv}}. This function is intended only
+#' for graphically inspecting that the observed survival curves with extrapolation
+#' and the expected survival curves have been sensibly computed in \code{survmean}.
+#' 
+#' If you want finer control over the plotted curves, extract the curves from
+#' the \code{survmean} output using 
+#' 
+#' \code{attr(x, "curves")}
+#' 
+#' where \code{x} is a \code{survmean} object.
+plot.survmean <- function(x, ...) {
+  curves <- attr(x, "curves")
+  if (is.null(curves)) stop("no curves information in x; usually lost if x altered after using survmean")
   
   plot(curves$surv.obs ~ curves$Tstop, type="n",
        xlab = "Years from entry", ylab = "Survival")
-  lines.meansurv(obj, ...)
+  lines.survmean(x, ...)
   
   subr <- attr(curves, "surv.breaks")
   abline(v = max(subr), lty=2, col="grey")
   
 }
 
-lines.meansurv <- function(obj, ...) {
-  curves <- attr(obj, "curves")
-  if (is.null(curves)) stop("no curves information in obj; usually lost if obj altered after using meansurv")
+#' @title Graphically Inspect Curves Used in Mean Survival Computation
+#' @description Plots the observed (with extrapolation) and expected survival
+#' curves for all strata in an object created by \code{\link{survmean}}
+#' @author Joonas Miettinen
+#' @export plot.survmean
+#' @param x a \code{survmean} object
+#' @param ... arguments passed (ultimately) to \code{matlines}; you
+#' may, therefore, supply e.g. \code{lwd} through this, though arguments
+#' such as \code{lty} and \code{col} will not work
+#' @details 
+#' 
+#' This function is intended to be a workhorse for \code{\link{plot.survmean}}.
+#' If you want finer control over the plotted curves, extract the curves from
+#' the \code{survmean} output using 
+#' 
+#' \code{attr(x, "curves")}
+#' 
+#' where \code{x} is a \code{survmean} object.
+#' 
+lines.survmean <- function(x, ...) {
+  curves <- attr(x, "curves")
+  if (is.null(curves)) stop("no curves information in x; usually lost if x altered after using survmean")
   
   by.vars <- attr(curves, "by.vars")
-  by.vars <- unique(c(c("meansurv_type", "ms_agegr_w"), by.vars))
+  by.vars <- unique(c(c("survmean_type", "ms_agegr_w"), by.vars))
   by.vars <- intersect(by.vars, names(curves))
   
   curves <- data.table(curves)
   setkeyv(curves, c(by.vars,"surv.int"))
   type_levs <- length(levels(interaction(curves[, (by.vars), with=FALSE])))/2L
   if (length(by.vars) > 1) {
-    other_levs <- length(levels(interaction(curves[, setdiff(by.vars, "meansurv_type"), with=FALSE])))
+    other_levs <- length(levels(interaction(curves[, setdiff(by.vars, "survmean_type"), with=FALSE])))
   } else {
     other_levs <- 1L
   }
