@@ -653,22 +653,16 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
 #' @author Joonas Miettinen
 #' @param x a \code{ratetable}
 #' @param ... unused but added for compatibility with \code{as.data.frame}
-#' @export as.data.frame.ratetable
-#' @S3method as.data.frame ratetable
 #' @examples
 #' library(relsurv)
 #' data(slopop)
-#' df <- as.data.frame.ratetable(slopop)
+#' df <- as.data.frame(slopop)
 #' head(df)
 #' @seealso 
 #' \code{\link[survival]{ratetable}}, 
 #' \code{\link{as.data.table.ratetable}}
 #'
-#' @examples
-#' library(relsurv)
-#' data(slopop)
-#' dt <- as.data.frame.ratetable(slopop)
-#' head(dt)
+#' @export
 as.data.frame.ratetable <- function(x, ...) {
   dimids <- attr(x, "dimid")
   x <- as.data.frame.table(as.table(as.array(x)))
@@ -687,8 +681,7 @@ as.data.frame.ratetable <- function(x, ...) {
 #' may not match names and levels of variables in your data.
 #' @param x a \code{ratetable}
 #' @param ... other arguments passed on to \code{as.data.table}
-#' @export as.data.table.ratetable
-#' @S3method as.data.table ratetable
+
 #' @seealso 
 #' \code{\link[survival]{ratetable}}, 
 #' \code{\link{as.data.frame.ratetable}}
@@ -696,8 +689,9 @@ as.data.frame.ratetable <- function(x, ...) {
 #' @examples
 #' library(relsurv)
 #' data(slopop)
-#' dt <- as.data.table.ratetable(slopop)
+#' dt <- as.data.table(slopop)
 #' dt
+#' @export
 as.data.table.ratetable <- function(x, ...) {
   dimids <- attr(x, "dimid")
   x <- as.data.table(as.table(as.array(x)), ...)

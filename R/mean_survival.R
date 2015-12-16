@@ -406,8 +406,6 @@ globalVariables(c('ms_agegr_w',
 #' @description Plots the observed (with extrapolation) and expected survival
 #' curves for all strata in an object created by \code{\link{survmean}}
 #' @author Joonas Miettinen
-#' @export plot.survmean
-#' @S3method plot survmean
 #' @param x a \code{survmean} object
 #' @param ... arguments passed (ultimately) to \code{matlines}; you
 #' may, therefore, supply e.g. \code{xlab} through this, though arguments
@@ -424,6 +422,7 @@ globalVariables(c('ms_agegr_w',
 #' \code{attr(x, "curves")}
 #' 
 #' where \code{x} is a \code{survmean} object.
+#' @export
 plot.survmean <- function(x, ...) {
   curves <- attr(x, "curves")
   if (is.null(curves)) stop("no curves information in x; usually lost if x altered after using survmean")
@@ -441,7 +440,6 @@ plot.survmean <- function(x, ...) {
 #' @description Plots the observed (with extrapolation) and expected survival
 #' curves for all strata in an object created by \code{\link{survmean}}
 #' @author Joonas Miettinen
-#' @export plot.survmean
 #' @param x a \code{survmean} object
 #' @param ... arguments passed (ultimately) to \code{matlines}; you
 #' may, therefore, supply e.g. \code{lwd} through this, though arguments
@@ -455,7 +453,7 @@ plot.survmean <- function(x, ...) {
 #' \code{attr(x, "curves")}
 #' 
 #' where \code{x} is a \code{survmean} object.
-#' 
+#' @export
 lines.survmean <- function(x, ...) {
   curves <- attr(x, "curves")
   if (is.null(curves)) stop("no curves information in x; usually lost if x altered after using survmean")
@@ -477,6 +475,15 @@ lines.survmean <- function(x, ...) {
   matlines(x=curves$Tstop, y=curves[, setdiff(names(curves), "Tstop"), with=FALSE],  
           lty = rep(1:2, each=type_levs), col = 1:other_levs, ...)
 }
+
+
+# #' @export
+# print.LOL <- function(x, ...) {
+#   cat("LOL! \n")
+#   invisible(NULL)
+# }
+
+
 
 
 

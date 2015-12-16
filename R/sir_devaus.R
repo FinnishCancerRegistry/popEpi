@@ -263,8 +263,7 @@ sir <- function( coh.data,
     }  
   }
   
-  results <- as.pe.list(results)
-  setclass(results, c('sir', class(results)))
+  setclass(results, c('sir', 'pe', class(results)))
   return(results)
 }
 
@@ -476,8 +475,8 @@ sirspline <- function( coh.data,
                          knots = knots,
                          reference.points = reference.points,
                          dependent.splines = dependent.splines)
-  results <- as.pe.list(results)
-  setclass(results, c('sirspline', class(results)))
+  
+  setclass(results, c('sirspline', 'pe', class(results)))
   return(results)  
 }
 

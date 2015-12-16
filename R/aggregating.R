@@ -36,7 +36,7 @@ setaggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff
   
   if (!inherits(x, "aggre")) {
     cl <- class(x)
-    wh <- which(cl %in% c("pe", "data.table", "data.frame"))
+    wh <- which(cl %in% c("data.table", "data.frame"))
     wh <- min(wh)
     
     ## yes, from zero: in case only one class
@@ -77,25 +77,23 @@ setaggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff
 #' class(df)
 #' class(dt)
 #' 
-#' @export as.aggre
+#' @export
 as.aggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...) {
   UseMethod("as.aggre", x)
 }
 
-#' @export as.aggre.data.frame
-#' @S3method as.aggre data.frame
 #' @describeIn as.aggre Coerces a \code{data.frame} to an \code{aggre} object
 #' (including a \code{data.table})
+#' @export
 as.aggre.data.frame <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...) {
   x <- copy(x)
   setaggre(x, obs = obs, pyrs = pyrs, obs.exp = obs.exp, by = by, ...)
   x[]
 }
 
-#' @export as.aggre.default
-#' @S3method as.aggre default
 #' @describeIn as.aggre Default method for \code{as.aggre} (stops computations
 #' if no class-specific method found)
+#' @export
 as.aggre.default <- function(x, ...) {
   stop(gettextf("cannot coerce class \"%s\" to 'aggre'", deparse(class(x))), 
        domain = NA)

@@ -20,7 +20,7 @@ may not match names and levels of variables in your data.
 \examples{
 library(relsurv)
 data(slopop)
-dt <- as.data.table.ratetable(slopop)
+dt <- as.data.table(slopop)
 dt
 }
 \author{

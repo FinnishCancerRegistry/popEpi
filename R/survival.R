@@ -984,7 +984,7 @@ survtab <- function(data,
   
   # attributes -----------------------------------------------------------------
   setkeyv(sutab, c(survtab_by_vars, "surv.int"))
-  setattr(sutab, "class", c("survtab", "pe", "data.table", "data.frame"))
+  setattr(sutab, "class", c("survtab", "data.table", "data.frame"))
   if (!getOption("popEpi.datatable")) setDFpe(sutab)
   setattr(sutab, "surv.breaks", surv.breaks)
   if (length(survtab_by_vars) == 0) survtab_by_vars <- NULL ## might be character(0) 

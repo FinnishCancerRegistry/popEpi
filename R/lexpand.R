@@ -876,7 +876,7 @@ lexpand <- function(data,
     set(l, j = "lex.multi", value = NULL)
     setattr(l, "time.scales", c("fot","per","age"))
     setattr(l, "breaks", breaks)
-    setattr(l, "class", c("pe","Lexis","data.table","data.frame"))
+    setattr(l, "class", c("Lexis","data.table","data.frame"))
     if (!getOption("popEpi.datatable") && is.data.table(l)) setDFpe(l)
     
     

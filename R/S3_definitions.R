@@ -1,94 +1,10 @@
-#### S3 definitions
-setOldClass("pe")
-setOldClass(c("pe", 'data.table'))
-setOldClass(c("pe", 'list'))
-
-
-as.pe <- function(x) {
-  if (is.null(x)) {return(data.table())}
-  UseMethod("as.pe")
-}
-
-
-setAs("data.table", "pe", function(from) {
-  as.pe(from)
-})
-
-setAs("list", "pe", function(from) {
-  as.pe(from)
-})
-
-
-
-
-#' @title Add class \code{'pe'} to a \code{Lexis} object.
-#' @author Joonas Miettinen
-#' @description Coerces an R \code{Lexis} object to a \code{Lexis} object 
-#' with the class
-#' \code{pe}.
-#' @param x a Lexis object
-#' @S3method as.pe Lexis
-as.pe.Lexis <- function(x) {
-  if (!"Lexis" %in% class(x)) stop("not a Lexis object")
-  pe <- copy(x) 
-  
-  cl <- class(x)
-  wh <- which(cl == "Lexis")
-  cl <- c(cl[1:(wh-1)], "pe", "Lexis",  cl[wh:length(cl)])
-  
-  setattr(pe, "class", cl)
-  
-  return(pe[])
-}
-
-
-#' @title Add class \code{'pe'} to a \code{data.table} object.
-#' @author Joonas Miettinen
-#' @description Coerces a \code{data.table} object to a \code{data.table} 
-#' with the class
-#' \code{pe}.
-#' @param x a data.table
-#' @S3method as.pe data.table
-as.pe.data.table <- function(x) {
-  pe <- copy(x) 
-  
-  cl <- class(x)
-  wh <- which(cl == "data.table")
-  cl <- c(cl[1:(wh-1)], "pe","data.table",  cl[wh:length(cl)])
-  
-  setattr(pe, "class", cl)
-  
-  return(pe[])
-}
-
-
-#' @title Add class \code{'pe'} to a \code{list} object.
-#' @author Joonas Miettinen
-#' @description Coerces an R \code{list} object to a \code{list} with the class
-#' \code{pe}.
-#' @param x a list
-#' @S3method as.pe list
-as.pe.list <- function(x) {
-  pe <- copy(x) 
-  
-  cl <- class(x)
-  wh <- which(cl == "list")
-  cl <- c(cl[1:(wh-1)], "pe","list",  cl[wh:length(cl)])
-  
-  setattr(pe, "class", cl)
-  
-  return(pe)
-}
-
-
 
 #' @title Print method for \code{sir} objects
 #' @author Matti Rantanen, Joonas Miettinen
 #' @description Prints the results of the \code{sir} function
-#' @export print.sir
 #' @param x a \code{sir} object
 #' @param ... unused
-#' @S3method print sir
+#' @export
 print.sir <- function(x, ...) {
   
   cat("SIR Standardized by: ", x[['adjusted']] , fill=TRUE)
@@ -123,11 +39,10 @@ print.sir <- function(x, ...) {
 #' @title Print method for \code{sirspline} objects
 #' @author Matti Rantanen, Joonas Miettinen
 #' @description Prints the results of the \code{sirspline} function
-#' @export print.sirspline
 #' @param x a \code{sir} object
 #' @param ... unused
-#' @S3method print sirspline
 #' @import grDevices
+#' @export
 print.sirspline <- function(x, ...) {
   if ( x$spline.dependent ) {
     if( any( !is.na(x$p.values))) {
@@ -162,8 +77,6 @@ print.sirspline <- function(x, ...) {
 #' 
 #' @seealso \code{\link{sir}},  \code{\link{sirspline}}
 #' 
-#' @S3method plot sir
-#' @export plot.sir
 #' @import graphics
 #' 
 #' @author Matti Rantanen
@@ -211,7 +124,7 @@ print.sirspline <- function(x, ...) {
 #'# plot(sir.by.gender, col = c(4,2), log=FALSE, eps=0.2, lty=1, lwd=2, pch=19,  
 #'#      main = 'SIR by gender', abline=TRUE)
 #' }
-
+#' @export
 plot.sir <- function(x, plot.type = 'model', 
                      conf.int = TRUE, ylab, xlab, xlim, main, 
                      eps=0.2, abline = TRUE, lang = 'fi', log = FALSE, left.margin, ...) {
@@ -313,8 +226,6 @@ plot.sir <- function(x, plot.type = 'model',
 #' 
 #' @seealso \code{\link{sir}},  \code{\link{sirspline}}, \code{\link{lines.sirspline}}
 #' 
-#' @S3method plot sirspline
-#' @export plot.sirspline
 #' @import graphics
 #' 
 #' @author Matti Rantanen
@@ -336,8 +247,7 @@ plot.sir <- function(x, plot.type = 'model',
 #' The plot axis without lines can be plotted using option \code{type = 'n'}. 
 #' On top of the frame it's then possible to add a \code{grid}, 
 #' \code{abline} or text before plotting the lines (see: \code{sirspline}).
-#' 
-
+#' @export
 plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, ylab, xlab,  ...) {
 
   #print(list(...))
@@ -433,11 +343,8 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 #' 
 #' @seealso \code{\link{sir}},  \code{\link{sirspline}}, \code{\link{plot.sirspline}}
 #' 
-#' @S3method lines sirspline
-#' @export lines.sirspline
 #' @import graphics
-
-
+#' @export
 lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline, ... ){
   ## input: sirspline object, with only one spline var (spline.est.A)
   ## input: print levels can be > 1.
@@ -556,8 +463,6 @@ subset.survmean <- function(x, ...) {
 #' 
 #' Plotting for \code{survtab} objects
 #' 
-#' @S3method plot survtab
-#' @export plot.survtab
 #' @import graphics
 #' 
 #' @author Joonas Miettinen
@@ -592,6 +497,7 @@ subset.survmean <- function(x, ...) {
 #' 
 #' ## or
 #' plot(st, "r.e2", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
+#' @export
 plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
   ## take copy preserving attributes (unlike  <- data.table())
@@ -669,8 +575,6 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
 #' 
 #' Plot \code{lines} from a \code{survtab} object
 #' 
-#' @S3method lines survtab
-#' @export lines.survtab
 #' @import graphics
 #' 
 #' @author Joonas Miettinen
@@ -703,7 +607,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
 #' 
 #' ## or
 #' plot(st, "r.e2", col = c(2,2,4,4))
-
+#' @export
 lines.survtab <- function(x, y = NULL, subset = NULL, 
                           conf.int = TRUE, 
                           col=NULL, lty=NULL, ...) {
