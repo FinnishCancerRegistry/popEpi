@@ -886,38 +886,44 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   ## if column names cannot be easily found, BV1, BV2, ... are imputed
   ## for missing names (unrobustly: such names may already exist, resulting in duplicates)
   
+  if (!is.null(enclos) && !is.environment(enclos)) stop("enclos must be NULL or an environment")
+  if (!is.environment(enclos)) enclos <- parent.frame(n + 1L)
+  
+  e <- eval(arg, envir = data, enclos = enclos)
+  if (is.language(e)) {
+    if (!recursive) stop("arg is of type language after evaluating, and recursive = FALSE")
+    
+    tick <- 1L
+    while (is.language(e)) {
+      if (tick == 100L) stop("arg was of type language even after 100 evaluations. Something went wrong here...")
+      arg <- e
+      e <- eval(arg, envir = data, enclos = enclos)
+      tick <- tick + 1L
+    }
+    
+    
+    
+  } 
+  
+  av <- all.vars(arg)
   
   argType <- popArgType(arg, data = data, n = n, enclos = enclos, recursive = FALSE)
   if (argType == "NULL") return(NULL) ## should this be stop() instead?
   
-  ## all variables used in arg should be within data
-  av <- all.vars(arg)
+  ## byNames: names of columns resulting from aggre argument, by which
+  ## pyrs and such are aggregated. same functionality
+  ## as in results seen in e.g.DT[, .N, by = list(factor(x), y, z = w)] ## factor, y, z
+  ## note: first object in ags with list or expression aggre is "list"
   byNames <- NULL
-  if (argType == "expression" && !all_names_present(data, av, stops = FALSE) && length(all.names(arg)) == 1L) {
-    ## assume to be a preset object containing character strings of variable names
-    ## or a list instead of being a symbol
-    
-    if (argType == "character") byNames <- arg 
   
-  } else {
-    
-    ## byNames: names of columns resulting from aggre argument, by which
-    ## pyrs and such are aggregated. same functionality
-    ## as in results seen in e.g.DT[ .N, by = list(factor(x), y)]
-    ## note: first object in ags with list or expression aggre is "list"
-    
-    if (argType == "character") byNames <- eval(arg)
-    else if (argType == "list") byNames <- sapply(arg[-1], function(x) all.names(x)[1]) 
-    else if (argType == "expression") byNames <- all.names(arg)[1]
-    
-    byNames[byNames %in% "$"] <- paste0("BV", 1:length(byNames))[byNames %in% "$"]
-  }
+  if (is.character(e)) byNames <- e
+  else if (argType == "list" & substr(deparse(arg), 1, 5) == "list(") byNames <- sapply(arg[-1], function(x) all.names(x)[1]) 
+  else if (argType == "expression") byNames <- all.names(arg)[1]
   
-  if (is.environment(enclos)) {
-    e <- eval(arg, envir = data, enclos = enclos)
-  } else {
-    e <- eval(arg, envir = data, enclos = parent.frame(n + 1L))
-  }
+  badNames <- c("$", ":")
+  
+  byNames[byNames %in% badNames] <- paste0("BV", 1:length(byNames))[byNames %in% badNames]
+  
   
   
   if (is.character(e)) {
@@ -964,8 +970,6 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
       setnames(e, 1, byNames)
       setattr(e, "evalPopArg", "expression")
     }
-  } else if (recursive && is.language(e)) {
-    e <- evalPopArg(data = data, arg = e, n = n + 1L, DT = DT, enclos = enclos)
   }
   
   ## NOTE: e may be of type language at this point if arg was double-quoted
