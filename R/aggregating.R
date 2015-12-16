@@ -3,8 +3,8 @@
 #' @author Joonas Miettinen
 #' @description Coerces an R object to an \code{aggre} object, identifying
 #' the object as one containing aggregated counts, person-years and other
-#' information. \code{setaggre} modifies in place without taking any copies
-#' and retaining all other attributes.
+#' information. \code{setaggre} modifies in place without taking any copies.
+#' Retains all other attributes.
 #' @param x a \code{data.frame} or \code{data.table}
 #' @param obs a character string; the name of the event counts variable
 #' @param pyrs a character string; the name of the person-time
@@ -49,7 +49,7 @@ setaggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff
   invisible(x)
 }
 
-#' @title Coercion to class \code{aggre}
+#' @title Coercion to Class \code{aggre}
 #' @author Joonas Miettinen
 #' @description Coerces an R object to an \code{aggre} object, identifying
 #' the object as one containing aggregated counts, person-years and other
@@ -82,16 +82,18 @@ as.aggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff
   UseMethod("as.aggre", x)
 }
 
-#' @export
-#' @describeIn as.aggre
+#' @export as.aggre.data.frame
+#' @describeIn as.aggre Coerces a \code{data.frame} to an \code{aggre} object
+#' (including a \code{data.table})
 as.aggre.data.frame <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...) {
   x <- copy(x)
   setaggre(x, obs = obs, pyrs = pyrs, obs.exp = obs.exp, by = by, ...)
   x[]
 }
 
-#' @export
-#' @describeIn as.aggre
+#' @export as.aggre.default
+#' @describeIn as.aggre Default method for \code{as.aggre} (stops computations
+#' if no class-specific method found)
 as.aggre.default <- function(x, ...) {
   stop(gettextf("cannot coerce class \"%s\" to 'aggre'", deparse(class(x))), 
        domain = NA)

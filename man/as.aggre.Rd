@@ -2,10 +2,17 @@
 % Please edit documentation in R/aggregating.R
 \name{as.aggre}
 \alias{as.aggre}
-\title{Coercion to class \code{aggre}}
+\alias{as.aggre.data.frame}
+\alias{as.aggre.default}
+\title{Coercion to Class \code{aggre}}
 \usage{
 as.aggre(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL,
   by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...)
+
+\method{as.aggre}{data.frame}(x, obs = "obs", pyrs = "pyrs",
+  obs.exp = NULL, by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...)
+
+\method{as.aggre}{default}(x, ...)
 }
 \arguments{
 \item{x}{an R object to coerce to \code{aggre}; must be a \code{data.frame} or \code{data.table}}
@@ -26,6 +33,14 @@ Coerces an R object to an \code{aggre} object, identifying
 the object as one containing aggregated counts, person-years and other
 information.
 }
+\section{Methods (by class)}{
+\itemize{
+\item \code{data.frame}: Coerces a \code{data.frame} to an \code{aggre} object
+(including a \code{data.table})
+
+\item \code{default}: Default method for \code{as.aggre} (stops computations
+if no class-specific method found)
+}}
 \examples{
 df <- data.frame(sex = rep(c("male", "female"), each = 5), 
                  obs = rpois(10, rep(7,5, each=5)), 

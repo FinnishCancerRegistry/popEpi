@@ -22,8 +22,8 @@ have been tabulated; optional, since the default value usually works}
 \description{
 Coerces an R object to an \code{aggre} object, identifying
 the object as one containing aggregated counts, person-years and other
-information. \code{setaggre} modifies in place without taking any copies
-and retaining all other attributes.
+information. \code{setaggre} modifies in place without taking any copies.
+Retains all other attributes.
 }
 \details{
 \code{setaggre} sets \code{x} to the \code{aggre} class in place without taking a copy
