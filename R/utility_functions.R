@@ -654,7 +654,7 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
 #' @param x a \code{ratetable}
 #' @param ... unused but added for compatibility with \code{as.data.frame}
 #' @export as.data.frame.ratetable
-# #' @S3method as.data.frame ratetable
+#' @S3method as.data.frame ratetable
 #' @examples
 #' library(relsurv)
 #' data(slopop)
@@ -688,7 +688,7 @@ as.data.frame.ratetable <- function(x, ...) {
 #' @param x a \code{ratetable}
 #' @param ... other arguments passed on to \code{as.data.table}
 #' @export as.data.table.ratetable
-# #' @S3method as.data.table ratetable
+#' @S3method as.data.table ratetable
 #' @seealso 
 #' \code{\link[survival]{ratetable}}, 
 #' \code{\link{as.data.frame.ratetable}}

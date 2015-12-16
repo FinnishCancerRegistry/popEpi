@@ -83,6 +83,7 @@ as.aggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff
 }
 
 #' @export as.aggre.data.frame
+#' @S3method as.aggre data.frame
 #' @describeIn as.aggre Coerces a \code{data.frame} to an \code{aggre} object
 #' (including a \code{data.table})
 as.aggre.data.frame <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...) {
@@ -92,6 +93,7 @@ as.aggre.data.frame <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, b
 }
 
 #' @export as.aggre.default
+#' @S3method as.aggre default
 #' @describeIn as.aggre Default method for \code{as.aggre} (stops computations
 #' if no class-specific method found)
 as.aggre.default <- function(x, ...) {

@@ -407,6 +407,7 @@ globalVariables(c('ms_agegr_w',
 #' curves for all strata in an object created by \code{\link{survmean}}
 #' @author Joonas Miettinen
 #' @export plot.survmean
+#' @S3method plot survmean
 #' @param x a \code{survmean} object
 #' @param ... arguments passed (ultimately) to \code{matlines}; you
 #' may, therefore, supply e.g. \code{xlab} through this, though arguments
