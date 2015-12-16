@@ -865,7 +865,7 @@ p.round <- function(p, dec=3) {
 
 
 
-evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL) {
+evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = TRUE) {
   ## arg: an unevaluated AND substitute()'d argument within a function, which may be
   ## * an expression
   ## * a list of expressions
@@ -875,6 +875,7 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL) {
   ## hence n = 1L should be almost always the right way to go.
   ## ALTERNATIVELY supply an environment by hand via enclos.
   ## enclos will override n.
+  ## recursive: if TRUE, evals arg as many times as it is of type language.
   ## output:
   ## * vector as a result of an expression
   ## * list as a result of a list
@@ -886,7 +887,7 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL) {
   ## for missing names (unrobustly: such names may already exist, resulting in duplicates)
   
   
-  argType <- popArgType(arg)
+  argType <- popArgType(arg, data = data, n = n, enclos = enclos, recursive = FALSE)
   if (argType == "NULL") return(NULL) ## should this be stop() instead?
   
   ## all variables used in arg should be within data
@@ -963,17 +964,22 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL) {
       setnames(e, 1, byNames)
       setattr(e, "evalPopArg", "expression")
     }
+  } else if (recursive && is.language(e)) {
+    e <- evalPopArg(data = data, arg = e, n = n + 1L, DT = DT, enclos = enclos)
   }
   
+  ## NOTE: e may be of type language at this point if arg was double-quoted
+  ## and recursive = FALSE
   if (DT && any(duplicated(names(e)))) warning("Some column names are duplicated in output")
   
-  ## note: e may be an expression at this point due to double substitution
   e
 }
 
 
-popArgType <- function(arg, data = NULL, n = 1L, enclos = NULL) {
+popArgType <- function(arg, data = NULL, n = 1L, enclos = NULL, recursive = TRUE) {
   ## input: a substitute()'d expression / argument
+  ## NOTE: recursive useful when arg might be quoted twice and want the eventual
+  ## result; need to supply data for it though
   ## output: type of thingie that was substitute()'d
   ##  * list (of expressions)
   ##  * character string vector
@@ -1002,7 +1008,7 @@ popArgType <- function(arg, data = NULL, n = 1L, enclos = NULL) {
     if (is.character(e) && all(e %in% names(data))) return("character")
     if (is.vector(e) || is.factor(e)) return("expression")
     
-    if (is.language(e)) return(popArgType(e, data = data, n = n + 1L, enclos = enclos))
+    if (recursive && is.language(e)) return(popArgType(e, data = data, n = n + 1L, enclos = enclos))
   }
   
   "expression"
