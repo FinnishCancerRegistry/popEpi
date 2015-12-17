@@ -119,4 +119,30 @@ test_that("laggre's aggre argument works flexibly", {
   
 })
 
+test_that("subset argument works properly", {
+  
+  
+  x <- sire[dg_date < ex_date, ][1:1000,]
+  BL <- list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014))
+  x <- lexpand(x, birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2, breaks=BL)
+  # setDT2DF(x)
+  x2 <- x[x$dg_age <= 55L, ]
+  
+  setDT(x)
+  setDT(x2)
+  forceLexisDT(x, breaks = BL, allScales = c("fot", "per", "age"), key = FALSE)
+  forceLexisDT(x2, breaks = BL, allScales = c("fot", "per", "age"), key = FALSE)
+  
+  ag <- quote(list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
+  ag1 <- laggre(x, aggre = ag, subset = dg_age <= 55L)
+  ag2 <- laggre(x2, aggre = ag)
+  
+  ag3 <- laggre(x, aggre = ag, type = "full", subset = dg_age <= 55L)
+  ag4 <- laggre(x2, aggre = ag, type = "full") 
+  
+  expect_identical(ag1, ag2)
+  expect_identical(ag3, ag4)
+  
+})
 
