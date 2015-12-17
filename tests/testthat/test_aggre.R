@@ -21,6 +21,19 @@ test_that("laggre leaves original data untouched", {
   expect_identical(x, xor)
 })
 
+test_that("laggre works with aggre = NULL", {
+  
+  sr <- popEpi::sire[dg_date < ex_date,][1:1000,]
+  
+  BL <- list(fot= seq(0,20,1), age= c(0:100, Inf), per= c(1960:2014))
+  x <- lexpand(sr, birth  = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2, breaks=BL)
+  
+  ag1 <- laggre(x, aggre = NULL)
+  expect_equal(as.numeric(ag1), c(9539.1903286174274, 1000, 373, 627))
+  
+})
+
 test_that("laggre and lexpand produce the same results", {
   # skip_on_cran()
   
