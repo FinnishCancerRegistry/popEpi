@@ -467,6 +467,8 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   ## casting & merging ---------------------------------------------------------
   
   mergeTime <- proc.time()
+  setDT(trans)
+  setDT(pyrs)
   
   ## tmpTr to be used in casting
   tmpTr <- makeTempVarName(trans, pre = "trans_")
@@ -477,25 +479,31 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   ## note: need tmpDum if aggre = NULL for correct casting & merging
   tmpDum <- makeTempVarName(trans)
   byNames <- c(byNames, tmpDum)
-  trans[, (tmpDum) := 1L]
-  pyrs[, (tmpDum) := 1L]
+  trans[, c(tmpDum) := 1L]
+  pyrs[, c(tmpDum) := 1L]
+  
   
   valVars <- unique(c(valVars, transitions))
   
-  trans <- cast_simple(trans, columns = tmpTr, rows = byNames, values = "obs")
+  castForm <- paste0(byNames, collapse = " + ")
+  castForm <- paste0(castForm, " ~ ", paste0(tmpTr, collapse = " + "))
+  castForm <- as.formula(castForm)
+  trans <- dcast.data.table(trans, formula = castForm, value.var = "obs")
   
   setkeyv(trans, byNames); setkeyv(pyrs, byNames)
   trans <- trans[pyrs]; rm(pyrs)
   
-  trans[, (tmpDum) := NULL]
+  trans[, c(tmpDum) := NULL]
   byNames <- setdiff(byNames, tmpDum)
   setcolorder(trans, c(byNames, valVars))
   
   if (verbose) cat("Time taken by merging pyrs & transitions: ", timetaken(mergeTime), "\n")
   
-  
-  for (var in valVars) {
-    trans[is.na(get(var)), (var) := 0]
+  if (length(valVars) > 0L) {
+    trans[, c(valVars) := lapply(.SD, function(x) {
+      x[is.na(x)] <- 0
+      x
+    }), .SDcols = c(valVars)]
   }
   
   
