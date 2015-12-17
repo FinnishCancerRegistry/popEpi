@@ -147,17 +147,18 @@ relpois <- function(data,
     stop("some pop.haz are NA")
   }
   
+  on.exit({
+    setcolsnull(data, c("FOT", tmpdexp), soft = TRUE)
+  }, add = TRUE)
+  
   if ("FOT" %in% form_vars)  {
-    set(data, j = "FOT", value = cut(data$fot, breaks = surv.breaks, right=FALSE))
+    data[, "FOT" := cut(fot, breaks = surv.breaks, right = FALSE)]
+    # set(data, j = "FOT", value = cut(data$fot, breaks = surv.breaks, right=FALSE))
     subset <- subset & !is.na(data$FOT)
   }
   tmpdexp <- makeTempVarName(data, pre = "TEMP_d.exp_")
-  set(data, j = tmpdexp, value = data$pop.haz * data$lex.dur)
-  
-  on.exit({
-    set(data, j = "FOT", value = NULL)
-    set(data, j = tmpdexp, value = NULL)
-  })
+  data[, c(tmpdexp) := pop.haz*lex.dur]
+  # set(data, j = tmpdexp, value = data$pop.haz * data$lex.dur)
   
   
   if (check) {
