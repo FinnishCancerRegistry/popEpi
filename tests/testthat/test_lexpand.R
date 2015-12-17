@@ -96,6 +96,7 @@ test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used",
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
                  breaks = BL, status = status, entry.status = 0L,
                  birth = bi_date, entry = dg_date, exit = ex_date)
+  setDT(ag1)
   forceLexisDT(ag1, breaks = BL, allScales = c("fot", "per", "age"))
   
   e <- quote(list(sex = factor(sex, 0:1, c("m", "f")),
@@ -125,12 +126,14 @@ test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used",
   expect_equal(ag1$from0to1, ag2$from0to1)
   
 })
+
 test_that("lexpanding with aggre.type = 'cartesian' works; only time scales used", {
   skip_on_cran()
   BL <- list(fot = 0:5, age = seq(0,100, 5))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
                  breaks = BL, status = status, entry.status = 0L,
                  birth = bi_date, entry = dg_date, exit = ex_date)
+  setDT(ag1)
   forceLexisDT(ag1, breaks = BL, allScales = c("fot", "per", "age"))
   
   ag3 <- laggre(ag1, aggre = list(fot, age), type = "cartesian")
@@ -229,11 +232,6 @@ test_that('lexpand aggre: multistate column names correct', {
   
   expect_equal(intersect(names(x), c('from0to0','from0to1','from0to2')), c('from0to0','from0to1','from0to2'))  
 })
-
-
-## TODO: pp weight checking ----------------------------------------------
-
-
 
 
 # overlapping time lines --------------------------------------------------
