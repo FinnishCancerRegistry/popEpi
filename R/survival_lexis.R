@@ -174,6 +174,7 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
   if (!is.null(breaks)) {
     
     splitScales <- names(breaks)
+    if (any(!splitScales %in% names(x))) stop("Following time scales missing from data that data was split by: ", paste0("'", setdiff(splitScales, names(x)), "'", collapse = ", "))
     
     brmax <- lapply(breaks, max)
     brmin <- lapply(breaks, min)
