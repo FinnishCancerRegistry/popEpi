@@ -271,39 +271,34 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   
   ## check expr ----------------------------------------------------------------
   exprSub <- substitute(expr)
-  exprType <- popArgType(exprSub, data = lex, enclos = PF)
+  exprType <- popArgType(exprSub, data = lex, enclos = PF, recursive = TRUE)
   if (!exprType %in% c("NULL","list")) stop("expr must be a list of expressions, e.g. list(d.exp = sum(lex.dur*pop.haz))")
   
   
-  ## aggre argument ------------------------------------------------------------
-  ags <- if (!substituted) substitute(aggre) else aggre
-  aggre <- evalPopArg(lex[1,], arg = ags, DT = TRUE, enclos = PF) ## for checking aggre argument type
+  ## aggre argument type -------------------------------------------------------
+  ## NOTE: need to eval aggre AFTER cutting time scales!
   
-  argType <- if (!is.null(aggre)) attr(aggre, "evalPopArg") else "NULL"
-  if (verbose) cat("Used aggre argument:", deparse(ags),"\n")
-  if (verbose) cat("Type of aggre argument:", argType, "\n")
-  if (argType != "NULL") {
-    if (argType == "character") {
-      av <- eval(ags, envir = parent.frame(1L))
-    } else {
-      av <- all.vars(ags)
-    } 
-    
-    ## maybe below is a bad idea to check, might use only variables from
-    ## global env instead of data...
-#     if (any(!av %in% names(lex))) {
-#       badAggre <- deparse(ags)
-#       stop("none of the variables used in aggre were found in lex; the aggre expression was '", badAggre, "'")
-#     }
-    
-  } else {
-    av <- NULL
+  ags <- substitute(aggre)
+  if (verbose) cat("Used aggre argument:", paste0(deparse(ags)),"\n")
+  
+  ## NOTE: with recursive = TRUE, evalPopArg digs deep enough to find
+  ## the actual expression (substituted only once) and returns that and other
+  ## things in attributes. Useful if arg substituted multiple times.
+  aggre <- evalPopArg(data = lex[1:min(nrow(lex), 20),], 
+                      arg = ags, DT = TRUE, enclos = PF, recursive = TRUE)
+  ags <- attr(aggre, "quoted.arg") 
+  av <- attr(aggre, "all.vars")
+  argType <- attr(aggre, "evalPopArg")
+  
+  if (is.null(aggre)) {
     ags <- substitute(list())
+    av <- NULL
+    argType <- "NULL"
     type <- "unique"
   }
-
+  if (verbose) cat("Type of aggre argument:", argType, "\n")
   
-  ## need to cut() time scales for aggregating?
+  ## cut time scales for aggregating if needed ---------------------------------
   aggScales <- intersect(allScales, av)
   if (any(!aggScales %in% names(breaks))) {
     aggScales <- paste0("'", setdiff(aggScales, names(breaks)), "'", collapse = ", ")
@@ -313,7 +308,7 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
     cutTime <- proc.time()
     
     catAggScales <- paste0("'", aggScales, "'", collapse = ", ")
-    if (verbose) cat("Following time scales mentioned in aggre argument and will be categorized for aggregation:", catAggScales, "\n")
+    if (verbose) cat("Following time scales mentioned in aggre argument and will be categorized into intervals (defined by breaks in object attributes) for aggregation:", catAggScales, "\n")
     
     ## NEW METHOD: modify time scales in place 
     ## (while taking copies of old values and returning them at exit)
@@ -336,8 +331,10 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
     cat("Detected the following non-time-scale variables to be utilized in aggregating:", catOthVars, "\n")
   }
   
-  
-  aggre <- evalPopArg(if (all(subset)) lex else lex[subset, ], arg = ags, DT = TRUE, enclos = PF)
+  ## eval aggre ----------------------------------------------------------------
+  ## NOTE: needed to eval aggre AFTER cutting time scales!
+  aggre <- evalPopArg(data = if (all(subset)) lex else lex[subset, ], 
+                      arg = ags, DT = TRUE, enclos = PF, recursive = TRUE)
   
   ## computing pyrs ------------------------------------------------------------
   pyrsTime <- proc.time()
