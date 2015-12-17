@@ -40,31 +40,27 @@
 #' }
 
 
-cast_simple <- function(data=NULL, columns='year', rows=c('PrimarySite','sex'), values='std.incidence') {
+cast_simple <- function(data=NULL, columns=NULL, rows=NULL, values=NULL) {
   if (!is.data.frame(data)) stop("data needs be a data.frame or data.table")
-  # make a formula
-  a <- NULL
-  for(i in 1:length(rows)) {
-    a <- paste(a, rows[i],'+',sep='') 
-  }
-  a <- substr(a,1, nchar(a)-1)
   
-  b <- NULL
-  for(i in 1:length(columns)) {
-    b <- paste(b, columns[i],'+',sep='')
-  }
-  b <- substr(b,1,nchar(b)-1)
+  if (is.null(columns)) stop("columns cannot be NULL")
   
-  form <- as.formula(paste(a,'~',b))
+  all_names_present(data, c(columns, rows, values))
+  
+  rowsNULL <- FALSE
+  if (is.null(rows)) rowsNULL <- TRUE
+  if (rowsNULL) rows <- "1"
+  form <- paste0(paste0(rows, collapse = " + "), " ~ ", paste0(columns, collapse = " + "))
   
   ## note: dcast probably usually finds the methods for data.frame / data.table,
   ## but this method is more certain
   if (is.data.table(data)) {
-    dcast.data.table(data, formula = form, value.var=values, drop=FALSE, fun.aggregate=sum)[]
+    d <- dcast.data.table(data, formula = form, value.var=values, drop=FALSE, fun.aggregate=sum)[]
   } else {
-    dcast(data, formula = form, value.var = values, drop = FALSE, fun.aggregate = sum)[]
+    d <- dcast(data, formula = form, value.var = values, drop = FALSE, fun.aggregate = sum)[]
   }
-  
+  if (rowsNULL) set(d, j = names(d)[1L], value = NULL)
+  d
 }
 
 

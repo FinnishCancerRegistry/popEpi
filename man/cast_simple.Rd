@@ -4,8 +4,7 @@
 \alias{cast_simple}
 \title{Cast \code{data.table}/\code{data.frame} from long format to wide format}
 \usage{
-cast_simple(data = NULL, columns = "year", rows = c("PrimarySite", "sex"),
-  values = "std.incidence")
+cast_simple(data = NULL, columns = NULL, rows = NULL, values = NULL)
 }
 \arguments{
 \item{data}{a \code{data.table} or \code{data.frame}}
