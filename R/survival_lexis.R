@@ -88,8 +88,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
     x <- intelliDrop(x, breaks = breaks, dropNegDur = TRUE, check = TRUE)
     forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
     
-    pp <- comp_pp_weighted_figures(x, breaks = breaks, 
-                                   haz = "haz", pp = "pp", by = "lex.id")
+    pp <- comp_pp_weighted_figures(x, haz = "haz", pp = "pp", by = "lex.id")
     ppNames <- makeTempVarName(x, pre = names(pp))
     x[, c(e$ppNames) := e$pp]
     

@@ -12,6 +12,7 @@ test_that("laggre leaves original data untouched", {
   x <- x[sample(x = .N, size = .N, replace = FALSE)]
   setkeyv(x, NULL)
   
+  setDT(x)
   forceLexisDT(x, breaks = BL, allScales = c("fot", "per", "age"), key = FALSE)
   
   xor <- copy(x)
