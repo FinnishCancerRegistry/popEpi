@@ -4,8 +4,8 @@
 \alias{laggre}
 \title{Aggregation of split \code{Lexis} data}
 \usage{
-laggre(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
-  expr = NULL, subset = NULL, substituted = FALSE, verbose = FALSE)
+laggre(lex, aggre = NULL, type = c("unique", "full"), expr = NULL,
+  subset = NULL, verbose = FALSE)
 }
 \arguments{
 \item{lex}{a \code{Lexis} object split with e.g. 
@@ -19,10 +19,6 @@ laggre(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
 automatic aggregation over Lexis time scales mentioned here; 
 see Details and Examples}
 
-\item{breaks}{if \code{NULL}, uses the breaks that were used to split the data
-to categorize time scales mentioned in \code{aggre} using \code{cut}; otherwise
-uses the supplied named list of breaks; see Details}
-
 \item{type}{determines outputted levels to which data is aggregated varying
 from returning only rows with \code{pyrs > 0} (\code{"unique"}) to
 returning all possible combinations of variables given in \code{aggre} even
@@ -34,10 +30,6 @@ see Examples}
 
 \item{subset}{a logical condition to subset by before computations;
 e.g. \code{subset = area \%in\% c("A", "B")}}
-
-\item{substituted}{\code{logical}, advanced; if \code{TRUE}, the supplied
-\code{aggre} is a \code{call} object as a result of using \code{substitute}
-or \code{quote}; useful for when using this function within another function}
 
 \item{verbose}{\code{logical}; if \code{TRUE}, the function returns timings
 and some information useful for debugging along the aggregation process}
@@ -106,12 +98,6 @@ used to split the data: e.g. if \code{age} was split using the breaks
 creating the \code{age} intervals \code{[0, 50)} and \code{[50, Inf)}
 and aggregating to them. The intervals are identified in the output
 as the lower bounds of the appropriate intervals.
-
-It is possible but not recommended to also supply the argument \code{breaks}, 
-a list of breaks as in \code{splitMulti}, but this may go wrong;
-It is mainly included for when the meta information about the 
-breaks used to split the data is lost due to modifying \code{lex}
-in certain ways after splitting.
 
 \strong{Aggregation types (styles)}
 

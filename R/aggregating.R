@@ -119,9 +119,6 @@ as.aggre.default <- function(x, ...) {
 #' 3) a list of expressions or symbols (e.g. \code{aggre = list(gender = sex, area)});
 #' automatic aggregation over Lexis time scales mentioned here; 
 #' see Details and Examples
-#' @param breaks if \code{NULL}, uses the breaks that were used to split the data
-#' to categorize time scales mentioned in \code{aggre} using \code{cut}; otherwise
-#' uses the supplied named list of breaks; see Details
 #' @param type determines outputted levels to which data is aggregated varying
 #' from returning only rows with \code{pyrs > 0} (\code{"unique"}) to
 #' returning all possible combinations of variables given in \code{aggre} even
@@ -131,9 +128,6 @@ as.aggre.default <- function(x, ...) {
 #' see Examples
 #' @param subset a logical condition to subset by before computations;
 #' e.g. \code{subset = area \%in\% c("A", "B")}
-#' @param substituted \code{logical}, advanced; if \code{TRUE}, the supplied
-#' \code{aggre} is a \code{call} object as a result of using \code{substitute}
-#' or \code{quote}; useful for when using this function within another function
 #' @param verbose \code{logical}; if \code{TRUE}, the function returns timings
 #' and some information useful for debugging along the aggregation process
 #' @details 
@@ -184,12 +178,6 @@ as.aggre.default <- function(x, ...) {
 #' creating the \code{age} intervals \code{[0, 50)} and \code{[50, Inf)}
 #' and aggregating to them. The intervals are identified in the output
 #' as the lower bounds of the appropriate intervals.
-#' 
-#' It is possible but not recommended to also supply the argument \code{breaks}, 
-#' a list of breaks as in \code{splitMulti}, but this may go wrong;
-#' It is mainly included for when the meta information about the 
-#' breaks used to split the data is lost due to modifying \code{lex}
-#' in certain ways after splitting.
 #' 
 #' \strong{Aggregation types (styles)}
 #' 
@@ -250,14 +238,8 @@ as.aggre.default <- function(x, ...) {
 #' a6 <- laggre(x, aggre = c("sex", "age", "fot"), 
 #'              expr = list(d.exp.pp = sum(lex.dur*pop.haz*pp)))
 #' 
-laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"), expr = NULL, subset = NULL, substituted = FALSE, verbose = FALSE) {
-  ## a generalized aggregator for split Lexis objects
-  ## input: lex: a Lexis object that has been split somehow; 
-  ##        aggre: an expression / list of expressions / a character vector of names;
-  ##        may have been substituted, but user must use substitued = TRUE then
-  ##        some way to define style of aggregation
-  ## output: a long-format data.frame or data.table, where transitions and person-time is tabulated.
-  ## TODO: "full" type aggregating
+laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, subset = NULL, verbose = FALSE) {
+
   allTime <- proc.time()
   
   PF <- parent.frame(1L)
@@ -267,11 +249,11 @@ laggre <- function(lex, aggre = NULL, breaks = NULL, type = c("unique", "full"),
   if (type == "cartesian") type <- "full"
   if (type == "non-empty") type <- "unique"
   
-  if (verbose) cat("Aggregation type: ", type, " \n")
+  if (verbose) cat("Aggregation type: '", type, "' \n", sep = "")
   
   checkLexisData(lex)
   
-  if (is.null(breaks)) breaks <- copy(attr(lex, "breaks"))
+  breaks <- copy(attr(lex, "breaks"))
   checkBreaksList(lex, breaks)
   
   allScales <- copy(attr(lex, "time.scales"))

@@ -35,8 +35,8 @@ test_that("laggre and lexpand produce the same results", {
   v <- c("gender", "sex", "sex", "surv.int", "per", "agegr")
   
   forceLexisDT(x, breaks = BL, allScales = c("fot", "per", "age"))
-  x2 <- laggre(x, aggre = e, substituted = T, verbose = FALSE)
-  x3 <- laggre(x, aggre = e, substituted = T, type = "full", verbose = FALSE)
+  x2 <- laggre(x, aggre = e, verbose = FALSE)
+  x3 <- laggre(x, aggre = e, type = "full", verbose = FALSE)
   x4 <- lexpand(sr, birth  = bi_date, entry = dg_date, exit = ex_date,
                 status = status %in% 1:2, aggre.type = "non-empty",
                 breaks=BL, aggre = list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
