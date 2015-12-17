@@ -457,6 +457,12 @@ subset.survmean <- function(x, ...) {
   y
 }
 
+## subsetting for Lexis objects
+`[.Lexis` <- function(x, ...) {
+  structure(NextMethod(), breaks = attr(x, "breaks"), 
+            time.scales = attr(x, "time.scales"),
+            time.since = attr(x, "time.since"))
+}
 
 
 #' \code{plot} method for survtab objects
