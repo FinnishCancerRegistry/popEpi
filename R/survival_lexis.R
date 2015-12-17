@@ -164,7 +164,7 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
   } else on.exit(setkeyv(x, oldKey), add = TRUE)
     
   
-  setkeyv(x, c(by, attr(x, "time.scales")[1L]))
+  setkeyv(x, c(by, names(breaks)[1L]))
   setkeyv(x, by)
   ## rows that actually can be events: transitions and last rows by subject
   whTr <- x[, lex.Cst != lex.Xst]
