@@ -8,7 +8,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   ## checks --------------------------------------------------------------------
   checkLexisData(data)
   
-  l <- environment() ## will refer to this explicitly in DT[] to avoid conflicts
+  e <- environment() ## will refer to this explicitly in DT[] to avoid conflicts
   allScales <- attr(data, "time.scales")
   splitScales <- names(breaks)
   
@@ -25,8 +25,8 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   checkBreaksList(data, breaks = breaks)
   ## match break types to time scale types
   ## (don't try to match time scales to breaks)
-  l$splitScales <- names(breaks)
-  for (k in l$splitScales) {
+  splitScales <- names(breaks)
+  for (k in splitScales) {
     breaks[[k]] <- matchBreakTypes(data, breaks = breaks[[k]], timeScale = k)
   }
   
@@ -39,27 +39,27 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   subset <- evalLogicalSubset(data, substitute(subset))
   
   x <- if (all(subset)) copy(data) else data[subset,]
-  forceLexisDT(x, breaks = attr(data, "breaks"), allScales = l$allScales, key = TRUE)
+  forceLexisDT(x, breaks = attr(data, "breaks"), allScales = allScales, key = TRUE)
   alloc.col(x)
   
   # isCens <- 
   
   print <- evalPopArg(x, substitute(print), DT = TRUE)
   adjust <- evalPopArg(x, substitute(adjust), DT = TRUE)
-  l$pophazVars <- setdiff(names(pophaz), "haz")
+  pophazVars <- setdiff(names(pophaz), "haz")
   
-  setcolsnull(x, keep = c("lex.id", "lex.dur", l$allScales, "lex.Cst", "lex.Xst", l$pophazVars))
+  setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", pophazVars))
   
   if (!is.null(print)) x[, names(print) := print]
   if (!is.null(adjust)) x[, names(adjust) := adjust]
-  l$print <- names(print) ## note: names(NULL) equals NULL
-  l$adjust <- names(adjust)
+  print <- names(print) ## note: names(NULL) equals NULL
+  adjust <- names(adjust)
   rm(print, adjust)
   ## includes time scale to compute survivals over
-  l$aggreVars <- c(print, adjust, names(breaks)[1L]) 
+  aggreVars <- c(print, adjust, names(breaks)[1L]) 
   
   x <- splitMulti(x, breaks = breaks, drop = drop, merge = TRUE)
-  forceLexisDT(x, breaks = breaks, allScales = l$allScales, key = TRUE)
+  forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
   
 #   ## date time scales? ---------------------------------------------------------
 #   ## this actually needs to also handle breaks in an intellgent way!
@@ -69,9 +69,9 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
 #   if (any(areDifftimes)) x[, (allScales[areDifftimes]) := lapply(.SD, function(x) x/365.242199), .SDcols = allScales[areDifftimes]]
   
   if (!is.null(pophaz)) {
-    x <- cutLowMerge(x, pophaz, by = l$pophazVars, 
-                     mid.scales = intersect(l$pophazVars, l$allScales))
-    forceLexisDT(x, breaks = breaks, allScales =l$allScales, key = TRUE)
+    x <- cutLowMerge(x, pophaz, by = pophazVars, 
+                     mid.scales = intersect(pophazVars, allScales))
+    forceLexisDT(x, breaks = breaks, allScales =allScales, key = TRUE)
   }
   
   
@@ -79,32 +79,24 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   ## on the level of the splitted observations!
   
   if (comp_pp) {
-    comp_pp_weights(x, surv.scale = l$splitScales[1L], 
+    comp_pp_weights(x, surv.scale = splitScales[1L], 
                     breaks = breaks[[1L]], haz = "haz", 
                     style = "delta", verbose = FALSE)
-    forceLexisDT(x, breaks = breaks, allScales = l$allScales, key = TRUE)
+    forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
     
-    intelliCrop(x = x, breaks = breaks, allScales = l$allScales, cropStatuses = TRUE)
+    intelliCrop(x = x, breaks = breaks, allScales = allScales, cropStatuses = TRUE)
     x <- intelliDrop(x, breaks = breaks, dropNegDur = TRUE, check = TRUE)
-    forceLexisDT(x, breaks = breaks, allScales = l$allScales, key = TRUE)
+    forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
     
-    l$evInd <- detectEvents(x, breaks = breaks, by = "lex.id")
-    l$cens <- as.integer(l$evInd == 2L)
-    l$tran <- as.integer(l$evInd == 1L)
-    
-    pp <- vector("list", 4)
-    names(pp) <- c("d.pp", "d.exp.pp", "d.pp.2", if (surv.method == "hazard") "pyrs.pp" else "n.eff.pp")
-    
-    #### TODO ############
-    ## - find out which rows are events (transitions)
-    ## - find out which rows are censorings (NOTE: exit time < max(breaks))
-    ## - multiply d, d.exp, etc. with pp and aggregate.
+    pp <- comp_pp_weighted_figures(x, breaks = breaks, 
+                                   haz = "haz", pp = "pp", by = "lex.id")
+    ppNames <- makeTempVarName(x, pre = names(pp))
+    x[, c(e$ppNames) := e$pp]
     
   }
   
-  # c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else "n.eff.pp") else NULL)
   haz <- NULL ## appease R CMD CHECK
-  x <- laggre(x, aggre = l$aggreVars, verbose = FALSE,
+  x <- laggre(x, aggre = aggreVars, verbose = FALSE,
               expr = if (surv.type %in% c("surv.rel", "cif.rel") && "haz" %in% names(x)) list(d.exp = sum(haz*lex.dur)) else NULL)
   
   dn <- CJ(C = cens.values, X = event.values)
