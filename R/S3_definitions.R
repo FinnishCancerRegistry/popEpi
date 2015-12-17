@@ -415,17 +415,21 @@ print.yrs <- function(x, ...) {
 ## subsetting for aggre objects that retains attributes
 `[.aggre` <- function(x, ...) {
   y <- NextMethod()
-  setattr(y, "class", class(x))
-  setattr(y, "aggreVars", attr(x, "aggreVars"))
-  setattr(y, "breaks", attr(x, "breaks"))
+  if (is.data.frame(y)) {
+    setattr(y, "class", class(x))
+    setattr(y, "aggreVars", attr(x, "aggreVars"))
+    setattr(y, "breaks", attr(x, "breaks"))
+  }
   y
 }
 
 subset.aggre <- function(x, ...) {
   y <- NextMethod()
-  setattr(y, "class", class(x))
-  setattr(y, "aggreVars", attr(x, "aggreVars"))
-  setattr(y, "breaks", attr(x, "breaks"))
+  if (is.data.frame(y)) {
+    setattr(y, "class", class(x))
+    setattr(y, "aggreVars", attr(x, "aggreVars"))
+    setattr(y, "breaks", attr(x, "breaks"))
+  }
   y
 }
 
@@ -433,45 +437,57 @@ subset.aggre <- function(x, ...) {
 ## subsetting for survtab objects that retains attributes
 `[.survtab` <- function(x, ...) {
   y <- NextMethod()
-  setattr(y, "class", class(x))
-  setattr(y, "surv.breaks", attr(x, "surv.breaks"))
-  setattr(y, "byVars", attr(x, "byVars"))
+  if (is.data.frame(y)) {
+    setattr(y, "class", class(x))
+    setattr(y, "surv.breaks", attr(x, "surv.breaks"))
+    setattr(y, "byVars", attr(x, "byVars"))
+  }
+  y
 }
 
 subset.survtab <- function(x, ...) {
   y <- NextMethod()
-  setattr(y, "class", class(x))
-  setattr(y, "surv.breaks", attr(x, "surv.breaks"))
-  setattr(y, "byVars", attr(x, "byVars"))
+  if (is.data.frame(y)) {
+    setattr(y, "class", class(x))
+    setattr(y, "surv.breaks", attr(x, "surv.breaks"))
+    setattr(y, "byVars", attr(x, "byVars"))
+  }
   y
 }
 
 ## subsetting for meansurv objects that retains attributes
 `[.survmean` <- function(x, ...) {
   y <- NextMethod()
-  setattr(y, "class", class(x))
-  setattr(y, "surv.breaks", attr(x, "surv.breaks"))
-  setattr(y, "by.vars", attr(x, "by.vars"))
-  setattr(y, "curves", attr(x, "curves"))
+  if (is.data.frame(y)) {
+    setattr(y, "class", class(x))
+    setattr(y, "surv.breaks", attr(x, "surv.breaks"))
+    setattr(y, "by.vars", attr(x, "by.vars"))
+    setattr(y, "curves", attr(x, "curves"))
+  }
   y
 }
 
 subset.survmean <- function(x, ...) {
   y <- NextMethod()
-  setattr(y, "class", class(x))
-  setattr(y, "surv.breaks", attr(x, "surv.breaks"))
-  setattr(y, "by.vars", attr(x, "by.vars"))
-  setattr(y, "curves", attr(x, "curves"))
+  if (is.data.frame(y)) {
+    setattr(y, "class", class(x))
+    setattr(y, "surv.breaks", attr(x, "surv.breaks"))
+    setattr(y, "by.vars", attr(x, "by.vars"))
+    setattr(y, "curves", attr(x, "curves"))
+  }
   y
 }
 
 ## subsetting for Lexis objects
 `[.Lexis` <- function(x, ...) {
   y <- NextMethod()
-  setattr(y, "class", class(x))
-  setattr(y, "breaks", attr(x, "breaks"))
-  setattr(y, "time.scales", attr(x, "time.scales"))
-  setattr(y, "time.since", attr(x, "time.since"))
+  if (is.data.frame(y)) {
+    setattr(y, "class", class(x))
+    setattr(y, "breaks", attr(x, "breaks"))
+    setattr(y, "time.scales", attr(x, "time.scales"))
+    setattr(y, "time.since", attr(x, "time.since"))
+  }
+
   y
 }
 
