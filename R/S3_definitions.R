@@ -414,27 +414,32 @@ print.yrs <- function(x, ...) {
 
 ## subsetting for aggre objects that retains attributes
 `[.aggre` <- function(x, ...) {
-  structure(NextMethod(), aggreVars = attr(x, "aggreVars"), breaks = attr(x, "breaks"))
+  y <- NextMethod()
+  setattr(y, "class", class(x))
+  setattr(y, "aggreVars", attr(x, "aggreVars"))
+  setattr(y, "breaks", attr(x, "breaks"))
+  y
 }
 
 subset.aggre <- function(x, ...) {
   y <- NextMethod()
-  if (is.data.table(x)) setDT(y)
   setattr(y, "class", class(x))
   setattr(y, "aggreVars", attr(x, "aggreVars"))
-  if ("breaks" %in% names(attributes(y))) setattr(y, "breaks", attr(x, "breaks"))
+  setattr(y, "breaks", attr(x, "breaks"))
   y
 }
 
 
 ## subsetting for survtab objects that retains attributes
 `[.survtab` <- function(x, ...) {
-  structure(NextMethod(), surv.breaks = attr(x, "surv.breaks"))
+  y <- NextMethod()
+  setattr(y, "class", class(x))
+  setattr(y, "surv.breaks", attr(x, "surv.breaks"))
+  setattr(y, "byVars", attr(x, "byVars"))
 }
 
 subset.survtab <- function(x, ...) {
   y <- NextMethod()
-  if (is.data.table(x)) setDT(y)
   setattr(y, "class", class(x))
   setattr(y, "surv.breaks", attr(x, "surv.breaks"))
   setattr(y, "byVars", attr(x, "byVars"))
@@ -443,25 +448,31 @@ subset.survtab <- function(x, ...) {
 
 ## subsetting for meansurv objects that retains attributes
 `[.survmean` <- function(x, ...) {
-  structure(NextMethod(), curves = attr(x, "curves"), 
-            by.vars = attr(x, "by.vars"), surv.breaks = attr(x, "surv.breaks"))
+  y <- NextMethod()
+  setattr(y, "class", class(x))
+  setattr(y, "surv.breaks", attr(x, "surv.breaks"))
+  setattr(y, "by.vars", attr(x, "by.vars"))
+  setattr(y, "curves", attr(x, "curves"))
+  y
 }
 
 subset.survmean <- function(x, ...) {
   y <- NextMethod()
-  if (is.data.table(x)) setDT(y)
   setattr(y, "class", class(x))
   setattr(y, "surv.breaks", attr(x, "surv.breaks"))
   setattr(y, "by.vars", attr(x, "by.vars"))
-  setattr(y, "curvse", attr(x, "curves"))
+  setattr(y, "curves", attr(x, "curves"))
   y
 }
 
 ## subsetting for Lexis objects
 `[.Lexis` <- function(x, ...) {
-  structure(NextMethod(), breaks = attr(x, "breaks"), 
-            time.scales = attr(x, "time.scales"),
-            time.since = attr(x, "time.since"))
+  y <- NextMethod()
+  setattr(y, "class", class(x))
+  setattr(y, "breaks", attr(x, "breaks"))
+  setattr(y, "time.scales", attr(x, "time.scales"))
+  setattr(y, "time.since", attr(x, "time.since"))
+  y
 }
 
 
