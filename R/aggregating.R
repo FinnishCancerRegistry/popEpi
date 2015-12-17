@@ -259,20 +259,23 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   allScales <- copy(attr(lex, "time.scales"))
   if (length(allScales) == 0 ) stop("could not determine names of time scales; is the data a Lexis object?")
   
-  if (is.data.table(lex)) {
-    oldKey <- key(lex)
-    if (length(oldKey) == 0L) oldKey <- NULL
-    on.exit(setkeyv(lex, oldKey), add = TRUE)
-  }
-  
-  ## subset & drop -------------------------------------------------------------
+  ## subset --------------------------------------------------------------------
   subset <- substitute(subset)
   subset <- evalLogicalSubset(lex, subset)
   
   ## check expr ----------------------------------------------------------------
   exprSub <- substitute(expr)
-  exprType <- popArgType(exprSub, data = lex, enclos = PF, recursive = TRUE)
-  if (!exprType %in% c("NULL","list")) stop("expr must be a list of expressions, e.g. list(d.exp = sum(lex.dur*pop.haz))")
+  expr <- evalPopArg(lex[1:min(nrow(lex), 20L), ], arg = exprSub, 
+                     enclos = PF, recursive = TRUE, DT = TRUE)
+  exprType <- attr(expr, "evalPopArg")
+  exprVars <- attr(expr, "all.vars")
+  exprSub <- attr(expr, "quoted.arg")
+  if (is.null(expr)) {
+    exprType <- "NULL"
+    exprVars <- NULL
+    exprSub <- quote(list())
+  }
+  if (!exprType %in% c("NULL","list")) stop("expr must be a NULL or a list of expressions, e.g. list(d.exp = sum(lex.dur*pop.haz))")
   
   
   ## aggre argument type -------------------------------------------------------
@@ -298,6 +301,16 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   }
   if (verbose) cat("Type of aggre argument:", argType, "\n")
   
+  ## take copy of lex ----------------------------------------------------------
+  ## if lex is a data.table, this function gets really complicated.
+  ## if copy is taken only of necessary vars, it should be fine.
+  keepVars <- unique(c("lex.id", names(breaks), "lex.dur", "lex.Cst", "lex.Xst", av, exprVars))
+  lex.orig <- lex
+  lex <- if (is.data.table(lex)) lex[subset, copy(.SD), .SDcols = keepVars] else 
+    lex[subset, c(keepVars)]
+  setDT(lex)
+  forceLexisDT(lex, breaks = breaks, allScales = allScales)
+  
   ## cut time scales for aggregating if needed ---------------------------------
   aggScales <- intersect(allScales, av)
   if (any(!aggScales %in% names(breaks))) {
@@ -310,13 +323,7 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
     catAggScales <- paste0("'", aggScales, "'", collapse = ", ")
     if (verbose) cat("Following time scales mentioned in aggre argument and will be categorized into intervals (defined by breaks in object attributes) for aggregation:", catAggScales, "\n")
     
-    ## NEW METHOD: modify time scales in place 
-    ## (while taking copies of old values and returning them at exit)
-    oldScaleValues <- with(lex, mget(aggScales))
-    
-    on.exit({
-      set(lex, j = aggScales, value = oldScaleValues)
-    }, add = TRUE)
+    ## NEW METHOD: use a copy of lex and just modify in place.
     
     for (sc in aggScales) {
       set(lex, j = sc, value = cutLow(lex[[sc]], breaks = breaks[[sc]]))
@@ -333,39 +340,21 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   
   ## eval aggre ----------------------------------------------------------------
   ## NOTE: needed to eval aggre AFTER cutting time scales!
-  aggre <- evalPopArg(data = if (all(subset)) lex else lex[subset, ], 
-                      arg = ags, DT = TRUE, enclos = PF, recursive = TRUE)
+  aggre <- evalPopArg(data = lex, arg = ags, DT = TRUE, enclos = PF, recursive = TRUE)
   
   ## computing pyrs ------------------------------------------------------------
   pyrsTime <- proc.time()
-  if (!is.data.table(lex)) {
-    ## need to take copy of DF... might do this in the beginning of the function?
-    ## for some reason calling by string variable names does not work directly
-    DFtemp <- lex[subset, which(names(lex) %in% c(av, "lex.dur", "lex.id"))]
-    setDT(DFtemp)
-    pyrs <- DFtemp[, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = aggre]
-    byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
-    
-    if (exprType != "NULL") {
-      eVars <- intersect(all.vars(exprSub), names(lex))
-      expr <- DFtemp[, eval(exprSub, envir = .SD, enclos = PF), keyby = aggre, .SDcols = eVars]
-      pyrs <- merge(pyrs, expr, all = T)
-      rm(expr)
-    }
-    
-    rm(DFtemp)
-    } else {
-      pyrs <- lex[subset, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = aggre]
-      setDT(pyrs)
-      byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
-      if (exprType != "NULL") {
-        eVars <- intersect(all.vars(exprSub), names(lex))
-        expr <- lex[subset, eval(exprSub, envir = .SD, enclos = PF), keyby = aggre, .SDcols = eVars]
-        setDT(expr)
-        pyrs <- merge(pyrs, expr, all = T)
-        rm(expr)
-      }
-    }
+  
+  pyrs <- lex[, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = aggre]
+  setDT(pyrs)
+  byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
+  if (exprType != "NULL") {
+    expr <- lex[, eval(exprSub, envir = .SD, enclos = PF), keyby = aggre, .SDcols = exprVars]
+    setDT(expr)
+    pyrs <- merge(pyrs, expr, all = T)
+    rm(expr)
+  }
+  
   
   if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
   
@@ -374,10 +363,11 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   pyrs[is.na(pyrs), pyrs := 0]
   pyrs <- pyrs[pyrs > 0]
   
-  pyrsDiff <- pyrs[, sum(pyrs)] - sum(lex$lex.dur[subset])
+  pyrsDiff <- pyrs[, sum(pyrs)] - sum(lex.orig$lex.dur[subset])
   if (!isTRUE(all.equal(pyrsDiff, 0L))) {
     warning("Found discrepancy in total aggregated pyrs compared to sum(lex$lex.dur); compare results by hand and make sure settings are right \n")
   }
+  rm(subset)
   
   ## cartesian output ----------------------------------------------------------
   if (type == "full") {
@@ -422,41 +412,28 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   
   transTime <- proc.time()
   
-  for (var in c("lex.Cst", "lex.Xst")) {
-    set(aggre, j = var, value = lex[[var]][subset])
+  if (is.null(aggre) || (is.data.table(aggre) && nrow(aggre) == 0L)) {
+    
+    aggre <- quote(list(lex.Cst, lex.Xst))
+    
+  } else {
+    for (var in c("lex.Cst", "lex.Xst")) {
+      set(aggre, j = var, value = lex[[var]])
+    }
   }
+ 
   
   ## sadly, event computations requires information about
   ## 1) transitions (easy) and 2) end points (harder).
   ## end points requires sorting at some point!
+  hasEvent <- detectEvents(lex, breaks = breaks, by = "lex.id") %in% 1:2
   
-  ## note: following takes copy of some columns if data was DF; else
-  ## tmplex only an alias for lex
-  ## note: unfortunately need to take copy of DF here
+  ## is language if user supplied aggre = NULL 
+  if (!is.language(aggre)) aggre <- aggre[hasEvent]
   
-  firstScale <- allScales[1]
-  if (!is.data.table(lex)) {
-    copyVars <- which(names(lex) %in% c(av, "lex.id", "lex.dur", names(breaks), "lex.Cst", "lex.Xst"))
-    tmplex <- lex[, c(copyVars)]
-    setDT(tmplex)
-    forceLexisDT(tmplex, breaks = breaks, allScales = allScales, key = FALSE)
-  } else tmplex <- lex
+  trans <- lex[hasEvent, list(obs = .N), keyby = aggre]
   
-  
-  
-  tmpTrans <- makeTempVarName(tmplex, pre = "trans_")
-  on.exit({
-    if (exists("tmplex")) setcolsnull(tmplex, c(tmpTrans), soft = TRUE)
-  }, add = TRUE)
-  tmplex[, c(tmpTrans) := detectEvents(tmplex, breaks = breaks, by = "lex.id") %in% 1:2]
-  
-  tmplex[, (tmpTrans) := get(tmpTrans) & subset]
-  aggre <- aggre[tmplex[[tmpTrans]]]
-  
-  trans <- tmplex[tmplex[[tmpTrans]], list(obs = .N), keyby = aggre]
-  
-  setcolsnull(tmplex, c(tmpTrans), soft = TRUE)
-  rm(tmplex, aggre)
+  rm(aggre, lex)
   
   
   if (verbose) cat("Time taken by aggregating events: ", timetaken(transTime), "\n")
@@ -469,8 +446,8 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   
   ## tmpTr to be used in casting
   tmpTr <- makeTempVarName(trans, pre = "trans_")
-  trans[, (tmpTr) := paste0("from", lex.Cst, "to", lex.Xst)]
-  transitions <- trans[, sort(unique(get(tmpTr)))]
+  trans[, c(tmpTr) := paste0("from", lex.Cst, "to", lex.Xst)]
+  transitions <- sort(unique(trans[[tmpTr]]))
   trans[, c("lex.Cst", "lex.Xst") := NULL]
   
   ## note: need tmpDum if aggre = NULL for correct casting & merging
@@ -479,7 +456,6 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   trans[, c(tmpDum) := 1L]
   pyrs[, c(tmpDum) := 1L]
   
-  
   valVars <- unique(c(valVars, transitions))
   
   castForm <- paste0(byNames, collapse = " + ")
@@ -487,6 +463,7 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   castForm <- as.formula(castForm)
   trans <- dcast.data.table(trans, formula = castForm, value.var = "obs")
   
+  setkeyv(trans, NULL); setkeyv(pyrs, NULL) ## dcast.data.table seems to keep key but row order may be funky; this avoids a warning
   setkeyv(trans, byNames); setkeyv(pyrs, byNames)
   trans <- trans[pyrs]; rm(pyrs)
   
@@ -505,6 +482,8 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   
   
   ## final touch ---------------------------------------------------------------
+  setDT(trans)
+  alloc.col(trans) ## some problems with internal errors...
   setaggre(trans, obs = transitions, pyrs = "pyrs", by = byNames, obs.exp = NULL)
   setattr(trans, "breaks", breaks)
   if (!getOption("popEpi.datatable")) setDFpe(trans)
