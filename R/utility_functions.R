@@ -1108,3 +1108,25 @@ getOrigin <- function(x) {
   }
   
 }
+
+
+setcols <- function(x, j, value) {
+  ## intention: add new columns to DT via modifying in place, and to DF
+  ## via DF$var <- value; both conserve memory (don't take copy of whole data)
+  
+  if (!is.data.frame(x)) stop("x must be a data.frame")
+  if (!is.list(value)) stop("value must be a list of values (columns to add)")
+  if (missing(j)) j <- names(value)
+  
+  if (!is.data.table(x)) {
+    x[j] <- value
+  } else {
+    set(x, j = j, value = value)
+  }
+  x
+}
+
+
+
+
+
