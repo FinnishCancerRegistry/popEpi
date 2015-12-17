@@ -901,10 +901,12 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
     
   } 
   
-  av <- all.vars(arg)
   
-  argType <- popArgType(arg, data = data, n = n, enclos = enclos, recursive = FALSE)
+  argType <- popArgType(arg, data = data, n = n, enclos = enclos, recursive = TRUE)
   if (argType == "NULL") return(NULL) ## should this be stop() instead?
+  
+  av <- all.vars(arg)
+  if (argType == "character") av <- e
   
   ## byNames: names of columns resulting from aggre argument, by which
   ## pyrs and such are aggregated. same functionality
@@ -913,7 +915,7 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   byNames <- NULL
   
   if (is.character(e)) byNames <- e
-  else if (argType == "list" & substr(deparse(arg), 1, 5) == "list(") byNames <- sapply(arg[-1], function(x) all.names(x)[1]) 
+  else if (argType == "list" && substr(paste0(deparse(arg)), 1, 5) == "list(") byNames <- sapply(arg[-1], function(x) all.names(x)[1]) 
   else if (argType == "expression") byNames <- all.names(arg)[1]
   
   badNames <- c("$", ":")
@@ -971,7 +973,11 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   ## NOTE: e may be of type language at this point if arg was double-quoted
   ## and recursive = FALSE
   if (DT && any(duplicated(names(e)))) warning("Some column names are duplicated in output")
-  
+  if (DT) {
+    
+    setattr(e, "all.vars", av)
+    setattr(e, "quoted.arg", arg)
+  }
   e
 }
 
@@ -1125,6 +1131,7 @@ setcols <- function(x, j, value) {
   }
   x
 }
+
 
 
 
