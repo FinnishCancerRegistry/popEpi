@@ -886,24 +886,27 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   if (!is.environment(enclos)) enclos <- parent.frame(n + 1L)
   
   e <- eval(arg, envir = data, enclos = enclos)
-  if (is.language(e)) {
+  if (is.language(e) && !inherits(e, "formula")) {
     if (!recursive) stop("arg is of type language after evaluating, and recursive = FALSE")
     
     tick <- 1L
-    while (is.language(e)) {
-      if (tick == 100L) stop("arg was of type language even after 100 evaluations. Something went wrong here...")
+    while (is.language(e) && !inherits(e, "formula") && tick < 100L) {
       arg <- e
       e <- eval(arg, envir = data, enclos = enclos)
       tick <- tick + 1L
     }
+    if (tick == 100L) stop("arg was of type language even after 100 evaluations. Something went wrong here...")
     
     
     
   } 
+  argType <- "NULL"
+  if (is.list(e)) argType <- "list" else 
+    if (is.character(e)) argType <- "character" else 
+      if (is.vector(e) || is.factor(e)) argType <- "expression" else 
+        if (inherits(e, "formula")) argType <- "formula"
   
-  
-  argType <- popArgType(arg, data = data, n = n, enclos = enclos, recursive = TRUE)
-  if (argType == "NULL") return(NULL) ## should this be stop() instead?
+  if (argType == "NULL") return(NULL)
   
   av <- all.vars(arg)
   if (argType == "character") av <- e
@@ -923,8 +926,11 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   byNames[byNames %in% badNames] <- paste0("BV", 1:length(byNames))[byNames %in% badNames]
   
   
-  
-  if (is.character(e)) {
+  if (argType == "formula") {
+    
+    e <- setDT(eval(model.frame(e, data = data), envir = environment(), enclos = enclos))
+    
+  } else if (is.character(e)) {
     all_names_present(data, e)
     if (DT) {
       ## note: e contains variable names in character strings,
@@ -932,7 +938,6 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
       l <- lapply(e, function(x) data[[x]])
       setattr(l, "names", e)
       setDT(l)
-      setattr(l, "evalPopArg", "character")
       e <- l; rm(l)
     }
   } else if (is.list(e)) {
@@ -959,24 +964,24 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
       ## NOTE: used to be setDT, but length of different elements
       ## in list may differ, which as.data.table handles correctly
       e <- as.data.table(e)
-      setattr(e, "evalPopArg", "list")
     }
   } else if ((is.vector(e) || is.factor(e))) {
     ## is e.g. a numeric vector or a factor
     if (DT) {
       e <- data.table(V1 = e)
       setnames(e, 1, byNames)
-      setattr(e, "evalPopArg", "expression")
     }
   }
   
   ## NOTE: e may be of type language at this point if arg was double-quoted
   ## and recursive = FALSE
-  if (DT && any(duplicated(names(e)))) warning("Some column names are duplicated in output")
+  
   if (DT) {
-    
+    if (any(duplicated(names(e))))  warning("Some column names are duplicated in data.table output by evalPopArg; make sure you are not using the same variable names in the same e.g. list of expressions or vector of variable names. If that is not the case, complain to the package maintainer")
+    setDT(e)
     setattr(e, "all.vars", av)
     setattr(e, "quoted.arg", arg)
+    setattr(e, "arg.type", argType)
   }
   e
 }
@@ -1009,6 +1014,7 @@ popArgType <- function(arg, data = NULL, n = 1L, enclos = NULL, recursive = TRUE
     if (length(av) == 1L && av %in% names(data)) return("expression")
     e <- eval(arg, envir = data[1:min(nrow(data), 20L), ], 
               enclos = if (is.environment(enclos)) enclos else parent.frame(n + 1L))
+    if (inherits(e, "formula")) return("formula")
     if (is.null(e)) return("NULL")
     if (is.list(e)) return("list")
     if (is.character(e) && all(e %in% names(data))) return("character")

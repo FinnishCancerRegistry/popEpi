@@ -279,7 +279,7 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), sum.values = N
   sumSub <- substitute(sum.values)
   sum.values <- evalPopArg(lex[1:min(nrow(lex), 20L), ], arg = sumSub, 
                      enclos = PF, recursive = TRUE, DT = TRUE)
-  sumType <- attr(sum.values, "evalPopArg")
+  sumType <- attr(sum.values, "arg.type")
   sumVars <- attr(sum.values, "all.vars")
   sumSub <- attr(sum.values, "quoted.arg")
   if (is.null(sum.values)) {
@@ -306,7 +306,7 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), sum.values = N
                       arg = ags, DT = TRUE, enclos = PF, recursive = TRUE)
   ags <- attr(aggre, "quoted.arg") 
   av <- attr(aggre, "all.vars")
-  argType <- attr(aggre, "evalPopArg")
+  argType <- attr(aggre, "arg.type")
   
   if (is.null(aggre)) {
     ags <- substitute(list())
