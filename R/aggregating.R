@@ -101,7 +101,6 @@ as.aggre.default <- function(x, ...) {
 
 
 
-#' @export laggre
 #' @title Aggregation of split \code{Lexis} data
 #' @author Joonas Miettinen
 #' @description Aggregates a split \code{Lexis} object by given variables 
@@ -123,9 +122,10 @@ as.aggre.default <- function(x, ...) {
 #' from returning only rows with \code{pyrs > 0} (\code{"unique"}) to
 #' returning all possible combinations of variables given in \code{aggre} even
 #' if those combinations are not represented in data (\code{"full"}); see Details
-#' @param expr a (preferably named) list of expressions which will be computed in addition
-#' to person-time and events; e.g. \code{list(d.exp = sum(lex.dur*pop.haz))};
-#' see Examples
+#' @param sum optional: additional variables to sum by \code{aggre} given as 
+#' a character vector
+#' of variable names in data, an expression, or a list of expressions; see
+#' Examples
 #' @param subset a logical condition to subset by before computations;
 #' e.g. \code{subset = area \%in\% c("A", "B")}
 #' @param verbose \code{logical}; if \code{TRUE}, the function returns timings
@@ -204,6 +204,10 @@ as.aggre.default <- function(x, ...) {
 #' but events occur at any point within an interval.
 #' @examples 
 #' 
+#' @seealso \code{\link{aggregate}} for a similar base R solution,
+#' and \code{\link{ltable}} for a \code{data.table} based aggregator. Neither
+#' are directly applicable to split \code{Lexis} data.
+#' 
 #' ## form a Lexis object
 #' library(Epi)
 #' data(sibr)
@@ -231,14 +235,22 @@ as.aggre.default <- function(x, ...) {
 #' x <- lexpand(sibr[1:10,], birth = bi_date, entry = dg_date,
 #'              exit = ex_date, status = status %in% 1:2, 
 #'              pophaz = popmort, fot = 0:5, age = c(0, 50, 100))
+#' x$d.exp <- with(x, lex.dur*pop.haz)
+#' ## these produce the same result
+#' a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = list(d.exp))
+#' a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = "d.exp")
+#' a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = factor(d.exp))
+#' ## same result here with custom name
 #' a5 <- laggre(x, aggre = c("sex", "age", "fot"), 
-#'              expr = list(d.exp = sum(lex.dur*pop.haz)))
+#'              sum.values = list(expCases = d.exp))
 #'              
 #' ## computing pohar-perme weighted figures
+#' x$d.exp.pp <- with(x, lex.dur*pop.haz*pp)
 #' a6 <- laggre(x, aggre = c("sex", "age", "fot"), 
-#'              expr = list(d.exp.pp = sum(lex.dur*pop.haz*pp)))
-#' 
-laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, subset = NULL, verbose = FALSE) {
+#'              sum.values = c("d.exp", "d.exp.pp"))
+#' ## or equivalently e.g. sum.values = list(expCases = d.exp, expCases.p = d.exp.pp).
+#' @export
+laggre <- function(lex, aggre = NULL, type = c("unique", "full"), sum.values = NULL, subset = NULL, verbose = FALSE) {
 
   allTime <- proc.time()
   
@@ -263,20 +275,23 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   subset <- substitute(subset)
   subset <- evalLogicalSubset(lex, subset)
   
-  ## check expr ----------------------------------------------------------------
-  exprSub <- substitute(expr)
-  expr <- evalPopArg(lex[1:min(nrow(lex), 20L), ], arg = exprSub, 
+  ## check sum.values ----------------------------------------------------------
+  sumSub <- substitute(sum.values)
+  sum.values <- evalPopArg(lex[1:min(nrow(lex), 20L), ], arg = sumSub, 
                      enclos = PF, recursive = TRUE, DT = TRUE)
-  exprType <- attr(expr, "evalPopArg")
-  exprVars <- attr(expr, "all.vars")
-  exprSub <- attr(expr, "quoted.arg")
-  if (is.null(expr)) {
-    exprType <- "NULL"
-    exprVars <- NULL
-    exprSub <- quote(list())
+  sumType <- attr(sum.values, "evalPopArg")
+  sumVars <- attr(sum.values, "all.vars")
+  sumSub <- attr(sum.values, "quoted.arg")
+  if (is.null(sum.values)) {
+    sumType <- "NULL"
+    sumVars <- NULL
+    sumSub <- quote(list())
   }
-  if (!exprType %in% c("NULL","list")) stop("expr must be a NULL or a list of expressions, e.g. list(d.exp = sum(lex.dur*pop.haz))")
-  
+  badSum <- names(sum.values)[!sapply(sum.values, is.numeric)]
+  if (length(badSum) > 0L) {
+    badSum <- paste0("'", badSum, "'", collapse = ", ")
+    stop("Following variables resulting from evaluating supplied sum.values argument are not numeric and cannot be summed: ", badSum, ". Evaluated sum.values: ", deparse(sumSub))
+  }
   
   ## aggre argument type -------------------------------------------------------
   ## NOTE: need to eval aggre AFTER cutting time scales!
@@ -304,7 +319,7 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   ## take copy of lex ----------------------------------------------------------
   ## if lex is a data.table, this function gets really complicated.
   ## if copy is taken only of necessary vars, it should be fine.
-  keepVars <- unique(c("lex.id", names(breaks), "lex.dur", "lex.Cst", "lex.Xst", av, exprVars))
+  keepVars <- unique(c("lex.id", names(breaks), "lex.dur", "lex.Cst", "lex.Xst", av, sumVars))
   lex.orig <- lex
   lex <- if (is.data.table(lex)) lex[subset, copy(.SD), .SDcols = keepVars] else 
     lex[subset, c(keepVars)]
@@ -348,17 +363,30 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), expr = NULL, s
   pyrs <- lex[, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = aggre]
   setDT(pyrs)
   byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
-  if (exprType != "NULL") {
-    expr <- lex[, eval(exprSub, envir = .SD, enclos = PF), keyby = aggre, .SDcols = exprVars]
-    setDT(expr)
-    pyrs <- merge(pyrs, expr, all = T)
-    rm(expr)
+  
+  if (sumType != "NULL") {
+    if (sumType == "character") {
+      sumNames <- evalPopArg(lex, sumSub, n = n, DT = FALSE, recursive = TRUE, enclos = PF)
+      sum.values <- lex[, lapply(.SD, sum), keyby = aggre, .SDcols = c(sumNames)]
+    } else {
+      sum.values <- evalPopArg(lex, sumSub, n = n, enclos = PF)
+      sumNames <- names(sum.values)
+      sumTmpNames <- makeTempVarName(lex, pre = sumNames)
+      set(lex, j = sumTmpNames, value = sum.values)
+      sum.values <- lex[, lapply(.SD, sum), keyby = aggre, .SDcols = sumTmpNames]
+      setnames(sum.values, sumTmpNames, sumNames)
+      setcolsnull(lex, sumTmpNames)
+    }
+    
+    setDT(sum.values)
+    pyrs <- merge(pyrs, sum.values, all = TRUE)
+    rm(sum.values)
   }
   
   
   if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
   
-  valVars <- setdiff(names(pyrs), byNames) ## includes pyrs and anything created by expr
+  valVars <- setdiff(names(pyrs), byNames) ## includes pyrs and anything created by sum
   
   pyrs[is.na(pyrs), pyrs := 0]
   pyrs <- pyrs[pyrs > 0]
