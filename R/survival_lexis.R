@@ -37,11 +37,34 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   if (comp_pp) drop <- FALSE
   
   ## data & subset -------------------------------------------------------------
-  subset <- evalLogicalSubset(data, substitute(subset))
-  
-  x <- data[subset, ]
+  x <- data[evalLogicalSubset(data, substitute(subset)), ]
   setDT(x)
   forceLexisDT(x, breaks = attr(data, "breaks"), allScales = allScales, key = TRUE)
+  
+  
+  ## simplify event and censoring indicators -----------------------------------
+  if (!surv.type %in% c("cif.obs", "cif.rel")) {
+    ## this simplifies computations
+    x[, lex.Cst := 0L]
+    x[, lex.Xst := as.integer(lex.Xst %in% event.values)]
+    cens.values <- 0L
+    event.values <- 1L
+  }
+  
+  ## pre-crop data to speed up computations ------------------------------------
+  cropBreaks <- breaks
+  if (surv.type == "surv.rel" && relsurv.method == "pp")  {
+    ## pp-weights have to be computed from entry to follow-up till roof of breaks;
+    ## can only crop along the survival time scale
+    cropBreaks <- breaks[1L]
+    cb <- protectFromDrop(cropBreaks[[1L]], lower = TRUE)
+    cb <- c(min(cb), max(cropBreaks[[1L]]))
+    cropBreaks[[1L]] <- cb
+  }
+  intelliCrop(x = x, breaks = cropBreaks, allScales = allScales, cropStatuses = TRUE)
+  x <- intelliDrop(x, breaks = cropBreaks, dropNegDur = TRUE, check = TRUE)
+  setDT(x)
+  forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
   
   print <- evalPopArg(x, substitute(print), DT = TRUE, recursive = TRUE, enclos = PF)
   adjust <- evalPopArg(x, substitute(adjust), DT = TRUE, recursive = TRUE, enclos = PF)
@@ -88,15 +111,18 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
                     breaks = breaks[[1L]], haz = "haz", 
                     style = "delta", verbose = FALSE)
     forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
+    if (verbose) cat("Time taken by computing Pohar-Perme weights: ", timetaken(ppTime), "\n")
     
     intelliCrop(x = x, breaks = breaks, allScales = allScales, cropStatuses = TRUE)
     x <- intelliDrop(x, breaks = breaks, dropNegDur = TRUE, check = TRUE)
     forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
     
+    ppTime <- proc.time()
     pp <- comp_pp_weighted_figures(x, haz = "haz", pp = "pp", by = "lex.id")
     ppNames <- makeTempVarName(x, pre = names(pp))
     x[, c(e$ppNames) := e$pp] ## note: e$pp avoid conflict with possibly existing pp column
     rm(pp)
+    print(x)
     if (verbose) cat("Time taken by computing Pohar-Perme weighted counts and person-times: ", timetaken(ppTime), "\n")
   }
   
