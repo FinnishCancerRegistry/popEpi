@@ -232,6 +232,12 @@ survtab_ag <- function(data,
                        pyrs = "pyrs",
                        d.exp = "d.exp",
                        
+                       d.pp = "d.pp",
+                       d.pp.2 = "d.pp.2",
+                       n.cens.pp = "n.cens.pp",
+                       pyrs.pp = "pyrs.pp",
+                       d.exp.pp = "d.exp.pp",
+                       
                        surv.type="surv.rel", 
                        surv.method="hazard", 
                        relsurv.method="e2",  
@@ -310,9 +316,8 @@ survtab_ag <- function(data,
   
   valVars <- c(valVars, if (surv.type == "cif.rel")  "d.exp" else NULL)
   
-  valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "pp")  
-    c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else "n.eff.pp") else NULL)
-  
+  ppVars <- c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else "n.cens.pp")
+  valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "pp") ppVars else NULL)
   
   fo <- formals("survtab_ag")
   mc <- as.list(match.call())[-1]
