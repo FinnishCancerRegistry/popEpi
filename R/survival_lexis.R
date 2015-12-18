@@ -24,6 +24,8 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   
   ## ensure breaks make sense --------------------------------------------------
   checkBreaksList(data, breaks = breaks)
+  oldBreaks <- attr(data, "breaks")
+  if (!is.null(oldBreaks)) checkBreaksList(data, breaks = oldBreaks)
   ## match break types to time scale types
   ## (don't try to match time scales to breaks)
   splitScales <- names(breaks)
@@ -37,13 +39,14 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   if (comp_pp) drop <- FALSE
   
   ## data & subset -------------------------------------------------------------
-  x <- data[evalLogicalSubset(data, substitute(subset)), ]
+  subset <- evalLogicalSubset(data, substitute(subset))
+  x <- data[subset, ]; rm(subset)
   setDT(x)
   forceLexisDT(x, breaks = NULL, allScales = allScales, key = TRUE)
   
   
   ## simplify event and censoring indicators -----------------------------------
-  if (!surv.type %in% c("cif.obs", "cif.rel")) {
+  if (!surv.type %in% c("cif.obs", "surv.cause")) {
     ## this simplifies computations
     x[, lex.Cst := 0L]
     x[, lex.Xst := as.integer(lex.Xst %in% event.values)]
@@ -64,7 +67,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   intelliCrop(x = x, breaks = cropBreaks, allScales = allScales, cropStatuses = TRUE)
   x <- intelliDrop(x, breaks = cropBreaks, dropNegDur = TRUE, check = TRUE)
   setDT(x)
-  forceLexisDT(x, breaks = NULL, allScales = allScales, key = TRUE)
+  forceLexisDT(x, breaks = oldBreaks, allScales = allScales, key = TRUE)
   
   print <- evalPopArg(x, substitute(print), DT = TRUE, recursive = TRUE, enclos = PF)
   adjust <- evalPopArg(x, substitute(adjust), DT = TRUE, recursive = TRUE, enclos = PF)
@@ -83,7 +86,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   
   splitTime <- proc.time()
   setDT(x)
-  forceLexisDT(x, breaks = NULL, allScales = allScales, key = TRUE)
+  forceLexisDT(x, breaks = oldBreaks, allScales = allScales, key = TRUE)
   x <- splitMulti(x, breaks = breaks, drop = FALSE, merge = TRUE)
   setDT(x)
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
@@ -183,6 +186,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
 # library(popEpi)
 # dt <- copy(sire)[dg_date < ex_date,]
 # dt[, agegr := cut(dg_age, c(0,50,75,Inf))]
+# dt[, sex := rbinom(n = .N, size = 1, prob = 0.5)]
 # dt <- Lexis(data = dt, entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
 #             exit = list(CAL = get.yrs(ex_date)), entry.status = 0L, exit.status = status, merge = TRUE)
 # pm <- copy(popEpi::popmort)
@@ -198,7 +202,25 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
 #                   relsurv.method = "pp",
 #                   # weights = list(agegr = c(0.2,0.4,0.4)),
 #                   breaks = list(FUT = seq(0,5,1/12)))
+# st <- survtab_lex(dt, print = NULL, adjust = c("sex","agegr"), 
+#                   pophaz = pm,
+#                   surv.type = "surv.rel",
+#                   relsurv.method = "pp",
+#                   weights = list(sex = c(0.5, 0.5), agegr = c(0.2,0.4,0.4)),
+#                   breaks = list(FUT = seq(0,5,1/12)))
 
+
+# ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
+#               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
+#               fot = seq(0, 5, 1/12))
+# pm2 <- copy(popEpi::popmort)
+# setnames(pm2, c("year", "agegroup"), c("per", "age"))
+# st <- survtab_lex(ag, print = NULL, #adjust = c("sex","agegr"), 
+#                   pophaz = pm2,
+#                   surv.type = "surv.rel",
+#                   relsurv.method = "pp",
+#                   #weights = list(sex = c(0.5, 0.5), agegr = c(0.2,0.4,0.4)),
+#                   breaks = list(fot = seq(0,5,1/12)))
 detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id") {
   ## INTENTION: given a Lexis object, determines which rows
   ## have an event (a transition or end-point) within the window
