@@ -615,7 +615,7 @@ survtab_ag <- function(data,
   
   
   # relative survivals ---------------------------------------------------------
-  if (surv.type == "surv.rel") {
+  if (surv.type == "surv.rel" & relsurv.method == "e2") {
     
     # compute r.e2 -------------------------------------------------------------
     comp.st.rs <- function(rs.table, rs.by.vars = byVars) {
