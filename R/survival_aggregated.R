@@ -358,10 +358,10 @@ survtab_ag <- function(data,
   # making weighted table of aggregated values ---------------------------------
   prSub <- substitute(print)
   adSub <- substitute(adjust)
-  adType <- popArgType(adSub, data = origData)
+  
   vaSub <- substitute(mc)
   weSub <- substitute(weights)
-  weType <- popArgType(weSub, data = origData)
+  
   ssSub <- list(origData[[surv.scale]])
   setattr(ssSub, "names", surv.scale)
   ssSub[[surv.scale]] <- cutLow(ssSub[[surv.scale]], breaks = surv.breaks)
