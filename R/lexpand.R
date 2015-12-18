@@ -489,22 +489,7 @@ lexpand <- function(data,
   
   ## aggregating checks --------------------------------------------------------
   aggSub <- substitute(aggre)
-  agTy <- popArgType(aggSub, data = data)
-  if (agTy != "NULL") {
-    if (agTy == "character") {
-      bad_vars <- setdiff(aggre, c(if (merge) names(data), c("fot", "per", "age")))
-    } else if (agTy == "expression") {
-      aggSub <- substitute(list(aggre))
-      bad_vars <- setdiff(all.vars(aggSub), c(if (merge) names(data), c("fot", "per", "age")))
-    } else if (agTy == "list") {
-      bad_vars <- setdiff(all.vars(aggSub), c(if (merge) names(data), c("fot", "per", "age")))
-    }
-    bad_vars <- setdiff(bad_vars, c("F", "$", "T"))
-    if (length(bad_vars) > 0) {
-      bad_vars <- paste0("'", bad_vars, "'", collapse = ", ")
-      stop("you used the following variable(s) in 'aggre' not available in splitted data: ", bad_vars)
-    }
-  }
+  agTy <- popArgType(aggSub, data = data, enclos = parent.frame(1L), recursive = TRUE)
   
   # convert to fractional years ------------------------------------------------
   
