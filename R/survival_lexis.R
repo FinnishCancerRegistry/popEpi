@@ -39,7 +39,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   ## data & subset -------------------------------------------------------------
   x <- data[evalLogicalSubset(data, substitute(subset)), ]
   setDT(x)
-  forceLexisDT(x, breaks = attr(data, "breaks"), allScales = allScales, key = TRUE)
+  forceLexisDT(x, breaks = NULL, allScales = allScales, key = TRUE)
   
   
   ## simplify event and censoring indicators -----------------------------------
@@ -64,7 +64,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   intelliCrop(x = x, breaks = cropBreaks, allScales = allScales, cropStatuses = TRUE)
   x <- intelliDrop(x, breaks = cropBreaks, dropNegDur = TRUE, check = TRUE)
   setDT(x)
-  forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
+  forceLexisDT(x, breaks = NULL, allScales = allScales, key = TRUE)
   
   print <- evalPopArg(x, substitute(print), DT = TRUE, recursive = TRUE, enclos = PF)
   adjust <- evalPopArg(x, substitute(adjust), DT = TRUE, recursive = TRUE, enclos = PF)
@@ -80,11 +80,16 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   ## includes time scale to compute survivals over
   aggreVars <- c(print, adjust, names(breaks)[1L]) 
   
+  
   splitTime <- proc.time()
-  x <- splitMulti(x, breaks = breaks, drop = drop, merge = TRUE)
+  setDT(x)
+  forceLexisDT(x, breaks = NULL, allScales = allScales, key = TRUE)
+  x <- splitMulti(x, breaks = breaks, drop = FALSE, merge = TRUE)
+  setDT(x)
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
   if (verbose) cat("Time taken by splitting Lexis data: ", timetaken(splitTime), "\n")
-    
+  
+  
 #   ## date time scales? ---------------------------------------------------------
 #   ## this actually needs to also handle breaks in an intellgent way!
 #   areDates <- x[, sapply(.SD, is.Date), .SDcols = allScales]
@@ -104,12 +109,13 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   ## still need to compute pp-weighted figures below. they all have to be done
   ## on the level of the splitted observations!
   
-  ppNames <- NULL
+  ppNames <- d.pp <- d.pp.2 <- d.exp.pp <- ptime.pp <- n.cens.pp <- NULL
   if (comp_pp) {
     ppTime <- proc.time()
     comp_pp_weights(x, surv.scale = splitScales[1L], 
                     breaks = breaks[[1L]], haz = "haz", 
                     style = "delta", verbose = FALSE)
+    setDT(x)
     forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
     if (verbose) cat("Time taken by computing Pohar-Perme weights: ", timetaken(ppTime), "\n")
     
@@ -122,7 +128,14 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
     ppNames <- makeTempVarName(x, pre = names(pp))
     x[, c(e$ppNames) := e$pp] ## note: e$pp avoid conflict with possibly existing pp column
     rm(pp)
-    print(x)
+    
+    d.pp.2 <- ppNames[substr(ppNames, 1, 13) == "from0to1.pp.2"]
+    d.pp <- ppNames[substr(ppNames, 1, 11) == "from0to1.pp"]
+    d.pp <- setdiff(d.pp, d.pp.2)
+    d.exp.pp <- ppNames[substr(ppNames, 1, 8) == "d.exp.pp"]
+    ptime.pp <- ppNames[substr(ppNames, 1, 8) == "ptime.pp"]
+    n.cens.pp <- ppNames[substr(ppNames, 1, 11) == "from0to0.pp"]
+    
     if (verbose) cat("Time taken by computing Pohar-Perme weighted counts and person-times: ", timetaken(ppTime), "\n")
   }
   
@@ -131,10 +144,18 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
     d.exp <- makeTempVarName(x, pre = "d.exp_")
     x[, c(e$d.exp) := lex.dur * haz]
   }
+  
+  
   # haz <- NULL ## appease R CMD CHECK
   aggreTime <- proc.time()
-  x <- laggre(x, aggre = aggreVars, verbose = FALSE,
+  setDT(x)
+  forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
+  if (verbose) cat("** verbose messages from laggre: \n")
+  x <- laggre(x, aggre = aggreVars, verbose = verbose,
               sum.values = c(d.exp, ppNames))
+  if (verbose) cat("** end of  verbose messages from laggre \n")
+  setDT(x)
+  setattr(x, "class", c("aggre", "data.table", "data.frame"))
   if (verbose) cat("Time taken by aggregating split Lexis data: ", timetaken(aggreTime), "\n")
   
   dn <- CJ(C = cens.values, X = event.values)
@@ -142,10 +163,19 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   dn <- intersect(dn, names(x))
   
   survTime <- proc.time()
-  st <- survtab_ag(x, surv.scale = names(breaks)[1L], adjust = adjust,
-                   d = dn, pyrs = pyrs, 
-                   print = print, weights = weights, surv.type = surv.type,
-                   d.exp = d.exp)
+  st <- survtab_ag(x, surv.scale = names(breaks)[1L], 
+                   adjust = adjust,
+                   print = print, 
+                   weights = weights, 
+                   
+                   d = dn, pyrs = pyrs, d.exp = d.exp, 
+                   
+                   d.pp = d.pp, d.exp.pp = d.exp.pp, d.pp.2 = d.pp.2, 
+                   n.cens.pp = n.cens.pp, pyrs.pp = ptime.pp,
+                   
+                   surv.type = surv.type,
+                   surv.method = surv.method,
+                   relsurv.method = relsurv.method)
   if (verbose) cat("Time taken by computing survivals with aggregated data: ", timetaken(survTime), "\n")
   st
 }
