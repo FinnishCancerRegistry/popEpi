@@ -1002,7 +1002,7 @@ popArgType <- function(arg, data = NULL, n = 1L, enclos = NULL, recursive = TRUE
   
   a <- deparse(arg)
   a <- paste0(a, collapse = "") ## lists may somehow produce length > 1 here
-  if (substr(a, 1, 4) == "list") return("list")
+  if (substr(a, 1, 5) == "list(") return("list")
   if (a == "NULL") return("NULL")
   ## detection of character arguments is not easy and should not be considered
   ## fool proof since user may pass e.g. a vector of character strings as a 
