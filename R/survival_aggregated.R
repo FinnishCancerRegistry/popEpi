@@ -341,7 +341,7 @@ survtab_ag <- function(data,
     
     if (length(cn) > 1) jay <- paste0(jay, "_", cn) ## e.g. d_1, d_2, ...
     if (argName == "d") eventVars <- jay else 
-      if (length(cn) > 1) stop("'", argName, "' is of length ", length(cn), "; only 'd' may be of length > 1 of the value arguments")
+      if (length(cn) > 1) stop("'", argName, "' has/evaluates to ", length(cn), " columns; only 'd' may evaluate to more than one column of the value arguments")
     setnames(mc[[k]], cn, jay)
     set(mc[[1]], j = jay, value = mc[[k]])
   }
