@@ -122,7 +122,7 @@ as.aggre.default <- function(x, ...) {
 #' from returning only rows with \code{pyrs > 0} (\code{"unique"}) to
 #' returning all possible combinations of variables given in \code{aggre} even
 #' if those combinations are not represented in data (\code{"full"}); see Details
-#' @param sum optional: additional variables to sum by \code{aggre} given as 
+#' @param sum.values optional: additional variables to sum by \code{aggre} given as 
 #' a character vector
 #' of variable names in data, an expression, or a list of expressions; see
 #' Examples
@@ -202,11 +202,12 @@ as.aggre.default <- function(x, ...) {
 #' (implying \code{X} = \code{Y}). Subjects at risk are computed in the beginning
 #' of an interval defined by any Lexis time scales and mentioned in \code{aggre},
 #' but events occur at any point within an interval.
-#' @examples 
 #' 
 #' @seealso \code{\link{aggregate}} for a similar base R solution,
 #' and \code{\link{ltable}} for a \code{data.table} based aggregator. Neither
 #' are directly applicable to split \code{Lexis} data.
+#' 
+#' @examples 
 #' 
 #' ## form a Lexis object
 #' library(Epi)
@@ -239,7 +240,7 @@ as.aggre.default <- function(x, ...) {
 #' ## these produce the same result
 #' a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = list(d.exp))
 #' a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = "d.exp")
-#' a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = factor(d.exp))
+#' a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = d.exp)
 #' ## same result here with custom name
 #' a5 <- laggre(x, aggre = c("sex", "age", "fot"), 
 #'              sum.values = list(expCases = d.exp))
@@ -366,10 +367,10 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), sum.values = N
   
   if (sumType != "NULL") {
     if (sumType == "character") {
-      sumNames <- evalPopArg(lex, sumSub, n = n, DT = FALSE, recursive = TRUE, enclos = PF)
+      sumNames <- evalPopArg(lex, sumSub, n = 1L, DT = FALSE, recursive = TRUE, enclos = PF)
       sum.values <- lex[, lapply(.SD, sum), keyby = aggre, .SDcols = c(sumNames)]
     } else {
-      sum.values <- evalPopArg(lex, sumSub, n = n, enclos = PF)
+      sum.values <- evalPopArg(lex, sumSub, n = 1L, enclos = PF)
       sumNames <- names(sum.values)
       sumTmpNames <- makeTempVarName(lex, pre = sumNames)
       set(lex, j = sumTmpNames, value = sum.values)

@@ -4,7 +4,7 @@
 \alias{laggre}
 \title{Aggregation of split \code{Lexis} data}
 \usage{
-laggre(lex, aggre = NULL, type = c("unique", "full"), expr = NULL,
+laggre(lex, aggre = NULL, type = c("unique", "full"), sum.values = NULL,
   subset = NULL, verbose = FALSE)
 }
 \arguments{
@@ -24,9 +24,10 @@ from returning only rows with \code{pyrs > 0} (\code{"unique"}) to
 returning all possible combinations of variables given in \code{aggre} even
 if those combinations are not represented in data (\code{"full"}); see Details}
 
-\item{expr}{a (preferably named) list of expressions which will be computed in addition
-to person-time and events; e.g. \code{list(d.exp = sum(lex.dur*pop.haz))};
-see Examples}
+\item{sum.values}{optional: additional variables to sum by \code{aggre} given as 
+a character vector
+of variable names in data, an expression, or a list of expressions; see
+Examples}
 
 \item{subset}{a logical condition to subset by before computations;
 e.g. \code{subset = area \%in\% c("A", "B")}}
@@ -143,15 +144,27 @@ a4 <- laggre(x, aggre = c("sex", "AGE", "CAL"), type = "full")
 x <- lexpand(sibr[1:10,], birth = bi_date, entry = dg_date,
              exit = ex_date, status = status \%in\% 1:2, 
              pophaz = popmort, fot = 0:5, age = c(0, 50, 100))
+x$d.exp <- with(x, lex.dur*pop.haz)
+## these produce the same result
+a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = list(d.exp))
+a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = "d.exp")
+a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = d.exp)
+## same result here with custom name
 a5 <- laggre(x, aggre = c("sex", "age", "fot"), 
-             expr = list(d.exp = sum(lex.dur*pop.haz)))
+             sum.values = list(expCases = d.exp))
              
 ## computing pohar-perme weighted figures
+x$d.exp.pp <- with(x, lex.dur*pop.haz*pp)
 a6 <- laggre(x, aggre = c("sex", "age", "fot"), 
-             expr = list(d.exp.pp = sum(lex.dur*pop.haz*pp)))
-
+             sum.values = c("d.exp", "d.exp.pp"))
+## or equivalently e.g. sum.values = list(expCases = d.exp, expCases.p = d.exp.pp).
 }
 \author{
 Joonas Miettinen
+}
+\seealso{
+\code{\link{aggregate}} for a similar base R solution,
+and \code{\link{ltable}} for a \code{data.table} based aggregator. Neither
+are directly applicable to split \code{Lexis} data.
 }
 

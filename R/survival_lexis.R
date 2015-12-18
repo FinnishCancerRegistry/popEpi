@@ -102,6 +102,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   
   if (!is.null(pophaz)) {
     hazTime <- proc.time()
+    haz <- NULL ## appease R CMD CHECK
     x <- cutLowMerge(x, pophaz, by = pophazVars, 
                      mid.scales = intersect(pophazVars, allScales))
     forceLexisDT(x, breaks = breaks, allScales =allScales, key = TRUE)
@@ -149,7 +150,6 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   }
   
   
-  # haz <- NULL ## appease R CMD CHECK
   aggreTime <- proc.time()
   setDT(x)
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
