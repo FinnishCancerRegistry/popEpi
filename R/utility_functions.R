@@ -928,8 +928,8 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   
   if (argType == "formula") {
     
-    e <- setDT(eval(model.frame(e, data = data), envir = environment(), enclos = enclos))
-    
+    e <- RHS2DT(formula = arg, data = data, enclos = enclos)
+      
   } else if (is.character(e)) {
     all_names_present(data, e)
     if (DT) {
@@ -1140,6 +1140,45 @@ setcols <- function(x, j, value) {
 
 
 
+`%.:%` <- function(x, y) {
+  ## INTENTION: hacking formula calls using `:`
+  ## which is apparently normally evaluated in C... (in model.matrix.default)
+  ## USAGE: e.g. c(1,2) %.:% c(3,4) = c(3, 8)
+  ## (instead of getting warning)
+  if (length(x) > 1L && length(y) > 1L && is.numeric(x) && is.numeric(y)) {
+    return(x*y)
+  }
+  as.factor(x):as.factor(y)
+  
+}
 
+
+
+RHS2list <- function(formula) {
+  ## INTENTION: turns the right-hand side of a formula
+  ## into a list of substituted expressions;
+  ## each element in list is an expressions separated
+  ## by a '+' in the formula. needs to be eval()'d,
+  ## preferably using the appropriate data set.
+  if (!inherits(formula, "formula")) stop("not a formula")
+  
+  
+  te <- terms(formula)
+  tl <- attr(te, "term.labels")
+  ## to avoid e.g. c(1,2):c(3,4) NOT evaluating as c(3, 8)
+  l <- lapply(tl, function(x) gsub(pattern = ":", x = x, replacement = "%.:%"))
+  
+  e <- attr(te, ".Environment")
+  l <- lapply(l, function(x) eval(parse(text = paste0("substitute(", x, ", env = e)"))))
+  names(l) <- tl
+  l
+}
+
+RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
+  l <- RHS2list(formula)
+  l <- lapply(l, function(x) eval(expr = x, envir = data, enclos = enclos))
+  setDT(l)
+  l
+}
 
 
