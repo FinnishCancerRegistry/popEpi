@@ -14,7 +14,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   splitScales <- names(breaks)
   
   if (is.null(event.values)) {
-    event.values <- if (is.factor(data$lex.Xst)) levels(data$lex.Xst) else sort(unique(data$lex.Xst))
+    event.values <- if (is.factor(data$lex.Xst)) levels(data$lex.Xst)[-1L] else sort(unique(data$lex.Xst))
   }
   event.values <- intersect(event.values, unique(data$lex.Xst))
   event.values <- setdiff(event.values, unique(data$lex.Cst))
@@ -44,6 +44,32 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   setDT(x)
   forceLexisDT(x, breaks = NULL, allScales = allScales, key = TRUE)
   
+  ## pre-eval of print & adjust ------------------------------------------------
+  adTest <- evalPopArg(x[1:min(10, .N)], substitute(adjust), DT = TRUE, recursive = TRUE, enclos = PF)
+  if (!is.null(adTest)) {
+    adType <- attr(adTest, "arg.type")
+    adSub <- attr(adTest, "quoted.arg")
+    adVars <- attr(adTest, "all.vars")
+  } else {
+    adType <- "NULL"
+    adSub <- substitute(NULL)
+    adVars <- NULL
+  } 
+  prTest <- evalPopArg(x[1:min(10, .N)], substitute(print), DT = TRUE, recursive = TRUE, enclos = PF)
+  if (!is.null(prTest)) {
+    prType <- attr(prTest, "arg.type")
+    prSub <- attr(prTest, "quoted.arg")
+    prVars <- attr(prTest, "all.vars")
+  } else {
+    prType <- "NULL"
+    prSub <- substitute(NULL)
+    prVars <- NULL
+  }
+  
+  
+  pophazVars <- setdiff(names(pophaz), "haz")
+  
+  setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", pophazVars, adVars, prVars))
   
   ## simplify event and censoring indicators -----------------------------------
   if (!surv.type %in% c("cif.obs", "surv.cause")) {
@@ -69,10 +95,16 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   setDT(x)
   forceLexisDT(x, breaks = oldBreaks, allScales = allScales, key = TRUE)
   
+  ## eval print & adjust -------------------------------------------------------
+  
+  if (prType == "formula") {
+    print <- evalPopFormula(formula = eval(prSub), data = x, enclos = PF, Surv.response = TRUE)
+  }
+  print(print)
+  stop("test")
   print <- evalPopArg(x, substitute(print), DT = TRUE, recursive = TRUE, enclos = PF)
   adjust <- evalPopArg(x, substitute(adjust), DT = TRUE, recursive = TRUE, enclos = PF)
-  pophazVars <- setdiff(names(pophaz), "haz")
-  
+  ## only keep necessary variables...
   setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", pophazVars))
   
   if (!is.null(print)) x[, names(print) := print]
