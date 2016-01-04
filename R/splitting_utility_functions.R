@@ -590,8 +590,8 @@ lexpile <- function(lex, by = "lex.id", subset = NULL) {
 #' The resulting time is also a \code{data.table} if 
 #' \code{options("popEpi.datatable") == TRUE} (see: \code{?popEpi})
 #' 
-#' @export prepExpo
 #' @import data.table
+#' @export
 prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(get(cutScale)),
                      exit = max(get(cutScale)), by = "lex.id", breaks = NULL, freezeDummy = NULL, subset = NULL,
                      verbose = FALSE, ...) {

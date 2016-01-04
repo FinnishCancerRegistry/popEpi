@@ -154,7 +154,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   setDT(x)
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
   if (verbose) cat("** verbose messages from laggre: \n")
-  x <- laggre(x, aggre = aggreVars, verbose = verbose,
+  x <- laggre(x, by = aggreVars, verbose = verbose,
               sum.values = c(d.exp, ppNames))
   if (verbose) cat("** end of  verbose messages from laggre \n")
   setDT(x)

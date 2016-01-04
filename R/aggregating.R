@@ -111,7 +111,7 @@ as.aggre.default <- function(x, ...) {
 #' and/or age.
 #' @param lex a \code{Lexis} object split with e.g. 
 #' \code{\link[Epi]{splitLexis}} or \code{\link{splitMulti}}
-#' @param aggre expression(s) or variables to aggregate by; can be 
+#' @param by expression(s) or variables to aggregate by; can be 
 #' 1) a character string vector of variable names (e.g. \code{aggre = c("sex", "area")});
 #' 2) an expression or symbol (e.g. \code{aggre = sex} or 
 #' \code{aggre = factor(sex, 0:1, c("m", "f"))});
@@ -222,15 +222,15 @@ as.aggre.default <- function(x, ...) {
 #'                                  AGE = seq(0, 100, 50)))
 #' 
 #' ## these produce the same results (with differing ways of determining aggre)
-#' a1 <- laggre(x, aggre = list(gender = factor(sex, 0:1, c("m", "f")), 
+#' a1 <- laggre(x, by = list(gender = factor(sex, 0:1, c("m", "f")), 
 #'              agegroup = AGE, period = CAL))
 #' 
-#' a2 <- laggre(x, aggre = c("sex", "AGE", "CAL"))
+#' a2 <- laggre(x, by = c("sex", "AGE", "CAL"))
 #' 
-#' a3 <- laggre(x, aggre = list(sex, agegroup = AGE, CAL))
+#' a3 <- laggre(x, by = list(sex, agegroup = AGE, CAL))
 #' 
 #' ## returning also empty levels
-#' a4 <- laggre(x, aggre = c("sex", "AGE", "CAL"), type = "full")
+#' a4 <- laggre(x, by = c("sex", "AGE", "CAL"), type = "full")
 #' 
 #' ## computing also expected numbers of cases
 #' x <- lexpand(sibr[1:10,], birth = bi_date, entry = dg_date,
@@ -238,20 +238,20 @@ as.aggre.default <- function(x, ...) {
 #'              pophaz = popmort, fot = 0:5, age = c(0, 50, 100))
 #' x$d.exp <- with(x, lex.dur*pop.haz)
 #' ## these produce the same result
-#' a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = list(d.exp))
-#' a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = "d.exp")
-#' a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = d.exp)
+#' a5 <- laggre(x, by = c("sex", "age", "fot"), sum.values = list(d.exp))
+#' a5 <- laggre(x, by = c("sex", "age", "fot"), sum.values = "d.exp")
+#' a5 <- laggre(x, by = c("sex", "age", "fot"), sum.values = d.exp)
 #' ## same result here with custom name
-#' a5 <- laggre(x, aggre = c("sex", "age", "fot"), 
+#' a5 <- laggre(x, by = c("sex", "age", "fot"), 
 #'              sum.values = list(expCases = d.exp))
 #'              
 #' ## computing pohar-perme weighted figures
 #' x$d.exp.pp <- with(x, lex.dur*pop.haz*pp)
-#' a6 <- laggre(x, aggre = c("sex", "age", "fot"), 
+#' a6 <- laggre(x, by = c("sex", "age", "fot"), 
 #'              sum.values = c("d.exp", "d.exp.pp"))
 #' ## or equivalently e.g. sum.values = list(expCases = d.exp, expCases.p = d.exp.pp).
 #' @export
-laggre <- function(lex, aggre = NULL, type = c("unique", "full"), sum.values = NULL, subset = NULL, verbose = FALSE) {
+laggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL, subset = NULL, verbose = FALSE) {
 
   allTime <- proc.time()
   
@@ -294,28 +294,28 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), sum.values = N
     stop("Following variables resulting from evaluating supplied sum.values argument are not numeric and cannot be summed: ", badSum, ". Evaluated sum.values: ", deparse(sumSub))
   }
   
-  ## aggre argument type -------------------------------------------------------
-  ## NOTE: need to eval aggre AFTER cutting time scales!
+  ## by argument type -------------------------------------------------------
+  ## NOTE: need to eval by AFTER cutting time scales!
   
-  ags <- substitute(aggre)
-  if (verbose) cat("Used aggre argument:", paste0(deparse(ags)),"\n")
+  ags <- substitute(by)
+  if (verbose) cat("Used by argument:", paste0(deparse(ags)),"\n")
   
   ## NOTE: with recursive = TRUE, evalPopArg digs deep enough to find
   ## the actual expression (substituted only once) and returns that and other
   ## things in attributes. Useful if arg substituted multiple times.
-  aggre <- evalPopArg(data = lex[1:min(nrow(lex), 20),], 
+  by <- evalPopArg(data = lex[1:min(nrow(lex), 20),], 
                       arg = ags, DT = TRUE, enclos = PF, recursive = TRUE)
-  ags <- attr(aggre, "quoted.arg") 
-  av <- attr(aggre, "all.vars")
-  argType <- attr(aggre, "arg.type")
+  ags <- attr(by, "quoted.arg") 
+  av <- attr(by, "all.vars")
+  argType <- attr(by, "arg.type")
   
-  if (is.null(aggre)) {
+  if (is.null(by)) {
     ags <- substitute(list())
     av <- NULL
     argType <- "NULL"
     type <- "unique"
   }
-  if (verbose) cat("Type of aggre argument:", argType, "\n")
+  if (verbose) cat("Type of by argument:", argType, "\n")
   
   ## take copy of lex ----------------------------------------------------------
   ## if lex is a data.table, this function gets really complicated.
@@ -337,7 +337,7 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), sum.values = N
     cutTime <- proc.time()
     
     catAggScales <- paste0("'", aggScales, "'", collapse = ", ")
-    if (verbose) cat("Following time scales mentioned in aggre argument and will be categorized into intervals (defined by breaks in object attributes) for aggregation:", catAggScales, "\n")
+    if (verbose) cat("Following time scales mentioned in by argument and will be categorized into intervals (defined by breaks in object attributes) for aggregation:", catAggScales, "\n")
     
     ## NEW METHOD: use a copy of lex and just modify in place.
     
@@ -354,27 +354,27 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), sum.values = N
     cat("Detected the following non-time-scale variables to be utilized in aggregating:", catOthVars, "\n")
   }
   
-  ## eval aggre ----------------------------------------------------------------
-  ## NOTE: needed to eval aggre AFTER cutting time scales!
-  aggre <- evalPopArg(data = lex, arg = ags, DT = TRUE, enclos = PF, recursive = TRUE)
+  ## eval by ----------------------------------------------------------------
+  ## NOTE: needed to eval by AFTER cutting time scales!
+  by <- evalPopArg(data = lex, arg = ags, DT = TRUE, enclos = PF, recursive = TRUE)
   
   ## computing pyrs ------------------------------------------------------------
   pyrsTime <- proc.time()
   
-  pyrs <- lex[, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = aggre]
+  pyrs <- lex[, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = by]
   setDT(pyrs)
   byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
   
   if (sumType != "NULL") {
     if (sumType == "character") {
       sumNames <- evalPopArg(lex, sumSub, n = 1L, DT = FALSE, recursive = TRUE, enclos = PF)
-      sum.values <- lex[, lapply(.SD, sum), keyby = aggre, .SDcols = c(sumNames)]
+      sum.values <- lex[, lapply(.SD, sum), keyby = by, .SDcols = c(sumNames)]
     } else {
       sum.values <- evalPopArg(lex, sumSub, n = 1L, enclos = PF)
       sumNames <- names(sum.values)
       sumTmpNames <- makeTempVarName(lex, pre = sumNames)
       set(lex, j = sumTmpNames, value = sum.values)
-      sum.values <- lex[, lapply(.SD, sum), keyby = aggre, .SDcols = sumTmpNames]
+      sum.values <- lex[, lapply(.SD, sum), keyby = by, .SDcols = sumTmpNames]
       setnames(sum.values, sumTmpNames, sumNames)
       setcolsnull(lex, sumTmpNames)
     }
@@ -407,19 +407,19 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), sum.values = N
     ## which variables used one time scale? and which one?
     ## will only be used in cartesian stuff.
     if (argType == "character") {
-      varsUsingScales <- intersect(aggre, aggScales)
+      varsUsingScales <- intersect(by, aggScales)
       whScaleUsed <- varsUsingScales
     } else if (argType != "NULL") {
       ## note: ags a substitute()'d list at this point always if not char
       whScaleUsed <- lapply(ags[-1], function(x) intersect(all.vars(x), aggScales))
       ## only one time scale should be used in a variable!
       oneScaleTest <- any(sapply(whScaleUsed, function(x) length(x) > 1L))
-      if (oneScaleTest) stop("Only one Lexis time scale can be used in any one variable in aggre argument!")
+      if (oneScaleTest) stop("Only one Lexis time scale can be used in any one variable in by argument!")
       varsUsingScales <- byNames[sapply(whScaleUsed, function (x) length(x) == 1L)]
       whScaleUsed <- unlist(whScaleUsed)
     }
     
-    ceejay <- lapply(aggre, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
+    ceejay <- lapply(by, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
     if (length(aggScales) > 0) {
       ## which variables in ceejay used the Lexis time scales from lex?
       
@@ -441,13 +441,13 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), sum.values = N
   
   transTime <- proc.time()
   
-  if (is.null(aggre) || (is.data.table(aggre) && nrow(aggre) == 0L)) {
+  if (is.null(by) || (is.data.table(by) && nrow(by) == 0L)) {
     
-    aggre <- quote(list(lex.Cst, lex.Xst))
+    by <- quote(list(lex.Cst, lex.Xst))
     
   } else {
     for (var in c("lex.Cst", "lex.Xst")) {
-      set(aggre, j = var, value = lex[[var]])
+      set(by, j = var, value = lex[[var]])
     }
   }
  
@@ -457,12 +457,12 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), sum.values = N
   ## end points requires sorting at some point!
   hasEvent <- detectEvents(lex, breaks = breaks, by = "lex.id") %in% 1:2
   
-  ## is language if user supplied aggre = NULL 
-  if (!is.language(aggre)) aggre <- aggre[hasEvent]
+  ## is language if user supplied by = NULL 
+  if (!is.language(by)) by <- by[hasEvent]
   
-  trans <- lex[hasEvent, list(obs = .N), keyby = aggre]
+  trans <- lex[hasEvent, list(obs = .N), keyby = by]
   
-  rm(aggre, lex)
+  rm(by, lex)
   
   
   if (verbose) cat("Time taken by aggregating events: ", timetaken(transTime), "\n")
@@ -479,7 +479,7 @@ laggre <- function(lex, aggre = NULL, type = c("unique", "full"), sum.values = N
   transitions <- sort(unique(trans[[tmpTr]]))
   trans[, c("lex.Cst", "lex.Xst") := NULL]
   
-  ## note: need tmpDum if aggre = NULL for correct casting & merging
+  ## note: need tmpDum if by = NULL for correct casting & merging
   tmpDum <- makeTempVarName(trans)
   byNames <- c(byNames, tmpDum)
   trans[, c(tmpDum) := 1L]

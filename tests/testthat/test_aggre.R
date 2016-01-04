@@ -17,12 +17,12 @@ test_that("laggre leaves original data untouched", {
   
   xor <- copy(x)
   
-  ag1 <- laggre(x, aggre = list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
+  ag1 <- laggre(x, by = list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
   
   expect_identical(x, xor)
 })
 
-test_that("laggre works with aggre = NULL", {
+test_that("laggre works with by = NULL", {
   
   sr <- popEpi::sire[dg_date < ex_date,][1:1000,]
   
@@ -30,7 +30,7 @@ test_that("laggre works with aggre = NULL", {
   x <- lexpand(sr, birth  = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2, breaks=BL)
   
-  ag1 <- laggre(x, aggre = NULL)
+  ag1 <- laggre(x, by = NULL)
   expect_equal(as.numeric(ag1), c(9539.1903286174274, 1000, 373, 627))
   
 })
@@ -49,8 +49,8 @@ test_that("laggre and lexpand produce the same results", {
   v <- c("gender", "sex", "sex", "surv.int", "per", "agegr")
   
   forceLexisDT(x, breaks = BL, allScales = c("fot", "per", "age"))
-  x2 <- laggre(x, aggre = e, verbose = FALSE)
-  x3 <- laggre(x, aggre = e, type = "full", verbose = FALSE)
+  x2 <- laggre(x, by = e, verbose = FALSE)
+  x3 <- laggre(x, by = e, type = "full", verbose = FALSE)
   x4 <- lexpand(sr, birth  = bi_date, entry = dg_date, exit = ex_date,
                 status = status %in% 1:2, aggre.type = "non-empty",
                 breaks=BL, aggre = list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
@@ -113,17 +113,17 @@ test_that("laggre's aggre argument works flexibly", {
       alloc.col(x)
     }
     
-    a <- laggre(x, aggre = list(agegr = cut(dg_age, 2), sex, fot, per = per), type = "unique")
-    b <- laggre(x, aggre = c("agegr", "sex", "fot", "per"), type = "unique")
+    a <- laggre(x, by = list(agegr = cut(dg_age, 2), sex, fot, per = per), type = "unique")
+    b <- laggre(x, by = c("agegr", "sex", "fot", "per"), type = "unique")
     
     expect_equal(a, b)
     
-    a <- laggre(x, aggre = cut(dg_age, 2), type = "unique")
+    a <- laggre(x, by = cut(dg_age, 2), type = "unique")
     setnames(a, "cut", "agegr")
     attr(a, "aggreVars")$by <- "agegr"
-    b <- laggre(x, aggre = c("agegr"), type = "unique")
-    c <- laggre(x, aggre = list(agegr = cut(dg_age, 2)), type = "unique")
-    d<- laggre(x, aggre = agegr, type = "unique")
+    b <- laggre(x, by = c("agegr"), type = "unique")
+    c <- laggre(x, by = list(agegr = cut(dg_age, 2)), type = "unique")
+    d<- laggre(x, by = agegr, type = "unique")
     
     expect_equal(a, b)
     expect_equal(b, c)
@@ -149,11 +149,11 @@ test_that("subset argument works properly", {
   forceLexisDT(x2, breaks = BL, allScales = c("fot", "per", "age"), key = FALSE)
   
   ag <- quote(list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
-  ag1 <- laggre(x, aggre = ag, subset = dg_age <= 55L)
-  ag2 <- laggre(x2, aggre = ag)
+  ag1 <- laggre(x, by = ag, subset = dg_age <= 55L)
+  ag2 <- laggre(x2, by = ag)
   
-  ag3 <- laggre(x, aggre = ag, type = "full", subset = dg_age <= 55L)
-  ag4 <- laggre(x2, aggre = ag, type = "full") 
+  ag3 <- laggre(x, by = ag, type = "full", subset = dg_age <= 55L)
+  ag4 <- laggre(x2, by = ag, type = "full") 
   
   expect_identical(ag1, ag2)
   expect_identical(ag3, ag4)

@@ -4,14 +4,14 @@
 \alias{laggre}
 \title{Aggregation of split \code{Lexis} data}
 \usage{
-laggre(lex, aggre = NULL, type = c("unique", "full"), sum.values = NULL,
+laggre(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   subset = NULL, verbose = FALSE)
 }
 \arguments{
 \item{lex}{a \code{Lexis} object split with e.g. 
 \code{\link[Epi]{splitLexis}} or \code{\link{splitMulti}}}
 
-\item{aggre}{expression(s) or variables to aggregate by; can be 
+\item{by}{expression(s) or variables to aggregate by; can be 
 1) a character string vector of variable names (e.g. \code{aggre = c("sex", "area")});
 2) an expression or symbol (e.g. \code{aggre = sex} or 
 \code{aggre = factor(sex, 0:1, c("m", "f"))});
@@ -130,15 +130,15 @@ x <- splitMulti(x, breaks = list(CAL = seq(1993, 2013, 5),
                                  AGE = seq(0, 100, 50)))
 
 ## these produce the same results (with differing ways of determining aggre)
-a1 <- laggre(x, aggre = list(gender = factor(sex, 0:1, c("m", "f")), 
+a1 <- laggre(x, by = list(gender = factor(sex, 0:1, c("m", "f")), 
              agegroup = AGE, period = CAL))
 
-a2 <- laggre(x, aggre = c("sex", "AGE", "CAL"))
+a2 <- laggre(x, by = c("sex", "AGE", "CAL"))
 
-a3 <- laggre(x, aggre = list(sex, agegroup = AGE, CAL))
+a3 <- laggre(x, by = list(sex, agegroup = AGE, CAL))
 
 ## returning also empty levels
-a4 <- laggre(x, aggre = c("sex", "AGE", "CAL"), type = "full")
+a4 <- laggre(x, by = c("sex", "AGE", "CAL"), type = "full")
 
 ## computing also expected numbers of cases
 x <- lexpand(sibr[1:10,], birth = bi_date, entry = dg_date,
@@ -146,16 +146,16 @@ x <- lexpand(sibr[1:10,], birth = bi_date, entry = dg_date,
              pophaz = popmort, fot = 0:5, age = c(0, 50, 100))
 x$d.exp <- with(x, lex.dur*pop.haz)
 ## these produce the same result
-a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = list(d.exp))
-a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = "d.exp")
-a5 <- laggre(x, aggre = c("sex", "age", "fot"), sum.values = d.exp)
+a5 <- laggre(x, by = c("sex", "age", "fot"), sum.values = list(d.exp))
+a5 <- laggre(x, by = c("sex", "age", "fot"), sum.values = "d.exp")
+a5 <- laggre(x, by = c("sex", "age", "fot"), sum.values = d.exp)
 ## same result here with custom name
-a5 <- laggre(x, aggre = c("sex", "age", "fot"), 
+a5 <- laggre(x, by = c("sex", "age", "fot"), 
              sum.values = list(expCases = d.exp))
              
 ## computing pohar-perme weighted figures
 x$d.exp.pp <- with(x, lex.dur*pop.haz*pp)
-a6 <- laggre(x, aggre = c("sex", "age", "fot"), 
+a6 <- laggre(x, by = c("sex", "age", "fot"), 
              sum.values = c("d.exp", "d.exp.pp"))
 ## or equivalently e.g. sum.values = list(expCases = d.exp, expCases.p = d.exp.pp).
 }

@@ -136,10 +136,10 @@ test_that("lexpanding with aggre.type = 'cartesian' works; only time scales used
   setDT(ag1)
   forceLexisDT(ag1, breaks = BL, allScales = c("fot", "per", "age"))
   
-  ag3 <- laggre(ag1, aggre = list(fot, age), type = "cartesian")
+  ag3 <- laggre(ag1, by = list(fot, age), type = "cartesian")
   setDT(ag3)
   
-  ag4 <- laggre(ag1, aggre = list(fot, age), type = "unique")
+  ag4 <- laggre(ag1, by = list(fot, age), type = "unique")
   setDT(ag4)
   
   ag1[, `:=`(fot = try2int(cutLow(fot, c(BL$fot, Inf))), 

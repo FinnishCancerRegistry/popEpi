@@ -844,7 +844,7 @@ lexpand <- function(data,
     if (verbose) cat("Starting aggregation of splitted data... \n")
     setDT(l)
     forceLexisDT(l, allScales = c("fot", "per", "age"), breaks = breaks)
-    l <- laggre(l, aggre = aggSub, type = aggre.type, verbose = verbose)
+    l <- laggre(l, by = aggSub, type = aggre.type, verbose = verbose)
     if (verbose) cat("Aggregation done. \n")
     
     if (!getOption("popEpi.datatable") && is.data.table(l)) setDFpe(l)
