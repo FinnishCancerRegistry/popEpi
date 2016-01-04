@@ -1171,6 +1171,9 @@ RHS2list <- function(formula) {
   l <- lapply(tl, function(x) gsub(pattern = ":", x = x, replacement = "%.:%"))
   
   e <- attr(te, ".Environment")
+  e <- as.list(e)
+  e <- e[names(e) %in% all.vars(formula)]
+  
   l <- lapply(l, function(x) eval(parse(text = paste0("substitute(", x, ", env = e)"))))
   names(l) <- tl
   l
@@ -1179,7 +1182,7 @@ RHS2list <- function(formula) {
 RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   l <- RHS2list(formula)
   l <- lapply(l, function(x) eval(expr = x, envir = data, enclos = enclos))
-  setDT(l)
+  l <- data.table(l)
   l
 }
 
