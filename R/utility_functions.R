@@ -1186,4 +1186,32 @@ RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   l
 }
 
+Surv2DT <- function(Surv) {
+  
+  dt <- copy(Surv)
+  setattr(dt, "class", "array")
+  dt <- data.table(dt)
+  setattr(dt, "type", attr(Surv, "type"))
+  dt
+}
+
+promptYN <- function(q) {
+  
+  rl <- readline(prompt = paste0(q, " (Y/N) ::: "))
+  y <- c("y", "Y")
+  n <- c( "n", "N")
+  if (!rl %in% c(y,n)) {
+    cat("Answer must be one of the following (without ticks):", paste0("'",c(y, n),"'", collapse = ", "))
+    promptYN(q = q)
+  }
+  
+  if (rl %in% y) TRUE else FALSE
+  
+}
+
+adjust <- function(...) {
+  
+  mc <- as.list(match.call())[-1L]
+  mc
+}
 
