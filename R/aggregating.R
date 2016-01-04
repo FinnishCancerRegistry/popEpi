@@ -134,7 +134,7 @@ as.aggre.default <- function(x, ...) {
 #' 
 #' \strong{Basics}
 #' 
-#' \code{laggre} is intented for aggregation of split \code{Lexis} data only.
+#' \code{aggre} is intented for aggregation of split \code{Lexis} data only.
 #' See \code{\link[Epi]{Lexis}} for forming \code{Lexis} objects by hand
 #' and e.g. \code{\link[Epi]{splitLexis}}, \code{\link{splitLexisDT}}, and
 #' \code{\link{splitMulti}} for splitting the data. \code{\link{lexpand}}
@@ -222,15 +222,15 @@ as.aggre.default <- function(x, ...) {
 #'                                  AGE = seq(0, 100, 50)))
 #' 
 #' ## these produce the same results (with differing ways of determining aggre)
-#' a1 <- laggre(x, by = list(gender = factor(sex, 0:1, c("m", "f")), 
+#' a1 <- aggre(x, by = list(gender = factor(sex, 0:1, c("m", "f")), 
 #'              agegroup = AGE, period = CAL))
 #' 
-#' a2 <- laggre(x, by = c("sex", "AGE", "CAL"))
+#' a2 <- aggre(x, by = c("sex", "AGE", "CAL"))
 #' 
-#' a3 <- laggre(x, by = list(sex, agegroup = AGE, CAL))
+#' a3 <- aggre(x, by = list(sex, agegroup = AGE, CAL))
 #' 
 #' ## returning also empty levels
-#' a4 <- laggre(x, by = c("sex", "AGE", "CAL"), type = "full")
+#' a4 <- aggre(x, by = c("sex", "AGE", "CAL"), type = "full")
 #' 
 #' ## computing also expected numbers of cases
 #' x <- lexpand(sibr[1:10,], birth = bi_date, entry = dg_date,
@@ -238,21 +238,21 @@ as.aggre.default <- function(x, ...) {
 #'              pophaz = popmort, fot = 0:5, age = c(0, 50, 100))
 #' x$d.exp <- with(x, lex.dur*pop.haz)
 #' ## these produce the same result
-#' a5 <- laggre(x, by = c("sex", "age", "fot"), sum.values = list(d.exp))
-#' a5 <- laggre(x, by = c("sex", "age", "fot"), sum.values = "d.exp")
-#' a5 <- laggre(x, by = c("sex", "age", "fot"), sum.values = d.exp)
+#' a5 <- aggre(x, by = c("sex", "age", "fot"), sum.values = list(d.exp))
+#' a5 <- aggre(x, by = c("sex", "age", "fot"), sum.values = "d.exp")
+#' a5 <- aggre(x, by = c("sex", "age", "fot"), sum.values = d.exp)
 #' ## same result here with custom name
-#' a5 <- laggre(x, by = c("sex", "age", "fot"), 
+#' a5 <- aggre(x, by = c("sex", "age", "fot"), 
 #'              sum.values = list(expCases = d.exp))
 #'              
 #' ## computing pohar-perme weighted figures
 #' x$d.exp.pp <- with(x, lex.dur*pop.haz*pp)
-#' a6 <- laggre(x, by = c("sex", "age", "fot"), 
+#' a6 <- aggre(x, by = c("sex", "age", "fot"), 
 #'              sum.values = c("d.exp", "d.exp.pp"))
 #' ## or equivalently e.g. sum.values = list(expCases = d.exp, expCases.p = d.exp.pp).
 #' @export
-laggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL, subset = NULL, verbose = FALSE) {
-
+aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL, subset = NULL, verbose = FALSE) {
+  
   allTime <- proc.time()
   
   PF <- parent.frame(1L)
@@ -293,6 +293,7 @@ laggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL
     badSum <- paste0("'", badSum, "'", collapse = ", ")
     stop("Following variables resulting from evaluating supplied sum.values argument are not numeric and cannot be summed: ", badSum, ". Evaluated sum.values: ", deparse(sumSub))
   }
+  
   
   ## by argument type -------------------------------------------------------
   ## NOTE: need to eval by AFTER cutting time scales!
@@ -516,7 +517,7 @@ laggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL
   setaggre(trans, obs = transitions, pyrs = "pyrs", by = byNames, obs.exp = NULL)
   setattr(trans, "breaks", breaks)
   if (!getOption("popEpi.datatable")) setDFpe(trans)
-  if (verbose) cat("Time taken by laggre(): ", timetaken(allTime), "\n")
+  if (verbose) cat("Time taken by aggre(): ", timetaken(allTime), "\n")
   
   
   

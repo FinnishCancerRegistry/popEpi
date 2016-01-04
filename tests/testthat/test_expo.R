@@ -30,11 +30,11 @@ test_that("prepExpo works in the simple case", {
                  # verbose = TRUE,
                  exit = 2012, by = "lex.id", 
                  breaks = BL)
-  ag <- laggre(x2, by = list(lex.id, per, age))
+  ag <- aggre(x2, by = list(lex.id, per, age))
   
   xx <- Lexis(entry = list(per = 1964, age = 1964-birth), exit = list(per=2012), data = df[1,])
   ag2 <- splitMulti(xx, breaks = BL[c("per","age")])
-  ag2 <- laggre(ag2, by = list(lex.id, per, age))
+  ag2 <- aggre(ag2, by = list(lex.id, per, age))
   
   setkeyv(ag, c("lex.id","per"))
   setkeyv(ag2, c("lex.id","per"))

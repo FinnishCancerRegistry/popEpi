@@ -331,6 +331,9 @@ lexpand <- function(data,
                     ...) {
   start_time <- proc.time()
   
+  TF <- environment()
+  PF <- parent.frame(1L)
+  
   ## data checks
   if ( missing(data) || nrow(data) == 0) stop("no data found")
   
@@ -374,7 +377,7 @@ lexpand <- function(data,
   lex_vars <- c("lex.birth","lex.entry","lex.exit","lex.event", "lex.status", "lex.entry.status", "lexpand.id")[wh]
   if (any(!c("lex.birth", "lex.entry", "lex.exit", "lex.status") %in% lex_vars)) stop("birth, entry, exit and status are mandatory")
   
-  l <- eval(l, envir = data[subset, ], enclos = parent.frame())
+  l <- eval(l, envir = data[subset, ], enclos = PF)
   l[-wh] <- NULL
   
   
@@ -487,10 +490,6 @@ lexpand <- function(data,
     stop("any given non-null vector of breaks must have more than one break!")
   }
   
-  ## aggregating checks --------------------------------------------------------
-  aggSub <- substitute(aggre)
-  agTy <- popArgType(aggSub, data = data, enclos = parent.frame(1L), recursive = TRUE)
-  
   # convert to fractional years ------------------------------------------------
   
   char2date <- function(obj) {
@@ -545,7 +544,7 @@ lexpand <- function(data,
   test_times <- function(condition, msg, old_subset=l_subset, DT=l) {
     
     condition <- substitute(condition)
-    condition <- eval(condition, envir = DT, enclos = parent.frame())
+    condition <- eval(condition, envir = DT, enclos = parent.frame(1L))
     
     new_subset <- old_subset & !(condition & !is.na(condition))
     old_n <- sum(old_subset)
@@ -571,10 +570,10 @@ lexpand <- function(data,
     l_subset <- test_times(lex.exit < min(breaks$per), "subjects left follow-up before earliest per breaks value")
   }
   if (!is.null(breaks$age)) {
-    l_subset <- test_times(lex.exit < min(breaks$age), "subjects left follow-up before lowest age breaks value")
+    l_subset <- test_times(lex.entry - lex.birth < min(breaks$age), "subjects left follow-up before lowest age breaks value")
   }
   if (!is.null(breaks$fot)) {
-    l_subset <- test_times(lex.exit < min(breaks$fot), "subjects left follow-up before lowest fot breaks value")
+    l_subset <- test_times(lex.exit - lex.entry < min(breaks$fot), "subjects left follow-up before lowest fot breaks value")
   }
   l_subset <- test_times(lex.birth >= lex.exit, "birth >= exit")
   l_subset <- test_times(lex.entry == lex.exit, "entry == exit")
@@ -764,6 +763,17 @@ lexpand <- function(data,
   }
   rm(data, subset, l_subset)
   
+  ## aggregating checks --------------------------------------------------------
+  ## NOTE: aggre evaled here using small data subset to check that all needed
+  ## variables are found, etc.
+  aggSub <- substitute(aggre)
+  agTest <- evalPopArg(arg = aggSub, data = l[1:min(10L, .N), ], 
+                       enclos = PF, recursive = TRUE, DT = TRUE)
+  agTy <- attr(agTest, "arg.type")
+  if (is.null(agTy)) agTy <- "NULL"
+  aggSub <- attr(agTest, "quoted.arg")
+  rm(aggre)
+  
   # merging pophaz and pp-weighting --------------------------------------------
   if (!is.null(pophaz)) {
     
@@ -844,7 +854,9 @@ lexpand <- function(data,
     if (verbose) cat("Starting aggregation of splitted data... \n")
     setDT(l)
     forceLexisDT(l, allScales = c("fot", "per", "age"), breaks = breaks)
-    l <- laggre(l, by = aggSub, type = aggre.type, verbose = verbose)
+    l <- try(aggre(lex = l, by = aggSub, type = aggre.type, verbose = verbose))
+    if (inherits(l, "try-error")) stop("Something went wrong when calling aggre() within lexpand(). Usual suspect: bad 'by' argument. Error message from aggre(): 
+                                       ", paste0(l[[1]]))
     if (verbose) cat("Aggregation done. \n")
     
     if (!getOption("popEpi.datatable") && is.data.table(l)) setDFpe(l)

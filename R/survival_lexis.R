@@ -153,10 +153,10 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   aggreTime <- proc.time()
   setDT(x)
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
-  if (verbose) cat("** verbose messages from laggre: \n")
-  x <- laggre(x, by = aggreVars, verbose = verbose,
+  if (verbose) cat("** verbose messages from aggre(): \n")
+  x <- aggre(x, by = aggreVars, verbose = verbose,
               sum.values = c(d.exp, ppNames))
-  if (verbose) cat("** end of  verbose messages from laggre \n")
+  if (verbose) cat("** end of  verbose messages from aggre() \n")
   setDT(x)
   setattr(x, "class", c("aggre", "data.table", "data.frame"))
   if (verbose) cat("Time taken by aggregating split Lexis data: ", timetaken(aggreTime), "\n")

@@ -273,7 +273,7 @@ survtab_ag <- function(data,
   found_breaks <- NULL
   attrs <- attributes(data)
   if (is.null(attrs$breaks) && is.null(surv.breaks)) {
-    stop("Data does not have breaks information and surv.breaks not defined; this would hold if data is output from laggre or lexpand")
+    stop("Data does not have breaks information and surv.breaks not defined; this would be true if data is output from aggre() or lexpand(). If it is and you did not tamper with it, complain to the package maintainer.")
   } else {
     breaks_names <- names(attrs$breaks)
     
