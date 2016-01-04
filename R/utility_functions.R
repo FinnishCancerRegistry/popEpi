@@ -1162,6 +1162,8 @@ RHS2list <- function(formula) {
   ## preferably using the appropriate data set.
   if (!inherits(formula, "formula")) stop("not a formula")
   
+  ## no response
+  formula <- formula[c(1, length(formula))]
   
   te <- terms(formula)
   tl <- attr(te, "term.labels")
