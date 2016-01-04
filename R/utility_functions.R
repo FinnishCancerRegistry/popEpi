@@ -1187,12 +1187,15 @@ RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
 }
 
 Surv2DT <- function(Surv) {
-  
+  sa <- attributes(Surv)
   dt <- copy(Surv)
   setattr(dt, "class", "array")
   dt <- data.table(dt)
   setattr(dt, "type", attr(Surv, "type"))
-  dt
+  
+  if (!is.null(sa$inputAttributes$time2$class)) dt[, status := factor(status, labels = sa$inputAttributes$time2$levels)]
+  
+  dt[]
 }
 
 promptYN <- function(q) {
