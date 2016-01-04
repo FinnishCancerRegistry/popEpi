@@ -1215,3 +1215,73 @@ adjust <- function(...) {
   mc
 }
 
+evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2L), subset = NULL, Surv.response = TRUE) {
+  
+  ## INTENTION: given a formula object, returns a DT where each column
+  ## is an evaluated expression from formula (separated by  + )
+  
+  fe <- environment(formula)
+  
+  ## subset if needed ----------------------------------------------------------
+  subset <- evalLogicalSubset(data, substitute(subset), enclos = enclos)
+  if (!all(subset)) {
+    data <- data[subset, ]
+    setcolsnull(data, keep = all.vars(formula))
+  }
+  
+  
+  ## formula -------------------------------------------------------------------
+  if (!inherits(formula, "formula")) stop("formula is not of class 'formula'; supply it as e.g. y ~ x")
+  if (length(formula) < 3L) stop("formula appears to be one-sided, which is not supported; supply it as e.g. y ~ x")
+  
+  ## response
+  y <- eval(formula[[2L]], envir = data, enclos = fe)
+  if (Surv.response) {
+    if (!inherits(y, "Surv")) stop("the response of the formula must be a Surv object; see ?Surv (in package survival)")
+    y <- Surv2DT(y)
+    setcolsnull(y, keep = c("time", "start", "status"), colorder = TRUE)
+    if (!any(c("time", "start") %in% names(y))) stop("Surv must have a 'time' argument")
+    setnames(y, names(y), c("time", "status")[1:ncol(y)])
+  } else {
+    y <- data.table(y)
+    setnames(y, deparse(formula[[2L]]))
+  }
+  
+  
+  ## RHS
+  l <- RHS2list(formula)
+  
+  ## adjusting variables? ------------------------------------------------------
+  adj <- names(l)[substr(names(l), 1, 6) == "adjust"]
+  
+  if (length(adj)) {
+    adj <- l[adj]
+    l <- l[setdiff(names(l), names(adj))]
+    
+    ## if e.g. used multiple adjust() calls in formula
+    ## (adj may be a list of multiple adjust() expressions)
+    
+    adj <- lapply(adj, eval)
+    adj <- unlist(adj, recursive = FALSE)
+    names(adj) <- sapply(adj, function(x) deparse(x))
+    # names(adj) <- paste0("adjust(", names(adj), ")")
+    
+    l <- c(l, adj)
+  }
+  
+  l <- lapply(l, eval, envir = data, enclos = enclos)
+  l <- as.data.table(l)
+  
+  # setnames(y, names(y), makeTempVarName(names = c(names(data), names(l)), pre = names(y)))
+  l <- cbind(y, l)
+  
+  setattr(l, "adjust.names", names(adj))
+  setattr(l, "print.names", setdiff(names(l), c(names(adj), names(y))))
+  setattr(l, "Surv.names", names(y))
+  setattr(l, "formula", formula)
+  
+  l
+}
+
+
+
