@@ -928,7 +928,7 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   
   if (argType == "formula") {
     
-    e <- RHS2DT(formula = arg, data = data, enclos = enclos)
+    e <- RHS2DT(formula = e, data = data, enclos = enclos)
       
   } else if (is.character(e)) {
     all_names_present(data, e)
