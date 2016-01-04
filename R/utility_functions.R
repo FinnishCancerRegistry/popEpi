@@ -771,11 +771,11 @@ setDFpe <- function(x) {
 
 
 
-evalLogicalSubset <- function(data, substiset, n = 2) {
+evalLogicalSubset <- function(data, substiset, n = 2, enclos = parent.frame(n)) {
   ## NOTE: subset MUST be substitute()'d before using this function!
   ## we allow substiset to be a logical condition only
   ## ALWAYS returns a logical vector of length nrow(data)
-  substiset <- eval(substiset, envir = data, enclos = parent.frame(n))
+  substiset <- eval(substiset, envir = data, enclos = enclos)
   if (!is.null(substiset)) {
     if (!is.logical(substiset)) stop("expression to substitute by must be a logical condition, e.g. var1 > 0")
     substiset <- substiset & !is.na(substiset)
