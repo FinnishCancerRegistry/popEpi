@@ -101,7 +101,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   ## NOTE: have to do CJ by hand: some levels of adjust or something may not
   ## have each level of e.g. fot repeated!
   cj <- list()
-  cj <- lapply(data[, mget(c(prVars, adVars, boVars))], 
+  cj <- lapply(data[, .SD, .SDcols =  c(prVars, adVars, boVars)], 
                function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
   
   if (length(custom.levels) > 0) cj[names(custom.levels)] <- custom.levels
@@ -219,8 +219,8 @@ globalVariables("weights")
 ## will not always sum to one in the right way.
 
 survtab_ag <- function(data, 
-                       surv.breaks=NULL, 
-                       surv.scale="fot",
+                       surv.breaks = NULL, 
+                       surv.scale = NULL,
                        
                        print = NULL,
                        adjust = NULL,
@@ -249,6 +249,8 @@ survtab_ag <- function(data,
                        format=TRUE,
                        verbose=FALSE) {
   
+  TF <- environment()
+  PF <- parent.frame(1L)
   
   # check data -----------------------------------------------------------------
   if (missing(data) || nrow(data) == 0) stop("data missing or has no rows")
@@ -265,7 +267,7 @@ survtab_ag <- function(data,
   if (relsurv.method %in% c("Pohar-Perme", "pohar-perme")) relsurv.method <- "pp"
   relsurv.method <- match.arg(relsurv.method, c("e2", "pp"))
   conf.type <- match.arg(conf.type, c("log","log-log","plain"))
-  if (verbose) {starttime <- proc.time()}
+  if (verbose) starttime <- proc.time()
   
   
   # handle breaks in attributes ------------------------------------------------
@@ -277,7 +279,20 @@ survtab_ag <- function(data,
   } else {
     breaks_names <- names(attrs$breaks)
     
-    if (!surv.scale %in% breaks_names) {
+    prTest <- evalPopArg(data = data[1:min(10L, nrow(data)), ], arg = substitute(print), DT = TRUE, enclos = PF, recursive = TRUE)
+    prType <- attr(prTest, "arg.type")
+    if (prType == "formula") {
+      print <- eval(attr(prTest, "quoted.arg"))
+      if (length(print) != 3L) stop("formula does not appear to be two-sided; supply it as e.g. fot ~ sex")
+      surv.scale <- deparse(print[[2L]])
+      if (!is.null(surv.scale)) message("Ignoring 'surv.scale' since 'print' is a formula...")
+    }
+    
+    if (is.null(surv.scale) && prType != "formula") stop("Could not determine time scale to compute survival over; either supply 'surv.scale' by hand or supply the appropriate time scale on the left-hand side of a formula gievn to argument 'print'; see ?survtab_ag")
+
+    all_names_present(data, surv.scale)
+      
+    if (length(surv.scale) && !surv.scale %in% breaks_names) {
       stop(paste0("no breaks information found for given surv.scale '", surv.scale, "'"))
     }
     
@@ -356,16 +371,50 @@ survtab_ag <- function(data,
   setcolorder(mc, valVars)
   
   # making weighted table of aggregated values ---------------------------------
-  prSub <- substitute(print)
-  adSub <- substitute(adjust)
   
   vaSub <- substitute(mc)
   weSub <- substitute(weights)
   
-  ssSub <- list(origData[[surv.scale]])
-  setattr(ssSub, "names", surv.scale)
-  ssSub[[surv.scale]] <- cutLow(ssSub[[surv.scale]], breaks = surv.breaks)
-  ssSub <- substitute(ssSub)
+  
+  ## print may be a formula
+  prSub <- substitute(print)
+  prType <- popArgType(prSub, data = data, enclos = PF, recursive = TRUE)
+  
+  adSub <- substitute(adjust)
+  
+  if (prType == "formula") {
+    prDT <- evalPopFormula(print, data = data, enclos = PF, Surv.response = FALSE)
+    
+    prNames <- attr(prDT, "print.names")
+    prSub <- substitute(NULL)
+    if (length(prNames)) {
+      prSub <- prDT[, attr(prDT, "print.names"),with = FALSE]
+      # prSub <- substitute(prSub)
+    }
+    adNames <- attr(prDT, "adjust.names")
+    adSub <- substitute(NULL)
+    if (length(adNames)) {
+      adSub <- prDT[, attr(prDT, "adjust.names"),with = FALSE]
+      # adSub <- substitute(adSub)
+    }
+    
+    ssSub <- list(prDT[[attr(prDT, "Surv.names")[1L]]])
+    setattr(ssSub, "names", surv.scale)
+    
+    
+    data[, names(prDT) := prDT]
+    rm(prDT)
+    
+  } else {
+    
+    
+    ssSub <- list(origData[[surv.scale]][subset])
+    setattr(ssSub, "names", surv.scale)
+    ssSub[[surv.scale]] <- cutLow(ssSub[[surv.scale]], breaks = surv.breaks)
+    # ssSub <- substitute(ssSub)
+    
+  }
+  
   
   ## NOTE: while ssSub will pass the whole column of e.g. fot values, which will
   ## not limit the data to e.g. up 5 years of follow-up if original data went 
@@ -374,7 +423,7 @@ survtab_ag <- function(data,
   bl <- list(surv.breaks[-length(surv.breaks)])
   setattr(bl, "names", surv.scale)
   
-  data <- makeWeightsDT(data = origData, values = vaSub, n = 0L,
+  data <- makeWeightsDT(data = data, values = vaSub, n = 0L,
                         print = prSub, adjust = adSub, 
                         by.other = ssSub,
                         custom.levels = bl, weights = weSub)
