@@ -604,10 +604,11 @@ subset.survmean <- function(x, ...) {
 #' 
 #' @param x a \code{survtab} output object
 #' @param y survival a character vector of a variable names to plot;
-#' e.g. \code{"r.e2"}
+#' e.g. \code{y = "r.e2"}
 #' @param subset a logical condition; \code{obj} is subset accordingly 
-#' before plotting
-#' @param conf.int logical; if \code{TRUE}, adds any confidence intervals
+#' before plotting; use this for limiting to specific strata, 
+#' e.g. \code{subset = sex == "male"}
+#' @param conf.int logical; if \code{TRUE}, also plots any confidence intervals
 #' present in \code{obj} for variables in \code{y}
 #' @param col line colour; one value for each stratum; will be recycled
 #' @param lty line type; one value for each stratum; will be recycled
@@ -681,9 +682,9 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
   
   ## plotting ------------------------------------------------------------------
   ## y is a data.table with survival variables as columns
-  min_y <- min(x[subset, c(y,y.ci), with=FALSE], na.rm=TRUE)
+  min_y <- min(x[subset, c(y,y.lo), with=FALSE], na.rm=TRUE)
   min_y <- max(min_y, 0)
-  max_y <- max(x[subset, c(y,y.ci), with=FALSE], na.rm=TRUE)
+  max_y <- max(x[subset, c(y,y.hi), with=FALSE], na.rm=TRUE) + 0.025
   
   max_x <- max(x[subset, Tstop])
   
@@ -716,11 +717,13 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
 #' 
 #' @param x a \code{survtab} output object
 #' @param y a variable to plot; a quoted name of a variable
-#' in \code{x}; e.g. \code{"surv.obs"};
+#' in \code{x}; e.g. \code{y = "surv.obs"};
 #' if \code{NULL}, picks last survival variable column in order in \code{x}
-#' @param subset a logical condition; \code{x} is subset accordingly 
-#' before plotting
-#' @param conf.int logical; if \code{TRUE}, plots confidence regions as well
+#' @param subset a logical condition; \code{obj} is subset accordingly 
+#' before plotting; use this for limiting to specific strata, 
+#' e.g. \code{subset = sex == "male"}
+#' @param conf.int logical; if \code{TRUE}, also plots any confidence intervals
+#' present in \code{obj} for variables in \code{y}
 #' @param col line colour passed to \code{matlines}
 #' @param lty line type passed to \code{matlines}
 #' @param ... additional arguments passed on to to a \code{matlines} call;

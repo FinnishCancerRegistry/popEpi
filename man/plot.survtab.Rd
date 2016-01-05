@@ -11,12 +11,13 @@
 \item{x}{a \code{survtab} output object}
 
 \item{y}{survival a character vector of a variable names to plot;
-e.g. \code{"r.e2"}}
+e.g. \code{y = "r.e2"}}
 
 \item{subset}{a logical condition; \code{obj} is subset accordingly 
-before plotting}
+before plotting; use this for limiting to specific strata, 
+e.g. \code{subset = sex == "male"}}
 
-\item{conf.int}{logical; if \code{TRUE}, adds any confidence intervals
+\item{conf.int}{logical; if \code{TRUE}, also plots any confidence intervals
 present in \code{obj} for variables in \code{y}}
 
 \item{col}{line colour; one value for each stratum; will be recycled}

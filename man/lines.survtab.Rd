@@ -11,13 +11,15 @@
 \item{x}{a \code{survtab} output object}
 
 \item{y}{a variable to plot; a quoted name of a variable
-in \code{x}; e.g. \code{"surv.obs"};
+in \code{x}; e.g. \code{y = "surv.obs"};
 if \code{NULL}, picks last survival variable column in order in \code{x}}
 
-\item{subset}{a logical condition; \code{x} is subset accordingly 
-before plotting}
+\item{subset}{a logical condition; \code{obj} is subset accordingly 
+before plotting; use this for limiting to specific strata, 
+e.g. \code{subset = sex == "male"}}
 
-\item{conf.int}{logical; if \code{TRUE}, plots confidence regions as well}
+\item{conf.int}{logical; if \code{TRUE}, also plots any confidence intervals
+present in \code{obj} for variables in \code{y}}
 
 \item{col}{line colour passed to \code{matlines}}
 
