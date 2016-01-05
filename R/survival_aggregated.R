@@ -229,6 +229,11 @@ globalVariables("weights")
 # wli$sex <- c(0.4, 0.6)
 # st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, surv.type = "surv.obs", weights = wli)
 # st <- survtab_ag(fot ~ adjust(agegr), data = ag, surv.type = "surv.obs", weights = wli["agegr"])
+# ag[, d.exp := pmax(from0to1 - 1, 0L)]
+# st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, surv.type = "surv.rel", weights = wli)
+# st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, surv.type = "surv.cause", weights = wli)
+# ag[, othd := pmax(from0to1 - 1L, 0L)]
+# st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, d = list(cand = from0to1, othd = pmax(from0to1-1L, 0L)), surv.type = "surv.cause", weights = wli)
 
 ## probably cannot allow pre-merging weights into data and supplying name of weights
 ## column in data since data may not contain all the rows that a cross-join
@@ -361,6 +366,7 @@ survtab_ag <- function(formula = NULL,
   mc <- lapply(mc, function(x) try(evalPopArg(data = data, arg = x, DT = TRUE, enclos = PF), silent = TRUE))
   mc[sapply(mc, function(x) is.null(x) || is.language(x) || inherits(x, "try-error"))] <- NULL
   
+  
   lackVars <- setdiff(valVars, names(mc))
   if (length(lackVars) > 0) stop("Following arguments were NULL or could not be evaluated but are required: ", paste0("'", lackVars, "'", collapse = ", "), ". Usual suspects: arguments are NULL or refer to variables that cannot be found in data or elsewhere.")
   
@@ -372,7 +378,7 @@ survtab_ag <- function(formula = NULL,
     jay <- argName <- names(mc[k])
     cn <- names(mc[[k]])
     
-    if (length(cn) > 1) jay <- paste0(jay, "_", cn) ## e.g. d_1, d_2, ...
+    if (length(cn) > 1) jay <- paste0(jay, ".", cn) ## e.g. d.1, d.2, ...
     if (argName == "d") eventVars <- jay else 
       if (length(cn) > 1) stop("'", argName, "' has/evaluates to ", length(cn), " columns; only 'd' may evaluate to more than one column of the value arguments")
     setnames(mc[[k]], cn, jay)
@@ -451,6 +457,7 @@ survtab_ag <- function(formula = NULL,
   valVars <- allVars$vaVars
   
   byVars <- c(prVars, adVars)
+  
   
   # formulate some needed variables --------------------------------------------
   setkeyv(data, c(byVars, surv.scale))
@@ -614,17 +621,18 @@ survtab_ag <- function(formula = NULL,
         # data[,  eval(parse(text = expr), envir = .SD)]
         
       }
+      
     }
     
     
     surv_names <- names(data)[grep("surv.obs", names(data))]
-    surv_names <- c("d", "n.eff", surv_names)
+    surv_names <- c("d", if (surv.method == "lifetable") "n.eff" else NULL, surv_names)
     setnames(data, surv_names, paste0(surv_names, ".orig"))
     
     for (k in eventVars) {
       
-      k <- gsub(pattern = "d_", replacement = "", x = k)
-      setnames(data, paste0("d_",k), "d")
+      k <- gsub(pattern = "d.", replacement = "", x = k)
+      setnames(data, paste0("d.",k), "d")
       
       if (surv.method=="hazard") {
         comp.st.surv.obs.haz(surv.table = data, surv.by.vars = byVars)
@@ -634,9 +642,9 @@ survtab_ag <- function(formula = NULL,
       }
       os.table <- comp.st.conf.ints(data, al=1-conf.level, surv="surv.obs", transform = conf.type)
       
-      new_surv_names <- setdiff(surv_names, c("d", "n.eff"))
+      new_surv_names <- setdiff(surv_names, c("d", if (surv.method == "lifetable") "n.eff" else NULL))
       new_surv_names <- gsub("surv.obs", paste0("surv.obs.", k), new_surv_names)
-      new_surv_names <- c(paste0(c("d.", "n.eff."), k), new_surv_names)
+      new_surv_names <- c(paste0(c("d.", if (surv.method == "lifetable") "n.eff." else NULL), k), new_surv_names)
       setnames(data, surv_names, new_surv_names)
       
       
@@ -653,15 +661,15 @@ survtab_ag <- function(formula = NULL,
     if (surv.type == "cif.obs") {
       for (k in eventVars) {
         
-        k <- gsub("d_", "", x = k)
-        d_k <- paste0("d_", k)
+        k <- gsub("d.", "", x = k)
+        d.k <- paste0("d.", k)
         
-        d_var <- paste0("d_",k)
-        q_var <- paste0("q_", k)
+        d.var <- paste0("d.",k)
+        q.var <- paste0("q.", k)
         CIF_var <- paste0("CIF_", k)
-        data[, (q_var)   := (1-p.obs)*get(d_var)/d]
-        data[get(d_var) == 0L | d == 0L, (q_var) := 0]
-        data[, (CIF_var) := cumsum(lag1_surv.obs*get(q_var)), by = byVars]
+        data[, (q.var)   := (1-p.obs)*get(d.var)/d]
+        data[get(d.var) == 0L | d == 0L, (q.var) := 0]
+        data[, (CIF_var) := cumsum(lag1_surv.obs*get(q.var)), by = byVars]
       }
     }
     
@@ -746,6 +754,7 @@ survtab_ag <- function(formula = NULL,
     }
     data <- comp.st.pp(pp.table = data)
   }
+  
   
   # compute adjusted estimates -------------------------------------------------
   if ("weights" %in% names(data)) {
