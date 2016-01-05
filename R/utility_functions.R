@@ -1291,5 +1291,14 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
   l
 }
 
+oneWhitespace <- function(x) {
+  if (!is.character(x)) stop("x not a character")
+  x <- paste0(x, collapse = " ")
+  while(sum(grep(pattern = "  ", x = x))) {
+    x <- gsub(pattern = "  ", replacement = " ", x = x)
+  }
+  x
+}
+
 
 
