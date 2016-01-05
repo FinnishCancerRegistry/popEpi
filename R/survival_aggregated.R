@@ -211,28 +211,38 @@ globalVariables("weights")
 # st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard")
 # st <- survtab_ag(ag, surv.type = "surv.cause", surv.method = "hazard", d = list(a = from0to1-3, b = 3))
 
+# sire <- copy(sire)
+# sire$sex <- rbinom(nrow(sire), size = 1, prob = 0.5)
 # ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
 #               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
 #               aggre = list(sex, agegr = cut(dg_age, c(0,60,70,80, Inf), labels = FALSE), fot), fot = seq(0, 5, 1/12))
 # wdt <- data.table(agegr = 1:4, weights = c(0.2, 0.4, 0.3, 0.1))
-# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard", adjust = "agegr", weights = wdt$weights)
-# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard", adjust = "agegr", weights = wdt)
-# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard", adjust = NULL, weights = wdt)
-# ag2 <- merge(ag, wdt, by = "agegr")
-# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard", adjust = NULL, weights = "weights")
+# wli <- list(agegr = c(0.2, 0.4, 0.3, 0.1))
+# st <- survtab_ag(fot ~ sex + adjust(agegr), data = ag, surv.type = "surv.obs", surv.method = "hazard", weights = wli)
+# st <- survtab_ag(fot ~ sex, data = ag, surv.type = "surv.obs", surv.method = "hazard", adjust = "agegr", weights = wli)
+# st <- survtab_ag(fot ~ adjust(agegr), data = ag, surv.type = "surv.obs", weights = wli)
+# st <- survtab_ag(fot ~ 1, data = ag, adjust = "agegr", surv.type = "surv.obs", weights = wli)
+# st <- survtab_ag(fot ~ 1, data = ag, adjust = "agegr", surv.type = "surv.obs", weights = wli)
+# st <- survtab_ag(fot ~ 1, data = ag, surv.type = "surv.obs")
+
+# wli2 <- wli
+# wli$sex <- c(0.4, 0.6)
+# st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, surv.type = "surv.obs", weights = wli)
+# st <- survtab_ag(fot ~ adjust(agegr), data = ag, surv.type = "surv.obs", weights = wli["agegr"])
 
 ## probably cannot allow pre-merging weights into data and supplying name of weights
 ## column in data since data may not contain all the rows that a cross-join
 ## (cartesian product, e.g. CJ(var1, var2)) would contain; hence the weights
 ## will not always sum to one in the right way.
 
-survtab_ag <- function(data, 
-                       surv.breaks = NULL, 
-                       surv.scale = NULL,
+survtab_ag <- function(formula = NULL,
                        
-                       print = NULL,
+                       data, 
+                       
                        adjust = NULL,
                        weights = NULL,
+                       
+                       surv.breaks = NULL, 
                        
                        n = "at.risk",
                        d = "from0to1",
@@ -257,14 +267,22 @@ survtab_ag <- function(data,
                        format=TRUE,
                        verbose=FALSE) {
   
+  if (verbose) starttime <- proc.time()
+  
   TF <- environment()
   PF <- parent.frame(1L)
+  
+  this_call <- match.call()
+  used_args <- as.list(this_call)[-1L]
+  fl <- formals("survtab_ag")
+  used_args <- c(used_args, fl[!names(fl) %in% names(used_args)])
+  used_args <- used_args[names(fl)]
+  rm(fl)
   
   # check data -----------------------------------------------------------------
   if (missing(data) || nrow(data) == 0) stop("data missing or has no rows")
   
-  if (inherits(data, "aggre") && is.null(attr(data, "aggre")))
-    stop("data is an aggre object, but no meta-information about event indicators etc. is present; did you modify data after setting the data to be an aggre object? You may set it again using e.g. as.aggre")
+  if (!inherits(data, "aggre")) stop("Data must be an aggre object; see ?aggre")
   
   # check arguments ------------------------------------------------------------
   
@@ -275,38 +293,35 @@ survtab_ag <- function(data,
   if (relsurv.method %in% c("Pohar-Perme", "pohar-perme")) relsurv.method <- "pp"
   relsurv.method <- match.arg(relsurv.method, c("e2", "pp"))
   conf.type <- match.arg(conf.type, c("log","log-log","plain"))
-  if (verbose) starttime <- proc.time()
   
   
   # handle breaks in attributes ------------------------------------------------
   
   found_breaks <- NULL
   attrs <- attributes(data)
-  if (is.null(attrs$breaks) && is.null(surv.breaks)) {
+  if (is.null(attrs$breaks)) {
     stop("Data does not have breaks information and surv.breaks not defined; this would be true if data is output from aggre() or lexpand(). If it is and you did not tamper with it, complain to the package maintainer.")
-  } else {
-    breaks_names <- names(attrs$breaks)
-    
-    prTest <- evalPopArg(data = data[1:min(10L, nrow(data)), ], arg = substitute(print), DT = TRUE, enclos = PF, recursive = TRUE)
-    prType <- attr(prTest, "arg.type")
-    if (prType == "formula") {
-      print <- eval(attr(prTest, "quoted.arg"))
-      if (length(print) != 3L) stop("formula does not appear to be two-sided; supply it as e.g. fot ~ sex")
-      surv.scale <- deparse(print[[2L]])
-      if (!is.null(surv.scale)) message("Ignoring 'surv.scale' since 'print' is a formula...")
-    }
-    
-    if (is.null(surv.scale) && prType != "formula") stop("Could not determine time scale to compute survival over; either supply 'surv.scale' by hand or supply the appropriate time scale on the left-hand side of a formula gievn to argument 'print'; see ?survtab_ag")
-
-    all_names_present(data, surv.scale)
-      
-    if (length(surv.scale) && !surv.scale %in% breaks_names) {
-      stop(paste0("no breaks information found for given surv.scale '", surv.scale, "'"))
-    }
-    
-    found_breaks <- attrs$breaks[[ surv.scale ]]
-  }
+  } 
   
+  breakScales <- names(attrs$breaks)
+  
+  ## argument 'formula' pre-check
+  
+  foTest <- evalPopArg(data = data[1:min(10L, nrow(data)), ], arg = substitute(formula), DT = TRUE, enclos = PF, recursive = TRUE)
+  foType <- attr(foTest, "arg.type")
+  if (is.null(foType)) foType <- "NULL"
+  
+  if (foType != "formula") stop("Argument 'formula' does not appear to be a formula object. Usage: e.g. fot ~ sex")
+  
+  formula <- eval(attr(foTest, "quoted.arg"))
+  if (length(formula) != 3L) stop("formula does not appear to be two-sided; supply it as e.g. fot ~ sex")
+  surv.scale <- deparse(formula[[2L]])
+  if (!surv.scale %in% names(data)) stop("Supplied time scale '", surv.scale, "' is not a name of a time scale by which data has been aggregated (no column with that name in data)")
+  if (!surv.scale %in% breakScales) stop("Supplied time scale '", surv.scale, "' is not a name of a time scale by which data has been split AND aggregated by (could not find breaks for that time scale in data's attributes)")
+  
+  ## check breaks
+  
+  found_breaks <- attrs$breaks[[ surv.scale ]]
   
   
   if (is.null(surv.breaks) && !is.null(found_breaks)) {
@@ -317,20 +332,15 @@ survtab_ag <- function(data,
   surv.breaks <- sort(unique(surv.breaks))
   
   # data prep & subsetting -----------------------------------------------------
-  ## todo: make survtab work without taking copy
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data, subset)
   
   origData <- data
   
-  data <- if (!all(subset)) data[subset, ] else copy(data)
+  data <- data[subset, ]
   setDT(data)
   
-  rm("subset", pos=-1L, inherits = FALSE)
-  
   # handle count etc. variables ------------------------------------------------
-  TF <- environment()
-  PF <- parent.frame(1L)
   
   valVars <- c("d")
   valVars <- c(valVars, if (surv.method == "hazard")  "pyrs" else c("n", "n.cens"))
@@ -384,44 +394,43 @@ survtab_ag <- function(data,
   weSub <- substitute(weights)
   
   
-  ## print may be a formula
-  prSub <- substitute(print)
-  prType <- popArgType(prSub, data = data, enclos = PF, recursive = TRUE)
+  ## argument formula ----------------------------------------------------------
+  ## is converted to a DT containing 'print' variables
+  foSub <- substitute(formula)
   
+  prDT <- evalPopFormula(formula, data = data, enclos = PF, Surv.response = FALSE)
+  
+  ## print stuff passed on to makeWeightsDT()
+  prNames <- attr(prDT, "print.names")
+  prSub <- substitute(NULL)
+  if (length(prNames)) {
+    prSub <- prDT[, attr(prDT, "print.names"),with = FALSE]
+  }
+  
+  ## argument adjust -----------------------------------------------------------
+  ## NOTE: cannot have adjust in formula AND in separate argument
   adSub <- substitute(adjust)
+  adTest <- evalPopArg(data, adSub, enclos = PF, recursive = TRUE, DT = TRUE)
+  adSub <- attr(adTest, "quoted.arg")
+  adType <- attr(adTest, "arg.type")
+  if (is.null(adType)) adType <- "NULL"
   
-  if (prType == "formula") {
-    prDT <- evalPopFormula(print, data = data, enclos = PF, Surv.response = FALSE)
-    
-    prNames <- attr(prDT, "print.names")
-    prSub <- substitute(NULL)
-    if (length(prNames)) {
-      prSub <- prDT[, attr(prDT, "print.names"),with = FALSE]
-      # prSub <- substitute(prSub)
-    }
-    adNames <- attr(prDT, "adjust.names")
+  adNames <- attr(prDT, "adjust.names")
+  if (length(adNames) > 0L && adType != "NULL") stop("Cannot have both adjust() function used within argument 'formula' AND variables passed via argument 'adjust'; only use one or the other.")
+  if (length(adNames) > 0L) {
     adSub <- substitute(NULL)
     if (length(adNames)) {
       adSub <- prDT[, attr(prDT, "adjust.names"),with = FALSE]
-      # adSub <- substitute(adSub)
     }
-    
-    ssSub <- list(prDT[[attr(prDT, "Surv.names")[1L]]])
-    setattr(ssSub, "names", surv.scale)
-    
-    
-    data[, names(prDT) := prDT]
-    rm(prDT)
-    
-  } else {
-    
-    
-    ssSub <- list(origData[[surv.scale]][subset])
-    setattr(ssSub, "names", surv.scale)
-    ssSub[[surv.scale]] <- cutLow(ssSub[[surv.scale]], breaks = surv.breaks)
-    # ssSub <- substitute(ssSub)
-    
   }
+  
+  ssSub <- list(prDT[[attr(prDT, "Surv.names")[1L]]])
+  setattr(ssSub, "names", surv.scale)
+  
+  
+  data[, names(prDT) := prDT]
+  rm(prDT)
+  
   
   
   ## NOTE: while ssSub will pass the whole column of e.g. fot values, which will
@@ -810,6 +819,7 @@ survtab_ag <- function(data,
   setattr(data, "surv.breaks", surv.breaks)
   if (length(prVars) == 0) prVars <- NULL ## might be character(0) 
   setattr(data, "by.vars", prVars)
+  setattr(data, "survtab.meta", list(call = this_call, arguments = used_args))
   
   if (verbose) cat("Time taken by whole process: ", timetaken(starttime), "\n")
   data[]
