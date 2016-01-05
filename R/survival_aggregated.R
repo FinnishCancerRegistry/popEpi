@@ -143,22 +143,27 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
       
       adjust <- lapply(adjust, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
       
+      ## check numbers of variables
       if (length(adjust) != length(weights)) 
-        stop("Mismatch in numbers of elements (variables) in adjust (", length(adjust), ") and weights (", length(weights),"); make sure each given weights has a corresponding variable in adjust and vice versa.")
-      weLen <- sapply(weights, length)
-      adLen <- sapply(adjust, length)
-      badLen <- names(adjust)[weLen != adLen]
-      if (length(badLen) > 0) 
-        stop("Mismatch in lengths of following adjust and weights arguments' element(s). Names of adjust elements not matching in length with weigths: ", paste0("'", badLen, "'", collapse = ", "))
-      
+        stop("Mismatch in numbers of variables (NOT necessarily in the numbers of levels/values within the variables) in adjust (", length(adjust), " variables) and weights (", length(weights)," variables); make sure each given weights vector has a corresponding variable in adjust and vice versa.")
+
+      ## check names of variables
       weVars <- names(weights)
       
       badAdVars <- setdiff(adVars, weVars)
       badWeVars <- setdiff(weVars, adVars)
       if (length(badAdVars) > 0)
-        stop("Mismatch in names of elements in adjust and weights; following adjust elements not mentioned in weights: ", paste0("'", badAdVars, "'", collapse = ", "))
+        stop("Mismatch in names of variables in adjust and weights; following adjust variables not mentioned in weights: ", paste0("'", badAdVars, "'", collapse = ", "))
       if (length(badWeVars) > 0)
-        stop("Mismatch in names of elements in adjust and weights; following weights elements not mentioned in adjust: ", paste0("'", badWeVars, "'", collapse = ", "))
+        stop("Mismatch in names of variables in adjust and weights; following weights variables not mentioned in adjust: ", paste0("'", badWeVars, "'", collapse = ", "))
+      
+      ## check variable levels
+      weLen <- sapply(weights, length)
+      adLen <- sapply(adjust, length)
+      badLen <- names(adjust)[weLen != adLen]
+      if (length(badLen) > 0) 
+        stop("Mismatch in lengths of adjust and weights arguments' variables(s). Names of adjust elements not matching in length with weigths: ", paste0("'", badLen, "'", collapse = ", "))
+      
       
       weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
       adjust <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), adjust)
