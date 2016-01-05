@@ -215,7 +215,12 @@ globalVariables("weights")
 # sire$sex <- rbinom(nrow(sire), size = 1, prob = 0.5)
 # ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
 #               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
-#               aggre = list(sex, agegr = cut(dg_age, c(0,60,70,80, Inf), labels = FALSE), fot), fot = seq(0, 5, 1/12))
+#               aggre = list(sex, agegr = cut(dg_age, c(0,60,70,80, Inf), labels = FALSE), fot), 
+#               fot = seq(0, 5, 1/12))
+# ag <- lexpand(sire, birth = "bi_date", entry = "bi_date", exit = "ex_date",
+#               status = status %in% 1:2,
+#               aggre = list(sex, age), 
+#               age = seq(0, 100, 1))
 # wdt <- data.table(agegr = 1:4, weights = c(0.2, 0.4, 0.3, 0.1))
 # wli <- list(agegr = c(0.2, 0.4, 0.3, 0.1))
 # st <- survtab_ag(fot ~ sex + adjust(agegr), data = ag, surv.type = "surv.obs", surv.method = "hazard", weights = wli)

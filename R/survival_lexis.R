@@ -229,6 +229,11 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
 #                   # weights = list(agegr = c(0.2,0.4,0.4)),
 #                   breaks = list(FUT = seq(0,5,1/12)))
 # st <- survtab_lex(dt, print = NULL, #adjust = "agegr", 
+#                   # pophaz = pm,
+#                   surv.type = "surv.obs",
+#                   # weights = list(agegr = c(0.2,0.4,0.4)),
+#                   breaks = list(AGE = seq(0,100, 1)))
+# st <- survtab_lex(dt, print = NULL, #adjust = "agegr", 
 #                   pophaz = pm,
 #                   surv.type = "surv.rel",
 #                   relsurv.method = "pp",

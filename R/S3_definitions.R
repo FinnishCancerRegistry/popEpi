@@ -436,6 +436,7 @@ subset.aggre <- function(x, ...) {
 preface_survtab.print <- function(x) {
   at <- attributes(x)$survtab.meta
   arg <- at$arguments
+  
   cat("\n")
   cat("Call: \n", oneWhitespace(deparse(at$call)), "\n")
   cat("\n")
@@ -457,8 +458,8 @@ preface_survtab.print <- function(x) {
   }
   if (length(at$adjust.vars) > 0L) {
     cat("Adjusted by:", paste0("'", at$adjust.vars, "'", collapse = ", "))
-    cat("\n \n")
   }
+  cat("\n \n")
   invisible()
 }
 

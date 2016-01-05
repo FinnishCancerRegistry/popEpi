@@ -855,7 +855,6 @@ lexpand <- function(data,
     
   }
   
-  
   # dropping after merging -----------------------------------------------------
   if (drop_after) {
     l <- intelliDrop(x = l, breaks = breaks)
@@ -875,7 +874,7 @@ lexpand <- function(data,
       l[, c("d.exp") := pop.haz*lex.dur ]
       sumVars <- c(sumVars, "d.exp")
     }
-    if (comp_pp) {
+    if ("pop.haz" %in% names(l) && comp_pp && "pp" %in% names(l)) {
       forceLexisDT(l, breaks = breaks, allScales = c("fot", "per", "age"))
       ppFigs <- comp_pp_weighted_figures(lex = l, haz = "pop.haz", pp = "pp", event.ind = NULL)
       bad_pp_vars <- intersect(names(ppFigs), names(l))
