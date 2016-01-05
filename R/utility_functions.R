@@ -1170,11 +1170,16 @@ RHS2list <- function(formula) {
   ## to avoid e.g. c(1,2):c(3,4) NOT evaluating as c(3, 8)
   l <- lapply(tl, function(x) gsub(pattern = ":", x = x, replacement = "%.:%"))
   
-  e <- attr(te, ".Environment")
-  e <- as.list(e)
-  e <- e[names(e) %in% all.vars(formula)]
+  ## only want to substitute variables mentioned in formula (and not e.g.
+  ## functions that are by coincidence the same name)
+  ne <- new.env()
+  oe <- attr(te, ".Environment")
+  for(obj in intersect(all.vars(formula), ls(oe))) {
+    assign(envir = ne, x = obj, value = eval(parse(text = paste0("oe$", obj))))
+  }
   
-  l <- lapply(l, function(x) eval(parse(text = paste0("substitute(", x, ", env = e)"))))
+  
+  l <- lapply(l, function(x) eval(parse(text = paste0("substitute(", x, ", env = ne)"))))
   names(l) <- tl
   l
 }
