@@ -1276,7 +1276,7 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
   l <- as.data.table(l)
   
   # setnames(y, names(y), makeTempVarName(names = c(names(data), names(l)), pre = names(y)))
-  l <- cbind(y, l)
+  l <- if (length(l) > 0L) cbind(y, l) else y
   
   setattr(l, "adjust.names", names(adj))
   setattr(l, "print.names", setdiff(names(l), c(names(adj), names(y))))
