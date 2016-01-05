@@ -39,7 +39,7 @@
 #' after splitting that reside outside
 #' the time window as defined by the given breaks (all time scales)
 #' @param pophaz a dataset of population hazards to merge
-#'  with splitted data; see Details
+#'  with split data; see Details
 #' @param pp logical; if \code{TRUE}, computes Pohar-Perme weights using
 #' \code{pophaz}; adds variable with reserved name \code{pp}; 
 #' see Details for computing method
@@ -233,8 +233,8 @@
 #' with the given new names as categorizing variable names, e.g. 
 #' \code{aggre = list(follow_up = fot, gender = sex, agegroup = age)}.
 #' 
-#' The ouputted table has person-years (\code{pyrs}) and event (mutation) counts
-#' (e.g. \code{from0to1}) as columns. Event counts are the numbers of mutations
+#' The ouputted table has person-years (\code{pyrs}) and event counts
+#' (e.g. \code{from0to1}) as columns. Event counts are the numbers of transitions
 #' (\code{lex.Cst != lex.Xst}) or the \code{lex.Xst} value at a subject's 
 #' last record (subject possibly defined by \code{id}).
 #' 
@@ -250,6 +250,14 @@
 #' In essence, \code{"cartesian"} forces also combinations of variables used
 #' in \code{aggre} that have no match in data to be shown in the result.
 #' 
+#' If \code{aggre} is not \code{NULL} and \code{pophaz} has been supplied,
+#' \code{lexpand} also aggregates the expected counts of events, which
+#' appears in the outputted data by the reserved name \code{d.exp}. Additionally,
+#' having \code{pp = TRUE} causes \code{lexpand} to also compute various
+#' Pohar-Perme weighted figures necessary for computing Pohar-Perme net survivals
+#' with \code{\link{survtab_ag}}. This can be slow, so consider what is really
+#' needed. The Pohar-Perme weighted figures have the suffix \code{.pp}. 
+#' 
 #' @return
 #' If \code{aggre = NULL}, returns 
 #' a \code{data.table} or \code{data.frame} 
@@ -263,7 +271,10 @@
 #' \code{data.table}/\code{data.frame} with the variable \code{pyrs} (person-years),
 #' and variables for the counts of transitions in state or state at end of 
 #' follow-up formatted \code{fromXtoY}, where \code{X} and \code{Y} are 
-#' the states transitioned from and to, respectively.
+#' the states transitioned from and to, respectively. The data may also have
+#' the columns \code{d.exp} for expected numbers of cases and various
+#' Pohar-Perme weighted figures as identified by the suffix \code{.pp}; see 
+#' Details.
 #' 
 #' 
 #' @examples
@@ -284,6 +295,12 @@
 #' ag <- lexpand(sire, breaks = BL, status = status != 0, 
 #'              birth = bi_date, entry = dg_date, exit = ex_date,
 #'               aggre=list(sex, period = per, surv.int = fot))
+#' 
+#' ## aggregating even more
+#' ag <- lexpand(sire, breaks = BL, status = status != 0, 
+#'               birth = bi_date, entry = dg_date, exit = ex_date,
+#'               aggre=list(sex, period = per, surv.int = fot),
+#'               pophaz = popmort, pp = TRUE)
 #' 
 #' ## using "..."
 #' x <- lexpand(sire, fot=0:5, status =  status != 0,
@@ -310,11 +327,9 @@
 #' 
 #' @import data.table
 #' @import Epi
-#' @export lexpand
 #' @seealso
 #' \code{\link{splitMulti}}, \code{\link[Epi]{Lexis}}, \code{\link{survtab}}, \code{\link{relpois}}, \code{\link{popmort}} \code{\link{sir}}
-
-
+#' @export
 lexpand <- function(data, 
                     birth=NULL, entry=NULL, exit=NULL, event=NULL,
                     status = status != 0,
@@ -772,6 +787,7 @@ lexpand <- function(data,
   agTy <- attr(agTest, "arg.type")
   if (is.null(agTy)) agTy <- "NULL"
   aggSub <- attr(agTest, "quoted.arg")
+  agVars <- attr(agTest, "all.vars")
   rm(aggre)
   
   # merging pophaz and pp-weighting --------------------------------------------
@@ -851,10 +867,32 @@ lexpand <- function(data,
   # aggregating if appropriate -------------------------------------------------
   if (agTy != "NULL") {
     
-    if (verbose) cat("Starting aggregation of splitted data... \n")
+    setcolsnull(l, keep = c("lex.id","lex.dur", "fot", "per", "age", "lex.Cst", "lex.Xst", agVars, "pop.haz", "pp"))
+    
+    sumVars <- NULL
+    if ("pop.haz" %in% names(l)) {
+      if ("d.exp" %in% names(l)) stop("data had variable named 'd.exp' by which to aggregate, which would be overwritten due to aggregating expected numbers of cases (you have supplied pophaz AND are aggregating); please rename / remove it first.")
+      l[, c("d.exp") := pop.haz*lex.dur ]
+      sumVars <- c(sumVars, "d.exp")
+    }
+    if (comp_pp) {
+      forceLexisDT(l, breaks = breaks, allScales = c("fot", "per", "age"))
+      ppFigs <- comp_pp_weighted_figures(lex = l, haz = "pop.haz", pp = "pp", event.ind = NULL)
+      bad_pp_vars <- intersect(names(ppFigs), names(l))
+      if (length(bad_pp_vars) > 0L) {
+        bad_pp_vars <- paste0("'",bad_pp_vars, "'", collapse = ", ")
+        stop("Data had variable(s) named ", bad_pp_vars, ", by which to aggregate, which would be overwritten due to aggregating expected numbers of cases (you have supplied pophaz AND are aggregating); please rename / remove them first")
+      }
+      l[, names(ppFigs) := ppFigs]
+      sumVars <- c(sumVars, names(ppFigs))
+      rm(ppFigs)
+      
+    }
+    
+    if (verbose) cat("Starting aggregation of split data... \n")
     setDT(l)
     forceLexisDT(l, allScales = c("fot", "per", "age"), breaks = breaks)
-    l <- try(aggre(lex = l, by = aggSub, type = aggre.type, verbose = verbose))
+    l <- try(aggre(lex = l, by = aggSub, type = aggre.type, verbose = verbose, sum.values = sumVars))
     if (inherits(l, "try-error")) stop("Something went wrong when calling aggre() within lexpand(). Usual suspect: bad 'by' argument. Error message from aggre(): 
                                        ", paste0(l[[1]]))
     if (verbose) cat("Aggregation done. \n")

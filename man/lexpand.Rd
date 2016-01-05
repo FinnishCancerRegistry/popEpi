@@ -57,7 +57,7 @@ after splitting that reside outside
 the time window as defined by the given breaks (all time scales)}
 
 \item{pophaz}{a dataset of population hazards to merge
-with splitted data; see Details}
+with split data; see Details}
 
 \item{pp}{logical; if \code{TRUE}, computes Pohar-Perme weights using
 \code{pophaz}; adds variable with reserved name \code{pp}; 
@@ -90,7 +90,10 @@ If \code{aggre} is defined, returns a long-format
 \code{data.table}/\code{data.frame} with the variable \code{pyrs} (person-years),
 and variables for the counts of transitions in state or state at end of 
 follow-up formatted \code{fromXtoY}, where \code{X} and \code{Y} are 
-the states transitioned from and to, respectively.
+the states transitioned from and to, respectively. The data may also have
+the columns \code{d.exp} for expected numbers of cases and various
+Pohar-Perme weighted figures as identified by the suffix \code{.pp}; see 
+Details.
 }
 \description{
 Given subject-level data, data is split 
@@ -276,8 +279,8 @@ the lower limits of the appropriate intervals as values.
 with the given new names as categorizing variable names, e.g. 
 \code{aggre = list(follow_up = fot, gender = sex, agegroup = age)}.
 
-The ouputted table has person-years (\code{pyrs}) and event (mutation) counts
-(e.g. \code{from0to1}) as columns. Event counts are the numbers of mutations
+The ouputted table has person-years (\code{pyrs}) and event counts
+(e.g. \code{from0to1}) as columns. Event counts are the numbers of transitions
 (\code{lex.Cst != lex.Xst}) or the \code{lex.Xst} value at a subject's 
 last record (subject possibly defined by \code{id}).
 
@@ -292,6 +295,14 @@ computes results for \code{"a", "b"}, and the latter also for \code{"c"}
 and any combination with other variables or expression given in \code{aggre}.
 In essence, \code{"cartesian"} forces also combinations of variables used
 in \code{aggre} that have no match in data to be shown in the result.
+
+If \code{aggre} is not \code{NULL} and \code{pophaz} has been supplied,
+\code{lexpand} also aggregates the expected counts of events, which
+appears in the outputted data by the reserved name \code{d.exp}. Additionally,
+having \code{pp = TRUE} causes \code{lexpand} to also compute various
+Pohar-Perme weighted figures necessary for computing Pohar-Perme net survivals
+with \code{\link{survtab_ag}}. This can be slow, so consider what is really
+needed. The Pohar-Perme weighted figures have the suffix \code{.pp}.
 }
 \examples{
 \dontrun{
@@ -311,6 +322,12 @@ BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
 ag <- lexpand(sire, breaks = BL, status = status != 0, 
              birth = bi_date, entry = dg_date, exit = ex_date,
               aggre=list(sex, period = per, surv.int = fot))
+
+## aggregating even more
+ag <- lexpand(sire, breaks = BL, status = status != 0, 
+              birth = bi_date, entry = dg_date, exit = ex_date,
+              aggre=list(sex, period = per, surv.int = fot),
+              pophaz = popmort, pp = TRUE)
 
 ## using "..."
 x <- lexpand(sire, fot=0:5, status =  status != 0,
