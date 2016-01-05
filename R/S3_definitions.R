@@ -433,6 +433,106 @@ subset.aggre <- function(x, ...) {
   y
 }
 
+preface_survtab.print <- function(x) {
+  at <- attributes(x)$survtab.meta
+  arg <- at$arguments
+  cat("\n")
+  cat("Call: \n", oneWhitespace(deparse(at$call)), "\n")
+  cat("\n")
+  cat("Type arguments: \nsurv.type:", as.character(arg$surv.type), 
+      "--- surv.method:", as.character(arg$surv.method))
+  if (as.character(arg$surv.type) == "surv.rel")
+    cat(" --- relsurv.method:", as.character(arg$relsurv.method))
+  cat("\n \n")
+  cat("Confidence interval arguments: \n level:", 
+      as.character(arg$conf.level*100), "%")
+  cat(" --- transformation:",
+      as.character(arg$conf.type))
+  cat("\n \n")
+  cat("Totals: \n person-time:", round(sum(x$pyrs)), "--- events:", sum(x$d))
+  cat("\n \n")
+  if (length(at$print.vars) > 0L) {
+    cat("Stratified by:", paste0("'", at$print.vars, "'", collapse = ", "))
+    if (length(at$adjust.vars) > 0L) cat(" --- ")
+  }
+  if (length(at$adjust.vars) > 0L) {
+    cat("Adjusted by:", paste0("'", at$adjust.vars, "'", collapse = ", "))
+    cat("\n \n")
+  }
+  invisible()
+}
+
+#' @title Print a survtab Object
+#' @author Joonas Miettinen
+#' @description Print method function for \code{survtab} objects; see
+#' \code{\link{survtab_ag}}.
+#' @param x a \code{survtab} object
+#' @param subset a logical condition to subset results table by
+#' before printing; use this to limit to a certain stratum. E.g.
+#' \code{subset = sex == "male"}
+#' @param ... arguments passed to \code{print.data.table}; try e.g.
+#' \code{top = 2} for numbers of rows in head and tail, 
+#' \code{nrow = 100} for number of rows to print, etc.
+#' @export
+print.survtab <- function(x, subset = NULL, ...) {
+  
+  PF <- parent.frame(1L)
+  
+  subset <- evalLogicalSubset(x, substitute(subset), enclos = PF)
+  x <- x[subset, ]
+  
+  preface_survtab.print(x)
+  
+  print(data.table(x), ...)
+  invisible()
+}
+
+#' @title Summarize a survtab Object
+#' @author Joonas Miettinen
+#' @description Summary method function for \code{survtab} objects; see
+#' \code{\link{survtab_ag}}.
+#' @param object a \code{survtab} object
+#' @param t a vector of times at which time points to print
+#' summary table of survival function estimates by strata;
+#' will automatically use values in breaks used to split data
+#' for aggregation closest to these values, so e.g. supplyig 
+#' \code{t = c(2.5, 5.1)}
+#' with data that was split by the breaks \code{seq(0, 5, 1/12)}
+#' causes the times \code{c(2.5, 5.0)} to be used. 
+#' @param subset a logical condition to subset results table by
+#' before printing; use this to limit to a certain stratum. E.g.
+#' \code{subset = sex == "male"}
+#' @param ... arguments passed to \code{print.data.table}; try e.g.
+#' \code{top = 2} for numbers of rows in head and tail, 
+#' \code{nrow = 100} for number of rows to print, etc.
+#' @export
+summary.survtab <- function(object, t = NULL, subset = NULL, ...) {
+  
+  PF <- parent.frame(1L)
+  
+  subset <- evalLogicalSubset(object, substitute(subset), enclos = PF)
+  x <- object[subset, ]
+  
+  preface_survtab.print(x)
+  
+  at <- attr(x, "survtab.meta")
+  sb <- at$surv.breaks
+  
+  if (is.null(t)) t <- c(median(sb), max(sb)) else {
+    
+    wh <- sapply(t, function(x) which.min(x = abs(sb - x)))
+    wh <- sort(unique(wh))
+    t <- sb[wh]
+    
+  }
+  setDT(x)
+  setkeyv(x, c(at$print.vars, "Tstop"))
+  x <- x[Tstop %in% t]
+  surv.vars <- setdiff(names(x), c(at$print.vars, "Tstop", at$value.vars, at$adjust.vars, "surv.int", "Tstart", "Tstop", "delta"))
+  setcolsnull(x, keep = c(at$print.vars, "Tstop", surv.vars))
+  print(x, ...)
+  invisible()
+}
 
 ## subsetting for survtab objects that retains attributes
 `[.survtab` <- function(x, ...) {
@@ -441,6 +541,7 @@ subset.aggre <- function(x, ...) {
     setattr(y, "class", class(x))
     setattr(y, "surv.breaks", attr(x, "surv.breaks"))
     setattr(y, "byVars", attr(x, "byVars"))
+    setattr(y, "survtab.meta", attr(x, "survtab.meta"))
   }
   y
 }
@@ -451,6 +552,7 @@ subset.survtab <- function(x, ...) {
     setattr(y, "class", class(x))
     setattr(y, "surv.breaks", attr(x, "surv.breaks"))
     setattr(y, "byVars", attr(x, "byVars"))
+    setattr(y, "survtab.meta", attr(x, "survtab.meta"))
   }
   y
 }

@@ -819,7 +819,13 @@ survtab_ag <- function(formula = NULL,
   setattr(data, "surv.breaks", surv.breaks)
   if (length(prVars) == 0) prVars <- NULL ## might be character(0) 
   setattr(data, "by.vars", prVars)
-  setattr(data, "survtab.meta", list(call = this_call, arguments = used_args))
+  setattr(data, "survtab.meta", 
+          list(call = this_call, 
+               arguments = used_args,
+               print.vars = prVars,
+               surv.breaks = surv.breaks,
+               value.vars = valVars,
+               adjust.vars = adVars))
   
   if (verbose) cat("Time taken by whole process: ", timetaken(starttime), "\n")
   data[]
