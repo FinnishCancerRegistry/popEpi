@@ -143,6 +143,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
       
       adjust <- lapply(adjust, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
       
+      ## check adjust and weights arguments' congruence ------------------------
       ## check numbers of variables
       if (length(adjust) != length(weights)) 
         stop("Mismatch in numbers of variables (NOT necessarily in the numbers of levels/values within the variables) in adjust (", length(adjust), " variables) and weights (", length(weights)," variables); make sure each given weights vector has a corresponding variable in adjust and vice versa.")
@@ -156,6 +157,8 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
         stop("Mismatch in names of variables in adjust and weights; following adjust variables not mentioned in weights: ", paste0("'", badAdVars, "'", collapse = ", "))
       if (length(badWeVars) > 0)
         stop("Mismatch in names of variables in adjust and weights; following weights variables not mentioned in adjust: ", paste0("'", badWeVars, "'", collapse = ", "))
+      
+      weights <- weights[names(adjust)]
       
       ## check variable levels
       weLen <- sapply(weights, length)
