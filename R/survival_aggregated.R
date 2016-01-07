@@ -323,7 +323,7 @@ survtab_ag <- function(formula = NULL,
   
   if (foType != "formula") stop("Argument 'formula' does not appear to be a formula object. Usage: e.g. fot ~ sex")
   
-  formula <- eval(attr(foTest, "quoted.arg"))
+  formula <- eval(attr(foTest, "quoted.arg"), envir = PF)
   if (length(formula) != 3L) stop("formula does not appear to be two-sided; supply it as e.g. fot ~ sex")
   surv.scale <- deparse(formula[[2L]])
   if (!surv.scale %in% names(data)) stop("Supplied time scale '", surv.scale, "' is not a name of a time scale by which data has been aggregated (no column with that name in data)")
@@ -833,6 +833,11 @@ survtab_ag <- function(formula = NULL,
   setattr(data, "surv.breaks", surv.breaks)
   if (length(prVars) == 0) prVars <- NULL ## might be character(0) 
   setattr(data, "by.vars", prVars)
+  
+  used_args$data <- origData
+  used_args$formula <- eval(attr(foTest, "quoted.arg"), envir = PF)
+  used_args$weights <- evalPopArg(origData, arg = weights, enclos = PF, DT = FALSE, recursive = TRUE)
+  
   setattr(data, "survtab.meta", 
           list(call = this_call, 
                arguments = used_args,
