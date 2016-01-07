@@ -1244,6 +1244,7 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
   
   ## response
   y <- eval(formula[[2L]], envir = data, enclos = fe)
+  if (inherits(y, "Surv") && !Surv.response) stop("Response is a result of using Surv(), which is not allowed in this context.")
   if (Surv.response) {
     if (!inherits(y, "Surv")) stop("the response of the formula must be a Surv object; see ?Surv (in package survival)")
     y <- Surv2DT(y)
@@ -1298,6 +1299,63 @@ oneWhitespace <- function(x) {
     x <- gsub(pattern = "  ", replacement = " ", x = x)
   }
   x
+}
+
+
+
+evalRecursive <- function(arg, env, enc, max.n = 100L) {
+  ## INTENTION: digs out actual evaluatable value and expression
+  
+  if (missing(env)) env <- environment()
+  if (missing(enc)) enc <- parent.frame(1L)
+  
+  if (is.data.frame(env)) {
+    na <- names(env)
+    env <- env[1:(min(10L, nrow(env))), ]
+    
+    env <- data.frame(env)
+    setattr(env, "names", na)
+    
+  }
+  argSub <- arg
+  
+  tick <- 1L
+  while (is.language(arg) && !inherits(arg, "formula") && tick < max.n) {
+    
+    argSub <- arg
+    arg <- eval(argSub, envir = env, enclos = enc)
+    
+    tick <- tick + 1L
+  }
+  
+  if (tick == max.n) stop("evaluated expression ", max.n, " times and still could not find underlying expression")
+  if (!is.language(argSub)) argSub <- substitute(arg)
+  list(arg = arg, argSub = argSub, all.vars = all.vars(argSub))
+}
+
+
+usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(), enclos, Surv.response = TRUE) {
+  ## INTENTION: evaluates form and combines with adjust appropriately
+  # formSub <- substitute(form)
+  al <- evalRecursive(arg = form, env = data, enc = enclos)
+  
+  if (!inherits(al$arg, "formula")) stop("'form' is not a formula object")
+  
+  dt <- evalPopFormula(formula = al$arg, data = data, enclos = enclos, Surv.response = Surv.response)
+  adNames <- attr(dt, "adjust.names")
+  prNames <- attr(dt, "print.names")
+  suNames <- attr(dt, "Surv.names")
+  
+  
+  adjust <- evalPopArg(data, substitute(adjust), DT = TRUE, recursive = TRUE, enclos = enclos)
+  if (!is.null(adjust) && ncol(adjust) > 0L && length(adNames) > 0L) stop("Cannot both use argument 'adjust' AND use an adjust() term within the formula argument. Please only use one.")
+  if (is.null(adjust) && length(adNames) > 0L) adjust <- dt[, .SD, .SDcols = c(adNames)]
+  
+  print <- dt[]
+  
+  list(y = dt[, .SD, .SDcols = c(suNames)], 
+       print = dt[, .SD, .SDcols = c(prNames)], 
+       adjust = adjust, formula = al$arg)
 }
 
 
