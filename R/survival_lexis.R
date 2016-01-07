@@ -3,13 +3,19 @@
 # s <- dt[, Surv(time = rep(0, nrow(dt)), time2 = fot, event = status %in% 1:2)]
 
 
-survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz = NULL, weights = NULL, event.values = NULL, surv.type = "surv.rel", surv.method = "hazard", relsurv.method = "e2", subset = NULL, verbose = FALSE, ...) {
+survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NULL, weights = NULL, event.values = NULL, surv.type = "surv.rel", surv.method = "hazard", relsurv.method = "e2", subset = NULL, verbose = FALSE, ...) {
+  
+  TF <- environment()
+  PF <- parent.frame()
+  this_call <- match.call()
   
   ## checks --------------------------------------------------------------------
+  
+  if (missing(formula)) stop("Formula not defined!")
+  
   checkLexisData(data)
   
-  PF <- parent.frame()
-  e <- environment() ## will refer to this explicitly in DT[] to avoid conflicts
+  TF <- environment() ## will refer to this explicitly in DT[] to avoid conflicts
   allScales <- attr(data, "time.scales")
   splitScales <- names(breaks)
   
@@ -23,9 +29,11 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   if (length(event.values) == 0) stop("could not determine which values of lex.Xst imply events; supply event.values by hand and make sure data has meaningful lex.Cst and lex.Xst values")
   
   ## ensure breaks make sense --------------------------------------------------
-  checkBreaksList(data, breaks = breaks)
   oldBreaks <- attr(data, "breaks")
   if (!is.null(oldBreaks)) checkBreaksList(data, breaks = oldBreaks)
+  if (is.null(breaks) && is.null(breaks)) stop("No breaks supplied via argument 'breaks', and data has not been split in advance. Please supply a list of breaks to argument 'breaks'")
+  if (is.null(breaks)) breaks <- oldBreaks
+  checkBreaksList(data, breaks = breaks)
   ## match break types to time scale types
   ## (don't try to match time scales to breaks)
   splitScales <- names(breaks)
@@ -55,21 +63,20 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
     adSub <- substitute(NULL)
     adVars <- NULL
   } 
-  prTest <- evalPopArg(x[1:min(10, .N)], substitute(print), DT = TRUE, recursive = TRUE, enclos = PF)
-  if (!is.null(prTest)) {
-    prType <- attr(prTest, "arg.type")
-    prSub <- attr(prTest, "quoted.arg")
-    prVars <- attr(prTest, "all.vars")
-  } else {
-    prType <- "NULL"
-    prSub <- substitute(NULL)
-    prVars <- NULL
-  }
   
+  formula <- evalRecursive(substitute(formula), env = TF, enc = PF)$arg
+  foSub <- substitute(formula)
+  foVars <- all.vars(formula)
+  
+  
+  if (!inherits(formula,"formula")) stop("Argument 'formula' is not a formula object. Usage: e.g. Surv(fot, lex.Xst %in% 1:2) ~ sex")
+  if (length(formula) != 3L) stop("Argument 'formula'must be two-sided. Usage: e.g. Surv(fot, lex.Xst %in% 1:2) ~ sex")
+  
+  foTest <- evalPopArg(x[1:min(10, .N)], foSub, DT = TRUE, recursive = TRUE, enclos = PF)
   
   pophazVars <- setdiff(names(pophaz), "haz")
   
-  setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", pophazVars, adVars, prVars))
+  setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", pophazVars, adVars, foVars))
   
   ## simplify event and censoring indicators -----------------------------------
   if (!surv.type %in% c("cif.obs", "surv.cause")) {
@@ -97,24 +104,24 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   
   ## eval print & adjust -------------------------------------------------------
   
-  if (prType == "formula") {
-    print <- evalPopFormula(formula = eval(prSub), data = x, enclos = PF, Surv.response = TRUE)
-  }
-  print(print)
-  stop("test")
-  print <- evalPopArg(x, substitute(print), DT = TRUE, recursive = TRUE, enclos = PF)
-  adjust <- evalPopArg(x, substitute(adjust), DT = TRUE, recursive = TRUE, enclos = PF)
+  l <- usePopFormula(form = formula, adjust = adSub, data = x, enclos = TF)
+  prVars <- names(l$print)
+  adVars <- names(l$adjust)
+  
+  
+  ## detect which time scale used ----------------------------------------------
   ## only keep necessary variables...
   setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", pophazVars))
   
-  if (!is.null(print)) x[, names(print) := print]
-  if (!is.null(adjust)) x[, names(adjust) := adjust]
-  print <- names(print) ## note: names(NULL) equals NULL
-  adjust <- names(adjust)
+  survScale <- allScales[x[, unlist(lapply(.SD, function(x) identical(x, l$y$time)))]]
+  
+  if (length(survScale) == 0L) survScale <- allScales[x[, unlist(lapply(.SD, function(x) all.equal(x, l$y$time)))]]
+  if (length(survScale) == 0L) stop("Could not determine which time scale was used. The formula MUST include the time scale used within a Surv() call (or a Surv object), e.g. Surv(FUT, lex.Xst) ~ sex. Note that the 'time' argument is effectively (and exceptionally) used here to denote the times at the beginning of follow-up to identify the time scale existing in the supplied data to use. If you are sure you are mentioning a time scale in the formula in this manner, complain to the package maintainer.")
   
   ## includes time scale to compute survivals over
-  aggreVars <- c(print, adjust, names(breaks)[1L]) 
+  aggreVars <- c(prVars, adVars, survScale) 
   
+  ## splitting -----------------------------------------------------------------
   
   splitTime <- proc.time()
   setDT(x)
@@ -132,19 +139,18 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
 #   if (any(areDates)) x[, (allScales[areDates]) := lapply(.SD, get.yrs, year.length = "actual"), .SDcols = allScales[areDates]]
 #   if (any(areDifftimes)) x[, (allScales[areDifftimes]) := lapply(.SD, function(x) x/365.242199), .SDcols = allScales[areDifftimes]]
   
+  ## pophaz merge --------------------------------------------------------------
   if (!is.null(pophaz)) {
     hazTime <- proc.time()
     haz <- NULL ## appease R CMD CHECK
     x <- cutLowMerge(x, pophaz, by = pophazVars, 
                      mid.scales = intersect(pophazVars, allScales))
+    setDT(x)
     forceLexisDT(x, breaks = breaks, allScales =allScales, key = TRUE)
     if (verbose) cat("Time taken by merging population hazards with split Lexis data: ", timetaken(hazTime), "\n")
   }
   
-  
-  ## still need to compute pp-weighted figures below. they all have to be done
-  ## on the level of the splitted observations!
-  
+  ## pp computation ------------------------------------------------------------
   ppNames <- d.pp <- d.pp.2 <- d.exp.pp <- ptime.pp <- n.cens.pp <- NULL
   if (comp_pp) {
     ppTime <- proc.time()
@@ -162,7 +168,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
     ppTime <- proc.time()
     pp <- comp_pp_weighted_figures(x, haz = "haz", pp = "pp", by = "lex.id")
     ppNames <- makeTempVarName(x, pre = names(pp))
-    x[, c(e$ppNames) := e$pp] ## note: e$pp avoid conflict with possibly existing pp column
+    x[, c(TF$ppNames) := TF$pp] ## note: TF$pp avoid conflict with possibly existing pp column
     rm(pp)
     
     d.pp.2 <- ppNames[substr(ppNames, 1, 13) == "from0to1.pp.2"]
@@ -178,10 +184,10 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   d.exp <- NULL
   if (surv.type %in% c("surv.rel", "cif.rel") && "haz" %in% names(x)) {
     d.exp <- makeTempVarName(x, pre = "d.exp_")
-    x[, c(e$d.exp) := lex.dur * haz]
+    x[, c(TF$d.exp) := lex.dur * haz]
   }
   
-  
+  ## aggregation ---------------------------------------------------------------
   aggreTime <- proc.time()
   setDT(x)
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
@@ -193,14 +199,19 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
   setattr(x, "class", c("aggre", "data.table", "data.frame"))
   if (verbose) cat("Time taken by aggregating split Lexis data: ", timetaken(aggreTime), "\n")
   
+  ## survtab_ag ----------------------------------------------------------------
   dn <- CJ(C = cens.values, X = event.values)
   dn <- paste0("from",dn$C, "to", dn$X)
   dn <- intersect(dn, names(x))
   
   survTime <- proc.time()
-  st <- survtab_ag(x, surv.scale = names(breaks)[1L], 
-                   adjust = adjust,
-                   print = print, 
+  if (length(prVars) == 0L) prVars <- "1"
+  form <- as.formula(paste0(survScale, " ~ ", prVars))
+  
+  st <- survtab_ag(data = x, 
+                   formula = form,
+                   adjust = adVars,
+                   
                    weights = weights, 
                    
                    d = dn, pyrs = pyrs, d.exp = d.exp, 
@@ -211,6 +222,15 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
                    surv.type = surv.type,
                    surv.method = surv.method,
                    relsurv.method = relsurv.method)
+  
+  ## attributes ----------------------------------------------------------------
+  attributes(st)$survtab.meta$call <- this_call
+  attributes(st)$survtab.meta$arguments$adjust <- evalPopArg(data, arg = adjust, DT = TRUE, enclos = PF, recursive = TRUE)
+  
+  attributes(st)$survtab.meta$arguments$surv.type <- surv.type
+  attributes(st)$survtab.meta$arguments$surv.method <- surv.method
+  attributes(st)$survtab.meta$arguments$relsurv.method <- relsurv.method
+  
   if (verbose) cat("Time taken by computing survivals with aggregated data: ", timetaken(survTime), "\n")
   st
 }
@@ -223,7 +243,7 @@ survtab_lex <- function(data, print = NULL, adjust = NULL, breaks = NULL, pophaz
 #             exit = list(CAL = get.yrs(ex_date)), entry.status = 0L, exit.status = status, merge = TRUE)
 # pm <- copy(popEpi::popmort)
 # setnames(pm, c("agegroup", "year"), c("AGE", "CAL"))
-# st <- survtab_lex(dt, print = NULL, #adjust = "agegr", 
+# st <- survtab_lex(data = dt, formula = Surv(FUT, lex.Xst) ~ 1, #adjust = "agegr", 
 #                   # pophaz = pm,
 #                   surv.type = "surv.obs",
 #                   # weights = list(agegr = c(0.2,0.4,0.4)),
