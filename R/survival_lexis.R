@@ -193,16 +193,21 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
   if (verbose) cat("** verbose messages from aggre(): \n")
   x <- aggre(x, by = aggreVars, verbose = verbose,
-              sum.values = c(d.exp, ppNames))
+             sum.values = c(d.exp, ppNames))
   if (verbose) cat("** end of  verbose messages from aggre() \n")
   setDT(x)
   setattr(x, "class", c("aggre", "data.table", "data.frame"))
   if (verbose) cat("Time taken by aggregating split Lexis data: ", timetaken(aggreTime), "\n")
   
+  ## neater column names -------------------------------------------------------
+  ## e.g. fromAlivetoDead -> Dead
+  evCols <- paste0("from", cens.values, "to", c(cens.values, event.values))
+  whEC <- which(evCols %in% names(x))
+  
+  if (sum(whEC)) setnames(x, evCols[whEC], c(cens.values, event.values)[whEC])
+  
   ## survtab_ag ----------------------------------------------------------------
-  dn <- CJ(C = cens.values, X = event.values)
-  dn <- paste0("from",dn$C, "to", dn$X)
-  dn <- intersect(dn, names(x))
+  dn <- intersect(event.values, names(x))
   
   survTime <- proc.time()
   if (length(prVars) == 0L) prVars <- "1"
