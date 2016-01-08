@@ -46,6 +46,7 @@ intelliCrop <- function(x, breaks = list(fot = 0:5), allScales = NULL, cropStatu
   }
   
   if (cropStatuses) {
+    harmonizeStatuses(x, C = "lex.Cst", X = "lex.Xst")
     x[lex.dur < durDT$origDur, lex.Xst := lex.Cst]
     rm(durDT)
   }

@@ -775,9 +775,10 @@ evalLogicalSubset <- function(data, substiset, n = 2, enclos = parent.frame(n)) 
   ## NOTE: subset MUST be substitute()'d before using this function!
   ## we allow substiset to be a logical condition only
   ## ALWAYS returns a logical vector of length nrow(data)
+  
   substiset <- eval(substiset, envir = data, enclos = enclos)
   if (!is.null(substiset)) {
-    if (!is.logical(substiset)) stop("expression to substitute by must be a logical condition, e.g. var1 > 0")
+    if (!is.logical(substiset)) stop("Expression to subset by must be a logical condition, e.g. var1 == 0, var1 %in% 1:2, var1 > 0, etc.")
     substiset <- substiset & !is.na(substiset)
     if (sum(substiset) == 0) stop("zero rows in data after subset")
   } else {

@@ -490,7 +490,11 @@ print.survtab <- function(x, subset = NULL, ...) {
   pv <- as.character(sa$print.vars)
   
   if (length(pv) == 0L) pv <- NULL
-  medmax <- x[, list(Tstop = c(median(c(min(Tstart),Tstop)), max(Tstop))), keyby = eval(TF$pv)]
+  magicMedian <- function(x) {
+    if (length(x) %% 2L == 0L) median(x[-1L], na.rm = TRUE) else
+      median(x, na.rm = TRUE)
+  }
+  medmax <- x[, list(Tstop = c(magicMedian(c(min(Tstart),Tstop)), max(Tstop))), keyby = eval(TF$pv)]
   
   setkeyv(medmax, c(pv, "Tstop"))
   setkeyv(x, c(pv, "Tstop"))
@@ -604,11 +608,10 @@ subset.survmean <- function(x, ...) {
   y
 }
 
-prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, ...) {
+prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclos = parent.frame(1L), ...) {
   
   ## subsetting ----------------------------------------------------------------
-  subset <- substitute(subset)
-  subset <- evalLogicalSubset(data = x, substiset = subset)
+  subset <- evalLogicalSubset(data = x, substiset = substitute(subset), enclos = environment())
   
   attrs <- attributes(x)
   
@@ -637,7 +640,7 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, ...) 
     if (!all_names_present(x, y, stops = FALSE)) stop("Given survival variable in argument 'y' not present in survtab object ('", y, "')")
   } else {
     y <- surv_vars[length(surv_vars)]
-    message("y was NULL; chose ", y, " automatically")
+    if (length(surv_vars) > 1L) message("y was NULL; chose ", y, " automatically")
   }
   rm(surv_vars)
   
@@ -691,13 +694,13 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, ...) 
 #' si$period <- cut(si$dg_date, as.Date(c("1993-01-01", "2004-01-01", "2013-01-01")), right = FALSE)
 #' si$cancer <- c(rep("rectal", nrow(sire)), rep("breast", nrow(sibr)))
 #' x <- lexpand(si, birth = bi_date, entry = dg_date, exit = ex_date, 
-#'              status = status %in% 1:2, pophaz = popmort,
-#'              fot = 0:5)
-#' st <- survtab(x, by.vars = c("cancer", "period"), 
-#'               event.values = 1L, surv.method = "lifetable")
+#'              status = status %in% 1:2, 
+#'              fot = 0:5, aggre = list(cancer, period, fot))
+#' st <- survtab_ag(fot ~ cancer + period, data = x, 
+#'                  surv.method = "lifetable", surv.type = "surv.obs")
 #' 
-#' plot(st, "r.e2", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
-#' lines(st, "r.e2", subset = cancer == "rectal", col = "red")
+#' plot(st, "surv.obs", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
+#' lines(st, "surv.obs", subset = cancer == "rectal", col = "red")
 #' 
 #' ## or
 #' plot(st, "r.e2", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
@@ -705,7 +708,11 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, ...) 
 plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
   ## prep ----------------------------------------------------------------------
-  l <- prep_plot_survtab(x = x, y = y, subset = subset, conf.int = conf.int)
+  PF <- parent.frame(1L)
+  subset <- substitute(subset)
+  subset <- evalLogicalSubset(data = x, subset, enclos = PF)
+  
+  l <- prep_plot_survtab(x = x, y = y, subset = subset, conf.int = conf.int, enclos = PF)
   x <- l$x
   y <- l$y
   y.ci <- l$y.ci
@@ -774,23 +781,25 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 #' si$period <- cut(si$dg_date, as.Date(c("1993-01-01", "2004-01-01", "2013-01-01")), right = FALSE)
 #' si$cancer <- c(rep("rectal", nrow(sire)), rep("breast", nrow(sibr)))
 #' x <- lexpand(si, birth = bi_date, entry = dg_date, exit = ex_date, 
-#'              status = status %in% 1:2, pophaz = popmort,
-#'              fot = 0:5)
-#' st <- survtab(x, by.vars = c("cancer", "period"), 
-#'               event.values = 1L, surv.method = "lifetable")
+#'              status = status %in% 1:2, 
+#'              fot = 0:5, aggre = list(cancer, period, fot))
+#' st <- survtab_ag(fot ~ cancer + period, data = x, 
+#'                  surv.method = "lifetable", surv.type = "surv.obs")
 #' 
-#' plot(st, "r.e2", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
-#' lines(st, "r.e2", subset = cancer == "rectal", col = "red")
+#' plot(st, "surv.obs", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")
+#' lines(st, "surv.obs", subset = cancer == "rectal", col = "red")
 #' 
 #' ## or
-#' plot(st, "r.e2", col = c(2,2,4,4))
+#' plot(st, "r.e2", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
-lines.survtab <- function(x, y = NULL, subset = NULL, 
-                          conf.int = TRUE, 
-                          col=NULL, lty=NULL, ...) {
+lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL, lty=NULL, ...) {
   
   ## prep ----------------------------------------------------------------------
-  l <- prep_plot_survtab(x = x, y = y, subset = subset, conf.int = conf.int)
+  PF <- parent.frame(1L)
+  subset <- substitute(subset)
+  subset <- evalLogicalSubset(data = x, subset, enclos = PF)
+  
+  l <- prep_plot_survtab(x = x, y = y, subset = subset, conf.int = conf.int, enclos = environment())
   x <- l$x
   y <- l$y
   y.ci <- l$y.ci

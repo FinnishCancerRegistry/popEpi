@@ -21,13 +21,12 @@ causes the times \code{c(2.5, 5.0)} to be used.}
 before printing; use this to limit to a certain stratum. E.g.
 \code{subset = sex == "male"}}
 
-\item{...}{arguments passed to \code{print.data.table}; try e.g.
-\code{top = 2} for numbers of rows in head and tail, 
-\code{nrow = 100} for number of rows to print, etc.}
+\item{...}{unused; required for congruence with other \code{summary} methods}
 }
 \description{
 Summary method function for \code{survtab} objects; see
-\code{\link{survtab_ag}}.
+\code{\link{survtab_ag}}. Returns estimates at given time points
+or all time points.
 }
 \author{
 Joonas Miettinen
