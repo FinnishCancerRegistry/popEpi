@@ -552,8 +552,6 @@ summary.survtab <- function(object, t = NULL, subset = NULL, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
     setattr(y, "class", class(x))
-    setattr(y, "surv.breaks", attr(x, "surv.breaks"))
-    setattr(y, "byVars", attr(x, "byVars"))
     setattr(y, "survtab.meta", attr(x, "survtab.meta"))
   }
   y
@@ -563,8 +561,6 @@ subset.survtab <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
     setattr(y, "class", class(x))
-    setattr(y, "surv.breaks", attr(x, "surv.breaks"))
-    setattr(y, "byVars", attr(x, "byVars"))
     setattr(y, "survtab.meta", attr(x, "survtab.meta"))
   }
   y
