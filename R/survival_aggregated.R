@@ -488,10 +488,19 @@ survtab_ag <- function(formula = NULL,
   setcolorder(data, c(byVars, "surv.int", "Tstart", "Tstop", "delta", valVars, intersect(names(data), "weights")))
   
   if (surv.method == "lifetable") {
-    testEvents <- data[, n - shift(n, n = 1, type = "lead", fill = NA), by = byVars ]
+    testEvents <- data[, n - shift(n, n = 1, type = "lead", fill = NA), by = byVars]$V1
     testEvents <- data$n.cens + data$d - testEvents
     
-    if (sum(abs(testEvents), na.rm = TRUE)) warning("given n.cens and d do not sum to total number of events and transitions based on n alone; check your variables?")
+    if (sum(abs(testEvents), na.rm = TRUE)) {
+      on.exit({
+        data[, "n.cens + d - (n-lead1_n)" := testEvents]
+        wh <- testEvents != 0L
+        wh <- wh & !is.na(wh)
+        print(data[wh, .SD, .SDcols = c(byVars, "Tstop", "d", "n", "n.cens", "n.cens + d - (n-lead1_n)")])
+      }, add = TRUE)
+      
+      stop("Supplied n.cens and d do not sum to total number of events and censorings based on n alone; See table below and check your variables")
+    }
     rm(testEvents)
     data[, n.eff := n - n.cens/2L]
   }
