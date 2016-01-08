@@ -391,18 +391,22 @@ survtab_ag <- function(formula = NULL,
   ## NOTE: not sure if other arguments than 'd' should be allowed to be of 
   ## length > 1 (cause-specific 'd'); restricted for now to 'd' but easy to
   ## allow in the procedure below.
+  ## nl will contain the names of the variables corresponding to each argument,
+  ## e.g. d = c("d.1", "d.2"), etc.
+  nl <- lapply(mc, names)
   for (k in 1:length(mc)) {
     jay <- argName <- names(mc[k])
     cn <- names(mc[[k]])
     
     if (length(cn) > 1) jay <- paste0(jay, ".", cn) ## e.g. d.1, d.2, ...
-    if (argName == "d") {
+    if (argName %in% c("d", "d.pp", "d.pp.2")) {
       eventVars <- jay
       if (surv.type %in% c("surv.cause") && length(cn) == 1L) stop("surv.type = 'surv.cause', but only one type of event supplied via argument 'd'. If you want to compute cause-specific survivals, please supply multiple types of events via 'd'; otherwise use surv.type = 'surv.obs'") 
       } else  if (length(cn) > 1) 
-        stop("'", argName, "' has/evaluates to ", length(cn), " columns; only 'd' may evaluate to more than one column of the value arguments")
+        stop("'", argName, "' has/evaluates to ", length(cn), " columns; only 'd', 'd.pp', and 'd'pp.2' may evaluate to more than one column of the value arguments")
     setnames(mc[[k]], cn, jay)
     set(mc[[1]], j = jay, value = mc[[k]])
+    nl[[argName]] <- jay
   }
   mc <- mc[[1]]
   
@@ -410,6 +414,21 @@ survtab_ag <- function(formula = NULL,
     set(mc, j = "d", value = rowSums(mc[, mget(eventVars)]))
     valVars <- unique(c(valVars, "d", eventVars))
   }
+  
+  ## sum e.g. d.pp.1 + d.pp.2 = d.pp
+  dna <- names(nl)[names(nl) %in% c("d.pp", "d.pp.2")]
+  if (length(dna)) dna <- dna[unlist(lapply(nl[dna], function(x) length(x) > 1L))]
+  if (length(dna)) {
+    
+    for (k in dna) {
+      set(mc, j = k, value = mc[, rowSums(.SD), .SDcols = nl[[k]]])
+    }
+    setcolsnull(mc, unlist(nl[dna]))
+    valVars <- setdiff(valVars, unlist(nl[dna]))
+    valVars <- c(valVars, dna)
+    valVars <- unique(valVars)
+  }
+  
   
   all_names_present(mc, valVars)
   setcolorder(mc, valVars)
