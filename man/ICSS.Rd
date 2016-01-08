@@ -5,12 +5,10 @@
 \title{Age standardisation weights from the ICSS scheme.}
 \format{data.table with columns
 \itemize{
- \item agegroup - coded from 1 to 16
+ \item age - lower bound of the age group
  \item ICSS1 - first set of weights, sums to 100 000
  \item ICSS2 - second set of weights, sums to 100 000
  \item ICSS3 - third set of weights, sums to 100 000
- \item ageint_start - lower bound of the age group
- \item ageint_end - upper bound of the age group
 }}
 \source{
 \href{http://seer.cancer.gov/stdpopulations/survival.html}{ICSS weights (US National Cancer Institute website)}

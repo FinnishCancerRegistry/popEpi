@@ -68,12 +68,10 @@ NULL
 #' Corazziari, Isabella, Mike Quinn, and Riccardo Capocaccia. "Standard cancer patient population for age standardising survival ratios." European Journal of Cancer 40.15 (2004): 2307-2316.
 #' @format data.table with columns
 #' \itemize{
-#'  \item agegroup - coded from 1 to 16
+#'  \item age - lower bound of the age group
 #'  \item ICSS1 - first set of weights, sums to 100 000
 #'  \item ICSS2 - second set of weights, sums to 100 000
 #'  \item ICSS3 - third set of weights, sums to 100 000
-#'  \item ageint_start - lower bound of the age group
-#'  \item ageint_end - upper bound of the age group
 #' }
 #' @name ICSS
 NULL
