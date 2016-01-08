@@ -4,7 +4,7 @@
 \alias{plot.survtab}
 \title{\code{plot} method for survtab objects}
 \usage{
-\method{plot}{survtab}(x, y = NULL, subset = NULL, conf.int = NULL,
+\method{plot}{survtab}(x, y = NULL, subset = NULL, conf.int = TRUE,
   col = NULL, lty = NULL, ylab = NULL, xlab = NULL, ...)
 }
 \arguments{

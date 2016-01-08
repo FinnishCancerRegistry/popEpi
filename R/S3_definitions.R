@@ -798,11 +798,15 @@ lines.survtab <- function(x, y = NULL, subset = NULL,
   
   
   ## need to determine total number of strata; also used in casting ------------
-  ## note: if no strata, created a dummy repeating 1L as strata
+  ## note: if no strata, create a dummy repeating 1L as strata
   tmpBy <- makeTempVarName(x)
-  x[, (tmpBy) := interaction(mget(rev(strata)))]
-  x[, (tmpBy) := factor(get(tmpBy), labels = 1:uniqueN(get(tmpBy)))]
-  x[, (tmpBy) := robust_values(get(tmpBy))]
+  if (length(strata) == 0L) {
+    strata <- tmpBy
+    x[, c(tmpBy) := 1L]
+  }
+  x[, c(tmpBy) := interaction(mget(rev(strata)))]
+  x[, c(tmpBy) := factor(get(tmpBy), labels = 1:uniqueN(get(tmpBy)))]
+  x[, c(tmpBy) := robust_values(get(tmpBy))]
   
   Nstrata <- x[, uniqueN(get(tmpBy))]
   
