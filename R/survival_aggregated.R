@@ -224,6 +224,18 @@ globalVariables("weights")
 # wdt <- data.table(agegr = 1:4, weights = c(0.2, 0.4, 0.3, 0.1))
 # wli <- list(agegr = c(0.2, 0.4, 0.3, 0.1))
 # st <- survtab_ag(fot ~ sex + adjust(agegr), data = ag, surv.type = "surv.obs", surv.method = "hazard", weights = wli)
+# st <- survtab_ag(fot ~ sex + adjust(agegr), data = ag, surv.type = "surv.rel", 
+#                  d.pp = "from0to1.pp", d.pp.2 = "from0to1.pp.2", 
+#                  d.exp.pp = "d.exp.pp", pyrs.pp = "ptime.pp",
+#                  surv.method = "hazard", weights = wli,
+#                  relsurv.method = "pp")
+# ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
+#               status = status, pophaz = popmort, pp = TRUE,
+#               aggre = list(sex, agegr = cut(dg_age, c(0,60,70,80, Inf), labels = FALSE), fot), 
+#               fot = seq(0, 5, 1/12))
+# st <- survtab_ag(fot ~ sex + adjust(agegr), data = ag, 
+#                  d = list(cand = from0to1, othd = from0to2),
+#                  surv.type = "surv.cause", weights = wli)
 # st <- survtab_ag(fot ~ sex, data = ag, surv.type = "surv.obs", surv.method = "hazard", adjust = "agegr", weights = wli)
 # st <- survtab_ag(fot ~ adjust(agegr), data = ag, surv.type = "surv.obs", weights = wli)
 # st <- survtab_ag(fot ~ 1, data = ag, adjust = "agegr", surv.type = "surv.obs", weights = wli)
@@ -384,8 +396,11 @@ survtab_ag <- function(formula = NULL,
     cn <- names(mc[[k]])
     
     if (length(cn) > 1) jay <- paste0(jay, ".", cn) ## e.g. d.1, d.2, ...
-    if (argName == "d") eventVars <- jay else 
-      if (length(cn) > 1) stop("'", argName, "' has/evaluates to ", length(cn), " columns; only 'd' may evaluate to more than one column of the value arguments")
+    if (argName == "d") {
+      eventVars <- jay
+      if (surv.type %in% c("surv.cause") && length(cn) == 1L) stop("surv.type = 'surv.cause', but only one type of event supplied via argument 'd'. If you want to compute cause-specific survivals, please supply multiple types of events via 'd'; otherwise use surv.type = 'surv.obs'") 
+      } else  if (length(cn) > 1) 
+        stop("'", argName, "' has/evaluates to ", length(cn), " columns; only 'd' may evaluate to more than one column of the value arguments")
     setnames(mc[[k]], cn, jay)
     set(mc[[1]], j = jay, value = mc[[k]])
   }
@@ -629,7 +644,6 @@ survtab_ag <- function(formula = NULL,
       
     }
     
-    
     surv_names <- names(data)[grep("surv.obs", names(data))]
     surv_names <- c("d", if (surv.method == "lifetable") "n.eff" else NULL, surv_names)
     setnames(data, surv_names, paste0(surv_names, ".orig"))
@@ -763,8 +777,11 @@ survtab_ag <- function(formula = NULL,
   
   # compute adjusted estimates -------------------------------------------------
   if ("weights" %in% names(data)) {
-    adEsts <- c("surv.obs", "r.e2", "r.pp", names(data)[substr(names(data),1,3)=="CIF"])
+    adEsts <- names(data)[substr(names(data), 1, 8) == "surv.obs"]
+    adEsts <- c(adEsts, "r.e2", "r.pp")
+    adEsts <- c(adEsts,  names(data)[substr(names(data),1,3)=="CIF"])
     adEsts <- intersect(adEsts, names(data))
+    adEsts <- adEsts[unlist(lapply(adEsts, function(x) !substr(x, nchar(x)-2L, nchar(x)) %in% c(".lo", ".hi")))]
     adSEs <- paste0("SE.", adEsts)
     
     data.w <- data[, lapply(mget(c(adEsts, adSEs)), function(x) sum(x*weights)), keyby = c(prVars, "surv.int")]
