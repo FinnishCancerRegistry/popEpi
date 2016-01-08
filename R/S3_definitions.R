@@ -594,6 +594,63 @@ subset.survmean <- function(x, ...) {
   y
 }
 
+prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, ...) {
+  
+  ## subsetting ----------------------------------------------------------------
+  subset <- substitute(subset)
+  subset <- evalLogicalSubset(data = x, substiset = subset)
+  
+  attrs <- attributes(x)
+  
+  if (!inherits(x, "survtab")) stop("x is not a survtab object")
+  if (is.null(attrs$survtab.meta)) stop("Missing meta information (attributes) in survtab object; have you tampered with it after estimation?")
+  strata.vars <- attrs$survtab.meta$print.vars
+  x <- copy(x)
+  setDT(x)
+  x <- x[subset, ]
+  
+  ## detect survival variables in data -----------------------------------------
+  surv_vars <- c("surv.obs","CIF.rel","CIF_","r.e2","r.pp")
+  wh <- NULL
+  for (k in surv_vars) {
+    wh <- c(wh, which(substr(names(x), 1, nchar(k)) == k))
+  }
+  surv_vars <- names(x)[wh]
+  surv_vars <- surv_vars[!substr(surv_vars, nchar(surv_vars)-1, nchar(surv_vars)) %in% c("hi","lo")]
+  if (length(surv_vars) == 0) stop("x does not appear to have any survival variables; did you tamper with it after estimation?")
+  
+  
+  ## getting y -----------------------------------------------------------------
+  if (!is.null(y)) {
+    if (!is.character(y)) stop("please supply y as a character string indicating the name of a variable in x")
+    if (length(y) > 1) stop("y must be of length 1 or NULL")
+    if (!all_names_present(x, y, stops = FALSE)) stop("Given survival variable in argument 'y' not present in survtab object ('", y, "')")
+  } else {
+    y <- surv_vars[length(surv_vars)]
+    message("y was NULL; chose ", y, " automatically")
+  }
+  rm(surv_vars)
+  
+  if (substr(y, 1, 3) == "CIF" && conf.int) stop("No confidence intervals currently supported for CIFs. Hopefully they will be added in a future version; meanwhile use conf.int = FALSE when plotting CIFs.")
+  
+  
+  ## confidence intervals ------------------------------------------------------
+  y.lo <- y.hi <- y.ci <- NULL
+  if (conf.int) {
+    
+    y.lo <- paste0(y, ".lo")
+    y.hi <- paste0(y, ".hi")
+    y.ci <- c(y.lo, y.hi)
+    
+    badCIvars <- setdiff(y.ci, names(x))
+    if (sum(length(badCIvars))) stop("conf.int = TRUE, but missing confidence interval variables in data for y = '", y, "' (could not detect variables named", paste0("'", badCIvars, "'", collapse = ", ") ,")")
+    
+  } 
+  
+  list(x = x, y = y, y.ci = y.ci, y.lo = y.lo, y.hi = y.hi, strata = strata.vars, attrs = attrs)
+  
+}
+
 
 #' \code{plot} method for survtab objects
 #' 
@@ -635,59 +692,25 @@ subset.survmean <- function(x, ...) {
 #' ## or
 #' plot(st, "r.e2", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
-plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
+plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
-  ## take copy preserving attributes (unlike  <- data.table())
-  x <- copy(x)
-  if (!inherits(x, "survtab")) stop("x is not a survtab object or it has been modified (e.g. subset) after survtab ")
-  setDT(x)
+  ## prep ----------------------------------------------------------------------
+  l <- prep_plot_survtab(x = x, y = y, subset = subset, conf.int = conf.int)
+  x <- l$x
+  y <- l$y
+  y.ci <- l$y.ci
+  y.lo <- l$y.lo
+  y.hi <- l$y.hi
   
-  by.vars <- attr(x, "by.vars")
-  
-  surv_vars <- c("surv.obs","CIF.rel","CIF_","r.e2","r.pp")
-  wh <- NULL
-  for (k in surv_vars) {
-    wh <- c(wh, which(substr(names(x), 1, nchar(k)) == k))
-  }
-  surv_vars <- names(x)[wh]; rm(wh)
-  surv_vars <- surv_vars[!substr(surv_vars, nchar(surv_vars)-1, nchar(surv_vars)) %in% c("hi","lo")]
-  if (length(surv_vars) == 0) stop("x does not appear to have any survival variables; is it an untouched output from survtab?")
-  
-  
-  ## getting y -----------------------------------------------------------------
-  if (!is.null(y)) {
-    if (!is.character(y)) stop("please supply y as a character string indicating the name of a variable in x")
-    if (length(y) > 1) stop("y must be of length 1 or NULL")
-    all_names_present(x, y)
-  } else {
-    y <- surv_vars[length(surv_vars)]
-    message("y was NULL; chose ", y, " automatically")
-  }
-  rm(surv_vars)
-  
-  ## subsetting ----------------------------------------------------------------
-  subset <- substitute(subset)
-  subset <- evalLogicalSubset(data = x, substiset = subset)
-  
-  ## confidence intervals ------------------------------------------------------
-  y.lo <- paste0(y, ".lo")
-  y.hi <- paste0(y, ".hi")
-  y.ci <- c(y.lo, y.hi)
-  y.ci <- intersect(y.ci, names(x))
-  ley <- length(c(y.ci))
-  
-  if (is.null(conf.int)) {
-    conf.int <- conf.int <- ifelse(ley %in% 1:2, TRUE, FALSE)
-  }
-  if (!conf.int) y.ci <- NULL
-  
-  ## plotting ------------------------------------------------------------------
-  ## y is a data.table with survival variables as columns
-  min_y <- min(x[subset, c(y,y.lo), with=FALSE], na.rm=TRUE)
+  ## figure out limits, etc. to pass to plot() ---------------------------------
+  min_y <- min(x[, c(y,y.lo), with=FALSE], na.rm=TRUE)
   min_y <- max(min_y, 0)
-  max_y <- max(x[subset, c(y,y.hi), with=FALSE], na.rm=TRUE) + 0.025
   
-  max_x <- max(x[subset, Tstop])
+  max_y <- max(x[, c(y,y.hi), with=FALSE], na.rm=TRUE) + 0.025
+  if (substr(y[1], 1, 3) == "CIF") min_y <- 0L else max_y <- 1L
+  
+  max_x <- max(x[, Tstop])
+  min_x <- min(x[, Tstop-delta])
   
   if (is.null(ylab)) {
     ylab <- "Observed survival"
@@ -697,11 +720,16 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
   }
   if (is.null(xlab)) xlab <- "Years from entry"
  
+  ## attributes insurance to pass to lines.survtab
+  setattr(x, "survtab.meta", l$attrs$survtab.meta)
+  setattr(x, "class", c("survtab", "data.table", "data.frame"))
   
-  plot(I(c(min_y,max_y))~I(c(0,max_x)), data=x, type="n", 
+  ## plotting ------------------------------------------------------------------
+  plot(I(c(min_y,max_y))~I(c(min_x,max_x)), data=x, type="n", 
        xlab = xlab, ylab = ylab, ...)
   
-  lines.survtab(x, subset = subset, y = y, conf.int=conf.int,
+  
+  lines.survtab(x, subset = NULL, y = y, conf.int=conf.int,
                 col=col, lty=lty, ...)
   
  
@@ -750,70 +778,27 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=NULL, col=NULL,lty=N
 lines.survtab <- function(x, y = NULL, subset = NULL, 
                           conf.int = TRUE, 
                           col=NULL, lty=NULL, ...) {
-  ## take copy preserving attributes (unlike data.table())
-  x <- copy(x)
-  setDT(x)
   
-  by.vars <- attr(x, "by.vars")
-  if (!is.null(by.vars)) {
-    all_names_present(x, by.vars)
-  } else {
-    by.vars <- makeTempVarName(x, pre = "by_")
-    x[, (by.vars) := 1L]
-    all_names_present(x, by.vars)
-  }
-  
-  surv_vars <- c("surv.obs","CIF.rel","CIF_","r.e2","r.pp")
-  wh <- NULL
-  for (k in surv_vars) {
-    wh <- c(wh, which(substr(names(x), 1, nchar(k)) == k))
-  }
-  surv_vars <- names(x)[wh]; rm(wh)
-  surv_vars <- surv_vars[!substr(surv_vars, nchar(surv_vars)-1, nchar(surv_vars)) %in% c("hi","lo")]
-  if (length(surv_vars) == 0) stop("x does not appear to have any survival variables; is it an untouched output from survtab?")
+  ## prep ----------------------------------------------------------------------
+  l <- prep_plot_survtab(x = x, y = y, subset = subset, conf.int = conf.int)
+  x <- l$x
+  y <- l$y
+  y.ci <- l$y.ci
+  y.lo <- l$y.lo
+  y.hi <- l$y.hi
+  strata <- l$strata ## character vector of var names
   
   
-  ## subsetting ----------------------------------------------------------------
-  subset <- substitute(subset)
-  subset <- evalLogicalSubset(data = x, substiset = subset)
-  
-  
-  ## getting y -----------------------------------------------------------------  
-  if (!is.null(y)) {
-    if (!is.character(y)) stop("please supply y as a character string indicating the name of a variable in x")
-    if (length(y) > 1) stop("y must be of length 1 or NULL")
-    all_names_present(x, y)
-  } else {
-    y <- surv_vars[length(surv_vars)]
-    message("y was NULL; chose ", y, " automatically")
-  }
-  
-  
-  ## confidence intervals ------------------------------------------------------
-  is_CIF <- FALSE
-  if (substr(y,1,3) == "CIF") is_CIF <- TRUE
-  varname <- copy(y)
-  
-  y.lo <- paste0(y, ".lo")
-  y.hi <- paste0(y, ".hi")
-  y.ci <- c(y.lo, y.hi)
-  y.ci <- intersect(y.ci, names(x))
-  ley <- length(c(y.ci))
-  
-  if (is.null(conf.int)) {
-    conf.int <- ifelse(ley %in% 1:2, TRUE, FALSE)
-  }
-  if (!conf.int) y.ci <- NULL
-  
-  ## need to determine total number of strata; also used in casting
-  ## note: if no by.vars, created a dummy repeating 1L as by.vars
+  ## need to determine total number of strata; also used in casting ------------
+  ## note: if no strata, created a dummy repeating 1L as strata
   tmpBy <- makeTempVarName(x)
-  x[, (tmpBy) := interaction(mget(rev(by.vars)))]
+  x[, (tmpBy) := interaction(mget(rev(strata)))]
   x[, (tmpBy) := factor(get(tmpBy), labels = 1:uniqueN(get(tmpBy)))]
   x[, (tmpBy) := robust_values(get(tmpBy))]
   
-  Nstrata <- x[subset, uniqueN(get(tmpBy))]
+  Nstrata <- x[, uniqueN(get(tmpBy))]
   
+  ## color and line type matching to strata ------------------------------------
   if (is.null(lty)) {
     lty <- if (conf.int) c(1,2,2) else 1
   } else {
@@ -825,18 +810,18 @@ lines.survtab <- function(x, y = NULL, subset = NULL,
     col <- if(conf.int) rep(col, each = 3) else col 
   }
   
-  ## cast to accommodate by.vars
+  ## impute first values (time = 0, surv = 1 / cif = 0) ------------------------
   
-  ## impute first values (time = 0, surv = 1 / cif = 0)
-  first <- x[subset & !duplicated(get(tmpBy)), ]
-  first[, c(varname) := ifelse(is_CIF, 0, 1)]
+  is_CIF <- if (substr(y, 1, 3) == "CIF") TRUE else FALSE
+  first <- x[!duplicated(get(tmpBy)), ]
+  first[, c(y) := ifelse(is_CIF, 0, 1)]
   first[, Tstop := 0]
   
-  
-  if (length(y.ci) > 0) first[, (y.ci) := get(varname) ]
-  x <- rbindlist(list(first, x[subset, ]), use.names = TRUE)
+  if (length(y.ci) > 0) first[, (y.ci) := get(y) ]
+  x <- rbindlist(list(first, x[, ]), use.names = TRUE)
   setkeyv(x, c(tmpBy, "surv.int"))
   
+  ## cast to accommodate strata ------------------------------------------------
   x <- cast_simple(x, columns = tmpBy, rows = "Tstop", 
                    values = c(y, y.ci))
   estVars <- names(x)[1:Nstrata+1]
@@ -844,14 +829,14 @@ lines.survtab <- function(x, y = NULL, subset = NULL,
   strata <- unique(unlist(strata))
   newOrder <- NULL
   
-  
+  ## reorder to match col, lty, etc. -------------------------------------------
   for (k in strata) {
     newOrder <- c(newOrder, names(x)[grep(k, names(x))])
   }
   setcolorder(x, c("Tstop", newOrder))
   setDF(x)
   
-  ## plotting
+  ## plotting ------------------------------------------------------------------
   graphics::matlines(x = x$Tstop, 
                      y = x[, setdiff(names(x), "Tstop")], 
                      col=col, lty=lty, ...)
