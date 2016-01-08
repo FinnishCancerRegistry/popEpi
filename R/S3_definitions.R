@@ -478,6 +478,7 @@ preface_survtab.print <- function(x) {
 print.survtab <- function(x, subset = NULL, ...) {
   
   PF <- parent.frame(1L)
+  TF <- environment()
   sa <- attributes(x)$survtab.meta
   
   subset <- evalLogicalSubset(x, substitute(subset), enclos = PF)
@@ -486,9 +487,10 @@ print.survtab <- function(x, subset = NULL, ...) {
   preface_survtab.print(x)
   
   setDT(x)
-  pv <- sa$print.vars
+  pv <- as.character(sa$print.vars)
+  
   if (length(pv) == 0L) pv <- NULL
-  medmax <- x[, list(Tstop = c(median(c(min(Tstart),Tstop)), max(Tstop))), keyby = c(pv)]
+  medmax <- x[, list(Tstop = c(median(c(min(Tstart),Tstop)), max(Tstop))), keyby = eval(TF$pv)]
   
   setkeyv(medmax, c(pv, "Tstop"))
   setkeyv(x, c(pv, "Tstop"))
