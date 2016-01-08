@@ -478,11 +478,24 @@ preface_survtab.print <- function(x) {
 print.survtab <- function(x, subset = NULL, ...) {
   
   PF <- parent.frame(1L)
+  sa <- attributes(x)$survtab.meta
   
   subset <- evalLogicalSubset(x, substitute(subset), enclos = PF)
   x <- x[subset, ]
   
   preface_survtab.print(x)
+  
+  setDT(x)
+  pv <- sa$print.vars
+  if (length(pv) == 0L) pv <- NULL
+  medmax <- x[, list(Tstop = c(median(c(min(Tstart),Tstop)), max(Tstop))), keyby = c(pv)]
+  
+  setkeyv(medmax, c(pv, "Tstop"))
+  setkeyv(x, c(pv, "Tstop"))
+  x <- x[medmax]
+  
+  surv.vars <- setdiff(names(x), c(sa$print.vars, "Tstop", sa$value.vars, sa$adjust.vars, "surv.int", "Tstart", "Tstop", "delta"))
+  setcolsnull(x, keep = c(pv, "Tstop", surv.vars), colorder = TRUE)
   
   print(data.table(x), ...)
   invisible()
@@ -491,7 +504,8 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' @title Summarize a survtab Object
 #' @author Joonas Miettinen
 #' @description Summary method function for \code{survtab} objects; see
-#' \code{\link{survtab_ag}}.
+#' \code{\link{survtab_ag}}. Returns estimates at given time points
+#' or all time points.
 #' @param object a \code{survtab} object
 #' @param t a vector of times at which time points to print
 #' summary table of survival function estimates by strata;
@@ -503,9 +517,7 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' @param subset a logical condition to subset results table by
 #' before printing; use this to limit to a certain stratum. E.g.
 #' \code{subset = sex == "male"}
-#' @param ... arguments passed to \code{print.data.table}; try e.g.
-#' \code{top = 2} for numbers of rows in head and tail, 
-#' \code{nrow = 100} for number of rows to print, etc.
+#' @param ... unused; required for congruence with other \code{summary} methods
 #' @export
 summary.survtab <- function(object, t = NULL, subset = NULL, ...) {
   
@@ -519,7 +531,7 @@ summary.survtab <- function(object, t = NULL, subset = NULL, ...) {
   at <- attr(x, "survtab.meta")
   sb <- at$surv.breaks
   
-  if (is.null(t)) t <- c(median(sb), max(sb)) else {
+  if (is.null(t)) t <- sb else {
     
     wh <- sapply(t, function(x) which.min(x = abs(sb - x)))
     wh <- sort(unique(wh))
@@ -529,10 +541,10 @@ summary.survtab <- function(object, t = NULL, subset = NULL, ...) {
   setDT(x)
   setkeyv(x, c(at$print.vars, "Tstop"))
   x <- x[Tstop %in% t]
-  surv.vars <- setdiff(names(x), c(at$print.vars, "Tstop", at$value.vars, at$adjust.vars, "surv.int", "Tstart", "Tstop", "delta"))
-  setcolsnull(x, keep = c(at$print.vars, "Tstop", surv.vars))
-  print(x, ...)
-  invisible()
+  
+  if (!getOption("popEpi.datatable")) setDFpe(x)
+  
+  x
 }
 
 ## subsetting for survtab objects that retains attributes
