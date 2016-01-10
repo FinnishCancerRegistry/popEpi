@@ -50,7 +50,7 @@ plot(st, "surv.obs", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue"
 lines(st, "surv.obs", subset = cancer == "rectal", col = "red")
 
 ## or
-plot(st, "r.e2", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
+plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 }
 \author{
 Joonas Miettinen
