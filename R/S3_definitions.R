@@ -459,7 +459,6 @@ preface_survtab.print <- function(x) {
   if (length(at$adjust.vars) > 0L) {
     cat("Adjusted by:", paste0("'", at$adjust.vars, "'", collapse = ", "))
   }
-  cat("\n \n")
   invisible()
 }
 
@@ -703,7 +702,7 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclo
 #' lines(st, "surv.obs", subset = cancer == "rectal", col = "red")
 #' 
 #' ## or
-#' plot(st, "r.e2", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
+#' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
 plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
@@ -790,7 +789,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 #' lines(st, "surv.obs", subset = cancer == "rectal", col = "red")
 #' 
 #' ## or
-#' plot(st, "r.e2", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
+#' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
 lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL, lty=NULL, ...) {
   

@@ -204,59 +204,272 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
 }
 globalVariables("weights")
 
-# ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
-#               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
-#               aggre = list(sex, fot), fot = seq(0, 5, 1/12))
-# ag[, d.exp := pmax(0L, from0to1 - 3L)]
-# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard")
-# st <- survtab_ag(ag, surv.type = "surv.cause", surv.method = "hazard", d = list(a = from0to1-3, b = 3))
-
-# sire <- copy(sire)
-# sire$sex <- rbinom(nrow(sire), size = 1, prob = 0.5)
-# ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
-#               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
-#               aggre = list(sex, agegr = cut(dg_age, c(0,60,70,80, Inf), labels = FALSE), fot), 
-#               fot = seq(0, 5, 1/12))
-# ag <- lexpand(sire, birth = "bi_date", entry = "bi_date", exit = "ex_date",
-#               status = status %in% 1:2,
-#               aggre = list(sex, age), 
-#               age = seq(0, 100, 1))
-# wdt <- data.table(agegr = 1:4, weights = c(0.2, 0.4, 0.3, 0.1))
-# wli <- list(agegr = c(0.2, 0.4, 0.3, 0.1))
-# st <- survtab_ag(fot ~ sex + adjust(agegr), data = ag, surv.type = "surv.obs", surv.method = "hazard", weights = wli)
-# st <- survtab_ag(fot ~ sex + adjust(agegr), data = ag, surv.type = "surv.rel", 
-#                  d.pp = "from0to1.pp", d.pp.2 = "from0to1.pp.2", 
-#                  d.exp.pp = "d.exp.pp", pyrs.pp = "ptime.pp",
-#                  surv.method = "hazard", weights = wli,
-#                  relsurv.method = "pp")
-# ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
-#               status = status, pophaz = popmort, pp = TRUE,
-#               aggre = list(sex, agegr = cut(dg_age, c(0,60,70,80, Inf), labels = FALSE), fot), 
-#               fot = seq(0, 5, 1/12))
-# st <- survtab_ag(fot ~ sex + adjust(agegr), data = ag, 
-#                  d = list(cand = from0to1, othd = from0to2),
-#                  surv.type = "surv.cause", weights = wli)
-# st <- survtab_ag(fot ~ sex, data = ag, surv.type = "surv.obs", surv.method = "hazard", adjust = "agegr", weights = wli)
-# st <- survtab_ag(fot ~ adjust(agegr), data = ag, surv.type = "surv.obs", weights = wli)
-# st <- survtab_ag(fot ~ 1, data = ag, adjust = "agegr", surv.type = "surv.obs", weights = wli)
-# st <- survtab_ag(fot ~ 1, data = ag, adjust = "agegr", surv.type = "surv.obs", weights = wli)
-# st <- survtab_ag(fot ~ 1, data = ag, surv.type = "surv.obs")
-
-# wli2 <- wli
-# wli$sex <- c(0.4, 0.6)
-# st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, surv.type = "surv.obs", weights = wli)
-# st <- survtab_ag(fot ~ adjust(agegr), data = ag, surv.type = "surv.obs", weights = wli["agegr"])
-# ag[, d.exp := pmax(from0to1 - 1, 0L)]
-# st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, surv.type = "surv.rel", weights = wli)
-# st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, surv.type = "surv.cause", weights = wli)
-# ag[, othd := pmax(from0to1 - 1L, 0L)]
-# st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, d = list(cand = from0to1, othd = pmax(from0to1-1L, 0L)), surv.type = "surv.cause", weights = wli)
-
 ## probably cannot allow pre-merging weights into data and supplying name of weights
 ## column in data since data may not contain all the rows that a cross-join
 ## (cartesian product, e.g. CJ(var1, var2)) would contain; hence the weights
 ## will not always sum to one in the right way.
+#' @title Survival tables
+#' @author Joonas Miettinen, Karri Seppa
+#' @description Given a data set processed by \code{lexpand}, estimates various 
+#' survival time functions as requested by the user. 
+#' @param formula a \code{formula} object, e.g. \code{fot ~ sex + adjust(agegr)}.
+#' The response must be the time scale to compute survival time function estimates
+#' over, and stratifying variables can be included on the right-hand side
+#' separated by '\code{+}'. May contain usage of \code{adjust()} --- see Details.
+#' @param data a data set of aggregated counts, subject-times, etc., as created
+#' by \code{\link{aggre}}; for pre-aggregated data see \code{\link{as.aggre}}
+#' @param adjust can be used as an alternative to passing variables to 
+#' argument \code{formula} within a call to \code{adjust()}; e.g.
+#' \code{adjust = "agegr"} --- see Details.
+#' @param weights a \code{list} or \code{data.frame} of weights corresponding
+#' to the variables used to adjust estimates. E.g. with \code{adjust = "agegr"},
+#' weights may be passed as a list such as 
+#' \code{weights = list(agegr = c(0.2, 0.4))} (with two age groups). See Details.
+#' @param surv.breaks a vector of breaks on the survival time scale. Only used
+#' to compute estimates using a subset of the intervals in data or larger intervals
+#' than in data. E.g. one might use \code{surv.breaks = 0:5} when the aggregated
+#' data has intervals with the breaks \code{seq(0, 10, 1/12)}.
+#' 
+#' @param n variable containing counts of subjects at-risk at the start of a time 
+#' interval; e.g. \code{n = "at.risk"}. 
+#' Required when \code{surv.method = "lifetable"}.
 
+#' @param d variable(s) containing counts of subjects experiencing an event. With
+#' only one type of event, e.g. \code{d = "deaths"}. With multiple types of 
+#' events (for CIF or cause-specific survival estimation), supply e.g.
+#' \code{d = c("canD", "othD")}. If the survival time function to be estimated
+#' does not use multiple types of events, supplying more than one variable
+#' to \code{d} simply causes the variables to be added together. 
+#' Always required.
+
+#' @param n.cens variable containing counts of subjects censored during a 
+#' survival time interval; E.g. \code{n.cens = "alive"}.
+#' Required when \code{surv.method = "lifetable"}.
+
+#' @param pyrs variable containing total subject-time accumulated within a survival
+#' time interval; E.g. \code{pyrs = "pyrs"}. 
+#' Required when \code{surv.method = "hazard"}.
+
+#' @param d.exp variable denoting total "expected numbers of events" 
+#' (typically computed \code{pyrs * pop.haz}, where 
+#' \code{pop.haz} is the expected hazard level) 
+#' accumulated within a survival time interval; E.g. \code{pyrs = "pyrs"}.
+#' Required when computing EdererII relative survivals or 
+#' CIFs based on excess counts of events.
+
+#' @param d.pp variable(s) containing total Pohar-Perme weighted counts of events,
+#' supplied as argument \code{d} is supplied. Computed originally on the subject
+#' level as analogous to \code{pp * as.integer(status == some_event)}.
+#' Required when \code{relsurv.method = "pp"}.
+
+#' @param d.pp.2 variable(s) containing total Pohar-Perme 
+#' "double-weighted" counts of events,
+#' supplied as argument \code{d} is supplied. Computed originally on the subject
+#' level as analogous to \code{pp * pp * as.integer(status == some_event)}.
+#' Required when \code{relsurv.method = "pp"}.
+
+#' @param n.cens.pp variable containing total Pohar-Perme weighted counts 
+#' censorings,
+#' supplied as argument \code{n.cens} is supplied. 
+#' Computed originally on the subject
+#' level as analogous to \code{pp * as.integer(status == "censored")}.
+#' Required when \code{relsurv.method = "pp"}.
+
+#' @param pyrs.pp variable containing total Pohar-Perme weighted subject-times,
+#' supplied as argument \code{pyrs} is supplied. 
+#' Computed originally on the subject
+#' level as analogous to \code{pp * pyrs}.
+#' Required when \code{relsurv.method = "pp"}.
+
+#' @param d.exp.pp variable containing total Pohar-Perme weighted counts 
+#' of excess events,
+#' supplied as argument \code{pyrs} is supplied. 
+#' Computed originally on the subject
+#' level as analogous to \code{pp * d.exp}.
+#' Required when \code{relsurv.method = "pp"}.
+#' 
+#' @param surv.type one of \code{'surv.obs'},
+#' \code{'surv.cause'}, \code{'surv.rel'}, 
+#' \code{'cif.obs'} or \code{'cif.rel'}; 
+#' defines what kind of survival time function(s) is/are estimated; see Details
+#' @param surv.method either \code{'lifetable'} or \code{'hazard'}; determines
+#' the method of calculating survival time functions, where the former computes
+#' ratios such as \code{p = d/(n - n.cens)} 
+#' and the latter utilizes subject-times 
+#' (typically person-years) for hazard estimates such as \code{d/pyrs} 
+#' which are used to compute survival time function estimates.
+#' The former method requires argument \code{n.cens} and the latter 
+#' argument \code{pyrs} to be supplied. 
+#' @param relsurv.method  either \code{'e2'} or \code{'pp'}; 
+#' defines whether to compute relative survival using the
+#' EdererII method or using Pohar-Perme weighting;
+#' ignored if \code{surv.type != "surv.rel"}
+#'  
+#' @param subset a logical condition; e.g. \code{subset = sex == 1}; 
+#' subsets the data before computations
+#' 
+#' @param conf.level confidence level used in confidence intervals; 
+#' e.g. \code{0.95} for 95 percent confidence intervals
+#' @param conf.type character string; must be one of \code{"plain"}, 
+#' \code{"log-log"} and \code{"log"}; 
+#' defines the transformation used on the survival time
+#' function to yield confidence 
+#' intervals via the delta method
+#' @param format logical; if \code{TRUE}, output is formatted into a neat table;
+#' otherwise you get all the raw results
+#' @param verbose logical; if \code{TRUE}, the function is chatty and
+#'  returns some messages and timings along the process
+#' 
+#' @details
+#' 
+#' \strong{Basics}
+#' 
+#' \code{survtab_ag} computes estimates of survival time functions using 
+#' pre-aggregated data. For using subject-level data directly, see 
+#' \code{\link{survtab_lex}}. For aggregating data, see \code{\link{lexpand}}
+#' and \code{\link{aggre}}.
+#' 
+#' By default
+#' \code{survtab_ag} makes use of the exact same breaks that were used in 
+#' splitting the original data (with e.g. \code{lexpand}), so it is not 
+#' necessary to specify any
+#' \code{surv.breaks}. If specified, the 
+#' \code{surv.breaks} must be a subset of the pertinent 
+#' pre-existing breaks. Interval lengths (\code{delta} in output) are 
+#' also calculated based on existing breaks or \code{surv.breaks}, 
+#' so the upper limit of the breaks should
+#' therefore be meaningful and never e.g. \code{Inf}. 
+#' 
+#' if \code{surv.type = 'surv.obs'}, only 'raw' observed survival 
+#' is calculated over the chosen time intervals. With
+#' \code{surv.type = 'surv.rel'}, also relative survival estimates 
+#' are supplied in addition to observed survival figures. 
+#' 
+#' \code{surv.type = 'cif.obs'} requests cumulative incidence functions (CIF) 
+#' to be estimated, where all unique events (supplied via \code{d})
+#' are seen as competing risks. 
+#' CIFs are estimated for each competing risk based 
+#' on a survival-interval-specific proportional hazards
+#' assumption as described by Chiang (1968).  
+#' With \code{surv.type = 'cif.rel'}, a CIF is estimated with using 
+#' excess cases as the ''cause-specific'' cases.
+#' 
+#' if \code{surv.type = 'surv.cause'}, cause-specific survivals are estimated
+#' separately for each unique value of \code{event.values}.
+#' 
+#' The vignette \href{../doc/survtab_examples.html}{survtab_examples} 
+#' has some practical examples.
+#' 
+#' \strong{Relative / net survival}
+#'  
+#' When \code{surv.type = 'surv.rel'}, the user can choose 
+#' \code{relsurv.method = 'pp'}, whereupon
+#' Pohar-Perme weighting is used.
+#' By default \code{relsurv.method = 'e2'}.
+#'
+#' \strong{Adjusted estimates}
+#' 
+#' Adjusted estimates in this context mean computing estimates separately
+#' by the levels of adjusting variables and returning weighted averages
+#' of the estimates. For example, computing estimates separately by
+#' age groups and returning a weighted average estimate (age-adjusted estimate).
+#' 
+#' Adjusting requires specification of both the adjusting variables and
+#' the weights for all the levels of the adjusting variables. The former can be
+#' accomplished by using \code{adjust()} with the argument \code{formula},
+#' or by supplying variables directly to argument \code{adjust}. E.g. the
+#' following are all equivalent:
+#' 
+#' \code{formula = fot ~ sex + adjust(agegr, area)}
+#' 
+#' \code{formula  = fot ~ sex} and \code{adjust = c("agegr", "area")}
+#' 
+#' \code{formula  = fot ~ sex} and \code{adjust = list(agegr, area)}
+#' 
+#' The adjusting variables must match with the variable names in the
+#' argument \code{weights}, which may be supplied as a \code{list} or
+#' a \code{data.frame}. The former can be done by e.g.
+#' 
+#' \code{weights = list(agegr = VEC1, area = VEC2)},
+#' 
+#' where \code{VEC1} and \code{VEC2} are vectors of weights (which do not
+#' have to add up to one). When passing a \code{list} of weights, the order
+#' of the weights must match with the order of the levels of the variable:
+#' For \code{factor} variables, they must correspond to the \code{factor}'s
+#' levels. Otherwise they must match to the sorted levels of the variable,
+#' i.e. if variable \code{agegr} has three levels \code{c(1, 2, 3)},
+#' the weights in e.g. \code{list(agegr = c(0.1, 0.4, 0.5))} would pass 
+#' the weight
+#' \code{0.1} for level \code{1} and so on, regardless of the order of values in
+#' the data.
+#' 
+#' 
+#' See 
+#' \href{../doc/survtab_examples.html}{survtab_examples} 
+#' for an example of using a \code{data.frame} to pass weights.
+#' 
+#' 
+#' 
+#' \strong{Period analysis and other data selection schemes}
+#' 
+#' If one wishes to calculate e.g. period analysis (delayed entry estimates), 
+#' one should limit the data when/before supplying to this function. 
+#' See e.g. \code{\link{lexpand}}.
+#' 
+#' @return
+#' Returns a table of life time function values and other 
+#' information with survival intervals as rows.
+#' Returns some of the following estimates of survival time functions:
+#' 
+#' \itemize{
+#'  \item \code{surv.obs} - observed (raw) survival
+#'  \item \code{CIF_k} - cumulative incidence function for cause \code{k}
+#'  \item \code{CIF.rel} - cumulative incidence function using excess cases
+#'  \item \code{r.e2} -  relative survival, EdererII
+#'  \item \code{r.pp} -  relative survival, Pohar-Perme weighted
+#' }
+#' The suffix \code{.as} implies adjusted estimates, and \code{.lo} and
+#' \code{.hi} imply lower and upper confidence limits, respectively. 
+#' The prefix \code{SE.} stands for standard error.
+#' 
+#' @import data.table
+#' 
+#' @seealso
+#' \code{\link{splitMulti}}, \code{\link{lexpand}}, 
+#' \code{\link{ICSS}}, \code{\link{sire}},
+#' \code{\link{survtab_lex}}
+#' \href{../doc/survtab_examples.html}{The survtab_examples vignette}
+#' 
+#' @references
+#' 
+#' Perme, Maja Pohar, Janez Stare, and Jacques Estève. 
+#' "On estimation in relative survival." Biometrics 68.1 (2012): 113-120.
+#' 
+#' Hakulinen, Timo, Karri Seppa, and Paul C. Lambert. 
+#' "Choosing the relative survival method for cancer survival estimation." European Journal of Cancer 47.14 (2011): 2202-2210.
+#'  
+#' Seppa, Karri, Timo Hakulinen, and Arun Pokhrel. 
+#' "Choosing the net survival method for cancer survival estimation." European Journal of Cancer (2013).
+#' 
+#' CHIANG, Chin Long. Introduction to stochastic processes in biostatistics. 1968.
+#'  
+#' 
+#' @examples
+#' ## see more examples with explanations in vignette("survtab_examples")
+#' 
+#' ## prepare data for e.g. 5-year "period analysis" for 2008-2012
+#' ## note: sire is a simulated cohort integrated into popEpi.
+#' BL <- list(fot=seq(0, 5, by = 1/12),
+#'            per = c("2008-01-01", "2013-01-01"))
+#' x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
+#'              status = status %in% 1:2,
+#'              breaks = BL,
+#'              pophaz = popmort,
+#'              aggre = list(fot))
+#'              
+#' ## calculate relative EdererII period method 
+#' st <- survtab_ag(fot ~ 1, data = x)
+#' @export
 survtab_ag <- function(formula = NULL,
                        
                        data, 
@@ -892,3 +1105,52 @@ survtab_ag <- function(formula = NULL,
   if (verbose) cat("Time taken by whole process: ", timetaken(starttime), "\n")
   data[]
 }
+
+
+# ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
+#               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
+#               aggre = list(sex, fot), fot = seq(0, 5, 1/12))
+# ag[, d.exp := pmax(0L, from0to1 - 3L)]
+# st <- survtab_ag(ag, surv.type = "surv.obs", surv.method = "hazard")
+# st <- survtab_ag(ag, surv.type = "surv.cause", surv.method = "hazard", d = list(a = from0to1-3, b = 3))
+
+# sire <- copy(sire)
+# sire$sex <- rbinom(nrow(sire), size = 1, prob = 0.5)
+# ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
+#               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
+#               aggre = list(sex, agegr = cut(dg_age, c(0,60,70,80, Inf), labels = FALSE), fot), 
+#               fot = seq(0, 5, 1/12))
+# ag <- lexpand(sire, birth = "bi_date", entry = "bi_date", exit = "ex_date",
+#               status = status %in% 1:2,
+#               aggre = list(sex, age), 
+#               age = seq(0, 100, 1))
+# wdt <- data.table(agegr = 1:4, weights = c(0.2, 0.4, 0.3, 0.1))
+# wli <- list(agegr = c(0.2, 0.4, 0.3, 0.1))
+# st <- survtab_ag(fot ~ sex + adjust(agegr), data = ag, surv.type = "surv.obs", surv.method = "hazard", weights = wli)
+# st <- survtab_ag(fot ~ sex + adjust(agegr), data = ag, surv.type = "surv.rel", 
+#                  d.pp = "from0to1.pp", d.pp.2 = "from0to1.pp.2", 
+#                  d.exp.pp = "d.exp.pp", pyrs.pp = "ptime.pp",
+#                  surv.method = "hazard", weights = wli,
+#                  relsurv.method = "pp")
+# ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
+#               status = status, pophaz = popmort, pp = TRUE,
+#               aggre = list(sex, agegr = cut(dg_age, c(0,60,70,80, Inf), labels = FALSE), fot), 
+#               fot = seq(0, 5, 1/12))
+# st <- survtab_ag(fot ~ sex + adjust(agegr), data = ag, 
+#                  d = list(cand = from0to1, othd = from0to2),
+#                  surv.type = "surv.cause", weights = wli)
+# st <- survtab_ag(fot ~ sex, data = ag, surv.type = "surv.obs", surv.method = "hazard", adjust = "agegr", weights = wli)
+# st <- survtab_ag(fot ~ adjust(agegr), data = ag, surv.type = "surv.obs", weights = wli)
+# st <- survtab_ag(fot ~ 1, data = ag, adjust = "agegr", surv.type = "surv.obs", weights = wli)
+# st <- survtab_ag(fot ~ 1, data = ag, adjust = "agegr", surv.type = "surv.obs", weights = wli)
+# st <- survtab_ag(fot ~ 1, data = ag, surv.type = "surv.obs")
+
+# wli2 <- wli
+# wli$sex <- c(0.4, 0.6)
+# st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, surv.type = "surv.obs", weights = wli)
+# st <- survtab_ag(fot ~ adjust(agegr), data = ag, surv.type = "surv.obs", weights = wli["agegr"])
+# ag[, d.exp := pmax(from0to1 - 1, 0L)]
+# st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, surv.type = "surv.rel", weights = wli)
+# st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, surv.type = "surv.cause", weights = wli)
+# ag[, othd := pmax(from0to1 - 1L, 0L)]
+# st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, d = list(cand = from0to1, othd = pmax(from0to1-1L, 0L)), surv.type = "surv.cause", weights = wli)
