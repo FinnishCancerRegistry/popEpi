@@ -1198,8 +1198,10 @@ Surv2DT <- function(Surv) {
   setattr(dt, "class", "array")
   dt <- data.table(dt)
   setattr(dt, "type", attr(Surv, "type"))
-  
-  if (!is.null(sa$inputAttributes$time2$class)) dt[, status := factor(status, labels = sa$inputAttributes$time2$levels)]
+  testClass <- sa$inputAttributes$time2$class
+  if (!is.null(testClass) && testClass == "factor") dt[, status := factor(status, labels = sa$inputAttributes$time2$levels)]
+  testClass <- sa$inputAttributes$event$class
+  if (!is.null(testClass) && testClass == "factor") dt[, status := factor(status, labels = sa$inputAttributes$event$levels)]
   
   dt[]
 }
