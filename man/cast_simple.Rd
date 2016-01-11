@@ -20,14 +20,14 @@ on rows and columns as specified by \code{columns} and \code{rows}}
 }
 \description{
 Convenience function for using \code{\link[data.table]{dcast.data.table}}
-and \code{link[reshape2]{dcast}};
+and \code{\link[reshape2]{dcast}};
 inputs are character strings (names of variables) instead of a formula.
 }
 \details{
 This function is just a small interface for \code{dcast} / 
 \code{dcast.data.table} and less flexible than the originals.
 
-Note that all \code{data.table} objects are alos \code{data.frame} 
+Note that all \code{data.table} objects are also \code{data.frame} 
 objects, but that each have their own \code{dcast} method.
 \code{\link[data.table]{dcast.data.table}} is faster.
 
