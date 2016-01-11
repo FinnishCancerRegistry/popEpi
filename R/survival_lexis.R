@@ -2,12 +2,14 @@
 # dt[, fot := as.integer(ex_date-dg_date)/365.24]
 # s <- dt[, Surv(time = rep(0, nrow(dt)), time2 = fot, event = status %in% 1:2)]
 
-
-survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NULL, weights = NULL, event.values = NULL, surv.type = "surv.rel", surv.method = "hazard", relsurv.method = "e2", subset = NULL, verbose = FALSE, ...) {
+#' @describeIn survtab_ag survtab_lex
+#' @export
+survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NULL, weights = NULL, surv.type = "surv.rel", surv.method = "hazard", relsurv.method = "e2", subset = NULL, format = FALSE, verbose = FALSE) {
   
   TF <- environment()
   PF <- parent.frame()
   this_call <- match.call()
+  startTime <- proc.time()
   
   ## checks --------------------------------------------------------------------
   
@@ -19,19 +21,10 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   allScales <- attr(data, "time.scales")
   splitScales <- names(breaks)
   
-  if (is.null(event.values)) {
-    event.values <- if (is.factor(data$lex.Xst)) levels(data$lex.Xst)[-1L] else sort(unique(data$lex.Xst))
-  }
-  event.values <- intersect(event.values, unique(data$lex.Xst))
-  event.values <- setdiff(event.values, unique(data$lex.Cst))
-  cens.values <- setdiff(unique(data$lex.Cst), event.values)
-  if (length(cens.values) == 0) stop("could not determine which values of lex.Cst / lex.Xst imply censoring; supply event.values by hand and make sure data has meaningful lex.Cst and lex.Xst values")
-  if (length(event.values) == 0) stop("could not determine which values of lex.Xst imply events; supply event.values by hand and make sure data has meaningful lex.Cst and lex.Xst values")
-  
   ## ensure breaks make sense --------------------------------------------------
   oldBreaks <- attr(data, "breaks")
   if (!is.null(oldBreaks)) checkBreaksList(data, breaks = oldBreaks)
-  if (is.null(breaks) && is.null(breaks)) stop("No breaks supplied via argument 'breaks', and data has not been split in advance. Please supply a list of breaks to argument 'breaks'")
+  if (is.null(breaks) && is.null(oldBreaks)) stop("No breaks supplied via argument 'breaks', and data has not been split in advance. Please supply a list of breaks to argument 'breaks'")
   if (is.null(breaks)) breaks <- oldBreaks
   checkBreaksList(data, breaks = breaks)
   ## match break types to time scale types
@@ -80,21 +73,6 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
                           "lex.Cst", "lex.Xst", pophazVars, 
                           adVars, foVars), colorder = TRUE)
   
-  
-  ## simplify event and censoring indicators -----------------------------------
-  if (!surv.type %in% c("cif.obs", "surv.cause")) {
-    ## this simplifies computations
-    
-    x[, lex.Cst := NULL]
-    x[, lex.Cst := 0L]
-    setcolorder(x, intersect(names(data), names(x)))
-    
-    x[, lex.Xst := as.integer(lex.Xst %in% event.values)]
-    cens.values <- 0L
-    event.values <- 1L
-  }
-  
-  
   ## pre-crop data to speed up computations ------------------------------------
   cropBreaks <- breaks
   if (surv.type == "surv.rel" && relsurv.method == "pp")  {
@@ -119,6 +97,30 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   l <- usePopFormula(form = formula, adjust = adSub, data = x, enclos = TF)
   prVars <- names(l$print)
   adVars <- names(l$adjust)
+  
+  
+  ## simplify event and censoring indicators -----------------------------------
+  cens.values <- event.values <- NULL
+  all.values <- if (is.factor(l$y$status)) levels(l$y$status) else sort(unique(l$y$status))
+  cens.values <- all.values[1L]
+  event.values <- setdiff(all.values, cens.values)
+  x[, lex.Cst := NULL]
+  x[, lex.Cst := cens.values]
+  x[, lex.Xst := NULL]
+  x[, lex.Xst := l$y$status]
+  harmonizeStatuses(x, C = "lex.Cst", X = "lex.Xst")
+  
+  if (!surv.type %in% c("cif.obs", "surv.cause")) {
+    ## this simplifies computations
+    
+    x[, lex.Cst := NULL]
+    x[, lex.Cst := 0L]
+    setcolorder(x, intersect(names(data), names(x)))
+    
+    x[, lex.Xst := as.integer(lex.Xst %in% event.values)]
+    cens.values <- 0L
+    event.values <- 1L
+  }
   
   ## only keep necessary variables ---------------------------------------------
   
@@ -225,10 +227,10 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   ## survtab_ag ----------------------------------------------------------------
   dn <- intersect(event.values, names(x))
   
-  survTime <- proc.time()
   if (length(prVars) == 0L) prVars <- "1"
   form <- as.formula(paste0(survScale, " ~ ", prVars))
   
+  if (verbose) cat("** verbose messages from survtab_ag(): \n")
   st <- survtab_ag(data = x, 
                    formula = form,
                    adjust = adVars,
@@ -242,8 +244,10 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
                    
                    surv.type = surv.type,
                    surv.method = surv.method,
-                   relsurv.method = relsurv.method)
-  
+                   relsurv.method = relsurv.method,
+                   format = format,
+                   verbose = verbose)
+  if (verbose) cat("** end of verbose messages from survtab_ag() \n")
   ## attributes ----------------------------------------------------------------
   attributes(st)$survtab.meta$call <- this_call
   attributes(st)$survtab.meta$arguments$adjust <- adjAttr
@@ -252,7 +256,7 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   attributes(st)$survtab.meta$arguments$surv.method <- surv.method
   attributes(st)$survtab.meta$arguments$relsurv.method <- relsurv.method
   
-  if (verbose) cat("Time taken by computing survivals with aggregated data: ", timetaken(survTime), "\n")
+  if (verbose) cat("Total time taken by survtab_lex: ", timetaken(startTime), "\n")
   st
 }
 # library(Epi)

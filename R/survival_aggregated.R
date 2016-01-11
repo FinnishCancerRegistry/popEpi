@@ -202,22 +202,25 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   return(data[])
   
 }
-globalVariables("weights")
 
-## probably cannot allow pre-merging weights into data and supplying name of weights
-## column in data since data may not contain all the rows that a cross-join
-## (cartesian product, e.g. CJ(var1, var2)) would contain; hence the weights
-## will not always sum to one in the right way.
-#' @title Survival tables
+#' @title Estimate Survival Time Functions
+#' @aliases survtab_lex
 #' @author Joonas Miettinen, Karri Seppa
-#' @description Given a data set processed by \code{lexpand}, estimates various 
-#' survival time functions as requested by the user. 
-#' @param formula a \code{formula} object, e.g. \code{fot ~ sex + adjust(agegr)}.
-#' The response must be the time scale to compute survival time function estimates
-#' over, and stratifying variables can be included on the right-hand side
+#' @description Estimate survival time functions (survival, relative/net
+#' survival, CIFs) using aggregated data (\code{survtab_ag}) or 
+#' \code{\link[Epi]{Lexis}} data
+#' @param formula a \code{formula} object. For \code{survtab_ag}, the response 
+#' must be the time scale to compute survival time function estimates
+#' over, e.g. \code{fot ~ sex + adjust(agegr)}, and for \code{survtab_lex}
+#' the response must be a \code{\link[survival]{Surv}} object containing the 
+#' survival time scale and the event indicator, e.g. 
+#' \code{Surv(fot, lex.Xst) ~ sex}.
+#' Stratifying variables can be included on the right-hand side
 #' separated by '\code{+}'. May contain usage of \code{adjust()} --- see Details.
-#' @param data a data set of aggregated counts, subject-times, etc., as created
-#' by \code{\link{aggre}}; for pre-aggregated data see \code{\link{as.aggre}}
+#' @param data for \code{survtab_ag}, a data set of aggregated counts, 
+#' subject-times, etc., as created
+#' by \code{\link{aggre}}; for pre-aggregated data see \code{\link{as.aggre}}.
+#' For \code{survtab_lex}, a \code{Lexis} object.
 #' @param adjust can be used as an alternative to passing variables to 
 #' argument \code{formula} within a call to \code{adjust()}; e.g.
 #' \code{adjust = "agegr"} --- see Details.
@@ -225,10 +228,26 @@ globalVariables("weights")
 #' to the variables used to adjust estimates. E.g. with \code{adjust = "agegr"},
 #' weights may be passed as a list such as 
 #' \code{weights = list(agegr = c(0.2, 0.4))} (with two age groups). See Details.
-#' @param surv.breaks a vector of breaks on the survival time scale. Only used
+#' @param surv.breaks (\code{survtab_ag} only) a vector of breaks on the survival time scale. Only used
 #' to compute estimates using a subset of the intervals in data or larger intervals
 #' than in data. E.g. one might use \code{surv.breaks = 0:5} when the aggregated
 #' data has intervals with the breaks \code{seq(0, 10, 1/12)}.
+#' @param breaks (\code{survtab_lex} only) a named list of breaks, e.g.
+#' \code{list(FUT = 0:5)}. If data is not split in advance, \code{breaks}
+#' must at the very least contain a vector of breaks to split the survival time 
+#' scale (mentioned in argument \code{formula}). If data has already been split
+#' (using e.g. \code{\link{splitMulti}}) along at least the used survival time
+#' scale, this may be \code{NULL}.
+#' @param pophaz (\code{survtab_lex} only) a \code{data.frame} containing
+#' expected hazards for the event of interest to occur. Required when
+#' \code{surv.type = "surv.rel"} or \code{"cif.rel"}. \code{pophaz} must
+#' contain one column named \code{"haz"}, and any number of other columns
+#' identifying levels of variables to do a merge with split data within
+#' \code{survtab_lex}. Some columns may be time scales, which will
+#' allow for the expected hazard to vary by e.g. calendar time and age.
+#' See \code{\link{popmort}} for an example, and 
+#' \href{../doc/survtab_examples.html}{The survtab_examples vignette}
+#' for examples of usage.
 #' 
 #' @param n variable containing counts of subjects at-risk at the start of a time 
 #' interval; e.g. \code{n = "at.risk"}. 
@@ -325,9 +344,10 @@ globalVariables("weights")
 #' \strong{Basics}
 #' 
 #' \code{survtab_ag} computes estimates of survival time functions using 
-#' pre-aggregated data. For using subject-level data directly, see 
-#' \code{\link{survtab_lex}}. For aggregating data, see \code{\link{lexpand}}
-#' and \code{\link{aggre}}.
+#' pre-aggregated data. When using subject-level data directly, use 
+#' \code{survtab_lex}. For aggregating data, see \code{\link{lexpand}}
+#' and \code{\link{aggre}}. Data sets can be coerced into \code{Lexis}
+#' objects using \code{\link[Epi]{Lexis}}.
 #' 
 #' By default
 #' \code{survtab_ag} makes use of the exact same breaks that were used in 
@@ -339,6 +359,9 @@ globalVariables("weights")
 #' also calculated based on existing breaks or \code{surv.breaks}, 
 #' so the upper limit of the breaks should
 #' therefore be meaningful and never e.g. \code{Inf}. 
+#' 
+#' \code{survtab_lex} may be a split or unsplit \code{Lexis} data set, but it 
+#' is recommended to supply the \code{breaks} argument anyway.
 #' 
 #' if \code{surv.type = 'surv.obs'}, only 'raw' observed survival 
 #' is calculated over the chosen time intervals. With
@@ -378,13 +401,18 @@ globalVariables("weights")
 #' the weights for all the levels of the adjusting variables. The former can be
 #' accomplished by using \code{adjust()} with the argument \code{formula},
 #' or by supplying variables directly to argument \code{adjust}. E.g. the
-#' following are all equivalent:
+#' following are all equivalent (using \code{survtab_ag}):
 #' 
 #' \code{formula = fot ~ sex + adjust(agegr, area)}
 #' 
 #' \code{formula  = fot ~ sex} and \code{adjust = c("agegr", "area")}
 #' 
 #' \code{formula  = fot ~ sex} and \code{adjust = list(agegr, area)}
+#' 
+#' When using \code{survtab_lex}, the response must be a 
+#' \code{\link[survival]{Surv}} object, e.g. 
+#' \code{Surv(time = fot, event = lex.Xst)}, but otherwise the 
+#' syntax is the same.
 #' 
 #' The adjusting variables must match with the variable names in the
 #' argument \code{weights}, which may be supplied as a \code{list} or
@@ -457,6 +485,9 @@ globalVariables("weights")
 #' @examples
 #' ## see more examples with explanations in vignette("survtab_examples")
 #' 
+#' #### survtab_ag usage
+#' 
+#' data(sire)
 #' ## prepare data for e.g. 5-year "period analysis" for 2008-2012
 #' ## note: sire is a simulated cohort integrated into popEpi.
 #' BL <- list(fot=seq(0, 5, by = 1/12),
@@ -469,6 +500,29 @@ globalVariables("weights")
 #'              
 #' ## calculate relative EdererII period method 
 #' st <- survtab_ag(fot ~ 1, data = x)
+#' 
+#' #### survtab_lex usage
+#' library(Epi)
+#' library(survival)
+#'
+#' ## NOTE: recommended to use factor status variable
+#' x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
+#'            exit = list(CAL = get.yrs(ex_date)), 
+#'            data = sire[sire$dg_date < sire$ex_date, ],
+#'            exit.status = factor(status, levels = 0:2, 
+#'                                 labels = c("alive", "canD", "othD")), 
+#'            merge = TRUE)
+#' 
+#' ## pretend some are male
+#' set.seed(1L)
+#' x$sex <- rbinom(nrow(x), 1, 0.5)
+#' 
+#' ## observed survival
+#' st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+#'                   surv.type = "surv.obs",
+#'                   breaks = list(FUT = seq(0, 5, 1/12)))
+#'
+#' 
 #' @export
 survtab_ag <- function(formula = NULL,
                        
