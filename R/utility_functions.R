@@ -1197,7 +1197,14 @@ Surv2DT <- function(Surv) {
   dt <- copy(Surv)
   setattr(dt, "class", "array")
   dt <- data.table(dt)
-  setattr(dt, "type", attr(Surv, "type"))
+  
+  type <- attr(Surv, "type")
+  statNA <- sum(is.na(dt$status))
+  if (statNA) 
+    stop("Some status indicators (", statNA  ," values in total) were NA as a result of using Surv(). Usual suspects: original status variable has NA values, or you have numeric status variable with more than two levels and you did not assign e.g. type = 'mstate' (e.g. Surv(time = c(1,1,1), event = c(0,1,2), type = 'mstate') works).")
+  
+  
+  setattr(dt, "type", type)
   testClass <- sa$inputAttributes$time2$class
   if (!is.null(testClass) && testClass == "factor") dt[, status := factor(status, labels = sa$inputAttributes$time2$levels)]
   testClass <- sa$inputAttributes$event$class
