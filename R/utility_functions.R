@@ -354,28 +354,32 @@ robust_values <- function(num.values, force = FALSE, messages = TRUE) {
 #' @param data dataset where the variable names should be found
 #' @param var.names a character vector of variable names
 #' @param stops logical, stop returns exception
+#' @param msg Custom message to return instead of default message.
+#' Special: include %%VARS%% in message and the missing variable names
+#' will be inserted there (quoted, separated by comma, e.g. 
+#' \code{'var1'}, \code{'var2'} --- no leading or tracing white space). 
 #' @description given a character vector, checks if all names are present in \code{names(data)}.
 #' Throws error if \code{stops=TRUE}, else returns \code{FALSE} if some variable name is not present.
 #' @seealso
 #' \code{\link{robust_values}}
 #' @export all_names_present
 
-all_names_present <- function(data, var.names, stops=TRUE) {
-  if (any(!var.names %in% names(data))) {
-    if (stops) {
-      vn <- NULL
-      for(k in var.names[!var.names %in% names(data)]) {
-        vn <- paste(vn,"'",k,"', ", sep="")
-      }
-      vn <- substr(vn,1,nchar(vn)-2)
-      stop(paste("Cannot proceed - following given variable name(s) not present in dataset '",
-                 deparse(substitute(data)),"': ", vn,sep=""))
-    }
-    if (!stops) {
-      return(FALSE)
-    }
-  }
-  else{return(TRUE)}
+all_names_present <- function(data, var.names, stops = TRUE, msg = NULL) {
+  
+  badNames <- setdiff(var.names, names(data))
+  if (length(badNames) == 0L) return(TRUE)
+  
+  badNames <- paste0("'", badNames, "'", collapse = ", ")
+  
+  if (is.null(msg)) msg <- paste0("Cannot proceed - following given variable name(s) not present in dataset '",
+                                  deparse(substitute(data)), "': ", badNames)
+  if (!is.character(msg) || length(msg) > 1L) stop("Argument 'msg' must be a character string vector of length one.") else
+    msg <- gsub(pattern = "%%VARS%%", replacement = badNames, x = msg)
+  if (!is.logical(stops) || length(stops) > 1L) stop("Argument 'stops' must be either TRUE or FALSE.")
+  
+  if (stops) stop(msg)
+  
+  return(FALSE)
 }
 
 
