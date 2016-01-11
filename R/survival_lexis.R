@@ -4,7 +4,8 @@
 
 #' @describeIn survtab_ag survtab_lex
 #' @export
-survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NULL, weights = NULL, surv.type = "surv.rel", surv.method = "hazard", relsurv.method = "e2", subset = NULL, format = FALSE, verbose = FALSE) {
+#' @importFrom survival Surv
+survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NULL, weights = NULL, surv.type = "surv.rel", surv.method = "hazard", relsurv.method = "e2", subset = NULL, format = TRUE, verbose = FALSE) {
   
   TF <- environment()
   PF <- parent.frame()
