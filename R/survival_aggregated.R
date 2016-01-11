@@ -1,5 +1,5 @@
 # ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
-#               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
+#               status = status %in% 1:2, pophaz = popmort, pp = FALSE,
 #               aggre = list(sex, agegr = cut(dg_age, c(0,50,75,Inf)), fot), 
 #               fot = seq(0, 5, 1/12))
 # ps <- substitute(list(sex, fot))
@@ -88,9 +88,9 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   # other category vars to keep ------------------------------------------------
   boSub <- by.other
   by.other <- evalPopArg(data = origData, arg = boSub, DT = TRUE, enclos = PF)
-  if (length(print) > 0) {
+  if (ncol(by.other) > 0) {
     boVars <- names(by.other)
-    data[, (boVars) := by.other]
+    data[, c(boVars) := by.other]
   } else {
     boVars <- NULL
   }
