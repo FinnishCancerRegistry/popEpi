@@ -1222,6 +1222,11 @@ promptYN <- function(q) {
 
 adjust <- function(...) {
   
+  call <- sys.call(1L)
+  call <- as.list(call)[1L]
+  
+  if (deparse(call) %in% c("adjust", "list(adjust)")) stop("Function adjust() only intended to be used within the formulas of certain functions of package popEpi. See e.g. ?survtab_ag for usage.")
+  
   mc <- as.list(match.call())[-1L]
   mc
 }
