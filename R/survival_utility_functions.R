@@ -162,14 +162,7 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
   ## input: a split Lexis object (data.table) and the time scale to compute
   ## pp weights over; lex must also contain 'haz', the population
   ## (expected) hazard level for each row
-  this_env_ <- environment()
-  
-  g <- function(x, e = .SD) {
-    x <- deparse(substitute(x)) ## e.g. x = y-> x = "surv.scale"
-    x <- this_env_[[x]] ## e.g. this_env_[["surv.scale"]]
-    
-    eval(as.symbol(x), envir = e)
-  }
+  TF <- environment()
   
   style <- match.arg(style, c("delta", "actual"))
   if (!is.data.table(lex)) stop("lex must be a data.table")
@@ -178,42 +171,47 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
   
   if ("pp" %in% names(lex)) stop("Variable named 'pp' existed in data when attempting to compute pohar-perme weights; 'pp' is reserved so you should delete or rename that variable")
   
-  ## cumulative survivals needed for pp weighting.
-  setorderv(lex, c("lex.id", surv.scale))
+  
+  if (!identical(key(lex), c("lex.id", surv.scale))) stop("lex must be a data.table keyed by lex.id and the survival time scale")
+  
   
   breaks <- sort(unique(breaks)) - .Machine$double.eps^0.5
   
-  
   ## need a bunch of temporary variable names to compute pp weights
   ## inside the data set without overwriting anything existing.
-  
+  ## this will take about 0.1 secs.
   tmpSI <- makeTempVarName(data = lex, pre = "surv.int_")
   tmpSIstart <- makeTempVarName(data = lex, pre = "surv.int.start_")
   tmpSIstop <- makeTempVarName(data = lex, pre = "surv.int.stop_")
   tmpSIlength <- makeTempVarName(data = lex, pre = "surv.int.length_")
   on.exit(setcolsnull(lex, delete = c(tmpSI, tmpSIstart, tmpSIstop, tmpSIlength, tmpPS, tmpPCS, tmpPCSM)), add = TRUE)
-  lex[, (tmpSI) := cut(g(surv.scale, e = .SD), breaks, labels = FALSE)]
-  lex[, (tmpSIstop) := breaks[-1][g(tmpSI, e = .SD)]]
-  lex[, (tmpSIstart) := breaks[-length(breaks)][g(tmpSI, e = .SD)]]
-  lex[, (tmpSIlength) := g(tmpSIstop, e = .SD) - g(tmpSIstart, e = .SD)]
+  
+  set(lex, j = tmpSI, value = cut(lex[[surv.scale]], breaks, labels = FALSE))
+  set(lex, j = tmpSIstop, value = breaks[-1][lex[[tmpSI]]])
+  set(lex, j = tmpSIstart, value = breaks[-length(breaks)][lex[[tmpSI]]])
+  set(lex, j = tmpSIlength, value = lex[[tmpSIstop]] - lex[[tmpSIstart]])
   
   tmpPS <- makeTempVarName(data = lex, pre = "pop.surv_")
   tmpPCS <- makeTempVarName(data = lex, pre = "pop.cumsurv_")
   tmpPCSM <- makeTempVarName(data = lex, pre = "pop.cumsurv.mid_")
 
   ## conditional survs
-  lex[, (tmpPS) := exp(-g(haz, e = .SD)*lex.dur)] 
+  if (verbose) condSurvTime <- proc.time()
+  
+  set(lex, j = tmpPS, value = exp(-lex[[haz]]*lex$lex.dur))
   ## till end of each interval...
-  lex[, (tmpPCS) := cumprod(g(tmpPS, e = .SD)), by = lex.id]
+  lex[, c(tmpPCS) := list(exp(-cumsum(.SD[[1L]]*lex.dur))),
+      by = lex.id, .SDcols = c(haz, "lex.dur")]
   ## till start of each interval
-  lex[, (tmpPCS) := g(tmpPCS, e = .SD) / (g(tmpPS, e = .SD))]    
+  set(lex, j = tmpPCS, value = lex[[tmpPCS]] / lex[[tmpPS]]) 
+  if (verbose) cat("Time taken by computing expected survivals up to start of each interval for each lex.id: ", timetaken(condSurvTime), "\n")
   
   ## pohar-perme weighting by expected cumulative survival. approximation:
   ## cumulative survival up to either middle of remaining surv.int (not individual-specific)
   ## or up to middle of subject's follow-up in each row (individual-specific)
   ## difference: e.g. 2 rows within a surv.int have either the same or different pp-weights
   if (style == "actual") {
-    lex[, (tmpPCSM) := g(tmpPCS, e = .SD)*(g(tmpPS, e = .SD)^(1/2))]
+    set(lex, j = tmpPCSM, value = lex[[tmpPCS]] * (lex[[tmpPS]])^0.5)
   }
   if (style == "delta") {
     if (verbose) deltaTime <- proc.time()
@@ -227,38 +225,54 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
     last_in_surv.int <- !duplicated(lex, fromLast = TRUE)
     only_in_surv.int <- first_in_surv.int & last_in_surv.int
     
-    #         last_in_surv.int <- last_in_surv.int & !first_in_surv.int
-    #         first_in_surv.int <- first_in_surv.int & !first_in_surv.int
+    lex[only_in_surv.int, c(tmpPCSM) := .SD[[1L]] * exp(.SD[[2L]] * (.SD[[3L]] - .SD[[4L]])/2L),
+        .SDcols = c(tmpPCS, haz, tmpSIstop, surv.scale)]
     
-    lex[only_in_surv.int, (tmpPCSM) := g(tmpPCS, e = .SD) * exp(-g(haz, e = .SD)*(g(tmpSIstop, e = .SD) - g(surv.scale, e = .SD))/2)]
     ## more complicated with many records in a surv.int per lex.id
     if (any(!only_in_surv.int)) {
       
+      tmpSImid <- makeTempVarName(x, pre = "surv.int.mid_")
       dist <- makeTempVarName(lex, pre = "dist_")
-      on.exit(setcolsnull(lex, delete = dist), add = TRUE)
+      on.exit(setcolsnull(lex, delete = c(dist, tmpSImid)), add = TRUE)
       
-      ## distance from remaining surv.int mid-point starting from start of record, or lex.dur; for integration
-      lex[, (dist) := pmin((g(tmpSIstop, e = .SD) - g(surv.scale, e = .SD))/2, lex.dur)]
+      ## middle point of survival interval
+      set(lex, j = tmpSImid, value = (lex[[tmpSIstop]] - lex[[tmpSIstart]])/2L)
+      
+      ## distance from remaining surv.int mid-point starting from start of 
+      ## record; or at most lex.dur; for integration
+      set(lex, j = dist, value = pmin(lex$lex.dur, lex[[tmpSImid]]))
       ## some records after mid-point can have negative fot.dist at this point
-      lex[, (dist) := pmax(g(dist, e = .SD), 0)]
+      set(lex, j = dist, value = pmax(lex[[dist]], 0))
       
       ## some lex.id are censored / die before mid of surv.int; last record
       ## must reach its fot.dist at least up to the mid (or be zero due to above)
-      lex[last_in_surv.int, (dist) := pmax((g(tmpSIstop, e = .SD) - g(surv.scale, e = .SD))/2, 0)]
+      lex[last_in_surv.int, c(dist) := pmax((.SD[[1L]] - .SD[[2L]])/2L, 0), 
+          .SDcols = c(tmpSIstop, surv.scale)]
+      
+      byTime <- proc.time()
       
       ## from start of first in surv.int till mid point
-      lex[!only_in_surv.int, (tmpPCSM) := g(tmpPCS, e = .SD)[1L] * exp(-sum(g(haz, e = .SD)*g(dist, e = .SD))), by = c(tmpSI, "lex.id")]
+      ## step by step for efficiency...
+      lex[!only_in_surv.int, c(tmpPCSM) := .SD[[1L]] * .SD[[2L]], .SDcols = c(haz, dist)]
+      lex[!only_in_surv.int, c(tmpPCSM) := lapply(.SD, sum), 
+          .SDcols = c(tmpPCSM), by = c("lex.id", tmpSI)]
+      lex[!only_in_surv.int, c(tmpPCS) := .SD[1L], 
+          by = c("lex.id", tmpSI), .SDcols = c(tmpPCS)]
+      lex[!only_in_surv.int, c(tmpPCSM) := .SD[[1L]] * exp(-.SD[[2L]]), 
+          .SDcols = c(tmpPCS, tmpPCSM)]
       
       ## todo: alternate faster method for integration!
       setcolsnull(lex, delete = c(dist))
+      if (verbose) cat("Time taken by extra computation due to style 'delta': ", timetaken(deltaTime), "\n")
     }
     
     rm(first_in_surv.int, last_in_surv.int, only_in_surv.int)
     if (verbose) cat("Time taken by computation of Pohar-Perme weights: ", timetaken(ppTime), "\n")
   }
   
+  setkeyv(lex, c("lex.id", surv.scale))
   
-  lex[, pp := 1/(g(tmpPCSM, e = .SD))]
+  lex[, pp := 1/.SD, .SDcols = tmpPCSM]
   
   invisible(lex[])
 }

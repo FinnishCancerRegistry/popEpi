@@ -172,8 +172,9 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   ppNames <- d.pp <- d.pp.2 <- d.exp.pp <- ptime.pp <- n.cens.pp <- NULL
   if (comp_pp) {
     ppTime <- proc.time()
-    comp_pp_weights(x, surv.scale = splitScales[1L], 
-                    breaks = breaks[[1L]], haz = "haz", 
+    setkeyv(x, c("lex.id", survScale))
+    comp_pp_weights(x, surv.scale = survScale, 
+                    breaks = breaks[[survScale]], haz = "haz", 
                     style = "delta", verbose = FALSE)
     setDT(x)
     forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)

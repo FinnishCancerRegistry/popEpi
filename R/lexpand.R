@@ -844,6 +844,7 @@ lexpand <- function(data,
     
     # pohar-perme weighting ----------------------------------------------------
     if (comp_pp) {
+      setkeyv(l, c("lex.id", "fot"))
       comp_pp_weights(l, surv.scale = "fot", breaks = breaks$fot, haz = "pop.haz", 
                       style = "delta", verbose = verbose)
     }
