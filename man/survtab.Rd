@@ -2,7 +2,7 @@
 % Please edit documentation in R/survival.R
 \name{survtab}
 \alias{survtab}
-\title{Estimate Survival Time Functions}
+\title{Survival tables}
 \usage{
 survtab(data, surv.breaks = NULL, by.vars = NULL, event.values = NULL,
   surv.type = "surv.rel", surv.method = "hazard", relsurv.method = "e2",
@@ -90,9 +90,8 @@ The suffix \code{.as} implies agegroup-standardisation, and \code{.lo} and
 The prefix \code{SE.} stands for standard error.
 }
 \description{
-Estimate survival time functions (survival, relative/net
-survival, CIFs) using aggregated data (\code{survtab_ag}) or 
-\code{\link[Epi]{Lexis}} data
+Given a data set processed by \code{lexpand}, estimates various 
+survival time functions as requested by the user.
 }
 \details{
 \strong{survtab may change in significant ways in future releases and
