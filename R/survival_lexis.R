@@ -99,6 +99,9 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   prVars <- names(l$print)
   adVars <- names(l$adjust)
   
+  ## check weights makes sense with respect to adjust --------------------------
+  if (length(adVars) > 0L && is.null(weights)) stop("No weights given though attempting by adjust by ", paste0("'", adVars, "'", collapse = ", "))
+  
   
   ## simplify event and censoring indicators -----------------------------------
   cens.values <- event.values <- NULL

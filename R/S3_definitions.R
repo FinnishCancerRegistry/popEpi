@@ -488,13 +488,14 @@ print.survtab <- function(x, subset = NULL, ...) {
   
   setDT(x)
   pv <- as.character(sa$print.vars)
-  
   if (length(pv) == 0L) pv <- NULL
+  
   magicMedian <- function(x) {
     if (length(x) %% 2L == 0L) median(x[-1L], na.rm = TRUE) else
       median(x, na.rm = TRUE)
   }
-  medmax <- x[, list(Tstop = c(magicMedian(c(min(Tstart),Tstop)), max(Tstop))), keyby = eval(TF$pv)]
+  
+  medmax <- x[, list(Tstop = c(magicMedian(c(min(Tstart),Tstop)), max(Tstop))), keyby = eval(pv)]
   
   setkeyv(medmax, c(pv, "Tstop"))
   setkeyv(x, c(pv, "Tstop"))
