@@ -370,4 +370,55 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
 
 
 
-
+test_empty_surv_ints <- function(x, by = c(prVars, byVars), sum.over = prVars, test.var = "pyrs") {
+  
+  x <- copy(x)
+  oc <- class(x)
+  setDT(x)
+  setattr(x, "class", oc)
+  
+  all_names_present(x, by, msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer.")
+  all_names_present(x, sum.over, msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer.")
+  all_names_present(x, test.var, msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer.")
+  
+  if (any(!sum.over %in% by)) stop("sum.over must be a subset of by.")
+  
+  sum.to <- setdiff(by, sum.over)
+  if (length(sum.to) == 0L) sum.to <- NULL
+  
+  tmpTV <- makeTempVarName(x, pre = "testValues_")
+  tmpDiff <- makeTempVarName(x, pre = "diff_")
+  on.exit(setcolsnull(x, delete = c(tmpTV, tmpDiff)))
+  
+  ## first check empty surv.ints are all consecutive...
+  ## consecutiveness: e.g. out of 10 surv ints, 6-10 are empty.
+  ## non-consecutiveness: e.g. out of 10 surv ints, 6-8 are empty.
+  ## (then 9-10 will have NA estimates as well.)
+  setkeyv(x, c(by, "surv.int"))
+  
+  ct <- x[, lapply(.SD, sum), keyby = c(sum.to, "surv.int"), .SDcols = test.var]
+  setnames(ct, length(ct), tmpTV)
+  ct <- ct[ct[[tmpTV]] > 0L, diff(surv.int), keyby = eval(sum.to)]
+  setnames(ct, length(ct), tmpDiff)
+  ct <- ct[ct[[tmpDiff]] > 1L]
+  ## THE IDEA: if the difference in the number of the survival interval
+  ## is > 1, it means there is at least one row between two non-empty
+  ## intervals, i.e. non-consecutively.
+  
+  ## we keep non-consecutively bad surv.int stratas in entirety for inspection
+  if (nrow(ct) > 0L) {
+    msg <- paste0("Some survival intervals")
+    if (!is.null(sum.to)) msg <- paste0(msg, ", when summed to the variable(s) ", paste0("'", sum.to, "',", collapse = ", ")) else
+      msg <- paste0(msg, " summed to the margins (over any stratifying / adjusting variables)")
+    msg <- paste0(msg, " were empty non-consecutively; keeping all survival ",
+                  "intervals with some estimates as NA for inspection.")
+    message(msg)
+  } else {
+    ## we leave out intervals that are empty consecutively (e.g. all from 5-10)
+    x[, c(tmpTV) := lapply(.SD, sum), by=c(sum.to, "surv.int"), .SDcols = test.var]
+    x <- x[x[[tmpTV]] > 0L]
+    setcolsnull(x, tmpTV)
+  }
+  
+  x
+}
