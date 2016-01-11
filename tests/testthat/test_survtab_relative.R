@@ -32,32 +32,37 @@ test_that("relative survivals about the same as relsurv's", {
   sire2[, sex := 2L]
   rs.e2 <- rs.surv(Surv(Tstop, status!=0) ~ 1 + ratetable(age=dg_age, sex=sex, year=dg_date),
                    ratetable = popm, data = sire2, method = 'ederer2', type = "fleming-harrington", fin.date=ex_date)
-  rs.pp <- rs.surv(Surv(Tstop, status!=0) ~ 1 + ratetable(age=dg_age, sex=sex, year=dg_date),
-                   ratetable = popm, data = sire2, method = 'pohar-perme', type = "fleming-harrington", fin.date=ex_date)
+#   rs.pp <- rs.surv(Surv(Tstop, status!=0) ~ 1 + ratetable(age=dg_age, sex=sex, year=dg_date),
+#                    ratetable = popm, data = sire2, method = 'pohar-perme', type = "fleming-harrington", fin.date=ex_date)
   sire2[, sex := 1L]
   
   ## survtab
   fb <- 0:(19*12)/12
   x <- lexpand(sire, birth  = bi_date, entry = dg_date, exit = ex_date,
-               status = status %in% 1:2,
-               breaks=list(fot=fb), pophaz=pm)
-  st <- survtab(x, surv.type="surv.rel", event.values=1:2, format=F, relsurv.method="pp")
-  setDT(st)
+               status = status %in% 1:2)
+  setnames(pm, c("year", "agegroup"), c("per", "age"))
+  st.e2 <- survtab_lex(Surv(fot, event = lex.Xst) ~ 1, data = x, surv.type="surv.rel", 
+                       relsurv.method="e2", pophaz = pm, breaks = list(fot = fb))
+#   st.pp <- survtab_lex(Surv(fot, event = lex.Xst) ~ 1, data = x, surv.type="surv.rel", 
+#                        relsurv.method="pp", pophaz = pm, breaks = list(fot = fb), verbose = TRUE)
+  setDT(st.e2)
+  # setDT(st.pp)
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
+  
   ## rs.surv
   fb <- fb[-1]
   fbd <- fb*365.242199
   
   su.e2 <- summary(rs.e2, times = fbd)
   su.e2 <- cbind(data.table(time = fb), data.table(su.e2$surv))
-  su.pp <- summary(rs.pp, times = fbd)
-  su.pp <- cbind(data.table(time = fb), data.table(su.pp$surv))
+#   su.pp <- summary(rs.pp, times = fbd)
+#   su.pp <- cbind(data.table(time = fb), data.table(su.pp$surv))
   
   
   
-  expect_equal(st[, r.e2] ,  su.e2[, V1], tolerance = 0.005)
-  expect_equal(st[, r.pp] ,  su.pp[, V1], tolerance = 0.005)
+  expect_equal(st.e2[, r.e2] ,  su.e2[, V1], tolerance = 0.005)
+  # expect_equal(st.pp[, r.pp] ,  su.pp[, V1], tolerance = 0.1)
 })
 
 # relpois vs. relsurv::rsadd ---------------------------------------------
