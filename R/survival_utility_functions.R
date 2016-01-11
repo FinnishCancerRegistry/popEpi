@@ -231,7 +231,7 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
     ## more complicated with many records in a surv.int per lex.id
     if (any(!only_in_surv.int)) {
       
-      tmpSImid <- makeTempVarName(x, pre = "surv.int.mid_")
+      tmpSImid <- makeTempVarName(lex, pre = "surv.int.mid_")
       dist <- makeTempVarName(lex, pre = "dist_")
       on.exit(setcolsnull(lex, delete = c(dist, tmpSImid)), add = TRUE)
       
