@@ -175,7 +175,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
       setnames(weights, adVars, weVars)
       weights[, (adVars) := adjust]
       
-      weights[, weights := 1L]
+      set(weights, j = "weights", value = 1L)
       for (k in weVars) {
         set(weights, j = "weights", value = weights$weights * weights[[k]])
       }
@@ -606,17 +606,18 @@ survtab_ag <- function(formula = NULL,
   ## allow in the procedure below.
   ## nl will contain the names of the variables corresponding to each argument,
   ## e.g. d = c("d.1", "d.2"), etc.
+  mc[[1]] <- data.table(mc[[1L]]) ## this avoids an exotic error in set().
   nl <- lapply(mc, names)
   for (k in 1:length(mc)) {
     jay <- argName <- names(mc[k])
     cn <- names(mc[[k]])
     
     if (length(cn) > 1) jay <- paste0(jay, ".", cn) ## e.g. d.1, d.2, ...
-    if (argName %in% c("d", "d.pp", "d.pp.2")) {
+    if (argName %in% c("d")) {
       eventVars <- jay
       if (surv.type %in% c("surv.cause") && length(cn) == 1L) stop("surv.type = 'surv.cause', but only one type of event supplied via argument 'd'. If you want to compute cause-specific survivals, please supply multiple types of events via 'd'; otherwise use surv.type = 'surv.obs'") 
-      } else  if (length(cn) > 1) 
-        stop("'", argName, "' has/evaluates to ", length(cn), " columns; only 'd', 'd.pp', and 'd'pp.2' may evaluate to more than one column of the value arguments")
+    } else  if (length(cn) > 1 && !argName %in% c("d.pp", "d.pp.2")) 
+      stop("'", argName, "' has/evaluates to ", length(cn), " columns; only 'd', 'd.pp', and 'd'pp.2' may evaluate to more than one column of the value arguments")
     setnames(mc[[k]], cn, jay)
     set(mc[[1]], j = jay, value = mc[[k]])
     nl[[argName]] <- jay

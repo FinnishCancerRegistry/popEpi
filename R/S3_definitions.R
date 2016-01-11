@@ -459,6 +459,7 @@ preface_survtab.print <- function(x) {
   if (length(at$adjust.vars) > 0L) {
     cat("Adjusted by:", paste0("'", at$adjust.vars, "'", collapse = ", "))
   }
+  cat("\n")
   invisible()
 }
 
