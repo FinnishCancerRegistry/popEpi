@@ -340,8 +340,6 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
 #' defines the transformation used on the survival time
 #' function to yield confidence 
 #' intervals via the delta method
-#' @param format logical; if \code{TRUE}, output is formatted into a neat table;
-#' otherwise you get all the raw results
 #' @param verbose logical; if \code{TRUE}, the function is chatty and
 #'  returns some messages and timings along the process
 #' 
@@ -559,7 +557,7 @@ survtab_ag <- function(formula = NULL,
                        
                        conf.level = 0.95, 
                        conf.type = "log-log",
-                       format=TRUE,
+                       
                        verbose=FALSE) {
   
   if (verbose) starttime <- proc.time()
@@ -940,6 +938,7 @@ survtab_ag <- function(formula = NULL,
     CIF_vars <- names(data)[substr(names(data),1,3) == "CIF"]
     data[, c(paste0("SE.", CIF_vars)) := 0L]
     
+    setcolsnull(data, c("lag1_surv.obs", "p.obs", paste0("q.", substr(eventVars, 3, nchar(eventVars)))))
     
   }
   
@@ -1034,51 +1033,47 @@ survtab_ag <- function(formula = NULL,
   }
   
   # clean-up -------------------------------------------------------------------
-  ## reorder table
-  if (format) {
-    order <- c("surv.int", "Tstart", "Tstop","delta","pyrs","pyrs.pp","n","d","n.cens","d.pp","d.exp","d.exp.pp",
-               "surv.obs.lo","surv.obs","surv.obs.hi","SE.surv.obs",
-               "r.e2.lo","r.e2","r.e2.hi","SE.r.e2",
-               "r.pp.lo","r.pp","r.pp.hi","SE.r.pp",
-               "surv.obs.as.lo","surv.obs.as","surv.obs.as.hi","SE.surv.obs.as",
-               "r.e2.as.lo","r.e2.as","r.e2.as.hi","SE.r.e2.as",
-               "r.pp.as.lo","r.pp.as","r.pp.as.hi","SE.r.pp.as")
-    order <- unique(c(prVars, order))
-    CIF_vars <- names(data)[substr(names(data),1,3)=="CIF"]
-    order <- c(order, CIF_vars)
-    surv.obs.vars <- names(data)[substr(names(data), 1,8) == "surv.obs"]
-    order <- c(order, surv.obs.vars)
-    
-    order <- unique(order)
-    order <- intersect(order, names(data))
-    
-    setcolsnull(data, setdiff(names(data), order))
-    setcolorder(data,order)
-    
-    
-    setkeyv(data, c(prVars, "surv.int"))
-    
-    #       data[, surv.int :=paste("[", format(round(Tstart,2)),", ", format(round(Tstop,2)),"[", sep="")]
-    
-    
-    ## rounding & formatting
-    signif_vars <- setdiff(order, c("surv.int", prVars, "n", "n.eff", "n.cens", "d"))
-    signif_vars <- union(signif_vars, c("Tstart", "Tstop"))
-    signif_vars <- intersect(signif_vars, names(data))
-    signiff <- function(x) {
-      if (is.numeric(x)) {
-        signif(x, digits=4)
-      } else {
-        x
-      }
-      
-    }
-    
-    data[, c(signif_vars) := lapply(.SD, signiff), .SDcols = c(signif_vars)]
-    
-    NWO <- c(prVars, "surv.int","Tstart", "Tstop", setdiff(names(data), c(prVars,  "surv.int","Tstart", "Tstop")))
-    setcolorder(data, NWO)
-  }
+  ## reorder table, format numeric values, etc.
+  
+  miscVars <- intersect(names(data), c("surv.int", "Tstart", "Tstop", "delta"))
+  
+  survVars <- c("surv.obs.lo","surv.obs","surv.obs.hi","SE.surv.obs",
+                "r.e2.lo","r.e2","r.e2.hi","SE.r.e2",
+                "r.pp.lo","r.pp","r.pp.hi","SE.r.pp",
+                paste0("CIF.rel.", c("lo", "", "hi")), "SE.CIF.rel",
+                "surv.obs.as.lo","surv.obs.as","surv.obs.as.hi","SE.surv.obs.as",
+                "r.e2.as.lo","r.e2.as","r.e2.as.hi","SE.r.e2.as",
+                "r.pp.as.lo","r.pp.as","r.pp.as.hi","SE.r.pp.as",
+                paste0("CIF.rel.as.", c("lo", "", "hi")), "SE.CIF.rel.as"
+  )
+  survVars <- intersect(survVars, names(data))
+  
+  ## which variables are estimates, SEs, CIs, etc.
+  survVars.ca <- setdiff(names(data), c(prVars, valVars, miscVars, survVars))
+  CIF_vars <- survVars.ca[substr(survVars.ca, 1,3)=="CIF" | substr(survVars.ca, 1,6)=="SE.CIF"]
+  survVars <- c(survVars, CIF_vars)
+  
+  surv.obs.vars <- survVars.ca[substr(survVars.ca, 1,8) == "surv.obs" | substr(survVars.ca, 1,11) == "SE.surv.obs"]
+  survVars <- c(survVars, surv.obs.vars)
+  
+  survVars <- unique(intersect(survVars, names(data)))
+  
+  ## remove some unuseful variables
+  setcolsnull(data, c("SE.A", "SE.B"))
+  setcolsnull(data, survVars[substr(survVars, 1, 6) == "SE.CIF"]) ## since they are zero for now
+  survVars <- intersect(survVars, names(data))
+  
+  SEVars <- survVars[substr(survVars, 1, 3) == "SE."]
+  CIVars <- survVars[substr(survVars, nchar(survVars) - 2L, nchar(survVars)) %in% c(".lo", ".hi")]
+  estVars <- setdiff(survVars, c(SEVars, CIVars))
+  
+  order <- unique(c(prVars, miscVars, valVars, survVars))
+  order <- intersect(order, names(data))
+  
+  setcolsnull(data, setdiff(names(data), order))
+  setcolorder(data,order)
+  
+  setkeyv(data, c(prVars, "surv.int"))
   
   # attributes -----------------------------------------------------------------
   setkeyv(data, c(prVars, "surv.int"))
@@ -1090,13 +1085,22 @@ survtab_ag <- function(formula = NULL,
   used_args$formula <- eval(attr(foTest, "quoted.arg"), envir = PF)
   used_args$weights <- evalPopArg(origData, arg = weights, enclos = PF, DT = FALSE, recursive = TRUE)
   
-  setattr(data, "survtab.meta", 
-          list(call = this_call, 
-               arguments = used_args,
-               print.vars = prVars,
-               surv.breaks = surv.breaks,
-               value.vars = valVars,
-               adjust.vars = adVars))
+  arglist <- list(call = this_call, 
+                  arguments = used_args,
+                  surv.breaks = surv.breaks,
+                  print.vars = prVars,
+                  adjust.vars = adVars,
+                  value.vars = valVars,
+                  misc.vars = miscVars,
+                  surv.vars = survVars,
+                  est.vars = estVars,
+                  SE.vars = SEVars,
+                  CI.vars = CIVars)
+  varsArgs <- substr(names(arglist), nchar(names(arglist))-4L, nchar(names(arglist))) == ".vars"
+  varsArgs <- names(arglist)[varsArgs]
+  arglist[varsArgs] <- lapply(arglist[varsArgs], function(x) if (length(x) == 0L) NULL else x)
+                  
+  setattr(data, "survtab.meta", arglist)
   
   if (verbose) cat("Time taken by whole process: ", timetaken(starttime), "\n")
   data[]

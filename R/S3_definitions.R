@@ -501,8 +501,14 @@ print.survtab <- function(x, subset = NULL, ...) {
   setkeyv(x, c(pv, "Tstop"))
   x <- x[medmax]
   
-  surv.vars <- setdiff(names(x), c(sa$print.vars, "Tstop", sa$value.vars, sa$adjust.vars, "surv.int", "Tstart", "Tstop", "delta"))
-  setcolsnull(x, keep = c(pv, "Tstop", surv.vars), colorder = TRUE)
+  x[, c(sa$est.vars, sa$CI.vars, sa$misc.vars) := lapply(.SD, function(x) round(x, 4L)), 
+       .SDcols = c(sa$est.vars, sa$CI.vars, sa$misc.vars)]
+  
+  if (length(sa$SE.vars) > 0L) x[, c(sa$SE.vars) := lapply(.SD, function(x) signif(x, 4L)), .SDcols = c(sa$SE.vars)]
+  
+  # x[, c(sa$value.vars) := lapply(.SD, function(x) round(x, 2L)), .SDcols = c(sa$value.vars)]  
+  
+  setcolsnull(x, keep = c(pv, "Tstop", sa$surv.vars), colorder = TRUE)
   
   print(data.table(x), ...)
   invisible()
@@ -572,11 +578,12 @@ summary.survtab <- function(object, t = NULL, subset = NULL, ...) {
   
   if (is.null(t)) t <- unique(x$Tstop-x$delta) else {
     
-    wh <- sapply(t, function(x) which.min(x = abs(unique(x$Tstop) - x)))
+    wh <- sapply(t, function(x_) which.min(abs(unique(x$Tstop) - x_)))
     wh <- sort(unique(wh))
     t <- unique(x$Tstop)[wh]
     
   }
+  
   setDT(x)
   setkeyv(x, c(at$print.vars, "Tstop"))
   x <- x[Tstop %in% t]

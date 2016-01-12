@@ -11,11 +11,11 @@ survtab_ag(formula = NULL, data, adjust = NULL, weights = NULL,
   d.pp.2 = "d.pp.2", n.cens.pp = "n.cens.pp", pyrs.pp = "pyrs.pp",
   d.exp.pp = "d.exp.pp", surv.type = "surv.rel", surv.method = "hazard",
   relsurv.method = "e2", subset = NULL, conf.level = 0.95,
-  conf.type = "log-log", format = TRUE, verbose = FALSE)
+  conf.type = "log-log", verbose = FALSE)
 
 survtab_lex(formula, data, adjust = NULL, breaks = NULL, pophaz = NULL,
   weights = NULL, surv.type = "surv.rel", surv.method = "hazard",
-  relsurv.method = "e2", subset = NULL, format = TRUE, verbose = FALSE)
+  relsurv.method = "e2", subset = NULL, verbose = FALSE)
 }
 \arguments{
 \item{formula}{a \code{formula} object. For \code{survtab_ag}, the response 
@@ -134,9 +134,6 @@ e.g. \code{0.95} for 95 percent confidence intervals}
 defines the transformation used on the survival time
 function to yield confidence 
 intervals via the delta method}
-
-\item{format}{logical; if \code{TRUE}, output is formatted into a neat table;
-otherwise you get all the raw results}
 
 \item{verbose}{logical; if \code{TRUE}, the function is chatty and
 returns some messages and timings along the process}
