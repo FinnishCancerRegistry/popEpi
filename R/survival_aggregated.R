@@ -758,6 +758,7 @@ survtab_ag <- function(formula = NULL,
                         by.other = ssSub,
                         custom.levels = bl, weights = weSub)
   allVars <- attr(data, "makeWeightsDT")
+  allVars[] <- lapply(allVars, function(x) if (length(x) == 0L) NULL else x)
   prVars <- allVars$prVars
   adVars <- allVars$adVars
   # boVars <- allVars$boVars ## this is surv.scale
@@ -775,7 +776,7 @@ survtab_ag <- function(formula = NULL,
   setcolorder(data, c(byVars, "surv.int", "Tstart", "Tstop", "delta", valVars, intersect(names(data), "weights")))
   
   if (surv.method == "lifetable") {
-    testEvents <- data[, n - shift(n, n = 1, type = "lead", fill = NA), by = byVars]$V1
+    testEvents <- data[, n - shift(n, n = 1, type = "lead", fill = NA), by = eval(byVars)]$V1
     testEvents <- data$n.cens + data$d - testEvents
     
     if (sum(abs(testEvents), na.rm = TRUE)) {
@@ -820,9 +821,13 @@ survtab_ag <- function(formula = NULL,
                                  sum.over = NULL, test.var = testVar)
   }
 
-  
-#   print(data)
-#   stop("test")
+  ## if adjusting, crop all estimates by adjusting variables
+  ## to shortest estimate
+  if (length(adVars)) {
+    adLe <- data[, list(min = min(surv.int), max = max(surv.int)), keyby = eval(adVars)]
+    adLe <- c(max(adLe$min), min(adLe$max))
+    data <- data[surv.int %in% `:`(adLe[1L], adLe[2L])]
+  }
   
   # create and print table of bad surv.ints ------------------------------------
   
