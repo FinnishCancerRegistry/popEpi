@@ -4,12 +4,12 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
   library(survival)
   BL <- list(fot= seq(0,19,1/12), per=c(2008,2013))
   sire2 <- sire[dg_date<ex_date, ]
-  sire2$status <- factor(sire2$status, levels = 0:2, 
+  sire2$statusf <- factor(sire2$status, levels = 0:2, 
                          labels = c("alive", "canD", "othD"))
   
   x <- lexpand(sire2, 
                birth  = bi_date, entry = dg_date, exit = ex_date,
-               status = status,
+               status = statusf,
                breaks=BL)
   st <- survtab_lex(Surv(fot, event = lex.Xst) ~ 1, data = x, surv.type="cif.obs")
   setDT(x)
@@ -22,7 +22,7 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
   
   x <- lexpand(sire2, 
                birth  = bi_date, entry = dg_date, exit = ex_date,
-               status = status,
+               status = statusf,
                breaks = BL["per"])
   
   fb <- setdiff(BL$fot, 0)
@@ -55,10 +55,11 @@ test_that("survtab_lex status argument works as expected", {
   st <- NULL
   x <- lexpand(sr, birth  = bi_date, entry = dg_date, 
                exit = ex_date, status = status)
-  st <- try(survtab_lex(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
-                    breaks = list(fot = 0:5)), silent = TRUE)
-  expect_equal(class(st)[1L], "try-error")
-  
+  expect_error({
+    suppressWarnings(st <- survtab_lex(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
+                      breaks = list(fot = 0:5)))
+  }, regexp = "Some status indicators \\(4591 values in total\\) were NA as a result of using Surv\\(\\). Usual suspects: original status variable has NA values, or you have numeric status variable with more than two levels and you did not assign e.g. type = 'mstate' \\(e.g. Surv\\(time = c\\(1,1,1\\), event = c\\(0,1,2\\), type = 'mstate'\\) works\\).")
+
   st <- NULL
   x <- lexpand(sr, birth  = bi_date, entry = dg_date, 
                exit = ex_date, status = statusf)
