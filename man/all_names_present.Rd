@@ -4,7 +4,7 @@
 \alias{all_names_present}
 \title{Check if all names are present in given data}
 \usage{
-all_names_present(data, var.names, stops = TRUE)
+all_names_present(data, var.names, stops = TRUE, msg = NULL)
 }
 \arguments{
 \item{data}{dataset where the variable names should be found}
@@ -12,6 +12,11 @@ all_names_present(data, var.names, stops = TRUE)
 \item{var.names}{a character vector of variable names}
 
 \item{stops}{logical, stop returns exception}
+
+\item{msg}{Custom message to return instead of default message.
+Special: include %%VARS%% in message and the missing variable names
+will be inserted there (quoted, separated by comma, e.g. 
+\code{'var1'}, \code{'var2'} --- no leading or tracing white space).}
 }
 \description{
 given a character vector, checks if all names are present in \code{names(data)}.
