@@ -521,10 +521,43 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' \code{t = c(2.5, 5.1)}
 #' with data that was split by the breaks \code{seq(0, 5, 1/12)}
 #' causes the times \code{c(2.5, 5.0)} to be used. 
+#' Since the estimates at the time points closest to \code{t} are selected,
+#' values of \code{t} are compared with column \code{Tstop} in the data.
+#' If \code{NULL}, prints all rows.
 #' @param subset a logical condition to subset results table by
 #' before printing; use this to limit to a certain stratum. E.g.
 #' \code{subset = sex == "male"}
 #' @param ... unused; required for congruence with other \code{summary} methods
+#' 
+#' @examples 
+#' 
+#' library(Epi)
+#' library(survival)
+#' 
+#' ## NOTE: recommended to use factor status variable
+#' x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
+#'            exit = list(CAL = get.yrs(ex_date)), 
+#'            data = sire[sire$dg_date < sire$ex_date, ],
+#'            exit.status = factor(status, levels = 0:2, 
+#'            labels = c("alive", "canD", "othD")), 
+#'            merge = TRUE)
+#' 
+#' ## observed survival
+#' st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ 1, data = x, 
+#'                   surv.type = "surv.obs",
+#'                   breaks = list(FUT = seq(0, 5, 1/12)))
+#' 
+#' ## estimates at full years of follow-up
+#' summary(st, t = 1:5)
+#' 
+#' ## interval estimate closest to 75th percentile (75 % survival;
+#' ## just switch 0.75 to 0.5 for median survival, etc.)
+#' summary(st, subset = surv.obs == surv.obs[which.min(abs(surv.obs - 0.75))])
+#' 
+#' ## if you want all estimates in a new data.frame, you can also simply do
+#' 
+#' x <- as.data.frame(st)
+#' 
 #' @export
 summary.survtab <- function(object, t = NULL, subset = NULL, ...) {
   
@@ -536,13 +569,12 @@ summary.survtab <- function(object, t = NULL, subset = NULL, ...) {
   preface_survtab.print(x)
   
   at <- attr(x, "survtab.meta")
-  sb <- at$surv.breaks
   
-  if (is.null(t)) t <- sb else {
+  if (is.null(t)) t <- unique(x$Tstop-x$delta) else {
     
-    wh <- sapply(t, function(x) which.min(x = abs(sb - x)))
+    wh <- sapply(t, function(x) which.min(x = abs(unique(x$Tstop) - x)))
     wh <- sort(unique(wh))
-    t <- sb[wh]
+    t <- unique(x$Tstop)[wh]
     
   }
   setDT(x)
