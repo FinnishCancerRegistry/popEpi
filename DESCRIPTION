@@ -1,7 +1,7 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
-Version: 0.2.2.9012
-Date: 2016-01-11
+Version: 0.2.2.9013
+Date: 2016-01-12
 Author: J Miettinen, M Rantanen, K Seppa, J Pitkaniemi
 Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
 Description: Enables computation of various epidemiological statistics where the use of population data such as population counts and hazards is required. Relatively
