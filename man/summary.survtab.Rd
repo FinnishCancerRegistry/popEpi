@@ -4,7 +4,7 @@
 \alias{summary.survtab}
 \title{Summarize a survtab Object}
 \usage{
-\method{summary}{survtab}(object, t = NULL, subset = NULL, ...)
+\method{summary}{survtab}(object, t = NULL, subset = NULL, q = NULL, ...)
 }
 \arguments{
 \item{object}{a \code{survtab} object}
@@ -23,6 +23,10 @@ If \code{NULL}, prints all rows.}
 \item{subset}{a logical condition to subset results table by
 before printing; use this to limit to a certain stratum. E.g.
 \code{subset = sex == "male"}}
+
+\item{q}{a named \code{list} of quantiles to include in returned data set.
+E.g. \code{list(surv.obs = 0.5)} for rows closest to the median survival
+for each strata in the \code{survtab} object. See Examples.}
 
 \item{...}{unused; required for congruence with other \code{summary} methods}
 }
@@ -43,18 +47,22 @@ x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
            exit.status = factor(status, levels = 0:2, 
            labels = c("alive", "canD", "othD")), 
            merge = TRUE)
-
+## pretend some are male
+set.seed(1L)
+x$sex <- rbinom(nrow(x), 1, 0.5)
 ## observed survival
-st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ 1, data = x, 
-                  surv.type = "surv.obs",
+st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+                  surv.type = "cif.obs",
                   breaks = list(FUT = seq(0, 5, 1/12)))
 
 ## estimates at full years of follow-up
 summary(st, t = 1:5)
 
-## interval estimate closest to 75th percentile (75 \% survival;
-## just switch 0.75 to 0.5 for median survival, etc.)
-summary(st, subset = surv.obs == surv.obs[which.min(abs(surv.obs - 0.75))])
+## interval estimate closest to 75th percentile 
+## (just switch 0.75 to 0.5 for median survival, etc.)
+summary(st, q = list(surv.obs = 0.75))
+## multiple quantiles
+summary(st, q = list(surv.obs = c(0.75, 0.90), CIF_canD = 0.20))
 
 ## if you want all estimates in a new data.frame, you can also simply do
 

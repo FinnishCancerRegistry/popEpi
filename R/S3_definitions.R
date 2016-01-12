@@ -472,7 +472,8 @@ preface_survtab.print <- function(x) {
 #' before printing; use this to limit to a certain stratum. E.g.
 #' \code{subset = sex == "male"}
 #' @param ... arguments passed to \code{print.data.table}; try e.g.
-#' \code{top = 2} for numbers of rows in head and tail, 
+#' \code{top = 2} for numbers of rows in head and tail printed 
+#' if the table is large, 
 #' \code{nrow = 100} for number of rows to print, etc.
 #' @export
 print.survtab <- function(x, subset = NULL, ...) {
@@ -530,6 +531,9 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' Since the estimates at the time points closest to \code{t} are selected,
 #' values of \code{t} are compared with column \code{Tstop} in the data.
 #' If \code{NULL}, prints all rows.
+#' @param q a named \code{list} of quantiles to include in returned data set.
+#' E.g. \code{list(surv.obs = 0.5)} for rows closest to the median survival
+#' for each strata in the \code{survtab} object. See Examples.
 #' @param subset a logical condition to subset results table by
 #' before printing; use this to limit to a certain stratum. E.g.
 #' \code{subset = sex == "male"}
@@ -547,46 +551,83 @@ print.survtab <- function(x, subset = NULL, ...) {
 #'            exit.status = factor(status, levels = 0:2, 
 #'            labels = c("alive", "canD", "othD")), 
 #'            merge = TRUE)
-#' 
+#' ## pretend some are male
+#' set.seed(1L)
+#' x$sex <- rbinom(nrow(x), 1, 0.5)
 #' ## observed survival
-#' st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ 1, data = x, 
-#'                   surv.type = "surv.obs",
+#' st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+#'                   surv.type = "cif.obs",
 #'                   breaks = list(FUT = seq(0, 5, 1/12)))
 #' 
 #' ## estimates at full years of follow-up
 #' summary(st, t = 1:5)
 #' 
-#' ## interval estimate closest to 75th percentile (75 % survival;
-#' ## just switch 0.75 to 0.5 for median survival, etc.)
-#' summary(st, subset = surv.obs == surv.obs[which.min(abs(surv.obs - 0.75))])
+#' ## interval estimate closest to 75th percentile 
+#' ## (just switch 0.75 to 0.5 for median survival, etc.)
+#' summary(st, q = list(surv.obs = 0.75))
+#' ## multiple quantiles
+#' summary(st, q = list(surv.obs = c(0.75, 0.90), CIF_canD = 0.20))
 #' 
 #' ## if you want all estimates in a new data.frame, you can also simply do
 #' 
 #' x <- as.data.frame(st)
 #' 
 #' @export
-summary.survtab <- function(object, t = NULL, subset = NULL, ...) {
+summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   
   PF <- parent.frame(1L)
+  at <- attr(object, "survtab.meta")
   
   subset <- evalLogicalSubset(object, substitute(subset), enclos = PF)
   x <- object[subset, ]
+  setDT(x)
+  setattr(x, "class", class(object))
   
-  preface_survtab.print(x)
   
-  at <- attr(x, "survtab.meta")
+  ## quantile detection --------------------------------------------------------
+  if (!is.null(q) && !is.null(t)) stop("Only define use argument 't' or argument 'q'")
+  if (is.null(q)) q <- list()
+  bn <- setdiff(names(q), at$est.vars)
+  if (length(bn) > 0L) stop("No survival time function estimates named ",
+                            paste0("'", bn, "'", collapse = ", "), 
+                            " found in supplied survtab object. Available survival time function estimates: ", 
+                            paste0("'", at$est.vars, "'", collapse = ", "))
+  q <- lapply(q, function(x) eval(x, envir = PF))
   
-  if (is.null(t)) t <- unique(x$Tstop-x$delta) else {
+  lapply(q, function(x) if (min(x < 0L) || max(x > 1L)) stop("Quantiles must be expressed as numbers between 0 and 1, e.g. surv.obs = 0.5."))
+  
+  for (k in names(q)) {
     
-    wh <- sapply(t, function(x_) which.min(abs(unique(x$Tstop) - x_)))
-    wh <- sort(unique(wh))
-    t <- unique(x$Tstop)[wh]
+    q[[k]] <- rbindlist(lapply(q[[k]], function(y) x[, list(Tstop = .SD[[2L]][which.min(abs(.SD[[1L]] - y))]), 
+                                                     .SDcols = c(k, "Tstop"), by = eval(at$print.vars)]))
     
   }
+  q <- rbindlist(q)
   
-  setDT(x)
+  
+  ## time point detection ------------------------------------------------------
+  
+  if (is.null(t) && length(q) == 0L) t <- sort(unique(x$Tstop))
+  if (length(q) == 0L && !is.null(t)) {
+    
+    t <- sort(unique(t))
+    
+    t <- lapply(t, function(y) x[, list(Tstop = .SD[[1L]][which.min(abs(.SD[[1L]] - y))]), 
+                                 .SDcols = "Tstop", by = eval(at$print.vars)])
+    t <- rbindlist(t)
+    
+    setkeyv(t, c(at$print.vars, "Tstop"))
+    t <- unique(t)
+  }
+  
+  if (length(q) > 0L && is.null(t)) t <- q 
+  
+  ## final touches -------------------------------------------------------------
+  # preface_survtab.print(x)
+  
+  x <- data.table(x)
   setkeyv(x, c(at$print.vars, "Tstop"))
-  x <- x[Tstop %in% t]
+  x <- x[t]
   
   if (!getOption("popEpi.datatable")) setDFpe(x)
   
