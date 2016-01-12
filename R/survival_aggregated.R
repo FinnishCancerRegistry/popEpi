@@ -25,9 +25,9 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   ## * a list of named weights vectors which will be collated into a data.frame of weights.
   ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
   
-#   if (!is.language(print)) stop("print must be substituted!")
-#   if (!is.language(adjust)) stop("adjust must be substituted!")
-#   if (!is.language(weights)) stop("weights must be substituted!")
+  #   if (!is.language(print)) stop("print must be substituted!")
+  #   if (!is.language(adjust)) stop("adjust must be substituted!")
+  #   if (!is.language(weights)) stop("weights must be substituted!")
   
   origData <- data
   tmpDum <- makeTempVarName(origData, pre = "dummy_")
@@ -49,6 +49,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   }
   rm(print)
   
+  
   # variables to sum -----------------------------------------------------------
   vaSub <- values
   values <- evalPopArg(data = origData, arg = vaSub, DT = TRUE, enclos = PF)
@@ -59,6 +60,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
     stop("no values given to sum!")
   }
   rm(values)
+  
   
   # pre-check of weights argument ----------------------------------------------
   weightsTest <- eval(envir  = origData[1,], expr = weights, enclos = PF)
@@ -74,7 +76,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   rm(weightsTest)
   
   # standardization ------------------------------------------------------------
-    adSub <- adjust
+  adSub <- adjust
   adjust <- evalPopArg(data = origData, arg = adSub, DT = TRUE, enclos = PF)
   if (length(adjust) > 0) {
     adVars <- names(adjust)
@@ -88,7 +90,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   # other category vars to keep ------------------------------------------------
   boSub <- by.other
   by.other <- evalPopArg(data = origData, arg = boSub, DT = TRUE, enclos = PF)
-  if (ncol(by.other) > 0) {
+  if (length(by.other) > 0) {
     boVars <- names(by.other)
     data[, c(boVars) := by.other]
   } else {
@@ -126,6 +128,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   if (!is.null(weights)) {
     
     if (is.character(weights)) {
+      stop("Argument 'weights' cannot be a character string. Supply either a list or a data.frame of weights.")
       if (length(weights) > 1) stop("When given as a character string naming a variable in data, the weights argument can only be of length one.")
       all_names_present(origData, weights)
       weights <- with(origData, get(weights))
@@ -141,13 +144,13 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
         setattr(weights, "names", adVars[1])
       }
       
-      adjust <- lapply(adjust, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
+      adjust <- as.list(data[, lapply(.SD, function(x) if (is.factor(x)) levels(x) else sort(unique(x))), .SDcols = eval(adVars)])
       
       ## check adjust and weights arguments' congruence ------------------------
       ## check numbers of variables
       if (length(adjust) != length(weights)) 
         stop("Mismatch in numbers of variables (NOT necessarily in the numbers of levels/values within the variables) in adjust (", length(adjust), " variables) and weights (", length(weights)," variables); make sure each given weights vector has a corresponding variable in adjust and vice versa.")
-
+      
       ## check names of variables
       weVars <- names(weights)
       
@@ -165,7 +168,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
       adLen <- sapply(adjust, length)
       badLen <- names(adjust)[weLen != adLen]
       if (length(badLen) > 0) 
-        stop("Mismatch in lengths of adjust and weights arguments' variables(s). Names of adjust elements not matching in length with weigths: ", paste0("'", badLen, "'", collapse = ", "))
+        stop("Mismatch in numbers of levels/unique values in adjusting variables and lengths of corresponding weights vectors. Names of mismatching variables: ", paste0("'", badLen, "'", collapse = ", "))
       
       
       weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
@@ -188,12 +191,15 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
       
     }
     
-    if (is.data.frame(weights)) {
-      ## it's a data.frame of weights and corresponding vars to merge by
-      data <- merge(data, weights, by = adVars, all.x = TRUE, all.y = TRUE)
-    } else {
-      stop("Something went wrong: 'weights' was not collated into a data.frame to merge with data. Blame the package maintainer please!")
-    }
+    if (!is.data.frame(weights)) stop("Something went wrong: 'weights' was not collated into a data.frame to merge with data. Blame the package maintainer please!")
+    
+    weights <- data.table(weights)
+    weights[, weights := weights/sum(weights)]
+    
+    ## it's a data.frame of weights and has corresponding vars to merge by
+    
+    data <- merge(data, weights, by = adVars, all.x = TRUE, all.y = FALSE)
+    
     
     
   }
@@ -820,7 +826,7 @@ survtab_ag <- function(formula = NULL,
     data <- test_empty_surv_ints(data, by = c(prVars, adVars), 
                                  sum.over = NULL, test.var = testVar)
   }
-
+  
   ## if adjusting, crop all estimates by adjusting variables
   ## to shortest estimate
   if (length(adVars)) {
