@@ -732,7 +732,7 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
     
     setDT(x)
     setDT(x_frozen)
-    x <- rbindlist(list(x, x_frozen)); rm(x_frozen)
+    x <- rbindlist(list(x, x_frozen), use.names = TRUE); rm(x_frozen)
     if (verbose) cat("Finished splitting data. Time taken: ", timetaken(splitTime), "\n")
   }
   
