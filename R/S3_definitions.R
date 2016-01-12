@@ -635,18 +635,6 @@ subset.survmean <- function(x, ...) {
   y
 }
 
-## subsetting for Lexis objects
-`[.Lexis` <- function(x, ...) {
-  y <- NextMethod()
-  if (is.data.frame(y)) {
-    setattr(y, "class", class(x))
-    setattr(y, "breaks", attr(x, "breaks"))
-    setattr(y, "time.scales", attr(x, "time.scales"))
-    setattr(y, "time.since", attr(x, "time.since"))
-  }
-
-  y
-}
 
 prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclos = parent.frame(1L), ...) {
   
