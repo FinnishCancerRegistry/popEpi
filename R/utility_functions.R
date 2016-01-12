@@ -366,6 +366,8 @@ robust_values <- function(num.values, force = FALSE, messages = TRUE) {
 
 all_names_present <- function(data, var.names, stops = TRUE, msg = NULL) {
   
+  var.names <- eval(substitute(var.names), envir = parent.frame(1L))
+  if (!is.character(var.names)) stop("Argument 'var.names' must be character string vector. E.g. var.names = 'var1'")
   badNames <- setdiff(var.names, names(data))
   if (length(badNames) == 0L) return(TRUE)
   
