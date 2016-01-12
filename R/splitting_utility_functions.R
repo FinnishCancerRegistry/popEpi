@@ -730,15 +730,17 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
     setattr(x, "time.scales", allScales)
     x <- splitMulti(x, breaks = breaks, ...)
     
-    x <- rbind(x, x_frozen); rm(x_frozen)
+    setDT(x)
+    setDT(x_frozen)
+    x <- rbindlist(list(x, x_frozen)); rm(x_frozen)
     if (verbose) cat("Finished splitting data. Time taken: ", timetaken(splitTime), "\n")
   }
   
   
   ## final touch ---------------------------------------------------------------
   
+  setDT(x)
   if (is.character(freezeDummy)) setnames(x, l$frz, freezeDummy)
-  
   setkeyv(x, c(l$by, l$order))
   setcolsnull(x, unlist(l[setdiff(names(l), c("by", "cutScale", "freezeScales", "linkScales", "allScales", "othScales"))]))
   
