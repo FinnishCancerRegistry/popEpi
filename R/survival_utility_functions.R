@@ -370,7 +370,7 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
 
 
 
-test_empty_surv_ints <- function(x, by = c(prVars, byVars), sum.over = prVars, test.var = "pyrs") {
+test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs") {
   
   x <- copy(x)
   oc <- class(x)
