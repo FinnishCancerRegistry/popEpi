@@ -9,12 +9,14 @@
 #' @param obs a character string; the name of the event counts variable
 #' @param pyrs a character string; the name of the person-time
 #' @param obs.exp a character string; the name of the expected event counts variable
-#' @param by a character string vector; the names of variables by which \code{obs} and \code{pyrs}
+#' @param by a character string vector; the names of variables 
+#' by which \code{obs} and \code{pyrs}
 #' have been tabulated; optional, since the default value usually works
 #' @details 
 #' 
-#' \code{setaggre} sets \code{x} to the \code{aggre} class in place without taking a copy
-#' as e.g. \code{as.data.frame.XXX} functions do; see e.g. \code{\link[data.table]{setDT}}.
+#' \code{setaggre} sets \code{x} to the \code{aggre} class in place 
+#' without taking a copy as e.g. \code{as.data.frame.XXX} functions do; see e.g. 
+#' \code{\link[data.table]{setDT}}.
 #' 
 #' @seealso 
 #' \code{\link{as.aggre}}
@@ -24,15 +26,15 @@
 #' df <- data.frame(sex = rep(c("male", "female"), each = 5), 
 #'                  obs = rpois(10, rep(7,5, each=5)), 
 #'                  pyrs = rpois(10, lambda = 10000))
-#' setaggre(df, obs = "obs", pyrs = "pyrs", by = "sex")
-setaggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff(names(x), c(obs, pyrs, obs.exp))) {
+#' setaggre(df, values = c("obs", "pyrs"), by = "sex")
+setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
   ## input: aggregated data in data.frame or data.table format
   ## intention: any user can define their data as an aggregated data set
   ## which will be usable by survtab / sir / other
   ## output: no need to do x <- setaggre(x); instead modifies attributes in place;
-  ## sets "aggreVars" attribute, a list of names of various variables.
+  ## sets "aggre.meta" attribute, a list of names of various variables.
   ## survtab for aggregated data will need this attribute to work.
-  all_names_present(x, c(obs, pyrs, obs.exp, by))
+  all_names_present(x, c(values, by))
   
   if (!inherits(x, "aggre")) {
     cl <- class(x)
@@ -45,7 +47,7 @@ setaggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff
   }
   
   
-  setattr(x, "aggreVars", list(obs = obs, pyrs = pyrs, by = by, obs.exp = obs.exp))
+  setattr(x, "aggre.meta", list(values = values, by = by))
   invisible(x)
 }
 
@@ -78,16 +80,25 @@ setaggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff
 #' class(dt)
 #' 
 #' @export
-as.aggre <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...) {
+as.aggre <- function(x, values = NULL, by = setdiff(names(x), values), ...) {
   UseMethod("as.aggre", x)
 }
 
 #' @describeIn as.aggre Coerces a \code{data.frame} to an \code{aggre} object
-#' (including a \code{data.table})
 #' @export
-as.aggre.data.frame <- function(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL, by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...) {
+as.aggre.data.frame <- function(x, values = NULL, by = setdiff(names(x), values), ...) {
   x <- copy(x)
-  setaggre(x, obs = obs, pyrs = pyrs, obs.exp = obs.exp, by = by, ...)
+  setaggre(x, values = values, by = by, ...)
+  setattr(x, "class", c("aggre", "data.frame"))
+  x[]
+}
+
+#' @describeIn as.aggre Coerces a \code{data.table} to an \code{aggre} object
+#' @export
+as.aggre.data.table <- function(x, values = NULL, by = setdiff(names(x), values), ...) {
+  x <- copy(x)
+  setaggre(x, values = values, by = by, ...)
+  setattr(x, "class", c("aggre", "data.table", "data.frame"))
   x[]
 }
 
@@ -366,6 +377,7 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   setDT(pyrs)
   byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
   
+  sumNames <- NULL
   if (sumType != "NULL") {
     if (sumType == "character") {
       sumNames <- evalPopArg(lex, sumSub, n = 1L, DT = FALSE, recursive = TRUE, enclos = PF)
@@ -514,7 +526,7 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   ## final touch ---------------------------------------------------------------
   setDT(trans)
   alloc.col(trans) ## some problems with internal errors...
-  setaggre(trans, obs = transitions, pyrs = "pyrs", by = byNames, obs.exp = NULL)
+  setaggre(trans, values = c("pyrs", "at.risk", transitions, sumNames), by = byNames)
   setattr(trans, "breaks", breaks)
   if (!getOption("popEpi.datatable")) setDFpe(trans)
   if (verbose) cat("Time taken by aggre(): ", timetaken(allTime), "\n")

@@ -269,25 +269,6 @@ survtab <- function(data,
     all_names_present(data, required_vars)
   } else {
     stop("not yet supported with aggregated data")
-    ## sketching what is needed when using aggregated data...
-    ## only via hazard method:
-    ## observed survival / CIF / cause-specific survival: obs, pyrs
-    ## relative survival / cif.rel: + d.exp
-    ## ... + any by.vars
-    ## pohar-perme won't work with aggregated data.
-    
-    aggreVars <- attr(data, "aggreVars")
-    if (!is.character(aggreVars$obs)) {
-      stop("data is aggregated but observations variable not present; set the data to aggre using setaggre to fix")
-    }
-    required_vars <- unlist(aggreVars)
-    if (surv.type %in%  c("surv.rel","cif.rel")) {
-      required_vars <- c(required_vars, "d.exp")
-      if (relsurv.method == "pp") {
-        required_vars <- c(required_vars, "pp")
-      }
-    }
-    all_names_present(data, required_vars)
   }
   
   

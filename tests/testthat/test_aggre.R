@@ -120,7 +120,7 @@ test_that("aggre()'s by argument works flexibly", {
     
     a <- aggre(x, by = cut(dg_age, 2), type = "unique")
     setnames(a, "cut", "agegr")
-    attr(a, "aggreVars")$by <- "agegr"
+    attr(a, "aggre.meta")$by <- "agegr"
     b <- aggre(x, by = c("agegr"), type = "unique")
     c <- aggre(x, by = list(agegr = cut(dg_age, 2)), type = "unique")
     d<- aggre(x, by = agegr, type = "unique")

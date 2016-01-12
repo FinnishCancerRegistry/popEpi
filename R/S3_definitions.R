@@ -417,7 +417,7 @@ print.yrs <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
     setattr(y, "class", class(x))
-    setattr(y, "aggreVars", attr(x, "aggreVars"))
+    setattr(y, "aggre.meta", attr(x, "aggre.meta"))
     setattr(y, "breaks", attr(x, "breaks"))
   }
   y
@@ -427,7 +427,7 @@ subset.aggre <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
     setattr(y, "class", class(x))
-    setattr(y, "aggreVars", attr(x, "aggreVars"))
+    setattr(y, "aggre.meta", attr(x, "aggre.meta"))
     setattr(y, "breaks", attr(x, "breaks"))
   }
   y
