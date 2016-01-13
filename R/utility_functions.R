@@ -794,37 +794,57 @@ evalLogicalSubset <- function(data, substiset, n = 2, enclos = parent.frame(n)) 
 }
 
 
-subsetGently <- function(dt, subset=NULL, select=NULL) {
-  ## source:
-  ## http://stackoverflow.com/questions/10790204/how-to-delete-a-row-by-reference-in-r-data-table/10791729#10791729
-  ## intended for sparing memory, may be slower due to evaluating subset
-  ## multiple times
-  
-  ## - dt must be a data.table or a data.frame
-  ## - subset must be already evaluated into a logical vector using e.g.
-  ##   substitute & evalLogicalSubset
-  ## - retains attributes
-  
-  if (!is.data.frame(dt)) stop("dt must be a data.table/data.frame")
-  if (!is.logical(subset)) stop("subset must be logical condition, e.g. var1 > 0")
+subsetDTorDF <- function(data, subset=NULL, select=NULL) {
+  ## INTENTION: subsetting either a data.table or a data.frame
+  ## and returning only selected variables for lazy people.
+  if (!is.data.frame(data)) stop("data must be a data.table/data.frame")
+  if (!is.logical(subset)) stop("subset must be a logical vector")
   
   if (is.null(select)) {
-    select <- names(dt)
+    select <- names(data)
   } else {
-    all_names_present(dt, select)
+    all_names_present(data, select)
   }
   
-  sdt <- data.table(dt[[select[1]]][subset])
-  setnames(sdt, 1, select[1])
-  if (length(select) > 1) {
-    alloc.col(sdt, n = length(select) + 100L)
-    for (k in select[-1]) {
-      set(sdt, j = k, value = dt[[k]][subset])
-    }
+  if (is.data.table(data)) {
+    return(data[subset, eval(select), with = FALSE])
+  } else {
+    return(data[subset, eval(select)])
   }
-  sdt
   
 }
+
+subsetRolling <- function(data, subset = NULL, select = NULL) {
+  ## INTENTION: subsets a data.table column by column and by deleting columns
+  ## in the old data.table.
+  if (!is.data.table(data)) stop("data must be a data.table")
+  if (!is.logical(subset)) stop("subset must be a logical vector")
+  
+  if (is.null(select)) {
+    select <- names(data)
+  } else {
+    all_names_present(data, select)
+  }
+  
+  if (length(select) == 0L) stop("select is of length zero, which would delete all columns in data")
+  
+  setcolsnull(data, keep = select)
+  
+  dt <- data[subset, select[1L], with = FALSE]
+  
+  setcolsnull(data, delete = select[1L])
+  select <- select[-1L]
+  
+  for (v in select) {
+    set(dt, j = v, value = data[[v]][subset])
+    set(data, j = v, value = NULL)
+  }
+  
+  rm(list = deparse(substitute(data)), envir = parent.frame(1L))
+  
+  dt
+}
+
 
 
 setDT2DF <- function(x) {
