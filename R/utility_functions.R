@@ -352,7 +352,8 @@ robust_values <- function(num.values, force = FALSE, messages = TRUE) {
 #' @title Check if all names are present in given data
 #' @author Joonas Miettinen
 #' @param data dataset where the variable names should be found
-#' @param var.names a character vector of variable names
+#' @param var.names a character vector of variable names, e.g.
+#' \code{c("var1", "var2")}
 #' @param stops logical, stop returns exception
 #' @param msg Custom message to return instead of default message.
 #' Special: include %%VARS%% in message and the missing variable names
@@ -366,8 +367,7 @@ robust_values <- function(num.values, force = FALSE, messages = TRUE) {
 
 all_names_present <- function(data, var.names, stops = TRUE, msg = NULL) {
   
-  var.names <- eval(substitute(var.names), envir = parent.frame(1L))
-  if (!is.character(var.names)) stop("Argument 'var.names' must be character string vector. E.g. var.names = 'var1'")
+  # if (!is.character(var.names)) stop("Argument 'var.names' must be character string vector. E.g. var.names = 'var1'")
   badNames <- setdiff(var.names, names(data))
   if (length(badNames) == 0L) return(TRUE)
   

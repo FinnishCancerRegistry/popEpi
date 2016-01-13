@@ -9,7 +9,8 @@ all_names_present(data, var.names, stops = TRUE, msg = NULL)
 \arguments{
 \item{data}{dataset where the variable names should be found}
 
-\item{var.names}{a character vector of variable names}
+\item{var.names}{a character vector of variable names, e.g.
+\code{c("var1", "var2")}}
 
 \item{stops}{logical, stop returns exception}
 
