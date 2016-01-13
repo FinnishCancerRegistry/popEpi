@@ -9,15 +9,10 @@ setaggre(x, values = NULL, by = setdiff(names(x), values))
 \arguments{
 \item{x}{a \code{data.frame} or \code{data.table}}
 
-\item{by}{a character string vector; the names of variables 
-by which \code{obs} and \code{pyrs}
-have been tabulated; optional, since the default value usually works}
+\item{values}{a character string vector; the names of value variables}
 
-\item{obs}{a character string; the name of the event counts variable}
-
-\item{pyrs}{a character string; the name of the person-time}
-
-\item{obs.exp}{a character string; the name of the expected event counts variable}
+\item{by}{a character string vector; the names of variables by which 
+\code{values} have been tabulated}
 }
 \description{
 Coerces an R object to an \code{aggre} object, identifying

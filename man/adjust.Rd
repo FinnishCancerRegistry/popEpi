@@ -6,13 +6,16 @@
 \usage{
 adjust(...)
 }
+\arguments{
+\item{...}{variables to adjust by, e.g. \code{adjust(factor(v1), v2, v3)}}
+}
 \value{
 Returns a list of promises of the variables supplied which can be
 evaluated.
 }
 \description{
 This function is only intended to be used within a formula
-when supplied to e.g. \code{\link{survtaq_ag}} and should not be
+when supplied to e.g. \code{\link{survtab_ag}} and should not be
 used elsewhere.
 }
 \examples{

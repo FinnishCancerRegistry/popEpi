@@ -18,12 +18,13 @@ as.aggre(x, values = NULL, by = setdiff(names(x), values), ...)
 \method{as.aggre}{default}(x, ...)
 }
 \arguments{
-\item{x}{an R object to coerce to \code{aggre}; must be a \code{data.frame} or \code{data.table}}
+\item{x}{an R object to coerce to \code{aggre}; must be 
+a \code{data.frame} or \code{data.table}}
 
 \item{values}{a character string vector; the names of value variables}
 
-\item{by}{a character string vector; the names of variables by which \code{obs} and \code{pyrs}
-have been tabulated; optional, since the default value usually works}
+\item{by}{a character string vector; the names of variables by which 
+\code{values} have been tabulated}
 
 \item{...}{arguments passed to or from methods}
 }

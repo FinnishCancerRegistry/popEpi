@@ -6,12 +6,9 @@
 #' information. \code{setaggre} modifies in place without taking any copies.
 #' Retains all other attributes.
 #' @param x a \code{data.frame} or \code{data.table}
-#' @param obs a character string; the name of the event counts variable
-#' @param pyrs a character string; the name of the person-time
-#' @param obs.exp a character string; the name of the expected event counts variable
-#' @param by a character string vector; the names of variables 
-#' by which \code{obs} and \code{pyrs}
-#' have been tabulated; optional, since the default value usually works
+#' @param values a character string vector; the names of value variables
+#' @param by a character string vector; the names of variables by which 
+#' \code{values} have been tabulated
 #' @details 
 #' 
 #' \code{setaggre} sets \code{x} to the \code{aggre} class in place 
@@ -56,10 +53,11 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
 #' @description Coerces an R object to an \code{aggre} object, identifying
 #' the object as one containing aggregated counts, person-years and other
 #' information. 
-#' @param x an R object to coerce to \code{aggre}; must be a \code{data.frame} or \code{data.table}
+#' @param x an R object to coerce to \code{aggre}; must be 
+#' a \code{data.frame} or \code{data.table}
 #' @param values a character string vector; the names of value variables
-#' @param by a character string vector; the names of variables by which \code{obs} and \code{pyrs}
-#' have been tabulated; optional, since the default value usually works
+#' @param by a character string vector; the names of variables by which 
+#' \code{values} have been tabulated
 #' @param ... arguments passed to or from methods
 #' @seealso 
 #' \code{\link{setaggre}} for modifying in place
