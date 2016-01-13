@@ -4,20 +4,20 @@
 \alias{setaggre}
 \title{Set 'aggre' attributes to an object by modifying in place}
 \usage{
-setaggre(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL,
-  by = setdiff(names(x), c(obs, pyrs, obs.exp)))
+setaggre(x, values = NULL, by = setdiff(names(x), values))
 }
 \arguments{
 \item{x}{a \code{data.frame} or \code{data.table}}
+
+\item{by}{a character string vector; the names of variables 
+by which \code{obs} and \code{pyrs}
+have been tabulated; optional, since the default value usually works}
 
 \item{obs}{a character string; the name of the event counts variable}
 
 \item{pyrs}{a character string; the name of the person-time}
 
 \item{obs.exp}{a character string; the name of the expected event counts variable}
-
-\item{by}{a character string vector; the names of variables by which \code{obs} and \code{pyrs}
-have been tabulated; optional, since the default value usually works}
 }
 \description{
 Coerces an R object to an \code{aggre} object, identifying
@@ -26,14 +26,15 @@ information. \code{setaggre} modifies in place without taking any copies.
 Retains all other attributes.
 }
 \details{
-\code{setaggre} sets \code{x} to the \code{aggre} class in place without taking a copy
-as e.g. \code{as.data.frame.XXX} functions do; see e.g. \code{\link[data.table]{setDT}}.
+\code{setaggre} sets \code{x} to the \code{aggre} class in place 
+without taking a copy as e.g. \code{as.data.frame.XXX} functions do; see e.g. 
+\code{\link[data.table]{setDT}}.
 }
 \examples{
 df <- data.frame(sex = rep(c("male", "female"), each = 5), 
                  obs = rpois(10, rep(7,5, each=5)), 
                  pyrs = rpois(10, lambda = 10000))
-setaggre(df, obs = "obs", pyrs = "pyrs", by = "sex")
+setaggre(df, values = c("obs", "pyrs"), by = "sex")
 }
 \author{
 Joonas Miettinen

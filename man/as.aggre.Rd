@@ -3,25 +3,24 @@
 \name{as.aggre}
 \alias{as.aggre}
 \alias{as.aggre.data.frame}
+\alias{as.aggre.data.table}
 \alias{as.aggre.default}
 \title{Coercion to Class \code{aggre}}
 \usage{
-as.aggre(x, obs = "obs", pyrs = "pyrs", obs.exp = NULL,
-  by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...)
+as.aggre(x, values = NULL, by = setdiff(names(x), values), ...)
 
-\method{as.aggre}{data.frame}(x, obs = "obs", pyrs = "pyrs",
-  obs.exp = NULL, by = setdiff(names(x), c(obs, pyrs, obs.exp)), ...)
+\method{as.aggre}{data.frame}(x, values = NULL, by = setdiff(names(x),
+  values), ...)
+
+\method{as.aggre}{data.table}(x, values = NULL, by = setdiff(names(x),
+  values), ...)
 
 \method{as.aggre}{default}(x, ...)
 }
 \arguments{
 \item{x}{an R object to coerce to \code{aggre}; must be a \code{data.frame} or \code{data.table}}
 
-\item{obs}{a character string; the name of the event counts variable}
-
-\item{pyrs}{a character string; the name of the person-time}
-
-\item{obs.exp}{a character string; the name of the expected event counts variable}
+\item{values}{a character string vector; the names of value variables}
 
 \item{by}{a character string vector; the names of variables by which \code{obs} and \code{pyrs}
 have been tabulated; optional, since the default value usually works}
@@ -36,7 +35,8 @@ information.
 \section{Methods (by class)}{
 \itemize{
 \item \code{data.frame}: Coerces a \code{data.frame} to an \code{aggre} object
-(including a \code{data.table})
+
+\item \code{data.table}: Coerces a \code{data.table} to an \code{aggre} object
 
 \item \code{default}: Default method for \code{as.aggre} (stops computations
 if no class-specific method found)
@@ -47,8 +47,8 @@ df <- data.frame(sex = rep(c("male", "female"), each = 5),
                  pyrs = rpois(10, lambda = 10000))
 dt <- as.data.table(df)
 
-df <- as.aggre(df, obs = "obs", pyrs = "pyrs", by = "sex")
-dt <- as.aggre(dt, obs = "obs", pyrs = "pyrs", by = "sex")
+df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex")
+dt <- as.aggre(dt, values = c("pyrs", "obs"), by = "sex")
 
 class(df)
 class(dt)

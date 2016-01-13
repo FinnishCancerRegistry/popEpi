@@ -57,9 +57,7 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
 #' the object as one containing aggregated counts, person-years and other
 #' information. 
 #' @param x an R object to coerce to \code{aggre}; must be a \code{data.frame} or \code{data.table}
-#' @param obs a character string; the name of the event counts variable
-#' @param pyrs a character string; the name of the person-time
-#' @param obs.exp a character string; the name of the expected event counts variable
+#' @param values a character string vector; the names of value variables
 #' @param by a character string vector; the names of variables by which \code{obs} and \code{pyrs}
 #' have been tabulated; optional, since the default value usually works
 #' @param ... arguments passed to or from methods
@@ -73,8 +71,8 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
 #'                  pyrs = rpois(10, lambda = 10000))
 #' dt <- as.data.table(df)
 #' 
-#' df <- as.aggre(df, obs = "obs", pyrs = "pyrs", by = "sex")
-#' dt <- as.aggre(dt, obs = "obs", pyrs = "pyrs", by = "sex")
+#' df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex")
+#' dt <- as.aggre(dt, values = c("pyrs", "obs"), by = "sex")
 #' 
 #' class(df)
 #' class(dt)
