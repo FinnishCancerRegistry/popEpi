@@ -24,10 +24,11 @@ test_that("SIR w/ coh=ref=sire", {
   ltbr[is.na(pyrs), pyrs := 0]
 
 
-
-  sl <- sir(coh.data=ltre, coh.obs="obs", coh.pyrs="pyrs",
-            ref.data=ltre, ref.obs="obs", ref.pyrs="pyrs", 
-            adjust= c("agegroup","ex_y"))
+  suppressMessages(
+    sl <- sir(coh.data=ltre, coh.obs="obs", coh.pyrs="pyrs",
+              ref.data=ltre, ref.obs="obs", ref.pyrs="pyrs", 
+              adjust= c("agegroup","ex_y"))
+  )
   ## SIR w/ coh=ref=sire
   ## don't skip on CRAN
   expect_equal(sl$total$sir, 1)
@@ -35,9 +36,11 @@ test_that("SIR w/ coh=ref=sire", {
   expect_equal(sl$total$expected, 4595)
   expect_equal(sl$total$observed, 4595)
   
-  sl <- sir(coh.data=ltre, coh.obs="obs", coh.pyrs="pyrs",
-            ref.data=ltbr, ref.obs="obs", ref.pyrs="pyrs",
-            adjust= c("agegroup","ex_y"))
+  suppressMessages(
+    sl <- sir(coh.data=ltre, coh.obs="obs", coh.pyrs="pyrs",
+              ref.data=ltbr, ref.obs="obs", ref.pyrs="pyrs",
+              adjust= c("agegroup","ex_y"))
+  )
   ## SIR w/ coh=ref=sire"
   expect_equal(sl$total$sir, 1.39, tolerance=0.01)
   expect_equal(sl$total$pyrs, 13783.81, tolerance=0.01)
@@ -62,21 +65,35 @@ c2 <- lexpand( sire[dg_date<ex_date,], status = status, birth = bi_date, exit = 
 
 test_that("SIR works with multistate aggregated lexpand data", {
   ## don't skip on CRAN
-  
-  se <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs', 
-             subset = year %in% 1990:2009,
-             ref.data = popmort, ref.rate = 'haz', 
-             adjust = c('agegroup','year','sex'), print =c('cause','fot'), mstate = 'cause')
-  
-  
-  
-  s1 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', subset = year %in% 1990:2009,
-             ref.data = popmort, ref.rate = 'haz', 
-             adjust = c('agegroup','year','sex'), print =c('fot'))
-  
-  s2 <- sir( coh.data = c2, coh.obs = c('from0to2'), coh.pyrs = 'pyrs',
-             ref.data = popmort, ref.rate = 'haz', 
-             adjust = c('agegroup','year','sex'), print =c('fot'))
+  suppressMessages(
+    suppressWarnings(  
+      se <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs', 
+                 subset = year %in% 1990:2009,
+                 ref.data = popmort, ref.rate = 'haz', 
+                 adjust = c('agegroup','year','sex'), print =c('cause','fot'), mstate = 'cause')
+    )
+  )
+  dummy.coh <- data.table(agegroup = 1:18, sex = 1, from0to1 = round(runif(18)), 
+                          from0to2 = round(runif(18)+0.4),
+                          pyrs = (rnorm(18)+100)*200)
+  dummy.ref <- data.table(agegroup = rep(1:18,times=2), sex = 1, obs = floor(runif(36)*100),
+                          categ2 = rep(c(1,2),each=18),pyrs = (rnorm(36)+100)*2000)
+  suppressMessages(
+    sm <- sir( coh.data = dummy.coh, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs', 
+               ref.data = dummy.ref, ref.obs = 'obs', ref.pyrs = 'pyrs', mstate = 'categ2',
+               adjust = c('agegroup','sex','categ2'), print =c('categ2'))
+  )
+  # please finish this
+  suppressMessages(
+    s1 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', subset = year %in% 1990:2009,
+               ref.data = popmort, ref.rate = 'haz', 
+               adjust = c('agegroup','year','sex'), print =c('fot'))
+  )
+  suppressMessages(
+    s2 <- sir( coh.data = c2, coh.obs = c('from0to2'), coh.pyrs = 'pyrs',
+               ref.data = popmort, ref.rate = 'haz', 
+               adjust = c('agegroup','year','sex'), print =c('fot'))
+  )
   s12 <- rbind( cbind(cause=1L, s1[[3]]), 
                 cbind(cause=2L, s2[[3]]))
   
@@ -148,18 +165,20 @@ test_that("SIR spline throws errors correctly", {
 
 test_that("print accepts a function and subset works", {
   skip_on_cran()
-
-  pl1 <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
-              subset = year %in% 1990:2008,
-              ref.data = popmort, ref.rate = 'haz', 
-              adjust = c('agegroup','year','sex'), print = list(year.int = findInterval(year,c(1989,2000,2010))),
-              mstate = 'cause')
-  pl2 <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
-              subset = year %in% 1990:2008,
-              ref.data = popmort, ref.rate = 'haz', 
-              adjust = c('agegroup','year','sex'), print = list(year.int = findInterval(year,c(1989,2000,2010)), sex),
-              mstate = 'cause')
-  
+  suppressWarnings(
+    pl1 <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
+                subset = year %in% 1990:2008,
+                ref.data = popmort, ref.rate = 'haz', 
+                adjust = c('agegroup','year','sex'), print = list(year.int = findInterval(year,c(1989,2000,2010))),
+                mstate = 'cause')
+  )
+  suppressWarnings(
+    pl2 <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
+                subset = year %in% 1990:2008,
+                ref.data = popmort, ref.rate = 'haz', 
+                adjust = c('agegroup','year','sex'), print = list(year.int = findInterval(year,c(1989,2000,2010)), sex),
+                mstate = 'cause')
+  )
   setDT(pl1[[2]])
   expect_equal( pl1[[2]][,year.int], 1:2)
   expect_is(object=pl2, 'sir')
