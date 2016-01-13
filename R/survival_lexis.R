@@ -231,6 +231,7 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   
   ## survtab_ag ----------------------------------------------------------------
   dn <- intersect(event.values, names(x))
+  n.cens <- intersect(cens.values, names(x))
   
   if (length(prVars) == 0L) prVars <- "1"
   form <- as.formula(paste0(survScale, " ~ ", prVars))
@@ -242,7 +243,7 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
                    
                    weights = weights, 
                    
-                   d = dn, pyrs = pyrs, d.exp = d.exp, 
+                   d = dn, pyrs = pyrs, d.exp = d.exp, n.cens = n.cens,
                    
                    d.pp = d.pp, d.exp.pp = d.exp.pp, d.pp.2 = d.pp.2, 
                    n.cens.pp = n.cens.pp, pyrs.pp = ptime.pp,
