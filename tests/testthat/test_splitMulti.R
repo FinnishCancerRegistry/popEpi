@@ -2,7 +2,7 @@ context("Compare splitMulti results with splitLexis results")
 
 test_that("splitMulti and splitLexis are congruent", {
   skip_on_cran()
-  
+  skip_on_travis()
   library(Epi)
   
   sire2 <- copy(sire)
