@@ -79,7 +79,7 @@ test_that("lexpanding with aggre.type = 'unique' works", {
                  birth = bi_date, entry = dg_date, exit = ex_date)
   setDT(ag1)
   ag1 <- ag1[, list(pyrs = sum(lex.dur), from0to1 = sum(lex.Xst == 1L)), 
-           keyby = list(fot = cutLow(fot, BL$fot), age = cutLow(age, BL$age))]
+           keyby = list(fot = popEpi:::cutLow(fot, BL$fot), age = popEpi:::cutLow(age, BL$age))]
   ag2 <- lexpand(sire[dg_date < ex_date, ], 
                  breaks = BL, status = status,
                  birth = bi_date, entry = dg_date, exit = ex_date,
@@ -142,8 +142,8 @@ test_that("lexpanding with aggre.type = 'cartesian' works; only time scales used
   ag4 <- aggre(ag1, by = list(fot, age), type = "unique")
   setDT(ag4)
   
-  ag1[, `:=`(fot = try2int(cutLow(fot, c(BL$fot, Inf))), 
-             age = try2int(cutLow(age, c(BL$age, Inf))))]
+  ag1[, `:=`(fot = try2int(popEpi:::cutLow(fot, c(BL$fot, Inf))), 
+             age = try2int(popEpi:::cutLow(age, c(BL$age, Inf))))]
   ceejay <- do.call(CJ, lapply(BL, function(x) x[-length(x)]))
   setkey(ceejay, fot, age); setkey(ag1, fot, age)
   ag1 <- ag1[ceejay, list(pyrs = sum(lex.dur), 
@@ -179,7 +179,7 @@ test_that("lexpanding and aggregating to years works", {
                  breaks = list(per=2000:2014), status = status,
                  birth = bi_date, entry = dg_date, exit = ex_date)
   setDT(ag1)
-  ag1[, `:=`(per = as.integer(cutLow(per, 2000:2014)))]
+  ag1[, `:=`(per = as.integer(popEpi:::cutLow(per, 2000:2014)))]
   ag1 <- ag1[, list(pyrs = sum(lex.dur), from0to1 = sum(lex.Xst == 1L)), keyby = per]
   
   ag2 <- lexpand(sire[dg_date < ex_date, ], 

@@ -7,12 +7,12 @@ test_that("makeWeightsDT works with various weights & adjust spesifications", {
   sibr[1:50, sex := 0L]
   
   dt <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,
-                status = status %in% 1:2, aggre = list(sex, dg_age = cutLow(dg_age, 0:125)))
+                status = status %in% 1:2, aggre = list(sex, dg_age = popEpi:::cutLow(dg_age, 0:125)))
   
   print <- quote(list(gender = sex))
   prdt <- evalPopArg(dt, print)
   
-  adjust <- quote(list(agegr = cutLow(dg_age, c(0, seq(15,85,5), Inf))))
+  adjust <- quote(list(agegr = popEpi:::cutLow(dg_age, c(0, seq(15,85,5), Inf))))
   addt <- evalPopArg(dt, adjust)
   
   expr <- quote(list(pyrs = sum(pyrs), from0to1 = sum(from0to1)))

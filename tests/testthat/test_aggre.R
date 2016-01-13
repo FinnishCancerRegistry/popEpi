@@ -58,9 +58,9 @@ test_that("aggre and lexpand produce the same results", {
                 status = status %in% 1:2, aggre.type = "cartesian",
                 breaks=BL, aggre = list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
   
-  x[, fot := cutLow(fot, BL$fot)]
-  x[, age := cutLow(age, BL$age)]
-  x[, per := cutLow(per, BL$per)]
+  x[, fot := popEpi:::cutLow(fot, BL$fot)]
+  x[, age := popEpi:::cutLow(age, BL$age)]
+  x[, per := popEpi:::cutLow(per, BL$per)]
   
   x <- x[, list(pyrs = sum(lex.dur), obs = sum(lex.Xst)), keyby = e]
   x <- x[pyrs > 0 & !is.na(pyrs)]

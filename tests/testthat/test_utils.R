@@ -147,8 +147,8 @@ test_that("cutLowMerge merges succesfully what is intended", {
   expect_equal(sr1, sr3, check.attributes = FALSE)
   expect_equal(sr2$haz*1e5L, sr4$pop.haz*1e5L, check.attributes = FALSE)
   
-  sr1[, year := cutLow(year, breaks = sort(unique(pm$year)))]
-  sr1[, agegroup := cutLow(agegroup, breaks = sort(unique(pm$agegroup)))]
+  sr1[, year := popEpi:::cutLow(year, breaks = sort(unique(pm$year)))]
+  sr1[, agegroup := popEpi:::cutLow(agegroup, breaks = sort(unique(pm$agegroup)))]
   
   sr5 <- merge(sr1, pm, by = c("sex", "year", "agegroup"))
   setDT(sr5)
