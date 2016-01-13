@@ -82,17 +82,17 @@ a <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
              status = status %in% 1:2,
              fot = 0:5, per = 1994:2000, aggre = list(fot, per))
 print(a)
-#>     fot  per       pyrs from0to0
-#>  1:   0 1994 0.90958904        0
-#>  2:   0 1995 0.09041096        0
-#>  3:   1 1995 0.90958904        0
-#>  4:   1 1996 0.09041096        0
-#>  5:   2 1996 0.90958904        0
-#>  6:   2 1997 0.09041096        0
-#>  7:   3 1997 0.90958904        0
-#>  8:   3 1998 0.09041096        0
-#>  9:   4 1998 0.90958904        0
-#> 10:   4 1999 0.09041096        1
+#>     fot  per       pyrs at.risk from0to0
+#>  1:   0 1994 0.90958904       1        0
+#>  2:   0 1995 0.09041096       1        0
+#>  3:   1 1995 0.90958904       1        0
+#>  4:   1 1996 0.09041096       1        0
+#>  5:   2 1996 0.90958904       1        0
+#>  6:   2 1997 0.09041096       1        0
+#>  7:   3 1997 0.90958904       1        0
+#>  8:   3 1998 0.09041096       1        0
+#>  9:   4 1998 0.90958904       1        0
+#> 10:   4 1999 0.09041096       1        1
 ```
 
 SIRs / SMRs
@@ -131,19 +131,62 @@ se
 (Relative) survival
 -------------------
 
-The `survtab` function computes observed, relative and cause-specific survivals as well as cumulative incidence functions. Any of the supported survival time functions can be easily standardised by age if necessary. `survtab` currently needs splitted subject-level data, but may in the future work with aggregated data for computing some estimates.
+The `survtab_lex` function computes observed, net/relative and cause-specific survivals as well as cumulative incidence functions for `Lexis` data. Any of the supported survival time functions can be easily adjusted by any number of categorical variables if needed.
+
+One can also use `survtab_ag` for aggregated data. This means the data does not have to be on the subject-level to compute survival time function estimates.
 
 ``` r
-x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
-             status = status %in% 1:2,
-             fot = seq(0, 5, 1/12), pophaz = popmort)
-#> dropped 16 rows where entry == exit
-#> 14 rows in expanded data had age values >= 101; assumed for these the same expected hazard as for people of age 100
+library(Epi)
+#> Warning: package 'Epi' was built under R version 3.2.3
+#> 
+#> Attaching package: 'Epi'
+#> The following object is masked from 'package:base':
+#> 
+#>     merge.data.frame
 
-st <- survtab(x, event.values = 1)
-st[st$Tstop == 5, ]
-#>    surv.int Tstart Tstop   delta  pyrs n.start  d n.cens d.exp surv.obs.lo
-#> 1:       60  4.917     5 0.08333 253.1    3053 17     16 9.222      0.5032
-#>    surv.obs surv.obs.hi SE.surv.obs r.e2.lo   r.e2 r.e2.hi  SE.r.e2
-#> 1:   0.5148      0.5263    0.005901  0.5947 0.6086  0.6221 0.006976
+data(sibr)
+sire$cancer <- "rectal"
+sibr$cancer <- "breast"
+sr <- rbind(sire, sibr)
+
+sr$cancer <- factor(sr$cancer)
+sr <- sr[sr$dg_date < sr$ex_date, ]
+
+sr$status <- factor(sr$status, levels = 0:2, 
+                    labels = c("alive", "canD", "othD"))
+
+x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
+           exit = list(CAL = get.yrs(ex_date)), 
+           data = sr,
+           exit.status = status)
+#> NOTE: entry.status has been set to "alive" for all.
+
+st <- survtab_lex(Surv(FUT, lex.Xst) ~ cancer, data = x,
+                  breaks = list(FUT = seq(0, 5, 1/12)),
+                  surv.type = "cif.obs")
+st
+#> 
+#> Call: 
+#>  survtab_lex(formula = Surv(FUT, lex.Xst) ~ cancer, data = x, breaks = list(FUT = seq(0, 5, 1/12)), surv.type = "cif.obs") 
+#> 
+#> Type arguments: 
+#> surv.type: cif.obs --- surv.method: hazard
+#>  
+#> Confidence interval arguments: 
+#>  level: 95 % --- transformation: log-log
+#>  
+#> Totals: 
+#>  person-time: 62120 --- events: 5375
+#>  
+#> Stratified by: 'cancer'
+#>    cancer Tstop surv.obs.lo surv.obs surv.obs.hi SE.surv.obs CIF_canD
+#> 1: breast   2.5      0.8804   0.8870      0.8933    0.003290   0.0687
+#> 2: breast   5.0      0.7899   0.7986      0.8070    0.004368   0.1162
+#> 3: rectal   2.5      0.6250   0.6359      0.6465    0.005480   0.2981
+#> 4: rectal   5.0      0.5032   0.5148      0.5263    0.005901   0.3727
+#>    CIF_othD
+#> 1:   0.0442
+#> 2:   0.0852
+#> 3:   0.0660
+#> 4:   0.1125
 ```

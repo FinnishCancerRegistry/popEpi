@@ -83,18 +83,37 @@ se
 
 ## (Relative) survival
 
-The `survtab` function computes observed, relative and cause-specific survivals as well as 
-cumulative incidence functions. Any of the supported survival time functions can be
-easily standardised by age if necessary. `survtab` currently needs splitted subject-level data,
-but may in the future work with aggregated data for computing some estimates.
+The `survtab_lex` function computes observed, net/relative and cause-specific
+survivals as well as  cumulative incidence functions for `Lexis` data. 
+Any of the supported survival time functions can be
+easily adjusted by any number of categorical variables if needed.
+
+One can also use `survtab_ag` for aggregated data. This means the data does
+not have to be on the subject-level to compute survival time function estimates.
 
 ```{r survtab}
-x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
-             status = status %in% 1:2,
-             fot = seq(0, 5, 1/12), pophaz = popmort)
+library(Epi)
 
-st <- survtab(x, event.values = 1)
-st[st$Tstop == 5, ]
+data(sibr)
+sire$cancer <- "rectal"
+sibr$cancer <- "breast"
+sr <- rbind(sire, sibr)
+
+sr$cancer <- factor(sr$cancer)
+sr <- sr[sr$dg_date < sr$ex_date, ]
+
+sr$status <- factor(sr$status, levels = 0:2, 
+                    labels = c("alive", "canD", "othD"))
+
+x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
+           exit = list(CAL = get.yrs(ex_date)), 
+           data = sr,
+           exit.status = status)
+
+st <- survtab_lex(Surv(FUT, lex.Xst) ~ cancer, data = x,
+                  breaks = list(FUT = seq(0, 5, 1/12)),
+                  surv.type = "cif.obs")
+st
 ```
 
 
