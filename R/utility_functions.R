@@ -1320,8 +1320,8 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
   fe <- environment(formula)
   
   ## subset if needed ----------------------------------------------------------
-  subset <- evalLogicalSubset(data, substitute(subset), enclos = enclos)
-  if (!all(subset)) {
+  if (!is.null(subset) && !is.logical(subset)) stop("subset must be NULL or a logical vector and not an expression at this point. If you see this, complain to the package maintainer.")
+  if (!is.null(subset)) {
     data <- data[subset, ]
     setcolsnull(data, keep = all.vars(formula))
   }
@@ -1350,19 +1350,21 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
   l <- RHS2list(formula)
   
   ## adjusting variables? ------------------------------------------------------
-  adj <- names(l)[substr(names(l), 1, 6) == "adjust"]
+  adj <- names(l)[substr(names(l), 1L, 7L) == "adjust("]
   
   if (length(adj)) {
+    adjNames <- adj
+    adjNames <- substr(adj, 8L, nchar(adj)-1L) ## removes "adjust(" and ")"
+    
     adj <- l[adj]
     l <- l[setdiff(names(l), names(adj))]
     
-    ## if e.g. used multiple adjust() calls in formula
-    ## (adj may be a list of multiple adjust() expressions)
     
-    adj <- lapply(adj, eval)
-    adj <- unlist(adj, recursive = FALSE)
-    names(adj) <- sapply(adj, function(x) deparse(x))
-    # names(adj) <- paste0("adjust(", names(adj), ")")
+    ## why lapply? if e.g. used multiple adjust() calls in formula
+    ## (adj may be a list of multiple adjust() expressions)
+    adj <- lapply(adj, eval) ## list of lists of expressions
+    adj <- unlist(adj, recursive = FALSE) ## long list of expressions
+    names(adj) <- adjNames
     
     l <- c(l, adj)
   }
