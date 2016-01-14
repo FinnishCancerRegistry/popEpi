@@ -177,3 +177,109 @@ test_that("comp_pp_weighted_figures produces intended results", {
   expect_equal(x[event == 1L, pp^2], x[event == 1L,]$from0to1.pp.2)
   
 })
+
+
+test_that("evalPopFormula & usePopFormula output is stable", {
+  set.seed(1L)
+  evalPopFormula <- popEpi:::evalPopFormula
+  usePopFormula <- popEpi:::usePopFormula
+  
+  x <- sire[dg_date<ex_date,][sample(x = .N, size = 5L, replace = FALSE),]
+  x <- lexpand(x, birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2)
+  x$sex <- c(1, 0, 1, 0, 1)
+  
+  f1a <- Surv(fot, lex.Xst) ~ 1
+  f1b <- Surv(fot, event = lex.Xst) ~ 1
+  f2 <- Surv(fot, lex.Xst) ~ sex
+  f3 <- Surv(fot, lex.Xst) ~ sex + adjust(factor(sex+1))
+  f4 <- Surv(fot, lex.Xst) ~ adjust(factor(sex+1))
+  f5 <- lex.Xst ~ 1
+  f6 <- lex.Xst ~ sex
+  f7 <- lex.Xst ~ sex + adjust(factor(sex+1))
+  f8 <- lex.Xst ~ adjust(factor(sex+1))
+  f9 <- lex.Xst ~ factor(sex)
+  
+  TF <- environment()
+  
+  res <- data.table(time = rep(0, 5), status = c(1,1,0,1,1), sex = c(1,0,1,0,1))
+  res[, "factor(sex + 1)" := factor(sex+1)]
+  res[, lex.Xst := c(1,1,0,1,1)]
+  
+  
+  ## evalPopFormula
+  library(survival)
+  r1a <- evalPopFormula(f1a, data = x, enclos = TF, Surv.response = TRUE)
+  r1b <- evalPopFormula(f1b, data = x, enclos = TF, Surv.response = TRUE)
+  setattr(r1a, "formula", attr(r1b, "formula"))
+  expect_equal(r1a, r1b)
+  expect_equal(data.table(r1a), res[, list(time, status)])
+  
+  r5 <- evalPopFormula(f5, data = x, enclos = parent.frame(1L), Surv.response = FALSE)
+  r6 <- evalPopFormula(f6, data = x, enclos = parent.frame(1L), Surv.response = FALSE)
+  expect_equal(r5$lex.Xst, c(1,1,0,1,1))
+  expect_equal(data.table(r6), res[, list(lex.Xst, sex)])
+  
+  ## model-type naming of columns
+  r9 <- evalPopFormula(f9, data = x, enclos = parent.frame(1L), Surv.response = FALSE)
+  expect_equal(data.table(r9), res[, list(lex.Xst, "factor(sex)" = factor(sex))])
+  
+  ## multiple variables, model-type naming of columns with adjust
+  r3 <- evalPopFormula(f3, data = x, enclos = parent.frame(1L), Surv.response = TRUE)
+  expect_equivalent(r3, res[, .SD, .SDcols = names(r3)])
+  
+  ## usePopFormula
+  
+  r3 <- usePopFormula(f3, data = x, enclos = parent.frame(2L), Surv.response = TRUE)
+  expect_equivalent(r3, 
+                    list(y = res[, list(time, status)], 
+                         print = res[, list(sex)], 
+                         adjust = res[, "factor(sex + 1)", with=FALSE],
+                         formula = f3) 
+  )
+  r4 <- usePopFormula(f4, data = x, enclos = parent.frame(2L), Surv.response = TRUE)
+  expect_equivalent(r4, 
+                    list(y = res[, list(time, status)], 
+                         print = NULL, 
+                         adjust = res[, "factor(sex + 1)", with=FALSE],
+                         formula = f4) 
+  )
+  r6 <- usePopFormula(f6, data = x, enclos = parent.frame(2L), Surv.response = FALSE)
+  expect_equivalent(r6, 
+                    list(y = res[, list(lex.Xst)], 
+                         print = res[, list(sex)], 
+                         adjust = NULL,
+                         formula = f6) 
+  )
+  
+  r7 <- usePopFormula(f7, data = x, enclos = parent.frame(2L), Surv.response = FALSE)
+  expect_equivalent(r7, 
+                    list(y = res[, list(lex.Xst)], 
+                         print = res[, list(sex)], 
+                         adjust = res[, "factor(sex + 1)", with=FALSE],
+                         formula = f7) 
+  )
+  r8 <- usePopFormula(f8, data = x, enclos = parent.frame(2L), Surv.response = FALSE)
+  expect_equivalent(r8, 
+                    list(y = res[, list(lex.Xst)], 
+                         print = NULL, 
+                         adjust = res[, "factor(sex + 1)", with=FALSE],
+                         formula = f8) 
+  )
+  r9 <- usePopFormula(lex.Xst ~ sex, data = x, adjust = quote(factor(sex+1)),
+                      enclos = parent.frame(2L), Surv.response = FALSE) 
+  expect_equivalent(r9, 
+               list(y = res[, list(lex.Xst)], 
+                    print = res[, list(sex)], 
+                    adjust = res[, "factor(sex + 1)", with=FALSE],
+                    formula = lex.Xst ~ sex)
+  )
+  expect_equal(lapply(r9, names), list(y = "lex.Xst", print = "sex", adjust = "factor(sex + 1)", formula = NULL))
+  
+  r9 <- usePopFormula(lex.Xst ~ as.numeric(sex), data = x, adjust = quote(list(factor(sex+1), factor(sex - 1))),
+                      enclos = parent.frame(2L), Surv.response = FALSE) 
+  
+  expect_equal(lapply(r9, names), list(y = "lex.Xst", print = "as.numeric(sex)", 
+                                       adjust = c("factor(sex + 1)", "factor(sex - 1)"), formula = NULL))
+  
+})
