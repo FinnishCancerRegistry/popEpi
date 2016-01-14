@@ -505,6 +505,19 @@ lexpile <- function(lex, by = "lex.id", subset = NULL) {
   
 }
 
+contractLexis <- function(x, breaks, drop = TRUE) {
+  stop("This doesnt do anything yet")
+  ## INTENTION: given a Lexis object and breaks,
+  ## ensures data is split by the breaks and contracts the split rows
+  ## so that the data is split at the level of the supplied breaks.
+  ## e.g. with x split by fot = seq(0, 5, 1/12) and with supplying
+  ## breaks = list(fot = 0:5), rows within 0-1 are collated into one row etc.
+  
+  ## PROBLEM: a subject may have e.g. rows spaning 0.5 - 1 which are requested
+  ## to be contracted to one row spanning 0-1.
+  
+  
+}
 
 
 
