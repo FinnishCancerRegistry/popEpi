@@ -483,6 +483,8 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   TF <- environment()
   PF <- parent.frame(1L)
   
+  r.e2 <- x.table <- agetab <- NULL ## R CMD CHECK appeasement
+  
   if(!requireNamespace("survival")) stop("Need to load package survival to proceed")
   
   checkLexisData(data, check.breaks = FALSE)
