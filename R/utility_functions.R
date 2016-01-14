@@ -886,9 +886,34 @@ p.round <- function(p, dec=3) {
   p 
 }
 
+popArg2ModelNames <- function(arg, type) {
+  ## INTENTION: given a quoted/substituted expression,
+  ## digs out the expression(s) creating a/multiple column(s)
+  ## and returns the deparsed expression(s) to be used as names
+  ## of columns the same way that models such as lm() display
+  ## the names of expressions used within formula
+  type <- match.arg(type[1L], c("NULL", "character", "list", "expression"))
+  
+  lang <- NULL
+  lang <- try(is.language(arg) && !inherits(arg, "formula"), silent = TRUE)
+  if (inherits(lang, "try-error") || !lang) stop("arg must be a quoted or substituted expression (of type language but not a formula). Error message: ", lang)
+  
+  d <- oneWhitespace(paste0(deparse(arg)))
+  
+  if (type == "expression") return(d) else 
+    if (type == "NULL") return(NULL) else 
+      if (type == "character") return(eval(arg)) else 
+        if (type == "list") {
+          d <- substr(d, 6, nchar(d)-1L) ## removes "list(" and ")"
+          d <- strsplit(d, ", ")
+          return(unlist(d))
+        }
+  
+}
 
 
-evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = TRUE) {
+
+evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = TRUE, types = c("NULL","character", "list", "expression"), naming = c("DT", "model")) {
   ## arg: an unevaluated AND substitute()'d argument within a function, which may be
   ## * an expression
   ## * a list of expressions
@@ -908,6 +933,14 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   ## a data.table output is directly usable in by.
   ## if column names cannot be easily found, BV1, BV2, ... are imputed
   ## for missing names (unrobustly: such names may already exist, resulting in duplicates)
+  
+  ## naming: DT style uses first element of all.names() where 
+  ## a name has to be created; model style keeps the whole deparsed
+  ## expression. Only applied when DT = TRUE
+  naming <- match.arg(naming[1L], c("DT", "model"))
+  
+  ## types: allowed popArg types of arguments.
+  types <- match.arg(types, c("NULL","character", "list", "expression", "formula"), several.ok = TRUE)
   
   if (!is.null(enclos) && !is.environment(enclos)) stop("enclos must be NULL or an environment")
   if (!is.environment(enclos)) enclos <- parent.frame(n + 1L)
@@ -932,6 +965,8 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
     if (is.character(e)) argType <- "character" else 
       if (is.vector(e) || is.factor(e)) argType <- "expression" else 
         if (inherits(e, "formula")) argType <- "formula"
+  
+  if (!argType %in% types) stop("popArg type of evaluated arg not one of the allowed types (set via argument types). Detected type: '", argType, "'. Allowed types: ", paste0("'", types, "'", collapse = ", "))
   
   if (argType == "NULL") return(NULL)
   
@@ -1009,6 +1044,8 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
     setattr(e, "all.vars", av)
     setattr(e, "quoted.arg", arg)
     setattr(e, "arg.type", argType)
+    
+    if (naming == "model") setnames(e, names(e), popArg2ModelNames(arg, type = argType))
   }
   e
 }
