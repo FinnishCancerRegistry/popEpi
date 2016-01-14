@@ -8,7 +8,79 @@
 # ws <- substitute(list(agegr = c(0.2,0.4,0.4)))
 # dt <- makeWeightsDT(ag, print = ps, adjust = as, values = vs, weights = ws, custom.levels = list(fot = (0:59)/12))
 
-makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.other = NULL, custom.levels = NULL, weights = NULL, n = 1L) {
+#' @title Make a \code{data.table} of Tabulated, Aggregated Values and Weights
+#' @param data DF/DT; passed to \code{envir} in \code{eval}
+#' @param values values to tabulate. Anything \code{evalPopArg} can evaluate.
+#' @param print variables to tabulate by and include in \code{prVars} in attributes
+#' @param adjust variables to tabulate by and include in \code{adVars} in attributes
+#' @param a formula such as \code{fot ~ sex} or \code{Surv(fot, lex.Xst) ~ sex}
+#' @param Surv.response logical, if \code{TRUE} throws error if response in
+#' \code{formula} is not a \code{Surv} object and vice versa
+#' @param by.other other variables to tabulate by and include 
+#' in \code{boVars} in attributes
+#' @param custom.levels a named list of values. When "inflating" the data
+#' in the cross-join / cartesian join sense (try e.g. \code{merge(1:5, 1:2)}),
+#' one can supply the levels to inflate by using this to ensure inflation is full.
+#' E.g. data might only have levels present to do inflation analogous to
+#' \code{merge(2:5, 1:2)} although \code{merge(1:5, 1:2)} is intended and 
+#' needed. 
+#' @param weights a named list or long-form data.frame of weights. See Examples.
+#' @param enclos the enclosing environment passed on to \code{eval}. Variables
+#' not found in \code{data} or searched for here.
+#' @examples 
+#' makeWeightsDT <- popEpi:::makeWeightsDT ## this avoids errors during tests
+#' 
+#' sire <- copy(popEpi::sire)
+#' set.seed(1L)
+#' sire$sex <- rbinom(nrow(sire), 1, 0.5)
+#' ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
+#'               status = status %in% 1:2, pophaz = popmort, pp = FALSE,
+#'               aggre = list(sex, agegr = cut(dg_age, c(0,50,75,Inf)), fot), 
+#'               fot = seq(0, 5, 1/12))
+#' ps <- quote(list(sex, fot))
+#' as <- quote(list(agegr))
+#' vs <- quote(list(pyrs, at.risk))
+#' ws <- list(agegr = c(0.2,0.4,0.4))
+#' 
+#' #### custom.levels usage
+#' fb <- seq(0, 5-1/12, 1/12)
+#' ag2 <- ag[fot > 0.5,]
+#' # repeats fot intervals < 0.5 as empty rows
+#' # may be the safest way to do this
+#' dt <- makeWeightsDT(ag2, print = ps, adjust = as, 
+#'                     values = vs, weights = ws,
+#'                     custom.levels = list(fot = fb))
+#' 
+#' #### use of enclos
+#' TF <- environment()
+#' gender <- factor(ag$sex)
+#' dt <- makeWeightsDT(ag, print = quote(gender), adjust = as, 
+#'                     values = vs, weights = ws, enclos = TF)
+#' ## or
+#' dt <- makeWeightsDT(ag, print = quote(gender), adjust = as, 
+#'                     values = vs, weights = ws,
+#'                     enclos = parent.frame(1L))
+#' 
+#' #### formula usage
+#' form <- Surv(fot, factor(from0to1))~gender
+#' dt <- makeWeightsDT(ag, formula = form, Surv.response = TRUE,
+#'                     adjust = as, values = vs, weights = ws,
+#'                     enclos = parent.frame(1L))
+#'                     
+#' ## or
+#' form <- Surv(fot, factor(from0to1))~gender + adjust(agegr)
+#' dt <- makeWeightsDT(ag, formula = form, Surv.response = TRUE,
+#'                     adjust = NULL, values = vs, weights = ws,
+#'                     enclos = parent.frame(1L))
+#'                     
+#' ## or   
+#' form <- from0to1 ~ fot + gender + adjust(agegr)
+#' dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
+#'                     adjust = NULL, values = vs, weights = ws,
+#'                     enclos = parent.frame(1L))            
+#'                     
+#'                     
+makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, formula = NULL, Surv.response = TRUE, by.other = NULL, custom.levels = NULL, weights = NULL, enclos = parent.frame(1L)) {
   ## input: data and substitute()'d weights and adjust arguments
   ## custom.levels: for when in CJ expansion a variable should use levels other than
   ## the ones found in data (such as a time scale of survival, for which each
@@ -29,30 +101,60 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   #   if (!is.language(adjust)) stop("adjust must be substituted!")
   #   if (!is.language(weights)) stop("weights must be substituted!")
   
+  # environmentalism -----------------------------------------------------------
+  TF <- environment()
+  PF <- parent.frame(1L)
+  if (missing(enclos) || is.null(enclos)) enclos <- PF else 
+    if (!is.environment(enclos)) stop("enclos is not an environment")
+  
+  ## dataism -------------------------------------------------------------------
+  if (!is.data.frame(data)) stop("data must be a data.frame")
+  ## tmpDum for convenience. will be deleted in the end. (if no tabulating vars)
   origData <- data
   tmpDum <- makeTempVarName(origData, pre = "dummy_")
   data <- data.table(rep(1L, nrow(origData)))
   setnames(data, 1, tmpDum)
   
-  TF <- environment()
-  PF <- parent.frame(2L)
+  # formula: vars to print and adjust by ---------------------------------------
+  if (!is.null(formula)) {
+    adSub <- substitute(adjust)
+    foList <- usePopFormula(formula, adjust = adSub, 
+                            data = origData, enclos = enclos, 
+                            Surv.response = Surv.response)
+    print <- foList$print
+    adjust <- foList$adjust
+  } else {
+    
+    prSub <- print
+    print <- evalPopArg(data = origData, arg = prSub, DT = TRUE, enclos = enclos)
+    
+    adSub <- adjust
+    adjust <- evalPopArg(data = origData, arg = adSub, DT = TRUE, enclos = enclos)
+    
+  }
   
-  # variables to print by ------------------------------------------------------
-  prSub <- print
-  print <- evalPopArg(data = origData, arg = prSub, DT = TRUE, enclos = PF)
+  # variables to print by ----------------------------------------------------
   if (length(print) > 0) {
     prVars <- names(print)
-    data[, (prVars) := print]
-    data[, (tmpDum) := NULL]
+    data[, c(prVars) := print]
+    data[, c(tmpDum) := NULL]
   } else {
     prVars <- tmpDum
   }
   rm(print)
   
+  # standardization ----------------------------------------------------------
+  if (length(adjust) > 0) {
+    adVars <- names(adjust)
+    data[, c(adVars) := adjust]
+  } else {
+    adVars <- NULL
+  }
+  rm(adjust)
   
   # variables to sum -----------------------------------------------------------
   vaSub <- values
-  values <- evalPopArg(data = origData, arg = vaSub, DT = TRUE, enclos = PF)
+  values <- evalPopArg(data = origData, arg = vaSub, DT = TRUE, enclos = enclos)
   if (length(values) > 0) {
     vaVars <- names(values)
     data[, (vaVars) := values]
@@ -61,35 +163,9 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   }
   rm(values)
   
-  
-  # pre-check of weights argument ----------------------------------------------
-  weightsTest <- eval(envir  = origData[1,], expr = weights, enclos = PF)
-  if (is.data.frame(weightsTest) && length(adjust) == 0) {
-    if (!"weights" %in% names(weightsTest)) stop("column 'weights' not found in weights data.frame; if you supplied a data.frame of weights, please check that it has a column named 'weights'; otherwise contact the package maintainer because this was supposed to work.")
-    
-    adjust <- setdiff(names(weightsTest), "weights")
-    badAdjust <- setdiff(adjust, names(origData))
-    if (length(badAdjust) > 0) stop("adjust was NULL and weights was a data.frame, but following variables present in weights DF not present in data: ", paste0("'", badAdjust, "'", collapse = ", "))
-  } else if (is.character(weightsTest)) {
-    stop("argument 'weights' cannot currently be supplied as a character string naming a column in data to ensure correct scaling of weights (to one by every combination of variables in 'print'); please use a list, a vector of weights, or a data.frame of weights instead.")
-  }
-  rm(weightsTest)
-  
-  # standardization ------------------------------------------------------------
-  adSub <- adjust
-  adjust <- evalPopArg(data = origData, arg = adSub, DT = TRUE, enclos = PF)
-  if (length(adjust) > 0) {
-    adVars <- names(adjust)
-    data[, (adVars) := adjust]
-  } else {
-    adVars <- NULL
-  }
-  # rm(adjust)
-  
-  
   # other category vars to keep ------------------------------------------------
   boSub <- by.other
-  by.other <- evalPopArg(data = origData, arg = boSub, DT = TRUE, enclos = PF)
+  by.other <- evalPopArg(data = origData, arg = boSub, DT = TRUE, enclos = enclos)
   if (length(by.other) > 0) {
     boVars <- names(by.other)
     data[, c(boVars) := by.other]
@@ -98,7 +174,13 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   }
   rm(by.other)
   
-  # aggregate data to smallest number of rows according to print & adjust ------
+  # inflate data ---------------------------------------------------------------
+  ## on the other hand we aggregate data to levels of print, adjust and 
+  ## by.other; on the other hand the data will always have tabulating variables
+  ## represented as cross-joined, e.g. merge(1:5, 1:2).
+  ## this means some rows might have zeroes as values in the 'values'
+  ## columns.
+  ## (necessary for correct standardization with weights)
   
   ## NOTE: have to do CJ by hand: some levels of adjust or something may not
   ## have each level of e.g. fot repeated!
@@ -108,7 +190,6 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   
   if (length(custom.levels) > 0) cj[names(custom.levels)] <- custom.levels
   cj <- do.call(CJ, cj)
-  
   
   setkeyv(data, c(prVars, adVars, boVars))
   data <- data[cj, lapply(.SD, sum), .SDcols = vaVars, by = .EACHI]
@@ -124,7 +205,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, by.o
   ## merge in weights ----------------------------------------------------------
   
   weSub <- weights
-  weights <- evalPopArg(data  = origData, arg = weSub, enclos = PF, DT = FALSE)
+  weights <- evalPopArg(data  = origData, arg = weSub, enclos = enclos, DT = FALSE)
   if (!is.null(weights)) {
     
     if (is.character(weights)) {
@@ -713,44 +794,8 @@ survtab_ag <- function(formula = NULL,
   vaSub <- substitute(mc)
   weSub <- substitute(weights)
   
-  
-  ## argument formula ----------------------------------------------------------
-  ## is converted to a DT containing 'print' variables
-  foSub <- substitute(formula)
-  
-  prDT <- evalPopFormula(formula, data = data, enclos = PF, Surv.response = FALSE)
-  
-  ## print stuff passed on to makeWeightsDT()
-  prNames <- attr(prDT, "print.names")
-  prSub <- substitute(NULL)
-  if (length(prNames)) {
-    prSub <- prDT[, attr(prDT, "print.names"),with = FALSE]
-  }
-  
-  ## argument adjust -----------------------------------------------------------
-  ## NOTE: cannot have adjust in formula AND in separate argument
-  adSub <- substitute(adjust)
-  adTest <- evalPopArg(data, adSub, enclos = PF, recursive = TRUE, DT = TRUE)
-  adSub <- attr(adTest, "quoted.arg")
-  adType <- attr(adTest, "arg.type")
-  if (is.null(adType)) adType <- "NULL"
-  
-  adNames <- attr(prDT, "adjust.names")
-  if (length(adNames) > 0L && adType != "NULL") stop("Cannot have both adjust() function used within argument 'formula' AND variables passed via argument 'adjust'; only use one or the other.")
-  if (length(adNames) > 0L) {
-    adSub <- substitute(NULL)
-    if (length(adNames)) {
-      adSub <- prDT[, attr(prDT, "adjust.names"),with = FALSE]
-    }
-  }
-  
   ssSub <- list(prDT[[attr(prDT, "Surv.names")[1L]]])
   setattr(ssSub, "names", surv.scale)
-  
-  
-  data[, names(prDT) := prDT]
-  rm(prDT)
-  
   
   
   ## NOTE: while ssSub will pass the whole column of e.g. fot values, which will
