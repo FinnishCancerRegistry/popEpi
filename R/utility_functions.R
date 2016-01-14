@@ -892,11 +892,11 @@ popArg2ModelNames <- function(arg, type) {
   ## and returns the deparsed expression(s) to be used as names
   ## of columns the same way that models such as lm() display
   ## the names of expressions used within formula
-  type <- match.arg(type[1L], c("NULL", "character", "list", "expression"))
+  type <- match.arg(type[1L], c("NULL", "character", "list", "expression", "formula"))
   
   lang <- NULL
-  lang <- try(is.language(arg) && !inherits(arg, "formula"), silent = TRUE)
-  if (inherits(lang, "try-error") || !lang) stop("arg must be a quoted or substituted expression (of type language but not a formula). Error message: ", lang)
+  lang <- try(is.language(arg) || inherits(arg, "formula"), silent = TRUE)
+  if (inherits(lang, "try-error") || !lang) stop("arg must be a quoted or substituted expression or a formula. Error message: ", lang, ". type of arg: ", typeof(arg), ". Class: ", class(arg), ". Mode: ", mode(arg), ".")
   
   d <- oneWhitespace(paste0(deparse(arg)))
   
@@ -907,8 +907,13 @@ popArg2ModelNames <- function(arg, type) {
           d <- substr(d, 6, nchar(d)-1L) ## removes "list(" and ")"
           d <- strsplit(d, ", ")
           return(unlist(d))
+        } else if (type == "formula") {
+          arg <- eval(arg)
+          d <- names(RHS2list(arg))
+          if (length(d) == 0L) return(NULL) ## e.g. y ~ 1
+          return(d)
         }
-  
+  stop("could not determine deparsed-expression-names")
 }
 
 
@@ -989,9 +994,10 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   
   
   if (argType == "formula") {
-    
+    arg <- e
     e <- RHS2DT(formula = e, data = data, enclos = enclos)
-      
+    if (ncol(e) == 0L || nrow(e) == 0L) e <- data.table() ## e.g. y ~ 1
+    
   } else if (is.character(e)) {
     all_names_present(data, e)
     if (DT) {
@@ -1039,13 +1045,11 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   ## and recursive = FALSE
   
   if (DT) {
-    if (any(duplicated(names(e))))  warning("Some column names are duplicated in data.table output by evalPopArg; make sure you are not using the same variable names in the same e.g. list of expressions or vector of variable names. If that is not the case, complain to the package maintainer")
     setDT(e)
     setattr(e, "all.vars", av)
     setattr(e, "quoted.arg", arg)
     setattr(e, "arg.type", argType)
-    
-    if (naming == "model") setnames(e, names(e), popArg2ModelNames(arg, type = argType))
+    if (naming == "model" && ncol(e) > 0L) setnames(e, 1:ncol(e), popArg2ModelNames(arg, type = argType))
   }
   e
 }
@@ -1250,8 +1254,10 @@ RHS2list <- function(formula) {
 
 RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   l <- RHS2list(formula)
-  l <- lapply(l, function(x) eval(expr = x, envir = data, enclos = enclos))
-  l <- data.table(l)
+  if (length(l) == 0L) return(data.table())
+  
+  l <- lapply(l, function(x) if (is.language(x)) eval(expr = x, envir = data, enclos = enclos) else x)
+  l <- as.data.table(l)
   l
 }
 
@@ -1427,6 +1433,7 @@ evalRecursive <- function(arg, env, enc, max.n = 100L) {
 
 usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(), enclos, Surv.response = TRUE) {
   ## INTENTION: evaluates form and combines with adjust appropriately
+  ## returns a list of the elements dug out from the formula and adjust arguments.
   # formSub <- substitute(form)
   al <- evalRecursive(arg = form, env = data, enc = enclos)
   
@@ -1437,15 +1444,19 @@ usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(), enclo
   prNames <- attr(dt, "print.names")
   suNames <- attr(dt, "Surv.names")
   
+  adjust <- evalPopArg(data, adjust, DT = TRUE, recursive = TRUE, enclos = environment(), 
+                       types = c("NULL", "character", "list", "expression"), naming = "model")
   
-  adjust <- evalPopArg(data, substitute(adjust), DT = TRUE, recursive = TRUE, enclos = enclos)
+  if (is.data.frame(adjust) && (nrow(adjust) == 0L || ncol(adjust) == 0L)) stop("adjust evaluated to an empty data.frame")
   if (!is.null(adjust) && ncol(adjust) > 0L && length(adNames) > 0L) stop("Cannot both use argument 'adjust' AND use an adjust() term within the formula argument. Please only use one.")
   if (is.null(adjust) && length(adNames) > 0L) adjust <- dt[, .SD, .SDcols = c(adNames)]
+
   
-  print <- dt[]
+  print <- NULL
+  if (length(prNames > 0L)) print <- dt[, .SD, .SDcols = eval(prNames)]
   
   list(y = dt[, .SD, .SDcols = c(suNames)], 
-       print = dt[, .SD, .SDcols = c(prNames)], 
+       print = print, 
        adjust = adjust, formula = al$arg)
 }
 

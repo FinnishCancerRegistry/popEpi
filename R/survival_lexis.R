@@ -66,7 +66,9 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   if (!inherits(formula,"formula")) stop("Argument 'formula' is not a formula object. Usage: e.g. Surv(fot, lex.Xst %in% 1:2) ~ sex")
   if (length(formula) != 3L) stop("Argument 'formula'must be two-sided. Usage: e.g. Surv(fot, lex.Xst %in% 1:2) ~ sex")
   
-  foTest <- evalPopArg(x[1:min(10, .N)], foSub, DT = TRUE, recursive = TRUE, enclos = PF)
+  foTest <- evalPopArg(x[1:min(10, .N)], foSub, DT = TRUE, 
+                       recursive = TRUE, enclos = PF,
+                       types = "formula", naming = "model")
   
   pophazVars <- setdiff(names(pophaz), "haz")
   

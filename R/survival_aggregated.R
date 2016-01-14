@@ -600,7 +600,10 @@ survtab_ag <- function(formula = NULL,
   
   ## argument 'formula' pre-check
   
-  foTest <- evalPopArg(data = data[1:min(10L, nrow(data)), ], arg = substitute(formula), DT = TRUE, enclos = PF, recursive = TRUE)
+  foTest <- evalPopArg(data = data[1:min(10L, nrow(data)), ], 
+                       arg = substitute(formula), 
+                       DT = TRUE, enclos = PF, recursive = TRUE,
+                       types = "formula", naming = "model")
   foType <- attr(foTest, "arg.type")
   if (is.null(foType)) foType <- "NULL"
   
