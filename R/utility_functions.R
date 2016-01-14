@@ -1338,7 +1338,7 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
   if (length(formula) < 3L) stop("formula appears to be one-sided, which is not supported; supply it as e.g. y ~ x")
   
   ## response
-  y <- eval(formula[[2L]], envir = data, enclos = fe)
+  y <- eval(formula[[2L]], envir = data, enclos = enclos)
   if (inherits(y, "Surv") && !Surv.response) stop("Response is a result of using Surv(), which is not allowed in this context.")
   if (Surv.response) {
     if (!inherits(y, "Surv")) stop("the response of the formula must be a Surv object; see ?Surv (in package survival)")
