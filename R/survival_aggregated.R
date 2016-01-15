@@ -159,6 +159,9 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   }
   rm(by.other)
   
+  # check for aliased columns --------------------------------------------------
+  aliased_cols(data, cols = c(prVars, adVars, boVars))
+  
   # inflate data ---------------------------------------------------------------
   ## on the other hand we aggregate data to levels of print, adjust and 
   ## by.other; on the other hand the data will always have tabulating variables

@@ -1461,4 +1461,48 @@ usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(), enclo
 }
 
 
+aliased_cols <- function(data, cols) {
+  
+  if (missing(cols)) cols <- names(data)
+  all_names_present(data, cols)
+  
+  if (length(cols) < 2L) return(invisible())
+  
+  x <- with(data, mget(cols))
+  x <- lapply(x, duplicated)
+  
+  sub_cols <- cols
+  tl <- list()
+  ## loop: each step reduce vector of names by one
+  ## to avoid testing the same variables twice (in both directions)
+  tick <- 0L
+  aliased <- FALSE
+  while (!aliased && length(sub_cols) > 1L && tick <= length(cols)) {
+    
+    currVar <- sub_cols[1L]
+    sub_cols <- setdiff(sub_cols, currVar)
+    tl[[currVar]] <- unlist(lapply(x[sub_cols], function(j) identical(x[[currVar]], j)))
+    aliased <- sum(tl[[currVar]])
+    
+    tick <- tick + 1L
+  }
+  
+  if (tick == length(cols)) warning("while loop went over the number of columns argument cols")
+  
+  ## result: list of logical vectors indicating if a column is aliased
+  ## with other columns
+  tl[vapply(tl, function(j) sum(j) == 0L, logical(1))] <- NULL
+  
+  if (length(tl) == 0L) return(invisible())
+  
+  ## take first vector for reporting
+  var <- names(tl)[1L]
+  aliases <- names(tl[[1L]])[tl[[1]]]
+  aliases <- paste0("'", aliases, "'", collapse = ", ")
+  stop("Variable '", var, "' is aliased with following variable(s): ", aliases, ".")
+  
+  invisible()
+}
+
+
 
