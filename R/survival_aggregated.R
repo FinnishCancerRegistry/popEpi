@@ -187,6 +187,11 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
     data[is.na(get(k)), (k) := 0]
   }
   
+  ## NOTE: factor variables were turned to characters above.
+  ## don't really need character variables methinks.
+  charVars <- names(data)[unlist(lapply(data, is.character))]
+  if (length(charVars) > 0L) data[, c(charVars) := lapply(.SD, factor), .SDcols = charVars]
+  
   setcolsnull(data, tmpDum)
   prVars <- setdiff(prVars, tmpDum); if (length(prVars) == 0) prVars <- NULL
   
@@ -243,9 +248,9 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
       if (length(badLen) > 0) 
         stop("Mismatch in numbers of levels/unique values in adjusting variables and lengths of corresponding weights vectors. Names of mismatching variables: ", paste0("'", badLen, "'", collapse = ", "))
       
-      
-      weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
       adjust <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), adjust)
+      weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
+      
       
       weVars <- paste0(weVars, ".w")
       setnames(weights, adVars, weVars)
