@@ -172,12 +172,13 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   
   ## NOTE: have to do CJ by hand: some levels of adjust or something may not
   ## have each level of e.g. fot repeated!
+  
   cj <- list()
   cj <- lapply(data[, .SD, .SDcols =  c(prVars, adVars, boVars)], 
                function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
   
   if (length(custom.levels) > 0) cj[names(custom.levels)] <- custom.levels
-  cj <- do.call(CJ, cj)
+  cj <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), cj)
   
   setkeyv(data, c(prVars, adVars, boVars))
   data <- data[cj, lapply(.SD, sum), .SDcols = vaVars, by = .EACHI]
