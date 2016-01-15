@@ -74,6 +74,12 @@ NULL
 #'  \item ICSS3 - third set of weights, sums to 100 000
 #' }
 #' @name ICSS
+#' @examples 
+#' ## aggregate weights to a subset of age groups
+#' data(ICSS)
+#' cut <- c(0, 30, 50, 70, Inf)
+#' agegr <- cut(ICSS$age, cut, right = FALSE)
+#' aggregate(ICSS1~agegr, data = ICSS, FUN = sum)
 NULL
 
 
