@@ -88,7 +88,11 @@ form <- from0to1 ~ fot + gender + adjust(agegr)
 dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
                     adjust = NULL, values = vs, weights = ws,
                     enclos = parent.frame(1L))            
-                    
-                    
+
+form <- from0to1 ~ fot + gender + adjust(agegr) + adjust(sex)
+ws2 <- list(agegr = c(0.33, 0.33, 0.33), sex = c(0.5, 0.5))
+dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
+                    adjust = NULL, values = vs, weights = ws2,
+                    enclos = parent.frame(1L))
 }
 

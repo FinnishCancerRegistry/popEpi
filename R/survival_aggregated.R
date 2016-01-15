@@ -78,29 +78,14 @@
 #' dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
 #'                     adjust = NULL, values = vs, weights = ws,
 #'                     enclos = parent.frame(1L))            
-#'                     
-#'                     
+#' 
+#' form <- from0to1 ~ fot + gender + adjust(agegr) + adjust(sex)
+#' ws2 <- list(agegr = c(0.33, 0.33, 0.33), sex = c(0.5, 0.5))
+#' dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
+#'                     adjust = NULL, values = vs, weights = ws2,
+#'                     enclos = parent.frame(1L))
 makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, formula = NULL, Surv.response = TRUE, by.other = NULL, custom.levels = NULL, weights = NULL, enclos = parent.frame(1L)) {
-  ## input: data and substitute()'d weights and adjust arguments
-  ## custom.levels: for when in CJ expansion a variable should use levels other than
-  ## the ones found in data (such as a time scale of survival, for which each
-  ## break used to split data should be represented by a row), supply a named list
-  ## referring to variables named in print and/or adjust
-  ## output: a prepared data.table for merging with aggregated or other data
-  ## OR a character string vector naming the weights variable already in data
-  ## to compute weighted results with
-  ## 'adjust' argument for defining adjusting vars
-  ## and 'weights' as: 
-  ## * character string name of weights variable in data;
-  ## * character string naming ICSS1-3;
-  ## * a data.frame that has lower bounds of categories and weights;
-  ## * a list of named weights vectors which will be collated into a data.frame of weights.
-  ## * list might allow for e.g. weights = list(sex = c(0.5, 0.5), agegroup = "ICSS1")
-  
-  #   if (!is.language(print)) stop("print must be substituted!")
-  #   if (!is.language(adjust)) stop("adjust must be substituted!")
-  #   if (!is.language(weights)) stop("weights must be substituted!")
-  
+
   # environmentalism -----------------------------------------------------------
   TF <- environment()
   PF <- parent.frame(1L)
@@ -201,11 +186,10 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   setcolsnull(data, tmpDum)
   prVars <- setdiff(prVars, tmpDum); if (length(prVars) == 0) prVars <- NULL
   
-  
   ## merge in weights ----------------------------------------------------------
   
   weSub <- weights
-  weights <- evalPopArg(data  = origData, arg = weSub, enclos = enclos, DT = FALSE)
+  weights <- eval(weights, envir = enclos)
   if (!is.null(weights)) {
     
     if (is.character(weights)) {
@@ -225,7 +209,11 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
         setattr(weights, "names", adVars[1])
       }
       
-      adjust <- as.list(data[, lapply(.SD, function(x) if (is.factor(x)) levels(x) else sort(unique(x))), .SDcols = eval(adVars)])
+      adjust <- list()
+      if (length(adVars) > 0L) {
+        adjust <- lapply(data[, eval(adVars), with = FALSE], 
+                         function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
+      }
       
       ## check adjust and weights arguments' congruence ------------------------
       ## check numbers of variables
