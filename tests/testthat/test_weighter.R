@@ -132,4 +132,21 @@ test_that("weighter works with a list of values arguments", {
 })
 
 
+test_that("weighted NA checks work", {
+  skip_on_cran()
+  sibr <- popEpi::sibr[1:100]
+  sibr[1:50, sex := 0L]
+  
+  dt <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,
+                status = status %in% 1:2, 
+                aggre = list(sex, dg_age = popEpi:::cutLow(dg_age, 0:125)))
+  dt[, agegr := cut(dg_age, c(0, 45, 75), right = FALSE)]
+  
+  naTxt <- "A warning message with counts: %%NA_COUNT%%"
+  expect_warning({
+    DT1 <- makeWeightsDT(dt, values = list(c("pyrs", "from0to1"), quote(from0to0)), 
+                         adjust = "agegr", weights = "internal", 
+                         internal.weights.values = "pyrs", NA.text = naTxt)
+  }, regexp = "A warning message with counts: 15")
 
+})
