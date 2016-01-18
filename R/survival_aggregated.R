@@ -173,9 +173,14 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   ## NOTE: have to do CJ by hand: some levels of adjust or something may not
   ## have each level of e.g. fot repeated!
   
+  sortedLevs <- function(x) {
+    if (!is.factor(x)) return(sort(unique(x)))
+    
+    factor(levels(x), levels(x), levels(x))
+  }
   cj <- list()
-  cj <- lapply(data[, .SD, .SDcols =  c(prVars, adVars, boVars)], 
-               function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
+  cj <- lapply(data[, .SD, .SDcols =  c(prVars, adVars, boVars)], sortedLevs)
+  
   
   if (length(custom.levels) > 0) cj[names(custom.levels)] <- custom.levels
   cj <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), cj)
@@ -186,11 +191,6 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   for (k in vaVars) {
     data[is.na(get(k)), (k) := 0]
   }
-  
-  ## NOTE: factor variables were turned to characters above.
-  ## don't really need character variables methinks.
-  charVars <- names(data)[unlist(lapply(data, is.character))]
-  if (length(charVars) > 0L) data[, c(charVars) := lapply(.SD, factor), .SDcols = charVars]
   
   setcolsnull(data, tmpDum)
   prVars <- setdiff(prVars, tmpDum); if (length(prVars) == 0) prVars <- NULL
@@ -220,8 +220,7 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
       
       adjust <- list()
       if (length(adVars) > 0L) {
-        adjust <- lapply(data[, eval(adVars), with = FALSE], 
-                         function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
+        adjust <- lapply(data[, eval(adVars), with = FALSE], sortedLevs)
       }
       
       ## check adjust and weights arguments' congruence ------------------------
@@ -250,7 +249,6 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
       
       adjust <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), adjust)
       weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
-      
       
       weVars <- paste0(weVars, ".w")
       setnames(weights, adVars, weVars)
