@@ -143,7 +143,16 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   rm(adjust)
   
   # variables to sum -----------------------------------------------------------
-  values <- evalPopArg(data = origData, arg = values, DT = TRUE, enclos = enclos)
+  if (!is.list(values)) stop("Argument 'values' must be a list ",
+                             "(internal error: complain to the package",
+                             "maintainer if you see this)")
+  values <- lapply(values, function(x) {
+    evalPopArg(data = origData, arg = x, DT = TRUE, enclos = enclos)
+  })
+  for (dt in setdiff(seq_along(values), 1L)) {
+    values[[1L]] <- cbind(values[[1L]], values[[dt]])
+  }
+  values <- values[[1L]]
   vaVars <- NULL
   if (length(values) > 0) {
     vaVars <- names(values)

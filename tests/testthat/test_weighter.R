@@ -108,3 +108,28 @@ test_that("internal weights are computed correctly", {
   expect_equal(DT1$weights, DT4$weight)
   
 })
+
+
+test_that("weighter works with a list of values arguments", {
+  
+  skip_on_cran()
+  sibr <- popEpi::sibr[1:100]
+  sibr[1:50, sex := 0L]
+  
+  dt <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,
+                status = status %in% 1:2, 
+                aggre = list(sex, dg_age = popEpi:::cutLow(dg_age, 0:125)))
+  
+  DT1 <- makeWeightsDT(dt, values = list(c("pyrs", "from0to1"), quote(from0to0)), 
+                       print = "sex")
+  expect_equivalent(DT1, dt[, lapply(.SD, sum), by = sex, .SDcols = c("pyrs", "from0to1", "from0to0")])
+  
+  dt$agegr <- cut(dt$dg_age, c(0, 45, 75, Inf))
+  DT2 <- makeWeightsDT(dt, values = list(c("pyrs", "from0to1"), quote(from0to0)), 
+                       print = c("sex", "agegr"))
+  expect_equivalent(DT2, dt[, lapply(.SD, sum), by = list(sex,agegr), .SDcols = c("pyrs", "from0to1", "from0to0")])
+  
+})
+
+
+
