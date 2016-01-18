@@ -18,6 +18,8 @@ makeWeightsDT(data, values = NULL, print = NULL, adjust = NULL,
 
 \item{adjust}{variables to tabulate by and include in \code{adVars} in attributes}
 
+\item{formula}{a formula such as \code{fot ~ sex} or \code{Surv(fot, lex.Xst) ~ sex}}
+
 \item{Surv.response}{logical, if \code{TRUE} throws error if response in
 \code{formula} is not a \code{Surv} object and vice versa}
 
@@ -44,8 +46,10 @@ if there are any rows with missing \code{values} or \code{adjust} values.
 \strong{special:} key phrase \code{\%\%NA_COUNT\%\%} in text is replaced
 with the count of missing observations.
 E.g. \code{"Missing \%\%NA_COUNTS\%\% observations due to derpness."}}
-
-\item{a}{formula such as \code{fot ~ sex} or \code{Surv(fot, lex.Xst) ~ sex}}
+}
+\description{
+An internal function that aggregates a table
+and merges in weights.
 }
 \examples{
 makeWeightsDT <- popEpi:::makeWeightsDT ## this avoids errors during tests

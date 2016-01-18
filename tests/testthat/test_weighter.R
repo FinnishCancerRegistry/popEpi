@@ -22,7 +22,7 @@ test_that("makeWeightsDT works with various weights & adjust spesifications", {
   wdt <- ICSS[, list(agegr = c(0, seq(15,85,5)), weights = ICSS3)]
   
   
-  expr <- quote(list(pyrs = pyrs, from0to1 = from0to1))
+  expr <- list(quote(list(pyrs = pyrs, from0to1 = from0to1)))
   
   ## works with weights data.frame?
   ## Intention of test: wdt contains more levels of agegr than data;
@@ -70,18 +70,21 @@ test_that("internal weights are computed correctly", {
   adjust <- quote(popEpi:::cutLow(dg_age, c(0, seq(15,85,5), Inf)))
   dt[, c("agegr") := eval(adjust)]
   
+  vals <- list(c("pyrs", "from0to1"))
+  
   err1 <- paste0("Requested computing internal weights, but no values to ",
                  "compute internals weights with were supplied ", 
                  "\\(internal error: If you see this, complain ", 
                  "to the package maintainer\\).")
+  
   expect_error({
-    DT <- makeWeightsDT(dt, values = c("pyrs", "from0to1"), 
+    DT <- makeWeightsDT(dt, values = vals, 
                         weights = "internal", 
                         print = NULL, adjust = c("sex", "agegr"))
   }, regexp = err1)
   
   ## one adjust var
-  DT1 <- makeWeightsDT(dt, values = c("pyrs", "from0to1"), 
+  DT1 <- makeWeightsDT(dt, values = vals, 
                        weights = "internal", 
                        print = NULL, adjust = "agegr",
                        internal.weights.values = "pyrs")
@@ -89,7 +92,7 @@ test_that("internal weights are computed correctly", {
   expect_equal(DT1$weights, DT2$V1)
   
   ## two adjust vars
-  DT1 <- makeWeightsDT(dt, values = c("pyrs", "from0to1"), 
+  DT1 <- makeWeightsDT(dt, values = vals, 
                        weights = "internal", 
                        print = NULL, adjust = c("sex", "agegr"),
                        internal.weights.values = "pyrs")
@@ -120,12 +123,14 @@ test_that("weighter works with a list of values arguments", {
                 status = status %in% 1:2, 
                 aggre = list(sex, dg_age = popEpi:::cutLow(dg_age, 0:125)))
   
-  DT1 <- makeWeightsDT(dt, values = list(c("pyrs", "from0to1"), quote(from0to0)), 
+  vals <- list(c("pyrs", "from0to1"), quote(from0to0))
+  
+  DT1 <- makeWeightsDT(dt, values = vals, 
                        print = "sex")
   expect_equivalent(DT1, dt[, lapply(.SD, sum), by = sex, .SDcols = c("pyrs", "from0to1", "from0to0")])
   
   dt$agegr <- cut(dt$dg_age, c(0, 45, 75, Inf))
-  DT2 <- makeWeightsDT(dt, values = list(c("pyrs", "from0to1"), quote(from0to0)), 
+  DT2 <- makeWeightsDT(dt, values = vals, 
                        print = c("sex", "agegr"))
   expect_equivalent(DT2, dt[, lapply(.SD, sum), by = list(sex,agegr), .SDcols = c("pyrs", "from0to1", "from0to0")])
   
@@ -141,6 +146,7 @@ test_that("weighted NA checks work", {
                 status = status %in% 1:2, 
                 aggre = list(sex, dg_age = popEpi:::cutLow(dg_age, 0:125)))
   dt[, agegr := cut(dg_age, c(0, 45, 75), right = FALSE)]
+  vals <- list(c("pyrs", "from0to1"), quote(from0to0))
   
   naTxt <- "A warning message with counts: %%NA_COUNT%%"
   expect_warning({

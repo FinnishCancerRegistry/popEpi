@@ -1,9 +1,11 @@
 #' @title Make a \code{data.table} of Tabulated, Aggregated Values and Weights
+#' @description An internal function that aggregates a table
+#' and merges in weights.
 #' @param data DF/DT; passed to \code{envir} in \code{eval}
 #' @param values values to tabulate. Anything \code{evalPopArg} can evaluate.
 #' @param print variables to tabulate by and include in \code{prVars} in attributes
 #' @param adjust variables to tabulate by and include in \code{adVars} in attributes
-#' @param a formula such as \code{fot ~ sex} or \code{Surv(fot, lex.Xst) ~ sex}
+#' @param formula a formula such as \code{fot ~ sex} or \code{Surv(fot, lex.Xst) ~ sex}
 #' @param Surv.response logical, if \code{TRUE} throws error if response in
 #' \code{formula} is not a \code{Surv} object and vice versa
 #' @param by.other other variables to tabulate by and include 
@@ -96,14 +98,19 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   tmpDum <- makeTempVarName(origData, pre = "dummy_")
   data <- data.table(rep(1L, nrow(origData)))
   setnames(data, 1, tmpDum)
-  
+
   # pre-check weights argument -------------------------------------------------
   weights <- eval(weights, envir = enclos)
   if (is.character(weights)) weights <- match.arg(weights, "internal")
   
   # formula: vars to print and adjust by ---------------------------------------
+  
+  adSub <- adjust
+  adjust <- evalPopArg(data = origData, arg = adSub, DT = TRUE, enclos = enclos)
+  
   if (!is.null(formula)) {
-    foList <- usePopFormula(formula, adjust = adSub, 
+    
+    foList <- usePopFormula(formula, adjust = adjust, 
                             data = origData, enclos = enclos, 
                             Surv.response = Surv.response)
     print <- foList$print
@@ -113,8 +120,6 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
     prSub <- substitute(print)
     print <- evalPopArg(data = origData, arg = prSub, DT = TRUE, enclos = enclos)
     
-    adSub <- substitute(adjust)
-    adjust <- evalPopArg(data = origData, arg = adSub, DT = TRUE, enclos = enclos)
     
   }
   
@@ -157,24 +162,28 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   rm(values)
   
   # additionally, values to compute internal weights by: -----------------------
-  iw <- substitute(internal.weights.values)
-  iw <- evalPopArg(data = origData, iw, DT = TRUE,
-                   enclos = enclos, recursive = TRUE,
-                   types = c("character", "expression", "list", "NULL"))
   iwVar <- NULL
-  if (length(iw) > 1L) stop("Argument 'internal.weights.values' ",
-                            "must produce only one column.")
-  if (length(iw) == 1L && is.character(weights) && weights == "internal") {
-    iwVar <- makeTempVarName(names=c(names(data), names(origData)), pre = "iw_")
-    data[, c(iwVar) := TF$iw]
+  if (is.character(weights) && weights == "internal") {
+    iw <- substitute(internal.weights.values)
+    iw <- evalPopArg(data = origData, iw, DT = TRUE,
+                     enclos = enclos, recursive = TRUE,
+                     types = c("character", "expression", "list", "NULL"))
+    
+    if (length(iw) > 1L) stop("Argument 'internal.weights.values' ",
+                              "must produce only one column.")
+    if (length(iw) == 1L && is.character(weights) && weights == "internal") {
+      iwVar <- makeTempVarName(names=c(names(data), names(origData)), pre = "iw_")
+      data[, c(iwVar) := TF$iw]
+    }
+    
+    if (length(iwVar) == 0L) {
+      stop("Requested computing internal weights, but no values to compute ",
+           "internals weights with were supplied (internal error: If you see ",
+           "this, complain to the package maintainer).")
+    }
+    rm(iw)
   }
   
-  if (is.character(weights) && weights == "internal" && length(iwVar) == 0L) {
-    stop("Requested computing internal weights, but no values to compute ",
-         "internals weights with were supplied (internal error: If you see ",
-         "this, complain to the package maintainer).")
-  }
-  rm(iw)
   
   # other category vars to keep ------------------------------------------------
   boSub <- by.other

@@ -555,8 +555,8 @@ shift.var <- function(data, id.vars = NULL, shift.var = NULL, value.vars=NULL, s
   setkeyv(data, c(id.vars, merge_var))
   setkeyv(lagdata, c(id.vars, merge_var))
   data <- lagdata[data]
-#   data <- merge(data, lagdata, all.x=TRUE, all.y=FALSE, by = c(id.vars, merge_var))
-
+  #   data <- merge(data, lagdata, all.x=TRUE, all.y=FALSE, by = c(id.vars, merge_var))
+  
   data[, (merge_var) := NULL]
   setkeyv(data, old_key)
   return(data[])
@@ -892,10 +892,17 @@ popArg2ModelNames <- function(arg, type) {
   ## and returns the deparsed expression(s) to be used as names
   ## of columns the same way that models such as lm() display
   ## the names of expressions used within formula
+  
+  ## some exceptions
+  if (is.data.frame(arg)) return(names(arg))
+  if (is.character(arg)) return(arg)
+  
   type <- match.arg(type[1L], c("NULL", "character", "list", "expression", "formula"))
   
   lang <- NULL
   lang <- try(is.language(arg) || inherits(arg, "formula"), silent = TRUE)
+  
+  
   if (inherits(lang, "try-error") || !lang) stop("arg must be a quoted or substituted expression or a formula. Error message: ", lang, ". type of arg: ", typeof(arg), ". Class: ", class(arg), ". Mode: ", mode(arg), ".")
   
   d <- oneWhitespace(paste0(deparse(arg)))
@@ -1222,7 +1229,7 @@ setcols <- function(x, j, value) {
 
 
 
-RHS2list <- function(formula) {
+RHS2list <- function(formula, handle.adjust=TRUE) {
   ## INTENTION: turns the right-hand side of a formula
   ## into a list of substituted expressions;
   ## each element in list is an expressions separated
@@ -1235,29 +1242,40 @@ RHS2list <- function(formula) {
   
   te <- terms(formula)
   tl <- attr(te, "term.labels")
-  ## to avoid e.g. c(1,2):c(3,4) NOT evaluating as c(3, 8)
-  l <- lapply(tl, function(x) gsub(pattern = ":", x = x, replacement = "%.:%"))
   
-  ## only want to substitute variables mentioned in formula (and not e.g.
-  ## functions that are by coincidence the same name)
-  ne <- new.env()
-  oe <- attr(te, ".Environment")
-  for(obj in intersect(all.vars(formula), ls(oe))) {
-    assign(envir = ne, x = obj, value = eval(parse(text = paste0("oe$", obj))))
+  ## handle adjusting variables (e.g. adjust(V1, V2) -> c("V1", "V2"))
+  adj <- tl[substr(tl, 1, 7) == "adjust("]
+  if (length(adj) == 0L) adj <- NULL
+  if (handle.adjust && !is.null(adj)) {
+    tl <- setdiff(tl, adj)
+    adjNames <- substr(adj, 8, nchar(adj)-1L)
+    adj <- lapply(adj, function(x) parse(text = x))
+    adj <- unlist(lapply(adj, eval), recursive = FALSE)
+    adj <- lapply(adj, deparse)
+    adj <- unlist(adj)
+    
+    tl <- c(tl, adj)
   }
   
+  ## to avoid e.g. c(1,2):c(3,4) NOT evaluating as c(3, 8)
+  l <- lapply(tl, function(x) gsub(pattern = ":", x = x, replacement = "%.:%"))
+  l <- lapply(l, function(x) parse(text = x)[[1L]])
   
-  l <- lapply(l, function(x) eval(parse(text = paste0("substitute(", x, ", env = ne)"))))
   names(l) <- tl
+  
+  setattr(l, "adjust", adj)
+  
   l
 }
 
 RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   l <- RHS2list(formula)
   if (length(l) == 0L) return(data.table())
+  adj <- attr(l, "adjust")
+  l <- lapply(l, function(x_) if (is.language(x_)) eval(expr = x_, envir = data, enclos = enclos) else x_)
   
-  l <- lapply(l, function(x) if (is.language(x)) eval(expr = x, envir = data, enclos = enclos) else x)
   l <- as.data.table(l)
+  setattr(l, "adjust", adj)
   l
 }
 
@@ -1353,36 +1371,14 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
   
   
   ## RHS
-  l <- RHS2list(formula)
+  l <- RHS2DT(formula, data = data, enclos = enclos)
+  adj <- attr(l, "adjust")
   
-  ## adjusting variables? ------------------------------------------------------
-  adj <- names(l)[substr(names(l), 1L, 7L) == "adjust("]
-  
-  if (length(adj)) {
-    adjNames <- adj
-    adjNames <- substr(adj, 8L, nchar(adj)-1L) ## removes "adjust(" and ")"
-    
-    adj <- l[adj]
-    l <- l[setdiff(names(l), names(adj))]
-    
-    
-    ## why lapply? if e.g. used multiple adjust() calls in formula
-    ## (adj may be a list of multiple adjust() expressions)
-    adj <- lapply(adj, eval) ## list of lists of expressions
-    adj <- unlist(adj, recursive = FALSE) ## long list of expressions
-    names(adj) <- adjNames
-    
-    l <- c(l, adj)
-  }
-  
-  l <- lapply(l, eval, envir = data, enclos = enclos)
-  l <- as.data.table(l)
-  
-  # setnames(y, names(y), makeTempVarName(names = c(names(data), names(l)), pre = names(y)))
+  ## combine
   l <- if (length(l) > 0L) cbind(y, l) else y
   
-  setattr(l, "adjust.names", names(adj))
-  setattr(l, "print.names", setdiff(names(l), c(names(adj), names(y))))
+  setattr(l, "adjust.names", adj)
+  setattr(l, "print.names", setdiff(names(l), c(adj, names(y))))
   setattr(l, "Surv.names", names(y))
   setattr(l, "formula", formula)
   
@@ -1450,7 +1446,7 @@ usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(), enclo
   if (is.data.frame(adjust) && (nrow(adjust) == 0L || ncol(adjust) == 0L)) stop("adjust evaluated to an empty data.frame")
   if (!is.null(adjust) && ncol(adjust) > 0L && length(adNames) > 0L) stop("Cannot both use argument 'adjust' AND use an adjust() term within the formula argument. Please only use one.")
   if (is.null(adjust) && length(adNames) > 0L) adjust <- dt[, .SD, .SDcols = c(adNames)]
-
+  
   
   print <- NULL
   if (length(prNames > 0L)) print <- dt[, .SD, .SDcols = eval(prNames)]

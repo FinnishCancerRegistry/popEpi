@@ -387,7 +387,7 @@ survtab_ag <- function(formula = NULL,
   
   breakScales <- names(attrs$breaks)
   
-  ## argument 'formula' pre-check
+  ## argument 'formula' pre-check ----------------------------------------------
   
   foTest <- evalPopArg(data = data[1:min(10L, nrow(data)), ], 
                        arg = substitute(formula), 
@@ -497,14 +497,24 @@ survtab_ag <- function(formula = NULL,
   all_names_present(mc, valVars)
   setcolorder(mc, valVars)
   
+  ## addition: internal weights use n at beginning of first interval
+  
+  if (is.character(weights)) {
+    weights <- match.arg(weights, "internal")
+    if (!"n" %in% valVars) {
+      stop("Requested internal weights to be computed and used to standardize", 
+           "estimates, but argument 'n' not supplied. This is currently ",
+           "required for computing internal weights (the values of 'n' ", 
+           "at the first interval will be used for this). Please supply 'n' ",
+           "or supply hand-made weights (preferred for your clarity).")
+    } 
+    
+    data[, c("n") := mc$n]
+    
+  }
+  
+  
   # making weighted table of aggregated values ---------------------------------
-  
-  vaSub <- substitute(mc)
-  weSub <- substitute(weights)
-  
-  ssSub <- list(prDT[[attr(prDT, "Surv.names")[1L]]])
-  setattr(ssSub, "names", surv.scale)
-  
   
   ## NOTE: while ssSub will pass the whole column of e.g. fot values, which will
   ## not limit the data to e.g. up 5 years of follow-up if original data went 
@@ -513,10 +523,14 @@ survtab_ag <- function(formula = NULL,
   bl <- list(surv.breaks[-length(surv.breaks)])
   setattr(bl, "names", surv.scale)
   
-  data <- makeWeightsDT(data = data, values = vaSub, n = 0L,
-                        print = prSub, adjust = adSub, 
-                        by.other = ssSub,
-                        custom.levels = bl, weights = weSub)
+  adjust <- evalPopArg(data, adjust, enclos = PF, naming = "model")
+  
+  iws <- if ("n" %in% names(data)) "n" else NULL
+  data <- makeWeightsDT(data = data, values = list(mc), enclos = PF,
+                        print = NULL, formula = formula, adjust = adjust, 
+                        by.other = surv.scale, Surv.response = FALSE,
+                        custom.levels = bl, weights = weights,
+                        internal.weights.values = NULL)
   allVars <- attr(data, "makeWeightsDT")
   allVars[] <- lapply(allVars, function(x) if (length(x) == 0L) NULL else x)
   prVars <- allVars$prVars
@@ -525,7 +539,6 @@ survtab_ag <- function(formula = NULL,
   valVars <- allVars$vaVars
   
   byVars <- c(prVars, adVars)
-  
   
   # formulate some needed variables --------------------------------------------
   setkeyv(data, c(byVars, surv.scale))
@@ -839,7 +852,7 @@ survtab_ag <- function(formula = NULL,
   
   used_args$data <- origData
   used_args$formula <- eval(attr(foTest, "quoted.arg"), envir = PF)
-  used_args$weights <- evalPopArg(origData, arg = weights, enclos = PF, DT = FALSE, recursive = TRUE)
+  used_args$weights <- evalRecursive(arg = weights, env = PF)
   
   arglist <- list(call = this_call, 
                   arguments = used_args,
