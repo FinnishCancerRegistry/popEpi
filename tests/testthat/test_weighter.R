@@ -7,7 +7,8 @@ test_that("makeWeightsDT works with various weights & adjust spesifications", {
   sibr[1:50, sex := 0L]
   
   dt <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,
-                status = status %in% 1:2, aggre = list(sex, dg_age = popEpi:::cutLow(dg_age, 0:125)))
+                status = status %in% 1:2, 
+                aggre = list(sex, dg_age = popEpi:::cutLow(dg_age, 0:125)))
   
   print <- quote(list(gender = sex))
   prdt <- evalPopArg(dt, print)
@@ -51,5 +52,59 @@ test_that("makeWeightsDT works with various weights & adjust spesifications", {
                sort(unique(DT$weights)))
   expect_equal(DT[agegr>=30L, sum(pyrs), keyby = agegr], dt[, sum(pyrs), keyby = agegr], check.attributes = FALSE)
   expect_equal(DT[, sum(pyrs), keyby = gender], dt[, sum(pyrs), keyby = gender], check.attributes = FALSE)
+  
+})
+
+
+
+test_that("internal weights are computed correctly", {
+  skip_on_cran()
+  sibr <- popEpi::sibr[1:100]
+  sibr[1:50, sex := 0L]
+  
+  dt <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,
+                status = status %in% 1:2, 
+                aggre = list(sex, dg_age = popEpi:::cutLow(dg_age, 0:125)))
+  
+  
+  adjust <- quote(popEpi:::cutLow(dg_age, c(0, seq(15,85,5), Inf)))
+  dt[, c("agegr") := eval(adjust)]
+  
+  err1 <- paste0("Requested computing internal weights, but no values to ",
+                 "compute internals weights with were supplied ", 
+                 "\\(internal error: If you see this, complain ", 
+                 "to the package maintainer\\).")
+  expect_error({
+    DT <- makeWeightsDT(dt, values = c("pyrs", "from0to1"), 
+                        weights = "internal", 
+                        print = NULL, adjust = c("sex", "agegr"))
+  }, regexp = err1)
+  
+  ## one adjust var
+  DT1 <- makeWeightsDT(dt, values = c("pyrs", "from0to1"), 
+                       weights = "internal", 
+                       print = NULL, adjust = "agegr",
+                       internal.weights.values = "pyrs")
+  DT2 <- dt[, sum(pyrs)/sum(dt$pyrs), keyby = agegr]  
+  expect_equal(DT1$weights, DT2$V1)
+  
+  ## two adjust vars
+  DT1 <- makeWeightsDT(dt, values = c("pyrs", "from0to1"), 
+                       weights = "internal", 
+                       print = NULL, adjust = c("sex", "agegr"),
+                       internal.weights.values = "pyrs")
+  DT2 <- dt[, sum(pyrs), keyby = agegr]  
+  DT3 <- dt[, sum(pyrs), keyby = sex] 
+  DT4 <- CJ(sex = 0:1, agegr = sort(unique(dt$agegr)))
+  DT4 <- merge(DT4, DT3, by = "sex", all.x = TRUE, all.y = TRUE)
+  setnames(DT4, "V1", "w.sex")
+  DT4 <- merge(DT4, DT2, by = "agegr", all.x = TRUE, all.y = TRUE)
+  setnames(DT4, "V1", "w.agegr")
+  DT4[, weight := w.agegr*w.sex]
+  DT4[, weight := weight/sum(weight)]
+  setkeyv(DT4, c("sex", "agegr"))
+  setkeyv(DT1, c("sex", "agegr"))
+  
+  expect_equal(DT1$weights, DT4$weight)
   
 })

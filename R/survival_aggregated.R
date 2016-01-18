@@ -25,6 +25,8 @@
 #' \code{merge(2:5, 1:2)} although \code{merge(1:5, 1:2)} is intended and 
 #' needed. 
 #' @param weights a named list or long-form data.frame of weights. See Examples.
+#' @param internal.weights.values the variable to use to compute internal
+#' weights; only used if \code{weights = "internal"}.
 #' @param enclos the enclosing environment passed on to \code{eval}. Variables
 #' not found in \code{data} or searched for here.
 #' @examples 
@@ -57,7 +59,7 @@
 #' dt <- makeWeightsDT(ag, print = quote(gender), adjust = as, 
 #'                     values = vs, weights = ws, enclos = TF)
 #' ## or
-#' dt <- makeWeightsDT(ag, print = quote(gender), adjust = as, 
+#' dt <- makeWeightsDT(ag, print = quote(gender), adjust = quote(gender), 
 #'                     values = vs, weights = ws,
 #'                     enclos = parent.frame(1L))
 #' 
@@ -84,7 +86,7 @@
 #' dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
 #'                     adjust = NULL, values = vs, weights = ws2,
 #'                     enclos = parent.frame(1L))
-makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, formula = NULL, Surv.response = TRUE, by.other = NULL, custom.levels = NULL, weights = NULL, enclos = parent.frame(1L)) {
+makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, formula = NULL, Surv.response = TRUE, by.other = NULL, custom.levels = NULL, weights = NULL, internal.weights.values = NULL, enclos = parent.frame(1L)) {
 
   # environmentalism -----------------------------------------------------------
   TF <- environment()
@@ -100,6 +102,10 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   data <- data.table(rep(1L, nrow(origData)))
   setnames(data, 1, tmpDum)
   
+  # pre-check weights argument -------------------------------------------------
+  weights <- eval(weights, envir = enclos)
+  if (is.character(weights)) weights <- match.arg(weights, "internal")
+  
   # formula: vars to print and adjust by ---------------------------------------
   if (!is.null(formula)) {
     adSub <- substitute(adjust)
@@ -110,58 +116,95 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
     adjust <- foList$adjust
   } else {
     
-    prSub <- print
+    prSub <- substitute(print)
     print <- evalPopArg(data = origData, arg = prSub, DT = TRUE, enclos = enclos)
     
-    adSub <- adjust
+    adSub <- substitute(adjust)
     adjust <- evalPopArg(data = origData, arg = adSub, DT = TRUE, enclos = enclos)
     
   }
   
   # variables to print by ----------------------------------------------------
+  prVars <- tmpDum
   if (length(print) > 0) {
     prVars <- names(print)
-    data[, c(prVars) := print]
+    data[, c(prVars) := TF$print]
     data[, c(tmpDum) := NULL]
-  } else {
-    prVars <- tmpDum
-  }
+  } 
   rm(print)
   
   # standardization ----------------------------------------------------------
+  ## note: adjust evaluated above with formula
+  adVars <- NULL
   if (length(adjust) > 0) {
     adVars <- names(adjust)
-    data[, c(adVars) := adjust]
-  } else {
-    adVars <- NULL
-  }
+    data[, c(adVars) := TF$adjust]
+  } 
   rm(adjust)
   
   # variables to sum -----------------------------------------------------------
-  vaSub <- values
-  values <- evalPopArg(data = origData, arg = vaSub, DT = TRUE, enclos = enclos)
+  values <- evalPopArg(data = origData, arg = values, DT = TRUE, enclos = enclos)
+  vaVars <- NULL
   if (length(values) > 0) {
     vaVars <- names(values)
-    data[, (vaVars) := values]
+    data[, c(vaVars) := TF$values]
   } else {
     stop("no values given to sum!")
   }
   rm(values)
   
+  # additionally, values to compute internal weights by: -----------------------
+  iw <- substitute(internal.weights.values)
+  iw <- evalPopArg(data = origData, iw, DT = TRUE,
+                   enclos = enclos, recursive = TRUE,
+                   types = c("character", "expression", "list", "NULL"))
+  iwVar <- NULL
+  if (length(iw) > 1L) stop("Argument 'internal.weights.values' ",
+                            "must produce only one column.")
+  if (length(iw) == 1L && is.character(weights) && weights == "internal") {
+    iwVar <- makeTempVarName(names=c(names(data), names(origData)), pre = "iw_")
+    data[, c(iwVar) := TF$iw]
+  }
+  
+  if (is.character(weights) && weights == "internal" && length(iwVar) == 0L) {
+    stop("Requested computing internal weights, but no values to compute ",
+         "internals weights with were supplied (internal error: If you see ",
+         "this, complain to the package maintainer).")
+  }
+  rm(iw)
+  
   # other category vars to keep ------------------------------------------------
   boSub <- by.other
   by.other <- evalPopArg(data = origData, arg = boSub, DT = TRUE, enclos = enclos)
+  boVars <- NULL
   if (length(by.other) > 0) {
     boVars <- names(by.other)
-    data[, c(boVars) := by.other]
-  } else {
-    boVars <- NULL
-  }
+    data[, c(boVars) := TF$by.other]
+  } 
   rm(by.other)
   
   # check for aliased columns --------------------------------------------------
   aliased_cols(data, cols = c(prVars, adVars, boVars))
   
+  # check for conflicting column names -----------------------------------------
+  dupCols <- c(prVars, adVars, boVars, vaVars, iwVar)
+  dupCols <- unique(dupCols[duplicated(dupCols)])
+  if (length(dupCols) > 0L) {
+    dupCols <- paste0("'", dupCols, "'", collapse = ", ")
+    stop("Following column names duplicated (columns created by arguments ", 
+         "print, adjust, etc.): ", dupCols, ". If you see this, please ensure ",
+         "you are not passing e.g. the same column to both for adjusting ",
+         "and stratification (printing).")
+  }
+  
+  # check for NA values --------------------------------------------------------
+  ## NOTE: NA values of print/adjust/by.other are OK.
+  NAs <- data[, lapply(.SD, function(x) is.na(x)), .SDcols = c(vaVars, iwVar)]
+  NAs <- rowSums(NAs) > 0L
+  if (sum(NAs)) {
+    cat("NOTE: dropped ", sum(NAs), " rows due to missingness \n")
+    data <- data[!NAs]
+  }
   # inflate data ---------------------------------------------------------------
   ## on the other hand we aggregate data to levels of print, adjust and 
   ## by.other; on the other hand the data will always have tabulating variables
@@ -186,9 +229,9 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   cj <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), cj)
   
   setkeyv(data, c(prVars, adVars, boVars))
-  data <- data[cj, lapply(.SD, sum), .SDcols = vaVars, by = .EACHI]
+  data <- data[cj, lapply(.SD, sum), .SDcols = c(vaVars, iwVar), by = .EACHI]
   
-  for (k in vaVars) {
+  for (k in c(vaVars, iwVar)) {
     data[is.na(get(k)), (k) := 0]
   }
   
@@ -197,30 +240,46 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   
   ## merge in weights ----------------------------------------------------------
   
-  weSub <- weights
-  weights <- eval(weights, envir = enclos)
   if (!is.null(weights)) {
     
+    ## NOTE: adjust used here to contain levels of adjust arguments only
+    adjust <- list()
+    if (length(adVars) > 0L) {
+      adjust <- lapply(data[, eval(adVars), with = FALSE], sortedLevs)
+    }
+    
     if (is.character(weights)) {
-      stop("Argument 'weights' cannot be a character string. Supply either a list or a data.frame of weights.")
-      if (length(weights) > 1) stop("When given as a character string naming a variable in data, the weights argument can only be of length one.")
-      all_names_present(origData, weights)
-      weights <- with(origData, get(weights))
-      ## now as if weights was an expression or symbol, and handled below.
-      
+    
+      if (weights == "internal") {
+        
+        weights <- mapply(function(levs, colname) {
+          setkeyv(data, colname)
+          data[.(levs), lapply(.SD, sum), .SDcols = eval(iwVar), by = .EACHI]
+        }, 
+        colname = names(adjust), levs = adjust,
+        SIMPLIFY = FALSE)
+          
+        weights <- lapply(weights, function(x) {
+          x[[iwVar]]
+        })
+         
+      }
+      setcolsnull(data, iwVar)
+      setkeyv(data, c(prVars, adVars, boVars))
     } 
     
     if (!is.data.frame(weights) && is.vector(weights)) {
       ## note: lists are vectors
       if (!is.list(weights)) {
         weights <- list(weights) ## was a vector of values
-        if (length(adjust) != 1) stop("Argument 'weights' is a vector of weights, but there are more than one variables to adjust by; make sure 'adjust' is a character vector of length one naming an adjusting variable in data, an expression, or a list of expressions of length one.")
+        if (length(adjust) != 1) {
+          stop("Argument 'weights' is a vector of weights, but there are more ",
+               "than one variables to adjust by; make sure 'adjust' is a ", 
+               "character vector of length one naming an adjusting variable ", 
+               "in data, an expression, or a list of ", 
+               "expressions of length one.")
+        }
         setattr(weights, "names", adVars[1])
-      }
-      
-      adjust <- list()
-      if (length(adVars) > 0L) {
-        adjust <- lapply(data[, eval(adVars), with = FALSE], sortedLevs)
       }
       
       ## check adjust and weights arguments' congruence ------------------------
