@@ -5,6 +5,7 @@ test_that("relative survivals about the same as relsurv's", {
   
   library(survival)
   library(relsurv)
+  library(Epi)
   
   # male
   pm <- copy(popmort)
@@ -22,24 +23,33 @@ test_that("relative survivals about the same as relsurv's", {
   
   pm[, surv := NULL]
   
-  sire2 <- copy(sire)
+  sire2 <- sire[dg_date<ex_date, ]
   sire2[, Tstop  := as.integer(ex_date - dg_date)]
   sire2[, dg_age := as.integer(dg_date - bi_date)]
   
+  x <- Lexis(entry = list(age = dg_age, per = dg_date, fot = 0L),
+             exit = list(fot = Tstop), 
+             exit.status = as.integer(status %in% 1:2),
+             entry.status = 0L, data = sire2)
+  setDT(x)
+  setattr(x, "class", c("Lexis","data.table", "data.frame"))
   
   ## rs.surv
   ## sex must be coded c(1,2) (male, female)
-  sire2[, sex := 2L]
-  rs.e2 <- rs.surv(Surv(Tstop, status!=0) ~ 1 + ratetable(age=dg_age, sex=sex, year=dg_date),
-                   ratetable = popm, data = sire2, method = 'ederer2', type = "fleming-harrington", fin.date=ex_date)
-  rs.pp <- rs.surv(Surv(Tstop, status!=0) ~ 1 + ratetable(age=dg_age, sex=sex, year=dg_date),
-                   ratetable = popm, data = sire2, method = 'pohar-perme', type = "fleming-harrington", fin.date=ex_date)
-  sire2[, sex := 1L]
+  x[, sex := 2L]
+  rs.e2 <- rs.surv(Surv(lex.dur, lex.Xst!=0) ~ 1 + ratetable(age=age, sex=sex, year=per),
+                   ratetable = popm, data = x, method = 'ederer2', type = "fleming-harrington", fin.date=ex_date)
+  rs.pp <- rs.surv(Surv(lex.dur, lex.Xst!=0) ~ 1 + ratetable(age=age, sex=sex, year=per),
+                   ratetable = popm, data = x, method = 'pohar-perme', type = "fleming-harrington", fin.date=ex_date)
+  x[, sex := 1L]
   
   ## survtab
-  fb <- 0:(19*12)/12
-  x <- lexpand(sire, birth  = bi_date, entry = dg_date, exit = ex_date,
-               status = status %in% 1:2)
+  fb <- seq(0, 19, 1/24)
+  
+  x[, lex.dur := lex.dur/365.242199]
+  x[, age := age/365.242199]
+  x[, per := get.yrs(per, year.length = "approx")]
+  
   setnames(pm, c("year", "agegroup"), c("per", "age"))
   st.e2 <- survtab_lex(Surv(fot, event = lex.Xst) ~ 1, data = x, surv.type="surv.rel", 
                        relsurv.method="e2", pophaz = pm, breaks = list(fot = fb))
@@ -57,8 +67,8 @@ test_that("relative survivals about the same as relsurv's", {
   su.pp <- summary(rs.pp, times = fbd)
   su.pp <- cbind(data.table(time = fb), data.table(su.pp$surv))
   
-  expect_equal(st.e2[, r.e2] ,  su.e2[, V1], tolerance = 0.0005)
-  expect_equal(st.pp[, r.pp] ,  su.pp[, V1], tolerance = 0.0025)
+  expect_equal(st.e2[, r.e2] ,  su.e2[, V1], tolerance = 0.000226, scale = 1L)
+  expect_equal(st.pp[, r.pp] ,  su.pp[, V1], tolerance = 0.00292, scale = 1L)
 })
 
 # relpois vs. relsurv::rsadd ---------------------------------------------
