@@ -27,6 +27,8 @@
 #' with the count of missing observations.
 #' E.g. \code{"Missing \%\%NA_COUNTS\%\% observations due to derpness."}
 #' @examples 
+#' library(survival)
+#' 
 #' makeWeightsDT <- popEpi:::makeWeightsDT ## this avoids errors during tests
 #' 
 #' sire <- copy(popEpi::sire)
@@ -38,7 +40,7 @@
 #'               fot = seq(0, 5, 1/12))
 #' ps <- quote(list(sex, fot))
 #' as <- quote(list(agegr))
-#' vs <- quote(list(pyrs, at.risk))
+#' vs <- list(quote(list(pyrs, at.risk)))
 #' ws <- list(agegr = c(0.2,0.4,0.4))
 #' 
 #' #### custom.levels usage
@@ -56,7 +58,7 @@
 #' dt <- makeWeightsDT(ag, print = quote(gender), adjust = as, 
 #'                     values = vs, weights = ws, enclos = TF)
 #' ## or
-#' dt <- makeWeightsDT(ag, print = quote(gender), adjust = quote(gender), 
+#' dt <- makeWeightsDT(ag, print = quote(gender), adjust = as, 
 #'                     values = vs, weights = ws,
 #'                     enclos = parent.frame(1L))
 #' 
@@ -78,7 +80,7 @@
 #'                     adjust = NULL, values = vs, weights = ws,
 #'                     enclos = parent.frame(1L))            
 #' 
-#' form <- from0to1 ~ fot + gender + adjust(agegr) + adjust(sex)
+#' form <- from0to1 ~ fot + adjust(agegr) + adjust(sex)
 #' ws2 <- list(agegr = c(0.33, 0.33, 0.33), sex = c(0.5, 0.5))
 #' dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
 #'                     adjust = NULL, values = vs, weights = ws2,
