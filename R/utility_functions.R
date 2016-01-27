@@ -798,7 +798,7 @@ subsetDTorDF <- function(data, subset=NULL, select=NULL) {
   ## INTENTION: subsetting either a data.table or a data.frame
   ## and returning only selected variables for lazy people.
   if (!is.data.frame(data)) stop("data must be a data.table/data.frame")
-  if (!is.logical(subset)) stop("subset must be a logical vector")
+  if (!is.logical(subset) && !is.null(subset)) stop("subset must be a logical vector or NULL")
   
   if (is.null(select)) {
     select <- names(data)
@@ -806,11 +806,17 @@ subsetDTorDF <- function(data, subset=NULL, select=NULL) {
     all_names_present(data, select)
   }
   
-  if (is.data.table(data)) {
-    return(data[subset, eval(select), with = FALSE])
-  } else {
-    return(data[subset, eval(select)])
+  e <- "data["
+  if (!is.null(subset) && !all(subset)) e <- paste0(e, "subset") 
+  if (!is.null(select) && any(select != names(data))) {
+    e <- paste0(e, ", eval(select)")
+    if (is.data.table(data)) e <- paste0(e, ", with = FALSE")
   }
+  e <- paste0(e, "]")
+  
+  e <- parse(text = e)
+  
+  eval(e)
   
 }
 
