@@ -13,42 +13,43 @@ checkBreaksList <- function(x, breaks = list(fot = 0:5)) {
 globalVariables(c("lex.dur", "lex.Xst", "lex.Cst"))
 intelliCrop <- function(x, breaks = list(fot = 0:5), allScales = NULL, cropStatuses = FALSE, tol = .Machine$double.eps^0.5) {
   
+  TF <- environment()
   checkBreaksList(x = x, breaks = breaks)
   if (!is.data.table(x)) stop("x needs to be a data.table")
   
   cropScales <- names(breaks)
   
-  all_names_present(x, "lex.dur")
-  
-  mi <- lapply(breaks, min)
-  ma <- lapply(breaks, max)
+  all_names_present(x, c("lex.dur", allScales))
   
   if (cropStatuses) {
     ## wrapped in data.table to avoid conflicting variable names with x
     ## (maybe origDur might exist in x)
-    durDT <- data.table(origDur = x$lex.dur)
+    origEnd <- x$lex.dur + x[[allScales[1L]]]
   }
   
-  for (k in seq_along(breaks)) {
-    SC <- cropScales[k]
-    mik <- mi[[SC]]
-    mak <- ma[[SC]]
-    
-    delta <- pmax(mik, x[[SC]]) -x[[SC]] ## pos if e.g. per was 1994, but min break was 1995
-    
-    for (l in allScales) {
-      set(x, j = l,  value = x[[l]] + delta)
-    }
-    rm(delta)
-    
-    maxDur <- mak - x[[SC]]
-    set(x, j = "lex.dur", value = pmin(maxDur, x$lex.dur))
-  }
+  
+  deltas <- mapply(function(b, y) pmax(min(b), y) - y, SIMPLIFY = FALSE,
+                   b = breaks, y = subsetDTorDF(x, select = cropScales))
+  ## below: baseline (zero value without assigning zero of bad class)
+  deltas <- c(deltas, list(x[[cropScales[1]]][1L] - x[[cropScales[1]]][1L]))
+  deltas <- do.call(pmax, deltas)
+  
+  x[, c(allScales) := .SD + TF$deltas, .SDcols = eval(allScales)]
+  x[, lex.dur := lex.dur - TF$deltas]
+  
+  durs <- mapply(function(b, y) max(b) - y, SIMPLIFY = FALSE,
+                 b = breaks, y = subsetDTorDF(x, select = cropScales))
+  durs$lex.dur <- x$lex.dur
+  durs <- do.call(pmin, durs)
+  ## now have max durs by row, i.e. up to roof of breaks at most,
+  ## or to ((original lex.dur) - (deltas)) if that is smaller.
+  ## (being cropped or exiting before roof of breaks)
+  
+  x[, lex.dur := TF$durs]
   
   if (cropStatuses) {
     harmonizeStatuses(x, C = "lex.Cst", X = "lex.Xst")
-    x[lex.dur < durDT$origDur, lex.Xst := lex.Cst]
-    rm(durDT)
+    x[lex.dur + x[[allScales[1L]]] + tol < origEnd, lex.Xst := lex.Cst]
   }
   
   invisible(x)
