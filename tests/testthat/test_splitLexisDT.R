@@ -17,26 +17,14 @@ test_that("splitLexisDT and splitLexis are congruent", {
   
   x <- Lexis(data=sire2[dg_date < ex_date], entry=list(fot=0, per=dg_yrs, age=dg_age),
              exit=list(per=ex_yrs), merge=TRUE, exit.status=1L, entry.status = 0L)
-  # if (!is.data.table(x)) setDT(x)
-  #   
-  #     x2 <- splitLexis(x, breaks = BL[[1]], time.scale = "fot")
-  #     x3 <- splitLexisDT(x, breaks = BL[[1]], timeScale = "fot", drop = FALSE)
-  #   x2 <- intelliDrop(x2,  breaks = list(fot = BL[[1]]))
-  #   x3 <- intelliDrop(x3,  breaks = list(fot = BL[[1]]))
-  #   x3 <- splitLexisDT(x, breaks = BL[[1]], timeScale = "fot", drop = TRUE)
+  forceLexisDT(x, breaks = NULL, allScales = c("fot", "per", "age"))
   
-  #   x2 <- copy(x)
-  #   setDT(x2)
-  #   intelliCrop(x2, breaks = list(per = 1995:2000))
-  #   x3 <- intelliDrop(x2, breaks = list(per = 1995:2000))
-  #   setattr(x3, "class", c("Lexis", "data.table", "data.frame"))
-  #   setattr(x3, "time.scales", attr(x, "time.scales"))
-  #   x4 <- splitLexisDT(x, breaks = 1995:2000, timeScale = "per", drop = T)
   
-  #   
-  #   x5 <- splitLexis(x,  breaks = 1995:2000, time.scale = "per")
-  #   setDT(x5)
-  #   x5 <- intelliDrop(x5, breaks = list(per = 1995:2000))
+  x2 <- splitLexis(x, breaks = BL[[3]], time.scale = "fot")
+  x3 <- splitLexisDT(x, breaks = BL[[3]], timeScale = "fot", drop = FALSE)
+  x2 <- intelliDrop(setDT(x2),  breaks = list(fot = BL[[3]]))
+  x3 <- intelliDrop(x3,  breaks = list(fot = BL[[3]]))
+  x4 <- splitLexisDT(x, breaks = BL[[3]], timeScale = "fot", drop = TRUE)
   
   
   # one row per id ---------------------------------------------------------------

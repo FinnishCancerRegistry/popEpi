@@ -43,21 +43,29 @@
 #' x4 <- splitLexis(x4, breaks = BL$per, time.scale = "per")
 #' ## all produce identical results
 splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
-  if (!inherits(lex, "Lexis")) stop("'lex' needs to be a Lexis object")
+  
+  tol <- .Machine$double.eps^0.5
+  checkLexisData(lex, check.breaks = FALSE)
   
   allScales <- attr(lex, "time.scales")
   allBreaks <- attr(lex, "breaks")
   
-  if (!timeScale %in% allScales) stop("timeScale not among following existing time scales: ", paste0("'", allScales, "'", collapse = ", "))
+  if (!timeScale %in% allScales) {
+    stop("timeScale not among following existing time scales: ", 
+         paste0("'", allScales, "'", collapse = ", "))
+  }
   
   ## remove any existing breaks already split by;
   ## NOTE: setdiff would break Date format breaks!
   breaks <- breaks[!breaks %in% allBreaks[[timeScale]]]
   
   breaks <- matchBreakTypes(lex, breaks, timeScale, modify.lex = FALSE) 
-  lexVals <- lex[[timeScale]]
-  ## Date objects are based on doubles and therefore keep the most information
-  if (inherits(lexVals, c("IDate", "date", "dates"))) lexVals <- as.Date(lexVals)
+  
+  ## lexVars: if !merge, will drop all but these (NOTE: checkLexisData
+  ## check for existence of these)
+  lexVars <- c("lex.id", "lex.multi", allScales, "lex.dur", "lex.Cst", "lex.Xst")
+  lexVars <- intersect(names(lex), lexVars)
+  othVars <- setdiff(names(lex), lexVars)
   
   breaks <- sort(breaks)
   if (!drop)  breaks <- protectFromDrop(breaks)
@@ -66,37 +74,48 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   setattr(BL, "names", timeScale)
   checkBreaksList(x = lex, breaks = BL)
   
+  
+  
+  ## use subset lex if dropping for efficiency
+  if (drop) {
+    keepVars <- if (merge) NULL else lexVars ## NULL: all vars
+    lex <- subsetDTorDF(lex, select = keepVars)
+    rm(keepVars)
+    lex <- data.table(lex)
+    
+    setattr(lex, "class", c("Lexis", "data.table", "data.frame"))
+    
+    lex <- intelliCrop(lex, breaks = BL, allScales = allScales, 
+                       cropStatuses = TRUE, tol = tol)
+    lex <- intelliDrop(lex, breaks = BL, dropNegDur = TRUE, 
+                       check = FALSE, tol = tol)
+  }
+  
+  ## will use this due to step below (and laziness)
+  lexVals <- lex[[timeScale]]
+  ## Date objects are based on doubles and therefore keep the most information
+  if (inherits(lexVals, c("IDate", "date", "dates"))) lexVals <- as.Date(lexVals)
+  
   N_expand <- length(breaks)
   N_subjects <- nrow(lex)
-  
-  lexVars <- c("lex.id", "lex.multi", allScales, "lex.dur", "lex.Cst", "lex.Xst")
-  lexVars <- intersect(lexVars, names(lex))
-  othVars <- setdiff(names(lex), lexVars)
   
   ## quick data expansion ------------------------------------------------------
   
   l <- vector(mode = "list", length = N_expand)
   l[[1]] <- data.table(lex)
   
-  ## ALTERNATE METHOD
-  ## this would crop time scale values to obey breaks limits
-  ## and drop accordingly to save memory. however, 
-  ## time scale value determination relies on each subject from lex to reside in l.
-  ## might work if original lex data is subset as well. questionable if more efficient.
-  #   if (drop) {
-  #     intelliCrop(l[[1]], breaks = BL, allScales = allScales)
-  #     l[[1]] <- intelliDrop(l[[1]], breaks = BL, dropNegDur = TRUE)
-  #   }
-  
-  if (!merge) l[[1]][, (othVars) := NULL]
+  if (!merge) setcolsnull(l[[1]], keep = lexVars, soft = FALSE)
   
   tmpID <- makeTempVarName(data = l[[1]], pre = "TEMP_SPLITTING_ID")
   tmpIE <- makeTempVarName(data = l[[1]], pre = "TEMP_SPLIT_INT_END")
   
   set(l[[1]], j = tmpID, value = 1:nrow(l[[1]]))
-  for (k in 2:(N_expand)) {
-    l[[k]] <- l[[1]]
+  if (N_expand > 1L) {
+    for (k in 2:(N_expand)) {
+      l[[k]] <- l[[1]]
+    }
   }
+ 
   l <- rbindlist(l)
   
   ## time scale value determination --------------------------------------------
@@ -108,11 +127,10 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   ## status determination ------------------------------------------------------
   ## note: lex.dur still the original value (maximum possible)
   harmonizeStatuses(x = l, C = "lex.Cst", X = "lex.Xst")
-  not_event <- l[lexVals+lex.dur != get(tmpIE), which = TRUE]
+  not_event <- lexVals + l$lex.dur != l[[tmpIE]] ## old
   l[not_event, lex.Xst := lex.Cst]
   
   set(l, j = "lex.dur", value = l[[tmpIE]] - l[[timeScale]] )
-  
   
   ## other time scale values ---------------------------------------------------
   otherScales <- setdiff(allScales, timeScale)
@@ -123,13 +141,10 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   }
   
   ## dropping ------------------------------------------------------------------
-  
-  l <- l[lex.dur > 0]
-  if (drop) l <- intelliDrop(x = l, breaks = BL, dropNegDur = FALSE)
-  
+  ## drops very very small intervals as well as dur <= 0
+  l <- l[lex.dur > 0L + tol]
   
   setkeyv(l, c(tmpID, timeScale))
-  #   l <- unique(l) ## unsure if needed. probably highly unlikely?
   set(l, j = c(tmpIE, tmpID), value = NULL)
   
   ## ensure time scales and lex.dur have same (ish) class as before ------------
