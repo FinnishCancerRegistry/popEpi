@@ -808,7 +808,7 @@ subsetDTorDF <- function(data, subset=NULL, select=NULL) {
   
   e <- "data["
   if (!is.null(subset) && !all(subset)) e <- paste0(e, "subset") 
-  if (!is.null(select) && any(select != names(data))) {
+  if (!is.null(select) && (length(select) < names(data) || any(select != names(data)))) {
     e <- paste0(e, ", eval(select)")
     if (is.data.table(data)) e <- paste0(e, ", with = FALSE")
   }
