@@ -235,7 +235,10 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   dn <- intersect(event.values, names(x))
   n.cens <- intersect(cens.values, names(x))
   
-  if (length(prVars) == 0L) prVars <- "1"
+  if (length(prVars) == 0L) {
+    prVars <- "1"
+  } 
+  
   form <- as.formula(paste0(survScale, " ~ ", prVars))
   
   if (verbose) cat("** verbose messages from survtab_ag(): \n")

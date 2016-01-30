@@ -47,19 +47,42 @@ cast_simple <- function(data=NULL, columns=NULL, rows=NULL, values=NULL) {
   
   all_names_present(data, c(columns, rows, values))
   
+  ## allow rows = NULL 
   rowsNULL <- FALSE
   if (is.null(rows)) rowsNULL <- TRUE
   if (rowsNULL) rows <- "1"
-  form <- paste0(paste0(rows, collapse = " + "), " ~ ", paste0(columns, collapse = " + "))
+  
+  ## sometimes rows names appear to be like expressions, e.g. 'factor(V1)'
+  ## (and this function only uses string-column-names, so that's fine.)
+  actualRows <- rows
+  if (length(rows) > 1L || rows != "1") {
+    rows <- makeTempVarName(names = c(names(data), columns), 
+                            pre = paste0("RN", 1:length(rows)))
+    on.exit(setnames(data, rows, actualRows), add = TRUE)
+    setnames(data, actualRows, rows)
+  }
+  ## same for cols
+  actualCols <- columns
+  columns <- makeTempVarName(names = c(names(data), rows), 
+                             pre = paste0("CN", 1:length(columns)))
+  on.exit(setnames(data, columns, actualCols), add = TRUE)
+  setnames(data, actualCols, columns)
+  
+  form <- paste0(paste0(rows, collapse = " + "), " ~ ", 
+                 paste0(columns, collapse = " + "))
+  form <- as.formula(form)
   
   ## note: dcast probably usually finds the methods for data.frame / data.table,
   ## but this method is more certain
   if (is.data.table(data)) {
-    d <- dcast.data.table(data, formula = form, value.var=values, drop=FALSE, fun.aggregate=sum)[]
+    d <- dcast.data.table(data, formula = form, value.var=values, 
+                          drop=FALSE, fun.aggregate=sum)[]
   } else {
-    d <- dcast(data, formula = form, value.var = values, drop = FALSE, fun.aggregate = sum)[]
+    d <- dcast(data, formula = form, value.var = values, 
+               drop = FALSE, fun.aggregate = sum)[]
   }
   if (rowsNULL) set(d, j = names(d)[1L], value = NULL)
+  setnames(d, c(rows), c(actualRows))
   d
 }
 
@@ -1278,7 +1301,10 @@ RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   l <- RHS2list(formula)
   if (length(l) == 0L) return(data.table())
   adj <- attr(l, "adjust")
-  l <- lapply(l, function(x_) if (is.language(x_)) eval(expr = x_, envir = data, enclos = enclos) else x_)
+  ld <- lapply(l, deparse)
+  ld <- lapply(ld, function(ch) if (ch %in% names(data)) data[[ch]] else ch)
+  l[!unlist(lapply(ld, is.character))] <- ld[!unlist(lapply(ld, is.character))]
+  l <- lapply(l, function(elem) eval(expr = elem, envir = data, enclos = enclos))
   
   l <- as.data.table(l)
   setattr(l, "adjust", adj)

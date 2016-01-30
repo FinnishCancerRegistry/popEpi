@@ -496,10 +496,7 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   
   valVars <- unique(c(valVars, transitions))
   
-  castForm <- paste0(byNames, collapse = " + ")
-  castForm <- paste0(castForm, " ~ ", paste0(tmpTr, collapse = " + "))
-  castForm <- as.formula(castForm)
-  trans <- dcast.data.table(trans, formula = castForm, value.var = "obs")
+  trans <- cast_simple(trans, rows = byNames, columns = tmpTr, values = "obs")
   
   setkeyv(trans, NULL); setkeyv(pyrs, NULL) ## dcast.data.table seems to keep key but row order may be funky; this avoids a warning
   setkeyv(trans, byNames); setkeyv(pyrs, byNames)
