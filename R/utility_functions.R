@@ -42,6 +42,7 @@
 
 cast_simple <- function(data=NULL, columns=NULL, rows=NULL, values=NULL) {
   if (!is.data.frame(data)) stop("data needs be a data.frame or data.table")
+  if (is.null(data) || nrow(data) == 0L) stop("data NULL or has no rows")
   
   if (is.null(columns)) stop("columns cannot be NULL")
   
@@ -195,7 +196,7 @@ fac2num <- function(x) {
 #' get.yrs("2000-01-01") ## 2000
 #' 
 get.yrs <- function(dates, format = "%Y-%m-%d", year.length = "approx") {
-  match.arg(year.length, c("actual", "approx"))
+  year.length <- match.arg(year.length, c("actual", "approx"))
   y <- yrs <- NULL ## to instate as global variable to appease R CMD CHECK
   
   orle <- length(dates)
@@ -1251,6 +1252,8 @@ setcols <- function(x, j, value) {
   ## (instead of getting warning)
   if (length(x) > 1L && length(y) > 1L && is.numeric(x) && is.numeric(y)) {
     return(x*y)
+  } else if (length(x) == 1L && length(y) == 1L && is.numeric(x) && is.numeric(y)) {
+    return(x:y)
   }
   as.factor(x):as.factor(y)
   
@@ -1301,9 +1304,19 @@ RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   l <- RHS2list(formula)
   if (length(l) == 0L) return(data.table())
   adj <- attr(l, "adjust")
+  
+  dana <- names(data)
+  dana <- gsub(x=dana, pattern=" %.:% ", replacement = ":")
+  dana <- gsub(x=dana, pattern="%.:%", replacement = ":")
+  
   ld <- lapply(l, deparse)
-  ld <- lapply(ld, function(ch) if (ch %in% names(data)) data[[ch]] else ch)
-  l[!unlist(lapply(ld, is.character))] <- ld[!unlist(lapply(ld, is.character))]
+  ld <- lapply(ld, function(ch) gsub(x=ch, pattern=" %.:% ", replacement = ":"))
+  ld <- lapply(ld, function(ch) gsub(x=ch, pattern="%.:%", replacement = ":"))
+  ld <- lapply(ld, function(ch) if (ch %in% dana) which(dana %in% ch) else ch)
+  ld <- lapply(ld, function(el) if (is.integer(el)) data[[names(data)[el]]] else NULL)
+  ld[which(unlist(lapply(ld, is.null)))] <- NULL
+  l[names(ld)] <- ld
+  
   l <- lapply(l, function(elem) eval(expr = elem, envir = data, enclos = enclos))
   
   l <- as.data.table(l)

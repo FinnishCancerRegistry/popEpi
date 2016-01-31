@@ -370,7 +370,7 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
 
 
 
-test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs") {
+test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs", show.by = NULL) {
   
   x <- copy(x)
   oc <- class(x)
@@ -382,9 +382,17 @@ test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs
   all_names_present(x, test.var, msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer.")
   
   if (any(!sum.over %in% by)) stop("sum.over must be a subset of by.")
+  if (length(show.by) == 0L) show.by <- by
+  if (length(by) != length(show.by)) {
+    stop("Internal error: length(sum.over) != length(show.sum.over). ",
+         "If you see this, complain to the package maintainer.")
+  }
   
-  sum.to <- setdiff(by, sum.over)
-  if (length(sum.to) == 0L) sum.to <- NULL
+  wh_sum.to <- !by %in% sum.over
+  sum.to <- by[wh_sum.to]
+  show.sum.to <- show.by[wh_sum.to]
+  
+  if (length(sum.to) == 0L) sum.to <- show.sum.to <- NULL
   
   tmpTV <- makeTempVarName(x, pre = "testValues_")
   tmpDiff <- makeTempVarName(x, pre = "diff_")
@@ -408,7 +416,7 @@ test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs
   ## we keep non-consecutively bad surv.int stratas in entirety for inspection
   if (nrow(ct) > 0L) {
     msg <- paste0("Some survival intervals")
-    if (!is.null(sum.to)) msg <- paste0(msg, ", when summed to the variable(s) ", paste0("'", sum.to, "',", collapse = ", ")) else
+    if (!is.null(sum.to)) msg <- paste0(msg, ", when summed to the variable(s) ", paste0("'", show.sum.to, "',", collapse = ", ")) else
       msg <- paste0(msg, " summed to the margins (over any stratifying / adjusting variables)")
     msg <- paste0(msg, " were empty non-consecutively; keeping all survival ",
                   "intervals with some estimates as NA for inspection.")

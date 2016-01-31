@@ -496,6 +496,12 @@ print.survtab <- function(x, subset = NULL, ...) {
       median(x, na.rm = TRUE)
   }
   
+  ## to avoid e.g. 'factor(V1, 1:2)' going bonkers
+  pv_orig <- pv
+  if (length(pv) > 0L) {
+    pv <- makeTempVarName(x, pre = paste0("print_", 1:length(pv)))
+    setnames(x, pv_orig, pv)
+  }
   medmax <- x[, list(Tstop = c(magicMedian(c(min(Tstart),Tstop)), max(Tstop))), keyby = eval(pv)]
   
   setkeyv(medmax, c(pv, "Tstop"))
@@ -510,7 +516,7 @@ print.survtab <- function(x, subset = NULL, ...) {
   # x[, c(sa$value.vars) := lapply(.SD, function(x) round(x, 2L)), .SDcols = c(sa$value.vars)]  
   
   setcolsnull(x, keep = c(pv, "Tstop", sa$surv.vars), colorder = TRUE)
-  
+  if (length(pv)) setnames(x, pv, pv_orig)
   print(data.table(x), ...)
   invisible()
 }
@@ -583,6 +589,12 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   setDT(x)
   setattr(x, "class", class(object))
   
+  ## to avoid e.g. 'factor(V1, 1:2)' going bonkers
+  pv_orig <- pv <- at$print.vars
+  if (length(pv) > 0L) {
+    pv <- makeTempVarName(x, pre = paste0("print_", 1:length(pv)))
+    setnames(x, pv_orig, pv)
+  }
   
   ## quantile detection --------------------------------------------------------
   if (!is.null(q) && !is.null(t)) stop("Only define use argument 't' or argument 'q'")
@@ -599,24 +611,23 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   for (k in names(q)) {
     
     q[[k]] <- rbindlist(lapply(q[[k]], function(y) x[, list(Tstop = .SD[[2L]][which.min(abs(.SD[[1L]] - y))]), 
-                                                     .SDcols = c(k, "Tstop"), by = eval(at$print.vars)]))
+                                                     .SDcols = c(k, "Tstop"), by = eval(pv)]))
     
   }
   q <- rbindlist(q)
   
   
   ## time point detection ------------------------------------------------------
-  
   if (is.null(t) && length(q) == 0L) t <- sort(unique(x$Tstop))
   if (length(q) == 0L && !is.null(t)) {
     
     t <- sort(unique(t))
     
     t <- lapply(t, function(y) x[, list(Tstop = .SD[[1L]][which.min(abs(.SD[[1L]] - y))]), 
-                                 .SDcols = "Tstop", by = eval(at$print.vars)])
+                                 .SDcols = "Tstop", by = eval(pv)])
     t <- rbindlist(t)
     
-    setkeyv(t, c(at$print.vars, "Tstop"))
+    setkeyv(t, c(pv, "Tstop"))
     t <- unique(t)
   }
   
@@ -626,8 +637,9 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   # preface_survtab.print(x)
   
   x <- data.table(x)
-  setkeyv(x, c(at$print.vars, "Tstop"))
+  setkeyv(x, c(pv, "Tstop"))
   x <- x[t]
+  if (length(pv) > 0L) setnames(x, pv, pv_orig)
   
   if (!getOption("popEpi.datatable")) setDFpe(x)
   

@@ -465,7 +465,6 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   ## 1) transitions (easy) and 2) end points (harder).
   ## end points requires sorting at some point!
   hasEvent <- detectEvents(lex, breaks = breaks, by = "lex.id") %in% 1:2
-  
   ## is language if user supplied by = NULL 
   if (!is.language(by)) by <- by[hasEvent]
   

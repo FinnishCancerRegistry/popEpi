@@ -111,7 +111,7 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   cens.values <- all.values[1L]
   event.values <- setdiff(all.values, cens.values)
   x[, lex.Cst := NULL]
-  x[, lex.Cst := cens.values]
+  x[, lex.Cst := TF$cens.values]
   x[, lex.Xst := NULL]
   x[, lex.Xst := l$y$status]
   harmonizeStatuses(x, C = "lex.Cst", X = "lex.Xst")
@@ -143,7 +143,6 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   
   ## includes time scale to compute survivals over
   aggreVars <- c(prVars, adVars, survScale) 
-  
   
   ## splitting -----------------------------------------------------------------
   
@@ -239,7 +238,7 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
     prVars <- "1"
   } 
   
-  form <- as.formula(paste0(survScale, " ~ ", prVars))
+  form <- as.formula(paste0(survScale, " ~ ", paste0(prVars, collapse = " + ")))
   
   if (verbose) cat("** verbose messages from survtab_ag(): \n")
   st <- survtab_ag(data = x, 
@@ -336,9 +335,10 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
   # checkLexisData(x)
   if (!inherits(x, "Lexis")) stop("data not a Lexis object")
   if (!is.null(breaks)) {
-    if (!is.list(breaks)) stop("breaks must be a named list of breaks vectors")
-    if (length(breaks) != length(setdiff(names(breaks), ""))) stop("all elements in breaks list are not named")
+    checkBreaksList(x, breaks)
+    breaks[unlist(lapply(breaks, length)) == 0L] <- NULL
   }
+  
   
   tmp <- list()
   oldKey <- key(x)

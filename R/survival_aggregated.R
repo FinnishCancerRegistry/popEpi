@@ -388,7 +388,6 @@ survtab_ag <- function(formula = NULL,
   breakScales <- names(attrs$breaks)
   
   ## argument 'formula' pre-check ----------------------------------------------
-  
   foTest <- evalPopArg(data = data[1:min(10L, nrow(data)), ], 
                        arg = substitute(formula), 
                        DT = TRUE, enclos = PF, recursive = TRUE,
@@ -538,6 +537,18 @@ survtab_ag <- function(formula = NULL,
   # boVars <- allVars$boVars ## this is surv.scale
   valVars <- allVars$vaVars
   
+  ## to avoid e.g. 'factor(sex, 1:2)' going bonkers
+  prVars_orig <- prVars
+  if (length(prVars) > 0L) {
+    prVars <- makeTempVarName(names = c(names(data), adVars), 
+                              pre = paste0("print_", 1:length(prVars)))
+  }
+  adVars_orig <- adVars
+  if (length(adVars) > 0L) {
+    adVars <- makeTempVarName(names = c(names(data), prVars), 
+                              pre = paste0("print_", 1:length(adVars)))
+  }
+  if (length(c(prVars, adVars))) setnames(data, c(prVars_orig, adVars_orig), c(prVars, adVars))
   byVars <- c(prVars, adVars)
   
   # formulate some needed variables --------------------------------------------
@@ -545,7 +556,7 @@ survtab_ag <- function(formula = NULL,
   data[, Tstop := surv.breaks[-1]]
   setnames(data, surv.scale, "Tstart")
   data[, delta := Tstop - Tstart]
-  data[, surv.int := 1:.N, by = byVars]
+  data[, surv.int := 1:.N, by = eval(byVars)]
   setcolorder(data, c(byVars, "surv.int", "Tstart", "Tstop", "delta", valVars, intersect(names(data), "weights")))
   
   if (surv.method == "lifetable") {
@@ -586,11 +597,14 @@ survtab_ag <- function(formula = NULL,
   testVar <- if (surv.method == "lifetable") "n" else "pyrs"
   ## sum over adjusting variables
   data <- test_empty_surv_ints(data, by = c(prVars, adVars), 
-                               sum.over = adVars, test.var = testVar)
+                               show.by = c(prVars_orig, adVars_orig),
+                               sum.over = adVars,
+                               test.var = testVar)
   
   ## sum over nothing
   if (length(adVars) > 0L) {
     data <- test_empty_surv_ints(data, by = c(prVars, adVars), 
+                                 show.by = c(prVars_orig, adVars_orig),
                                  sum.over = NULL, test.var = testVar)
   }
   
@@ -614,6 +628,7 @@ survtab_ag <- function(formula = NULL,
     
     
     message("Some cumulative surv.obs were zero or NA:")
+    if (length(byVars)) setnames(zerotab, c(prVars, adVars), c(prVars_orig, adVars_orig))
     print(zerotab)
     if (surv.method == "lifetable" && data[surv.obs == 0, .N] > 0) {
       message("NOTE: Zero surv.obs leads to zero relative survivals as well. Adjusting with weights WILL use the zero surv.obs / relative survival values.")
@@ -802,6 +817,12 @@ survtab_ag <- function(formula = NULL,
   }
   
   # clean-up -------------------------------------------------------------------
+  ## back to original names of print / adjust (used to avoid e.g. 
+  ## 'factor(V1, 1:2)' going bonkers in data.table)
+  if (length(c(prVars))) setnames(data, c(prVars), c(prVars_orig))
+  prVars <- prVars_orig
+  adVars <- adVars_orig
+  
   ## reorder table, format numeric values, etc.
   
   miscVars <- intersect(names(data), c("surv.int", "Tstart", "Tstop", "delta"))

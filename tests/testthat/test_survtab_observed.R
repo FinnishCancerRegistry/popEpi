@@ -76,3 +76,54 @@ test_that("survtab_lex status argument works as expected", {
   
 })
 
+
+test_that("survtab_lex works with more complicated estimation", {
+  library(Epi)
+  library(survival)
+  
+  x <- popEpi::sire[sire$dg_date < sire$ex_date, ]
+  
+  ## pretend some are male
+  set.seed(1L)
+  x$sex <- rbinom(nrow(x), 1, 0.5)
+  
+  ## period
+  x$period <- cut(year(x$dg_date), c(1993,1998,2003,2008,2013), right = F)
+  
+  # age group
+  x$agegr <- cut(x$dg_age, 4)
+  
+  x$stat <- factor(x$status, levels = 0:2, 
+                   labels = c("alive", "canD", "othD"))
+  x$enStat <- factor(rep(0L, nrow(x)), levels = 0:2, 
+                     labels = c("alive", "canD", "othD"))
+  xl <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
+              exit = list(CAL = get.yrs(ex_date)), 
+              data = x,
+              exit.status = stat, entry.status = enStat, 
+              merge = TRUE)
+  
+  
+  ## observed survival
+  st1 <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ factor(sex, 0:1, c("male", "female")) + period 
+                     + adjust(agegr), data = xl, 
+                     weights = list(agegr = as.numeric(table(x$agegr))),
+                     surv.type = "surv.obs",
+                     breaks = list(FUT = seq(0, 5, 1/12)))
+  
+  ag <- splitLexisDT(xl, breaks = seq(0, 5, 1/12), timeScale = "FUT")
+  ag[, lex.Cst := as.integer(lex.Cst)]
+  ag[, lex.Cst := 0L]
+  ag[, lex.Xst := as.integer(lex.Xst != "alive")]
+  ag <- aggre(ag, by = list(sex, period, agegr, FUT))
+  
+  st2 <- survtab_ag(FUT ~ factor(sex, 0:1, c("male", "female")) + period + adjust(agegr), 
+                    weights = list(agegr = as.numeric(table(x$agegr))),
+                    data = ag, surv.type = "surv.obs", d = "from0to1")
+
+  expect_equal(st1$surv.obs.as.lo, st2$surv.obs.as.lo)
+  expect_equivalent(st1, st2)
+})
+
+
+
