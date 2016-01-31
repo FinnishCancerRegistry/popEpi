@@ -183,13 +183,17 @@ fac2num <- function(x) {
 #' 
 #' 
 #' @seealso
-#' \code{\link[Epi]{cal.yr}}
+#' \code{\link[Epi]{cal.yr}}, \code{\link{as.Date.yrs}}
 #' 
 #' @examples
 #' 
 #' test <- copy(sire)
 #' test$dg_yrs <- get.yrs(test$dg_date)
 #' summary(test$dg_yrs)
+#' 
+#' ## see: ?as.Date.yrs
+#' dg_date2 <- as.Date(test$dg_yrs)
+#' summary(as.numeric(dg_date2 - test$dg_date))
 #' 
 #' ## Epi's cal.yr versus get.yrs
 #' Epi::cal.yr("2000-01-01") ## 1999.999
@@ -199,17 +203,16 @@ get.yrs <- function(dates, format = "%Y-%m-%d", year.length = "approx") {
   year.length <- match.arg(year.length, c("actual", "approx"))
   y <- yrs <- NULL ## to instate as global variable to appease R CMD CHECK
   
+  if (missing(dates) || length(dates) == 0L) 
+    stop("'dates' not supplied or is a variable with length zero.")
+  
   orle <- length(dates)
   nale <- sum(is.na(dates))
-  
-  if (is.null(orle)) stop("dates vector is NULL; did you supply the right data?")
-  
-  if (orle == 0) stop("length of dates vector is zero; did you supply the right data?")
   
   dat <- data.table(dates=dates)
   if (is.character(dates)) {
     dat[, dates := as.IDate(dates, format = format)]
-  } else if (inherits(dat$dates, "date")) {
+  } else {
     dat[, dates := as.IDate(dates)]
   }
   
@@ -229,8 +232,13 @@ get.yrs <- function(dates, format = "%Y-%m-%d", year.length = "approx") {
     dat[, yrs := year(dates) + (yday(dates)-1L)/365.242199]
   }
   nale3 <- dat[, sum(is.na(yrs))]
-  if (nale3 == orle) warning(paste0("ALL dates values were coerced to NA by get.yrs"))
-  if (nale3 >  nale) warning(paste0(nale3-nale, "values were coerced to NA by get.yrs"))
+  if (nale3 >  nale) {
+    warning(nale3-nale, " values were coerced to NA by get.yrs, ",
+            "of which ", nale2-nale, " were coerced to NA by as.Date(). ",
+            "Please use any date class supported by as.Date(), or ",
+            "supply the appropriate 'format' if 'dates' is a character ", 
+            "vector. See ?as.Date for more information on formatting.")
+  }
   
   setattr(dat$yrs, "year.length", year.length)
   setattr(dat$yrs, "class", c("yrs", "numeric"))

@@ -49,6 +49,10 @@ test <- copy(sire)
 test$dg_yrs <- get.yrs(test$dg_date)
 summary(test$dg_yrs)
 
+## see: ?as.Date.yrs
+dg_date2 <- as.Date(test$dg_yrs)
+summary(as.numeric(dg_date2 - test$dg_date))
+
 ## Epi's cal.yr versus get.yrs
 Epi::cal.yr("2000-01-01") ## 1999.999
 get.yrs("2000-01-01") ## 2000
@@ -58,6 +62,6 @@ get.yrs("2000-01-01") ## 2000
 Joonas Miettinen
 }
 \seealso{
-\code{\link[Epi]{cal.yr}}
+\code{\link[Epi]{cal.yr}}, \code{\link{as.Date.yrs}}
 }
 
