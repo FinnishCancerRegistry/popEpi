@@ -419,13 +419,14 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   allScales <- attr(data, "time.scales")
   oldBreaks <- attr(data, "breaks")
   
-  
   ## breaks --------------------------------------------------------------------
   
   if (!is.null(oldBreaks)) checkBreaksList(data, oldBreaks)
+  if (is.null(breaks)) breaks <- oldBreaks
   
-  if (!is.null(breaks))  checkBreaksList(data, breaks)
+  checkBreaksList(data, breaks)
   
+  ## hmm - will later on set breaks on the found survival scale
   if (!is.null(ext.breaks))  checkBreaksList(data, ext.breaks)
   
   ## prep & subset data --------------------------------------------------------
@@ -439,7 +440,6 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   
   ## determine printing & adjusting vars ---------------------------------------
   adSub <- substitute(adjust)
-  # adjustDT <- evalPopArg(x, adSub, enclos = PF, recursive = TRUE, DT = TRUE)
   foList <- usePopFormula(formula, adjust = adSub, data = x, enclos = PF)
   
   adNames <- names(foList$adjust)
@@ -449,29 +449,64 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   if (length(adNames) > 0L) x[, c(adNames) := foList$adjust]
   if (length(prNames) > 0L) x[, c(prNames) := foList$print]
   
-  # formula for survtab_lex
+  ## formula for survtab_lex: we estimate survivals by all levels of both
+  ## print and adjust; adjusting here means computing directly adjusted
+  ## estimates of the mean survival time, so mean survival times are
+  ## weighted later on.
+  
   formula <- paste0(deparse(formula[[2L]]), " ~ ")
-  if (length(c(adNames, prNames)) > 0L) formula <- paste0(formula, paste0(c(prNames, adNames), collapse = " + ")) else 
+  if (length(c(adNames, prNames)) > 0L) {
+    formula <- paste0(formula, paste0(c(prNames, adNames), collapse = " + "))
+  } else {
     formula <- paste0(formula, "1")
+  }
   formula <- as.formula(formula)
 
   ## detect survival time scale ------------------------------------------------
   allScales <- attr(data, "time.scales")
   survScale <- allScales[x[, unlist(lapply(.SD, function(x) identical(x, foList$y$time))), .SDcols = allScales]]
   
-  if (length(survScale) == 0L) survScale <- allScales[x[, unlist(lapply(.SD, function(x) all.equal(x, foList$y$time)))]]
-  if (length(survScale) == 0L) stop("Could not determine which time scale was used. The formula MUST include the time scale used within a Surv() call (or a Surv object), e.g. Surv(FUT, lex.Xst) ~ sex. Note that the 'time' argument is effectively (and exceptionally) used here to denote the times at the beginning of follow-up to identify the time scale existing in the supplied data to use. If you are sure you are mentioning a time scale in the formula in this manner, complain to the package maintainer.")
-  all_names_present(x, survScale, msg = "Internal error: could not determine survival time scale. Make sure the formula contains e.g. Surv(time = fot, event = lex.Xst), where fot is the time scale you want to compute survivals over. If you are using this right, complain to the package maintainer.")
+  if (length(survScale) == 0L) {
+    survScale <- allScales[x[, unlist(lapply(.SD, function(x) all.equal(x, foList$y$time)))]]
+  }
+  if (length(survScale) == 0L) {
+    stop("Could not determine which time scale was used. The formula MUST ",
+         "include the time scale used within a Surv() call (or a Surv object)",
+         ", e.g. Surv(FUT, lex.Xst) ~ sex. Note that the 'time' argument is ",
+         "effectively (and exceptionally) used here to denote the times at ",
+         "the beginning of follow-up to identify the time scale existing in ",
+         "the supplied data to use. If you are sure you are mentioning a time ",
+         "scale in the formula in this manner, complain to the ",
+         "package maintainer.")
+  }
+  
+  no_ss <- paste0("Internal error: could not determine survival time scale. ",
+                  "Make sure the formula contains e.g. ",
+                  "Surv(time = fot, event = lex.Xst), where fot is the time ",
+                  "scale you want to compute survivals over. If you are ",
+                  "using this right, complain to the package maintainer.")
+  all_names_present(x, survScale, msg = no_ss)
+  rm(no_ss)
   
   # this used at the end for YPLL
   tol <- .Machine$double.eps^0.5
   byNames <- c(prNames, adNames)
   N_subjects <- x[!duplicated(lex.id) & x[[survScale]] < tol, list(obs=.N), keyby=eval(TF$byNames)]
   
+  ## figure out extrapolation breaks -------------------------------------------
+  ## now that the survival time scale is known this can actually be done.
+  
+  if (is.null(ext.breaks)) {
+    ext.breaks <- list(c(seq(0, 1, 1/12), 1.25, 1.5, 2:19, seq(20,50, 5)))
+    names(ext.breaks) <- survScale
+    checkBreaksList(x, ext.breaks)
+  }
+  
   ## compute survivals ---------------------------------------------------------
   ## NOTE: do not adjust here; adjust in original formula means weighting
   ## the mean survival time results.
   forceLexisDT(x, breaks = oldBreaks, allScales = allScales, key = FALSE)
+  
   st <- survtab_lex(formula, data = x, breaks = breaks, pophaz = pophaz,
                     surv.type = "surv.rel", relsurv.method = "e2", ...)
   print(formula)
@@ -481,9 +516,12 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   badByNames <- setdiff(byNames, names(st))
   if (length(badByNames) > 0L) {
     badByNames <- paste0("'", badByNames, "'", collapse = ", ")
-    stop("Internal error: could not find following variables in resulting survtab object although they were used in formula: ", 
+    stop("Internal error: could not find following variables in resulting ", 
+         "survtab object although they were used in formula: ", 
          badByNames, ". If you see this, complain to the package maintainer.")
   }
+  
+  stop("test")
   
   if (verbose) cat("Table of estimated observed survivals: \n")
   if (verbose) print(st)
@@ -697,3 +735,14 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   setattr(x, "curves", bkup)
   return(x[])
 }
+
+
+
+
+
+
+
+
+
+
+
