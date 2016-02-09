@@ -155,6 +155,12 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   }
   values <- values[[1L]]
   vaVars <- NULL
+  if (nrow(values) != nrow(data)) {
+    stop("mismatch in numers of rows in data (", nrow(data), 
+         ") and 'values' (", nrow(values), "). If you see this message, ",
+         "complain to the package maintainer.")
+  }
+  
   if (length(values) > 0) {
     vaVars <- names(values)
     data[, c(vaVars) := TF$values]
