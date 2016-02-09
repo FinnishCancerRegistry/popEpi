@@ -4,6 +4,7 @@ checkBreaksList <- function(x, breaks = list(fot = 0:5)) {
   if (!is.list(breaks)) stop("breaks needs to be a list")
   if (!is.data.frame(x)) stop("x needs to be a data.frame")
   timeScales <- names(breaks)
+  if (length(breaks) == 0L) stop("length of breaks list is zero")
   if (length(timeScales) != length(breaks)) stop("breaks needs to be a fully named list")
   
   bad_scales <- setdiff(timeScales, names(x))
