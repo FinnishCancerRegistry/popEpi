@@ -445,7 +445,15 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   adNames <- names(foList$adjust)
   prNames <- names(foList$print)
   
-  setcolsnull(x, keep = c("lex.id", allScales, "lex.dur", "lex.Cst", "lex.Xst", setdiff(names(pophaz), "haz")), soft = FALSE)
+  nophvars <- paste0("Data must have variables with the same names as the",
+                     " supplied pophaz data set (besides 'haz'). ",
+                     "Variables in pophaz missing from data: ",
+                     "%%VARS%%")
+  all_names_present(x, setdiff(names(pophaz), "haz"),
+                    msg = nophvars)
+  
+  setcolsnull(x, keep = c("lex.id", allScales, "lex.dur", "lex.Cst", "lex.Xst", 
+                          setdiff(names(pophaz), "haz")), soft = FALSE)
   if (length(adNames) > 0L) x[, c(adNames) := foList$adjust]
   if (length(prNames) > 0L) x[, c(prNames) := foList$print]
   
@@ -501,6 +509,10 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
     names(ext.breaks) <- survScale
     checkBreaksList(x, ext.breaks)
   }
+  if (!survScale %in% names(ext.breaks)) {
+    stop("The survival time scale must be included in the list of breaks ",
+         "to extrapolate by ('ext.breaks').")
+  }
   
   ## compute survivals ---------------------------------------------------------
   ## NOTE: do not adjust here; adjust in original formula means weighting
@@ -509,19 +521,13 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   
   st <- survtab_lex(formula, data = x, breaks = breaks, pophaz = pophaz,
                     surv.type = "surv.rel", relsurv.method = "e2", ...)
-  print(formula)
-  print(x)
-  print(data.table(st))
   
-  badByNames <- setdiff(byNames, names(st))
-  if (length(badByNames) > 0L) {
-    badByNames <- paste0("'", badByNames, "'", collapse = ", ")
-    stop("Internal error: could not find following variables in resulting ", 
-         "survtab object although they were used in formula: ", 
-         badByNames, ". If you see this, complain to the package maintainer.")
-  }
-  
-  stop("test")
+  bbnm <- paste0("Internal error: could not find following variables in ", 
+                 "resulting survtab object although they were used in formula:", 
+                  "%%VARS%%. If you see this, complain to the package ",
+                 "maintainer.")
+  all_names_present(st, byNames, msg = bbnm)
+
   
   if (verbose) cat("Table of estimated observed survivals: \n")
   if (verbose) print(st)
@@ -530,104 +536,117 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   subr <- attr(st, "survtab.meta")$surv.breaks
   n_si <- length(subr) - 1 ## maximum surv.int value
   
+  
   ## keep surv.exp -------------------------------------------------------------
-  ##  surv.exp will be used to determine disease-free mean survival
+  ##  surv.exp will be used to determine e.g. disease-free mean survival
   ## (will keep it for later inspection)
   
   setDT(st)
+  bareVars <- c(prNames, adNames, "surv.int", "Tstart", 
+                "Tstop", "delta", "surv.obs", "r.e2")
+  all_names_present(st, bareVars, msg = 
+                      paste0("Internal error: expected to have variables ",
+                             "%%VARS%% after computing observed survivals ",
+                             "but didn't. Blame the package maintainer if you ",
+                             "see this."))
+  setcolsnull(st, keep = bareVars)
   st[, surv.exp := surv.obs*r.e2]
+  st[, r.e2 := NULL]
   
-  st2 <- st[, c(prNames, adNames, "surv.int", "Tstart", "Tstop", "delta", "surv.obs"), with=FALSE]
-  setnames(st2, "surv.obs", "surv.exp")
-  st <- rbindlist(list(st2, st[, c(prNames, adNames, "surv.int", "Tstart", "Tstop", "delta", "surv.exp"), with=FALSE]), use.names = TRUE)
+  st2 <- copy(st)
+  st[, surv.exp := NULL]
+  st2[, surv.obs := NULL]
+  setnames(st2, "surv.exp", "surv.obs")
+  st <- rbind(st, st2)
+  setDT(st)
   rm(st2)
-  setnames(st, "surv.exp", "surv.obs")
   
   smType <- makeTempVarName(st, pre = "survmean_type_")
   st[, c(smType) := factor(rep(c("est", "exp"), each = nrow(st)/2L))]
-  setcolorder(st, c(smType, prNames, adNames, "surv.int", "Tstart", "Tstop", "delta", "surv.obs"))
+  setcolorder(st, c(smType, prNames, adNames, 
+                    setdiff(names(st), c(smType, prNames, adNames))))
   setkeyv(st, c(smType, prNames, adNames, "surv.int"))
   
-  print(st)
-  stop("test")
-  
   ## get only values at the end of known follow-up -----------------------------
-  ## get copy of x
-  setkeyv(x, c("lex.id", attr(x, "time.scales")[1L]))
+  ## x may be split or not
+  setkeyv(x, c("lex.id", survScale))
   x <- unique(x, by=c("lex.id"), fromLast = TRUE)
-  x[, fot := fot+lex.dur]
-  x <- x[fot >= max(subr)]
+  x <- x[x[[survScale]] + lex.dur >= max(subr)]
+  
   ## if all subjects left follow-up before the roof of surv.breaks, 
   ## now nrow(x) == 0. meaning we do not extrapolate
   
   if (nrow(x) > 0) {
-    if (verbose) cat("Computing EdererI expected (extrapolated) survivals for ", nrow(x), "subjects... \n")
+    if (verbose) cat("Computing EdererI expected (extrapolated) survivals for ", 
+                     nrow(x), "subjects... \n")
     
     ## extrapolate and add expected survivals after observed survivals
     
-    setcolsnull(x, keep = c("lex.id", "fot", "per", "age", "lex.dur", by.vars, names(pophaz)))
+    setcolsnull(x, keep = c("lex.id", allScales, "lex.dur", 
+                            byNames, setdiff(names(ext.pophaz), "haz")), 
+                soft = FALSE)
     
     ## preparations for extrapolation ------------------------------------------
-    ## more values at the end of known follow-up
-    x[, per := per+lex.dur]
-    x[, age := age+lex.dur]
+    ## move interval beginnings to end of observed survival curve
+    ## by individual; make lex.dur the distance to end of extrapolation;
+    ## and split and compute EdererI curve.
     
-    ## compute values in 100 years or up to 125th birthday
-    ## this elongates observations
-    ## TODO: use temporary variable names to avoid conflicts
-    BL <- list(fot = c(0:6/12, 0.75, 1:100), age = c(0, 125), per = c(-Inf, Inf))
-    if (!is.null(ext.breaks)) BL <- ext.breaks
-    for (k in c("per", "age", "fot")) {
-      if (is.null(BL[[k]])) BL[[k]] <- c(if (k == "per") -Inf else 0, Inf)
-    }
+    delta <- max(subr) - x[[survScale]]
+    ## set survival time scale to zero whatever the class
+    ## (we want it to be zero since ext.breaks are supplied in that fashion)
+    x[, c(survScale) := .SD - .SD, .SDcols = survScale]
+    otherScales <- setdiff(allScales ,survScale)
+    x[, c(otherScales) := lapply(.SD, function(col) col + TF$delta),
+      .SDcols = eval(otherScales)]
     
-    expRange <- lapply(BL, range)
-    expRange <- lapply(expRange, function(x) paste0(x, collapse = " - "))
-    expRange <- mapply(function(x,y) paste0(y, ": ", x, ";"), x = expRange, y = names(expRange), SIMPLIFY = TRUE)
-    if (verbose) cat("Extrapolation range:", paste0(expRange, collapse = " "),"\n")
+    ext.roofs <- lapply(ext.breaks, max)
     
-    ## NOTE: e.g. age value here at the end of interval (i.e. age + lex.dur)
-    ## NOTE: from here on fot will be considered to be zero for everyone 
-    MS_BIRTH_YRS_ <- NULL ## this appeases R CMD CHECK
-    x[, lex.dur := pmin(pmax(max(BL$age) - age, 0L), pmax(max(BL$per) - per, 0L), max(BL$fot))]
-    x <- x[lex.dur > 0L]
-    x[, MS_BIRTH_YRS_ := per-age]
+    x[, lex.dur := {
+      l <- mapply(function(roof, col) {
+        roof - col ## e.g. roof: age = 100, col: age = 75
+      }, col = .SD, roof = ext.roofs, SIMPLIFY = FALSE)
+      do.call(pmin, l)
+    }, .SDcols = names(ext.breaks)]
     
-    setnames(x, "per", "MS_ENTRY_YRS_")
-    setcolsnull(x, keep = c("MS_BIRTH_YRS_", "MS_ENTRY_YRS_", by.vars, names(pophaz)), colorder = TRUE)
-    if (verbose) cat("extrapolation x just before splitting: \n")
-    if (verbose) print(x)
+    ## lex.Cst & lex.Xst useless but needed for splitting function to work.
+    x[, c("lex.Cst", "lex.Xst") := 0L]
     
     ## split & merge elongated observations ------------------------------------
-    pophaz <- copy(pophaz)
-    set(pophaz, j = "haz", value = pophaz$haz * r)
+    forceLexisDT(x, breaks = NULL, allScales = allScales, key = TRUE)
     
-    x <- lexpand(x, birth = "MS_BIRTH_YRS_", entry = "MS_ENTRY_YRS_", exit = 1e6L, 
-                    status = 0L, entry.status = 0L,
-                    breaks = BL,
-                    pophaz = pophaz, pp = FALSE, merge= TRUE, drop = TRUE)
+    x <- splitMulti(x, breaks = ext.breaks, drop = TRUE, merge = TRUE)
+    phScales <- intersect(names(ext.pophaz), allScales)
+    x <- cutLowMerge(x, y = ext.pophaz, mid.scales = phScales,
+                     by = setdiff(names(ext.pophaz), "haz"), old.nums = TRUE)
+    
     setDT(x)
-    rm(pophaz)
+    rm(ext.pophaz)
     
-    if (verbose) cat("Extrapolation x just after splitting: \n")
+    if (verbose) cat("Extrapolated x just after splitting: \n")
     if (verbose) print(x)
     
-    setcolsnull(x, keep = c(by.vars, "fot","lex.dur","lex.id","lex.multi","pop.haz"))
-    setkey(x, lex.id, fot)
+    setcolsnull(x, keep = c(byNames, survScale, "lex.dur","lex.id","haz"),
+                soft = FALSE, colorder = TRUE)
+    setkeyv(x, c("lex.id", survScale))
     x[, lex.multi := 1:.N, by = lex.id]
     setkey(x, lex.id, lex.multi)
     
     ## compute subject-specific expected survival curves for EdererI method ----
-    ## NOTE: survmean_type not in x
-    by.vars <- setdiff(by.vars, "survmean_type")
-    if (length(by.vars)==0) by.vars <- NULL
-    x[, surv.int := cut(fot, BL$fot,right=FALSE,labels=FALSE)]
-    setkeyv(x, c(by.vars, "surv.int", "lex.id", "lex.multi"))
+    ## survival interval variable for simplicity
+    tmpSI <- makeTempVarName(x, pre = "surv_int_")
+    x[, c(tmpSI) := cut(x[[survScale]], ext.breaks[[survScale]],
+                        right=FALSE,labels=FALSE)]
+    setkeyv(x, c(byNames, tmpSI, "lex.id", "lex.multi"))
     
+    ## NOTE: following repeats cumulative hazard within surv.int for 
+    ## each row there by id (this is the cumulative hazard of the marginal
+    ## curve by each category to print by)
+    # x2 <- x[, .(haz = sum(haz * lex.dur)), by = c(byNames, tmpSI, "lex.id")]
+    x[, haz  := sum(haz*lex.dur), by = c(tmpSI, "lex.id")]
+    print(x)
+    # print(x2)
+    stop("test")
     
-    
-    ## NOTE: following repeats cumulative hazard within surv.int for each row there by id
-    x[, pop.haz  := sum(pop.haz*lex.dur), by = c(by.vars, "surv.int", "lex.id")]
     x[, p.exp    := exp(-pop.haz)] ## surv.int level for each subject
     x <- unique(x, by = c("surv.int", "lex.id"))
     x[, surv.exp := cumprod(p.exp)/p.exp, by = list(lex.id)] ## till start of interval
@@ -671,11 +690,12 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
     x[, surv.obs := cumprod(surv.obs), by=by.vars]
     if (verbose) cat("EdererI extrapolation done. \n")
   } else {
-    cat("No extrapolation done since all subjects exited follow-up within the range of surv.breaks used to compute observed survivals. \n")
+    cat("No extrapolation done since all subjects exited follow-up within ",
+        "the range of surv.breaks used to compute observed survivals. \n")
     x <- st
     rm(st)
     setcolsnull(x, keep = c(by.vars, "surv.int","surv.obs","delta",
-                               "surv.int.start","surv.int.stop","SE.surv.obs"))
+                            "surv.int.start","surv.int.stop"))
   }
   
   ## integrating by trapezoid areas --------------------------------------------
