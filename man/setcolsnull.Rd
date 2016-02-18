@@ -24,7 +24,7 @@ for programming sometimes}
 }
 \description{
 Deletes columns in a \code{data.table} conveniently.
-May only delete columns that are found silently. Somestimes useful in e.g.
+May only delete columns that are found silently. Sometimes useful in e.g.
 \code{on.exit} expressions.
 }
 \author{

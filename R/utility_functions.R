@@ -639,7 +639,7 @@ poisson.ci <- function(x, pt = 1, conf.level = 0.95) {
 #' @title Delete \code{data.table} columns if there
 #' @author Joonas Miettinen
 #' @description Deletes columns in a \code{data.table} conveniently.
-#' May only delete columns that are found silently. Somestimes useful in e.g.
+#' May only delete columns that are found silently. Sometimes useful in e.g.
 #' \code{on.exit} expressions.
 #' @param DT a \code{data.table}
 #' @param delete a character vector of column names to be deleted
@@ -656,7 +656,7 @@ poisson.ci <- function(x, pt = 1, conf.level = 0.95) {
 setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TRUE) {
   if (!is.data.table(DT)) stop("not a data.table")
   if (!soft) {
-    all_names_present(DT, keep)
+    all_names_present(DT, keep, msg = "Expected")
     all_names_present(DT, delete)
   }
   del_cols <- NULL
