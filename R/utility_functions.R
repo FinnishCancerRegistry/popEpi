@@ -761,35 +761,58 @@ longDF2ratetable <- function(DF, value.var = "haz", by.vars = setdiff(names(DF),
   ar
 }
 
+temp_var_names <- function(n = 1L, avoid = NULL, length = 10L) {
+  ## INTENTION: make temporary variable names that don't exist in
+  ## char vector "avoid", e.g. avoid = names(data).
+  if (n < 1L || !is.integer(n)) {
+    stop("n must an integer > 0")
+  }
+  if (length < 1L || !is.integer(length)) {
+    stop("length must an integer > 0")
+  }
+  if (!is.null(avoid)) avoid <- as.character(avoid)
+  
+  pool <- c(0:9, letters, LETTERS)
+  
+  formTemp <- function(int) {
+    v <- sample(x = pool, size = length, replace = TRUE)
+    paste0(v, collapse = "")
+  }
+  
+  l <- lapply(1:n, formTemp)
+  dupll <- duplicated(l) | l %in% avoid
+  tick <- 1L
+  while (any(dupll) && tick <= 100L) {
+    l[dupll] <- lapply(1:sum(dupll), formTemp)
+    dupll <- duplicated(l) | l %in% avoid
+    tick <- tick + 1L
+  }
+  if (tick >= 100L) {
+    stop("ran randomization 100 times and could not create unique temporary",
+         " names. Perhaps increase length?")
+  }
+  unlist(l)
+}
 
 #' @import stats
-makeTempVarName <- function(data=NULL, names=NULL, pre=NULL, post=NULL) {
+makeTempVarName <- function(data=NULL, names=NULL, 
+                            pre=NULL, post=NULL, length = 10L) {
   DN <- NULL
   DN <- c(DN, names(data))
   DN <- c(DN, names)
   DN <- unique(DN)
   
-  if (is.null(DN)) stop("no data nor names defined")
-  
-  ra <- "V123456789"
-  tvn <- paste0(pre, ra, post)
-  for (k in tvn) {
-    
-    if (k %in% DN) {
-      revo <- 1L
-      while (tvn %in% DN) {
-        if (revo >= 1000) {
-          stop("wow, did not find a random unused variable name even after 1000 tries. Specify 'pre' and or 'post'?")
-        }
-        ra <- paste0("V", as.integer(1e9*runif(1)))
-        tvn <- paste0(pre, ra, post)
-        revo <- revo + 1L
-      }
-    }
-    DN <- c(DN, k)
+  if (length(pre) != length(post) && length(post) > 0L && length(pre) > 0L) {
+    stop("Lengths of arguments 'pre' and 'post' differ (", length(pre), " vs. ",
+         length(post), "). (Tried to create temporary variables, so this is ",
+         "most likely an internal error and the pkg maintainer should be ",
+         "complained to.)")
   }
-  
-  return(tvn)
+  useN <- max(length(pre), length(post), 1L)
+  useL <- length
+  tv <- temp_var_names(avoid = DN, n = useN, length = useL)
+  tv <- paste0(pre, tv, post)
+  tv
 }
 
 
