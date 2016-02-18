@@ -388,10 +388,10 @@ robust_values <- function(num.values, force = FALSE, messages = TRUE) {
 #' \code{c("var1", "var2")}
 #' @param stops logical, stop returns exception
 #' @param msg Custom message to return instead of default message.
-#' Special: include %%VARS%% in message and the missing variable names
-#' will be inserted there (quoted, separated by comma, e.g. 
+#' Special: include \code{\%\%VARS\%\%} in message string and the missing 
+#' variable names will be inserted there (quoted, separated by comma, e.g. 
 #' \code{'var1'}, \code{'var2'} --- no leading or tracing white space). 
-#' @description given a character vector, checks if all names are present in \code{names(data)}.
+#' @description Given a character vector, checks if all names are present in \code{names(data)}.
 #' Throws error if \code{stops=TRUE}, else returns \code{FALSE} if some variable name is not present.
 #' @seealso
 #' \code{\link{robust_values}}
