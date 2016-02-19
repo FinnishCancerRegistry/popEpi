@@ -408,8 +408,6 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   TF <- environment()
   PF <- parent.frame(1L)
   
-  r.e2 <- x.table <- agetab <- NULL ## R CMD CHECK appeasement
-  
   if(!requireNamespace("survival")) stop("Need to load package survival to proceed")
   
   checkLexisData(data, check.breaks = FALSE)
@@ -614,10 +612,13 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
     ## split & merge elongated observations ------------------------------------
     forceLexisDT(x, breaks = NULL, allScales = allScales, key = TRUE)
     
+    ext.pophaz <- setDT(copy(ext.pophaz))
+    tmpHaz <- makeTempVarName(x, pre = "haz_")
+    setnames(ext.pophaz, "haz", tmpHaz)
     x <- splitMulti(x, breaks = ext.breaks, drop = TRUE, merge = TRUE)
     phScales <- intersect(names(ext.pophaz), allScales)
     x <- cutLowMerge(x, y = ext.pophaz, mid.scales = phScales,
-                     by = setdiff(names(ext.pophaz), "haz"), old.nums = TRUE)
+                     by = setdiff(names(ext.pophaz), tmpHaz), old.nums = TRUE)
     
     setDT(x)
     rm(ext.pophaz)
@@ -625,7 +626,7 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
     if (verbose) cat("Extrapolated x just after splitting: \n")
     if (verbose) print(x)
     
-    setcolsnull(x, keep = c(byNames, survScale, "lex.dur","lex.id","haz"),
+    setcolsnull(x, keep = c(byNames, survScale, "lex.dur","lex.id",tmpHaz),
                 soft = FALSE, colorder = TRUE)
     setkeyv(x, c("lex.id", survScale))
     x[, lex.multi := 1:.N, by = lex.id]
@@ -638,122 +639,121 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
                         right=FALSE,labels=FALSE)]
     setkeyv(x, c(byNames, tmpSI, "lex.id", "lex.multi"))
     
-    ## NOTE: following repeats cumulative hazard within surv.int for 
-    ## each row there by id (this is the cumulative hazard of the marginal
-    ## curve by each category to print by)
-    # x2 <- x[, .(haz = sum(haz * lex.dur)), by = c(byNames, tmpSI, "lex.id")]
-    x[, haz  := sum(haz*lex.dur), by = c(tmpSI, "lex.id")]
-    print(x)
-    # print(x2)
-    stop("test")
+    ## EDERER I: integral of the weighted average expected hazard,
+    ## where the weights are the subject-specific expected survival
+    ## probabilities.
+    ## 1) compute integral of hazard over an interval t_i by id
+    ##    (NOT cumulative hazard from zero till end of interval t_i)
+    x <- x[, sum(.SD[[1]]*.SD[[2]]), by = c(byNames, tmpSI, "lex.id"),
+      .SDcols = c(tmpHaz, "lex.dur")]
+    setnames(x, ncol(x), tmpHaz)
     
-    x[, p.exp    := exp(-pop.haz)] ## surv.int level for each subject
-    x <- unique(x, by = c("surv.int", "lex.id"))
-    x[, surv.exp := cumprod(p.exp)/p.exp, by = list(lex.id)] ## till start of interval
-    x <- x[, list(haz.exp.e1 = sum(surv.exp*pop.haz)/sum(surv.exp)), by = c(by.vars, "surv.int")] # EdererI weighting
-    x[, p.exp.e1 := exp(-haz.exp.e1)]
-    setkeyv(x, c(by.vars, "surv.int"))
-    setnames(x, "p.exp.e1", "surv.obs") ## cumulative computed later
+    ## 2) expected survivals over each single interval t_i by id...
+    ##   (no cumulative exp.surv yet)
+    tmpSE <- makeTempVarName(x, pre = "surv.exp_")
+    x[, c(tmpSE) := exp(-x[[tmpHaz]])]
+    
+    ## 3) cumulative surv.exp till START of interval t_i by id...
+    x[, c(tmpSE) := cumprod(.SD[[1]])/.SD[[1]], by = lex.id, .SDcols = tmpSE]
+    
+    ## 4) weighted average population hazard by printing & adjusting vars...
+    x <- x[, sum(.SD[[1]]*.SD[[2]])/sum(.SD[[1]]), by = c(byNames, tmpSI),
+           .SDcols = c(tmpSE, tmpHaz)]
+    tmpHW <- makeTempVarName(x, pre = "H_w_")
+    setnames(x, ncol(x), tmpHW)
+    ## 5) The Ederer I expected (marginal) survivals for intervals t_i 
+    ##    (named surv.obs here to rbind correctly with observed survival DT)
+    ##    NOTE: not cumulative at this point, will make it cumulative later.
+    x[, surv.obs := exp(-.SD[[1]]), .SDcols = tmpHW]
+    setkeyv(x, c(byNames, tmpSI))
     
     
-    ## prepare to add after actual surv.obs estimates / expected survivals
-    by.vars <- c("survmean_type", by.vars)
-    x <- rbindlist(list(x, x))
-    x[, survmean_type := factor(rep(c("est", "exp"), each = nrow(x)/2L))]
+    ## prepare to add after actual surv.obs estimates / expected survivals -----
+    byNames <- unique(c(smType, byNames))
+    ## double it because we have both surv.obs/surv.exp in st data
+    x <- rbindlist(list(x, x)) 
+    x[, c(smType) := factor(rep(c("est", "exp"), each = nrow(x)/2L))]
     
-    #     new_si_levs <- st[, max(surv.int)+1L]
-    #     new_si_levs <- new_si_levs:(new_si_levs+99L)
+    setorderv(st, c(byNames, "Tstop"))
+    st[, c(tmpSI) := 1:.N, by = eval(byNames)]
+    x[, c(tmpSI) := x[[tmpSI]] + max(st[[tmpSI]])]
     
-    #     x[, surv.int := factor(surv.int, levels = sort(unique(surv.int)), labels = new_si_levs)]
-    #     x[, surv.int := fac2num(surv.int)]
-    setorderv(st, c(by.vars, "Tstop"))
-    st[, surv.int := 1:.N, by = by.vars]
-    x[, surv.int := surv.int + max(st$surv.int)]
+    SItab <- data.table(surv.int = max(st$surv.int) + 1:(length(ext.breaks[[survScale]])-1), 
+                        delta = diff(ext.breaks[[survScale]]))
+    setnames(SItab, "surv.int", tmpSI)
+    x <- merge(x, SItab, by = tmpSI, all.x=TRUE, all.y=FALSE)
     
-    SItab <- x.table(surv.int = max(st$surv.int) + 1:(length(BL$fot)-1), delta = diff(BL$fot))
-    x <- merge(x, SItab, by = "surv.int", all.x=TRUE, all.y=FALSE)
-    
-    setcolsnull(x, keep = c(by.vars, "surv.int","surv.obs","delta"), colorder=TRUE, soft=FALSE)
-    setcolsnull(st,   keep = c(by.vars, "surv.int","surv.obs","delta"), colorder=TRUE, soft=FALSE)
+    setcolsnull(x, keep = c(byNames, tmpSI,"surv.obs","delta"), colorder=TRUE, soft=FALSE)
+    setcolsnull(st,keep = c(byNames, tmpSI,"surv.obs","delta"), colorder=TRUE, soft=FALSE)
     
     ## roll back cumulative surv.obs to cumulate later properly
-    setkeyv(st, c(by.vars, "surv.int"))
-    st[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = by.vars]
+    setkeyv(st, c(byNames, tmpSI))
+    lag1_surv.obs <- st[, shift(surv.obs, n = 1L, type = "lag", fill = 1), by = byNames]$V1
     
-    st[, surv.obs := surv.obs/lag1_surv.obs]
-    st[, lag1_surv.obs := NULL]
+    st[, surv.obs := surv.obs/TF$lag1_surv.obs]
     
     x <- rbindlist(list(st, x))
     rm(st)
     
-    setkeyv(x, c(by.vars,"surv.int"))
-    x[, surv.obs := cumprod(surv.obs), by=by.vars]
+    setkeyv(x, c(byNames,tmpSI))
+    x[, surv.obs := cumprod(surv.obs), by = eval(byNames)]
     if (verbose) cat("EdererI extrapolation done. \n")
   } else {
     cat("No extrapolation done since all subjects exited follow-up within ",
         "the range of surv.breaks used to compute observed survivals. \n")
     x <- st
     rm(st)
-    setcolsnull(x, keep = c(by.vars, "surv.int","surv.obs","delta",
-                            "surv.int.start","surv.int.stop"))
+    setcolsnull(x, keep = c(byNames,tmpSI,"surv.obs","delta"),
+                soft = FALSE, colorder = TRUE)
+    
+    setkeyv(x, c(byNames, tmpSI))
+    lag1_surv.obs <- x[, shift(surv.obs, n = 1L, type = "lag", fill = 1), by = byNames]$V1
+    
+    x[, surv.obs := surv.obs/TF$lag1_surv.obs]
   }
   
   ## integrating by trapezoid areas --------------------------------------------
-  ## need lag1 values
-  setkeyv(x, c(by.vars, "surv.int"))
-  x[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = by.vars]
+  ## trapezoid area: WIDTH*(HEIGHT1 + HEIGHT2)/2
+  ## so we compute "average interval survivals" for each interval t_i
+  ## and multiply with interval length.
   
+  setkeyv(x, c(byNames, tmpSI))
+  lag1_surv.obs <- x[, shift(surv.obs, n = 1L, type = "lag", fill = 1), 
+                     by = eval(byNames)]$V1
   
-  x[, dum := 1L]
-  x[!duplicated(x, by=c(by.vars,"dum"), fromLast=TRUE), surv.obs := 0]
-  x[is.na(lag1_surv.obs), lag1_surv.obs := 1]
-  x[, surv.obs := (surv.obs+lag1_surv.obs)/2]
-  setcolsnull(x, "dum")
+  x[, surv.obs := (surv.obs + TF$lag1_surv.obs)/2]
   
-  bkup <- x
-  setkeyv(bkup, c(by.vars, "surv.int"))
-  bkup[, Tstop := cumsum(delta), by=by.vars]
+  x[, Tstop := cumsum(delta), by = eval(byNames)]
   
-  x <- x[, list(survmean = sum(surv.obs*delta)), keyby = by.vars]
-  
+  sm <- x[, list(sum(surv.obs*delta)), keyby = eval(byNames)]
+  tmpSM <- makeTempVarName(sm, pre = "survmean_")
+  setnames(sm, ncol(sm), tmpSM)
   ## cast ----------------------------------------------------------------------
   
-  setkeyv(x, by.vars)
+  setkeyv(sm, byNames)
   
-  by.vars <- setdiff(by.vars, "survmean_type")
-  if (length(by.vars) == 0) {
-    by.vars <- "temp_dummy"
-    x[, temp_dummy := 1L]
-  }
-  x <- cast_simple(x, columns = "survmean_type", rows=by.vars, values = "survmean")
-  setcolsnull(x, "temp_dummy")
-  by.vars <- setdiff(by.vars, "temp_dummy")
-  if (length(by.vars) == 0) by.vars <- NULL
+  byNames <- setdiff(byNames, smType)
+  if (length(byNames) == 0L) byNames <- NULL
+  
+  sm <- cast_simple(sm, columns = smType, rows=byNames, values = tmpSM)
   
   ## add numbers of subjects, compute YPLL -------------------------------------
-  setkeyv(x, by.vars); setkeyv(N_subjects, by.vars)
-  x[, "obs" := N_subjects$obs]
-  x[, "YPLL" := (exp-est)*obs]
+  setkeyv(sm, byNames); setkeyv(N_subjects, byNames)
+  sm[, "obs" := N_subjects$obs]
+  sm[, "YPLL" := (exp-est)*obs]
   
   
-  ## age group weighting -------------------------------------------------------
-  if ("ms_agegr_w" %in% by.vars) {
-    by.vars <- setdiff(by.vars, "ms_agegr_w")
-    if (length(by.vars) == 0) by.vars <- NULL
-    setkey(x, ms_agegr_w)
-    setkey(agetab, ms_agegr_w)
-    x <- agetab[x]
-    x <- x[, list(est.as = sum(est*agr.w), exp.as = sum(exp*agr.w), obs = sum(obs), YPLL.as = sum(YPLL*agr.w)), keyby = by.vars]
-  }
+  ## adjusting -----------------------------------------------------------------
+  ## TODO: check weights in the beginning somehow, use makeWeightsDT() here.
+  
   if (verbose) cat("survmean computations finished. \n")
   
-  
-  setattr(bkup, "by.vars", by.vars)
-  setattr(bkup, "surv.breaks", subr)
-  setattr(x, "class", c("survmean","x.table", "x.frame"))
-  if (!getOption("popEpi.datatable")) setDFpe(x)
-  setattr(x, "curves", bkup)
-  return(x[])
+  setattr(x, "byNames", byNames)
+  setattr(x, "surv.breaks", subr)
+  setattr(sm, "class", c("survmean","data.table", "data.frame"))
+  if (!getOption("popEpi.datatable")) setDFpe(sm)
+  setattr(sm, "curves", x)
+  return(sm[])
 }
 
 
