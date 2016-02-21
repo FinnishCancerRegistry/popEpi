@@ -522,12 +522,24 @@ survtab_ag <- function(formula = NULL,
   
   
   # making weighted table of aggregated values ---------------------------------
+  ## NOTE: at-risk counts require special treatment when surv.breaks
+  ## are a subset of the available breaks: cannot sum at-risk figures!
+  ## instead should simply pick the value at the start of the
+  ## (now larger) interval. Will accomplish this by setting values not
+  ## at the start of an interval to zero and summing anyway.
+  if (surv.method == "lifetable") {
+    wh_internal <- list(surv.breaks)
+    names(wh_internal) <- surv.scale
+    wh_internal <- data[wh_internal, on = eval(surv.scale), which = TRUE]
+    wh_internal <- setdiff(1:nrow(data), wh_internal)
+    mc[wh_internal, intersect(c("n", "n.pp"), names(mc)) := 0L]
+  }
   
   ## NOTE: while ssSub will pass the whole column of e.g. fot values, which will
   ## not limit the data to e.g. up 5 years of follow-up if original data went 
   ## further, surv.breaks may be only up to 5 years and will limit the data
   ## in makeWeightsDT using a CJ-merge-trick appropriately (via custom.levels).
-  bl <- list(surv.breaks[-length(surv.breaks)])
+  bl <- list(surv.breaks)
   setattr(bl, "names", surv.scale)
   
   adjust <- evalPopArg(data, adjust, enclos = PF, naming = "model")
@@ -537,7 +549,9 @@ survtab_ag <- function(formula = NULL,
                         print = NULL, formula = formula, adjust = adjust, 
                         by.other = surv.scale, Surv.response = FALSE,
                         custom.levels = bl, weights = weights,
-                        internal.weights.values = NULL)
+                        internal.weights.values = NULL,
+                        custom.levels.cut.low = surv.scale)
+  
   allVars <- attr(data, "makeWeightsDT")
   allVars[] <- lapply(allVars, function(x) if (length(x) == 0L) NULL else x)
   prVars <- allVars$prVars
