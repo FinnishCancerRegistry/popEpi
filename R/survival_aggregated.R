@@ -71,6 +71,13 @@
 #' Required when computing EdererII relative survivals or 
 #' CIFs based on excess counts of events.
 
+#' @param n.pp variable containing total Pohar-Perme weighted counts of
+#' subjects at risk in an interval,
+#' supplied as argument \code{n} is supplied. 
+#' Computed originally on the subject
+#' level as analogous to \code{pp * as.integer(status == "at-risk")}.
+#' Required when \code{relsurv.method = "pp"}.
+#' 
 #' @param d.pp variable(s) containing total Pohar-Perme weighted counts of events,
 #' supplied as argument \code{d} is supplied. Computed originally on the subject
 #' level as analogous to \code{pp * as.integer(status == some_event)}.
@@ -332,6 +339,7 @@ survtab_ag <- function(formula = NULL,
                        pyrs = "pyrs",
                        d.exp = "d.exp",
                        
+                       n.pp = NULL,
                        d.pp = "d.pp",
                        d.pp.2 = "d.pp.2",
                        n.cens.pp = "n.cens.pp",
@@ -433,7 +441,7 @@ survtab_ag <- function(formula = NULL,
   
   valVars <- c(valVars, if (surv.type == "cif.rel")  "d.exp" else NULL)
   
-  ppVars <- c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else "n.cens.pp")
+  ppVars <- c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else c("n.cens.pp", "n.pp"))
   valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "pp") ppVars else NULL)
   
   fo <- formals("survtab_ag")
@@ -776,10 +784,16 @@ survtab_ag <- function(formula = NULL,
     comp.st.pp <- function(pp.table, by.vars = byVars) {
       ## relative survival
       if (surv.method == "hazard") {
-        all_names_present(data, c("pyrs.pp"))
+        all_names_present(data, c("pyrs.pp"),
+                          msg = paste0("internal error: work data did not have",
+                                       " variable named pyrs.pp. Complain ",
+                                       "to package maintainer if you see this."))
         comp.st.r.pp.haz(surv.table = pp.table, surv.by.vars = by.vars)
       } else {
-        all_names_present(data, c("n.eff.pp"))
+        all_names_present(data, c("n.pp", "n.cens.pp", "n.eff.pp"),
+                          msg = paste0("internal error: work data did not have",
+                                       " variable named n.eff.pp. Complain ",
+                                       "to package maintainer if you see this."))
         comp.st.r.pp.lif(surv.table = pp.table, surv.by.vars = by.vars)
         
         if (pp.table[, min(surv.obs, na.rm=T) == 0]) {

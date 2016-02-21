@@ -7,11 +7,11 @@
 \usage{
 survtab_ag(formula = NULL, data, adjust = NULL, weights = NULL,
   surv.breaks = NULL, n = "at.risk", d = "from0to1",
-  n.cens = "from0to0", pyrs = "pyrs", d.exp = "d.exp", d.pp = "d.pp",
-  d.pp.2 = "d.pp.2", n.cens.pp = "n.cens.pp", pyrs.pp = "pyrs.pp",
-  d.exp.pp = "d.exp.pp", surv.type = "surv.rel", surv.method = "hazard",
-  relsurv.method = "e2", subset = NULL, conf.level = 0.95,
-  conf.type = "log-log", verbose = FALSE)
+  n.cens = "from0to0", pyrs = "pyrs", d.exp = "d.exp", n.pp = NULL,
+  d.pp = "d.pp", d.pp.2 = "d.pp.2", n.cens.pp = "n.cens.pp",
+  pyrs.pp = "pyrs.pp", d.exp.pp = "d.exp.pp", surv.type = "surv.rel",
+  surv.method = "hazard", relsurv.method = "e2", subset = NULL,
+  conf.level = 0.95, conf.type = "log-log", verbose = FALSE)
 
 survtab_lex(formula, data, adjust = NULL, breaks = NULL, pophaz = NULL,
   weights = NULL, surv.type = "surv.rel", surv.method = "hazard",
@@ -72,6 +72,13 @@ Required when \code{surv.method = "hazard"}.}
 accumulated within a survival time interval; E.g. \code{pyrs = "pyrs"}.
 Required when computing EdererII relative survivals or 
 CIFs based on excess counts of events.}
+
+\item{n.pp}{variable containing total Pohar-Perme weighted counts of
+subjects at risk in an interval,
+supplied as argument \code{n} is supplied. 
+Computed originally on the subject
+level as analogous to \code{pp * as.integer(status == "at-risk")}.
+Required when \code{relsurv.method = "pp"}.}
 
 \item{d.pp}{variable(s) containing total Pohar-Perme weighted counts of events,
 supplied as argument \code{d} is supplied. Computed originally on the subject
