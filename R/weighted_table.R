@@ -16,6 +16,15 @@
 #' E.g. data might only have levels present to do inflation analogous to
 #' \code{merge(2:5, 1:2)} although \code{merge(1:5, 1:2)} is intended and 
 #' needed. 
+#' @param custom.levels.cut.low a character string vector of variable names.
+#' These variables mentioned in \code{custom.levels} and existing in data
+#' or first modified (in data) using \code{cutLow()} (essentially 
+#' \code{cut()} with \code{right = FALSE} and returning the lower bounds
+#' as values). Handy for aggregating data e.g. to survival intervals.
+#' \strong{NOTE}: the appropriate elements in \code{custom.levels} for these 
+#' variables must exceptionally contain an extra value as the roof used in
+#' cutting, which will not be used in "inflating" the table using a merge.
+#' See Examples.
 #' @param weights a named list or long-form data.frame of weights. See Examples.
 #' @param internal.weights.values the variable to use to compute internal
 #' weights; only used if \code{weights = "internal"}.
@@ -44,13 +53,20 @@
 #' ws <- list(agegr = c(0.2,0.4,0.4))
 #' 
 #' #### custom.levels usage
-#' fb <- seq(0, 5-1/12, 1/12)
+#' fb <- seq(0, 5-1/12, 1/12) ## exclude 5 as no row has that value
 #' ag2 <- ag[fot > 0.5,]
 #' # repeats fot intervals < 0.5 as empty rows
 #' # may be the safest way to do this
 #' dt <- makeWeightsDT(ag2, print = ps, adjust = as, 
 #'                     values = vs, weights = ws,
 #'                     custom.levels = list(fot = fb))
+#' ## aggregate from intervals seq(0, 5, 1/12) to 0:5
+#' fb2 <- 0:5 ## (this time we include 5 as the roof)       
+#' dt <- makeWeightsDT(ag2, print = ps, adjust = as, 
+#'                     values = vs, weights = ws,
+#'                     custom.levels = list(fot = fb2),
+#'                     custom.levels.cut.low = "fot")              
+#'                     
 #' 
 #' #### use of enclos
 #' TF <- environment()
@@ -85,7 +101,7 @@
 #' dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
 #'                     adjust = NULL, values = vs, weights = ws2,
 #'                     enclos = parent.frame(1L))
-makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, formula = NULL, Surv.response = TRUE, by.other = NULL, custom.levels = NULL, weights = NULL, internal.weights.values = NULL, enclos = parent.frame(1L), NA.text = NULL) {
+makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, formula = NULL, Surv.response = TRUE, by.other = NULL, custom.levels = NULL, custom.levels.cut.low = NULL, weights = NULL, internal.weights.values = NULL, enclos = parent.frame(1L), NA.text = NULL) {
   
   # environmentalism -----------------------------------------------------------
   TF <- environment()
@@ -250,10 +266,38 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
   cj <- list()
   cj <- lapply(data[, .SD, .SDcols =  c(prVars, adVars, boVars)], sortedLevs)
   
-  
+  ## e.g. if data only has fot = seq(0, 4, 1/12), but want to display table
+  ## with fot = seq(0, 5, 1/12). Very important sometimes for handy usage
+  ## of weights.
   if (length(custom.levels) > 0) cj[names(custom.levels)] <- custom.levels
+  
+  
+  ## SPECIAL: if e.g. a survival time scale with breaks seq(0, 5, 1/12)
+  ## is to be "compressed" to breaks 0:5, and the latter breaks were passed
+  ## via custom.levels, the following ensures e.g. intervals between 0 and 1
+  ## are aggregated to the same row in what follows after.
+  if (!is.null(custom.levels.cut.low)) {
+    cl_msg <- paste0("Internal error: tried to cut() variables in  ",
+                     "internally used work data that did not exist. ",
+                     "If you see this, complain to the ",
+                     "package maintainer. Bad variables: %%VARS%%.")
+    all_names_present(data, custom.levels.cut.low, msg = cl_msg)
+    all_names_present(cj, custom.levels.cut.low, msg = cl_msg)
+    
+    for (var in custom.levels.cut.low) {
+      set(data, j = var, value = cutLow(data[[var]], breaks = cj[[var]]))
+    }
+    
+    ## NOTE: if used cutlow(), then assume passed values via custom.levels
+    ## also contained the roof of the values which should not be repeated.
+    cj[custom.levels.cut.low] <- lapply(cj[custom.levels.cut.low],
+                                        function(elem) elem[-length(elem)])
+  }
+  
+  ## form data.table to merge by - the merge will inflate the data.
   cj <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), cj)
   
+  ## inflate & aggregate.
   setkeyv(data, c(prVars, adVars, boVars))
   data <- data[cj, lapply(.SD, sum), .SDcols = c(vaVars, iwVar), by = .EACHI]
   

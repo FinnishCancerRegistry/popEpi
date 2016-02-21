@@ -6,8 +6,9 @@
 \usage{
 makeWeightsDT(data, values = NULL, print = NULL, adjust = NULL,
   formula = NULL, Surv.response = TRUE, by.other = NULL,
-  custom.levels = NULL, weights = NULL, internal.weights.values = NULL,
-  enclos = parent.frame(1L), NA.text = NULL)
+  custom.levels = NULL, custom.levels.cut.low = NULL, weights = NULL,
+  internal.weights.values = NULL, enclos = parent.frame(1L),
+  NA.text = NULL)
 }
 \arguments{
 \item{data}{DF/DT; passed to \code{envir} in \code{eval}}
@@ -32,6 +33,16 @@ one can supply the levels to inflate by using this to ensure inflation is full.
 E.g. data might only have levels present to do inflation analogous to
 \code{merge(2:5, 1:2)} although \code{merge(1:5, 1:2)} is intended and 
 needed.}
+
+\item{custom.levels.cut.low}{a character string vector of variable names.
+These variables mentioned in \code{custom.levels} and existing in data
+or first modified (in data) using \code{cutLow()} (essentially 
+\code{cut()} with \code{right = FALSE} and returning the lower bounds
+as values). Handy for aggregating data e.g. to survival intervals.
+\strong{NOTE}: the appropriate elements in \code{custom.levels} for these 
+variables must exceptionally contain an extra value as the roof used in
+cutting, which will not be used in "inflating" the table using a merge.
+See Examples.}
 
 \item{weights}{a named list or long-form data.frame of weights. See Examples.}
 
@@ -69,13 +80,20 @@ vs <- list(quote(list(pyrs, at.risk)))
 ws <- list(agegr = c(0.2,0.4,0.4))
 
 #### custom.levels usage
-fb <- seq(0, 5-1/12, 1/12)
+fb <- seq(0, 5-1/12, 1/12) ## exclude 5 as no row has that value
 ag2 <- ag[fot > 0.5,]
 # repeats fot intervals < 0.5 as empty rows
 # may be the safest way to do this
 dt <- makeWeightsDT(ag2, print = ps, adjust = as, 
                     values = vs, weights = ws,
                     custom.levels = list(fot = fb))
+## aggregate from intervals seq(0, 5, 1/12) to 0:5
+fb2 <- 0:5 ## (this time we include 5 as the roof)       
+dt <- makeWeightsDT(ag2, print = ps, adjust = as, 
+                    values = vs, weights = ws,
+                    custom.levels = list(fot = fb2),
+                    custom.levels.cut.low = "fot")              
+                    
 
 #### use of enclos
 TF <- environment()
