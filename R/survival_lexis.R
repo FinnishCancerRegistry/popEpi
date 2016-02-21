@@ -201,7 +201,8 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
     d.exp.pp <- ppNames[substr(ppNames, 1, 8) == "d.exp.pp"]
     ptime.pp <- ppNames[substr(ppNames, 1, 8) == "ptime.pp"]
     n.cens.pp <- ppNames[substr(ppNames, 1, 11) == "from0to0.pp"]
-    
+    n.cens.pp <- n.cens.pp[substr(n.cens.pp, 1,13) != "from0to0.pp.2"]
+    ## TODO: n.pp via com_pp_weighted_figures()
     if (verbose) cat("Time taken by computing Pohar-Perme weighted counts and person-times: ", timetaken(ppTime), "\n")
   }
   
