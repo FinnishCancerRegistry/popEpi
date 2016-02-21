@@ -693,7 +693,7 @@ survtab_ag <- function(formula = NULL,
   # compute cause-specifc/excess-case CIFs -------------------------------------
   if (surv.type %in% c("cif.obs", "cif.rel")) {
     
-    data[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = byVars]
+    data[, lag1_surv.obs := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = eval(byVars)]
     data[, p.obs := surv.obs/lag1_surv.obs]
     
     if (surv.type == "cif.obs") {
@@ -707,7 +707,7 @@ survtab_ag <- function(formula = NULL,
         CIF_var <- paste0("CIF_", k)
         data[, (q.var)   := (1-p.obs)*get(d.var)/d]
         data[get(d.var) == 0L | d == 0L, (q.var) := 0]
-        data[, (CIF_var) := cumsum(lag1_surv.obs*get(q.var)), by = byVars]
+        data[, (CIF_var) := cumsum(lag1_surv.obs*get(q.var)), by = eval(byVars)]
       }
     }
     
@@ -715,7 +715,7 @@ survtab_ag <- function(formula = NULL,
       ## assuming d.exp in data
       data[, CIF.rel := (1-p.obs)*(d-d.exp)/d]
       data[d.exp>d, CIF.rel := NA]
-      data[, CIF.rel := cumsum(lag1_surv.obs*CIF.rel), by = byVars]
+      data[, CIF.rel := cumsum(lag1_surv.obs*CIF.rel), by = eval(byVars)]
     }
     
     ## SEs currently not known for CIFs; impute 0 to make adjusting work
@@ -738,12 +738,12 @@ survtab_ag <- function(formula = NULL,
       ##-------------
       if (surv.method == "hazard") {
         rs.table[, p.exp := exp(-delta*d.exp/pyrs)] 
-        rs.table[, surv.exp := cumprod(p.exp), by = rs.by.vars]
+        rs.table[, surv.exp := cumprod(p.exp), by = eval(rs.by.vars)]
         comp.st.r.e2.haz(surv.table = rs.table, surv.by.vars = rs.by.vars)
       } else {
         
         rs.table[, p.exp := d.exp/n]
-        rs.table[, surv.exp := cumprod(p.exp), by = rs.by.vars]
+        rs.table[, surv.exp := cumprod(p.exp), by = eval(rs.by.vars)]
         
         if (rs.table[, min(surv.obs, na.rm=T) == 0]) {
           rs.table[surv.obs == 0, surv.exp := 1]
@@ -793,7 +793,6 @@ survtab_ag <- function(formula = NULL,
     }
     data <- comp.st.pp(pp.table = data)
   }
-  
   
   # compute adjusted estimates -------------------------------------------------
   if ("weights" %in% names(data)) {
