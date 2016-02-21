@@ -1055,12 +1055,13 @@ lines.survmean <- function(x, ...) {
   curves <- attr(x, "curves")
   if (is.null(curves)) stop("no curves information in x; usually lost if x altered after using survmean")
   
-  by.vars <- attr(curves, "by.vars")
-  by.vars <- unique(c(c("survmean_type", "ms_agegr_w"), by.vars))
+  by.vars <- attr(curves, "print")
+  by.vars <- c(by.vars, attr(curves, "adjust"))
   by.vars <- intersect(by.vars, names(curves))
+  SI <- attr(curves, "surv.int")
   
   curves <- data.table(curves)
-  setkeyv(curves, c(by.vars,"surv.int"))
+  setkeyv(curves, c(by.vars, SI))
   type_levs <- length(levels(interaction(curves[, (by.vars), with=FALSE])))/2L
   if (length(by.vars) > 1) {
     other_levs <- length(levels(interaction(curves[, setdiff(by.vars, "survmean_type"), with=FALSE])))

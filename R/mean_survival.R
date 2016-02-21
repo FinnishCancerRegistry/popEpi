@@ -412,7 +412,13 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   
   checkLexisData(data, check.breaks = FALSE)
   if (is.null(pophaz)) stop("need a pophaz data set")
-  if (!is.numeric(r) || r < 0L) stop("r must be numeric and > 0, e.g. r = 1.10")
+  if (!is.numeric(r) && !is.character(r)) {
+    stop("r must be either 'auto' or a numeric value giving the assumed ",
+         "relative survival ratio to use in extrapolation, e.g. r = 0.95.",
+         "See ?survmean_lex for more information.")
+  }
+  if (is.numeric(r) && r < 0L) stop("numeric r must be > 0, e.g. r = 0.95")
+  if (is.character(r)) r <- match.arg(r, "auto")
   
   allScales <- attr(data, "time.scales")
   oldBreaks <- attr(data, "breaks")
@@ -519,7 +525,9 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   
   st <- survtab_lex(formula, data = x, breaks = breaks, pophaz = pophaz,
                     surv.type = "surv.rel", relsurv.method = "e2", ...)
-  
+  st$r.e2 <- st$surv.obs / st$r.e2
+  plot(st, y = "surv.obs")
+  stop("test")
   bbnm <- paste0("Internal error: could not find following variables in ", 
                  "resulting survtab object although they were used in formula:", 
                   "%%VARS%%. If you see this, complain to the package ",
@@ -530,9 +538,9 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   if (verbose) cat("Table of estimated observed survivals: \n")
   if (verbose) print(st)
   
-  # needed later on
+  ## needed later on to determine whose survival time lines
+  ## should be extrapolated etc.
   subr <- attr(st, "survtab.meta")$surv.breaks
-  n_si <- length(subr) - 1 ## maximum surv.int value
   
   
   ## keep surv.exp -------------------------------------------------------------
@@ -548,7 +556,13 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
                              "but didn't. Blame the package maintainer if you ",
                              "see this."))
   setcolsnull(st, keep = bareVars)
-  st[, surv.exp := surv.obs*r.e2]
+  st[, surv.exp := surv.obs/r.e2]
+  
+  if (r == "auto") {
+    ## figure out 'r' to use for each stratum
+    R <- st[, list(r.e2 = min(r.e2)), keyby = eval(byNames)]
+    R[, r.e2 := r.e2/r.e2]
+  }
   st[, r.e2 := NULL]
   
   st2 <- copy(st)
@@ -674,6 +688,11 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
     x <- rbindlist(list(x, x)) 
     x[, c(smType) := factor(rep(c("est", "exp"), each = nrow(x)/2L))]
     
+    ## argument 'r' is a RSR which adjusts the extrapolated (expected)
+    ## survivals by a given multiplier for the observed + expected curve
+    ## (not the fully expected survival curve computed for comparison)
+    x[x[[smType]] == "est", surv.obs := surv.obs * r]
+    
     setorderv(st, c(byNames, "Tstop"))
     st[, c(tmpSI) := 1:.N, by = eval(byNames)]
     x[, c(tmpSI) := x[[tmpSI]] + max(st[[tmpSI]])]
@@ -748,7 +767,8 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   
   if (verbose) cat("survmean computations finished. \n")
   
-  setattr(x, "byNames", byNames)
+  setattr(x, "print", c(smType,byNames))
+  setattr(x, "surv.int", tmpSI)
   setattr(x, "surv.breaks", subr)
   setattr(sm, "class", c("survmean","data.table", "data.frame"))
   if (!getOption("popEpi.datatable")) setDFpe(sm)
