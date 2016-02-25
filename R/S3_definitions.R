@@ -487,7 +487,7 @@ preface_survtab.print <- function(x) {
   cat("\n")
   cat("Call: \n", oneWhitespace(deparse(at$call)), "\n")
   cat("\n")
-  cat("Type arguments: \nsurv.type:", as.character(arg$surv.type), 
+  cat("Type arguments: \n surv.type:", as.character(arg$surv.type), 
       "--- surv.method:", as.character(arg$surv.method))
   if (as.character(arg$surv.type) == "surv.rel")
     cat(" --- relsurv.method:", as.character(arg$relsurv.method))
@@ -497,7 +497,14 @@ preface_survtab.print <- function(x) {
   cat(" --- transformation:",
       as.character(arg$conf.type))
   cat("\n \n")
-  cat("Totals: \n person-time:", round(sum(x$pyrs)), "--- events:", sum(x$d))
+  cat("Totals:") 
+  totCat <- paste0("\n person-time:", round(sum(x$pyrs)))
+  if (arg$surv.method == "lifetable") {
+    totCat <- paste0("\n at-risk at T=0: ", round(sum(x[surv.int == 1L]$n)))
+  }
+    
+  cat(totCat)
+  cat(" --- events:", sum(x$d))
   cat("\n \n")
   if (length(at$print.vars) > 0L) {
     cat("Stratified by:", paste0("'", at$print.vars, "'", collapse = ", "))
