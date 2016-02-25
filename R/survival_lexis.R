@@ -260,16 +260,18 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   form <- as.formula(paste0(survScale, " ~ ", paste0(prVars, collapse = " + ")))
   
   if (verbose) cat("** verbose messages from survtab_ag(): \n")
+  
   st <- survtab_ag(data = x, 
-                   formula = form,
-                   adjust = adVars,
+                   formula = TF$form,
+                   adjust = TF$adVars,
                    
-                   weights = weights, 
+                   weights = TF$weights, 
                    
-                   d = dn, pyrs = pyrs, d.exp = d.exp, n.cens = n.cens,
+                   d = TF$dn, pyrs = "pyrs", d.exp = TF$d.exp, n.cens = TF$n.cens,
                    
-                   d.pp = d.pp, d.exp.pp = d.exp.pp, d.pp.2 = d.pp.2, 
-                   n.cens.pp = n.cens.pp, pyrs.pp = ptime.pp,
+                   n.pp = TF$at.risk.pp,
+                   d.pp = TF$d.pp, d.exp.pp = TF$d.exp.pp, d.pp.2 = TF$d.pp.2, 
+                   n.cens.pp = TF$n.cens.pp, pyrs.pp = TF$ptime.pp,
                    
                    surv.type = surv.type,
                    surv.method = surv.method,
