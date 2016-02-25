@@ -441,7 +441,8 @@ survtab_ag <- function(formula = NULL,
   
   valVars <- c(valVars, if (surv.type == "cif.rel")  "d.exp" else NULL)
   
-  ppVars <- c("d.pp", "d.exp.pp", "d.pp.2",if (surv.method == "hazard") "pyrs.pp" else c("n.cens.pp", "n.pp"))
+  ppVars <- c("d.pp", "d.exp.pp", "d.pp.2", 
+              if (surv.method == "hazard") "pyrs.pp" else c("n.cens.pp", "n.pp"))
   valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "pp") ppVars else NULL)
   
   fo <- formals("survtab_ag")
@@ -450,12 +451,22 @@ survtab_ag <- function(formula = NULL,
   
   mc <- mc[valVars]
   
-  mc <- lapply(mc, function(x) try(evalPopArg(data = data, arg = x, DT = TRUE, enclos = PF), silent = TRUE))
-  mc[sapply(mc, function(x) is.null(x) || is.language(x) || inherits(x, "try-error"))] <- NULL
+  mc <- lapply(mc, function(elem) {
+    evalPopArg(data = data, arg = elem, DT = TRUE, enclos = PF, recursive = TRUE)
+    })
   
+  ## NOTE: this does not delete but sets the value to NULL.
+  mc[unlist(lapply(mc, function(x) {
+    NROW(x) == 0L || is.null(x) || is.language(x) || inherits(x, "try-error")
+    }))] <- NULL
   
-  lackVars <- setdiff(valVars, names(mc))
-  if (length(lackVars) > 0) stop("Following arguments were NULL or could not be evaluated but are required: ", paste0("'", lackVars, "'", collapse = ", "), ". Usual suspects: arguments are NULL or refer to variables that cannot be found in data or elsewhere.")
+  lackVars <- setdiff(valVars, names(mc[!unlist(lapply(mc, is.null))]))
+  if (length(lackVars) > 0) {
+    stop("Following arguments were NULL or could not be evaluated but are ",
+         "required: ", paste0("'", lackVars, "'", collapse = ", "), ". ",
+         "Usual suspects: arguments are NULL or refer to variables that ",
+         "cannot be found in data.")
+  }
   
   eventVars <- NULL
   ## NOTE: not sure if other arguments than 'd' should be allowed to be of 
@@ -472,9 +483,19 @@ survtab_ag <- function(formula = NULL,
     if (length(cn) > 1) jay <- paste0(jay, ".", cn) ## e.g. d.1, d.2, ...
     if (argName %in% c("d")) {
       eventVars <- jay
-      if (surv.type %in% c("surv.cause") && length(cn) == 1L) stop("surv.type = 'surv.cause', but only one type of event supplied via argument 'd'. If you want to compute cause-specific survivals, please supply multiple types of events via 'd'; otherwise use surv.type = 'surv.obs'") 
-    } else  if (length(cn) > 1 && !argName %in% c("d.pp", "d.pp.2")) 
-      stop("'", argName, "' has/evaluates to ", length(cn), " columns; only 'd', 'd.pp', and 'd'pp.2' may evaluate to more than one column of the value arguments")
+      if (surv.type %in% c("surv.cause") && length(cn) == 1L) {
+        stop("surv.type = 'surv.cause', but only one type of event supplied ",
+             "via argument 'd'. If you want to compute cause-specific ",
+             "survivals, please supply multiple types of events via ",
+             "'d'; otherwise use surv.type = 'surv.obs'") 
+      } else  if (length(cn) > 1 && !argName %in% c("d.pp", "d.pp.2", "n.pp")) {
+        stop("'", argName, "' has/evaluates to ", length(cn), 
+             " columns; only 'd', 'd.pp', and 'd'pp.2', 'n.pp' may evaluate ",
+             "to more than one column of the value arguments")
+      }
+      
+    }
+    
     setnames(mc[[k]], cn, jay)
     set(mc[[1]], j = jay, value = mc[[k]])
     nl[[argName]] <- jay
@@ -804,6 +825,7 @@ survtab_ag <- function(formula = NULL,
                                        "to package maintainer if you see this."))
         comp.st.r.pp.haz(surv.table = pp.table, surv.by.vars = by.vars)
       } else {
+        data[, n.eff.pp := n.pp - 0.5*n.cens.pp]
         all_names_present(data, c("n.pp", "n.cens.pp", "n.eff.pp"),
                           msg = paste0("internal error: work data did not have",
                                        " variable named n.eff.pp. Complain ",

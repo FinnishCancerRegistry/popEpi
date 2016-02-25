@@ -126,11 +126,16 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
     x[, lex.Xst := as.integer(lex.Xst %in% event.values)]
     cens.values <- 0L
     event.values <- 1L
+    if (x[, sum(lex.Xst)] == 0L) {
+      stop("There are no events in the data. Ensure that the event argument ",
+           "used in Surv() makes sense.")
+    }
   }
   
   ## only keep necessary variables ---------------------------------------------
   
-  setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", pophazVars))
+  setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, 
+                          "lex.Cst", "lex.Xst", pophazVars))
   if (length(prVars)) x[, c(prVars) := l$print]
   if (length(adVars)) x[, c(adVars) := l$adjust]
   
@@ -154,7 +159,6 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
   if (verbose) cat("Time taken by splitting Lexis data: ", timetaken(splitTime), "\n")
   
-  
 #   ## date time scales? ---------------------------------------------------------
 #   ## this actually needs to also handle breaks in an intellgent way!
 #   areDates <- x[, sapply(.SD, is.Date), .SDcols = allScales]
@@ -174,7 +178,9 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   }
   
   ## pp computation ------------------------------------------------------------
-  ppNames <- d.pp <- d.pp.2 <- d.exp.pp <- ptime.pp <- n.cens.pp <- NULL
+  ppNames <- d.pp <- d.pp.2 <- d.exp.pp <- ptime.pp <- 
+    at.risk.pp <- n.cens.pp <- NULL
+  
   if (comp_pp) {
     ppTime <- proc.time()
     setkeyv(x, c("lex.id", survScale))
@@ -192,7 +198,7 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
     ppTime <- proc.time()
     pp <- comp_pp_weighted_figures(x, haz = "haz", pp = "pp", by = "lex.id")
     ppNames <- makeTempVarName(x, pre = names(pp))
-    x[, c(TF$ppNames) := TF$pp] ## note: TF$pp avoid conflict with possibly existing pp column
+    x[, c(TF$ppNames) := TF$pp] ## note: TF$pp avoids conflicts
     rm(pp)
     
     d.pp.2 <- ppNames[substr(ppNames, 1, 13) == "from0to1.pp.2"]
@@ -202,8 +208,11 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
     ptime.pp <- ppNames[substr(ppNames, 1, 8) == "ptime.pp"]
     n.cens.pp <- ppNames[substr(ppNames, 1, 11) == "from0to0.pp"]
     n.cens.pp <- n.cens.pp[substr(n.cens.pp, 1,13) != "from0to0.pp.2"]
-    ## TODO: n.pp via com_pp_weighted_figures()
-    if (verbose) cat("Time taken by computing Pohar-Perme weighted counts and person-times: ", timetaken(ppTime), "\n")
+    at.risk.pp <-  ppNames[substr(ppNames, 1, 10) == "at.risk.pp"]
+    d.exp.pp <-  ppNames[substr(ppNames, 1, 8) == "d.exp.pp"]
+    
+    if (verbose) cat("Time taken by computing Pohar-Perme weighted ",
+                     "counts and person-times: ", timetaken(ppTime), "\n")
   }
   
   d.exp <- NULL
@@ -222,17 +231,26 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
   if (verbose) cat("** end of  verbose messages from aggre() \n")
   setDT(x)
   setattr(x, "class", c("aggre", "data.table", "data.frame"))
-  if (verbose) cat("Time taken by aggregating split Lexis data: ", timetaken(aggreTime), "\n")
+  if (verbose) cat("Time taken by aggregating split Lexis data: ", 
+                   timetaken(aggreTime), "\n")
   
   ## neater column names -------------------------------------------------------
-  ## e.g. fromAlivetoDead -> Dead
+  ## e.g. fromAlivetoDead -> Dead; looks better in survtab_ag output
   evCols <- paste0("from", cens.values, "to", c(cens.values, event.values))
   whEC <- which(evCols %in% names(x))
   
-  if (sum(whEC)) setnames(x, evCols[whEC], as.character(c(cens.values, event.values)[whEC]))
+  if (sum(whEC)) {
+    setnames(x, evCols[whEC], 
+             as.character(c(cens.values, event.values)[whEC]))
+  }
   
   ## survtab_ag ----------------------------------------------------------------
   dn <- intersect(event.values, names(x))
+  if (length(dn) == 0L) {
+    stop("Internal error: no event variables in work data. Complain to the ",
+         "package maintainer if you see this - unless there are no events ",
+         "in the data?")
+  }
   n.cens <- intersect(cens.values, names(x))
   
   if (length(prVars) == 0L) {
