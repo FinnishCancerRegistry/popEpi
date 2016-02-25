@@ -604,6 +604,12 @@ print.survtab <- function(x, subset = NULL, ...) {
   preface_survtab.print(x)
   
   setDT(x)
+  
+  if (nrow(x) == 0L) {
+    print(x)
+    return(invisible())
+  }
+  
   pv <- as.character(sa$print.vars)
   if (length(pv) == 0L) pv <- NULL
   
@@ -618,6 +624,7 @@ print.survtab <- function(x, subset = NULL, ...) {
     pv <- makeTempVarName(x, pre = paste0("print_", 1:length(pv)))
     setnames(x, pv_orig, pv)
   }
+  
   medmax <- x[, list(Tstop = c(magicMedian(c(min(Tstart),Tstop)), max(Tstop))), keyby = eval(pv)]
   
   setkeyv(medmax, c(pv, "Tstop"))
