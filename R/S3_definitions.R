@@ -517,6 +517,68 @@ preface_survtab.print <- function(x) {
   invisible()
 }
 
+
+#' @title Print an aggre Object
+#' @author Joonas Miettinen
+#' @description Print method function for \code{aggre} objects; see
+#' \code{\link{as.aggre}} and \ode{\link{aggre}}.
+#' @param x an \code{aggre} object
+#' @param subset a logical condition to subset results table by
+#' before printing; use this to limit to a certain stratum. E.g.
+#' \code{subset = sex == "male"}
+#' @param ... arguments passed to \code{print.data.table}; try e.g.
+#' \code{top = 2} for numbers of rows in head and tail printed 
+#' if the table is large, 
+#' \code{nrow = 100} for number of rows to print, etc.
+#' @export
+print.aggre <- function(x, subset = NULL, ...) {
+  
+  PF <- parent.frame(1L)
+  TF <- environment()
+  sa <- attributes(x)$aggre.meta
+  
+  subset <- evalLogicalSubset(x, substitute(subset), enclos = PF)
+  x <- x[subset, ]
+  setDT(x)
+  
+  print(x, ...)
+  
+}
+
+#' @title Summaryize an aggre Object
+#' @author Joonas Miettinen
+#' @description \code{summary} method function for \code{aggre} objects; see
+#' \code{\link{as.aggre}} and \ode{\link{aggre}}.
+#' @param object an \code{aggre} object
+#' @param by list of columns to summarize by - e.g. \code{list(V1, V2)}
+#' where \code{V1} and \code{V2} are columns in the data.
+#' @param subset a logical condition to subset results table by
+#' before summarizing; use this to limit to a certain stratum. E.g.
+#' \code{subset = sex == "male"}
+#' @param ... unused
+#' @export
+summary.aggre <- function(x, by = NULL, subset = NULL, ...) {
+  
+  PF <- parent.frame(1L)
+  TF <- environment()
+  sa <- attributes(x)$aggre.meta
+  
+  subset <- evalLogicalSubset(x, substitute(subset), enclos = PF)
+  x <- x[subset, ]
+  setDT(x)
+  
+  bys <- substitute(by)
+  bye <- evalPopArg(x, bys, enclos = environment(), types = c("list", "NULL"))
+  
+  vals <- sa$values
+  vals <- intersect(names(x), vals)
+  if (!length(vals)) {
+    cat("No originally created value columns appear to be left in data.")
+  }
+  r <- x[, lapply(.SD, sum), by = eval(bye), .SDcols = vals]
+  r
+}
+
 #' @title Print a survtab Object
 #' @author Joonas Miettinen
 #' @description Print method function for \code{survtab} objects; see
