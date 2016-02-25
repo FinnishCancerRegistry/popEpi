@@ -281,6 +281,7 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
   ## PURPOSE: given a split Lexis object with a column of pre-computed
   ## pohar-perme weights, computes pp-weighted:
   ## * person-time (lex.dur*pp)
+  ## * at-risk indicator
   ## * event counts
   ## * event counts multiplied with pp^2
   ## * expected event counts
@@ -359,12 +360,17 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
   setcolorder(evdt, c("ptime.pp", "d.exp.pp", sort(events)))
   setnames(evdt, events, paste0(events, ".pp"))
   
+  ## pp-weighted at-risk indicators --------------------------------------------
+  ## these will be n.pp at the aggregate level.
+  set(evdt, j = "at.risk.pp", value = lex[[pp]]*1L)
+  
   ## events multiplied with pp-weight again ------------------------------------
   ## (i.e. event times pp squared)
   
-  set(evdt, j = paste0(events, ".pp.2"), value = evdt[, .SD, .SDcols = paste0(events, ".pp")]*lex[[pp]])
+  set(evdt, j = paste0(events, ".pp.2"), 
+      value = evdt[, .SD, .SDcols = paste0(events, ".pp")]*lex[[pp]])
   
-  return(evdt)
+  return(evdt[])
   
 }
 
