@@ -488,7 +488,7 @@ survtab_ag <- function(formula = NULL,
              "via argument 'd'. If you want to compute cause-specific ",
              "survivals, please supply multiple types of events via ",
              "'d'; otherwise use surv.type = 'surv.obs'") 
-      } else  if (length(cn) > 1 && !argName %in% c("d.pp", "d.pp.2", "n.pp")) {
+      } else  if (length(cn) > 1 && !argName %in% c("d","d.pp", "d.pp.2", "n.pp")) {
         stop("'", argName, "' has/evaluates to ", length(cn), 
              " columns; only 'd', 'd.pp', and 'd'pp.2', 'n.pp' may evaluate ",
              "to more than one column of the value arguments")
