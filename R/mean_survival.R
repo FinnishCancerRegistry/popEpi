@@ -402,6 +402,28 @@ globalVariables(c('ms_agegr_w',
                   'YPLL',
                   'est'))
 
+
+# library(survival)
+# library(Epi)
+# ## NOTE: recommended to use factor status variable
+# x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+#            exit = list(CAL = get.yrs(ex_date)),
+#            data = sire[sire$dg_date < sire$ex_date, ],
+#            exit.status = factor(status, levels = 0:2,
+#                                 labels = c("alive", "canD", "othD")),
+#            merge = TRUE)
+# 
+# ## phony variable
+# set.seed(1L)
+# x$group <- rbinom(nrow(x), 1, 0.5)
+# 
+# ## observed survival
+# pm <- copy(popEpi::popmort)
+# names(pm) <- c("sex", "CAL", "AGE", "haz")
+# st <- survtab_lex(Surv(time = FUT, event = lex.Xst != "alive") ~ group,
+#                   pophaz = pm, data = x,
+#                   breaks = list(FUT = seq(0, 10, 1/12)))
+
 survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, pophaz = NULL, 
                          ext.breaks = NULL, ext.pophaz = pophaz, r = 1.00, 
                          subset = NULL, verbose = FALSE, ...) {
@@ -526,8 +548,7 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   st <- survtab_lex(formula, data = x, breaks = breaks, pophaz = pophaz,
                     surv.type = "surv.rel", relsurv.method = "e2", ...)
   st$r.e2 <- st$surv.obs / st$r.e2
-  plot(st, y = "surv.obs")
-  stop("test")
+  
   bbnm <- paste0("Internal error: could not find following variables in ", 
                  "resulting survtab object although they were used in formula:", 
                   "%%VARS%%. If you see this, complain to the package ",
