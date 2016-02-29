@@ -1222,19 +1222,35 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
   xKey <- key(x)
   if (length(xKey) == 0 && is.data.table(x)) {
     xKey <- makeTempVarName(x, pre = "sort_")
-    on.exit(setcolsnull(x, delete = xKey, soft = TRUE), add = TRUE)
-    on.exit(setcolsnull(z, delete = xKey, soft = TRUE), add = TRUE)
+    if (exists("x")) on.exit(setcolsnull(x, delete = xKey, soft = TRUE), add = TRUE)
+    if (exists("z")) on.exit(setcolsnull(z, delete = xKey, soft = TRUE), add = TRUE)
     x[, (xKey) := 1:.N]
+  }
+  
+  if (any(duplicated(y, by = by.y))) {
+    stop("y is duplicated by the inferred/supplied by.y variables (",
+         paste0("'", by.y, "'", collapse = ", "), "). ",
+         "First ensure this is not so before proceeding.")
   }
   
   xClass <- class(x)
   on.exit(setattr(x, "class", xClass), add = TRUE)
-  if (is.data.table(x)) setattr(x, "class", c("data.table", "data.frame"))
-  z <- merge(x, y, by.x = by.x, by.y = by.y, all.x = all.x, all.y = all.y, all = all, sort = FALSE)
+  if (is.data.table(x)) {
+    ## avoid e.g. using merge.Lexis when x inherits Lexis & data.table
+    setattr(x, "class", c("data.table", "data.frame"))
+  }
+  
+  z <- merge(x, y, by.x = by.x, by.y = by.y, 
+             all.x = all.x, all.y = all.y, all = all, 
+             sort = FALSE)
   
   setDT(z)
+  if (old.nums) {
+    ## avoid warning due to coercing double to integer
+    set(z, j = xScales, value = NULL)
+    set(z, j = xScales, value = oldVals)
+  }
   setcolorder(z, c(names(x), setdiff(names(z), names(x))))
-  if (old.nums) set(z, j = xScales, value = oldVals)
   if (length(xKey) > 0) setkeyv(z, xKey)
   z[]
   
