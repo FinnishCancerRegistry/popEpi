@@ -1224,8 +1224,8 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
   xKey <- key(x)
   if (length(xKey) == 0 && is.data.table(x)) {
     xKey <- makeTempVarName(x, pre = "sort_")
-    if (exists("x")) on.exit(setcolsnull(x, delete = xKey, soft = TRUE), add = TRUE)
-    if (exists("z")) on.exit(setcolsnull(z, delete = xKey, soft = TRUE), add = TRUE)
+    on.exit(if (exists("x")) setcolsnull(x, delete = xKey, soft = TRUE), add = TRUE)
+    on.exit(if (exists("z")) setcolsnull(z, delete = xKey, soft = TRUE), add = TRUE)
     x[, (xKey) := 1:.N]
   }
   
