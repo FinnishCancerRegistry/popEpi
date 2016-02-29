@@ -170,5 +170,42 @@ test_that("survmean_lex() agrees with results computed using pkg survival", {
 })
 
 
-
+test_that("survmean_lex expected survival curve corresponds to full Ederer I", {
+  
+  library(Epi)
+  library(survival)
+  
+  sr <- copy(sire)[dg_date < ex_date, ]
+  sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
+  
+  x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+             exit = list(CAL = get.yrs(ex_date)),
+             data = sr,
+             exit.status = factor(status, levels = 0:2,
+                                  labels = c("alive", "canD", "othD")),
+             merge = TRUE)
+  
+  pm <- copy(popEpi::popmort)
+  names(pm) <- c("sex", "CAL", "AGE", "haz")
+  
+  BL <- list(FUT = seq(0, 10, 1/12))
+  sm <- survmean_lex(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
+                     pophaz = pm, data = x,
+                     breaks = BL)
+  
+  ## pure Ederer I curve
+  setDT(x)
+  x[, lex.dur := 110]
+  setattr(x, "class", c("Lexis", "data.table", "data.frame"))
+  e1 <- comp_e1(x = x, breaks = list(FUT = c(BL$FUT, seq(11,110,1/2))), 
+                pophaz = pm, survScale = "FUT")
+  e1[, Tstop := c(FUT[-1], 110)]
+  e1[, delta := Tstop-FUT]
+  e1[, l1 := c(1,surv.exp[-.N])]
+  sm.e1 <- e1[, sum((l1+surv.exp)/2L*delta)]
+  
+  
+  expect_equal(sm$est, sm.e1, tol = 0.0005, scale = 1)
+  
+})
 
