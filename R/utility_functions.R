@@ -83,7 +83,9 @@ cast_simple <- function(data=NULL, columns=NULL, rows=NULL, values=NULL) {
                drop = FALSE, fun.aggregate = sum)[]
   }
   if (rowsNULL) set(d, j = names(d)[1L], value = NULL)
-  setnames(d, c(rows), c(actualRows))
+  wh_rows <- which(rows %in% names(d))
+  if (sum(wh_rows, na.rm = TRUE)) setnames(d, rows[wh_rows], actualRows[wh_rows])
+  
   d
 }
 
