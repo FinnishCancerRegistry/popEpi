@@ -170,8 +170,8 @@ test_that("Ederer I expected survival curve agrees with survival::survexp", {
   setnames(pm, c("year", "agegroup"), c("per", "age"))
   e1 <- comp_e1(x, breaks = list(fot = fb), pophaz = pm, survScale = "fot")
   
-  plot(su, ylim = c(0.35, 1), col = 1, xscale = 365.242199)
-  lines(surv.exp ~ fot, col = "red", type = "s", data = e1)
+#   plot(su, ylim = c(0.35, 1), col = 1, xscale = 365.242199)
+#   lines(surv.exp ~ fot, col = "red", type = "s", data = e1)
   
   ## rs.surv
   fb <- fb[-1]
