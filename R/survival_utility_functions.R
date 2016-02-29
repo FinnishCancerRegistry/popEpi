@@ -436,3 +436,134 @@ test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs
   
   x
 }
+
+
+
+
+comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", verbose = FALSE) {
+  ## INTENTION: given a Lexis data set x,
+  ## computes Ederer I expected survival curves till end of follow-up
+  ## by 'by' unless individual = TRUE.
+  TF <- environment()
+  
+  ## check ---------------------------------------------------------------------
+  checkLexisData(x)
+  checkBreaksList(x, breaks)
+  ph <- data.table(pophaz)
+  tmpHaz <- makeTempVarName(x, pre = "pop_haz_")
+  setnames(ph, "haz", tmpHaz)
+  checkPophaz(x, ph, haz.name = tmpHaz)
+  
+  byErr <- paste0("Internal error (probably): work data did not have ",
+                  "variable(s) %%VARS%%. If your supplied data has them, ",
+                  "complain to the package maintainer.")
+  all_names_present(x, c(by, id, survScale), msg = byErr)
+  
+  ## split ---------------------------------------------------------------------
+  pt <- proc.time()
+  oldBreaks <- attr(x, "breaks")
+  allScales <- attr(x, "time.scales")
+  if (!survScale %in% allScales) {
+    stop("survScale '", survScale, "' not a time scale in the Lexis object. ",
+         "(Possibly internal error - ensure you have that time scale in data. ",
+         "If not, complain to the package maintainer.")
+  }
+  keepVars <- c(allScales, "lex.dur", "lex.id", "lex.Cst", 
+                "lex.Xst", by, id, setdiff(names(ph), tmpHaz))
+  keepVars <- unique(keepVars)
+  y <- subsetDTorDF(x, select = keepVars)
+  y <- setDT(copy(y))
+  
+  forceLexisDT(y, breaks = oldBreaks, allScales = allScales)
+  y <- splitMulti(y, breaks = breaks, drop = TRUE, merge = TRUE)
+  
+  if (verbose) cat("Time taken by splitting: ", timetaken(pt), ".\n", sep = "")
+  
+  ## merge pop haz -------------------------------------------------------------
+  pt <- proc.time()
+  mergeVars <- intersect(names(y), names(ph))
+  mergeScales <- intersect(allScales, mergeVars)
+  if (length(mergeScales) == 0L) mergeScales <- NULL
+  mergeCats <- setdiff(mergeVars, mergeScales)
+  if (length(mergeCats) == 0L) mergeCats <- NULL
+  
+  y <- cutLowMerge(y, ph, by = mergeVars, 
+                   mid.scales = mergeScales, old.nums = TRUE,
+                   all.x = TRUE, all.y = FALSE)
+  setDT(y)
+  if (verbose) cat("Time taken by merging pophaz: ", timetaken(pt), ".\n", sep = "")
+  
+  ## ederer I computation ------------------------------------------------------
+  ## prep temp surv.int var
+  tmpSI <- makeTempVarName(x, pre = "surv_int_")
+  setkeyv(y, c(by, id, allScales[1L]))
+  y[, c(tmpSI) := cut(y[[survScale]], breaks[[survScale]],
+                      right=FALSE,labels=FALSE)]
+  setkeyv(y, c(by, tmpSI))
+  
+  
+  ## EDERER I: integral of the weighted average expected hazard,
+  ## where the weights are the subject-specific expected survival
+  ## probabilities.
+  ## 1) compute integral of hazard over an interval t_i by id
+  ##    (NOT cumulative hazard from zero till end of interval t_i)
+  ##    This sums over multiple rows a subject may have within one
+  ##    survival interval due to splitting by multiple time scales.
+  pt <- proc.time()
+  set(y, j = tmpHaz, value = y[[tmpHaz]]*y$lex.dur)
+  y <- y[, lapply(.SD, sum), by = c(by, id, tmpSI), .SDcols = c(tmpHaz)]
+  setnames(y, ncol(y), tmpHaz)
+  
+  ## reverse temp names - need to be able to refer to haz without temp var
+  ## to enable correct cumsum() below
+  avoid <- c(names(y), tmpHaz, "surv.exp")
+  tmpBy <- makeTempVarName(names = avoid, pre = by)
+  tmpID <- makeTempVarName(names = c(avoid, tmpBy), pre = id)
+  if (length(by)) {
+    setnames(y, by, tmpBy)
+  } else {
+    tmpBy <- by <- NULL
+  }
+  setnames(y, id, tmpID)
+  setnames(y, tmpHaz, "haz")
+  if (verbose) cat("Time taken by 1): ", timetaken(pt), ".\n", sep = "")
+  
+  ## 2) expected cum.haz. over intervals t_1 -> t_i by id...
+  ##   (no cumulative exp.surv yet)
+  pt <- proc.time()
+  y[, surv.exp := cumsum(haz), by = c(tmpBy, tmpID)]
+  # ## till start of interval t_i
+  y[, surv.exp := surv.exp - haz]
+  
+  if (verbose) cat("Time taken by 2): ", timetaken(pt), ".\n", sep = "")
+  ## 3) cumulative surv.exp till START of interval t_i by id...
+  pt <- proc.time()
+  y[, surv.exp := exp(-surv.exp), by = eval(tmpBy, tmpID)]
+  
+  if (verbose) cat("Time taken by 3): ", timetaken(pt), ".\n", sep = "")
+  ## 4) weighted average population hazard...
+  pt <- proc.time()
+  y <- y[, sum(surv.exp*haz)/sum(surv.exp), keyby = c(tmpBy, tmpSI)]
+  setnames(y, ncol(y), "haz")
+  
+  if (verbose) cat("Time taken by 4): ", timetaken(pt), ".\n", sep = "")
+  ## 5) The Ederer I expected (marginal) survivals for intervals t_i 
+  pt <- proc.time()
+  y[, surv.exp := cumsum(haz), by = eval(tmpBy)]
+  y[, surv.exp := exp(-surv.exp)]
+  y[, haz := NULL]
+  if (verbose) cat("Time taken by 5): ", timetaken(pt), ".\n", sep = "")
+  
+  if ("surv.exp" %in% by) by[by == "surv.exp"] <- "surv.exp.old"
+  if (length(by)) setnames(y, tmpBy, by)
+  
+  setcolorder(y, c(by, tmpSI, "surv.exp"))
+  setkeyv(y, c(by, tmpSI))
+  setnames(y, tmpSI, survScale)
+  br <- breaks[[survScale]]
+  bt <- br[-length(br)]
+  y[, c(survScale) := br[y[[survScale]]]]
+  
+  
+  y[]
+}
