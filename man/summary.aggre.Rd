@@ -20,7 +20,7 @@ before summarizing; use this to limit to a certain stratum. E.g.
 }
 \description{
 \code{summary} method function for \code{aggre} objects; see
-\code{\link{as.aggre}} and \ode{\link{aggre}}.
+\code{\link{as.aggre}} and \code{\link{aggre}}.
 }
 \author{
 Joonas Miettinen

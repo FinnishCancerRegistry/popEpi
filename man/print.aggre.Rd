@@ -20,7 +20,7 @@ if the table is large,
 }
 \description{
 Print method function for \code{aggre} objects; see
-\code{\link{as.aggre}} and \ode{\link{aggre}}.
+\code{\link{as.aggre}} and \code{\link{aggre}}.
 }
 \author{
 Joonas Miettinen

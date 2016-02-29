@@ -521,7 +521,7 @@ preface_survtab.print <- function(x) {
 #' @title Print an aggre Object
 #' @author Joonas Miettinen
 #' @description Print method function for \code{aggre} objects; see
-#' \code{\link{as.aggre}} and \ode{\link{aggre}}.
+#' \code{\link{as.aggre}} and \code{\link{aggre}}.
 #' @param x an \code{aggre} object
 #' @param subset a logical condition to subset results table by
 #' before printing; use this to limit to a certain stratum. E.g.
@@ -548,7 +548,7 @@ print.aggre <- function(x, subset = NULL, ...) {
 #' @title Summaryize an aggre Object
 #' @author Joonas Miettinen
 #' @description \code{summary} method function for \code{aggre} objects; see
-#' \code{\link{as.aggre}} and \ode{\link{aggre}}.
+#' \code{\link{as.aggre}} and \code{\link{aggre}}.
 #' @param object an \code{aggre} object
 #' @param by list of columns to summarize by - e.g. \code{list(V1, V2)}
 #' where \code{V1} and \code{V2} are columns in the data.
