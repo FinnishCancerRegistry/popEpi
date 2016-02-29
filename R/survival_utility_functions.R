@@ -446,6 +446,8 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", verb
   ## by 'by' unless individual = TRUE.
   TF <- environment()
   
+  haz <- NULL # R CMD CHECK appeasement
+  
   ## check ---------------------------------------------------------------------
   checkLexisData(x)
   checkBreaksList(x, breaks)

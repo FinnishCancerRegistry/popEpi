@@ -430,6 +430,8 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   TF <- environment()
   PF <- parent.frame(1L)
   
+  r.e2 <- NULL # R CMD CHECK appeasement
+  
   if(!requireNamespace("survival")) stop("Need to load package survival to proceed")
   
   checkLexisData(data, check.breaks = FALSE)
@@ -498,10 +500,14 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
 
   ## detect survival time scale ------------------------------------------------
   allScales <- attr(data, "time.scales")
-  survScale <- allScales[x[, unlist(lapply(.SD, function(x) identical(x, foList$y$time))), .SDcols = allScales]]
+  survScale <- allScales[x[, unlist(lapply(.SD, function(x) {
+    identical(x, foList$y$time)
+    })), .SDcols = allScales]]
   
   if (length(survScale) == 0L) {
-    survScale <- allScales[x[, unlist(lapply(.SD, function(x) all.equal(x, foList$y$time)))]]
+    survScale <- allScales[x[, unlist(lapply(.SD, function(x) {
+      all.equal(x, foList$y$time)
+      }))]]
   }
   if (length(survScale) == 0L) {
     stop("Could not determine which time scale was used. The formula MUST ",
@@ -525,7 +531,8 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   # this used at the end for YPLL
   tol <- .Machine$double.eps^0.5
   byNames <- c(prNames, adNames)
-  N_subjects <- x[!duplicated(lex.id) & x[[survScale]] < tol, list(obs=.N), keyby=eval(TF$byNames)]
+  N_subjects <- x[!duplicated(lex.id) & x[[survScale]] < tol, list(obs=.N), 
+                  keyby=eval(TF$byNames)]
   
   ## figure out extrapolation breaks -------------------------------------------
   ## now that the survival time scale is known this can actually be done.
