@@ -11,6 +11,42 @@ checkBreaksList <- function(x, breaks = list(fot = 0:5)) {
   if (length(bad_scales) > 0) stop("at least one breaks list name wasn't a variable in data; bad names: ", paste0("'", bad_scales, "'", collapse = ", "))
 }
 
+checkPophaz <- function(lex, ph, haz.name = "haz") {
+  ## INTENTION: checks a Lexis data set against the pophaz data set for
+  ## consistency (e.g. existing variables to merge by)
+  if (!haz.name %in% names(ph)) {
+    stop("Data set containing population/expected hazards does not contain a ",
+         "column named 'haz'. Make sure the name is exactly that (",
+         "case sensitive).")
+  }
+  
+  if (haz.name %in% names(lex)) {
+    stop("Lexis data set already contains a column named 'haz', which is a ",
+         "reserved name for the population hazard variable to be merged. ",
+         "Please rename/delete 'haz' from/in your Lexis data first.")
+  }
+  
+  if (!is.data.frame(ph)) {
+    stop("Data set of expected/population hazards must be a data.frame.")
+  }
+  
+  bn <- setdiff(names(ph), haz.name)
+  
+  if (length(bn) == 0L) {
+    stop("No variables in expected/population hazards data set to use in merge ",
+         "with Lexis data. Ensure that the pop. haz. data set containts some ",
+         "variables to merge by (e.g. sex, calendar year, and age group)")
+  }
+  if (!all(bn %in% names(lex))) {
+    badbn <- paste0("'", setdiff(bn, names(lex)), "'", collapse = ", ")
+    stop("Lexis data set did not have following variable(s) that were in ",
+         "the expected/population hazards data set: ", badbn,". ",
+         "Ensure you have supplied the right data and that the names of the ",
+         "intended variables match.")
+  }
+}
+
+
 globalVariables(c("lex.dur", "lex.Xst", "lex.Cst"))
 intelliCrop <- function(x, breaks = list(fot = 0:5), allScales = NULL, cropStatuses = FALSE, tol = .Machine$double.eps^0.5) {
   
