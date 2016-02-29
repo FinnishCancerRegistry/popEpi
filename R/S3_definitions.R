@@ -557,10 +557,11 @@ print.aggre <- function(x, subset = NULL, ...) {
 #' \code{subset = sex == "male"}
 #' @param ... unused
 #' @export
-summary.aggre <- function(x, by = NULL, subset = NULL, ...) {
+summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
   
   PF <- parent.frame(1L)
   TF <- environment()
+  x <- object
   sa <- attributes(x)$aggre.meta
   
   subset <- evalLogicalSubset(x, substitute(subset), enclos = PF)

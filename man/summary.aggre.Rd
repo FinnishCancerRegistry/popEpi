@@ -4,9 +4,11 @@
 \alias{summary.aggre}
 \title{Summaryize an aggre Object}
 \usage{
-\method{summary}{aggre}(x, by = NULL, subset = NULL, ...)
+\method{summary}{aggre}(object, by = NULL, subset = NULL, ...)
 }
 \arguments{
+\item{object}{an \code{aggre} object}
+
 \item{by}{list of columns to summarize by - e.g. \code{list(V1, V2)}
 where \code{V1} and \code{V2} are columns in the data.}
 
@@ -15,8 +17,6 @@ before summarizing; use this to limit to a certain stratum. E.g.
 \code{subset = sex == "male"}}
 
 \item{...}{unused}
-
-\item{object}{an \code{aggre} object}
 }
 \description{
 \code{summary} method function for \code{aggre} objects; see
