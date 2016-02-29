@@ -379,9 +379,12 @@ survmean <- function(data, surv.breaks=NULL, by.vars = NULL, pophaz = NULL,
   }
   if (verbose) cat("survmean computations finished. \n")
 
-  
-  setattr(bkup, "by.vars", by.vars)
+  prVars <- setdiff(by.vars, "ms_agegr_w")
+  setattr(bkup, "print", prVars)
+  adVars <- intersect(by.vars, "ms_agegr_w")
+  setattr(bkup, "adjust", adVars)
   setattr(bkup, "surv.breaks", subr)
+  setattr(bkup, "survmean_type", "survmean_type")
   setattr(data, "class", c("survmean","data.table", "data.frame"))
   if (!getOption("popEpi.datatable")) setDFpe(data)
   setattr(data, "curves", bkup)
@@ -420,7 +423,7 @@ globalVariables(c('ms_agegr_w',
 # ## observed survival
 # pm <- copy(popEpi::popmort)
 # names(pm) <- c("sex", "CAL", "AGE", "haz")
-# st <- survtab_lex(Surv(time = FUT, event = lex.Xst != "alive") ~ group,
+# st <- survmean_lex(Surv(time = FUT, event = lex.Xst != "alive") ~ group,
 #                   pophaz = pm, data = x,
 #                   breaks = list(FUT = seq(0, 10, 1/12)))
 

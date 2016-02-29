@@ -1132,18 +1132,20 @@ lines.survmean <- function(x, ...) {
   curves <- attr(x, "curves")
   if (is.null(curves)) stop("no curves information in x; usually lost if x altered after using survmean")
   
-  by.vars <- attr(curves, "print")
+  by.vars <- attr(curves, "survmean_type")
+  by.vars <- c(by.vars, attr(curves, "print"))
   by.vars <- c(by.vars, attr(curves, "adjust"))
   by.vars <- intersect(by.vars, names(curves))
+  if (!length(by.vars)) by.vars <- NULL
   SI <- attr(curves, "surv.int")
   
   curves <- data.table(curves)
   setkeyv(curves, c(by.vars, SI))
-  type_levs <- length(levels(interaction(curves[, (by.vars), with=FALSE])))/2L
+  
+  type_levs <- length(levels(interaction(curves[, c(by.vars), with=FALSE])))/2L
+  other_levs <- 1L
   if (length(by.vars) > 1) {
     other_levs <- length(levels(interaction(curves[, setdiff(by.vars, "survmean_type"), with=FALSE])))
-  } else {
-    other_levs <- 1L
   }
   
   curves <- cast_simple(curves, columns = by.vars, rows = "Tstop", values = "surv.obs")
