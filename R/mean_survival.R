@@ -557,7 +557,6 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   
   st <- survtab_lex(formula, data = x, breaks = breaks, pophaz = pophaz,
                     surv.type = "surv.rel", relsurv.method = "e2", ...)
-  st$r.e2 <- st$surv.obs / st$r.e2
   
   bbnm <- paste0("Internal error: could not find following variables in ", 
                  "resulting survtab object although they were used in formula:", 
