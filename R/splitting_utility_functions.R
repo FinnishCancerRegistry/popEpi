@@ -169,7 +169,10 @@ harmonizeFactors <- function(x, v1="lex.Cst", v2="lex.Xst") {
 
 intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = FALSE, tol = .Machine$double.eps^0.5, subset = NULL)  {
   
-  if (!is.data.table(x)) stop("x needs to be a data.table; if you see this message, complain to the package maintainer")
+  if (!is.data.table(x)) {
+    stop("x needs to be a data.table; if you see this message, complain ",
+         "to the package maintainer")
+  }
   checkBreaksList(x = x, breaks = breaks)
   timeScales <- names(breaks)
   
@@ -183,23 +186,42 @@ intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = 
   mi <- lapply(breaks, min)
   ma <- lapply(breaks, max)
   
-  subset <- evalLogicalSubset(x, substiset = substitute(subset))
-  subset <- rep(TRUE, nrow(x))
+  substi <- substitute(subset)
+  subset <- evalLogicalSubset(x, substiset = substi)
   
   if (dropNegDur) subset[subset] <- subset[subset] & x$lex.dur[subset] > 0L
   
   e <- environment()
   
+  ## figure out latest exit and first entry; don't need to test for dropping
+  ## if e.g. all left follow-up before the max in breaks
+  max_end <- lapply(ts, function(ch) min(x[[ch]] + x$lex.dur))
+  min_start <- lapply(ts, function(ch) max(x[[ch]]))
+  names(max_end) <- names(min_start) <- ts
+  
+  
   for (k in ts) {
     mik <- mi[[k]]
     mak <- ma[[k]]
     
-    subset[subset] <- x[e$subset, rowSums(.SD) <=  e$mak + e$tol, .SDcols = c(e$k, "lex.dur")]
-    subset[subset] <- x[e$subset, .SD[[e$k]]  > e$mik - e$tol, .SDcols = c(e$k)]
+    if (max_end[[k]] < mak + tol) {
+      subset[subset] <- x[e$subset, rowSums(.SD) <=  e$mak + e$tol, 
+                          .SDcols = c(e$k, "lex.dur")]
+    }
+    if (min_start[[k]] + tol > mik) {
+      subset[subset] <- x[e$subset, .SD[[e$k]]  > e$mik - e$tol, 
+                          .SDcols = c(e$k)]
+    }
+    
+    if (all(!subset)) {
+      stop("Dropped all remaining rows from data when subsetting by the  ",
+           "Lexis time scale '", k, "'. Range of values in data: ", 
+           paste0(round(range(x[[k]]),4), collapse = "-"), ". Min/Max breaks ",
+           "(used to subset data): ", mik, "/", mak, ".")
+    }
     
   }
   
-  if (sum(subset) == 0L) stop("Dropped all rows from data")
   
   x[e$subset, ]
 }
@@ -243,6 +265,10 @@ matchBreakTypes <- function(lex, breaks, timeScale, modify.lex = FALSE) {
 }
 
 protectFromDrop <- function(breaks, lower = FALSE) {
+  old_breaks <- copy(breaks)
+  if (length(breaks) == 0L) {
+    stop("Length of breaks to 'protect' from dropping is zero.")
+  }
   if (is.Date(breaks)) {
     breaks <- c(breaks, max(breaks) + 1e4L)
     if (lower) breaks <- c(min(breaks) - 1e4L, breaks)
@@ -258,10 +284,19 @@ protectFromDrop <- function(breaks, lower = FALSE) {
   } else {
     stop("breaks were not Date, integer or double")
   }
+  setattr(breaks, "unprotected", old_breaks)
   breaks
 }
 
-
+unprotectFromDrop <- function(breaks) {
+  up <- attr(breaks, "unprotected")
+  if (is.null(up) || length(up) == 0L) {
+    stop("Could not 'unprotect' breaks from dropping as the required ",
+         "attribute was not found. If you see this it is most likely ",
+         "an internal error and you should complain to the pkg maintainer.")
+  }
+  up
+}
 
 
 
