@@ -475,14 +475,16 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   keepVars <- unique(keepVars)
   y <- subsetDTorDF(x, select = keepVars)
   y <- setDT(copy(y))
+  forceLexisDT(y, breaks = oldBreaks, allScales = allScales, key = TRUE)
+  
   if (immortal) {
     ## set lex.dur to infinite. this assumes that the subjects never leave
     ## follow-up (which Ederer I assumes)
-    y[, lex.dur := NULL] ## avoids coercion to old class
-    y[, lex.dur := Inf]
+    storage.mode(y$lex.dur) <- "double"
+    id_last <- !duplicated(y, by = "lex.id", fromLast = TRUE)
+    y[TF$id_last, lex.dur := Inf]
   }
   
-  forceLexisDT(y, breaks = oldBreaks, allScales = allScales)
   y <- splitMulti(y, breaks = breaks, drop = TRUE, merge = TRUE)
   
   if (verbose) cat("Time taken by splitting: ", timetaken(pt), ".\n", sep = "")
@@ -509,7 +511,6 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
                       right=FALSE,labels=FALSE)]
   setkeyv(y, c(by, tmpSI))
   
-  
   ## EDERER I: integral of the weighted average expected hazard,
   ## where the weights are the subject-specific expected survival
   ## probabilities.
@@ -519,7 +520,7 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   ##    survival interval due to splitting by multiple time scales.
   pt <- proc.time()
   set(y, j = tmpHaz, value = y[[tmpHaz]]*y$lex.dur)
-  y <- y[, lapply(.SD, sum), by = c(by, id, tmpSI), .SDcols = c(tmpHaz)]
+  y <- y[, lapply(.SD, sum), keyby = c(by, id, tmpSI), .SDcols = c(tmpHaz)]
   setnames(y, ncol(y), tmpHaz)
   
   ## reverse temp names - need to be able to refer to haz without temp var
@@ -539,30 +540,23 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   ## 2) expected cum.haz. over intervals t_1 -> t_i by id...
   ##   (no cumulative exp.surv yet)
   pt <- proc.time()
-  y[, surv.exp := cumsum(haz), by = c(tmpBy, tmpID)]
-  # ## till start of interval t_i
-  y[, surv.exp := surv.exp - haz]
+  y[, surv.exp := cumsum(haz), by = eval(tmpID)]
   
   if (verbose) cat("Time taken by 2): ", timetaken(pt), ".\n", sep = "")
-  ## 3) cumulative surv.exp till START of interval t_i by id...
+  ## 3) cumulative surv.exp till end of interval t_i by id...
   pt <- proc.time()
-  y[, surv.exp := exp(-surv.exp), by = eval(tmpBy, tmpID)]
+  y[, surv.exp := exp(-surv.exp)]
   
   if (verbose) cat("Time taken by 3): ", timetaken(pt), ".\n", sep = "")
-  ## 4) weighted average population hazard...
-  pt <- proc.time()
-  y <- y[, sum(surv.exp*haz)/sum(surv.exp), keyby = c(tmpBy, tmpSI)]
-  setnames(y, ncol(y), "haz")
   
+  ## 4) The Ederer I expected (marginal) survivals for intervals t_i 
+  pt <- proc.time()
+  y <- y[, .(surv.exp = mean(surv.exp)), by = eval(c(tmpBy, tmpSI))]
   if (verbose) cat("Time taken by 4): ", timetaken(pt), ".\n", sep = "")
-  ## 5) The Ederer I expected (marginal) survivals for intervals t_i 
-  pt <- proc.time()
-  y[, surv.exp := cumsum(haz), by = eval(tmpBy)]
-  y[, surv.exp := exp(-surv.exp)]
-  y[, haz := NULL]
-  if (verbose) cat("Time taken by 5): ", timetaken(pt), ".\n", sep = "")
   
-  if ("surv.exp" %in% by) by[by == "surv.exp"] <- "surv.exp.old"
+  if ("surv.exp" %in% by) {
+    by[by == "surv.exp"] <- makeTempVarName(y, pre = "surv.exp")
+  }
   if (length(by)) setnames(y, tmpBy, by)
   
   setcolorder(y, c(by, tmpSI, "surv.exp"))
