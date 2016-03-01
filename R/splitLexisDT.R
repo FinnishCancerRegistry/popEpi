@@ -188,7 +188,7 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   
   setcolorder(l, neworder = intersect(c(lexVars, othVars), names(l)))
   if (!drop) breaks <- unprotectFromDrop(breaks)
-  allBreaks[[timeScale]] <- breaks
+  allBreaks[[timeScale]] <- sort(unique(c(allBreaks[[timeScale]], breaks)))
   setattr(l, "breaks", allBreaks)
   setattr(l, "time.scales", allScales)
   setattr(l, "time.since", rep("", times = length(allScales)))
