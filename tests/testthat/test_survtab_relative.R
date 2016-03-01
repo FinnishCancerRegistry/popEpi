@@ -182,7 +182,9 @@ test_that("Ederer I expected survival curve agrees with survival::survexp", {
   su[, time := time / 365.242199]
   setnames(su, "time", "fot")
   
-  expect_equal(e1, su, tolerance = 0.0004, scale = 1L)
+  expect_equal(e1, su, tolerance = 0.000004575, scale = 1L)
+  expect_equal(max(abs(e1$surv.exp-su$surv.exp)), 0L, 
+               tolerance = 0.0000103, scale = 1L)
   
   
 })
