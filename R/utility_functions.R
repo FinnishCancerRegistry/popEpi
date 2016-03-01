@@ -46,7 +46,12 @@ cast_simple <- function(data=NULL, columns=NULL, rows=NULL, values=NULL) {
   
   if (is.null(columns)) stop("columns cannot be NULL")
   
-  all_names_present(data, c(columns, rows, values))
+  msg <- paste0("Missing 'columns' variables: %%VARS%%")
+  all_names_present(data, columns, msg = msg)
+  msg <- paste0("Missing 'rows' variables: %%VARS%%")
+  all_names_present(data, rows, msg = msg)
+  msg <- paste0("Missing 'values' variables: %%VARS%%")
+  all_names_present(data, values, msg = msg)
   
   ## allow rows = NULL 
   rowsNULL <- FALSE
