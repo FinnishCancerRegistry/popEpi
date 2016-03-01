@@ -1,11 +1,11 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
-Version: 0.2.2.9017
-Date: 2016-01-31
+Version: 0.2.2.9018
+Date: 2016-03-01
 Author: J Miettinen, M Rantanen, K Seppa, J Pitkaniemi
 Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
-Description: Enables computation of various epidemiological statistics where the use of population data such as population counts and
-               hazards is required. Relatively high computation speed achieved by using data.table.
+Description: Enables computation of various epidemiological statistics where the use of population data such as population counts and hazards is required.
+                 Relatively high computation speed achieved by using data.table.
 Depends: R (>= 3.2.0), data.table (>= 1.9.6)
 Imports: Epi, survival
 Suggests: reshape2, methods, testthat, knitr, rmarkdown, relsurv, ggplot2, mstate, date, splines
