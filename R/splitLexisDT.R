@@ -61,6 +61,9 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   ## remove any existing breaks already split by;
   ## NOTE: setdiff would break Date format breaks!
   breaks <- breaks[!breaks %in% allBreaks[[timeScale]]]
+  ## if no breaks left, it means the data has already been split by these
+  ## exact breaks
+  if (!length(breaks)) return(lex)
   
   breaks <- matchBreakTypes(lex, breaks, timeScale, modify.lex = FALSE) 
   
@@ -71,12 +74,11 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   othVars <- setdiff(names(lex), lexVars)
   
   breaks <- sort(breaks)
-  if (!drop)  breaks <- protectFromDrop(breaks)
+  if (!drop) breaks <- protectFromDrop(breaks)
   
   BL <- list(breaks)
   setattr(BL, "names", timeScale)
   checkBreaksList(x = lex, breaks = BL)
-  
   
   
   ## use subset lex if dropping for efficiency
@@ -168,8 +170,7 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   ## final touch & attributes --------------------------------------------------
   
   setcolorder(l, neworder = intersect(c(lexVars, othVars), names(l)))
-  
-  if (!drop) breaks <- breaks[-c(length(breaks))] ## don't keep e.g. -Inf or Inf that were added by protectFromDrop
+  if (!drop) breaks <- unprotectFromDrop(breaks)
   allBreaks[[timeScale]] <- breaks
   setattr(l, "breaks", allBreaks)
   setattr(l, "time.scales", allScales)
