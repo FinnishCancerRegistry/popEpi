@@ -71,17 +71,17 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   ## exact breaks
   if (!length(breaks)) {
     l <- copy(lex)
+    setDT(l)
+    setattr(l, "class", c("Lexis", "data.table", "data.frame"))
     if (drop) {
       BL <- list(breaks)
       names(BL) <- timeScale
-      setDT(l)
-      setattr(l, "class", c("Lexis", "data.table", "data.frame"))
       l <- intelliCrop(l, breaks = BL, allScales = allScales, 
                        cropStatuses = TRUE)
       l <- intelliDrop(l, breaks = BL)
     }
     if (!merge) {
-      l[, othVars] <- NULL
+      l[, c(othVars) := NULL]
     }
     if (!getOption("popEpi.datatable")) setDFpe(l)
     return(l)

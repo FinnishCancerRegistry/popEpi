@@ -128,9 +128,9 @@ splitMulti <- function(data,
     ## whaddya know, all breaks elements were a subset of the corresponding
     ## elements in the breaks used to previously split the data.
     l <- copy(data)
+    setDT(l)
+    setattr(l, "class", c("Lexis", "data.table", "data.frame"))
     if (drop) {
-      setDT(l)
-      setattr(l, "class", c("Lexis", "data.table", "data.frame"))
       l <- intelliCrop(l, breaks = breaks, allScales = allScales, 
                        cropStatuses = TRUE)
       l <- intelliDrop(l, breaks = breaks)
@@ -138,7 +138,7 @@ splitMulti <- function(data,
     if (!merge) {
       othVars <- setdiff(names(l), c("lex.id", "lex.dur", allScales,
                                      "lex.Cst", "lex.Xst"))
-      l[, othVars] <- NULL
+      l[, c(othVars) := NULL]
     }
     if (!getOption("popEpi.datatable")) setDFpe(l)
     return(l)
