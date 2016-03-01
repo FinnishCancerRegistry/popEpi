@@ -569,7 +569,7 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   setkeyv(y, c(by, tmpSI))
   setnames(y, tmpSI, survScale)
   br <- breaks[[survScale]]
-  bt <- br[-1]
+  br <- br[-1]
   y[, c(survScale) := br[y[[survScale]]]]
   
   
