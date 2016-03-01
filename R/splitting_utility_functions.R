@@ -8,7 +8,19 @@ checkBreaksList <- function(x, breaks = list(fot = 0:5)) {
   if (length(timeScales) != length(breaks)) stop("breaks needs to be a fully named list")
   
   bad_scales <- setdiff(timeScales, names(x))
-  if (length(bad_scales) > 0) stop("at least one breaks list name wasn't a variable in data; bad names: ", paste0("'", bad_scales, "'", collapse = ", "))
+  if (length(bad_scales) > 0) {
+    stop("at least one breaks list name wasn't a variable in data; bad names: ", 
+         paste0("'", bad_scales, "'", collapse = ", "))
+  }
+  lens <- lapply(breaks, function(el) if (is.null(el)) -1 else length(el))
+  badLens <- names(lens[unlist(lens) == 0L])
+  if (length(badLens)) {
+    badLens <- paste0("'", badLens, "'", collapse = ", ")
+    stop("Elements in breaks list for the following time scales were of ",
+         "length zero but not NULL: ", badLens, ". Breaks list may only ",
+         "contain elements of length > 0 or elements that are NULL.")
+  }
+  invisible(NULL)
 }
 
 checkPophaz <- function(lex, ph, haz.name = "haz") {
