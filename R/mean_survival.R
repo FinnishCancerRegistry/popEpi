@@ -419,13 +419,14 @@ globalVariables(c('ms_agegr_w',
 # ## phony variable
 # set.seed(1L)
 # x$group <- rbinom(nrow(x), 1, 0.5)
+# x$agegr <- cut(x$dg_age, 4)
 # 
 # ## observed survival
 # pm <- copy(popEpi::popmort)
 # names(pm) <- c("sex", "CAL", "AGE", "haz")
-# st <- survmean_lex(Surv(time = FUT, event = lex.Xst != "alive") ~ group,
-#                   pophaz = pm, data = x,
-#                   breaks = list(FUT = seq(0, 10, 1/12)))
+# st <- survmean_lex(Surv(FUT, lex.Xst != "alive") ~ group + adjust(agegr),
+#                    pophaz = pm, data = x, weights = "internal",
+#                    breaks = list(FUT = seq(0, 10, 1/12)))
 
 survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, pophaz = NULL, 
                          ext.breaks = NULL, ext.pophaz = pophaz, r = 1.00, 
@@ -559,9 +560,17 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   rm(no_ss)
   
   tol <- .Machine$double.eps^0.5
-  # this used at the end for YPLL
+  
+  ## check weights & adjust ----------------------------------------------------
+  ## this is also used at the end for YPLL
   N_subjects <- x[!duplicated(lex.id) & x[[survScale]] < tol, list(obs=.N), 
                   keyby=eval(TF$tmpByNames)]
+  
+  setnames(N_subjects, tmpByNames, byNames)
+  mwDTtest <- makeWeightsDT(N_subjects, values = list("obs"), print = prNames,
+                            adjust = adNames, weights = weights, 
+                            internal.weights.values = "obs")
+  setnames(N_subjects, byNames, tmpByNames)
   
   ## figure out extrapolation breaks -------------------------------------------
   ## now that the survival time scale is known this can actually be done.
@@ -751,7 +760,13 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   ## adjusting -----------------------------------------------------------------
   ## TODO: check weights in the beginning somehow, use makeWeightsDT() here.
   
+  sm <- makeWeightsDT(sm, values = list(c("est", "exp", "obs", "YPLL")),
+                      print = tmpPrNames, adjust = tmpAdNames,
+                      weights = weights, internal.weights.values = "obs")
   
+  vv <- c("est", "exp", "obs", "YPLL")
+  sm[, c(vv) := lapply(.SD, function(col) col*sm$weights), .SDcols = vv]
+  sm <- sm[, lapply(.SD, sum), .SDcols = vv, by = eval(tmpPrNames)]
   
   ## final touch ---------------------------------------------------------------
   if (verbose) cat("survmean computations finished. \n")
