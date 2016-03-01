@@ -179,8 +179,10 @@ test_that("Ederer I expected survival curve agrees with survival::survexp", {
   
   su <- data.table(time = su$time, surv.exp = su$surv)
   su <- su[time != 0L]
+  su[, time := time / 365.242199]
+  setnames(su, "time", "fot")
   
-  expect_equal(e1$surv.exp, su$surv.exp, tolerance = 0.0004, scale = 1L)
+  expect_equal(e1, su, tolerance = 0.0004, scale = 1L)
   
   
 })
