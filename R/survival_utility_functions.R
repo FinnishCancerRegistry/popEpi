@@ -440,7 +440,7 @@ test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs
 
 
 
-comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", verbose = FALSE) {
+comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immortal = TRUE, verbose = FALSE) {
   ## INTENTION: given a Lexis data set x,
   ## computes Ederer I expected survival curves till end of follow-up
   ## by 'by' unless individual = TRUE.
@@ -475,6 +475,12 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", verb
   keepVars <- unique(keepVars)
   y <- subsetDTorDF(x, select = keepVars)
   y <- setDT(copy(y))
+  if (immortal) {
+    ## set lex.dur to infinite. this assumes that the subjects never leave
+    ## follow-up (which Ederer I assumes)
+    y[, lex.dur := NULL] ## avoids coercion to old class
+    y[, lex.dur := Inf]
+  }
   
   forceLexisDT(y, breaks = oldBreaks, allScales = allScales)
   y <- splitMulti(y, breaks = breaks, drop = TRUE, merge = TRUE)

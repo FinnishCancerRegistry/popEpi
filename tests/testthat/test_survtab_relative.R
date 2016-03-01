@@ -163,7 +163,7 @@ test_that("Ederer I expected survival curve agrees with survival::survexp", {
                 times = fb*365.242199)
   
   x[, sex := 1L]
-  x[, lex.dur := max(fb)]
+  x[, lex.dur := max(fb)] ## not really needed but illustrative
   x[, age := age/365.242199]
   x[, per := get.yrs(per, year.length = "approx")]
   
