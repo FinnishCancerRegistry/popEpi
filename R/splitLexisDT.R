@@ -66,10 +66,12 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   
   ## remove any existing breaks already split by;
   ## NOTE: setdiff would break Date format breaks!
+  orig_breaks <- copy(breaks)
   breaks <- breaks[!breaks %in% allBreaks[[timeScale]]]
   ## if no breaks left, it means the data has already been split by these
   ## exact breaks
-  if (!length(breaks)) {
+  if (!length(breaks) || (length(breaks) == 2L && drop)) {
+    breaks <- if (!length(breaks)) range(orig_breaks) else breaks
     l <- copy(lex)
     setDT(l)
     setattr(l, "class", c("Lexis", "data.table", "data.frame"))
