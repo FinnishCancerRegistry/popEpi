@@ -419,7 +419,7 @@ globalVariables(c('ms_agegr_w',
 # ## phony variable
 # set.seed(1L)
 # x$group <- rbinom(nrow(x), 1, 0.5)
-# x$agegr <- cut(x$dg_age, 4)
+# x$agegr <- cut(x$dg_age, c(0,45,60,Inf), right=FALSE)
 # 
 # ## observed survival
 # pm <- copy(popEpi::popmort)
@@ -427,10 +427,16 @@ globalVariables(c('ms_agegr_w',
 # st <- survmean_lex(Surv(FUT, lex.Xst != "alive") ~ group + adjust(agegr),
 #                    pophaz = pm, data = x, weights = "internal",
 #                    breaks = list(FUT = seq(0, 10, 1/12)))
-
+# st <- survmean_lex(Surv(FUT, lex.Xst != "alive") ~ agegr,
+#                    pophaz = pm, data = x, weights = NULL,
+#                    breaks = list(FUT = seq(0, 10, 1/12)))
+# st <- survmean_lex(Surv(FUT, lex.Xst != "alive") ~ 1,
+#                    pophaz = pm, data = x, weights = NULL,
+#                    breaks = list(FUT = seq(0, 10, 1/12)))
 survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, pophaz = NULL, 
                          ext.breaks = NULL, ext.pophaz = pophaz, r = 1.00, 
                          subset = NULL, verbose = FALSE, surv.method = "hazard") {
+  pt <- proc.time()
   TF <- environment()
   PF <- parent.frame(1L)
   
@@ -566,11 +572,11 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   N_subjects <- x[!duplicated(lex.id) & x[[survScale]] < tol, list(obs=.N), 
                   keyby=eval(TF$tmpByNames)]
   
-  setnames(N_subjects, tmpByNames, byNames)
+  if (length(byNames)) setnames(N_subjects, tmpByNames, byNames)
   mwDTtest <- makeWeightsDT(N_subjects, values = list("obs"), print = prNames,
                             adjust = adNames, weights = weights, 
                             internal.weights.values = "obs")
-  setnames(N_subjects, byNames, tmpByNames)
+  if (length(byNames)) setnames(N_subjects, byNames, tmpByNames)
   
   ## figure out extrapolation breaks -------------------------------------------
   ## now that the survival time scale is known this can actually be done.
@@ -584,10 +590,14 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
     stop("The survival time scale must be included in the list of breaks ",
          "to extrapolate by ('ext.breaks').")
   }
+  if (verbose) {
+    cat("Time taken by prepping data:", timetaken(pt), "\n")
+  }
   
   ## split ---------------------------------------------------------------------
   ## NOTE: handy to split once here and use that for extrapolation as well
   ## (otherwise would do the same split twice)
+  pt <- proc.time()
   xs <- splitMulti(x, breaks = breaks, drop = FALSE, merge = TRUE)
   setDT(xs)
   setattr(xs, "class", c("Lexis", "data.table", "data.frame"))
@@ -613,6 +623,14 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
     ## figure out 'r' to use for each stratum; for now simply the last
     ## estimate of RSR, i.e. p_i / p*_i
     autoR <- st[, list(r = r.e2[.N]/r.e2[.N-1L]), keyby = eval(tmpByNames)]
+    autoR[, r := pmin(1, r)]
+    if (verbose) {
+      cat("Estimated relative survival ratio(s) to use to multiply ",
+          "extrapolated survivals (note: allowed to be at most 1.00): \n")
+      if (length(byNames)) setnames(autoR, tmpByNames, byNames)
+      print(autoR)
+      if (length(byNames)) setnames(autoR, byNames, tmpByNames)
+    }
     
   }
   st[, r.e2 := NULL]
@@ -623,12 +641,17 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   st[, surv.obs := surv.obs/c(1, surv.obs[-.N]), by= eval(tmpByNames)]
   setnames(st, "surv.obs", "surv.exp")
   
+  if (verbose) {
+    cat("Time taken by estimating observed survival curves:", 
+        timetaken(pt), "\n")
+  }
   
   ## compute overall expected survival -----------------------------------------
   ## NOTE: need to do this twice since also observed curve has two steps
   ## and therefore there are two sets of breaks / pophaz's.
   ## 1) compute Ederer I expected survival the same way as observed survival
   ##    was computed
+  pt <- proc.time()
   e1a <- comp_e1(xs, breaks = breaks, pophaz = pophaz, immortal = TRUE, 
                  survScale = survScale, by = tmpByNames)
   
@@ -641,23 +664,28 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   
   mb <- max(breaks[[survScale]])
   xs[, c(allScales) := lapply(.SD, function(col) col + TF$mb), 
-     .SDcols = allScales]
-  xs$lex.dur <- NULL
-  xs$lex.dur <- Inf
+     .SDcols = c(allScales)]
+  
   ## set survScale to zero while maintaining variable type
   set(xs, j = survScale, value = xs[[survScale]] - xs[[survScale]])
+  
+  storage.mode(xs$lex.dur) <- "double"
+  set(xs, j = "lex.dur", value = Inf)
   
   ## split this as well in advance; can use the same file to extrapolate
   ## observed survival later
   empty_list <- lapply(allScales, function(el) NULL)
   names(empty_list) <- allScales
-  setattr(xs, "breaks", empty_list)
+  setDT(xs)
+  forceLexisDT(xs, breaks = empty_list, allScales = allScales)
   xs <- splitMulti(xs, breaks = ext.breaks, drop = FALSE, merge = TRUE)
   setDT(xs)
   forceLexisDT(xs, breaks = ext.breaks, allScales = allScales)
   
   ## compute "extrapolation" to expected survival curve, 
   ## e.g. from T = 10 to T = 100.
+  print(xs)
+  print(ext.breaks)
   e1b <- comp_e1(xs, breaks = ext.breaks, pophaz = ext.pophaz, immortal = TRUE, 
                  survScale = survScale, by = tmpByNames)
   
@@ -676,14 +704,17 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
     dt[, surv.exp := surv.exp/c(1,surv.exp[-.N]), by = eval(tmpByNames)]
     setcolorder(dt, c(tmpByNames,"Tstart", "Tstop", "surv.exp"))
     dt
-  }, dt = e1, SIMPLIFY = FALSE, 
-  fills = list(m1, m1+m2),
-  sh = list(0, m1))
+  }, dt = e1, fills = list(m1, m1+m2), sh = list(0, m1), SIMPLIFY = FALSE)
   e1 <- rbindlist(e1)
   setDT(e1)
   e1[, delta := Tstop - Tstart]
+  print(summary(e1a))
+  print(summary(e1b))
   
-  
+  if (verbose) {
+    cat("Time taken by computing overall expected survival curves:", 
+        timetaken(pt), "\n")
+  }
   ## figure out if need to extrapolate observed survival -----------------------
   ## which lex.id's survived beyond 
   extr_IDS <- x[lex.dur + x[[survScale]] >= max(TF$breaks[[survScale]]),
@@ -696,43 +727,75 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
         "the range of surv.breaks used to compute observed survivals. \n")
     st.ext <- st[0]
   } else {
-    
+    pt <- proc.time()
     xs <- xs[lex.id %in% TF$extr_IDS, ]
     setDT(xs)
     forceLexisDT(xs, breaks = ext.breaks, allScales = allScales)
     st.ext <- comp_e1(xs, breaks = ext.breaks, pophaz = ext.pophaz, 
                       survScale = survScale, by = tmpByNames, immortal = TRUE)
     setnames(st.ext, survScale, "Tstop")
+    st.ext[, Tstop := Tstop + max(TF$breaks[[survScale]])]
     st.ext[, Tstart := c(0, Tstop[-.N]), by = eval(tmpByNames)]
     st.ext[, delta := Tstop-Tstart]
     ## decumulate for later cumulation
     st.ext[, surv.exp := surv.exp/c(1, surv.exp[-.N]), by= eval(tmpByNames)]
     
+    if (verbose) {
+      cat("Time taken by extrapolating observed survival curves:", 
+          timetaken(pt), "\n")
+    }
   } 
   
   
   ## combine all estimates into one data set -----------------------------------
+  ## first multiply the extrapolated survival curve with RSR
+  pt <- proc.time()
+  if (length(r)) {
+    if (is.numeric(r)) {
+      st.ext[, surv.exp := surv.exp * TF$r]
+    } else if (r == "auto") {
+      if (length(tmpByNames)) {
+        st.ext <- merge(st.ext, autoR, by = tmpByNames, all.x=TRUE, all.y=FALSE)
+      } else {
+        ## autoR only has one row.
+        st.ext[, r := TF$autoR$r]
+      }
+      
+      st.ext[, surv.exp := surv.exp * st.ext$r]
+      st.ext[, r := NULL]
+    }
+  }
+  
   st[, survmean_type := "est"]
   st.ext[, survmean_type := "est"]
   e1[, survmean_type := "exp"]
   x <- rbindlist(list(st, st.ext, e1), use.names = TRUE)
   
-  setkeyv(x, c(tmpByNames, "Tstop"))
-  setcolorder(x, c("survmean_type",tmpByNames, 
+  setkeyv(x, c(tmpByNames, "survmean_type",  "Tstop"))
+  setcolorder(x, c(tmpByNames, "survmean_type",
                    "Tstart", "Tstop", "delta", "surv.exp"))
-  
-  if (length(r)) {
-    if (is.numeric(r)) {
-      x[, surv.exp := surv.exp * TF$r]
-    } else if (r == "auto") {
-      x <- merge(x, autoR, by = tmpByNames, all.x=T, all.y=F, sort = FALSE)
-      x[, surv.exp := surv.exp * x$r]
-    }
-  }
-  
   ## cumulate 
-  setkeyv(x, c(tmpByNames, "Tstop"))
-  x[, surv.exp := cumprod(surv.exp), by = eval(tmpByNames)]
+  setkeyv(x, c(tmpByNames, "survmean_type",  "Tstop"))
+  if (any(duplicated(x))) {
+    stop("Internal error: rows were duplicated when computing cumulative ",
+         "survival curves. Complain to the package maintainer if you see ",
+         "this.")
+  }
+  x[, surv.exp := cumprod(surv.exp), by = eval(c(tmpByNames, "survmean_type"))]
+  
+  ## check curve convergence to zero -------------------------------------------
+  ## a good integration is based on curves that get very close to 
+  ## zero in the end
+  mi <- x[, .(surv.exp = round(min(surv.exp),4)*100), 
+          keyby = eval(c(tmpByNames, "survmean_type"))]
+  mibr <- c(0, 0.001, 0.01, 0.05, 0.10, 0.5, 1)
+  mi[, surv.exp := cut(surv.exp, mibr, right = FALSE, labels = FALSE)]
+  mila <- c("<0.001", "0.001-0.01", "0.01-0.05", "0.1-0.5", ">0.5")
+  mi[, surv.exp := TF$mila[surv.exp]]
+  if (verbose) {
+    cat("Lowest points in observed / expected survival curves by strata:\n")
+    print(mi)
+  }
   
   ## integrating by trapezoid areas --------------------------------------------
   ## trapezoid area: WIDTH*(HEIGHT1 + HEIGHT2)/2
@@ -740,7 +803,7 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   ## and multiply with interval length.
   
   x[, surv.exp.mean := delta*(surv.exp + c(1, surv.exp[-.N]))/2L,
-    by = c(tmpByNames,"survmean_type")]
+    by = eval(c(tmpByNames,"survmean_type"))]
   
   sm <- x[, .(survmean = sum(surv.exp.mean*delta)), 
           keyby = c(tmpByNames, "survmean_type")]
@@ -763,15 +826,18 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   sm <- makeWeightsDT(sm, values = list(c("est", "exp", "obs", "YPLL")),
                       print = tmpPrNames, adjust = tmpAdNames,
                       weights = weights, internal.weights.values = "obs")
+  if (length(adNames)) {
+    vv <- c("est", "exp", "obs", "YPLL")
+    sm[, c(vv) := lapply(.SD, function(col) col*sm$weights), .SDcols = vv]
+    sm <- sm[, lapply(.SD, sum), .SDcols = vv, by = eval(tmpPrNames)]
+  }
   
-  vv <- c("est", "exp", "obs", "YPLL")
-  sm[, c(vv) := lapply(.SD, function(col) col*sm$weights), .SDcols = vv]
-  sm <- sm[, lapply(.SD, sum), .SDcols = vv, by = eval(tmpPrNames)]
+  if (verbose) {
+    cat("Time taken by final touches:", timetaken(pt), "\n")
+  }
   
   ## final touch ---------------------------------------------------------------
-  if (verbose) cat("survmean computations finished. \n")
-  
-  setnames(sm, tmpPrNames, prNames)
+  if (length(prNames)) setnames(sm, tmpPrNames, prNames)
   
   this_call <- match.call()
   at <- list(call = this_call, print = prNames, adjust = adNames, 
