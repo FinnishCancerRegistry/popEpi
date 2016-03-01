@@ -44,6 +44,9 @@
 #' ## all produce identical results
 splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   
+  TF <- environment()
+  PF <- parent.frame()
+  
   tol <- .Machine$double.eps^0.5
   checkLexisData(lex, check.breaks = FALSE)
   
@@ -92,9 +95,9 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   }
   
   ## will use this due to step below (and laziness)
-  lexVals <- lex[[timeScale]]
+  ts_values <- lex[[timeScale]]
   ## Date objects are based on doubles and therefore keep the most information
-  if (inherits(lexVals, c("IDate", "date", "dates"))) lexVals <- as.Date(lexVals)
+  if (inherits(ts_values, c("IDate", "date", "dates"))) ts_values <- as.Date(ts_values)
   
   N_expand <- length(breaks)
   N_subjects <- nrow(lex)
@@ -121,28 +124,30 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   ## time scale value determination --------------------------------------------
   set(l, j = tmpIE,  value = c(rep(breaks, each = N_subjects)) )
   set(l, j = tmpIE,  value = pmin(l[[tmpIE]], l[[timeScale]] + l$lex.dur) )
-  set(l, j = timeScale, value = c(lexVals, pmax(lexVals, rep(breaks[-length(breaks)], each = N_subjects))) )
+  set(l, j = timeScale, value = c(ts_values, pmax(ts_values, rep(breaks[-length(breaks)], each = N_subjects))) )
   
   
   ## status determination ------------------------------------------------------
   ## note: lex.dur still the original value (maximum possible)
   harmonizeStatuses(x = l, C = "lex.Cst", X = "lex.Xst")
-  not_event <- lexVals + l$lex.dur != l[[tmpIE]] ## old
-  l[not_event, lex.Xst := lex.Cst]
+  not_event <- ts_values + l$lex.dur != l[[tmpIE]]
+  l[TF$not_event, lex.Xst := lex.Cst]
   
   set(l, j = "lex.dur", value = l[[tmpIE]] - l[[timeScale]] )
   
   ## other time scale values ---------------------------------------------------
   otherScales <- setdiff(allScales, timeScale)
   if (length(otherScales) > 0) {
+    ## change in timeScale
+    ts_delta <- l[[timeScale]] - ts_values
     for (k in otherScales) {
-      set(l, j = k, value = lex[[k]] + l[[tmpIE]] - lexVals - l$lex.dur)
+      set(l, j = k, value = lex[[k]] + ts_delta)
     }
   }
   
   ## dropping ------------------------------------------------------------------
   ## drops very very small intervals as well as dur <= 0
-  l <- l[lex.dur > 0L + tol]
+  l <- l[lex.dur > 0L + TF$tol]
   
   setkeyv(l, c(tmpID, timeScale))
   set(l, j = c(tmpIE, tmpID), value = NULL)
