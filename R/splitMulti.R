@@ -113,6 +113,19 @@ splitMulti <- function(data,
   
   breaks <- splitMultiPreCheck(data = data, breaks = breaks, ...)
   
+  ## check if even need to do splitting ----------------------------------------
+  oldBreaks <- attr(data, "breaks")
+  checkBreaksList(data, oldBreaks)
+  br_test <- mapply(function(obr, nbr) {
+    all(nbr %in% obr)
+  }, nbr = breaks, obr = oldBreaks, SIMPLIFY = FALSE)
+  if (all(unlist(br_test))) {
+    ## whaddya know, all breaks elements were a subset of the corresponding
+    ## elements in the breaks used to previously split the data.
+    return(data)
+  }
+  
+  ## prepare data  -------------------------------------------------------------
   allScales <- attr(data, "time.scales")
   splitScales <- names(breaks)
   
@@ -131,7 +144,7 @@ splitMulti <- function(data,
   }
   l <- rbindlist(l)
   on.exit()
-  set(data, j = "lex.id", value = IDT[, ]$lex.id)
+  set(data, j = "lex.id", value = IDT$lex.id)
   
   ## lex.id is here 1:nrow(data)
   setkey(l, lex.id)
