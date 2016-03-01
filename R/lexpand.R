@@ -752,6 +752,8 @@ lexpand <- function(data,
     drop_after <- TRUE
   }
   
+  forceLexisDT(l, breaks = list(fot = NULL, per = NULL, age = NULL),
+               allScales = c("fot", "per", "age"))
   if (verbose) splittime <- proc.time()
   l <- splitMulti(l,  breaks = breaks, 
                   drop = drop, verbose=FALSE, merge = TRUE)
