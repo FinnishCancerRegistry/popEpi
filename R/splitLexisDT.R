@@ -58,20 +58,37 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
          paste0("'", allScales, "'", collapse = ", "))
   }
   
-  ## remove any existing breaks already split by;
-  ## NOTE: setdiff would break Date format breaks!
-  breaks <- breaks[!breaks %in% allBreaks[[timeScale]]]
-  ## if no breaks left, it means the data has already been split by these
-  ## exact breaks
-  if (!length(breaks)) return(lex)
-  
-  breaks <- matchBreakTypes(lex, breaks, timeScale, modify.lex = FALSE) 
-  
   ## lexVars: if !merge, will drop all but these (NOTE: checkLexisData
   ## check for existence of these)
   lexVars <- c("lex.id", "lex.multi", allScales, "lex.dur", "lex.Cst", "lex.Xst")
   lexVars <- intersect(names(lex), lexVars)
   othVars <- setdiff(names(lex), lexVars)
+  
+  ## remove any existing breaks already split by;
+  ## NOTE: setdiff would break Date format breaks!
+  breaks <- breaks[!breaks %in% allBreaks[[timeScale]]]
+  ## if no breaks left, it means the data has already been split by these
+  ## exact breaks
+  if (!length(breaks)) {
+    l <- copy(lex)
+    if (drop) {
+      BL <- list(breaks)
+      names(BL) <- timeScale
+      setDT(l)
+      setattr(l, "class", c("Lexis", "data.table", "data.frame"))
+      l <- intelliCrop(l, breaks = BL, allScales = allScales, 
+                       cropStatuses = TRUE)
+      l <- intelliDrop(l, breaks = BL)
+    }
+    if (!merge) {
+      l[, othVars] <- NULL
+    }
+    if (!getOption("popEpi.datatable")) setDFpe(l)
+    return(l)
+  }
+  
+  breaks <- matchBreakTypes(lex, breaks, timeScale, modify.lex = FALSE) 
+  
   
   breaks <- sort(breaks)
   if (!drop) breaks <- protectFromDrop(breaks)
