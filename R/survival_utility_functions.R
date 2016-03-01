@@ -447,7 +447,6 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   TF <- environment()
   
   haz <- NULL # R CMD CHECK appeasement
-  
   ## check ---------------------------------------------------------------------
   checkLexisData(x)
   checkBreaksList(x, breaks)
@@ -461,6 +460,9 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
                   "complain to the package maintainer.")
   all_names_present(x, c(by, id, survScale), msg = byErr)
   
+  if (length(id) != 1L) {
+    stop("Argument id must be of length 1.")
+  }
   ## split ---------------------------------------------------------------------
   pt <- proc.time()
   oldBreaks <- attr(x, "breaks")
@@ -520,7 +522,8 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   ##    survival interval due to splitting by multiple time scales.
   pt <- proc.time()
   set(y, j = tmpHaz, value = y[[tmpHaz]]*y$lex.dur)
-  y <- y[, lapply(.SD, sum), keyby = c(by, id, tmpSI), .SDcols = c(tmpHaz)]
+  y <- y[, lapply(.SD, sum), keyby = eval(unique(c(by, id, tmpSI))), 
+         .SDcols = c(tmpHaz)]
   setnames(y, ncol(y), tmpHaz)
   
   ## reverse temp names - need to be able to refer to haz without temp var
@@ -530,6 +533,7 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   tmpID <- makeTempVarName(names = c(avoid, tmpBy), pre = id)
   if (length(by)) {
     setnames(y, by, tmpBy)
+    if (id %in% by) tmpID <- id <- tmpBy[by == id]
   } else {
     tmpBy <- by <- NULL
   }
