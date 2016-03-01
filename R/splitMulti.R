@@ -118,7 +118,11 @@ splitMulti <- function(data,
   splitScales <- names(breaks)
   
   oldBreaks <- attr(data, "breaks")
-  checkBreaksList(data, oldBreaks)
+  tryCatch(checkBreaksList(data, oldBreaks), error = function(e) {
+    stop("Error in splitMulti: \n",
+         "Old breaks existing in Lexis data did not pass testing. Error ",
+         "message from test: \n", e, call. = FALSE)
+  })
   
   br_test <- mapply(function(obr, nbr) {
     all(nbr %in% obr)
