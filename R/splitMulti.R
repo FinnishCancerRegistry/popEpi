@@ -124,30 +124,6 @@ splitMulti <- function(data,
          "message from test: \n", e, call. = FALSE)
   })
   
-  br_test <- mapply(function(obr, nbr) {
-    all(nbr %in% obr)
-  }, nbr = breaks, obr = oldBreaks, SIMPLIFY = FALSE)
-  
-  if (all(unlist(br_test))) {
-    ## whaddya know, all breaks elements were a subset of the corresponding
-    ## elements in the breaks used to previously split the data.
-    l <- copy(data)
-    setDT(l)
-    setattr(l, "class", c("Lexis", "data.table", "data.frame"))
-    if (drop) {
-      l <- intelliCrop(l, breaks = breaks, allScales = allScales, 
-                       cropStatuses = TRUE)
-      l <- intelliDrop(l, breaks = breaks)
-    }
-    if (!merge) {
-      othVars <- setdiff(names(l), c("lex.id", "lex.dur", allScales,
-                                     "lex.Cst", "lex.Xst"))
-      l[, c(othVars) := NULL]
-    }
-    if (!getOption("popEpi.datatable")) setDFpe(l)
-    return(l)
-  }
-  
   ## prepare data  -------------------------------------------------------------
   
   tmpID <- makeTempVarName(data = data, pre = "TEMP_SPLITMULTI_ID_")
