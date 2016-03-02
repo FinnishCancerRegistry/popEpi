@@ -798,6 +798,7 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
                                c("Observed", "Expected"))]
   setnames(mi, c("survmean_type", "surv.exp"), 
            c("Obs./Exp. curve", "Lowest value"))
+  setnames(mi, tmpByNames, byNames)
   if (verbose) {
     cat("Lowest points in observed / expected survival curves by strata:\n")
     print(mi)
@@ -808,13 +809,10 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   ## so we compute "average interval survivals" for each interval t_i
   ## and multiply with interval length.
   
-  x[, surv.exp.mean := delta*(surv.exp + c(1, surv.exp[-.N]))/2L,
-    by = eval(c(tmpByNames,"survmean_type"))]
-  
-  sm <- x[, .(survmean = sum(surv.exp.mean*delta)), 
+  setkeyv(x, c(tmpByNames, "survmean_type",  "Tstop"))
+  sm <- x[, .(survmean = sum(delta*(surv.exp + c(1, surv.exp[-.N]))/2L)), 
           keyby = c(tmpByNames, "survmean_type")]
   
-  x[, surv.exp.mean := NULL]
   ## cast ----------------------------------------------------------------------
   
   sm <- cast_simple(sm, columns = "survmean_type", 
