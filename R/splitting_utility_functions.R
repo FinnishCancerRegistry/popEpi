@@ -1,3 +1,32 @@
+all_breaks_in <- function(bl1, bl2, x = NULL) {
+  ## INTENTION: return TRUE/FALSE depending on whether bl1 is a subset of bl2;
+  ## this means that each element in bl1 exists in bl2, and that those elements
+  ## are each subsets of the corresponding elements in bl2.
+  ## this is handy to check whether the some Lexis data has already
+  ## been split using the breaks in bl1.
+  ## NOTE: use checkBreakList() on each list separately before this.
+  
+  if (!is.list(bl1) || !is.list(bl2)) {
+    stop("Arguments bl1 and bl2 must be lists of breaks as supplied to e.g. ",
+         "splitMulti.")
+  }
+  
+  if (inherits(x, "Lexis")) {
+    checkLexisData(x)
+    checkBreaksList(x, bl1)
+    checkBreaksList(x, bl2)
+  }
+  
+  ce <- intersect(names(bl1), names(bl2))
+  if (length(ce) != length(bl1)) return(FALSE)
+  
+  test <- mapply(function(l1, l2) {
+    all(l1 %in% l2)
+  }, l1 = bl1, l2 = bl2[ce], SIMPLIFY = FALSE)
+  
+  all(unlist(test))
+}
+
 
 checkBreaksList <- function(x, breaks = list(fot = 0:5)) {
   if (is.null(breaks)) stop("breaks is NULL")
