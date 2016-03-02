@@ -684,8 +684,6 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   
   ## compute "extrapolation" to expected survival curve, 
   ## e.g. from T = 10 to T = 100.
-  print(xs)
-  print(ext.breaks)
   e1b <- comp_e1(xs, breaks = ext.breaks, pophaz = ext.pophaz, immortal = TRUE, 
                  survScale = survScale, by = tmpByNames)
   
@@ -708,8 +706,7 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   e1 <- rbindlist(e1)
   setDT(e1)
   e1[, delta := Tstop - Tstart]
-  print(summary(e1a))
-  print(summary(e1b))
+  print(e1)
   
   if (verbose) {
     cat("Time taken by computing overall expected survival curves:", 
@@ -788,10 +785,19 @@ survmean_lex <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   ## zero in the end
   mi <- x[, .(surv.exp = round(min(surv.exp),4)*100), 
           keyby = eval(c(tmpByNames, "survmean_type"))]
-  mibr <- c(0, 0.001, 0.01, 0.05, 0.10, 0.5, 1)
-  mi[, surv.exp := cut(surv.exp, mibr, right = FALSE, labels = FALSE)]
-  mila <- c("<0.001", "0.001-0.01", "0.01-0.05", "0.1-0.5", ">0.5")
-  mi[, surv.exp := TF$mila[surv.exp]]
+  if (any(mi$surv.exp > 1)) {
+    warning("One or several of the curves used to compute mean survival times ",
+            "or expected mean survival times was > 1 % at the lowest point. ",
+            "Mean survival estimates may be significantly biased. To avoid ",
+            "this, supply breaks to 'ext.breaks' which make the curves longer ",
+            ", e.g. ext.breaks = list(FUT = 0:150) when using time scale FUT ",
+            "as the survival time scale.")
+  }
+  mi[, surv.exp := paste0(surv.exp, " %")]
+  mi[, survmean_type := factor(survmean_type, c("est", "exp"),
+                               c("Observed", "Expected"))]
+  setnames(mi, c("survmean_type", "surv.exp"), 
+           c("Obs./Exp. curve", "Lowest value"))
   if (verbose) {
     cat("Lowest points in observed / expected survival curves by strata:\n")
     print(mi)
