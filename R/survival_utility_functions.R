@@ -479,6 +479,10 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   y <- setDT(copy(y))
   forceLexisDT(y, breaks = oldBreaks, allScales = allScales, key = TRUE)
   
+  ## won't use statuses for anything
+  y[, c("lex.Cst", "lex.Xst") := NULL]
+  y[, c("lex.Cst", "lex.Xst") := 0L]
+  
   if (immortal) {
     ## set lex.dur to infinite. this assumes that the subjects never leave
     ## follow-up (which Ederer I assumes)
@@ -487,7 +491,13 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
     y[TF$id_last, lex.dur := Inf]
   }
   
-  y <- splitMulti(y, breaks = breaks, drop = TRUE, merge = TRUE)
+  y <- intelliCrop(y, breaks = breaks, allScales = allScales)
+  y <- intelliDrop(y, breaks = breaks)
+  setDT(y)
+  forceLexisDT(y, breaks = oldBreaks, allScales = allScales, key = TRUE)
+  setkeyv(y, c(id, survScale))
+  
+  y <- splitMulti(y, breaks = breaks, drop = FALSE, merge = TRUE)
   
   if (verbose) cat("Time taken by splitting: ", timetaken(pt), ".\n", sep = "")
   
