@@ -124,56 +124,71 @@ splitMulti <- function(data,
          "message from test: \n", e, call. = FALSE)
   })
   
-  ## prepare data  -------------------------------------------------------------
+  ## only do split if all breaks are NOT in the breaks that the data
+  ## has already been split by.
+  do_split <- TRUE
+  do_split <- !all_breaks_in(breaks, oldBreaks, x = data)
   
-  tmpID <- makeTempVarName(data = data, pre = "TEMP_SPLITMULTI_ID_")
-  IDT <- data.table(lex.id = data$lex.id, temp.id = 1:nrow(data), key = "temp.id")
-  
-  set(data, j = "lex.id", value = 1:nrow(data))
-  on.exit(set(data, j = "lex.id", value = IDT[, ]$lex.id))
-  
-  l <- vector(mode = "list", length = length(splitScales))
-  setattr(l, "names", splitScales)
-  for (v in splitScales) {
-    l[[v]] <- splitLexisDT(data, breaks = breaks[[v]], 
-                           merge = TRUE, drop = FALSE, timeScale = v)
-    breaks[[v]] <- attr(l[[v]], "breaks")[[v]]
-  }
-  l <- rbindlist(l)
-  on.exit()
-  set(data, j = "lex.id", value = IDT$lex.id)
-  
-  ## lex.id is here 1:nrow(data)
-  setkey(l, lex.id)
-  setnames(l, "lex.id",  tmpID)
-  set(l, j = "lex.id", value = IDT[.(l[[tmpID]]), ]$lex.id)
-  rm(data, IDT)
-  
-  
-  if (!merge) setcolsnull(l, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", tmpID), soft = FALSE)
-  
-  v1 <- splitScales[1]
-  
-  if (length(splitScales) > 1L) {
+  if (!do_split) {
+    l <- setDT(copy(data))
+    setkeyv(l, c("lex.id", allScales[1]))
+  } else {
     
-    tmpIE <- makeTempVarName(data = l, pre = "TEMP_SPLITMULTI_intEnd")
-    tmpLD <- makeTempVarName(data = l, pre = "TEMP_SPLITMULTI_lagDur")
-    l[, (tmpIE) := get(v1) + lex.dur]
-    setkeyv(l, c(tmpID, tmpIE))
+    ## prepare data  -------------------------------------------------------------
     
-    l <- unique(l)
-    ## time scale minima and lex.dur as cumulative duration --------------------
-    l[, (allScales) := lapply(.SD, min), .SDcols = allScales, by = c(tmpID)]
-    l[, lex.dur := get(tmpIE) - get(v1)]
-    l[, (tmpLD) := c(0, lex.dur[-.N]), by = c(tmpID)]
+    tmpID <- makeTempVarName(data = data, pre = "TEMP_SPLITMULTI_ID_")
+    IDT <- data.table(lex.id = data$lex.id, temp.id = 1:nrow(data), key = "temp.id")
     
-    for (k in allScales) {
-      set(l, j = k, value = l[[k]] + l[[tmpLD]])
+    set(data, j = "lex.id", value = 1:nrow(data))
+    on.exit(set(data, j = "lex.id", value = IDT[, ]$lex.id))
+    
+    l <- vector(mode = "list", length = length(splitScales))
+    setattr(l, "names", splitScales)
+    for (v in splitScales) {
+      l[[v]] <- splitLexisDT(data, breaks = breaks[[v]], 
+                             merge = TRUE, drop = FALSE, timeScale = v)
+      breaks[[v]] <- attr(l[[v]], "breaks")[[v]]
     }
-    # non-cumulative duration
-    set(l, j = "lex.dur", value = l$lex.dur - l[[tmpLD]])
-    set(l, j = tmpLD, value = NULL)
-    set(l, j = tmpIE, value = NULL)
+    l <- rbindlist(l)
+    on.exit()
+    set(data, j = "lex.id", value = IDT$lex.id)
+    
+    ## lex.id is here 1:nrow(data)
+    setkey(l, lex.id)
+    setnames(l, "lex.id",  tmpID)
+    set(l, j = "lex.id", value = IDT[.(l[[tmpID]]), ]$lex.id)
+    rm(data, IDT)
+    
+    
+    if (!merge) setcolsnull(l, keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", tmpID), soft = FALSE)
+    
+    v1 <- splitScales[1]
+    
+    if (length(splitScales) > 1L) {
+      
+      tmpIE <- makeTempVarName(data = l, pre = "TEMP_SPLITMULTI_intEnd")
+      tmpLD <- makeTempVarName(data = l, pre = "TEMP_SPLITMULTI_lagDur")
+      l[, (tmpIE) := get(v1) + lex.dur]
+      setkeyv(l, c(tmpID, tmpIE))
+      
+      l <- unique(l)
+      ## time scale minima and lex.dur as cumulative duration --------------------
+      l[, (allScales) := lapply(.SD, min), .SDcols = allScales, by = c(tmpID)]
+      l[, lex.dur := get(tmpIE) - get(v1)]
+      l[, (tmpLD) := c(0, lex.dur[-.N]), by = c(tmpID)]
+      
+      for (k in allScales) {
+        set(l, j = k, value = l[[k]] + l[[tmpLD]])
+      }
+      # non-cumulative duration
+      set(l, j = "lex.dur", value = l$lex.dur - l[[tmpLD]])
+      set(l, j = tmpLD, value = NULL)
+      set(l, j = tmpIE, value = NULL)
+    }
+    
+    setkeyv(l, c(tmpID, v1))
+    set(l, j = tmpID, value = NULL)
+    
   }
   
   l <- l[lex.dur > 0]
@@ -182,10 +197,6 @@ splitMulti <- function(data,
   if (nrow(l) == 0) {
     warning("no data left after dropping; check breaks?")
   }
-  
-  setkeyv(l, c(tmpID, v1))
-  #   l[, lex.multi := 1:.N, by=c(tmpID)]
-  set(l, j = tmpID, value = NULL)
   
   order <- c("lex.id", "lex.multi", allScales, "lex.dur", "lex.Cst", "lex.Xst")
   order <- c(order, setdiff(names(l), order))
