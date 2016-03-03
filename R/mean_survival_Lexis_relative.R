@@ -161,15 +161,12 @@ survmean_rel <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   tol <- .Machine$double.eps^0.5
   
   ## check weights & adjust ----------------------------------------------------
-  ## this is also used at the end for YPLL
-  N_subjects <- x[!duplicated(lex.id) & x[[survScale]] < tol, list(obs=.N), 
-                  keyby=eval(TF$tmpByNames)]
-  
-  if (length(byNames)) setnames(N_subjects, tmpByNames, byNames)
-  mwDTtest <- makeWeightsDT(N_subjects, values = list("obs"), print = prNames,
+  test_obs <- x[, .(obs=.N),  keyby=eval(TF$tmpByNames)]
+  if (length(byNames)) setnames(test_obs, tmpByNames, byNames)
+  mwDTtest <- makeWeightsDT(test_obs, values = list("obs"), print = prNames,
                             adjust = adNames, weights = weights, 
                             internal.weights.values = "obs")
-  if (length(byNames)) setnames(N_subjects, byNames, tmpByNames)
+  if (length(byNames)) setnames(test_obs, byNames, tmpByNames)
   
   ## figure out extrapolation breaks -------------------------------------------
   ## now that the survival time scale is known this can actually be done.
@@ -231,8 +228,18 @@ survmean_rel <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   ##    defined by breaks list in argument 'breaks'
   pt <- proc.time()
   setkeyv(x, c("lex.id", survScale))
-  xe <- x[x[[survScale]] == 0, ]
-  xe <- intelliDrop(xe, breaks = breaks)
+  xe <- unique(x)[x[[survScale]] < TF$tol, ]
+  
+  if (length(breaks) > 1L) {
+    ## e.g. a period window was defined and we only use
+    ## entering follow-up in the time window.
+    tmpDropBreaks <- setdiff(allScales, survScale)
+    tmpDropBreaks <- intersect(names(breaks), tmpDropBreaks)
+    tmpDropBreaks <- breaks[tmpDropBreaks]
+    
+    xe <- intelliDrop(xe, breaks = tmpDropBreaks)
+  }
+  
   xe <- x[lex.id %in% TF$xe[, unique(lex.id)]]
   forceLexisDT(xe, breaks = oldBreaks, allScales = allScales, key = FALSE)
   
@@ -252,6 +259,13 @@ survmean_rel <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
     cat("Time taken by computing overall expected survival curves:", 
         timetaken(pt), "\n")
   }
+  
+  ## compute counts of subjects ------------------------------------------------
+  ## these correspond to the counts of patients for which expected survival
+  ## was computed. If observed survival is e.g. a period estimated curve,
+  ## we only use subjects entering follow-up in the period window.
+  N_subjects <- xe[!duplicated(lex.id)][, list(obs=.N), 
+                  keyby=eval(TF$tmpByNames)]
   
   ## combine all estimates into one data set -----------------------------------
   pt <- proc.time()
