@@ -4,19 +4,12 @@
 \alias{survmean}
 \title{Compute mean survival times using extrapolation}
 \usage{
-survmean(data, surv.breaks = NULL, by.vars = NULL, pophaz = NULL, r = 1,
-  agegr.w.breaks = NULL, agegr.w.weights = NULL, ext.breaks = NULL,
-  subset = NULL, verbose = FALSE, ...)
+survmean(formula, data, adjust = NULL, weights = NULL, breaks = NULL,
+  pophaz = NULL, e1.breaks = NULL, e1.pophaz = pophaz, r = "auto",
+  subset = NULL, verbose = FALSE, surv.method = "hazard")
 }
 \arguments{
 \item{data}{a data set of splitted records; e.g. output of \code{\link{lexpand}}}
-
-\item{surv.breaks}{passed on to \code{\link{survtab}}; if \code{NULL}, uses
-the existing breaks along time scale \code{"fot"} in \code{data}}
-
-\item{by.vars}{a character vector of variables names;
- e.g. \code{by.vars = "sex"} will calculate 
-mean survival separately for each unique combination of these variables}
 
 \item{pophaz}{a data set of appropriate population hazards as given to 
 \code{lexpand}; will be used in extrapolation - see Details}
@@ -25,23 +18,30 @@ mean survival separately for each unique combination of these variables}
 by this number; used e.g. \code{r = 1.1} if excess hazard of 10 percent should persist
 in extrapolation}
 
-\item{agegr.w.breaks}{a numeric vector of fractional years as \code{[a,b)}
-breaks as in \code{survtab}; will be used to determine standardization age group}
-
-\item{agegr.w.weights}{a numeric vector of weights
-breaks as in \code{survtab}; will be used to standardize by age group}
-
-\item{ext.breaks}{advanced; a list of breaks (see \code{\link{lexpand}});
-used as breaks for extrapolation; see Details}
-
 \item{subset}{a logical condition; e.g. \code{subset = sex == 1}; 
 subsets the data before computations}
 
 \item{verbose}{\code{logical}; if \code{TRUE}, the function is returns
 some messages and results along the run, which may be useful in debugging}
 
+\item{surv.breaks}{passed on to \code{\link{survtab}}; if \code{NULL}, uses
+the existing breaks along time scale \code{"fot"} in \code{data}}
+
+\item{by.vars}{a character vector of variables names;
+ e.g. \code{by.vars = "sex"} will calculate 
+mean survival separately for each unique combination of these variables}
+
+\item{agegr.w.breaks}{a numeric vector of fractional years as \code{[a,b)}
+breaks as in \code{survtab}; will be used to determine standardization age group}
+
+\item{agegr.w.weights}{a numeric vector of weights
+breaks as in \code{survtab}; will be used to standardize by age group}
+
 \item{...}{any other arguments passed on to \code{survtab} such as
 \code{surv.method = "lifetable"} for actuarial estimates of observed survival}
+
+\item{ext.breaks}{advanced; a list of breaks (see \code{\link{lexpand}});
+used as breaks for extrapolation; see Details}
 }
 \value{
 Returns a \code{data.frame} or \code{data.table} (depending on 
