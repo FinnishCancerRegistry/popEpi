@@ -148,18 +148,18 @@
 # ## observed survival
 # pm <- copy(popEpi::popmort)
 # names(pm) <- c("sex", "CAL", "AGE", "haz")
-# st <- survmean_rel(Surv(FUT, lex.Xst != "alive") ~ group + adjust(agegr),
+# st <- survmean(Surv(FUT, lex.Xst != "alive") ~ group + adjust(agegr),
 #                    pophaz = pm, data = x, weights = "internal",
 #                    breaks = list(FUT = seq(0, 10, 1/12)))
-# st <- survmean_rel(Surv(FUT, lex.Xst != "alive") ~ agegr,
+# st <- survmean(Surv(FUT, lex.Xst != "alive") ~ agegr,
 #                    pophaz = pm, data = x, weights = NULL,
 #                    breaks = list(FUT = seq(0, 10, 1/12)))
-# st <- survmean_rel(Surv(FUT, lex.Xst != "alive") ~ 1,
+# st <- survmean(Surv(FUT, lex.Xst != "alive") ~ 1,
 #                    pophaz = pm, data = x, weights = NULL,
 #                    breaks = list(FUT = seq(0, 10, 1/12)))
-survmean_rel <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, pophaz = NULL, 
-                         e1.breaks = NULL, e1.pophaz = pophaz, r = 1.00, 
-                         subset = NULL, verbose = FALSE, surv.method = "hazard") {
+survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, pophaz = NULL, 
+                     e1.breaks = NULL, e1.pophaz = pophaz, r = "auto", 
+                     subset = NULL, verbose = FALSE, surv.method = "hazard") {
   pt <- proc.time()
   TF <- environment()
   PF <- parent.frame(1L)
@@ -177,7 +177,7 @@ survmean_rel <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   if (!is.numeric(r) && !is.character(r)) {
     stop("r must be either 'auto' or a numeric value giving the assumed ",
          "relative survival ratio to use in extrapolation, e.g. r = 0.95.",
-         "See ?survmean_rel for more information.")
+         "See ?survmean for more information.")
   }
   if (is.numeric(r) && r < 0L) stop("numeric r must be > 0, e.g. r = 0.95")
   if (is.character(r)) r <- match.arg(r, "auto")
@@ -253,7 +253,8 @@ survmean_rel <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
   
   formula <- paste0(deparse(formula[[2L]]), " ~ ")
   if (length(c(tmpAdNames, tmpPrNames)) > 0L) {
-    formula <- paste0(formula, paste0(c(tmpPrNames, tmpAdNames), collapse = " + "))
+    formula <- paste0(formula, paste0(c(tmpPrNames, tmpAdNames), 
+                                      collapse = " + "))
   } else {
     formula <- paste0(formula, "1")
   }
@@ -341,7 +342,7 @@ survmean_rel <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
                              "%%VARS%% after computing observed survivals ",
                              "but didn't. Blame the package maintainer if you ",
                              "see this."))
-  setcolsnull(st, keep = bareVars)
+  setcolsnull(st, keep = bareVars, colorder = TRUE)
   setDT(st)
   setkeyv(st, c(tmpByNames, "Tstop"))
   st[, Tstart := c(0, Tstop[-.N]), by = eval(tmpByNames)]
@@ -425,9 +426,15 @@ survmean_rel <- function(formula, data, adjust = NULL, weights = NULL, breaks=NU
     x[, last.r.e2 := st$last.r.e2]
   }
   x[, last.r.e2 := last.r.e2^(delta)] ## back to non-annualized RSRs
+  ## enforce RSR in extrapolated part of observed curve to at most 1
+  x[, last.r.e2 := pmin(last.r.e2, 1)]
+  
+  ## manually given RSR for extrapolated part of the obs.surv. curve
+  if (r != "auto") {
+    x[, last.r.e2 := TF$r]
+  }
   
   x[is.na(r.e2), r.e2 := last.r.e2]
-  
   x[, surv := r.e2*surv.exp]
   
   ## cumulate again
