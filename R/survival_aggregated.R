@@ -565,12 +565,13 @@ survtab_ag <- function(formula = NULL,
   
   adjust <- evalPopArg(data, adjust, enclos = PF, naming = "model")
   
-  iws <- if ("n" %in% names(data)) "n" else NULL
-  data <- makeWeightsDT(data = data, values = list(mc), enclos = PF,
+  iws <- if ("n" %in% names(data)) "n" else "pyrs"
+  
+  data <- makeWeightsDT(data = data, values = list(mc), enclos = TF,
                         print = NULL, formula = formula, adjust = adjust, 
                         by.other = surv.scale, Surv.response = FALSE,
                         custom.levels = bl, weights = weights,
-                        internal.weights.values = NULL,
+                        internal.weights.values = iws,
                         custom.levels.cut.low = surv.scale)
   
   allVars <- attr(data, "makeWeightsDT")
