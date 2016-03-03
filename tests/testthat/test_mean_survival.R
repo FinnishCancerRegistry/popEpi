@@ -1,31 +1,6 @@
 context("mean survival testing")
 
-test_that("survmean results the same as before", {
-  ## note: used to check against the results of
-  ## Seppa, Karri, and Timo Hakulinen. 
-  ## "Mean and median survival times of cancer patients should be corrected 
-  ## for informative censoring." 
-  ## Journal of clinical epidemiology 62.10 (2009): 1095-1102.
-  ## 
-  ## age-group-specific estimates differed but randomly 
-  ## (since git ref e59d5c7 quite small differences)
-  
-  sr <- copy(sire)[dg_date < ex_date, ]
-  sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
-  x <- lexpand(sr, birth  = bi_date, entry = dg_date, exit = ex_date,
-               status = status %in% 1:2, pp = FALSE,
-               breaks=list(fot=seq(0,10,1/12)), pophaz=popmort)
-  sma <- survmean(x, pophaz=popmort, by.vars="agegr", 
-                  ext.breaks = list(fot = c(0:6/12, 0.75, 1:100), age = c(0, 125)))
-  
-  ## values to test against computed on 2015-12-01;
-  ## git ref: e59d5c7
-  expect_equal(sma$est, c(34.369009,  21.589894, 7.901299), tol = 0.005, scale = 1)
-  expect_equal(sma$exp, c(45.82442, 31.19623, 13.57836), tol = 0.005, scale = 1)
-  
-})
-
-test_that("survmean_lex() agrees with old results", {
+test_that("survmean() agrees with old results", {
   
   library(Epi)
   library(survival)
@@ -39,25 +14,25 @@ test_that("survmean_lex() agrees with old results", {
              exit.status = factor(status, levels = 0:2,
                                   labels = c("alive", "canD", "othD")),
              merge = TRUE)
-
+  
   ## observed survival
   pm <- copy(popEpi::popmort)
   names(pm) <- c("sex", "CAL", "AGE", "haz")
-  sm <- survmean_lex(Surv(time = FUT, event = lex.Xst != "alive") ~ agegr,
-                     pophaz = pm, data = x,
-                     breaks = list(FUT = seq(0, 10, 1/12)))
+  sm <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ agegr,
+                 pophaz = pm, data = x,
+                 breaks = list(FUT = seq(0, 10, 1/12)))
   
-  ## values to test against computed on 2015-02-29;
-  ## git ref: 8b50a33a52cc98defaa5ddc8e8fc226288b832d1
-  expect_equal(sm$est, c(34.089451,  21.544842, 7.916737), tol = 0.0005, scale = 1)
-  expect_equal(sm$exp, c(34.50633, 22.39038, 11.00145), tol = 0.0005, scale = 1)
+  ## values to test against computed on 2015-12-01;
+  ## git ref: e59d5c7
+  expect_equal(sma$est, c(34.369009,  21.589894, 7.901299), tol = 0.005, scale = 1)
+  expect_equal(sma$exp, c(45.82442, 31.19623, 13.57836), tol = 0.005, scale = 1)
   
   
 })
 
 
 
-test_that("survmean_lex() agrees with results computed using pkg survival", {
+test_that("survmean() agrees with results computed using pkg survival", {
   ## will only compute the mean survival time based on the cohort.
   ## will also compute expected extrapolation curve by hand.
   as.date.Date <- function(x, ...) {
@@ -80,9 +55,9 @@ test_that("survmean_lex() agrees with results computed using pkg survival", {
                breaks = NULL)
   popmort_sm <- setDT(copy(popEpi::popmort))
   setnames(popmort_sm, c("agegroup", "year"), c("age", "per"))
-  sm <- survmean_lex(Surv(fot, event = lex.Xst) ~ 1, 
-                     breaks = BL, ext.breaks = list(fot = seq(0,100,0.5)),
-                     pophaz = popmort_sm, data = x)
+  sm <- survmean(Surv(fot, event = lex.Xst) ~ 1, 
+                 breaks = BL, ext.breaks = list(fot = seq(0,100,0.5)),
+                 pophaz = popmort_sm, data = x)
   st <- survtab_lex(Surv(fot, event = lex.Xst) ~ 1, 
                     breaks = BL,
                     data = x, surv.type="surv.obs")
@@ -128,9 +103,9 @@ test_that("survmean_lex() agrees with results computed using pkg survival", {
   
   ## survival::survexp()
   su.exp <- survexp(~1, data = xe, ratetab = popm, method = "ederer", 
-                rmap = list(sex = "female", year = perdate, 
-                            age = agedate),
-                times = BL$fot*365.242199)
+                    rmap = list(sex = "female", year = perdate, 
+                                age = agedate),
+                    times = BL$fot*365.242199)
   
   su.exp <- data.table(time = su.exp$time/365.242199, surv.exp = su.exp$surv)
   su.exp <- su.exp[time != 0L]
@@ -170,7 +145,7 @@ test_that("survmean_lex() agrees with results computed using pkg survival", {
 })
 
 
-test_that("survmean_lex expected survival curve corresponds to full Ederer I", {
+test_that("survmean expected survival curve corresponds to full Ederer I", {
   
   library(Epi)
   library(survival)
@@ -189,9 +164,9 @@ test_that("survmean_lex expected survival curve corresponds to full Ederer I", {
   names(pm) <- c("sex", "CAL", "AGE", "haz")
   
   BL <- list(FUT = seq(0, 10, 1/12))
-  sm <- survmean_lex(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
-                     pophaz = pm, data = x,
-                     breaks = BL)
+  sm <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
+                 pophaz = pm, data = x,
+                 breaks = BL)
   
   ## pure Ederer I curve
   setDT(x)
