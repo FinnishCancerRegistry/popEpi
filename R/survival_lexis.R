@@ -292,6 +292,8 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL,
   
   attributes(st)$survtab.meta$call <- this_call
   attributes(st)$survtab.meta$arguments$adjust <- adjAttr
+  attributes(st)$survtab.meta$arguments$conf.type <- conf.type
+  attributes(st)$survtab.meta$arguments$conf.level <- conf.level
   
   attributes(st)$survtab.meta$arguments$surv.type <- surv.type
   attributes(st)$survtab.meta$arguments$surv.method <- surv.method
