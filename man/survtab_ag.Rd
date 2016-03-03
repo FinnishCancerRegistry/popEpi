@@ -15,7 +15,8 @@ survtab_ag(formula = NULL, data, adjust = NULL, weights = NULL,
 
 survtab_lex(formula, data, adjust = NULL, breaks = NULL, pophaz = NULL,
   weights = NULL, surv.type = "surv.rel", surv.method = "hazard",
-  relsurv.method = "e2", subset = NULL, verbose = FALSE)
+  relsurv.method = "e2", subset = NULL, conf.level = 0.95,
+  conf.type = "log-log", verbose = FALSE)
 }
 \arguments{
 \item{formula}{a \code{formula} object. For \code{survtab_ag}, the response 

@@ -5,7 +5,13 @@
 #' @describeIn survtab_ag survtab_lex
 #' @export
 #' @importFrom survival Surv
-survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NULL, weights = NULL, surv.type = "surv.rel", surv.method = "hazard", relsurv.method = "e2", subset = NULL, verbose = FALSE) {
+survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, 
+                        pophaz = NULL, weights = NULL, surv.type = "surv.rel", 
+                        surv.method = "hazard", relsurv.method = "e2", 
+                        subset = NULL, 
+                        conf.level = 0.95, 
+                        conf.type = "log-log",
+                        verbose = FALSE) {
   
   TF <- environment()
   PF <- parent.frame()
@@ -276,6 +282,9 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, pophaz = NU
                    surv.type = surv.type,
                    surv.method = surv.method,
                    relsurv.method = relsurv.method,
+                   
+                   conf.type = conf.type,
+                   conf.level = conf.level,
                    
                    verbose = verbose)
   if (verbose) cat("** end of verbose messages from survtab_ag() \n")
