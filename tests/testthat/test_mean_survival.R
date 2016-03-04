@@ -1,7 +1,7 @@
 context("mean survival testing")
 
 test_that("survmean() agrees with old results", {
-  
+  skip_on_cran()
   library(Epi)
   library(survival)
   
@@ -20,12 +20,13 @@ test_that("survmean() agrees with old results", {
   names(pm) <- c("sex", "CAL", "AGE", "haz")
   sm <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ agegr,
                  pophaz = pm, data = x,
-                 breaks = list(FUT = seq(0, 10, 1/12)))
+                 breaks = list(FUT = seq(0, 10, 1/12)),
+                 e1.breaks = list(FUT = c(seq(0, 10, 1/12), 11:100)))
   
   ## values to test against computed on 2016-03-04;
   ## git ref: 5077677
-  expect_equal(sm$est, c(33.841010, 21.685944,7.614719), tol = 0.005, scale = 1)
-  expect_equal(sm$exp, c(45.10715, 31.33931, 13.08773), tol = 0.005, scale = 1)
+  expect_equal(sm$est, c(33.951439, 21.611419,  7.604318), tol = 0.005, scale = 1)
+  expect_equal(sm$exp, c(45.25686, 31.22712, 13.06725), tol = 0.005, scale = 1)
   
   
 })
@@ -33,6 +34,7 @@ test_that("survmean() agrees with old results", {
 
 
 test_that("survmean() agrees with results computed using pkg survival", {
+  skip_on_cran()
   ## will only compute the mean survival time based on the cohort.
   ## will also compute expected extrapolation curve by hand.
   as.date.Date <- function(x, ...) {
@@ -45,6 +47,7 @@ test_that("survmean() agrees with results computed using pkg survival", {
   library(relsurv)
   
   BL <- list(fot= seq(0,15,1/12))
+  eBL <- list(fot = unique(c(BL$fot, seq(15, 115,0.5))))
   sire2 <- sire[dg_date<ex_date, ]
   sire2$statusf <- factor(sire2$status, levels = 0:2, 
                           labels = c("alive", "canD", "othD"))
@@ -56,7 +59,7 @@ test_that("survmean() agrees with results computed using pkg survival", {
   popmort_sm <- setDT(copy(popEpi::popmort))
   setnames(popmort_sm, c("agegroup", "year"), c("age", "per"))
   sm <- survmean(Surv(fot, event = lex.Xst) ~ 1, 
-                 breaks = BL, ext.breaks = list(fot = seq(0,100,0.5)),
+                 breaks = BL, e1.breaks = eBL,
                  pophaz = popmort_sm, data = x)
   st <- survtab_lex(Surv(fot, event = lex.Xst) ~ 1, 
                     breaks = BL,
@@ -113,7 +116,8 @@ test_that("survmean() agrees with results computed using pkg survival", {
   
   ## popEpi:::comp_e1()
   setnames(pm, c("year", "agegroup"), c("per", "age"))
-  forceLexisDT(xe, breaks = NULL, allScales = c("fot", "per", "age"))
+  empty_list <- list(fot = NULL, per = NULL, age = NULL)
+  forceLexisDT(xe, breaks = empty_list, allScales = c("fot", "per", "age"))
   e1 <- comp_e1(xe, breaks = BL, pophaz = pm, survScale = "fot")
   
   # plot(su.exp, ylim = c(0, 1), col = 1, xscale = 365.242199)
@@ -123,7 +127,6 @@ test_that("survmean() agrees with results computed using pkg survival", {
   su <- rbindlist(list(su.km, su.exp))
   
   st <- st[, .(fot = Tstop, surv.obs)]
-  e1[, fot := fot + max(st$fot)+0.5]
   st <- rbindlist(list(st, e1))
   st[181:380, surv.obs := surv.obs*st[180L, surv.obs]]
   
@@ -146,7 +149,7 @@ test_that("survmean() agrees with results computed using pkg survival", {
 
 
 test_that("survmean expected survival curve corresponds to full Ederer I", {
-  
+  skip_on_cran()
   library(Epi)
   library(survival)
   
@@ -164,23 +167,25 @@ test_that("survmean expected survival curve corresponds to full Ederer I", {
   names(pm) <- c("sex", "CAL", "AGE", "haz")
   
   BL <- list(FUT = seq(0, 10, 1/12))
+  eBL <- list(FUT = c(BL$FUT, seq(11,110,1/2)))
   sm <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
                  pophaz = pm, data = x,
-                 breaks = BL)
+                 breaks = BL, 
+                 e1.breaks = eBL)
   
   ## pure Ederer I curve
   setDT(x)
   x[, lex.dur := 110]
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
-  e1 <- comp_e1(x = x, breaks = list(FUT = c(BL$FUT, seq(11,110,1/2))), 
+  e1 <- comp_e1(x = x, breaks = eBL, 
                 pophaz = pm, survScale = "FUT")
-  e1[, Tstop := c(FUT[-1], 110)]
-  e1[, delta := Tstop-FUT]
+  setkeyv(e1, "FUT")
+  e1[, delta := diff(eBL$FUT)]
   e1[, l1 := c(1,surv.exp[-.N])]
   sm.e1 <- e1[, sum((l1+surv.exp)/2L*delta)]
   
   
-  expect_equal(sm$est, sm.e1, tol = 0.0005, scale = 1)
+  expect_equal(sm$exp, sm.e1, tol = 0.0005, scale = 1)
   
 })
 
