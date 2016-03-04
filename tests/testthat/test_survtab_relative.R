@@ -8,7 +8,7 @@ test_that("relative survivals about the same as relsurv's", {
   library(Epi)
   
   # male
-  pm <- copy(popmort)
+  pm <- data.table(popEpi::popmort)
   # pm[, surv := 1L]
   pm[, surv := exp(-haz)]
   pm.m <- cast_simple(pm[sex==0], columns = 'year', rows = 'agegroup',  values='surv')
@@ -80,7 +80,7 @@ test_that("relpois congruent with relsurv::rsadd", {
   library(relsurv)
   
   # male
-  pm <- copy(popmort)
+  pm <- data.table(popEpi::popmort)
   # pm[, surv := 1L]
   pm[, surv := exp(-haz)]
   pm.m <- cast_simple(pm[sex==0], columns = 'year', rows = 'agegroup',  values='surv')
@@ -125,7 +125,7 @@ test_that("Ederer I expected survival curve agrees with survival::survexp", {
   library(Epi)
   
   # male
-  pm <- copy(popmort)
+  pm <- data.table(popEpi::popmort)
   # pm[, surv := 1L]
   pm[, surv := exp(-haz)]
   pm.m <- cast_simple(pm[sex==0], columns = 'year', rows = 'agegroup',  values='surv')
