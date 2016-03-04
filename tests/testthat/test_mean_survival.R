@@ -22,10 +22,10 @@ test_that("survmean() agrees with old results", {
                  pophaz = pm, data = x,
                  breaks = list(FUT = seq(0, 10, 1/12)))
   
-  ## values to test against computed on 2015-12-01;
-  ## git ref: e59d5c7
-  expect_equal(sma$est, c(34.369009,  21.589894, 7.901299), tol = 0.005, scale = 1)
-  expect_equal(sma$exp, c(45.82442, 31.19623, 13.57836), tol = 0.005, scale = 1)
+  ## values to test against computed on 2016-03-04;
+  ## git ref: 5077677
+  expect_equal(sm$est, c(33.841010, 21.685944,7.614719), tol = 0.005, scale = 1)
+  expect_equal(sm$exp, c(45.10715, 31.33931, 13.08773), tol = 0.005, scale = 1)
   
   
 })
