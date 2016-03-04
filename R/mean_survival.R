@@ -203,7 +203,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
   
   x <- copy(data[subset, ])
   setDT(x)
-  setattr(x, "class", c("Lexis", "data.table", "data.frame"))
+  forceLexisDT(x, breaks = oldBreaks, allScales = allScales)
   
   ## ensure variables to merge pophaz datas by are kept ------------------------
   ## NOTE: temp var names avoid conflicts down the line
