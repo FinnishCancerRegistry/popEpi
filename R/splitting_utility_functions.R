@@ -85,6 +85,20 @@ checkPophaz <- function(lex, ph, haz.name = "haz") {
          "Ensure you have supplied the right data and that the names of the ",
          "intended variables match.")
   }
+  
+  mergeVars <- setdiff(names(ph), haz.name)
+  dup <- any(duplicated(as.data.table(ph), by = mergeVars))
+  if (dup) {
+    stop("Supplied data set of population/expected hzards has duplicated rows ",
+         "by the variables ", paste0("'",mergeVars, "'", collapse = ", "),
+         " which prevents correct usage of the data set. Please ensure no rows",
+         " area duplicated in the data set before proceeding. Tip: use e.g. ",
+         "duplicated(PH, by = c('V1', 'V2')) to check for duplicatedness in ",
+         "your data set (here named PH) by the variables V1 and V2."
+         )
+  }
+  
+  invisible()
 }
 
 
