@@ -69,7 +69,7 @@ test_that("SIR works with multistate aggregated lexpand data", {
     suppressWarnings(  
       se <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs', 
                  subset = year %in% 1990:2009,
-                 ref.data = popmort, ref.rate = 'haz', 
+                 ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                  adjust = c('agegroup','year','sex'), print =c('cause','fot'), mstate = 'cause')
     )
   )
@@ -86,12 +86,12 @@ test_that("SIR works with multistate aggregated lexpand data", {
   # please finish this
   suppressMessages(
     s1 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', subset = year %in% 1990:2009,
-               ref.data = popmort, ref.rate = 'haz', 
+               ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                adjust = c('agegroup','year','sex'), print =c('fot'))
   )
   suppressMessages(
     s2 <- sir( coh.data = c2, coh.obs = c('from0to2'), coh.pyrs = 'pyrs',
-               ref.data = popmort, ref.rate = 'haz', 
+               ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                adjust = c('agegroup','year','sex'), print =c('fot'))
   )
   s12 <- rbind( cbind(cause=1L, s1[[3]]), 
@@ -99,7 +99,7 @@ test_that("SIR works with multistate aggregated lexpand data", {
   
   # compare by hand calculated sir
   
-  r <- merge(c2, popmort, c('sex','agegroup','year'), all.x=TRUE)
+  r <- merge(c2, data.table(popEpi::popmort), c('sex','agegroup','year'), all.x=TRUE)
   setDT(r)
   r[, exp := haz*pyrs]
   est <- r[, list(observed=sum(from0to1, na.rm=TRUE),expected=sum(exp, na.rm=TRUE)), by=.(fot)]
@@ -132,28 +132,28 @@ test_that("SIR spline throws errors correctly", {
   
   sp0 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = 'from0to2', coh.pyrs = 'pyrs',
                                          subset = year %in% 1990:2008,
-                                         ref.data = popmort, ref.rate = 'haz', 
+                                         ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                                          adjust = c('agegroup','year','sex'), print = NULL,
                                          spline=c('agegroup','year','fot') )))
   sp1 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
                                          subset = year %in% 1990:2008,
-                                         ref.data = popmort, ref.rate = 'haz', 
+                                         ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                                          adjust = c('agegroup','year','sex'), print =c('cause'),
                                          mstate = 'cause', spline=c('agegroup','year','fot') )))
   sp2 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
                                          subset = year %in% 1990:2008,
-                                         ref.data = popmort, ref.rate = 'haz', dependent.spline=FALSE,
+                                         ref.data = data.table(popEpi::popmort), ref.rate = 'haz', dependent.spline=FALSE,
                                          adjust = c('agegroup','year','sex'), print =c('cause'), 
                                          mstate = 'cause', spline=c('agegroup','year','fot') )))
   sp3 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
                                          subset = year %in% 1990:2008,
-                                         ref.data = popmort, ref.rate = 'haz', 
+                                         ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                                          adjust = c('agegroup','year','sex'), print =c('cause'), 
                                          mstate = 'cause', spline='agegroup') ))
   
   sp4 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
                                          subset = year %in% 1990:2008,
-                                         ref.data = popmort, ref.rate = 'haz', reference.points = c(2000,4),
+                                         ref.data = data.table(popEpi::popmort), ref.rate = 'haz', reference.points = c(2000,4),
                                          adjust = c('agegroup','year','sex'), print =c('cause'), 
                                          mstate = 'cause', spline=c('agegroup','year','fot') )))
   expect_is( object = sp1, class = 'sirspline')
@@ -168,14 +168,14 @@ test_that("print accepts a function and subset works", {
   suppressWarnings(
     pl1 <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
                 subset = year %in% 1990:2008,
-                ref.data = popmort, ref.rate = 'haz', 
+                ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                 adjust = c('agegroup','year','sex'), print = list(year.int = findInterval(year,c(1989,2000,2010))),
                 mstate = 'cause')
   )
   suppressWarnings(
     pl2 <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
                 subset = year %in% 1990:2008,
-                ref.data = popmort, ref.rate = 'haz', 
+                ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                 adjust = c('agegroup','year','sex'), print = list(year.int = findInterval(year,c(1989,2000,2010)), sex),
                 mstate = 'cause')
   )

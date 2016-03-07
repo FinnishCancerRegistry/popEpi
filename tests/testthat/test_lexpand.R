@@ -47,7 +47,7 @@ test_that("pp not added to data if pp = FALSE but pop.haz is", {
   x <- lexpand(sire[dg_date < ex_date, ], 
                birth  = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2,
-               breaks=list(fot=0:5), pophaz=popmort, pp = FALSE)
+               breaks=list(fot=0:5), pophaz=data.table(popEpi::popmort), pp = FALSE)
   expect_equal(intersect(names(x), c("pp", "pop.haz")),  "pop.haz")
   expect_true(!any(is.na(x$pop.haz)))
 })
@@ -59,11 +59,11 @@ test_that("lexpand produces the same results with internal/external dropping", {
   x <- lexpand(sire[dg_date < ex_date, ], 
                birth  = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2,
-               breaks=list(fot=0:5), pophaz=popmort, pp = TRUE, drop = TRUE)
+               breaks=list(fot=0:5), pophaz=data.table(popEpi::popmort), pp = TRUE, drop = TRUE)
   x2 <-lexpand(sire[dg_date < ex_date, ], 
                birth  = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2,
-               breaks=list(fot=0:5), pophaz=popmort, pp = TRUE, drop = FALSE)
+               breaks=list(fot=0:5), pophaz=data.table(popEpi::popmort), pp = TRUE, drop = FALSE)
   x2 <-popEpi:::intelliDrop(x2, breaks = list(fot=0:5), dropNegDur = TRUE)
   setDT(x)
   setDT(x2)
