@@ -505,7 +505,8 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
                       weights = weights, internal.weights.values = "obs")
   if (length(adNames)) {
     vv <- c("est", "exp", "obs", "YPLL")
-    sm[, c(vv) := lapply(.SD, function(col) col*sm$weights), .SDcols = vv]
+    sm[, c("est", "exp") := lapply(.SD, function(col) col*sm$weights), 
+       .SDcols = c("est", "exp")]
     sm <- sm[, lapply(.SD, sum), .SDcols = vv, by = eval(tmpPrNames)]
   }
   
