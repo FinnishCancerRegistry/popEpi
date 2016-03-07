@@ -68,26 +68,6 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   ## NOTE: setdiff would break Date format breaks!
   orig_breaks <- copy(breaks)
   breaks <- breaks[!breaks %in% allBreaks[[timeScale]]]
-  ## if no breaks left, it means the data has already been split by these
-  ## exact breaks
-  if (!length(breaks) || (length(breaks) == 2L && drop)) {
-    breaks <- if (!length(breaks)) range(orig_breaks) else breaks
-    l <- copy(lex)
-    setDT(l)
-    setattr(l, "class", c("Lexis", "data.table", "data.frame"))
-    if (drop) {
-      BL <- list(breaks)
-      names(BL) <- timeScale
-      l <- intelliCrop(l, breaks = BL, allScales = allScales, 
-                       cropStatuses = TRUE)
-      l <- intelliDrop(l, breaks = BL)
-    }
-    if (!merge) {
-      l[, c(othVars) := NULL]
-    }
-    if (!getOption("popEpi.datatable")) setDFpe(l)
-    return(l)
-  }
   
   breaks <- matchBreakTypes(lex, breaks, timeScale, modify.lex = FALSE) 
   
@@ -101,6 +81,7 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   
   
   ## use subset lex if dropping for efficiency
+  orig_lex <- lex
   if (drop) {
     keepVars <- if (merge) NULL else lexVars ## NULL: all vars
     lex <- subsetDTorDF(lex, select = keepVars)
@@ -115,76 +96,86 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
                        check = FALSE, tol = tol)
   }
   
-  ## will use this due to step below (and laziness)
-  ts_values <- lex[[timeScale]]
-  ## Date objects are based on doubles and therefore keep the most information
-  if (inherits(ts_values, c("IDate", "date", "dates"))) ts_values <- as.Date(ts_values)
-  
-  N_expand <- length(breaks)
-  N_subjects <- nrow(lex)
-  
-  ## quick data expansion ------------------------------------------------------
-  
-  l <- vector(mode = "list", length = N_expand)
-  l[[1]] <- data.table(lex)
-  
-  if (!merge) setcolsnull(l[[1]], keep = lexVars, soft = FALSE)
-  
-  tmpID <- makeTempVarName(data = l[[1]], pre = "TEMP_SPLITTING_ID")
-  tmpIE <- makeTempVarName(data = l[[1]], pre = "TEMP_SPLIT_INT_END")
-  
-  set(l[[1]], j = tmpID, value = 1:nrow(l[[1]]))
-  if (N_expand > 1L) {
-    for (k in 2:(N_expand)) {
-      l[[k]] <- l[[1]]
-    }
-  }
- 
-  l <- rbindlist(l)
-  
-  ## time scale value determination --------------------------------------------
-  set(l, j = tmpIE,  value = c(rep(breaks, each = N_subjects)) )
-  set(l, j = tmpIE,  value = pmin(l[[tmpIE]], l[[timeScale]] + l$lex.dur) )
-  set(l, j = timeScale, value = c(ts_values, pmax(ts_values, rep(breaks[-length(breaks)], each = N_subjects))) )
-  
-  
-  ## status determination ------------------------------------------------------
-  ## note: lex.dur still the original value (maximum possible)
-  harmonizeStatuses(x = l, C = "lex.Cst", X = "lex.Xst")
-  not_event <- ts_values + l$lex.dur != l[[tmpIE]]
-  l[TF$not_event, lex.Xst := lex.Cst]
-  
-  set(l, j = "lex.dur", value = l[[tmpIE]] - l[[timeScale]] )
-  
-  ## other time scale values ---------------------------------------------------
-  otherScales <- setdiff(allScales, timeScale)
-  if (length(otherScales) > 0) {
-    ## change in timeScale
-    ts_delta <- l[[timeScale]] - ts_values
-    for (k in otherScales) {
-      set(l, j = k, value = lex[[k]] + ts_delta)
-    }
-  }
-  
-  ## dropping ------------------------------------------------------------------
-  ## drops very very small intervals as well as dur <= 0
-  l <- l[lex.dur > 0L + TF$tol]
-  
-  setkeyv(l, c(tmpID, timeScale))
-  set(l, j = c(tmpIE, tmpID), value = NULL)
-  
-  ## ensure time scales and lex.dur have same (ish) class as before ------------
-  for (k in c(allScales, "lex.dur")) {
+  ## if no breaks left, it means the data has already been split by these
+  ## exact breaks. If length of breaks == 2 AND dropping, only need to
+  ## crop to those times and drop values outside the breaks.
+  if (!length(breaks) || (length(breaks) == 2L && drop)) {
+    breaks <- if (!length(breaks)) range(orig_breaks) else breaks
+    l <- lex
     
-    if (inherits(lex[[k]], "difftime") && !inherits(l[[k]], "difftime")) {
-      setattr(l[[k]], "class", "difftime")
-      setattr(l[[k]], "units", attr(lex[[k]], "units"))
-    } else if (is.numeric(lex[[k]]) && inherits(l[[k]], "difftime")) {
-      set(l, j = k, value = as.numeric(l[[k]]))
+  } else {
+    
+    ## will use this due to step below (and laziness)
+    ts_values <- lex[[timeScale]]
+    ## Date objects are based on doubles and therefore keep the most information
+    if (inherits(ts_values, c("IDate", "date", "dates"))) ts_values <- as.Date(ts_values)
+    
+    N_expand <- length(breaks)
+    N_subjects <- nrow(lex)
+    
+    ## quick data expansion ------------------------------------------------------
+    
+    l <- vector(mode = "list", length = N_expand)
+    l[[1]] <- data.table(lex)
+    
+    if (!merge) setcolsnull(l[[1]], keep = lexVars, soft = FALSE)
+    
+    tmpID <- makeTempVarName(data = l[[1]], pre = "TEMP_SPLITTING_ID")
+    tmpIE <- makeTempVarName(data = l[[1]], pre = "TEMP_SPLIT_INT_END")
+    
+    set(l[[1]], j = tmpID, value = 1:nrow(l[[1]]))
+    if (N_expand > 1L) {
+      for (k in 2:(N_expand)) {
+        l[[k]] <- l[[1]]
+      }
     }
     
+    l <- rbindlist(l)
+    
+    ## time scale value determination --------------------------------------------
+    set(l, j = tmpIE,  value = c(rep(breaks, each = N_subjects)) )
+    set(l, j = tmpIE,  value = pmin(l[[tmpIE]], l[[timeScale]] + l$lex.dur) )
+    set(l, j = timeScale, value = c(ts_values, pmax(ts_values, rep(breaks[-length(breaks)], each = N_subjects))) )
+    
+    
+    ## status determination ------------------------------------------------------
+    ## note: lex.dur still the original value (maximum possible)
+    harmonizeStatuses(x = l, C = "lex.Cst", X = "lex.Xst")
+    not_event <- ts_values + l$lex.dur != l[[tmpIE]]
+    l[TF$not_event, lex.Xst := lex.Cst]
+    
+    set(l, j = "lex.dur", value = l[[tmpIE]] - l[[timeScale]] )
+    
+    ## other time scale values ---------------------------------------------------
+    otherScales <- setdiff(allScales, timeScale)
+    if (length(otherScales) > 0) {
+      ## change in timeScale
+      ts_delta <- l[[timeScale]] - ts_values
+      for (k in otherScales) {
+        set(l, j = k, value = lex[[k]] + ts_delta)
+      }
+    }
+    
+    ## dropping ------------------------------------------------------------------
+    ## drops very very small intervals as well as dur <= 0
+    l <- l[lex.dur > 0L + TF$tol]
+    
+    setkeyv(l, c(tmpID, timeScale))
+    set(l, j = c(tmpIE, tmpID), value = NULL)
+    
+    ## ensure time scales and lex.dur have same (ish) class as before ------------
+    for (k in c(allScales, "lex.dur")) {
+      
+      if (inherits(orig_lex[[k]], "difftime") && !inherits(l[[k]], "difftime")) {
+        setattr(l[[k]], "class", "difftime")
+        setattr(l[[k]], "units", attr(orig_lex[[k]], "units"))
+      } else if (is.numeric(orig_lex[[k]]) && inherits(l[[k]], "difftime")) {
+        set(l, j = k, value = as.numeric(l[[k]]))
+      }
+      
+    }
+    
   }
-  
   
   ## final touch & attributes --------------------------------------------------
   
