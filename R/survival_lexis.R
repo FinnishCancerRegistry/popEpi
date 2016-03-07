@@ -53,7 +53,8 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL,
   forceLexisDT(x, breaks = NULL, allScales = allScales, key = TRUE)
   
   ## pre-eval of print & adjust ------------------------------------------------
-  adTest <- evalPopArg(x[1:min(10, .N)], substitute(adjust), DT = TRUE, recursive = TRUE, enclos = PF)
+  adTest <- evalPopArg(x[1:min(10, .N)], substitute(adjust), 
+                       DT = TRUE, recursive = TRUE, enclos = PF)
   if (!is.null(adTest)) {
     adType <- attr(adTest, "arg.type")
     adSub <- attr(adTest, "quoted.arg")
@@ -108,14 +109,32 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL,
   adVars <- names(l$adjust)
   
   ## check weights makes sense with respect to adjust --------------------------
-  if (length(adVars) > 0L && is.null(weights)) stop("No weights given though attempting by adjust by ", paste0("'", adVars, "'", collapse = ", "))
+  if (length(adVars) > 0L && is.null(weights)) {
+    stop("No weights given though attempting by adjust by ", 
+         paste0("'", adVars, "'", collapse = ", "))
+  }
   
   
   ## simplify event and censoring indicators -----------------------------------
   cens.values <- event.values <- NULL
-  all.values <- if (is.factor(l$y$status)) levels(l$y$status) else sort(unique(l$y$status))
+  all.values <- if (is.factor(l$y$status)) levels(l$y$status) else 
+    sort(unique(l$y$status))
   cens.values <- all.values[1L]
   event.values <- setdiff(all.values, cens.values)
+  
+  if (is.numeric(l$y$status) && all(unique(l$y$status) %in% 0:1)) {
+    ## this should apply to situations where status coded 0/1
+    ## and both 0/1 present or only 1 present
+    if (all(unique(l$y$status) %in% 0L)) {
+      stop("All status values were zero, i.e. all obs were censored. ",
+           "Check that you passed the correct status variable or --- if this ",
+           "was intended --- code the status variable to 0/1 so that 1 ",
+           "corresponds to the event taking place and 0 not.")
+    }
+    cens.values <- 0L
+    event.values <- 1L
+  }
+  
   x[, lex.Cst := NULL]
   x[, lex.Cst := TF$cens.values]
   x[, lex.Xst := NULL]
@@ -129,7 +148,7 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL,
     x[, lex.Cst := 0L]
     setcolorder(x, intersect(names(data), names(x)))
     
-    x[, lex.Xst := as.integer(lex.Xst %in% event.values)]
+    x[, lex.Xst := as.integer(lex.Xst %in% TF$event.values)]
     cens.values <- 0L
     event.values <- 1L
     if (x[, sum(lex.Xst)] == 0L) {
@@ -241,6 +260,12 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL,
                    timetaken(aggreTime), "\n")
   
   ## neater column names -------------------------------------------------------
+  ## in case there are zero obs that are censored
+  censCols <- paste0("from", cens.values, "to", cens.values)
+  if (all(!censCols %in% names(x))) {
+    x[, c(censCols) := 0L]
+  }
+  
   ## e.g. fromAlivetoDead -> Dead; looks better in survtab_ag output
   evCols <- paste0("from", cens.values, "to", c(cens.values, event.values))
   whEC <- which(evCols %in% names(x))
