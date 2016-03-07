@@ -740,7 +740,7 @@ lexpand <- function(data,
   
   if (verbose) cat("time and status variables before splitting: \n")
   if (verbose) print(l)
-  if (exists("id")) rm("id")
+  if ("id" %in% ls()) rm("id")
   
   
   # splitting ------------------------------------------------------------------
