@@ -2,46 +2,64 @@
 % Please edit documentation in R/mean_survival.R
 \name{survmean}
 \alias{survmean}
-\title{Compute mean survival times using extrapolation}
+\title{Compute Mean Survival Times Using Extrapolation}
 \usage{
 survmean(formula, data, adjust = NULL, weights = NULL, breaks = NULL,
   pophaz = NULL, e1.breaks = NULL, e1.pophaz = pophaz, r = "auto",
-  subset = NULL, verbose = FALSE, surv.method = "hazard")
+  surv.method = "hazard", subset = NULL, verbose = FALSE)
 }
 \arguments{
-\item{data}{a data set of splitted records; e.g. output of \code{\link{lexpand}}}
+\item{formula}{a \code{formula}, e.g. \code{Surv(FUT, lex.Xst) ~ V1}.
+Supplied in the same way as to \code{\link{survtab_lex}}, see that help
+for more info.}
 
-\item{pophaz}{a data set of appropriate population hazards as given to 
-\code{lexpand}; will be used in extrapolation - see Details}
+\item{data}{a \code{Lexis} data set; see \code{\link[Epi]{Lexis}}.}
 
-\item{r}{a numeric of length one; multiplies population hazard in \code{pophaz}
-by this number; used e.g. \code{r = 1.1} if excess hazard of 10 percent should persist
-in extrapolation}
+\item{adjust}{variables to adjust estimates by, e.g. \code{adjust = "agegr"}.
+Supplied in the same way as to \code{\link{survtab_lex}}; see that help
+for more info.}
+
+\item{weights}{weights to use to adjust mean survival times.
+See \code{survtab_lex} for more details on weighting; \code{survmean}
+computes curves separately by all variables to adjust by, computes mean
+survival times, and computes weighted means of the mean survival times.
+See Examples.}
+
+\item{breaks}{a list of breaks defining the time window to compute 
+observed survival in, and the intervals used in estimation. E.g.
+\code{list(FUT = 0:10)} when \code{FUT} is the follow-up time scale in your
+data.}
+
+\item{pophaz}{a data set of population hazards passed to 
+\code{\link{survtab_lex}} (see that help for more info). Defines the 
+population hazard in the time window where observed survival is estimated.}
+
+\item{e1.breaks}{\code{NULL} or a list of breaks defining the time 
+window to compute 
+\strong{expected} survival in, and the intervals used in estimation. E.g.
+\code{list(FUT = 0:100)} when \code{FUT} is the follow-up time scale in your
+data to extrapolate up to 100 years from where the observed survival
+curve ends. \strong{NOTE:} the breaks on the survival time scale
+MUST include the breaks supplied to argument \code{breaks}; see Examples.
+If \code{NULL}, uses decent defaults (max follow-up time of 50 years).}
+
+\item{e1.pophaz}{a data set of population hazards passed to 
+\code{\link{survtab_lex}} (see that help for more info). Defines the 
+population hazard in the time window where \strong{expected} 
+survival is estimated. By default use the same data as 
+argument \code{pophaz}.}
+
+\item{r}{either \code{"auto"} or a numeric multiplier such as \code{0.995};
+used to determine the relative survival ratio (RSR) persisting after where 
+the estimated obsered survival curve ends. See Details.}
+
+\item{surv.method}{passed to \code{survtab_lex}; see that help for more info.}
 
 \item{subset}{a logical condition; e.g. \code{subset = sex == 1}; 
 subsets the data before computations}
 
 \item{verbose}{\code{logical}; if \code{TRUE}, the function is returns
 some messages and results along the run, which may be useful in debugging}
-
-\item{surv.breaks}{passed on to \code{\link{survtab}}; if \code{NULL}, uses
-the existing breaks along time scale \code{"fot"} in \code{data}}
-
-\item{by.vars}{a character vector of variables names;
- e.g. \code{by.vars = "sex"} will calculate 
-mean survival separately for each unique combination of these variables}
-
-\item{agegr.w.breaks}{a numeric vector of fractional years as \code{[a,b)}
-breaks as in \code{survtab}; will be used to determine standardization age group}
-
-\item{agegr.w.weights}{a numeric vector of weights
-breaks as in \code{survtab}; will be used to standardize by age group}
-
-\item{...}{any other arguments passed on to \code{survtab} such as
-\code{surv.method = "lifetable"} for actuarial estimates of observed survival}
-
-\item{ext.breaks}{advanced; a list of breaks (see \code{\link{lexpand}});
-used as breaks for extrapolation; see Details}
 }
 \value{
 Returns a \code{data.frame} or \code{data.table} (depending on 
@@ -53,10 +71,8 @@ following columns:
   \item{obs}{Counts of subjects in data}
   \item{YPLL}{Years of Potential Life Lost, computed as (\code{(exp-est)*obs})}
 }
-The data may also have columns specifying the levels of \code{by.vars}
-if any are used. Additionally, when age-adjusted estimates were requested,
-the output values that have been age-adjusted include the suffix \code{.as}
-in the appropriate column names.
+The returned data also has columns named according to the variables
+supplied to the right-hand-side of the formula.
 }
 \description{
 Computes mean survival times based on survival estimation up to
@@ -67,85 +83,132 @@ survival curve. The area under the full survival curve is the mean survival.
 \details{
 \strong{Basics}
 
-\code{survmean} computes mean survival times. 
-This is done using a) observed survival estimates computed with \code{survtab}
-and b) extrapolated survival probabilities using EdererI method expected
-survivals for subjects surviving beyond the roof of \code{surv.breaks},
-up to 100 years forward but only up to the 125th birthday by default. The area under
-the resulting extrapolated curve is computed via trapezoidal integration,
-which is the mean survival time.
+\code{survmean} computes mean survival times. For median survival times
+(i.e. where 50 % of subjects have died or met some other event)
+use \code{\link{survtab_lex}}.
 
-For extrapolation, the user must supply a \code{pophaz} data set of population
-hazards. The extrapolation itself is essentially done  
-by splitting the extrapolated observations and merging population hazards
-to those records using \code{lexpand}.
+The mean survival time is simply the area under the survival curve.
+However, since full follow-up rarely happens, the observed survival curves
+are extrapolated using expected survival: E.g. one might compute observed
+survival till up to 10 years and extrapolate beyond that 
+(till e.g. 50 years) to yield an educated guess on the full observed survival
+curve. 
 
-The user may compute age-standardized mean survival time estimates using the
-\code{agegr.w.breaks} and \code{agegr.w.weights}
-parameters, though this is also fairly simple to do by hand via using the
-\code{by.vars} argument and merging in the weights yourself.
+The area is computed by trapezoidal integration of the area under the curve.
+This function also computes the "full" expected survival curve from
+T = 0 till e.g. T = 50 depending on supplied arguments. The area under
+the expected survival curve is the expected survival time. The mean
+expected survival time is the are under the mean expected survival curve,
+which this function returns with the mean survival time for comparison
+and for computing years of potential life lost (YPLL).
 
-Note that mean survival is based by default on hazard-based estimates of
-observed survival as outlined in \code{survtab}. Unlike with actuarial
-estimates, observed survival can never fall to zero using this method.
-However, the bias caused by this is likely to be small, and hazard-based
-estimation allows for e.g. period method estimates of mean survival time.
+Results can be requested by strata and adjusted for e.g. age by using
+the \code{formula} argument as in \code{survtab_lex}.
 
 \strong{Extrapolation tweaks}
 
-One may tweak the accuracy and length of extrapolation by using \code{ext.breaks}:
-By default the survivals of any survivors beyond the roof of \code{surv.breaks} 
-are extrapolated up to 100 years from the roof of \code{surv.breaks} 
-or up to their 125th birthday, whichever comes first. The extrapolation
-is by default based on the assumption that population hazards supplied
-by \code{pophaz} are constant in time periods of length 1/12, 0.25, or 1 years:
-if \code{ext.breaks = NULL}, it is internally substituted by
+Argument \code{r} controls the relative survival ratio (RSR) assumed to
+persist beyond the time window where observed survival is computed
+(defined by argument \code{breaks}; e.g. up to \code{FUT = 10}).
+The RSR is simply \code{RSR_i = p_oi / p_ei} for a time interval \code{i}, 
+i.e. the observed divided by the expected 
+(conditional, not cumulative) probablity of surviving from the beginning of
+a time interval till its end. The cumulative product of \code{RSR_i}
+over time is the (cumulative) relative survival curve. 
 
-\code{list(fot = c(0:6/12, 0.75, 1:100), age = c(0, 125))}
+If \code{r = "auto"},
+this function computes RSR estimates and automatically uses the \code{RSR_i}
+in the last survival interval in each stratum (and adjusting group)
+and assumes that to persist beyond the observed survival curve.
+If \code{r} is numeric, e.g. \code{r = 0.995}, that RSR level is assumed
+to persist. Automatic determination of \code{r} is a good starting point,
+but in situations where the RSR estimate is uncertain it may produce poor
+results. Automatic determination will not use values \code{>1}. 
+Visual inspection of the produced curves is recommended: see
+Examples.
 
-to be supplied internally to a \code{lexpand} call.
+One may also tweak the accuracy and length of extrapolation and 
+expected survival curve computation by using 
+\code{e1.breaks}. By default this is whatever was supplied to \code{breaks}
+for the survival time scale, to which
 
-Hence, alternate specifications allow for longer/shorter and more/less
-accurate extrapolations. E.g.
+\code{c(seq(1/12, 1, 1/12), seq(1.2, 1.8, 0.2), 2:19, seq(20, 50, 5))}
 
-\code{ext.breaks = list(fot = seq(0,100,1/12), age = 0:125, per = 1900:2100)}
+is added after the maximum value, e.g. with \code{breaks = list(FUT = 0:10)}
+we have 
 
-would ensure a smooth extrapolation and perfect usage of \code{pophaz}.
-This will probably not produce results much different from the default, though.
+\code{..., 10+1/12, ..., 11, 11.2, ..., 2, 3, ..., 19, 20, 25, ... 50}
 
-Note that \code{ext.breaks} should always include some meaningful definitions
-of survival intervals (over \code{fot}) to correctly integrate the survival curve.
+as the \code{e1.breaks}. Supplying \code{e1.breaks} manually requires
+the breaks over time survival time scale supplied to argument \code{breaks}
+to be reiterated in \code{e1.breaks}; see Examples.
 }
 \examples{
 
-## take first 3000 subjects in sire data for demonstration
-sr <- sire[1:3000, ]
-sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
-x <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
-             status = status \%in\% 1:2,
-             breaks=list(fot=seq(0,10,1/12)), pophaz=popmort)
-sm <- survmean(x, pophaz=popmort)
-## for each level of "agegr" separately:
-#sma<- survmean(x, pophaz=popmort, by.vars="agegr") 
-## automated age-standardised results:
-#sms<- survmean(x, pophaz=popmort, agegr.w.breaks=c(0,45,60,Inf))
+library(survival)
+library(Epi)
+## take 500 subjects randomly for demonstration
+data(sire)
+sire <- sire[sire$dg_date < sire$ex_date, ]
+set.seed(1L)
+sire <- sire[sample(x = nrow(sire), size = 500),]
 
+## NOTE: recommended to use factor status variable
+x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+           exit = list(CAL = get.yrs(ex_date)),
+           data = sire,
+           exit.status = factor(status, levels = 0:2,
+                                labels = c("alive", "canD", "othD")),
+           merge = TRUE)
+
+## phony variable
+set.seed(1L)
+x$group <- rbinom(nrow(x), 1, 0.5)
+## age group
+x$agegr <- cut(x$dg_age, c(0,45,60,Inf), right=FALSE)
+
+## population hazards data  set
+pm <- data.frame(popEpi::popmort)
+names(pm) <- c("sex", "CAL", "AGE", "haz")
+
+## breaks to define observed survival estimation
+BL <- list(FUT = seq(0, 10, 1/12))
+
+## crude mean survival
+sm1 <- survmean(Surv(FUT, lex.Xst != "alive") ~ 1,
+                pophaz = pm, data = x, weights = NULL,
+                breaks = BL)
+\dontrun{
+## mean survival by group                 
+sm2 <- survmean(Surv(FUT, lex.Xst != "alive") ~ group,
+                pophaz = pm, data = x, weights = NULL,
+                breaks = BL)
+                
+## ... and adjusted for age using internal weights (counts of subjects)      
+## note: need also longer extrapolation here so that all curves
+## converge to zero in the end.
+eBL <- list(FUT = c(BL$FUT, 11:75))
+sm3 <- survmean(Surv(FUT, lex.Xst != "alive") ~ group + adjust(agegr),
+                pophaz = pm, data = x, weights = "internal",
+                breaks = BL, e1.breaks = eBL)
+}
 ## visual inspection of how realistic extrapolation is for each stratum;
-## grey vertical line points to start of extrapolation;
-## solid lines are observed and extrapolated survivals;
+## solid lines are observed + extrapolated survivals;
 ## dashed lines are expected survivals
-plot(sm)
-# plot(sma)
-# plot(sms) plots precisely the same as plot(sma)
+plot(sm1)
+\dontrun{
+## plotting object with both stratification and standardization
+## plots curves for each strata-std.group combination
+plot(sm3)
 
 ## for finer control of plotting these curves, you may extract
-## from the survmean object using
-attr(sm, "curves")
-## or
-attributes(sm)$curves
+## from the survmean object using e.g.
+attributes(sm3)$survmean.meta$curves
+}
+
 
 }
 \author{
-Joonas Miettinen, Karri Seppa
+Joonas Miettinen
 }
 
