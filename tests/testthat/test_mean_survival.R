@@ -73,12 +73,9 @@ test_that("survmean() agrees with results computed using pkg survival", {
   su.km  <- summary(su.km, times = fb)
   su.km  <- cbind(data.table(time = su.km$time), data.table(su.km$surv))
   
-  #### compute expected survivals for subjects surviving beyond observed curve
+  #### compute expected survivals for all subjects
   BL <- list(fot = seq(0,100, 1/2))
-  xe <- x[lex.dur >= max(fb)]
-  xe[, age := age + max(fb)]
-  xe[, per := per + max(fb)]
-  xe[, lex.dur := max(BL$fot)]
+  xe <- copy(x)
   setattr(xe$age, "class", c("yrs", "numeric"))
   setattr(xe$per, "class", c("yrs", "numeric"))
   setattr(xe$per, "year.length", "approx")
@@ -120,20 +117,22 @@ test_that("survmean() agrees with results computed using pkg survival", {
   forceLexisDT(xe, breaks = empty_list, allScales = c("fot", "per", "age"))
   e1 <- comp_e1(xe, breaks = BL, pophaz = pm, survScale = "fot")
   
-  # plot(su.exp, ylim = c(0, 1), col = 1, xscale = 365.242199)
+  # plot(I(c(1,surv.exp)) ~ I(BL$fot), ylim = c(0, 1), col = 1, data = su.exp, type = "s")
   # lines(I(c(1,surv.exp)) ~ I(BL$fot), col = "red", type = "s", data = e1)
-  
+
   su.exp[, surv.exp := surv.exp * su.km[.N, V1]]
   su <- rbindlist(list(su.km, su.exp))
   
   st <- st[, .(fot = Tstop, surv.obs)]
   st <- rbindlist(list(st, e1))
+  st[181:380, fot := fot + st[180, fot]]
   st[181:380, surv.obs := surv.obs*st[180L, surv.obs]]
   
   # plot(V1 ~ time, ylim = c(0, 1), col = 1, data = su, type = "l")
   # lines(surv.obs ~ fot, col = "red", type = "l", data = st)
   
-  expect_equal(st$surv.obs, su$V1, scale = 1L, tolerance = 0.000475)
+  expect_equal(st$surv.obs, su$V1, scale = 1L, tolerance = 0.0001765)
+  expect_equal(max(abs(st$surv.obs-su$V1)), 0.0003814132, scale = 1L)
   
   st[, delta := fot - c(0, fot[-.N])]
   st[, l1 := c(1, surv.obs[-.N])]
@@ -144,7 +143,7 @@ test_that("survmean() agrees with results computed using pkg survival", {
   sm.su <- su[, sum((V1+l1)/2L*delta)]
   
   expect_equal(sm.st, sm.su, scale = 1L, tolerance = 0.0571)
-  expect_equal(sm.st, sm$est, scale = 1L)
+  expect_equal(abs(sm.st-sm.su), 0.01086865, scale = 1L)
 })
 
 
