@@ -744,8 +744,12 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   breaks <- evalq(breaks)
   dumBreaks <- structure(list(c(-Inf, Inf)), names = cutScale, internal_prepExpo_dummy = TRUE)
   if (is.null(breaks)) breaks <- dumBreaks
-  breaks <- splitMultiPreCheck(data = lex, breaks = evalq(breaks))
+  breaks <- splitMultiPreCheck(data = lex, breaks = breaks)
   if (!is.null(attr(breaks, "internal_prepExpo_dummy"))) breaks <- NULL
+  checkLexisData(lex)
+  oldBreaks <- attr(lex, "breaks")
+  if (!is.null(breaks)) checkBreaksList(lex, breaks)
+  checkBreaksList(lex, oldBreaks)
   
   
   ## data ----------------------------------------------------------------------
@@ -764,6 +768,7 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   l <- list() ## will hold temp var names; this avoids collisions with names of vars in x
   l$cutScale <- cutScale
   l$freezeScales <- freezeScales
+  l$liquidScales <- setdiff(allScales, freezeScales)
   l$by <- by
   rm(cutScale, freezeScales, by)
   
@@ -859,31 +864,54 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   ## splitting separately ------------------------------------------------------
   if (!is.null(breaks)) {
     if (verbose) splitTime <- proc.time()
-    setattr(x, "class", c("Lexis", "data.table", "data.frame"))
     x_frozen <- x[get(l$frz) == 1L,]
     x <- x[get(l$frz) == 0L]
+    forceLexisDT(x, allScales = allScales, breaks = oldBreaks)
     
-    setattr(x_frozen, "time.scales", setdiff(allScales, l$freezeScales))
-    frzBreaks <- breaks[setdiff(names(breaks), l$freezeScales)]
+    ## NOTE: since we only split by the frozen time scales by pretending
+    ## they are NOT Lexis time scales (temporarily), and since one should 
+    ## pass the appropriate breaks info of pre-existing breaks to splitMulti,
+    ## choose only breaks for non-frozen time scales to include in x_frozen's
+    ## attributes here.
+    ## (e.g. when work history is no longer accumulating)
+    frzBreaks <- breaks[l$liquidScales]
+    oldFrzBreaks <- oldBreaks[l$liquidScales]
+    emptyFrzBreaks <- vector("list", length = length(l$liquidScales))
+    names(emptyFrzBreaks) <- l$liquidScales
+    if (length(oldFrzBreaks)) {
+      emptyFrzBreaks[names(oldFrzBreaks)] <- oldFrzBreaks
+    }
+    forceLexisDT(x_frozen, allScales = l$liquidScales, breaks = emptyFrzBreaks)
     
-    if (length(frzBreaks) > 0) x_frozen <- splitMulti(x_frozen, breaks = frzBreaks, ...)
+    if (length(frzBreaks) > 0) {
+      ## do (also) split for all time scales where also the frozen
+      ## time scales are split. This is allowed for times where the
+      ## frozen time scales have not been frozen
+      ## (e.g. work history is accumulating)
+      x_frozen <- splitMulti(x_frozen, breaks = frzBreaks, ...)
+    }
     
-    setattr(x, "time.scales", allScales)
+    ## do (also) split where also split
     x <- splitMulti(x, breaks = breaks, ...)
+    breaks <- attr(x, "breaks") ## new breaks appended by splitMulti
     
     setDT(x)
     setDT(x_frozen)
     x <- rbindlist(list(x, x_frozen), use.names = TRUE); rm(x_frozen)
+    forceLexisDT(x, breaks = breaks, allScales = allScales)
     if (verbose) cat("Finished splitting data. Time taken: ", timetaken(splitTime), "\n")
   }
-  
   
   ## final touch ---------------------------------------------------------------
   
   setDT(x)
   if (is.character(freezeDummy)) setnames(x, l$frz, freezeDummy)
   setkeyv(x, c(l$by, l$order))
-  setcolsnull(x, unlist(l[setdiff(names(l), c("by", "cutScale", "freezeScales", "linkScales", "allScales", "othScales"))]))
+  delCols <- setdiff(names(l), c("by", "cutScale", "freezeScales", 
+                                 "liquidScales",
+                                 "linkScales", "allScales", "othScales"))
+  delCols <- unlist(l[delCols])
+  setcolsnull(x, keep = names(lex), colorder = TRUE)
   
   setattr(x, "time.scales", allScales)
   setattr(x, "breaks", breaks)
