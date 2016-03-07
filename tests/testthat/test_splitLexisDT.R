@@ -17,14 +17,15 @@ test_that("splitLexisDT and splitLexis are congruent", {
   
   x <- Lexis(data=sire2[dg_date < ex_date], entry=list(fot=0, per=dg_yrs, age=dg_age),
              exit=list(per=ex_yrs), merge=TRUE, exit.status=1L, entry.status = 0L)
+  setDT(x)
   forceLexisDT(x, breaks = NULL, allScales = c("fot", "per", "age"))
   
   
-  x2 <- splitLexis(x, breaks = BL[[3]], time.scale = "fot")
-  x3 <- splitLexisDT(x, breaks = BL[[3]], timeScale = "fot", drop = FALSE)
-  x2 <- intelliDrop(setDT(x2),  breaks = list(fot = BL[[3]]))
-  x3 <- intelliDrop(x3,  breaks = list(fot = BL[[3]]))
-  x4 <- splitLexisDT(x, breaks = BL[[3]], timeScale = "fot", drop = TRUE)
+  # x2 <- splitLexis(x, breaks = BL[[3]], time.scale = "fot")
+  # x3 <- splitLexisDT(x, breaks = BL[[3]], timeScale = "fot", drop = FALSE)
+  # x2 <- intelliDrop(setDT(x2),  breaks = list(fot = BL[[3]]))
+  # x3 <- intelliDrop(x3,  breaks = list(fot = BL[[3]]))
+  # x4 <- splitLexisDT(x, breaks = BL[[3]], timeScale = "fot", drop = TRUE)
   
   
   # one row per id ---------------------------------------------------------------
