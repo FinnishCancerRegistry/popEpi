@@ -1098,14 +1098,15 @@ lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL,
 #' where \code{x} is a \code{survmean} object.
 #' @export
 plot.survmean <- function(x, ...) {
-  curves <- attr(x, "curves")
+  at <- attr(x, "survmean.meta")
+  curves <- at$curves
   if (is.null(curves)) stop("no curves information in x; usually lost if x altered after using survmean")
   
-  plot(curves$surv.obs ~ curves$Tstop, type="n",
+  plot(curves$surv ~ curves$Tstop, type="n",
        xlab = "Years from entry", ylab = "Survival")
   lines.survmean(x, ...)
   
-  subr <- attr(curves, "surv.breaks")
+  subr <- at$breaks[[at$survScale]]
   abline(v = max(subr), lty=2, col="grey")
   
 }
@@ -1129,18 +1130,18 @@ plot.survmean <- function(x, ...) {
 #' where \code{x} is a \code{survmean} object.
 #' @export
 lines.survmean <- function(x, ...) {
-  curves <- attr(x, "curves")
+  at <- copy(attr(x, "survmean.meta"))
+  curves <- at$curves
   if (is.null(curves)) stop("no curves information in x; usually lost if x altered after using survmean")
   
-  by.vars <- attr(curves, "survmean_type")
-  by.vars <- c(by.vars, attr(curves, "print"))
-  by.vars <- c(by.vars, attr(curves, "adjust"))
+  by.vars <- at$tprint
+  by.vars <- c(by.vars, at$tadjust)
+  by.vars <- c(by.vars, "survmean_type")
   by.vars <- intersect(by.vars, names(curves))
   if (!length(by.vars)) by.vars <- NULL
-  SI <- attr(curves, "surv.int")
   
   curves <- data.table(curves)
-  setkeyv(curves, c(by.vars, SI))
+  setkeyv(curves, c(by.vars, "Tstop"))
   
   type_levs <- length(levels(interaction(curves[, c(by.vars), with=FALSE])))/2L
   other_levs <- 1L
@@ -1148,7 +1149,7 @@ lines.survmean <- function(x, ...) {
     other_levs <- length(levels(interaction(curves[, setdiff(by.vars, "survmean_type"), with=FALSE])))
   }
   
-  curves <- cast_simple(curves, columns = by.vars, rows = "Tstop", values = "surv.obs")
+  curves <- cast_simple(curves, columns = by.vars, rows = "Tstop", values = "surv")
   matlines(x=curves$Tstop, y=curves[, setdiff(names(curves), "Tstop"), with=FALSE],  
            lty = rep(1:2, each=type_levs), col = 1:other_levs, ...)
 }
