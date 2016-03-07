@@ -168,6 +168,9 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
   
   if(!requireNamespace("survival")) stop("Need to load package survival to proceed")
   
+  ## appease R CMD CHECK (due to using vars in DT[] only)
+  r.e2 <- last.r.e2 <- surv <- survmean_type <- est <- NULL
+  
   checkLexisData(data, check.breaks = FALSE)
   checkPophaz(data, pophaz, haz.name = "haz")
   checkPophaz(data, e1.pophaz, haz.name = "haz")

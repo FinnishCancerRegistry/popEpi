@@ -66,6 +66,8 @@ rpcurve <- function(object = NULL) {
   
   if (!"FOT" %in% all.vars(object$formula)) stop("No FOT variable in model formula")
   
+  est <- NULL ## appease R CMD CHECK
+  
   ## collate surv.ints, breaks, deltas -----------------------------------------
   fotlevs <- as.factor(sort(as.character(unique(object$model$FOT))))
   fb <- sort(object$fot.breaks)
