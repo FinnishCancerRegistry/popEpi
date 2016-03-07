@@ -298,6 +298,11 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
   ## check weights & adjust ----------------------------------------------------
   test_obs <- x[, .(obs=.N),  keyby=eval(TF$tmpByNames)]
   if (length(byNames)) setnames(test_obs, tmpByNames, byNames)
+  if (length(weights) && !length(adNames)) {
+    weights <- NULL
+    warning("Replaced weights with NULL due to not supplying variables to ",
+            "adjust by.")
+  }
   mwDTtest <- makeWeightsDT(test_obs, values = list("obs"), print = prNames,
                             adjust = adNames, weights = weights, 
                             internal.weights.values = "obs")
