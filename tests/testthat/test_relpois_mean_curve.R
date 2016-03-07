@@ -9,13 +9,16 @@ test_that("rpcurve and survtab e2 are approximately congruent", {
   fb <- c(0,3/12,6/12,1:8,10)
   x <- lexpand(sire2, birth  = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2,
-               fot=fb,  pophaz=popmort)
+               fot=fb,  pophaz=data.table(popEpi::popmort))
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   rp <- relpois(x, formula = lex.Xst %in% 1:2 ~ -1 + FOT+agegr)
   mc <- rpcurve(rp)
-  st <- survtab(lexpand(sire2, fot=seq(0,10,1/12), birth  = bi_date, entry = dg_date, exit = ex_date,
-                        status = status %in% 1:2, pophaz=popmort), agegr.w.breaks=c(0,45,70,Inf))
+  st <- survtab(lexpand(sire2, fot=seq(0,10,1/12), birth  = bi_date, 
+                        entry = dg_date, exit = ex_date,
+                        status = status %in% 1:2, 
+                        pophaz = data.table(popEpi::popmort)), 
+                agegr.w.breaks=c(0,45,70,Inf))
   setDT(mc)
   setDT(st)
   
