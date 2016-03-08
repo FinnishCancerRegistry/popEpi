@@ -983,26 +983,18 @@ doComparisonWithEpi <- function(lexDT, lexDTdrop, lexDF, breaks) {
   setkeyv(lexDTdrop, c("lex.id", sc1))
   setkeyv(lexDF, c("lex.id", sc1))
   
-  #   test_that(paste0("attributes are the same with and without dropping and vs. splitLexis"), {
   testthat::expect_equal(attr(lexDT, "time.scales"), attr(lexDF, "time.scales"))
   testthat::expect_equal(attr(lexDT, "time.since"), attr(lexDF, "time.since"))
   
   testthat::expect_equal(attr(lexDTdrop, "time.scales"), attr(lexDF, "time.scales"))
   testthat::expect_equal(attr(lexDTdrop, "time.since"), attr(lexDF, "time.since"))
-  #   })
   
-  #   test_that("results agree without dropping", {
-  cat("lexDT vs. lexDF \n")
   doTestBarrage(dt1 = lexDT, dt2 = lexDF, allScales = allScales)
-  #   })
   rm(lexDT)
   
   lexDF <- intelliDrop(x = lexDF, breaks = breaks)
   
-  #   test_that("results agree with dropping", {
-  cat("lexDTdrop vs. lexDF with dropping \n")
   doTestBarrage(dt1 = lexDTdrop, dt2 = lexDF, allScales = allScales)
-  #   })
   
 }
 
@@ -1022,40 +1014,20 @@ doTestBarrage <- function(dt1, dt2, allScales, testTimes = TRUE, testStatuses = 
   
   if (testTimes) {
     for (k in allScales) {
-      cat("time scale:", k, "\n")
-      # tryCatch(
-        testthat::expect_equal(dt1[[k]], dt2[[k]], 
-                               check.attributes = TRUE)
-        #,
-               # error = function(e) {
-               #   print(dt1)
-               #   print(dt2)
-               #   print(summary(dt1[[k]]))
-               #   print(attributes(dt1[[k]]))
-               #   print(attributes(dt2[[k]]))
-               #   stop("When testing time scale '",k,"' found discrepancy ",
-               #        "between data sets printed above. Error message: \n",
-               #        e)
-               # })
-      
+      testthat::expect_equal(dt1[[k]], dt2[[k]], 
+                             check.attributes = TRUE)
     }
   }
   
   if (testStatuses) {
-    #     test_that(paste0("entry and exit statuses have the same values"), {
     testthat::expect_equal(dt1$lex.Cst, dt2$lex.Cst, check.attributes = FALSE)
     testthat::expect_equal(dt1$lex.Xst, dt2$lex.Xst, check.attributes = FALSE)
-    #     })
     
-    #     test_that(paste0("statuses have same levels"), {
     testthat::expect_equal(levels(dt1$lex.Cst), levels(dt2$lex.Cst), check.attributes = FALSE)
     testthat::expect_equal(levels(dt1$lex.Xst), levels(dt2$lex.Xst), check.attributes = FALSE)
-    #     })
     
-    #     test_that(paste0("status class at least contains class of splitLexis status"), {
     testthat::expect_true(all(class(dt2$lex.Cst) %in% class(dt1$lex.Cst)))
     testthat::expect_true(all(class(dt2$lex.Xst) %in% class(dt1$lex.Xst)))
-    #     })
   }
   
   invisible(NULL)
@@ -1070,10 +1042,8 @@ compareSLDTWithEpi <- function(data, breaks, timeScale) {
   lexDT <- splitLexisDT(data, breaks = breaks, timeScale = timeScale, merge = TRUE, drop = FALSE)
   lexDTdrop <- splitLexisDT(data, breaks = breaks, timeScale = timeScale, merge = TRUE, drop = TRUE)
   lexDF <- splitLexis(data, breaks = breaks, time.scale = timeScale) ## without dropping
-  
-  ## splitLexis does not retain some meta info
-  setattr(lexDF$per, "class", class(lexDT$per))
-  setattr(lexDF$per, "year.length", attr(lexDT$per, "year.length"))
+  ## this treatment done in splitLexisDT (difftime -> integer -> double)
+  harmonizeNumericTimeScales(lexDF, times = c(Epi::timeScales(lexDF), "lex.dur"))
   
   BL <- list(breaks)
   setattr(BL, "names", timeScale)
