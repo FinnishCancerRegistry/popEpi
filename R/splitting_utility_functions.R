@@ -172,6 +172,48 @@ harmonizeStatuses <- function(x, C = "lex.Cst", X = "lex.Xst") {
   
 }
 
+harmonizeNumericTimeScales <- function(x, times = NULL) {
+  ## INTENTION: given a Lexis data set with some time scales, ensure
+  ## that the classes of the time scales comply to the lowest denominator,
+  ## e.g. "double" and "integer" -> both "double"
+  
+  if (is.null(times)) {
+    times <- c(attr(x, "time.scales"), "lex.dur")
+  }
+  
+  msg <- paste0("Expected working data to have time scales %%VARS%%, but it ",
+                "didn't. This is an internal error: If you see this, complain ",
+                "to the package maintainer.")
+  all_names_present(x, times, msg = msg)
+  xt <- lapply(times, function(ch) x[[ch]])
+  names(xt) <- times
+  
+  harmoClasses <- c("numeric", "integer", "difftime")
+  cl <- lapply(xt, class)
+  wh <- unlist(lapply(cl, function(ch) {
+    any(ch %in% harmoClasses)
+  }))
+  ha <- times[wh]
+  hacl <- unique(unlist(cl[wh]))
+  
+  if (length(ha) > 1L) {
+    ## more than one class present and need to use common lowest denom
+    newMode <- as.double
+    
+    if (all(ha %in% c("integer", "difftime"))) {
+      ## all numeric times are integers or difftimes
+      newMode <- as.integer
+    }
+    for (var in ha) {
+      ## modify in place
+      set(x, j = var, value = newMode(x[[var]]))
+    }
+    
+    
+  }
+  invisible(NULL)
+}
+
 harmonizeNumeric <- function(x, v1="lex.Cst", v2="lex.Xst") {
   ## assumes v1, v2 are numeric variable names in x  
   
