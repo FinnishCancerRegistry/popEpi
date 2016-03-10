@@ -188,3 +188,47 @@ test_that("survmean expected survival curve corresponds to full Ederer I", {
   
 })
 
+test_that("survmean period method is useful", {
+  skip_on_cran()
+  library(Epi)
+  library(survival)
+  
+  sr <- copy(sire)[dg_date < ex_date, ]
+  sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
+  
+  x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+             exit = list(CAL = get.yrs(ex_date)),
+             data = sr,
+             exit.status = factor(status, levels = 0:2,
+                                  labels = c("alive", "canD", "othD")),
+             merge = TRUE)
+  
+  pm <- data.table(popEpi::popmort)
+  names(pm) <- c("sex", "CAL", "AGE", "haz")
+  
+  BL <- list(FUT = seq(0, 14, 1/12))
+  eBL <- list(FUT = c(BL$FUT, seq(max(BL$FUT),110,1/2)))
+  eBL$FUT <- sort(unique(eBL$FUT))
+  sm <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
+                 subset = dg_date >= "1998-01-01" & dg_date < "2003-01-01",
+                 pophaz = pm, data = x,
+                 breaks = BL, 
+                 e1.breaks = eBL)
+  
+  
+  BL <- list(FUT = seq(0, 10, 1/12), CAL = c(1998,2003))
+  eBL <- list(FUT = c(BL$FUT, seq(max(BL$FUT),110,1/2)))
+  eBL$FUT <- sort(unique(eBL$FUT))
+  smp <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
+                  pophaz = pm, data = x,
+                  breaks = BL, 
+                  e1.breaks = eBL)
+  
+  
+  
+  expect_equal(sm$obs, smp$obs)
+  expect_equal(sm$exp, smp$exp)
+  expect_equal(sm$est - smp$est, 0.5612021, tol = 0.0005, scale = 1)
+  
+})
+
