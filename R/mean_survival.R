@@ -39,7 +39,8 @@
 #' population hazard in the time window where \strong{expected} 
 #' survival is estimated. By default use the same data as 
 #' argument \code{pophaz}.
-#' @param r either \code{"auto"} or a numeric multiplier such as \code{0.995};
+#' @param r either a numeric multiplier such as \code{0.995}, \code{"auto"}, or
+#' \code{"autoX"} where \code{X} is an integer;
 #' used to determine the relative survival ratio (RSR) persisting after where 
 #' the estimated obsered survival curve ends. See Details.
 #' @param surv.method passed to \code{survtab_lex}; see that help for more info.
@@ -83,15 +84,26 @@
 #' a time interval till its end. The cumulative product of \code{RSR_i}
 #' over time is the (cumulative) relative survival curve. 
 #' 
-#' If \code{r = "auto"},
+#'
+#' If \code{r} is numeric, e.g. \code{r = 0.995}, that RSR level is assumed
+#' to persist beyond the observed survival curve. 
+#' Numeric \code{r} should be \code{> 0} and expressed at the annual level
+#' when using fractional years as the scale of the time variables.
+#' E.g. if RSR is known to be \code{0.95} at the month level, then the
+#' annualized RSR is \code{0.95^12}. This enables correct usage of the RSR
+#' with survival intervals of varying lengths.
+#' 
+#' If \code{r = "auto"} or \code{r = "auto1"},
 #' this function computes RSR estimates and automatically uses the \code{RSR_i}
 #' in the last survival interval in each stratum (and adjusting group)
 #' and assumes that to persist beyond the observed survival curve.
-#' If \code{r} is numeric, e.g. \code{r = 0.995}, that RSR level is assumed
-#' to persist. Automatic determination of \code{r} is a good starting point,
+#' Automatic determination of \code{r} is a good starting point,
 #' but in situations where the RSR estimate is uncertain it may produce poor
-#' results. Automatic determination will not use values \code{>1}. 
-#' Visual inspection of the produced curves is recommended: see
+#' results. Using \code{"autoX"} such as \code{"auto6"} causes \code{survmean}
+#' to use the mean of the estimated RSRs in the last X survival intervals, 
+#' which may be more stable.
+#' Automatic determination will not use values \code{>1} but set them to 1. 
+#' Visual inspection of the produced curves is always recommended: see
 #' Examples.
 #' 
 #' One may also tweak the accuracy and length of extrapolation and 
@@ -215,13 +227,18 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
   pophaz <- setDT(copy(pophaz))
   e1.pophaz <- setDT(copy(e1.pophaz))
   
-  if (!is.numeric(r) && !is.character(r)) {
-    stop("r must be either 'auto' or a numeric value giving the assumed ",
-         "relative survival ratio to use in extrapolation, e.g. r = 0.95.",
-         "See ?survmean for more information.")
-  }
   if (is.numeric(r) && r < 0L) stop("numeric r must be > 0, e.g. r = 0.95")
-  if (is.character(r)) r <- match.arg(r, "auto")
+  if (is.character(r)) {
+    if (substr(r, 1, 4) != "auto") {
+      stop("character string r must start with 'auto'; e.g. `auto` and ",
+           "`auto5` are accepted.")
+    }
+    if (r == "auto") r <- "auto1"
+    
+    auto_ints <- regmatches(r, regexec("\\d", text = r))
+    auto_ints <- as.integer(auto_ints)
+    r <- "auto"
+  }
   
   allScales <- attr(data, "time.scales")
   oldBreaks <- attr(data, "breaks")
@@ -462,29 +479,30 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
              by = c(tmpByNames,"surv.int"), all = TRUE)
   setkeyv(x, c(tmpByNames, "surv.int"))
   
-  ## add last non-NA values as separate column
-  if (length(tmpByNames)) {
-    st <- unique(st, by = tmpByNames, fromLast = TRUE)
-  } else {
-    st <- st[.N]
-  }
-  
-  st[, delta := Tstop - Tstart]
-  st[, r.e2 := r.e2^(1/delta)] ## "annualized" RSRs
-  setcolsnull(st, keep  = c(tmpByNames, "r.e2"), soft = FALSE)
-  setnames(st, "r.e2", "last.r.e2")
-  if (length(tmpByNames)) {
-    x <- merge(x, st, by = tmpByNames, all = TRUE)
-  } else {
-    x[, last.r.e2 := st$last.r.e2]
-  }
-  x[, last.r.e2 := last.r.e2^(delta)] ## back to non-annualized RSRs
-  ## enforce RSR in extrapolated part of observed curve to at most 1
-  x[, last.r.e2 := pmin(last.r.e2, 1)]
-  
-  ## manually given RSR for extrapolated part of the obs.surv. curve
+  ## extrapolation RSR definition ----------------------------------------------
   if (r != "auto") {
-    x[, last.r.e2 := TF$r]
+    ## manually given RSR for extrapolated part of the obs.surv. curve
+    x[, last.r.e2 := TF$r^(delta)] ## assumed that r is annualized
+    
+  } else {
+    ## add last non-NA values as separate column
+    
+    st <- st[, .SD[(.N-TF$auto_ints+1):.N], by = eval(tmpByNames)]
+    
+    st[, delta := Tstop - Tstart]
+    st[, r.e2 := r.e2^(1/delta)] ## "annualized" RSRs
+    
+    ## mean annualized RSR in last N intervas by strata
+    st <- st[, .(last.r.e2 = mean(r.e2)), by = eval(tmpByNames)]
+    
+    if (length(tmpByNames)) {
+      x <- merge(x, st, by = tmpByNames, all = TRUE)
+    } else {
+      x[, last.r.e2 := st$last.r.e2]
+    }
+    x[, last.r.e2 := last.r.e2^(delta)] ## back to non-annualized RSRs
+    ## enforce RSR in extrapolated part of observed curve to at most 1
+    x[, last.r.e2 := pmin(last.r.e2, 1)]
   }
   
   x[is.na(r.e2), r.e2 := last.r.e2]

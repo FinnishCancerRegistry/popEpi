@@ -49,7 +49,8 @@ population hazard in the time window where \strong{expected}
 survival is estimated. By default use the same data as 
 argument \code{pophaz}.}
 
-\item{r}{either \code{"auto"} or a numeric multiplier such as \code{0.995};
+\item{r}{either a numeric multiplier such as \code{0.995}, \code{"auto"}, or
+\code{"autoX"} where \code{X} is an integer;
 used to determine the relative survival ratio (RSR) persisting after where 
 the estimated obsered survival curve ends. See Details.}
 
@@ -116,15 +117,26 @@ i.e. the observed divided by the expected
 a time interval till its end. The cumulative product of \code{RSR_i}
 over time is the (cumulative) relative survival curve. 
 
-If \code{r = "auto"},
+
+If \code{r} is numeric, e.g. \code{r = 0.995}, that RSR level is assumed
+to persist beyond the observed survival curve. 
+Numeric \code{r} should be \code{> 0} and expressed at the annual level
+when using fractional years as the scale of the time variables.
+E.g. if RSR is known to be \code{0.95} at the month level, then the
+annualized RSR is \code{0.95^12}. This enables correct usage of the RSR
+with survival intervals of varying lengths.
+
+If \code{r = "auto"} or \code{r = "auto1"},
 this function computes RSR estimates and automatically uses the \code{RSR_i}
 in the last survival interval in each stratum (and adjusting group)
 and assumes that to persist beyond the observed survival curve.
-If \code{r} is numeric, e.g. \code{r = 0.995}, that RSR level is assumed
-to persist. Automatic determination of \code{r} is a good starting point,
+Automatic determination of \code{r} is a good starting point,
 but in situations where the RSR estimate is uncertain it may produce poor
-results. Automatic determination will not use values \code{>1}. 
-Visual inspection of the produced curves is recommended: see
+results. Using \code{"autoX"} such as \code{"auto6"} causes \code{survmean}
+to use the mean of the estimated RSRs in the last X survival intervals, 
+which may be more stable.
+Automatic determination will not use values \code{>1} but set them to 1. 
+Visual inspection of the produced curves is always recommended: see
 Examples.
 
 One may also tweak the accuracy and length of extrapolation and 
