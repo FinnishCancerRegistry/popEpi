@@ -406,16 +406,23 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
   ##    defined by breaks list in argument 'breaks'
   pt <- proc.time()
   setkeyv(x, c("lex.id", survScale))
-  xe <- unique(x)[x[[survScale]] < TF$tol, ]
+  xe <- unique(x)[x[[survScale]] < TF$tol, ] ## pick rows with entry to FU
   
   if (length(breaks) > 1L) {
-    ## e.g. a period window was defined and we only use
+    ## e.g. a period window was defined and we only use subjects
     ## entering follow-up in the time window.
-    tmpDropBreaks <- setdiff(allScales, survScale)
-    tmpDropBreaks <- intersect(names(breaks), tmpDropBreaks)
+    tmpDropBreaks <- setdiff(names(breaks), survScale)
     tmpDropBreaks <- breaks[tmpDropBreaks]
+    tmpDropBreaks <- lapply(tmpDropBreaks, range)
     
-    xe <- intelliDrop(xe, breaks = tmpDropBreaks)
+    expr <- mapply(function(ch, ra) {
+      paste0("between(", ch, ", ", ra[1], ", ", ra[2] - tol, ", incbounds = TRUE)")
+    }, ch = names(tmpDropBreaks), ra = tmpDropBreaks, SIMPLIFY = FALSE)
+    
+    expr <- lapply(expr, function(e) eval(parse(text = e), envir = xe))
+    setDT(expr)
+    expr <- expr[, rowSums(.SD)]  == ncol(expr)
+    xe <- xe[TF$expr, ]
   }
   
   xe <- x[lex.id %in% TF$xe[, unique(lex.id)]]
