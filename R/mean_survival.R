@@ -235,7 +235,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
     }
     if (r == "auto") r <- "auto1"
     
-    auto_ints <- regmatches(r, regexec("\\d", text = r))
+    auto_ints <- regmatches(r, regexec("\\d+", text = r))
     auto_ints <- as.integer(auto_ints)
     r <- "auto"
   }
