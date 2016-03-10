@@ -217,7 +217,7 @@ test_that("survmean period method is useful", {
   
   
   BL <- list(FUT = seq(0, 10, 1/12), CAL = c(1998,2003))
-  eBL <- list(FUT = c(BL$FUT, seq(max(BL$FUT),110,1/2)))
+  eBL <- list(FUT = c(BL$FUT, seq(max(BL$FUT), 14, 1/12), seq(14,110,1/2)))
   eBL$FUT <- sort(unique(eBL$FUT))
   smp <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
                   pophaz = pm, data = x,
@@ -228,7 +228,7 @@ test_that("survmean period method is useful", {
   
   expect_equal(sm$obs, smp$obs)
   expect_equal(sm$exp, smp$exp)
-  expect_equal(sm$est - smp$est, 0.5612021, tol = 0.0005, scale = 1)
+  expect_equal(sm$est - smp$est, 0.5611148, tol = 0.0005, scale = 1)
   
 })
 
