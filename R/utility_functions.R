@@ -406,7 +406,15 @@ robust_values <- function(num.values, force = FALSE, messages = TRUE) {
 
 all_names_present <- function(data, var.names, stops = TRUE, msg = NULL) {
   
-  # if (!is.character(var.names)) stop("Argument 'var.names' must be character string vector. E.g. var.names = 'var1'")
+  if (!is.null(var.names) && !is.character(var.names)) {
+    stop("Argument 'var.names' must be NULL or a character vector of ",
+         "variable names.")
+  }
+  if (length(var.names) && any(is.na(var.names))) {
+    stop("There are ", sum(is.na(var.names)), " missing values in argument ",
+         "'var.names'. Please only supply non-NA values.")
+  }
+  
   badNames <- setdiff(var.names, names(data))
   if (length(badNames) == 0L) return(TRUE)
   
