@@ -347,7 +347,7 @@
 #' pm$CAL <- as.Date(paste0(pm$CAL, "-01-01")) 
 #' pm$AGE <- pm$AGE*365.25 
 #' 
-#' st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+#' st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
 #'                   surv.type = "surv.rel", relsurv.method = "e2",
 #'                   pophaz = pm,
 #'                   breaks = list(FUT = seq(0, 5, 1/12)*365.25))  
