@@ -216,6 +216,37 @@ plot(sm3)
 ## for finer control of plotting these curves, you may extract
 ## from the survmean object using e.g.
 attributes(sm3)$survmean.meta$curves
+
+
+#### using Dates
+
+x <- Lexis(entry = list(FUT = 0L, AGE = dg_date-bi_date, CAL = dg_date),
+           exit = list(CAL = ex_date),
+           data = sire[sire$dg_date < sire$ex_date, ],
+           exit.status = factor(status, levels = 0:2, 
+                                labels = c("alive", "canD", "othD")), 
+           merge = TRUE)
+## phony group variable
+set.seed(1L)
+x$group <- rbinom(nrow(x), 1, 0.5)
+
+                  
+## NOTE: population hazard should be reported at the same scale
+## as time variables in your Lexis data.
+data(popmort, package = "popEpi")
+pm <- data.frame(popmort)
+names(pm) <- c("sex", "CAL", "AGE", "haz")
+## from year to day level
+pm$haz <- pm$haz/365.25 
+pm$CAL <- as.Date(paste0(pm$CAL, "-01-01")) 
+pm$AGE <- pm$AGE*365.25 
+
+BL <- list(FUT = seq(0, 8, 1/12)*365.25)
+eBL <- list(FUT = c(BL$FUT, c(8.25,8.5,9:60)*365.25))
+smd <- survmean(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
+                pophaz = pm, verbose = TRUE, r = "auto5",
+                breaks = BL, e1.breaks = eBL)     
+plot(smd)
 }
 
 
