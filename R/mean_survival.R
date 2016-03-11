@@ -545,10 +545,10 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
             "or expected mean survival times was > 1 % at the lowest point. ",
             "Mean survival estimates may be significantly biased. To avoid ",
             "this, supply breaks to 'e1.breaks' which make the curves longer ",
-            ", e.g. e1.breaks = list(FUT = 0:150) when using time scale FUT ",
-            "as the survival time scale.")
+            ", e.g. e1.breaks = list(FUT = 0:150) where time scale FUT ",
+            "is the survival time scale (yours may have a different name).")
   }
-  mi[, surv := paste0(surv, " %")]
+  mi[, surv := paste0(formatC(surv, digits = 2, format = "f"), " %")]
   mi[, survmean_type := factor(survmean_type, c("est", "exp"),
                                c("Observed", "Expected"))]
   setnames(mi, c("survmean_type", "surv"), 
