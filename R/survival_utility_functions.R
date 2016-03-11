@@ -612,6 +612,11 @@ detectSurvivalTimeScale <- function(lex, values) {
     whSurvScale <- unlist(whSurvScale)
   }
   if (sum(whSurvScale) == 0L) {
+    
+    dt <- as.data.table(allScVals)
+    dt <- cbind(dt, data.table(testValues = values))
+    on.exit(print(dt))
+    
     stop("Could not determine which time scale was used. The formula MUST ",
          "include the time scale used within a Surv() call (or a Surv object),",
          " e.g. Surv(FUT, lex.Xst) ~ sex. Note that the 'time' argument is ",
@@ -619,7 +624,9 @@ detectSurvivalTimeScale <- function(lex, values) {
          "the beginning of follow-up to identify the time scale existing in ",
          "the supplied data to use. If you are sure you are mentioning a ",
          "time scale in the formula in this manner, complain to the ",
-         "package maintainer.")
+         "package maintainer. The table printed below contains the time ",
+         "scales tested against and the values that were supplied as the last ",
+         "column.")
   }
   survScale <- allScales[whSurvScale]
   survScale
