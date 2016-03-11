@@ -7,8 +7,7 @@
 makeWeightsDT(data, values = NULL, print = NULL, adjust = NULL,
   formula = NULL, Surv.response = TRUE, by.other = NULL,
   custom.levels = NULL, custom.levels.cut.low = NULL, weights = NULL,
-  internal.weights.values = NULL, enclos = parent.frame(1L),
-  NA.text = NULL)
+  internal.weights.values = NULL, enclos = NULL, NA.text = NULL)
 }
 \arguments{
 \item{data}{DF/DT; passed to \code{envir} in \code{eval}}
@@ -100,33 +99,38 @@ TF <- environment()
 gender <- factor(ag$sex)
 dt <- makeWeightsDT(ag, print = quote(gender), adjust = as, 
                     values = vs, weights = ws, enclos = TF)
-## or
+## or NULL: uses calling frame by default.
 dt <- makeWeightsDT(ag, print = quote(gender), adjust = as, 
                     values = vs, weights = ws,
-                    enclos = parent.frame(1L))
+                    enclos = NULL)
+## passing parent.fram(1) is the same thing (as below),
+## but won't pass in testing these examples somehow (but work in real life)
+# dt <- makeWeightsDT(ag, print = quote(gender), adjust = as, 
+#                     values = vs, weights = ws,
+#                     enclos = NULL)                  
 
 #### formula usage
 form <- Surv(fot, factor(from0to1))~gender
 dt <- makeWeightsDT(ag, formula = form, Surv.response = TRUE,
                     adjust = as, values = vs, weights = ws,
-                    enclos = parent.frame(1L))
+                    enclos = NULL)
                     
 ## or
 form <- Surv(fot, factor(from0to1))~gender + adjust(agegr)
 dt <- makeWeightsDT(ag, formula = form, Surv.response = TRUE,
                     adjust = NULL, values = vs, weights = ws,
-                    enclos = parent.frame(1L))
+                    enclos = NULL)
                     
 ## or   
 form <- from0to1 ~ fot + gender + adjust(agegr)
 dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
                     adjust = NULL, values = vs, weights = ws,
-                    enclos = parent.frame(1L))            
+                    enclos = NULL)            
 
 form <- from0to1 ~ fot + adjust(agegr) + adjust(sex)
 ws2 <- list(agegr = c(0.33, 0.33, 0.33), sex = c(0.5, 0.5))
 dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
                     adjust = NULL, values = vs, weights = ws2,
-                    enclos = parent.frame(1L))
+                    enclos = NULL)
 }
 
