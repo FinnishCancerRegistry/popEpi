@@ -940,7 +940,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
     if (substr(y[1], 1,4) == "CIF_") ylab <- "Absolute risk"
     if (substr(y[1], 1,6) == "CIF.rel") ylab <- "Absolute risk"
   }
-  if (is.null(xlab)) xlab <- "Years from entry"
+  if (is.null(xlab)) xlab <- "Time from entry"
  
   ## attributes insurance to pass to lines.survtab
   setattr(x, "survtab.meta", l$attrs$survtab.meta)
@@ -1103,7 +1103,7 @@ plot.survmean <- function(x, ...) {
   if (is.null(curves)) stop("no curves information in x; usually lost if x altered after using survmean")
   
   plot(curves$surv ~ curves$Tstop, type="n",
-       xlab = "Years from entry", ylab = "Survival")
+       xlab = "Time from entry", ylab = "Survival")
   lines.survmean(x, ...)
   
   subr <- at$breaks[[at$survScale]]
