@@ -18,6 +18,11 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL,
   this_call <- match.call()
   startTime <- proc.time()
   
+  if(!requireNamespace("survival")) {
+    stop("Need package 'survival' to proceed")
+  }
+  
+  
   ## checks --------------------------------------------------------------------
   
   if (missing(formula)) stop("Formula not defined!")

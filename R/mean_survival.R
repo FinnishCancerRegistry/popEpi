@@ -3,7 +3,8 @@
 
 #' @title Compute Mean Survival Times Using Extrapolation
 #' @description Computes mean survival times based on survival estimation up to
-#' a point in follow-up time (e.g. 10 years), after which survival is extrapolated
+#' a point in follow-up time (e.g. 10 years), 
+#' after which survival is extrapolated
 #' using an appropriate hazard data file (\code{pophaz}) to yield the "full"
 #' survival curve. The area under the full survival curve is the mean survival.
 #' @author Joonas Miettinen
@@ -130,7 +131,8 @@
 #'   \item{est}{The estimated mean survival time}
 #'   \item{exp}{The computed expected survival time}
 #'   \item{obs}{Counts of subjects in data}
-#'   \item{YPLL}{Years of Potential Life Lost, computed as (\code{(exp-est)*obs})}
+#'   \item{YPLL}{Years of Potential Life Lost, computed as 
+#'   (\code{(exp-est)*obs})}
 #' }
 #' The returned data also has columns named according to the variables
 #' supplied to the right-hand-side of the formula.
@@ -238,7 +240,8 @@
 #' 
 #' 
 
-survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, pophaz = NULL, 
+survmean <- function(formula, data, adjust = NULL, weights = NULL, 
+                     breaks=NULL, pophaz = NULL, 
                      e1.breaks = NULL, e1.pophaz = pophaz, r = "auto", 
                      surv.method = "hazard", subset = NULL, verbose = FALSE) {
   pt <- proc.time()
@@ -247,7 +250,9 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
   
   surv.method <- match.arg(surv.method, c("hazard", "lifetable"))
   
-  if(!requireNamespace("survival")) stop("Need to load package survival to proceed")
+  if(!requireNamespace("survival")) {
+    stop("Need package 'survival' to proceed")
+  }
   
   ## appease R CMD CHECK (due to using vars in DT[] only)
   r.e2 <- last.p.e2 <- surv <- survmean_type <- est <- NULL
