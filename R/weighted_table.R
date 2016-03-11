@@ -104,10 +104,31 @@
 makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, formula = NULL, Surv.response = TRUE, by.other = NULL, custom.levels = NULL, custom.levels.cut.low = NULL, weights = NULL, internal.weights.values = NULL, enclos = parent.frame(1L), NA.text = NULL) {
   
   # environmentalism -----------------------------------------------------------
+  done <- FALSE
   TF <- environment()
   PF <- parent.frame(1L)
-  if (missing(enclos) || is.null(enclos)) enclos <- PF else 
-    if (!is.environment(enclos)) stop("enclos is not an environment")
+  if (missing(enclos) || is.null(enclos)) {
+    enclos <- PF 
+  } 
+  
+  enclos <- eval(enclos, envir = TF)
+  
+  if (!is.environment(enclos)) {
+    stop("Argument 'enclos' is not an environment. (Probably internal error, ",
+         "meaning you should complain to the package maintainer if you are not",
+         "doing something silly.)")
+  }
+  
+  THIS_CALL <- match.call()
+  
+  on.exit({
+    if (!done) {
+      stop("Failed to evaluate something in makeWeightsDT (see error ",
+           "message above). This is an internal error and the package ",
+           "maintainer should be contacted. The failed call is printed below.")
+      print(THIS_CALL)
+    }
+  })
   
   ## dataism -------------------------------------------------------------------
   if (!is.data.frame(data)) stop("data must be a data.frame")
@@ -412,7 +433,11 @@ makeWeightsDT <- function(data, values = NULL, print = NULL, adjust = NULL, form
     
     
   }
-  setattr(data, "makeWeightsDT", list(prVars = prVars, adVars = adVars, boVars = boVars, vaVars = vaVars, NAs = NAs))
+  setattr(data, "makeWeightsDT", list(prVars = prVars, adVars = adVars, 
+                                      boVars = boVars, vaVars = vaVars, 
+                                      NAs = NAs))
+  
+  done <- TRUE
   
   return(data[])
   
