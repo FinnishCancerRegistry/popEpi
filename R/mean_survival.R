@@ -219,7 +219,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
   if(!requireNamespace("survival")) stop("Need to load package survival to proceed")
   
   ## appease R CMD CHECK (due to using vars in DT[] only)
-  r.e2 <- last.r.e2 <- surv <- survmean_type <- est <- NULL
+  r.e2 <- last.p.e2 <- surv <- survmean_type <- est <- NULL
   
   checkLexisData(data, check.breaks = FALSE)
   checkPophaz(data, pophaz, haz.name = "haz")
@@ -457,7 +457,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
   ## extrapolation RSR definition ----------------------------------------------
   if (is.numeric(r)) {
     ## manually given RSR for extrapolated part of the obs.surv. curve
-    x[, last.r.e2 := TF$r^(delta)] ## assumed that r is annualized
+    x[, last.p.e2 := TF$r^(delta)] ## assumed that r is annualized
     
   } else {
     ## add last non-NA values as separate column
@@ -468,29 +468,30 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
     st[, r.e2 := r.e2^(1/delta)] ## "annualized" RSRs
     
     ## mean annualized RSR in last N intervas by strata
-    st <- st[, .(last.r.e2 = mean(r.e2)), by = eval(tmpByNames)]
-    st[, last.r.e2 := pmin(1, last.r.e2)]
-    
+    st <- st[, .(last.p.e2 = mean(r.e2)), by = eval(tmpByNames)]
+    st[, last.p.e2 := pmin(1, last.p.e2)]
     if (verbose) {
-      cat("Using following table of (mean, annualized) RSR estimates ",
-          "based on ", auto_ints, " interval(s) from the end of the relative ",
+      cat("Using following table of mean RSR estimates",
+          "(scaled to RSRs applicable to a time interval one",
+          "unit of time wide, e.g. one year or one day)",
+          "based on", auto_ints, "interval(s) from the end of the relative",
           "survival curve by strata: \n")
       prST <- data.table(st)
-      setnames(prST, c(tmpByNames, "last.r.e2"), c(byNames, "RSR"))
+      setnames(prST, c(tmpByNames, "last.p.e2"), c(byNames, "RSR"))
       print(prST)
     }
     
     if (length(tmpByNames)) {
       x <- merge(x, st, by = tmpByNames, all = TRUE)
     } else {
-      x[, last.r.e2 := st$last.r.e2]
+      x[, last.p.e2 := st$last.p.e2]
     }
-    x[, last.r.e2 := last.r.e2^(delta)] ## back to non-annualized RSRs
+    x[, last.p.e2 := last.p.e2^(delta)] ## back to non-annualized RSRs
     ## enforce RSR in extrapolated part of observed curve to at most 1
-    x[, last.r.e2 := pmin(last.r.e2, 1)]
+    x[, last.p.e2 := pmin(last.p.e2, 1)]
   }
   
-  x[is.na(r.e2), r.e2 := last.r.e2]
+  x[is.na(r.e2), r.e2 := last.p.e2]
   x[, surv := r.e2*surv.exp]
   
   ## cumulate again
