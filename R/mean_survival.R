@@ -350,11 +350,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
   formula <- as.formula(formula)
   
   ## detect survival time scale ------------------------------------------------
-  allScales <- attr(data, "time.scales")
-  
-  survScale <- detectSurvivalTimeScale(lex = data, values = foList$y$time)
-  
-  tol <- .Machine$double.eps^0.5
+  survScale <- detectSurvivalTimeScale(lex = x, values = foList$y$time)
   
   ## check weights & adjust ----------------------------------------------------
   test_obs <- x[, .(obs=.N),  keyby=eval(TF$tmpByNames)]
@@ -429,6 +425,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
   ##    defined by breaks list in argument 'breaks'
   pt <- proc.time()
   setkeyv(x, c("lex.id", survScale))
+  tol <- .Machine$double.eps^0.5
   xe <- unique(x)[x[[survScale]] < TF$tol, ] ## pick rows with entry to FU
   
   if (length(breaks) > 1L) {
