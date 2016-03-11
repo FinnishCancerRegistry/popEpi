@@ -228,6 +228,22 @@ test_that("evalPopFormula & usePopFormula output is stable", {
   r3 <- evalPopFormula(f3, data = x, enclos = parent.frame(1L), Surv.response = TRUE)
   expect_equivalent(r3, res[, .SD, .SDcols = names(r3)])
   
+  
+  #### only the survival time scale as response
+  fa <- fot ~ 1
+  fb <- fot ~ sex
+  fc <- fot ~ sex + adjust(factor(sex+1))
+  fd <- fot ~ adjust(factor(sex+1))
+  
+  ra <- evalPopFormula(fa, data = x, enclos = TF, Surv.response = "either")
+  expect_equivalent(ra, x[, .(fot)])
+  rb <- evalPopFormula(fb, data = x, enclos = parent.frame(1L), Surv.response = FALSE)
+  expect_equivalent(rb, x[, .(fot, sex)])
+  rc <- evalPopFormula(fc, data = x, enclos = parent.frame(1L), Surv.response = "either")
+  expect_equivalent(rc, x[, .(fot, sex, factor(sex+1))])
+  rd <- evalPopFormula(fd, data = x, enclos = TF, Surv.response = FALSE)
+  expect_equivalent(rd, x[, .(fot, factor(sex+1))])
+  
   ## usePopFormula
   
   r3 <- usePopFormula(f3, data = x, enclos = parent.frame(2L), Surv.response = TRUE)
@@ -281,5 +297,40 @@ test_that("evalPopFormula & usePopFormula output is stable", {
   
   expect_equal(lapply(r9, names), list(y = "lex.Xst", print = "as.numeric(sex)", 
                                        adjust = c("factor(sex + 1)", "factor(sex - 1)"), formula = NULL))
+  
+  
+  ra <- usePopFormula(fa, data = x, 
+                      adjust = quote(list(factor(sex+1), factor(sex - 1))),
+                      enclos = parent.frame(2L), Surv.response = FALSE) 
+  
+  expect_equal(lapply(ra, names), 
+               list(y = "fot", print = NULL, 
+                    adjust = c("factor(sex + 1)", "factor(sex - 1)"), 
+                    formula = NULL))
+  
+  
+  rb <- usePopFormula(fb, data = x, 
+                      adjust = quote(list(factor(sex+1), factor(sex - 1))),
+                      enclos = parent.frame(2L), Surv.response = FALSE) 
+  expect_equal(lapply(rb, names), 
+               list(y = "fot", print = "sex", 
+                    adjust = c("factor(sex + 1)", "factor(sex - 1)"), 
+                    formula = NULL))
+  
+  rc <- usePopFormula(fc, data = x, 
+                      adjust = NULL,
+                      enclos = parent.frame(2L), Surv.response = "either") 
+  expect_equal(lapply(rc, names), 
+               list(y = "fot", print = "sex", 
+                    adjust = "factor(sex + 1)", 
+                    formula = NULL))
+  
+  rd <- usePopFormula(fd, data = x, 
+                      adjust = NULL,
+                      enclos = parent.frame(2L), Surv.response = FALSE) 
+  expect_equal(lapply(rd, names), 
+               list(y = "fot", print = NULL, 
+                    adjust = "factor(sex + 1)", 
+                    formula = NULL))
   
 })

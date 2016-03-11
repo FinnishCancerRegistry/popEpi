@@ -1450,8 +1450,20 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
   
   fe <- environment(formula)
   
+  either <- FALSE
+  if (is.character(Surv.response)) {
+    Surv.response <- match.arg(Surv.response, "either")
+    Surv.response <- TRUE
+    either <- TRUE
+  } else if (!is.logical(Surv.response)) {
+    stop("Surv.response must be either logical or 'either'")
+  }
+  
   ## subset if needed ----------------------------------------------------------
-  if (!is.null(subset) && !is.logical(subset)) stop("subset must be NULL or a logical vector and not an expression at this point. If you see this, complain to the package maintainer.")
+  if (!is.null(subset) && !is.logical(subset)) {
+    stop("subset must be NULL or a logical vector and not an expression at ",
+         "this point. If you see this, complain to the package maintainer.")
+  }
   if (!is.null(subset)) {
     data <- data[subset, ]
     setcolsnull(data, keep = all.vars(formula))
@@ -1459,17 +1471,33 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
   
   
   ## formula -------------------------------------------------------------------
-  if (!inherits(formula, "formula")) stop("formula is not of class 'formula'; supply it as e.g. y ~ x")
-  if (length(formula) < 3L) stop("formula appears to be one-sided, which is not supported; supply it as e.g. y ~ x")
+  if (!inherits(formula, "formula")) {
+    stop("formula is not of class 'formula'; supply it as e.g. y ~ x")
+  }
+  if (length(formula) < 3L) {
+    stop("formula appears to be one-sided, which is not supported; ",
+         "supply it as e.g. y ~ x")
+  }
   
   ## response
   y <- eval(formula[[2L]], envir = data, enclos = enclos)
-  if (inherits(y, "Surv") && !Surv.response) stop("Response is a result of using Surv(), which is not allowed in this context.")
-  if (Surv.response) {
-    if (!inherits(y, "Surv")) stop("the response of the formula must be a Surv object; see ?Surv (in package survival)")
+  if (inherits(y, "Surv") && !either && !Surv.response) {
+    stop("Response is a result of using Surv(), which is not allowed in ",
+         "this context.")
+  }
+  
+  if (!inherits(y, "Surv") && !either && Surv.response) {
+    stop("The response of the formula must be a Surv object; ",
+         "see ?Surv (in package survival).")
+  }
+  
+  if (inherits(y, "Surv")) {
     y <- Surv2DT(y)
     setcolsnull(y, keep = c("time", "start", "status"), colorder = TRUE)
-    if (!any(c("time", "start") %in% names(y))) stop("Surv must have a 'time' argument")
+    if (!any(c("time", "start") %in% names(y))) {
+      stop("You must supply function Surv a value to the 'time' ",
+           "argument. See ?Surv")
+    }
     setnames(y, names(y), c("time", "status")[1:ncol(y)])
   } else {
     y <- data.table(y)
@@ -1534,25 +1562,36 @@ evalRecursive <- function(arg, env, enc, max.n = 100L) {
 }
 
 
-usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(), enclos, Surv.response = TRUE) {
+usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(), 
+                          enclos, Surv.response = TRUE) {
   ## INTENTION: evaluates form and combines with adjust appropriately
-  ## returns a list of the elements dug out from the formula and adjust arguments.
+  ## returns a list of the elements dug out from the formula and adjust 
+  ## arguments.
   # formSub <- substitute(form)
   al <- evalRecursive(arg = form, env = data, enc = enclos)
   
   if (!inherits(al$arg, "formula")) stop("'form' is not a formula object")
   
-  dt <- evalPopFormula(formula = al$arg, data = data, enclos = enclos, Surv.response = Surv.response)
+  dt <- evalPopFormula(formula = al$arg, data = data, enclos = enclos, 
+                       Surv.response = Surv.response)
   adNames <- attr(dt, "adjust.names")
   prNames <- attr(dt, "print.names")
   suNames <- attr(dt, "Surv.names")
   
-  adjust <- evalPopArg(data, adjust, DT = TRUE, recursive = TRUE, enclos = environment(), 
-                       types = c("NULL", "character", "list", "expression"), naming = "model")
+  adjust <- evalPopArg(data, adjust, DT = TRUE, recursive = TRUE, 
+                       enclos = new.env(), naming = "model",
+                       types = c("NULL", "character", "list", "expression"))
   
-  if (is.data.frame(adjust) && (nrow(adjust) == 0L || ncol(adjust) == 0L)) stop("adjust evaluated to an empty data.frame")
-  if (!is.null(adjust) && ncol(adjust) > 0L && length(adNames) > 0L) stop("Cannot both use argument 'adjust' AND use an adjust() term within the formula argument. Please only use one.")
-  if (is.null(adjust) && length(adNames) > 0L) adjust <- dt[, .SD, .SDcols = c(adNames)]
+  if (is.data.frame(adjust) && (nrow(adjust) == 0L || ncol(adjust) == 0L)) {
+    stop("adjust evaluated to an empty data.frame")
+  }
+  if (!is.null(adjust) && ncol(adjust) > 0L && length(adNames) > 0L) {
+    stop("Cannot both use argument 'adjust' AND use an adjust() term within ",
+         "the formula argument. Please only use one.")
+  }
+  if (is.null(adjust) && length(adNames) > 0L) {
+    adjust <- dt[, .SD, .SDcols = c(adNames)]
+  }
   
   
   print <- NULL
