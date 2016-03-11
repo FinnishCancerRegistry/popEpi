@@ -1100,7 +1100,15 @@ lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL,
 plot.survmean <- function(x, ...) {
   at <- attr(x, "survmean.meta")
   curves <- at$curves
-  if (is.null(curves)) stop("no curves information in x; usually lost if x altered after using survmean")
+  if (is.null(curves)) {
+    stop("no curves information in x; sometimes lost if x ",
+         "altered after using survmean")
+  }
+  
+  by.vars <- at$tprint
+  by.vars <- c(by.vars, at$tadjust)
+  by.vars <- intersect(by.vars, names(curves))
+  if (!length(by.vars)) by.vars <- NULL
   
   plot(curves$surv ~ curves$Tstop, type="n",
        xlab = "Time from entry", ylab = "Survival")
@@ -1108,6 +1116,12 @@ plot.survmean <- function(x, ...) {
   
   subr <- at$breaks[[at$survScale]]
   abline(v = max(subr), lty=2, col="grey")
+  
+  if (length(by.vars)) {
+    ## add legend denoting colors
+    Stratum <- curves[, unique(interaction(.SD)), .SDcols = eval(by.vars)]
+    legend(x = "topright", legend = Stratum, col = seq_along(Stratum), lty = 1)
+  }
   
 }
 
@@ -1136,7 +1150,7 @@ lines.survmean <- function(x, ...) {
   
   by.vars <- at$tprint
   by.vars <- c(by.vars, at$tadjust)
-  by.vars <- c(by.vars, "survmean_type")
+  by.vars <- c("survmean_type", by.vars)
   by.vars <- intersect(by.vars, names(curves))
   if (!length(by.vars)) by.vars <- NULL
   
