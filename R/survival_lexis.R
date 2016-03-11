@@ -166,10 +166,7 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL,
   
   ## detect which time scale used ----------------------------------------------
   
-  survScale <- allScales[x[, unlist(lapply(.SD, function(x) identical(x, l$y$time))), .SDcols = allScales]]
-  
-  if (length(survScale) == 0L) survScale <- allScales[x[, unlist(lapply(.SD, function(x) all.equal(x, l$y$time)))]]
-  if (length(survScale) == 0L) stop("Could not determine which time scale was used. The formula MUST include the time scale used within a Surv() call (or a Surv object), e.g. Surv(FUT, lex.Xst) ~ sex. Note that the 'time' argument is effectively (and exceptionally) used here to denote the times at the beginning of follow-up to identify the time scale existing in the supplied data to use. If you are sure you are mentioning a time scale in the formula in this manner, complain to the package maintainer.")
+  survScale <- detectSurvivalTimeScale(lex = x, values = l$y$time)
   
   ## includes time scale to compute survivals over
   aggreVars <- c(prVars, adVars, survScale) 

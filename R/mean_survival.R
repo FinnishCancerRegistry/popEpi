@@ -320,33 +320,8 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
   
   ## detect survival time scale ------------------------------------------------
   allScales <- attr(data, "time.scales")
-  survScale <- allScales[x[, unlist(lapply(.SD, function(x) {
-    identical(x, foList$y$time)
-  })), .SDcols = allScales]]
   
-  if (length(survScale) == 0L) {
-    survScale <- allScales[x[, unlist(lapply(.SD, function(x) {
-      all.equal(x, foList$y$time)
-    }))]]
-  }
-  if (length(survScale) == 0L) {
-    stop("Could not determine which time scale was used. The formula MUST ",
-         "include the time scale used within a Surv() call (or a Surv object)",
-         ", e.g. Surv(FUT, lex.Xst) ~ sex. Note that the 'time' argument is ",
-         "effectively (and exceptionally) used here to denote the times at ",
-         "the beginning of follow-up to identify the time scale existing in ",
-         "the supplied data to use. If you are sure you are mentioning a time ",
-         "scale in the formula in this manner, complain to the ",
-         "package maintainer.")
-  }
-  
-  no_ss <- paste0("Internal error: could not determine survival time scale. ",
-                  "Make sure the formula contains e.g. ",
-                  "Surv(time = fot, event = lex.Xst), where fot is the time ",
-                  "scale you want to compute survivals over. If you are ",
-                  "using this right, complain to the package maintainer.")
-  all_names_present(x, survScale, msg = no_ss)
-  rm(no_ss)
+  survScale <- detectSurvivalTimeScale(lex = data, values = foList$y$time)
   
   tol <- .Machine$double.eps^0.5
   

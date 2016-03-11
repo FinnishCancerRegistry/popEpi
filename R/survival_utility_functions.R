@@ -583,3 +583,45 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   
   y[]
 }
+
+
+
+
+detectSurvivalTimeScale <- function(lex, values) {
+  
+  checkLexisData(lex)
+  
+  allScales <- attr(lex, "time.scales")
+  
+  allScVals <- lapply(allScales, function(ch) lex[[ch]])
+  names(allScVals) <- allScales
+  
+  whSurvScale <- lapply(allScVals, function(col) {
+    identical(col, values)
+  })
+  whSurvScale <- unlist(whSurvScale)
+  
+  if (sum(whSurvScale) == 0L) {
+    whSurvScale <- lapply(allScVals, function(col) {
+      isTRUE({
+        all.equal(col, values, scale = 1L, 
+                  check.attributes = FALSE,
+                  tolerance = .Machine$double.eps ^ 0.5)
+      })
+    })
+    whSurvScale <- unlist(whSurvScale)
+  }
+  if (sum(whSurvScale) == 0L) {
+    stop("Could not determine which time scale was used. The formula MUST ",
+         "include the time scale used within a Surv() call (or a Surv object),",
+         " e.g. Surv(FUT, lex.Xst) ~ sex. Note that the 'time' argument is ",
+         "effectively (and exceptionally) used here to denote the times at ",
+         "the beginning of follow-up to identify the time scale existing in ",
+         "the supplied data to use. If you are sure you are mentioning a ",
+         "time scale in the formula in this manner, complain to the ",
+         "package maintainer.")
+  }
+  survScale <- allScales[whSurvScale]
+  survScale
+  
+}
