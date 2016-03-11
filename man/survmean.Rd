@@ -70,14 +70,16 @@ following columns:
   \item{est}{The estimated mean survival time}
   \item{exp}{The computed expected survival time}
   \item{obs}{Counts of subjects in data}
-  \item{YPLL}{Years of Potential Life Lost, computed as (\code{(exp-est)*obs})}
+  \item{YPLL}{Years of Potential Life Lost, computed as 
+  (\code{(exp-est)*obs})}
 }
 The returned data also has columns named according to the variables
 supplied to the right-hand-side of the formula.
 }
 \description{
 Computes mean survival times based on survival estimation up to
-a point in follow-up time (e.g. 10 years), after which survival is extrapolated
+a point in follow-up time (e.g. 10 years), 
+after which survival is extrapolated
 using an appropriate hazard data file (\code{pophaz}) to yield the "full"
 survival curve. The area under the full survival curve is the mean survival.
 }
