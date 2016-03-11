@@ -324,15 +324,44 @@ x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
                                 labels = c("alive", "canD", "othD")), 
            merge = TRUE)
 
-## pretend some are male
+## phony group variable
 set.seed(1L)
-x$sex <- rbinom(nrow(x), 1, 0.5)
+x$group <- rbinom(nrow(x), 1, 0.5)
 
 ## observed survival
-st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
                   surv.type = "surv.obs",
                   breaks = list(FUT = seq(0, 5, 1/12)))
 
+#### using dates with survtab_lex
+x <- Lexis(entry = list(FUT = 0L, AGE = dg_date-bi_date, CAL = dg_date),
+           exit = list(CAL = ex_date),
+           data = sire[sire$dg_date < sire$ex_date, ],
+           exit.status = factor(status, levels = 0:2, 
+                                labels = c("alive", "canD", "othD")), 
+           merge = TRUE)
+## phony group variable
+set.seed(1L)
+x$group <- rbinom(nrow(x), 1, 0.5)
+
+st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
+                  surv.type = "surv.obs",
+                  breaks = list(FUT = seq(0, 5, 1/12)*365.25))    
+                  
+## NOTE: population hazard should be reported at the same scale
+## as time variables in your Lexis data.
+data(popmort, package = "popEpi")
+pm <- data.frame(popmort)
+names(pm) <- c("sex", "CAL", "AGE", "haz")
+## from year to day level
+pm$haz <- pm$haz/365.25 
+pm$CAL <- as.Date(paste0(pm$CAL, "-01-01")) 
+pm$AGE <- pm$AGE*365.25 
+
+st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+                  surv.type = "surv.rel", relsurv.method = "e2",
+                  pophaz = pm,
+                  breaks = list(FUT = seq(0, 5, 1/12)*365.25))  
 
 }
 \author{
