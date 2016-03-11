@@ -480,7 +480,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
   setkeyv(x, c(tmpByNames, "surv.int"))
   
   ## extrapolation RSR definition ----------------------------------------------
-  if (r != "auto") {
+  if (is.numeric(r)) {
     ## manually given RSR for extrapolated part of the obs.surv. curve
     x[, last.r.e2 := TF$r^(delta)] ## assumed that r is annualized
     
@@ -494,6 +494,16 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL, breaks=NULL, 
     
     ## mean annualized RSR in last N intervas by strata
     st <- st[, .(last.r.e2 = mean(r.e2)), by = eval(tmpByNames)]
+    st[, last.r.e2 := pmin(1, last.r.e2)]
+    
+    if (verbose) {
+      cat("Using following table of (mean, annualized) RSR estimates ",
+          "based on ", auto_ints, " interval(s) from the end of the relative ",
+          "survival curve by strata: \n")
+      prST <- data.table(st)
+      setnames(prST, c(tmpByNames, "last.r.e2"), c(byNames, "RSR"))
+      print(prST)
+    }
     
     if (length(tmpByNames)) {
       x <- merge(x, st, by = tmpByNames, all = TRUE)
