@@ -134,9 +134,9 @@ makeWeightsDT <- function(data, values = NULL,
   
   on.exit({
     if (!done) {
-      stop("Failed to evaluate something in makeWeightsDT (see error ",
-           "message above). This is an internal error and the package ",
-           "maintainer should be contacted. The failed call is printed below.")
+      message("Failed to evaluate something in makeWeightsDT (see error ",
+              "message above). This is an internal error and the package ",
+              "maintainer should be contacted. The failed call is printed below.")
       print(THIS_CALL)
     }
   })
