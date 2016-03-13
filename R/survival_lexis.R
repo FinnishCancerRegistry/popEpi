@@ -88,6 +88,9 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL,
                        recursive = TRUE, enclos = PF,
                        types = "formula", naming = "model")
   
+  if (surv.type %in% c("surv.rel", "cif.rel")) {
+    checkPophaz(x, pophaz, haz.name = "haz")
+  }
   pophazVars <- setdiff(names(pophaz), "haz")
   
   setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, 
