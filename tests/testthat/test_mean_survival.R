@@ -119,7 +119,7 @@ test_that("survmean() agrees with results computed using pkg survival", {
   
   # plot(I(c(1,surv.exp)) ~ I(BL$fot), ylim = c(0, 1), col = 1, data = su.exp, type = "s")
   # lines(I(c(1,surv.exp)) ~ I(BL$fot), col = "red", type = "s", data = e1)
-
+  
   su.exp[, surv.exp := surv.exp * su.km[.N, V1]]
   su <- rbindlist(list(su.km, su.exp))
   
@@ -231,4 +231,105 @@ test_that("survmean period method is useful", {
   expect_equal(sm$est - smp$est, 0.5611148, tol = 0.0005, scale = 1)
   
 })
+
+
+
+test_that("Dates and frac. yrs produce congruent results", {
+  skip_on_cran()
+  library(Epi)
+  library(survival)
+  
+  x <- data.table(popEpi::sire)
+  x <- x[dg_date<ex_date]
+  
+  ## phony group variable
+  set.seed(1L)
+  x$group <- rbinom(nrow(x), 1, 0.5)
+  
+  
+  ## yrs
+  xy <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
+              exit = list(CAL = get.yrs(ex_date)), 
+              data = x,
+              exit.status = factor(status, levels = 0:2, 
+                                   labels = c("alive", "canD", "othD")), 
+              merge = TRUE)
+  
+  ## dates
+  xd <- Lexis(entry = list(FUT = 0L, AGE = dg_date-bi_date, CAL = dg_date),
+              exit = list(CAL = ex_date),
+              data = x,
+              exit.status = factor(status, levels = 0:2, 
+                                   labels = c("alive", "canD", "othD")), 
+              merge = TRUE)
+  yd <- 365.242199
+  BLy <- list(FUT = seq(0, 9, 1/4))
+  BLd <- lapply(BLy, function(el) el * yd)
+  eBLy <- list(FUT = c(seq(0, 9, 1/4), 9.5, 10:75))
+  eBLd <- lapply(eBLy, function(el) el * yd)
+  
+  pmy <- data.table(popEpi::popmort)
+  setnames(pmy, c("year", "agegroup"), c("CAL", "AGE"))
+  
+  pmd <- data.table(pmy)
+  pmd[, CAL := as.Date(paste0(CAL, "-01-01"))]
+  pmd[, AGE := AGE * yd]
+  pmd[, haz := haz/yd]
+  
+  #### hazard method
+  ## observed survival & Ederer II
+  
+  sty <- survmean(Surv(FUT, lex.Xst) ~ group, data = xy, 
+                  surv.method = "hazard",
+                  e1.breaks = eBLy,
+                  breaks = BLy, pophaz = pmy)
+  
+  std <- survmean(Surv(FUT, lex.Xst) ~ group, data = xd, 
+                  surv.method = "hazard",
+                  e1.breaks = eBLd,
+                  breaks = BLd, pophaz = pmd)    
+  cuy <- data.table(attributes(sty)$survmean.meta$curves)
+  cud <- data.table(attributes(std)$survmean.meta$curves)
+  
+  std[, c("est", "exp", "YPLL") := lapply(.SD, function(col) col/yd),
+      .SDcols = c("est", "exp", "YPLL")]
+  
+  expect_equal(sty$est, std$est, scale = 1L, tolerance = 0.0005)
+  expect_equal(sty$exp, std$exp, scale = 1L, tolerance = 0.001)
+  expect_equal(sty$obs, std$obs)
+  
+  expect_equal(cuy$surv, cud$surv, scale = 1L, tolerance = 0.00005)
+  
+  #### lifetable method
+  ## observed survival & Ederer II
+  
+  sty <- survmean(Surv(FUT, lex.Xst) ~ group, data = xy, 
+                  surv.method = "lifetable",
+                  e1.breaks = eBLy,
+                  breaks = BLy, pophaz = pmy)
+  
+  std <- survmean(Surv(FUT, lex.Xst) ~ group, data = xd, 
+                  surv.method = "lifetable",
+                  e1.breaks = eBLd,
+                  breaks = BLd, pophaz = pmd)    
+  cuy <- data.table(attributes(sty)$survmean.meta$curves)
+  cud <- data.table(attributes(std)$survmean.meta$curves)
+  
+  std[, c("est", "exp", "YPLL") := lapply(.SD, function(col) col/yd),
+      .SDcols = c("est", "exp", "YPLL")]
+  
+  expect_equal(sty$est, std$est, scale = 1L, tolerance = 0.0005)
+  expect_equal(sty$exp, std$exp, scale = 1L, tolerance = 0.001)
+  expect_equal(sty$obs, std$obs)
+  
+  expect_equal(cuy$surv, cud$surv, scale = 1L, tolerance = 0.00005)
+  
+  
+})
+
+
+
+
+
+
 
