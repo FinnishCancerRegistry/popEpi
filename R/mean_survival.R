@@ -65,14 +65,14 @@
 #' 
 #' The area is computed by trapezoidal integration of the area under the curve.
 #' This function also computes the "full" expected survival curve from
-#' T = 0 till e.g. T = 50 depending on supplied arguments. The area under
-#' the expected survival curve is the expected survival time. The mean
-#' expected survival time is the are under the mean expected survival curve,
-#' which this function returns with the mean survival time for comparison
-#' and for computing years of potential life lost (YPLL).
+#' T = 0 till e.g. T = 50 depending on supplied arguments. The
+#' expected mean survival time is the area under the 
+#' mean expected survival curve.
+#' This function returns the mean expected survival time to be omcpared with 
+#' the mean survival time and for computing years of potential life lost (YPLL).
 #' 
 #' Results can be requested by strata and adjusted for e.g. age by using
-#' the \code{formula} argument as in \code{survtab_lex}.
+#' the \code{formula} argument as in \code{survtab_lex}. See also Examples.
 #' 
 #' \strong{Extrapolation tweaks}
 #' 
@@ -92,10 +92,12 @@
 #' when using fractional years as the scale of the time variables.
 #' E.g. if RSR is known to be \code{0.95} at the month level, then the
 #' annualized RSR is \code{0.95^12}. This enables correct usage of the RSR
-#' with survival intervals of varying lengths.
+#' with survival intervals of varying lengths. When using day-level time 
+#' variables (such as \code{Dates}; see \code{as.Date}), numeric \code{r}
+#' should be expressed at the day level, etc.
 #' 
-#' If \code{r = "auto"} or \code{r = "auto1"},
-#' this function computes RSR estimates and automatically uses the \code{RSR_i}
+#' If \code{r = "auto"} or \code{r = "auto1"}, this function computes
+#' RSR estimates internally and automatically uses the \code{RSR_i}
 #' in the last survival interval in each stratum (and adjusting group)
 #' and assumes that to persist beyond the observed survival curve.
 #' Automatic determination of \code{r} is a good starting point,
@@ -121,18 +123,23 @@
 #' 
 #' as the \code{e1.breaks}. Supplying \code{e1.breaks} manually requires
 #' the breaks over time survival time scale supplied to argument \code{breaks}
-#' to be reiterated in \code{e1.breaks}; see Examples.
+#' to be reiterated in \code{e1.breaks}; see Examples. \strong{NOTE}: the
+#' default extrapolation breaks assume the time scales in the data to be 
+#' expressed as fractional years, meaning this will work extremely poorly
+#' when using e.g. day-level time scales (such as \code{Date} variables). 
+#' Set the extrapolation breaks manually in such cases.
 #' 
 #' @return 
 #' Returns a \code{data.frame} or \code{data.table} (depending on 
 #' \code{getOptions("popEpi.datatable")}; see \code{?popEpi}) containing the
 #' following columns:
 #' \itemize{
-#'   \item{est}{The estimated mean survival time}
-#'   \item{exp}{The computed expected survival time}
-#'   \item{obs}{Counts of subjects in data}
-#'   \item{YPLL}{Years of Potential Life Lost, computed as 
-#'   (\code{(exp-est)*obs})}
+#'   \item{est}{: The estimated mean survival time}
+#'   \item{exp}{: The computed expected survival time}
+#'   \item{obs}{: Counts of subjects in data}
+#'   \item{YPLL}{: Years of Potential Life Lost, computed as 
+#'   (\code{(exp-est)*obs}) - though your time data may be in e.g. days,
+#'   this column will have the same name regardless.}
 #' }
 #' The returned data also has columns named according to the variables
 #' supplied to the right-hand-side of the formula.
