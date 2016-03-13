@@ -55,6 +55,12 @@ checkBreaksList <- function(x, breaks = list(fot = 0:5)) {
 checkPophaz <- function(lex, ph, haz.name = "haz") {
   ## INTENTION: checks a Lexis data set against the pophaz data set for
   ## consistency (e.g. existing variables to merge by)
+  
+  if (!is.data.frame(ph)) {
+    stop("Data set containing population/expected hazards must be a data.frame",
+         " (or a data.table, which is also a data.frame).")
+  }
+  
   if (!haz.name %in% names(ph)) {
     stop("Data set containing population/expected hazards does not contain a ",
          "column named 'haz'. Make sure the name is exactly that (",
