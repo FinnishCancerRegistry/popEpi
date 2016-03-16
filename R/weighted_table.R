@@ -149,9 +149,6 @@ makeWeightsDT <- function(data, values = NULL,
   data <- data.table(rep(1L, nrow(origData)))
   setnames(data, 1, tmpDum)
 
-  # pre-check weights argument -------------------------------------------------
-  weights <- eval(weights, envir = enclos)
-  if (is.character(weights)) weights <- match.arg(weights, "internal")
   
   # formula: vars to print and adjust by ---------------------------------------
   
@@ -227,7 +224,8 @@ makeWeightsDT <- function(data, values = NULL,
   
   # additionally, values to compute internal weights by: -----------------------
   iwVar <- NULL
-  if (is.character(weights) && weights == "internal") {
+  if (is.character(weights) && 
+      pmatch(weights, c("internal", "cohort"), nomatch = 0L)) {
     iw <- substitute(internal.weights.values)
     iw <- evalPopArg(data = origData, iw, DT = TRUE,
                      enclos = enclos, recursive = TRUE,
@@ -235,7 +233,8 @@ makeWeightsDT <- function(data, values = NULL,
     
     if (length(iw) > 1L) stop("Argument 'internal.weights.values' ",
                               "must produce only one column.")
-    if (length(iw) == 1L && is.character(weights) && weights == "internal") {
+    if (length(iw) == 1L && is.character(weights) && 
+        pmatch(weights, c("internal", "cohort"), nomatch = 0L)) {
       iwVar <- makeTempVarName(names=c(names(data), names(origData)), pre = "iw_")
       data[, c(iwVar) := TF$iw]
     }
@@ -378,7 +377,15 @@ makeWeightsDT <- function(data, values = NULL,
     
     if (is.character(weights)) {
       
-      if (weights == "internal") {
+      if (pmatch(weights, c("internal", "cohort"), nomatch = 0L)) {
+        
+        
+        all_names_present(data, iwVar,
+                          msg = paste0(
+                            "Internal error: expected to have variable ",
+                            "%%VARS%% in working data but didn't. Complain ",
+                            "to the pkg maintainer if you see this."
+                          ))
         
         weights <- mapply(function(levs, colname) {
           setkeyv(data, colname)
@@ -469,8 +476,9 @@ checkWeights <- function(weights, adjust) {
   ## INTENTION: given a list/DF/vector/string specifying weights
   ## and a data.frame/list of the adjusting variables,
   ## checks they are congruent and complains if not.
-  
-  if (!any(class(weights) %in% c("list","data.frame","numeric","character"))) {
+  allowed_classes <- c("list","data.frame","integer","numeric","character",
+                       "NULL")
+  if (!any(class(weights) %in% allowed_classes)) {
     stop("weights must be either a list, a data.frame, a numeric variable, ",
          "or a character string specifing the weighting scheme to use. ",
          "See ?direct_standardization for more information.") 
