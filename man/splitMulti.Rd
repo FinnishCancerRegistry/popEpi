@@ -43,7 +43,7 @@ with speed and ease
  time scales.
 It requires a Lexis object as input.
 
-The \code{breaks} must be a list of named numeric vectors. 
+The \code{breaks} must be a list of named vectors of the appropriate type. 
 The breaks are fully explicit and
 left-inclusive and right exclusive, e.g. \code{fot=c(0,5)} 
 forces the data to only include time between
@@ -63,7 +63,16 @@ is equivalent to
 
 Multiple breaks can be supplied in the same manner. However, if both
 \code{breaks} and \code{...} are used, only the breaks in \code{breaks}
-are utilized within the function.
+are utilized within the function. 
+
+The \code{Lexis} time scale variables can be of any arbitrary 
+format, e.g. \code{Date},
+fractional years (see \code{\link[Epi]{cal.yr}}) and \code{\link{get.yrs}},
+or other. However, using \code{date} variables (from package \pkg{date})
+are not recommended, as \code{date} variables are always stored as integers,
+whereas \code{Date} variables (see \code{?as.Date}) are typically stored
+in double ("numeric") format. This allows for breaking days into fractions
+as well, when using e.g. hypothetical years of 365.25 days.
 }
 \examples{
 #### let's prepare data for computing period method survivals

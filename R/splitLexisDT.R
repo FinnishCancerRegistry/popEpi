@@ -23,7 +23,16 @@
 #' Unlike \code{splitLexis}, \code{splitLexisDT} drops observed time outside
 #' the roof and floor of \code{breaks} by default - with \code{drop = FALSE}
 #' the functions have identical behaviour.
-#'  
+#' 
+#' The \code{Lexis} time scale variables can be of any arbitrary 
+#' format, e.g. \code{Date},
+#' fractional years (see \code{\link[Epi]{cal.yr}}) and \code{\link{get.yrs}},
+#' or other. However, using \code{date} variables (from package \pkg{date})
+#' are not recommended, as \code{date} variables are always stored as integers,
+#' whereas \code{Date} variables (see \code{?as.Date}) are typically stored
+#' in double ("numeric") format. This allows for breaking days into fractions
+#' as well, when using e.g. hypothetical years of 365.25 days.
+#' 
 #' @return
 #' A \code{data.table} or \code{data.frame} 
 #' (depending on \code{options("popEpi.datatable")}; see \code{?popEpi}) 
