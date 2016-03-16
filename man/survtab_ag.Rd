@@ -37,10 +37,10 @@ For \code{survtab_lex}, a \code{Lexis} object.}
 argument \code{formula} within a call to \code{adjust()}; e.g.
 \code{adjust = "agegr"} --- see Details.}
 
-\item{weights}{a \code{list} or \code{data.frame} of weights corresponding
-to the variables used to adjust estimates. E.g. with \code{adjust = "agegr"},
-weights may be passed as a list such as 
-\code{weights = list(agegr = c(0.2, 0.4))} (with two age groups). See Details.}
+\item{weights}{typically a list of weights or a \code{character} string
+specifying an age group standardization scheme; see
+the \link[=direct_standardization]{dedicated help page} 
+and examples.}
 
 \item{surv.breaks}{(\code{survtab_ag} only) a vector of breaks on the survival time scale. Only used
 to compute estimates using a subset of the intervals in data or larger intervals

@@ -19,10 +19,10 @@
 #' @param adjust can be used as an alternative to passing variables to 
 #' argument \code{formula} within a call to \code{adjust()}; e.g.
 #' \code{adjust = "agegr"} --- see Details.
-#' @param weights a \code{list} or \code{data.frame} of weights corresponding
-#' to the variables used to adjust estimates. E.g. with \code{adjust = "agegr"},
-#' weights may be passed as a list such as 
-#' \code{weights = list(agegr = c(0.2, 0.4))} (with two age groups). See Details.
+#' @param weights typically a list of weights or a \code{character} string
+#' specifying an age group standardization scheme; see
+#' the \link[=direct_standardization]{dedicated help page} 
+#' and examples.
 #' @param surv.breaks (\code{survtab_ag} only) a vector of breaks on the survival time scale. Only used
 #' to compute estimates using a subset of the intervals in data or larger intervals
 #' than in data. E.g. one might use \code{surv.breaks = 0:5} when the aggregated
