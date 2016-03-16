@@ -305,13 +305,13 @@ rate_est <- function(data = data,
     
 
     # variance rate.adj for each strata A
-    fun1 <- '(d/n^2) * w^2'
-    fun2 <- 'd / n * w'
+    fun1 <- '(._d_/._n_^2) * ._w_^2'
+    fun2 <- '._d_ / ._n_ * ._w_'
     
     make_fun <- function(n = NA, d = NA, w = NA, fun) {
-      fun <- gsub(pattern = "n", replacement = n, x = fun)
-      fun <- gsub(pattern = "d", replacement = d, x = fun)
-      fun <- gsub(pattern = "w", replacement = w, x = fun)
+      fun <- gsub(pattern = "._n_", replacement = n, x = fun)
+      fun <- gsub(pattern = "._d_", replacement = d, x = fun)
+      fun <- gsub(pattern = "._w_", replacement = w, x = fun)
       parse(text = fun)
     }
     eval.me1 <- make_fun(d = obs, n = pyrs, w=weights, fun = fun1)
