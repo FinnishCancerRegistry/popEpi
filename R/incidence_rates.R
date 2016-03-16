@@ -1,66 +1,27 @@
-#' @title Standardised incidence/mortality rates (direct method)
+#' @title Direct-Standardised Incidence/Mortality Rates
 #' @author Matti Rantanen, Joonas Miettinen
 #'
 #' @description \code{rate} calculates adjusted rates using
 #' preloaded weights data or user specified weights.
 #'
-#' @param data aggregated data (see: \code{\link{lexpand}})
-#' @param pyrs person-years variable name in data, quoted or unquoted
-#' @param obs observations variable name in data, quoted or unquoted.
-#' @param adjust variable for adjusting the rates, quoted or unquoted
+#' @param data aggregated data (see e.g. \code{\link{lexpand}}, 
+#' \code{\link{aggre}} if you have subject-level data)
+#' @param pyrs person-years variable name in data.
+#' @param obs observations variable name in data.
+#' @param adjust variable for adjusting the rates.
 #' @param print variable name to stratify the rates. Vector or a list. Functions
 #' can be in list, \code{list( year.cat := cut(year, c(1990,2000,2010)) )}
-#' @param weight.data character string; select standard population: 
-#' \code{'nordic', 'world66_5','europe', 'world00_1', 'world00_18of5', 'world00_20of5'} or \code{'cohort'}
-#' If NULL, the weights are fetched from \code{weights}.
-#' @param weights user defined weights in a list. length of the list should 
-#' equal to variable levels in \code{adjust}. See examples.  (currenty only one dimension supported)
+#' @param weights typically a list of weights or a \code{character} string
+#' specifying an age group standardization scheme; see
+#' the \link[=direct_standardization]{dedicated help page} 
+#' and examples.
+#' 
 #' @param subset a logical expression to subset data.
 #' 
 #' @details Input data needs to be in aggregated format with observations 
-#' and person-years. For individual data use \code{\link{lexpand}}. Or
+#' and person-years. For individual data use \code{\link{lexpand}}, or
 #' \code{\link{ltable}} and merge person-years manually.
 #' 
-#' \strong{Weights}
-#' 
-#' User can set weights in a named list. These weights are merged with unique
-#' levels of variable in \code{adjust}. \strong{Multiple weights support coming soon.}
-#' 
-#' \strong{Standard populations}
-#' 
-#' Rates can be standardized either by preloaded standard
-#' population or cohorts person-years. For the world standard population, 
-#' four possibilities are currently available:
-#' The old world standard population from 1966 (\code{'world66_5'}), 
-#' the new equivalent from 2000 with 18 or 20 age groups
-#'  (\code{'world00_18of5'} or \code{'world00_20of5'}) 
-#' and the 1-year age groups (\code{'world00_1'}).
-#' 
-#' Differences between rates using the old and new population standards will 
-#' arise due to the shift in world population - the proportion of young people 
-#' has fallen. The new standard is arguably more useful when interpretability 
-#' and generalizability are concerned. However, the old standard is used still 
-#' in many contexts in order to assure comparability with old results.
-#' 
-#' Available age group standardization options:
-#' \itemize{
-#' \item 'europe' - european std. popupulation, 18 age groups
-#' \item 'nordic' - nordic std. popupulation, 18 age groups
-#' \item 'world66_5' - world 1966 standard, 18 age groups
-#' \item 'world00_18of5' - world 2000 standard, 18 agegroups
-#' \item 'world00_20of5' - world 2000 standard, 20 agegroups 
-#' \item 'world00_1' - world 2000 standard, 101 agegroups
-#' \item 'cohort' - weights are calculated from cohort person-years. Same 
-#' age specific weights are applied for each stratum, i.e. weights are 
-#' aggreagated from the whole cohort.
-#' }
-#'
-#' Age groups are coded in integer values 1-18, 1-20 and 1-101. Data is 
-#' derived from datasets included in \pkg{popEpi}: \code{\link{stdpop18}} and 
-#' \code{\link{stdpop101}}.
-#' 
-#' Note that age group variable should naturally have a correct number of 
-#' levels for the rate you want to calculate.
 #' 
 #' @return Returns a \code{data.table} with observations, person-years, rates and
 #' adjusted rates, if availble. Results are stratified by \code{print}.
@@ -68,115 +29,133 @@
 #' \code{.lo} and \code{.hi} are for confidence intervals lower and upper 
 #' 95\% bounds, respectively.
 #' The prefix \code{SE.} stands for standard error.
-#'  
-#' 
-#' @references
-#' Source of the Nordic standard population in 5-year age groups (also contains European & 1966 world standards):
-#' \url{http://www-dep.iarc.fr/NORDCAN/english/glossary.htm}
-#' 
-#' A discussion (and source) of the old European standard population: 
-#' \url{http://epp.eurostat.ec.europa.eu/cache/ITY_OFFPUB/KS-RA-13-028/EN/KS-RA-13-028-EN.PDF}
-#' 
-#' A comparison of the 1966 vs. 2000 world standard populations in 5-year age groups:
-#' \url{http://www3.ha.org.hk/cancereg/e_asr.asp}
-#' 
-#' Source of 2000 world standard population in 1-year age groups:
-#' \url{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}
 #' 
 #' @seealso \code{\link{lexpand}}, \code{\link{ltable}}
 #' 
 #' @examples 
 #' ## Prepare data with lexpand and then reformat agegroup.
+#' data(sibr)
 #' x <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,  
 #'              breaks = list(per = c(1990,2000,2010,2020), age = c(0:17*5,Inf)),
 #'              aggre = list(agegroup = age, year.cat = per),
 #'              status =  status != 0)
 #'
-#' x$agegroup <- findInterval(x$agegroup,  c(0:17*5,Inf))
+#' x$agegroup <- cut(x$agegroup,  c(0:17*5,Inf), right = FALSE)
 #'
 #' ## calculate rates for selected periods with Nordic 2000 weights:
 #' r1 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat, 
-#'             adjust = agegroup, weight.data = 'nordic')
+#'             adjust = agegroup, weights = 'nordic')
 #' r1
 #'
 #' r2 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat, 
-#'             adjust = agegroup, weight.data = NULL,
+#'             adjust = agegroup,
 #'             weights = list( agegroup = c(4,5,5,5,5,4,4,3,3,2,2,1,1) ))
 #' r2
+#' 
+#' r3 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat, 
+#'             adjust = agegroup,
+#'             weights = "internal")
+#' r3
 #'
 #' @import data.table
 #' @export rate
 
 rate <- function( data,
-                  obs,
-                  pyrs,
+                  obs = NULL,
+                  pyrs = NULL,
                   print = NULL,
                   adjust = NULL, 
                   weights = NULL,
-                  weight.data = 'world66_5',
                   subset = NULL
 ) {
-  data <- copy(data)
-  setDT(data)
+  
+  PF <- parent.frame(1L)
+  TF <- environment()
   
   ## subsetting -----------------------------------------------------------
   subset <- substitute(subset)
-  subset <- evalLogicalSubset(data = data, substiset = subset)
+  subset <- evalLogicalSubset(data = data, substiset = subset, enclos = PF)
   data <- data[subset,]
+  setDT(data)
   
   # evalPopArg
   obs <- substitute(obs)
-  inc.obs <- evalPopArg(data = data, arg = obs)
-  obs <- names(inc.obs)
+  inc.obs <- evalPopArg(data = data, arg = obs, enclos = PF)
+  if (!length(inc.obs)) {
+    stop("No observations given.")
+  }
+  obsNames <- names(inc.obs)
+  tmpObsNames <- makeTempVarName(data = data, pre = "obs")
+  setnames(inc.obs, obsNames, tmpObsNames)
   
   pyrs <- substitute(pyrs)
-  inc.pyr <- evalPopArg(data = data, arg = pyrs)
-  pyrs <- names(inc.pyr)
+  inc.pyr <- evalPopArg(data = data, arg = pyrs, enclos = PF)
+  if (!length(inc.pyr)) {
+    stop("No pyrs given.")
+  }
+  pyrNames <- names(inc.pyr)
+  tmpPyrNames <- makeTempVarName(data = data, pre = "pyr")
+  setnames(inc.pyr, pyrNames, tmpPyrNames)
   
   print <- substitute(print)
-  inc.pri <- evalPopArg(data = data, arg = print)
-  print <- names(inc.pri)
+  inc.pri <- evalPopArg(data = data, arg = print, enclos = PF)
+  prNames <- tmpPrNames <- NULL
+  if (length(inc.pri)) {
+    prNames <- names(inc.pri)
+    tmpPrNames <- makeTempVarName(data = data, 
+                                  pre = paste0("print", seq_along(prNames)))
+    setnames(inc.pri, prNames, tmpPrNames)
+  }
   
   adjust <- substitute(adjust)
-  inc.adj <- evalPopArg(data = data, arg = adjust)
-  adjust <- names(inc.adj)
-  
-  ## collect data
-  data <- cbind(inc.obs, inc.pyr)
-  if(!is.null(print))  data <- cbind(data, inc.pri) 
-  if(!is.null(adjust)) data <- cbind(data, inc.adj)
-  
-  
-  if(missing(weights)) weights <- NULL
-  
-  ## user specified weights
-  if (popArgType(substitute(weights)) == 'list' ) {
-    if( is.null(adjust) ) stop('Weights given without adjust variable. Assign adjust.')
-    if (length(names(inc.adj)) > 1 | length(eval(weights)) > 1  ) { 
-      stop('Only one weigth currently supported')
-    }
-    map <- cbind(as.data.table(eval(weights)), unique(inc.adj))
-    setnames(map, 1, 'Reference.Weights')
-    
-    weights <- 'Reference.Weights'
-    data <- merge(data, map, by = adjust)
+  inc.adj <- evalPopArg(data = data, arg = adjust, enclos = PF)
+  adNames <- tmpAdNames <- NULL
+  if (length(inc.adj)) {
+    adNames <- copy(names(inc.adj))
+    tmpAdNames <- makeTempVarName(data = data, 
+                                  pre = paste0("adjust", seq_along(adNames)))
+    setnames(inc.adj, adNames, tmpAdNames)
   }
-
-  # merge WHO std data
-  data <- rate_table(data = data, 
-                     obs = obs,
-                     pyrs = pyrs,
-                     adjust = adjust,
-                     print = print,
-                     weight.data = weight.data,
-                     weights = weights)
+  
+  ## collect data --------------------------------------------------------------
+  data <- cbind(inc.obs, inc.pyr)
+  if (!is.null(prNames)) data <- cbind(data, inc.pri) 
+  if (!is.null(adNames)) data <- cbind(data, inc.adj)
+  
+  
+  ## handle weights ------------------------------------------------------------
+  weights <- substitute(weights)
+  weights <- eval(weights, envir = PF)
+  if (length(inc.adj)) {
+    setnames(inc.adj, tmpAdNames, adNames)
+  }
+  
+  checkWeights(weights, inc.adj)
+  if (is.list(weights)) {
+    weights <- weights[adNames]
+    names(weights) <- tmpAdNames
+  }
+  
+  ## form table with weights ---------------------------------------------------
+  data <- makeWeightsDT(data, 
+                        values = list(tmpObsNames, tmpPyrNames),
+                        print = tmpPrNames, 
+                        adjust = tmpAdNames, 
+                        weights = weights, 
+                        internal.weights.values = "pyrs")
+  
+  ## estimate standardized rates -----------------------------------------------
   data <- rate_est(data = data,
-                   obs = obs,
-                   pyrs = pyrs,
-                   print = print,
-                   weights = 'reference')
-  # class
-  setattr(data, 'class',c('rate','pe',class(data)))
+                   obs = tmpObsNames,
+                   pyrs = tmpPyrNames,
+                   print = tmpPrNames,
+                   weights = "weights")
+  
+  ## final touch ---------------------------------------------------------------
+  setDT(data)
+  setattr(data, "class", c("rate", "data.table", "data.frame"))
+  setnames(data, c(tmpObsNames, tmpPyrNames, tmpPrNames),
+           c(obsNames, pyrNames, prNames))
   
   # data.frame output option  
   if (!getOption("popEpi.datatable")) {
@@ -188,29 +167,40 @@ rate <- function( data,
 
 
 
-stdr.weights <- function(wp = 'world00_1'){
+stdr.weights <- function(wp = 'world00_1') {
   
   ## This one returns the standard population
   ## output: data.table with colnames: agegroup, reference
   ## standard populations are from datasets: stdpop18 and stdpop101
+  allow.pop <- c("world_1966_18f5", 
+                 "europe_1976_18of5", 
+                 "nordic_2000_18of5", 
+                 "world_2000_18of5", 
+                 "world_2000_20of5", 
+                 "world_2000_101of1")
+  wp <- match.arg(wp, allow.pop)
+  
   if (length(wp) > 1) {
-    stop('Standard population name is not a scalar.')
-  }
-  else if (wp %in% c('world66_5','europe','nordic')){
+    stop('Standard population name is not a scalar (length != 1).')
+    
+  } else if (wp %in% allow.pop[1:3]) {
+    
     # get standard pop
-    sr <- data.table(stdpop18)
-    setnames(sr, 1:4, c('agegroup','world66_5','europe','nordic'))
-    sr[,agegroup := 1:18]
-    sr[,colnames(sr)[which(!colnames(sr) %in% c('agegroup', wp))]:=NULL]
+    sr <- data.table(popEpi::stdpop18)
+    setnames(sr, 1:4, c("agegroup",allow.pop[1:3]))
+    sr[, agegroup := 1:18]
+    sr[, setdiff(allow.pop[1:3], wp) := NULL]
+    
     setnames(sr, wp, 'reference')
-  }
-  else if (wp %in% c("world00_1","world00_20of5","world00_18of5") ){
-    sr <- data.table(stdpop101)
-    if (wp == "world00_18of5"){
+    
+  } else if (wp %in% allow.pop[4:6]) {
+    
+    sr <- data.table(popEpi::stdpop101)
+    if (wp == "world_2000_18of5") {
       sr[,agegroup := cut(agegroup, breaks=c(0:17*5,Inf), right=FALSE, labels=FALSE)]
       sr <- sr[,list(world_std = sum(world_std)), by="agegroup"]
     }
-    if (wp == 'world00_20of5'){
+    if (wp == 'world_2000_20of5') {
       sr[,agegroup := cut(agegroup, breaks=c(0:19*5,Inf), right=FALSE, labels=FALSE)]
       sr <- sr[,list(world_std = sum(world_std)), by="agegroup"]
     }
@@ -220,79 +210,79 @@ stdr.weights <- function(wp = 'world00_1'){
     setnames(sr, "world_std", "reference")
   }
   else {
-    stop("Invalid standard populaiton name.")
+    stop("Invalid standard population name.")
   }
   sr[]
 }
 globalVariables(c('stdpop18','stdpop101','agegroup','world_std'))
 
 
-rate_table <- function(data, 
-                       obs = 'obs',
-                       pyrs = 'pyrs',
-                       adjust = NULL,
-                       print = NULL,
-                       weight.data = 'world66_5',
-                       weights = NULL
-){
-  ## This one fetches and merges the standard population
-  ## or transforms the population already in the data to standard format.
-  
-  colsum1 <- function(c) c/sum(c)
-  # merge WHO weights to data
-  # Everything should sum to one on each level of print
-  data <- data.table(data)
-  if (!is.null(weights) && all(weights %in% colnames(data)) ) {
-    ## use predefined weights
-    if( !is.null(print)) {
-      data[, reference := colsum1(.SD), .SDcols = weights, by = c(print)]
-    }
-    else {
-      data[, reference := colsum1(.SD), .SDcols = weights]
-    }
-    data[, (weights) := NULL]
-  }
-  else if ( !is.null(adjust) ) { # add: if ( !is.null(adjust) )
-    ## aggregate data before adding weights
-    eval0 <- paste0('list(obs = sum(',obs,',na.rm=TRUE),pyrs = sum(',pyrs,', na.rm=TRUE))')
-    eval0 <- parse(text = eval0)
-    data <- data[, eval(eval0), by = c(adjust, print) ] 
-    setnames(data, c('obs','pyrs'), c(obs, pyrs))
-    stdr.list <- c('world66_5','europe','nordic',"world00_1",
-                   "world00_20of5","world00_18of5")
-    
-    if ( !is.null(weight.data) && weight.data %in% stdr.list) {
-      ## get preloaded WHO std data
-      
-      if(length(adjust) > 1) stop('Set only one variable name for indicating age group')
-
-      wd <- stdr.weights(wp = weight.data)
-      wd <- wd[, reference := colsum1(.SD), .SDcols = 'agegroup']
-      setnames(wd, 'agegroup', adjust)
-    }
-  
-    else if (is.null(weight.data) || weight.data=='cohort') {
-      # get cohort std
-      p1 <- paste0('sum(',pyrs,', na.rm=TRUE)')
-      p1 <- parse(text = p1)
-      wd <- data[,list( pyrs = eval(p1)), by = c(unique(adjust))]
-      wd[, reference := colsum1(.SD), .SDcols = 'pyrs']
-      wd[,c('pyrs') := NULL]
-    }
-
-    data <- merge(x  = data, y  = wd[, c('reference', adjust) , with=FALSE],
-                  by = adjust, all.x = TRUE)
-  }
-  else {
-    if(!is.null(print)) {
-      data <- data[, list(obs = sum(get(obs), na.rm=TRUE), pyrs = sum(get(pyrs), na.rm=TRUE)), by = c(print) ]
-      setnames(data, c('obs','pyrs'), c(obs, pyrs))
-    }
-  }
-  return(data[])
-}
-
-globalVariables(('reference'))
+# rate_table <- function(data, 
+#                        obs = 'obs',
+#                        pyrs = 'pyrs',
+#                        adjust = NULL,
+#                        print = NULL,
+#                        weight.data = 'world66_5',
+#                        weights = NULL
+# ) {
+#   ## This one fetches and merges the standard population
+#   ## or transforms the population already in the data to standard format.
+#   
+#   colsum1 <- function(c) c/sum(c)
+#   # merge WHO weights to data
+#   # Everything should sum to one on each level of print
+#   data <- data.table(data)
+#   if (!is.null(weights) && all(weights %in% colnames(data)) ) {
+#     ## use predefined weights
+#     if ( !is.null(print)) {
+#       data[, reference := colsum1(.SD), .SDcols = weights, by = c(print)]
+#     }
+#     else {
+#       data[, reference := colsum1(.SD), .SDcols = weights]
+#     }
+#     data[, (weights) := NULL]
+#   }
+#   else if ( !is.null(adjust) ) { # add: if ( !is.null(adjust) )
+#     ## aggregate data before adding weights
+#     eval0 <- paste0('list(obs = sum(',obs,',na.rm=TRUE),pyrs = sum(',pyrs,', na.rm=TRUE))')
+#     eval0 <- parse(text = eval0)
+#     data <- data[, eval(eval0), by = c(adjust, print) ] 
+#     setnames(data, c('obs','pyrs'), c(obs, pyrs))
+#     stdr.list <- c('world66_5','europe','nordic',"world00_1",
+#                    "world00_20of5","world00_18of5")
+#     
+#     if ( !is.null(weight.data) && weight.data %in% stdr.list) {
+#       ## get preloaded WHO std data
+#       
+#       if (length(adjust) > 1) stop('Set only one variable name for indicating age group')
+# 
+#       wd <- stdr.weights(wp = weight.data)
+#       wd <- wd[, reference := colsum1(.SD), .SDcols = 'agegroup']
+#       setnames(wd, 'agegroup', adjust)
+#     }
+#   
+#     else if (is.null(weight.data) || weight.data=='cohort') {
+#       # get cohort std
+#       p1 <- paste0('sum(',pyrs,', na.rm=TRUE)')
+#       p1 <- parse(text = p1)
+#       wd <- data[,list( pyrs = eval(p1)), by = c(unique(adjust))]
+#       wd[, reference := colsum1(.SD), .SDcols = 'pyrs']
+#       wd[,c('pyrs') := NULL]
+#     }
+# 
+#     data <- merge(x  = data, y  = wd[, c('reference', adjust) , with=FALSE],
+#                   by = adjust, all.x = TRUE)
+#   }
+#   else {
+#     if (!is.null(print)) {
+#       data <- data[, list(obs = sum(get(obs), na.rm=TRUE), pyrs = sum(get(pyrs), na.rm=TRUE)), by = c(print) ]
+#       setnames(data, c('obs','pyrs'), c(obs, pyrs))
+#     }
+#   }
+#   return(data[])
+# }
+# 
+# globalVariables(('reference'))
 
 rate_est <- function(data = data, 
                      obs = 'obs', 
@@ -303,7 +293,7 @@ rate_est <- function(data = data,
   ## This one estimates the rates and calculates CI's and SE's.
   
   data <- data.table(data)
-  if( is.null(weights) |  !weights %in% colnames(data)) {
+  if ( is.null(weights) |  !weights %in% colnames(data)) {
     weights <- NULL
   }
   
