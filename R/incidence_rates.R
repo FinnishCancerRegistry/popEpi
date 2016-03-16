@@ -84,7 +84,7 @@ rate <- function( data,
   if (!length(inc.obs)) {
     stop("No observations given.")
   }
-  obsNames <- names(inc.obs)
+  obsNames <- copy(names(inc.obs))
   tmpObsNames <- makeTempVarName(data = data, pre = "obs")
   setnames(inc.obs, obsNames, tmpObsNames)
   
@@ -93,7 +93,7 @@ rate <- function( data,
   if (!length(inc.pyr)) {
     stop("No pyrs given.")
   }
-  pyrNames <- names(inc.pyr)
+  pyrNames <- copy(names(inc.pyr))
   tmpPyrNames <- makeTempVarName(data = data, pre = "pyr")
   setnames(inc.pyr, pyrNames, tmpPyrNames)
   
@@ -101,7 +101,7 @@ rate <- function( data,
   inc.pri <- evalPopArg(data = data, arg = print, enclos = PF)
   prNames <- tmpPrNames <- NULL
   if (length(inc.pri)) {
-    prNames <- names(inc.pri)
+    prNames <- copy(names(inc.pri))
     tmpPrNames <- makeTempVarName(data = data, 
                                   pre = paste0("print", seq_along(prNames)))
     setnames(inc.pri, prNames, tmpPrNames)
@@ -142,7 +142,7 @@ rate <- function( data,
                         print = tmpPrNames, 
                         adjust = tmpAdNames, 
                         weights = weights, 
-                        internal.weights.values = "pyrs")
+                        internal.weights.values = tmpPyrNames)
   
   ## estimate standardized rates -----------------------------------------------
   data <- rate_est(data = data,
@@ -172,7 +172,7 @@ stdr.weights <- function(wp = 'world00_1') {
   ## This one returns the standard population
   ## output: data.table with colnames: agegroup, reference
   ## standard populations are from datasets: stdpop18 and stdpop101
-  allow.pop <- c("world_1966_18f5", 
+  allow.pop <- c("world_1966_18of5", 
                  "europe_1976_18of5", 
                  "nordic_2000_18of5", 
                  "world_2000_18of5", 
@@ -291,6 +291,11 @@ rate_est <- function(data = data,
                      weights = NULL
 ) {
   ## This one estimates the rates and calculates CI's and SE's.
+  
+  badVars <- paste0("Internal error: missing following variable names in ",
+                    "working data: %%VARS%%. Complain to the pkg maintainer ",
+                    "if you see this.")
+  all_names_present(data, c(obs, pyrs, print), msg = badVars)
   
   data <- data.table(data)
   if ( is.null(weights) |  !weights %in% colnames(data)) {
