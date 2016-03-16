@@ -173,6 +173,10 @@ makeWeightsDT <- function(data, values = NULL,
     
   }
   
+  if (length(weights) && length(adjust)) {
+    checkWeights(weights, adjust = adjust)
+  }
+  
   # variables to print by ----------------------------------------------------
   prVars <- tmpDum
   if (length(print) > 0) {
@@ -348,6 +352,24 @@ makeWeightsDT <- function(data, values = NULL,
   
   if (!is.null(weights)) {
     
+    if (is.list(weights) && !is.data.frame(weights)) {
+      ## in case one of the elements is a standardization scheme string,
+      ## such as "world_x_y". 
+      whChar <- which(unlist(lapply(weights, is.character)))
+      if (sum(whChar)) {
+        
+        weights[whChar] <- lapply(weights[whChar], function(string) {
+          ## expected to return data.frame with 1) age groups 2) weights
+          ## as columns.
+          stdr.weights(string)[[2]]
+        })
+        
+      }
+      
+      ## now list only contains numeric weights i hope.
+      
+    }
+    
     ## NOTE: adjust used here to contain levels of adjust arguments only
     adjust <- list()
     if (length(adVars) > 0L) {
@@ -369,48 +391,26 @@ makeWeightsDT <- function(data, values = NULL,
           x[[iwVar]]
         })
         
+        setcolsnull(data, iwVar)
+        setkeyv(data, c(prVars, adVars, boVars))
+      } else {
+        ## expected to return data.frame with 1) age groups 2) weights
+        ## as columns.
+        weights <- stdr.weights(weights)
+        weights <- weights[[2]]
+        
       }
-      setcolsnull(data, iwVar)
-      setkeyv(data, c(prVars, adVars, boVars))
     } 
     
     if (!is.data.frame(weights) && is.vector(weights)) {
       ## note: lists are vectors
       if (!is.list(weights)) {
         weights <- list(weights) ## was a vector of values
-        if (length(adjust) != 1) {
-          stop("Argument 'weights' is a vector of weights, but there are more ",
-               "than one variables to adjust by; make sure 'adjust' is a ", 
-               "character vector of length one naming an adjusting variable ", 
-               "in data, an expression, or a list of ", 
-               "expressions of length one.")
-        }
         setattr(weights, "names", adVars[1])
       }
       
-      ## check adjust and weights arguments' congruence ------------------------
-      ## check numbers of variables
-      if (length(adjust) != length(weights)) 
-        stop("Mismatch in numbers of variables (NOT necessarily in the numbers of levels/values within the variables) in adjust (", length(adjust), " variables) and weights (", length(weights)," variables); make sure each given weights vector has a corresponding variable in adjust and vice versa.")
-      
-      ## check names of variables
       weVars <- names(weights)
-      
-      badAdVars <- setdiff(adVars, weVars)
-      badWeVars <- setdiff(weVars, adVars)
-      if (length(badAdVars) > 0)
-        stop("Mismatch in names of variables in adjust and weights; following adjust variables not mentioned in weights: ", paste0("'", badAdVars, "'", collapse = ", "))
-      if (length(badWeVars) > 0)
-        stop("Mismatch in names of variables in adjust and weights; following weights variables not mentioned in adjust: ", paste0("'", badWeVars, "'", collapse = ", "))
-      
       weights <- weights[names(adjust)]
-      
-      ## check variable levels
-      weLen <- sapply(weights, length)
-      adLen <- sapply(adjust, length)
-      badLen <- names(adjust)[weLen != adLen]
-      if (length(badLen) > 0) 
-        stop("Mismatch in numbers of levels/unique values in adjusting variables and lengths of corresponding weights vectors. Names of mismatching variables: ", paste0("'", badLen, "'", collapse = ", "))
       
       adjust <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), adjust)
       weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
@@ -453,3 +453,134 @@ makeWeightsDT <- function(data, values = NULL,
   return(data[])
   
 }
+
+checkCharWeights <- function(w) {
+  if (is.character(w)) {
+    if (length(w) != 1L) {
+      stop("weights supplied as a character string must be of length one.")
+    }
+    if (!pmatch(w, c("internal", "cohort"), nomatch = 0L)) {
+      stdr.weights(w)
+    }
+  }
+}
+
+checkWeights <- function(weights, adjust) {
+  ## INTENTION: given a list/DF/vector/string specifying weights
+  ## and a data.frame/list of the adjusting variables,
+  ## checks they are congruent and complains if not.
+  
+  if (!any(class(weights) %in% c("list","data.frame","numeric","character"))) {
+    stop("weights must be either a list, a data.frame, a numeric variable, ",
+         "or a character string specifing the weighting scheme to use. ",
+         "See ?direct_standardization for more information.") 
+  }
+  
+  if (is.list(weights) && length(adjust) != length(weights)) {
+    stop("Mismatch in numbers of variables (NOT necessarily in the numbers of ",
+         "levels/values within the variables) in adjust (", length(adjust), 
+         " variables) and weights (", length(weights)," variables); ",
+         "make sure each given weights vector has a corresponding ",
+         "variable in adjust and vice versa. ",
+         "See ?direct_standardization for more information.")
+  }
+  
+  if (is.list(weights)) {
+    isChar <- unlist(lapply(weights, is.character))
+    if (any(isChar)) {
+      lapply(weights[isChar], checkCharWeights)
+      weights[isChar] <- lapply(weights[isChar], function(string) {
+        if (pmatch(string, c("cohort", "internal"), nomatch = 0L)) {
+          stop("List of weights had 'cohort' or 'internal' as at least one ",
+               "element, which is currently not supported. ",
+               "See ?direct_standardization for more information.")
+        }
+        stdr.weights(string)[[2]]
+        })
+    }
+  }
+
+  if (is.character(weights)) {
+    if (length(adjust) != 1L) {
+      stop("Supplied character string '", weights, "' as weights argument, ",
+           "but there are more or less than one adjusting variable. ",
+           "See ?direct_standardization for more information.")
+    }
+    checkCharWeights(weights)
+    if (pmatch(weights, c("internal", "cohort"), nomatch = 0L)) {
+      ## done checking since internal weights are pretty fool-proof.
+      return(invisible())
+    }
+    ## if not, pass along as vector of weights.
+    weights <- stdr.weights(weights)[[2]]
+  }
+  
+  if (is.numeric(weights)) { 
+    if (length(adjust) != 1L) {
+      stop("Weights is a numeric vector of weights, ",
+           "but there are more or less than one adjusting variable. ",
+           "See ?direct_standardization for more information.")
+    }
+    weights <- list(weights)
+    names(weights) <- names(adjust)
+  }
+  
+  ## by now either a list or a data.frame of weights...
+  adVars <- names(adjust)
+  weVars <- names(weights)
+  if (is.data.frame(weights)) {
+    if (!"weights" %in% weVars) {
+      stop("data.frame of weights did not have column named 'weights'. ",
+           "see ?direct_standardization for more information.")
+    }
+    weVars <- setdiff(weVars, "weights")
+  }
+  
+  badAdVars <- setdiff(adVars, weVars)
+  badWeVars <- setdiff(weVars, adVars)
+  if (length(badAdVars) > 0) {
+    stop("Mismatch in names of variables in adjust and weights; ",
+         "following adjust variables not mentioned in weights: ", 
+         paste0("'", badAdVars, "'", collapse = ", "))
+  }
+  
+  if (length(badWeVars) > 0) {
+    stop("Mismatch in names of variables in adjust and weights; ",
+         "following weights variables not mentioned in adjust: ",
+         paste0("'", badWeVars, "'", collapse = ", "))
+  }
+  
+  weights <- as.list(weights)
+  weights <- weights[adVars]
+  
+  ## check variable levels
+  adjust <- lapply(adjust, function(elem) {
+    if (is.factor(elem)) {
+      levels(elem)
+    } else {
+      sort(unique(elem))
+    }
+  })
+  
+  weLen <- sapply(weights, length)
+  adLen <- sapply(adjust, length)
+  badLen <- names(adjust)[weLen != adLen]
+  if (length(badLen) > 0) {
+    stop("Mismatch in numbers of levels/unique values in adjusting variables ",
+         "and lengths of corresponding weights vectors. ",
+         "Names of mismatching variables: ", 
+         paste0("'", badLen, "'", collapse = ", "), ". There were ",
+         weLen, " weights and ", adLen, " adjusting variable levels.")
+  }
+  
+  
+  invisible()
+}
+
+
+
+
+
+
+
+
