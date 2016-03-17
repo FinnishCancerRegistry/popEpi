@@ -497,11 +497,6 @@ checkWeights <- function(weights, adjust) {
   }
 
   if (is.character(weights)) {
-    if (length(adjust) != 1L) {
-      stop("Supplied character string '", weights, "' as weights argument, ",
-           "but there are more or less than one adjusting variable. ",
-           "See ?direct_standardization for more information.")
-    }
     checkCharWeights(weights)
     if (pmatch(weights, c("internal", "cohort"), nomatch = 0L)) {
       ## done checking since internal weights are pretty fool-proof.
