@@ -471,7 +471,8 @@ checkWeights <- function(weights, adjust) {
          "See ?direct_standardization for more information.") 
   }
   
-  if (is.list(weights) && length(adjust) != length(weights)) {
+  if (is.list(weights) && !is.data.frame(weights) && 
+      length(adjust) != length(weights)) {
     stop("Mismatch in numbers of variables (NOT necessarily in the numbers of ",
          "levels/values within the variables) in adjust (", length(adjust), 
          " variables) and weights (", length(weights)," variables); ",
@@ -545,28 +546,51 @@ checkWeights <- function(weights, adjust) {
          paste0("'", badWeVars, "'", collapse = ", "))
   }
   
-  weights <- as.list(weights)
-  weights <- weights[adVars]
-  
-  ## check variable levels
-  adjust <- lapply(adjust, function(elem) {
-    if (is.factor(elem)) {
-      levels(elem)
-    } else {
-      sort(unique(elem))
+  if (is.data.frame(weights)) {
+    
+    levDiff <- lapply(names(adjust), function(var) {
+      !all(adjust[[var]] %in% weights[[var]])
+    })
+    levDiff <- unlist(levDiff)
+    if (any(levDiff)) {
+      ## take only first conflicting variable for brevity of error message-
+      badVar <- names(adjust)[1]
+      badLevs <- setdiff(adjust[[badVar]], weights[[badVar]])
+      badLevs <- paste0("'", badLevs, "'", collapse = ", ")
+      stop("Missing levels in weights data.frame in variable '", badVar, "': ",
+           badLevs, ". These levels were found to exist in the corresponding ",
+           "adjusting variable. ",
+           "Usual suspects: adjusting variable is a factor and you ",
+           "only supplied weights for unique values in your data ",
+           "as opposed to the levels of the factor, which may contain levels ",
+           "that no row has. Try table(yourdata$yourvariable).")
     }
-  })
-  
-  weLen <- sapply(weights, length)
-  adLen <- sapply(adjust, length)
-  badLen <- names(adjust)[weLen != adLen]
-  if (length(badLen) > 0) {
-    stop("Mismatch in numbers of levels/unique values in adjusting variables ",
-         "and lengths of corresponding weights vectors. ",
-         "Names of mismatching variables: ", 
-         paste0("'", badLen, "'", collapse = ", "), ". There were ",
-         weLen, " weights and ", adLen, " adjusting variable levels.")
+    
+  } else {
+    weights <- as.list(weights)
+    weights <- weights[adVars]
+    
+    ## check variable levels
+    adjust <- lapply(adjust, function(elem) {
+      if (is.factor(elem)) {
+        levels(elem)
+      } else {
+        sort(unique(elem))
+      }
+    })
+    
+    weLen <- sapply(weights, length)
+    adLen <- sapply(adjust, length)
+    badLen <- names(adjust)[weLen != adLen]
+    if (length(badLen) > 0) {
+      stop("Mismatch in numbers of levels/unique values in adjusting variables ",
+           "and lengths of corresponding weights vectors. ",
+           "Names of mismatching variables: ", 
+           paste0("'", badLen, "'", collapse = ", "), ". There were ",
+           weLen, " weights and ", adLen, " adjusting variable levels.")
+    }
   }
+  
   
   
   invisible()
