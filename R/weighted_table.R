@@ -115,7 +115,6 @@ makeWeightsDT <- function(data, values = NULL,
                           enclos = NULL, NA.text = NULL) {
   
   # environmentalism -----------------------------------------------------------
-  done <- FALSE
   TF <- environment()
   PF <- parent.frame(1L)
   if (missing(enclos) || is.null(enclos)) {
@@ -131,15 +130,6 @@ makeWeightsDT <- function(data, values = NULL,
   }
   
   THIS_CALL <- match.call()
-  
-  on.exit({
-    if (!done) {
-      message("Failed to evaluate something in makeWeightsDT (see error ",
-              "message above). This is an internal error and the package ",
-              "maintainer should be contacted. The failed call is printed below.")
-      print(THIS_CALL)
-    }
-  })
   
   ## dataism -------------------------------------------------------------------
   if (!is.data.frame(data)) stop("data must be a data.frame")
@@ -454,9 +444,6 @@ makeWeightsDT <- function(data, values = NULL,
   setattr(data, "makeWeightsDT", list(prVars = prVars, adVars = adVars, 
                                       boVars = boVars, vaVars = vaVars, 
                                       NAs = NAs))
-  
-  done <- TRUE
-  
   return(data[])
   
 }
