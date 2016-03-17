@@ -1,9 +1,9 @@
 context("SIR")
 
 
-test_that("SIR w/ coh=ref=sire", {
+test_that("SIR w/ coh=ref=popEpi::sire", {
   ## don't skip on CRAN
-  sire2 <- copy(sire)
+  sire2 <- copy(popEpi::sire)
   sire2[, agegroup := cut(dg_age, breaks = c(0:17*5, Inf))]
   levels(sire2$agegroup) <- 1:18
   sire2[, ex_y := year(ex_date)]
@@ -13,7 +13,7 @@ test_that("SIR w/ coh=ref=sire", {
   setDT(ltre)
   ltre[is.na(pyrs), pyrs := 0]
   
-  sibr2 <- copy(sibr)
+  sibr2 <- copy(popEpi::sibr)
   sibr2[, agegroup := cut(dg_age, breaks = c(0:17*5, Inf))]
   levels(sibr2$agegroup) <- 1:18
   sibr2[, ex_y := year(ex_date)]
@@ -29,7 +29,7 @@ test_that("SIR w/ coh=ref=sire", {
               ref.data=ltre, ref.obs="obs", ref.pyrs="pyrs", 
               adjust= c("agegroup","ex_y"))
   )
-  ## SIR w/ coh=ref=sire
+  ## SIR w/ coh=ref=popEpi::sire
   ## don't skip on CRAN
   expect_equal(sl$total$sir, 1)
   expect_equal(sl$total$pyrs, 13783.81, tolerance=0.01)
@@ -41,7 +41,7 @@ test_that("SIR w/ coh=ref=sire", {
               ref.data=ltbr, ref.obs="obs", ref.pyrs="pyrs",
               adjust= c("agegroup","ex_y"))
   )
-  ## SIR w/ coh=ref=sire"
+  ## SIR w/ coh=ref=popEpi::sire"
   expect_equal(sl$total$sir, 1.39, tolerance=0.01)
   expect_equal(sl$total$pyrs, 13783.81, tolerance=0.01)
   expect_equal(sl$total$expected, 3305.04, tolerance=0.01)
@@ -53,11 +53,11 @@ test_that("SIR w/ coh=ref=sire", {
 # SIR mstate, subset + lexpand aggre ---------------------------------------
 
 # same model
-c <- lexpand( sire[dg_date<ex_date,], status = status, birth = bi_date, exit = ex_date, entry = dg_date,
+c <- lexpand( popEpi::sire[dg_date<ex_date,], status = status, birth = bi_date, exit = ex_date, entry = dg_date,
               breaks = list(per = 1990:2013, age = 0:100, fot = c(0,10,20,Inf)), 
               aggre = list(fot, agegroup = age, year = per, sex) )
 # different models
-c2 <- lexpand( sire[dg_date<ex_date,], status = status, birth = bi_date, exit = ex_date, entry = dg_date,
+c2 <- lexpand( popEpi::sire[dg_date<ex_date,], status = status, birth = bi_date, exit = ex_date, entry = dg_date,
                breaks = list(per = 1990:2010, age = 0:100, fot = c(0,10,20,Inf)), 
                aggre = list(fot, agegroup = age, year = per, sex) )
 
