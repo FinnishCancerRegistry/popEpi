@@ -115,7 +115,11 @@ and assign the weights as a column named \code{"weights"}. E.g.
 
 \code{FUN(weights = wdf)}
 
-And you're done!
+If you want to use the counts of subjects in strata as the weights,
+one way to do this is by e.g.
+
+\code{wdf <- as.data.frame(x$V1, x$V2, x$V3)}
+\code{names(wdf) <- c("V1", "V2", "V3", "weights")}
 }
 \author{
 Joonas Miettinen
