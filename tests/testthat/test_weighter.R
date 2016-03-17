@@ -37,21 +37,6 @@ test_that("makeWeightsDT works with various weights & adjust spesifications", {
   expect_equal(DT[, sum(pyrs), keyby = agegr], dt[, sum(pyrs), keyby = agegr], check.attributes = FALSE)
   expect_equal(DT[, sum(pyrs), keyby = gender], dt[, sum(pyrs), keyby = gender], check.attributes = FALSE)
   
-  ## weights and adjust only the same length thanks to custom.levels
-  ## intention: test that custom.levels works as intended (repeats empty levels),
-  ## and that weights as a list works
-  wli <- list(agegr = ICSS[, list(agegr = sum(ICSS3)), 
-                           by = list(cut(age, breaks = c(0,seq(15,85,5)), right = FALSE)) ]$agegr)
-  
-  DT <- makeWeightsDT(dt, values = expr, weights = wli, 
-                      print = "gender", adjust = "agegr", 
-                      custom.levels = list(agegr = c(0,seq(15,85,5))))
-  
-  expect_equal(nrow(DT), 32L)
-  expect_equal(sort(intersect(wli$agegr/sum(wli$agegr), unique(DT$weights))),
-               sort(unique(DT$weights)))
-  expect_equal(DT[agegr>=30L, sum(pyrs), keyby = agegr], dt[, sum(pyrs), keyby = agegr], check.attributes = FALSE)
-  expect_equal(DT[, sum(pyrs), keyby = gender], dt[, sum(pyrs), keyby = gender], check.attributes = FALSE)
   
 })
 
@@ -72,16 +57,11 @@ test_that("internal weights are computed correctly", {
   
   vals <- list(c("pyrs", "from0to1"))
   
-  err1 <- paste0("Requested computing internal weights, but no values to ",
-                 "compute internals weights with were supplied ", 
-                 "\\(internal error: If you see this, complain ", 
-                 "to the package maintainer\\).")
-  
   expect_error({
     DT <- makeWeightsDT(dt, values = vals, 
                         weights = "internal", 
                         print = NULL, adjust = c("sex", "agegr"))
-  }, regexp = err1)
+  })
   
   ## one adjust var
   DT1 <- makeWeightsDT(dt, values = vals, 
