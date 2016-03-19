@@ -16,8 +16,7 @@ for more info.}
 \item{data}{a \code{Lexis} data set; see \code{\link[Epi]{Lexis}}.}
 
 \item{adjust}{variables to adjust estimates by, e.g. \code{adjust = "agegr"}.
-Supplied in the same way as to \code{\link{survtab}}; see that help
-for more info.}
+\link[=flexible_argument]{Flexible input}.}
 
 \item{weights}{weights to use to adjust mean survival times. See the
 \link[=direct_standardization]{dedicated help page} for more details on 

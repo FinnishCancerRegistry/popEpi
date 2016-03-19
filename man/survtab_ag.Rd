@@ -35,7 +35,7 @@ For \code{survtab}, a \code{Lexis} object.}
 
 \item{adjust}{can be used as an alternative to passing variables to 
 argument \code{formula} within a call to \code{adjust()}; e.g.
-\code{adjust = "agegr"} --- see Details.}
+\code{adjust = "agegr"}. \link[=flexible_argument]{Flexible input}.}
 
 \item{weights}{typically a list of weights or a \code{character} string
 specifying an age group standardization scheme; see
@@ -49,7 +49,8 @@ data has intervals with the breaks \code{seq(0, 10, 1/12)}.}
 
 \item{n}{variable containing counts of subjects at-risk at the start of a time 
 interval; e.g. \code{n = "at.risk"}. 
-Required when \code{surv.method = "lifetable"}.}
+Required when \code{surv.method = "lifetable"}.
+\link[=flexible_argument]{Flexible input}.}
 
 \item{d}{variable(s) containing counts of subjects experiencing an event. With
 only one type of event, e.g. \code{d = "deaths"}. With multiple types of 
@@ -57,60 +58,61 @@ events (for CIF or cause-specific survival estimation), supply e.g.
 \code{d = c("canD", "othD")}. If the survival time function to be estimated
 does not use multiple types of events, supplying more than one variable
 to \code{d} simply causes the variables to be added together. 
-Always required.}
+Always required. \link[=flexible_argument]{Flexible input}.}
 
 \item{n.cens}{variable containing counts of subjects censored during a 
 survival time interval; E.g. \code{n.cens = "alive"}.
-Required when \code{surv.method = "lifetable"}.}
+Required when \code{surv.method = "lifetable"}. 
+\link[=flexible_argument]{Flexible input}.}
 
 \item{pyrs}{variable containing total subject-time accumulated within a survival
 time interval; E.g. \code{pyrs = "pyrs"}. 
-Required when \code{surv.method = "hazard"}.}
+Required when \code{surv.method = "hazard"}. Flexible input.}
 
 \item{d.exp}{variable denoting total "expected numbers of events" 
 (typically computed \code{pyrs * pop.haz}, where 
 \code{pop.haz} is the expected hazard level) 
 accumulated within a survival time interval; E.g. \code{pyrs = "pyrs"}.
 Required when computing EdererII relative survivals or 
-CIFs based on excess counts of events.}
+CIFs based on excess counts of events. Flexible input.}
 
 \item{n.pp}{variable containing total Pohar-Perme weighted counts of
 subjects at risk in an interval,
 supplied as argument \code{n} is supplied. 
 Computed originally on the subject
 level as analogous to \code{pp * as.integer(status == "at-risk")}.
-Required when \code{relsurv.method = "pp"}.}
+Required when \code{relsurv.method = "pp"}. Flexible input.}
 
 \item{d.pp}{variable(s) containing total Pohar-Perme weighted counts of events,
 supplied as argument \code{d} is supplied. Computed originally on the subject
 level as analogous to \code{pp * as.integer(status == some_event)}.
-Required when \code{relsurv.method = "pp"}.}
+Required when \code{relsurv.method = "pp"}. Flexible input.}
 
 \item{d.pp.2}{variable(s) containing total Pohar-Perme 
 "double-weighted" counts of events,
 supplied as argument \code{d} is supplied. Computed originally on the subject
 level as analogous to \code{pp * pp * as.integer(status == some_event)}.
-Required when \code{relsurv.method = "pp"}.}
+Required when \code{relsurv.method = "pp"}. Flexible input.}
 
 \item{n.cens.pp}{variable containing total Pohar-Perme weighted counts 
 censorings,
 supplied as argument \code{n.cens} is supplied. 
 Computed originally on the subject
 level as analogous to \code{pp * as.integer(status == "censored")}.
-Required when \code{relsurv.method = "pp"}.}
+Required when \code{relsurv.method = "pp"}. Flexible input.}
 
 \item{pyrs.pp}{variable containing total Pohar-Perme weighted subject-times,
 supplied as argument \code{pyrs} is supplied. 
 Computed originally on the subject
 level as analogous to \code{pp * pyrs}.
-Required when \code{relsurv.method = "pp"}.}
+Required when \code{relsurv.method = "pp"}. Flexible input.}
 
 \item{d.exp.pp}{variable containing total Pohar-Perme weighted counts 
 of excess events,
 supplied as argument \code{pyrs} is supplied. 
 Computed originally on the subject
 level as analogous to \code{pp * d.exp}.
-Required when \code{relsurv.method = "pp"}.}
+Required when \code{relsurv.method = "pp"}. Flexible input.}
 
 \item{surv.type}{one of \code{'surv.obs'},
 \code{'surv.cause'}, \code{'surv.rel'}, 

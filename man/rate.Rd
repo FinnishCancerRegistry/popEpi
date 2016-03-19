@@ -11,14 +11,21 @@ rate(data, obs = NULL, pyrs = NULL, print = NULL, adjust = NULL,
 \item{data}{aggregated data (see e.g. \code{\link{lexpand}}, 
 \code{\link{aggre}} if you have subject-level data)}
 
-\item{obs}{observations variable name in data.}
+\item{obs}{observations variable name in data.
+\link[=flexible_argument]{Flexible input}, typically e.g.
+\code{obs = obs}.}
 
-\item{pyrs}{person-years variable name in data.}
+\item{pyrs}{person-years variable name in data.
+\link[=flexible_argument]{Flexible input}, typically e.g.
+\code{pyrs = pyrs}.}
 
-\item{print}{variable name to stratify the rates. Vector or a list. Functions
-can be in list, \code{list( year.cat := cut(year, c(1990,2000,2010)) )}}
+\item{print}{variable name to stratify the rates.
+\link[=flexible_argument]{Flexible input}, typically e.g.
+\code{print = sex} or \code{print = list(sex, area)}.}
 
-\item{adjust}{variable for adjusting the rates.}
+\item{adjust}{variable for adjusting the rates.
+\link[=flexible_argument]{Flexible input}, typically e.g.
+\code{adjust = agegroup}.}
 
 \item{weights}{typically a list of weights or a \code{character} string
 specifying an age group standardization scheme; see

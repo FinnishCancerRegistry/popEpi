@@ -7,10 +7,17 @@
 #' @param data aggregated data (see e.g. \code{\link{lexpand}}, 
 #' \code{\link{aggre}} if you have subject-level data)
 #' @param pyrs person-years variable name in data.
+#' \link[=flexible_argument]{Flexible input}, typically e.g.
+#' \code{pyrs = pyrs}.
 #' @param obs observations variable name in data.
+#' \link[=flexible_argument]{Flexible input}, typically e.g.
+#' \code{obs = obs}.
 #' @param adjust variable for adjusting the rates.
-#' @param print variable name to stratify the rates. Vector or a list. Functions
-#' can be in list, \code{list( year.cat := cut(year, c(1990,2000,2010)) )}
+#' \link[=flexible_argument]{Flexible input}, typically e.g.
+#' \code{adjust = agegroup}.
+#' @param print variable name to stratify the rates.
+#' \link[=flexible_argument]{Flexible input}, typically e.g.
+#' \code{print = sex} or \code{print = list(sex, area)}.
 #' @param weights typically a list of weights or a \code{character} string
 #' specifying an age group standardization scheme; see
 #' the \link[=direct_standardization]{dedicated help page} 
