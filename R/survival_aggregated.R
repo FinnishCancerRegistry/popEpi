@@ -573,13 +573,21 @@ survtab_ag <- function(formula = NULL,
   ## addition: internal weights use n at beginning of first interval
   
   if (is.character(weights)) {
-    weights <- match.arg(weights, "internal")
+    checkWeights(weights)
     if (!"n" %in% valVars) {
-      stop("Requested internal weights to be computed and used to standardize ", 
-           "estimates, but argument 'n' not supplied. This is currently ",
-           "required for computing internal weights (the values of 'n' ", 
-           "in the first interval will be used for this). Please supply 'n' ",
-           "or supply hand-made weights (preferred for your clarity).")
+      n <- substitute(n)
+      mc$n <- evalPopArg(n, data = data, enclos = PF)
+      
+      valVars <- c(valVars, "n")
+      
+      if (is.null(mc$n)) {
+        
+        stop("Requested internal weights to be computed and used to standardize ", 
+             "estimates, but argument 'n' not supplied. This is currently ",
+             "required for computing internal weights (the values of 'n' ", 
+             "in the first interval will be used for this). Please supply 'n' ",
+             "or supply hand-made weights (preferred for your clarity).")
+      }
     } 
     
     data[, c("n") := mc$n]
