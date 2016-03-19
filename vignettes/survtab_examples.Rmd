@@ -9,9 +9,9 @@ output:
     fig_width: 6
     fig_height: 6
 vignette: >
-  % \VignetteEngine{knitr::rmarkdown}
-  % \VignetteIndexEntry{survtab examples}
-  % \usepackage[utf8]{inputenc}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{survtab examples}
+  %\usepackage[utf8]{inputenc}
 ---
 
 # Overview

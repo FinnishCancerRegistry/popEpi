@@ -14,7 +14,7 @@ Encoding: UTF-8
 License: GPL-3
 LazyData: true
 ByteCompile: true
-VignetteBuilder: rmarkdown
+VignetteBuilder: knitr
 URL: https://github.com/WetRobot/popEpi
 BugReports: https://github.com/WetRobot/popEpi/issues
 RoxygenNote: 5.0.1

@@ -9,24 +9,24 @@ output:
     fig_width: 6
     fig_height: 6
 vignette: >
-  % \VignetteEngine{knitr::rmarkdown}
-  % \VignetteIndexEntry{survtab examples}
-  % \usepackage[utf8]{inputenc}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{survtab examples}
+  %\usepackage[utf8]{inputenc}
 ---
 
 # Overview
 
-This vignette aims to clarify the usage of the `survtab_ag` and `survtab_lex` functions included in this package. `survtab_ag` estimates various survival functions and cumulative incidence functions (CIFs) non-parametrically using aggregated data, and `survtab_lex` is a wrapper for `survtab_ag`, to which `Lexis` data is supplied. 
+This vignette aims to clarify the usage of the `survtab_ag` and `survtab` functions included in this package. `survtab_ag` estimates various survival functions and cumulative incidence functions (CIFs) non-parametrically using aggregated data, and `survtab` is a wrapper for `survtab_ag`, to which `Lexis` data is supplied. 
 
 Two methods (`surv.method`) are currently supported: The `"lifetable"` (actuarial) method only makes use of counts when estimating any of the supported survival time functions. The default method (`"hazard"`}) estimates appropriate hazards and transforms them into survival function or CIF estimates.
 
 For relative survival estimation we need also to enumerate the expected hazard levels for the subjects in the data. This is done by merging expected hazards to individuals' subintervals (which divide their survival time lines to a number of small intervals). For Pohar-Perme-weighted analyses one must additionally compute various weighted figures at the level of split subject data. 
 
-If one has subject-level data, the simplest way of computing survival function estimates with `popEpi` is by defining a `Lexis` object and using `survtab_lex`, which will do the rest. For pre-aggregated data one may use the `survtab_ag` function instead. One can also use the `lexpand` function to split, merge population hazards, and aggregate in a single function call and then use `survtab_ag` if that is convenient.
+If one has subject-level data, the simplest way of computing survival function estimates with `popEpi` is by defining a `Lexis` object and using `survtab`, which will do the rest. For pre-aggregated data one may use the `survtab_ag` function instead. One can also use the `lexpand` function to split, merge population hazards, and aggregate in a single function call and then use `survtab_ag` if that is convenient.
 
-# Using `survtab_lex`
+# Using `survtab`
 
-It is straightforward to estimate various survival time functions with `survtab_lex` once a `Lexis` object has been defined (see `?Lexis` in package `Epi` for details):
+It is straightforward to estimate various survival time functions with `survtab` once a `Lexis` object has been defined (see `?Lexis` in package `Epi` for details):
 
 ```{r}
 # library(popEpi)
@@ -48,7 +48,7 @@ set.seed(1L)
 x$sex <- rbinom(nrow(x), 1, 0.5)
 
 ## observed survival
-st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+st <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
                   surv.type = "surv.obs",
                   breaks = list(FUT = seq(0, 5, 1/12)))
 
@@ -65,19 +65,19 @@ Plotting by strata (men = blue, women = red):
 plot(st, col = c("blue", "red"))
 ```
 
-Note that the correct usage of the `formula` argument in `survtab_lex` specifies the time scale in the `Lexis` object over which survival is computed (here `"FUT"` for follow-up time) as the `time` argument in `Surv()`. This is used to identify the appropriate time scale in the data. Therefore we effectively (and exceptionally) pass the starting times to the `time` argument in `Surv()`, and `time2` is ignored entirely. The function will fail if `time` does not match exactly with a time scale in data.
+Note that the correct usage of the `formula` argument in `survtab` specifies the time scale in the `Lexis` object over which survival is computed (here `"FUT"` for follow-up time) as the `time` argument in `Surv()`. This is used to identify the appropriate time scale in the data. Therefore we effectively (and exceptionally) pass the starting times to the `time` argument in `Surv()`, and `time2` is ignored entirely. The function will fail if `time` does not match exactly with a time scale in data.
 
 One must also pass the status variable, which can be something other than the `lex.Xst` variable created by `Lexis()`, though usually ``lex.Xst` is what you want to use (especially if the data has already been split using e.g. `splitLexis` or `splitMulti`, which is allowed). It is recommended to use a factor status variable to pass to `Surv()`, though a numeric variable will work in simple cases (0 = alive, 1 = dead; also `FALSE`  = alive, `TRUE` = dead).
 
-The argument `breaks` must be a named list of breaks by which to split the `Lexis` data (see `?splitMulti`). It is mandatory to assign breaks at least to the survival time scale (`"FUT"` in our example) so that `survtab_lex` knows what intervals to use to estimate the requested survival time function(s). The breaks also determine the window used: It is therefore easy to compute so called period estimates by defining the roof and floor along the calendar time scale, e.g. 
+The argument `breaks` must be a named list of breaks by which to split the `Lexis` data (see `?splitMulti`). It is mandatory to assign breaks at least to the survival time scale (`"FUT"` in our example) so that `survtab` knows what intervals to use to estimate the requested survival time function(s). The breaks also determine the window used: It is therefore easy to compute so called period estimates by defining the roof and floor along the calendar time scale, e.g. 
 
 `breaks = list(FUT = seq(0, 5, 1/12), CAL = c(2000, 2005))`
 
-would cause `survtab_lex` to compute period estimates for 2000-2004 (breaks given here as fractional years, so 2005 is effectively 2004.99999...).
+would cause `survtab` to compute period estimates for 2000-2004 (breaks given here as fractional years, so 2005 is effectively 2004.99999...).
 
 ## Relative/net survival
 
-Relative/net survival estimation requires knowledge of the expected hazard levels for the individuals in the data. In `survtab_lex` this is accomplished by passing a long-formt `data.frame` of population hazards via the `pophaz` argument. E.g. the `popmort` dataset included in `popEpi` (Finnish overall mortality rates for men and women).
+Relative/net survival estimation requires knowledge of the expected hazard levels for the individuals in the data. In `survtab` this is accomplished by passing a long-formt `data.frame` of population hazards via the `pophaz` argument. E.g. the `popmort` dataset included in `popEpi` (Finnish overall mortality rates for men and women).
 
 ```{r popmort}
 data(popmort)
@@ -86,12 +86,12 @@ names(pm) <- c("sex", "CAL", "AGE", "haz")
 head(pm)
 ```
 
-The `data.frame` should contain a variable named `"haz"` indicating the population hazard at the level of one subject-year. Any other variables are considered to be variables, by which to merge population hazards to the (split) subject-level data within `survtab_lex`. These merging variables may correspond to the time scales in the used `Lexis` object. This allows for e.g. merging in different population hazards for the same subject as they get older.
+The `data.frame` should contain a variable named `"haz"` indicating the population hazard at the level of one subject-year. Any other variables are considered to be variables, by which to merge population hazards to the (split) subject-level data within `survtab`. These merging variables may correspond to the time scales in the used `Lexis` object. This allows for e.g. merging in different population hazards for the same subject as they get older.
 
-The following causes `survtab_lex` to estimate EdererII relative survival:
+The following causes `survtab` to estimate EdererII relative survival:
 
-```{r survtab_lex_e2}
-st.e2 <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+```{r survtab_e2}
+st.e2 <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
                      surv.type = "surv.rel", relsurv.method = "e2",
                      breaks = list(FUT = seq(0, 5, 1/12)),
                      pophaz = pm)
@@ -103,8 +103,8 @@ plot(st.e2, y = "r.e2", col = c("blue", "red"))
 
 Note that the curves diverge due to merging in the "wrong" population hazards for some individuals which we randomized earlier to be male though all the individuals in data are actually female. Pohar-Perme-weighted estimates can be computed by
 
-```{r survtab_lex_pp}
-st.pp <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+```{r survtab_pp}
+st.pp <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
                      surv.type = "surv.rel", relsurv.method = "pp",
                      breaks = list(FUT = seq(0, 5, 1/12)),
                      pophaz = pm)
@@ -119,9 +119,9 @@ lines(st.pp, y = "r.pp", col = c("blue", "red"), lty = 2)
 
 ## Adjusting estimates
 
-`survtab_lex` also allows for adjusting the survival curves by categorical variables --- typically by age groups. The following demonstrates how:
+`survtab` also allows for adjusting the survival curves by categorical variables --- typically by age groups. The following demonstrates how:
 
-```{r survtab_lex_adjust}
+```{r survtab_adjust}
 ## an age group variable
 x$agegr <- cut(x$dg_age, c(0, 60, 70, 80, Inf), right = FALSE)
 
@@ -132,8 +132,8 @@ w
 w <- list(agegr = as.numeric(w))
 ```
 
-```{r survtab_lex_adjust_2}
-st.as <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex + adjust(agegr), 
+```{r survtab_adjust_2}
+st.as <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex + adjust(agegr), 
                      data = x, weights = w,
                      surv.type = "surv.rel", relsurv.method = "e2",
                      breaks = list(FUT = seq(0, 5, 1/12)),
@@ -157,10 +157,10 @@ wdf
 
 The weights do not have to sum to one when supplied as they are internally forced to do so within each stratum. In the `data.frame` of weights, the column of actual weights to use must be named "weights". When there are more than one variable to adjust by, and a list of weights has been supplied, the variable-specific weights are first multiplied together (cumulatively) and then scaled to sum to one.
 
-This adjusting can be done to any survival time function that `survtab_lex` (and `survtab_ag`) estimates. One can also supply adjusting variables via the `adjust` argument if convenient:
+This adjusting can be done to any survival time function that `survtab` (and `survtab_ag`) estimates. One can also supply adjusting variables via the `adjust` argument if convenient:
 
-```{r survtab_lex_adjust_3}
-st.as <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, 
+```{r survtab_adjust_3}
+st.as <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, 
                      adjust = "agegr",
                      data = x, weights = w,
                      surv.type = "surv.rel", relsurv.method = "e2",
@@ -178,13 +178,13 @@ for exactly the same results. When adjusting by multiple variables, one must sup
 
 One can also estimate cause-specific survival functions, cumulative incidence functions (CIFs, a.k.a. crude risk a.k.a. absolute risk functions), and CIFs based on the excess numbers of events. Cause-specific survival is close to net survival as they are philosophically highly similar concepts: 
 
-```{r survtab_lex_cause}
-st.ca <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ 1, 
+```{r survtab_cause}
+st.ca <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
                      data = x, 
                      surv.type = "surv.cause",
                      breaks = list(FUT = seq(0, 5, 1/12)))
 
-st.pp <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ 1, data = x, 
+st.pp <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, data = x, 
                      surv.type = "surv.rel", relsurv.method = "pp",
                      breaks = list(FUT = seq(0, 5, 1/12)),
                      pophaz = pm)
@@ -195,8 +195,8 @@ lines(st.pp, y = "r.pp", col = "red")
 
 Absolute risk:
 
-```{r survtab_lex_cif}
-st.cif <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ 1, 
+```{r survtab_cif}
+st.cif <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
                       data = x, 
                       surv.type = "cif.obs",
                       breaks = list(FUT = seq(0, 5, 1/12)))
@@ -206,8 +206,8 @@ lines(st.cif, y = "CIF_othD", conf.int = FALSE, col = "red")
 
 The "relative CIF" attempts to be close to the true CIF without using knowledge about the types of events, e.g. causes of death:
 
-```{r survtab_lex_relcif}
-st.cir <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ 1, 
+```{r survtab_relcif}
+st.cir <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
                       data = x, 
                       surv.type = "cif.rel",
                       breaks = list(FUT = seq(0, 5, 1/12)),
@@ -219,7 +219,7 @@ lines(st.cir, y = "CIF.rel", conf.int = FALSE, col = "red")
 
 # Using `survtab_ag`
 
-Arguments concerning the types and methods of estimating of survival time functions work the same in `survtab_ag` as in `survtab_lex` (the latter uses the former). However, with aggregated data one must explicitly supply the various count and person-time variables. Also, usage of the `formula` argument is different.
+Arguments concerning the types and methods of estimating of survival time functions work the same in `survtab_ag` as in `survtab` (the latter uses the former). However, with aggregated data one must explicitly supply the various count and person-time variables. Also, usage of the `formula` argument is different.
 
 For demonstration purposes we form an aggregated data set using `lexpand`; see `?lexpand` for more information on that function.
 
@@ -265,7 +265,7 @@ st.ca <- survtab_ag(fot ~ sex, data = ag, surv.type = "surv.cause",
 plot(st.ca, y = "surv.obs.canD", col = c("blue", "red"))
 ```
 
-One has to supply the most variables when computing Pohar-Perme estimates (though it is probably rare to have third-source aggregated data with Pohar-Perme weighted figures, it is implemented here to be used as a workhorse for `survtab_lex`). For this we must aggregate again to get the Pohar-Perme weighted counts and subject-times:
+One has to supply the most variables when computing Pohar-Perme estimates (though it is probably rare to have third-source aggregated data with Pohar-Perme weighted figures, it is implemented here to be used as a workhorse for `survtab`). For this we must aggregate again to get the Pohar-Perme weighted counts and subject-times:
 
 ```{r}
 ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",

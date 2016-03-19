@@ -18,7 +18,7 @@ set.seed(1L)
 x$sex <- rbinom(nrow(x), 1, 0.5)
 
 ## observed survival
-st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+st <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
                   surv.type = "surv.obs",
                   breaks = list(FUT = seq(0, 5, 1/12)))
 
@@ -37,8 +37,8 @@ pm <- data.frame(popmort)
 names(pm) <- c("sex", "CAL", "AGE", "haz")
 head(pm)
 
-## ----survtab_lex_e2------------------------------------------------------
-st.e2 <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+## ----survtab_e2----------------------------------------------------------
+st.e2 <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
                      surv.type = "surv.rel", relsurv.method = "e2",
                      breaks = list(FUT = seq(0, 5, 1/12)),
                      pophaz = pm)
@@ -46,8 +46,8 @@ st.e2 <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x,
 ## ------------------------------------------------------------------------
 plot(st.e2, y = "r.e2", col = c("blue", "red"))
 
-## ----survtab_lex_pp------------------------------------------------------
-st.pp <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+## ----survtab_pp----------------------------------------------------------
+st.pp <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
                      surv.type = "surv.rel", relsurv.method = "pp",
                      breaks = list(FUT = seq(0, 5, 1/12)),
                      pophaz = pm)
@@ -56,7 +56,7 @@ st.pp <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x,
 plot(st.e2, y = "r.e2", col = c("blue", "red"), lty = 1)
 lines(st.pp, y = "r.pp", col = c("blue", "red"), lty = 2)
 
-## ----survtab_lex_adjust--------------------------------------------------
+## ----survtab_adjust------------------------------------------------------
 ## an age group variable
 x$agegr <- cut(x$dg_age, c(0, 60, 70, 80, Inf), right = FALSE)
 
@@ -66,8 +66,8 @@ w
 
 w <- list(agegr = as.numeric(w))
 
-## ----survtab_lex_adjust_2------------------------------------------------
-st.as <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex + adjust(agegr), 
+## ----survtab_adjust_2----------------------------------------------------
+st.as <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex + adjust(agegr), 
                      data = x, weights = w,
                      surv.type = "surv.rel", relsurv.method = "e2",
                      breaks = list(FUT = seq(0, 5, 1/12)),
@@ -84,21 +84,21 @@ names(wdf) <- c("sex", "agegr")
 wdf$weights <- c(0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.1, 0.1)
 wdf
 
-## ----survtab_lex_adjust_3------------------------------------------------
-st.as <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, 
+## ----survtab_adjust_3----------------------------------------------------
+st.as <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, 
                      adjust = "agegr",
                      data = x, weights = w,
                      surv.type = "surv.rel", relsurv.method = "e2",
                      breaks = list(FUT = seq(0, 5, 1/12)),
                      pophaz = pm)
 
-## ----survtab_lex_cause---------------------------------------------------
-st.ca <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ 1, 
+## ----survtab_cause-------------------------------------------------------
+st.ca <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
                      data = x, 
                      surv.type = "surv.cause",
                      breaks = list(FUT = seq(0, 5, 1/12)))
 
-st.pp <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ 1, data = x, 
+st.pp <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, data = x, 
                      surv.type = "surv.rel", relsurv.method = "pp",
                      breaks = list(FUT = seq(0, 5, 1/12)),
                      pophaz = pm)
@@ -106,16 +106,16 @@ st.pp <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ 1, data = x,
 plot(st.ca, y = "surv.obs.canD", col = "blue")
 lines(st.pp, y = "r.pp", col = "red")
 
-## ----survtab_lex_cif-----------------------------------------------------
-st.cif <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ 1, 
+## ----survtab_cif---------------------------------------------------------
+st.cif <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
                       data = x, 
                       surv.type = "cif.obs",
                       breaks = list(FUT = seq(0, 5, 1/12)))
 plot(st.cif, y = "CIF_canD", conf.int = FALSE)
 lines(st.cif, y = "CIF_othD", conf.int = FALSE, col = "red")
 
-## ----survtab_lex_relcif--------------------------------------------------
-st.cir <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ 1, 
+## ----survtab_relcif------------------------------------------------------
+st.cir <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
                       data = x, 
                       surv.type = "cif.rel",
                       breaks = list(FUT = seq(0, 5, 1/12)),

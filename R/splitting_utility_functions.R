@@ -606,6 +606,8 @@ lexpile <- function(lex, by = "lex.id", subset = NULL) {
   ## - lex.Cst and lex.Xst are logical, i.e. 0 -> 1, 1 -> 1, 1 -> 2
   ## this should be made to work with both split and unsplit Lexis data.
   
+  data <- NULL # R CMD CHECK appeasement
+  
   checkLexisData(lex, check.breaks = FALSE)
   
   allScales <- attr(lex, "time.scales")
