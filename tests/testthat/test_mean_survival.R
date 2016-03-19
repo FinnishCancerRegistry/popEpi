@@ -61,7 +61,7 @@ test_that("survmean() agrees with results computed using pkg survival", {
   sm <- survmean(Surv(fot, event = lex.Xst) ~ 1, 
                  breaks = BL, e1.breaks = eBL,
                  pophaz = popmort_sm, data = x)
-  st <- survtab_lex(Surv(fot, event = lex.Xst) ~ 1, 
+  st <- survtab(Surv(fot, event = lex.Xst) ~ 1, 
                     breaks = BL,
                     data = x, surv.type="surv.obs")
   setDT(x)

@@ -5,7 +5,7 @@
 \title{Expected / Population Hazard Data Sets Usage in \pkg{popEpi}}
 \description{
 Several functions in \pkg{popEpi} make use of population or expected
-hazards in computing the intended estimates (e.g. \code{\link{survtab_lex}}).
+hazards in computing the intended estimates (e.g. \code{\link{survtab}}).
 This document explains using such data sets in this package.
 }
 \details{
@@ -29,7 +29,7 @@ sex \tab year \tab agegroup \tab haz \cr
 The names of the columns should match to the names of the variables
 that you have in your subject-level data. Time variables in your pophaz
 may also correspond to \code{Lexis} time scales; see 
-\code{\link{survtab_lex}}.
+\code{\link{survtab}}.
 
 Any time variables (as they usually have) should be coded consistently:
 When using fractional years in your data, the time variables in your pophaz

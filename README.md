@@ -131,13 +131,12 @@ se
 (Relative) survival
 -------------------
 
-The `survtab_lex` function computes observed, net/relative and cause-specific survivals as well as cumulative incidence functions for `Lexis` data. Any of the supported survival time functions can be easily adjusted by any number of categorical variables if needed.
+The `survtab` function computes observed, net/relative and cause-specific survivals as well as cumulative incidence functions for `Lexis` data. Any of the supported survival time functions can be easily adjusted by any number of categorical variables if needed.
 
 One can also use `survtab_ag` for aggregated data. This means the data does not have to be on the subject-level to compute survival time function estimates.
 
 ``` r
 library(Epi)
-#> Warning: package 'Epi' was built under R version 3.2.3
 #> 
 #> Attaching package: 'Epi'
 #> The following object is masked from 'package:base':
@@ -161,22 +160,22 @@ x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
            exit.status = status)
 #> NOTE: entry.status has been set to "alive" for all.
 
-st <- survtab_lex(Surv(FUT, lex.Xst) ~ cancer, data = x,
-                  breaks = list(FUT = seq(0, 5, 1/12)),
-                  surv.type = "cif.obs")
+st <- survtab(Surv(FUT, lex.Xst) ~ cancer, data = x,
+              breaks = list(FUT = seq(0, 5, 1/12)),
+              surv.type = "cif.obs")
 st
 #> 
 #> Call: 
-#>  survtab_lex(formula = Surv(FUT, lex.Xst) ~ cancer, data = x, breaks = list(FUT = seq(0, 5, 1/12)), surv.type = "cif.obs") 
+#>  survtab(formula = Surv(FUT, lex.Xst) ~ cancer, data = x, breaks = list(FUT = seq(0, 5, 1/12)), surv.type = "cif.obs") 
 #> 
 #> Type arguments: 
-#> surv.type: cif.obs --- surv.method: hazard
+#>  surv.type: cif.obs --- surv.method: hazard
 #>  
 #> Confidence interval arguments: 
 #>  level: 95 % --- transformation: log-log
 #>  
-#> Totals: 
-#>  person-time: 62120 --- events: 5375
+#> Totals:
+#>  person-time:62120 --- events: 5375
 #>  
 #> Stratified by: 'cancer'
 #>    cancer Tstop surv.obs.lo surv.obs surv.obs.hi SE.surv.obs CIF_canD

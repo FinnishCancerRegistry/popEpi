@@ -1,4 +1,4 @@
-context("survtab_lex usage")
+context("survtab usage")
 
 
 
@@ -45,12 +45,12 @@ test_that("Dates and frac. yrs produce congruent results", {
   #### hazard method
   ## observed survival & Ederer II
   
-  sty <- survtab_lex(Surv(FUT, lex.Xst) ~ group, data = xy, 
+  sty <- survtab(Surv(FUT, lex.Xst) ~ group, data = xy, 
                      surv.type = "surv.rel", relsurv.method = "e2",
                      surv.method = "hazard",
                      breaks = BLy, pophaz = pmy)
   
-  std <- survtab_lex(Surv(FUT, lex.Xst) ~ group, data = xd, 
+  std <- survtab(Surv(FUT, lex.Xst) ~ group, data = xd, 
                      surv.type = "surv.rel", relsurv.method = "e2",
                      surv.method = "hazard",
                      breaks = BLd, pophaz = pmd)    
@@ -64,12 +64,12 @@ test_that("Dates and frac. yrs produce congruent results", {
   
   ## pohar perme
   
-  sty <- survtab_lex(Surv(FUT, lex.Xst) ~ group, data = xy, 
+  sty <- survtab(Surv(FUT, lex.Xst) ~ group, data = xy, 
                      surv.type = "surv.rel", relsurv.method = "pp",
                      surv.method = "hazard",
                      breaks = BLy, pophaz = pmy)
   
-  std <- survtab_lex(Surv(FUT, lex.Xst) ~ group, data = xd, 
+  std <- survtab(Surv(FUT, lex.Xst) ~ group, data = xd, 
                      surv.type = "surv.rel", relsurv.method = "pp",
                      surv.method = "hazard",
                      breaks = BLd, pophaz = pmd)    
@@ -81,12 +81,12 @@ test_that("Dates and frac. yrs produce congruent results", {
   #### lifetable method
   ## observed survival & Ederer II
   
-  sty <- survtab_lex(Surv(FUT, lex.Xst) ~ group, data = xy, 
+  sty <- survtab(Surv(FUT, lex.Xst) ~ group, data = xy, 
                      surv.type = "surv.rel", relsurv.method = "e2",
                      surv.method = "lifetable",
                      breaks = BLy, pophaz = pmy)
   
-  std <- survtab_lex(Surv(FUT, lex.Xst) ~ group, data = xd, 
+  std <- survtab(Surv(FUT, lex.Xst) ~ group, data = xd, 
                      surv.type = "surv.rel", relsurv.method = "e2",
                      surv.method = "lifetable",
                      breaks = BLd, pophaz = pmd)    
@@ -100,12 +100,12 @@ test_that("Dates and frac. yrs produce congruent results", {
   
   ## pohar perme
   
-  sty <- survtab_lex(Surv(FUT, lex.Xst) ~ group, data = xy, 
+  sty <- survtab(Surv(FUT, lex.Xst) ~ group, data = xy, 
                      surv.type = "surv.rel", relsurv.method = "pp",
                      surv.method = "lifetable",
                      breaks = BLy, pophaz = pmy)
   
-  std <- survtab_lex(Surv(FUT, lex.Xst) ~ group, data = xd, 
+  std <- survtab(Surv(FUT, lex.Xst) ~ group, data = xd, 
                      surv.type = "surv.rel", relsurv.method = "pp",
                      surv.method = "lifetable",
                      breaks = BLd, pophaz = pmd)    

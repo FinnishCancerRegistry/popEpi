@@ -9,11 +9,11 @@
 #' survival curve. The area under the full survival curve is the mean survival.
 #' @author Joonas Miettinen
 #' @param formula a \code{formula}, e.g. \code{Surv(FUT, lex.Xst) ~ V1}.
-#' Supplied in the same way as to \code{\link{survtab_lex}}, see that help
+#' Supplied in the same way as to \code{\link{survtab}}, see that help
 #' for more info.
 #' @param data a \code{Lexis} data set; see \code{\link[Epi]{Lexis}}.
 #' @param adjust variables to adjust estimates by, e.g. \code{adjust = "agegr"}.
-#' Supplied in the same way as to \code{\link{survtab_lex}}; see that help
+#' Supplied in the same way as to \code{\link{survtab}}; see that help
 #' for more info.
 #' @param weights weights to use to adjust mean survival times. See the
 #' \link[=direct_standardization]{dedicated help page} for more details on 
@@ -26,9 +26,9 @@
 #' \code{list(FUT = 0:10)} when \code{FUT} is the follow-up time scale in your
 #' data.
 #' @param pophaz a data set of population hazards passed to 
-#' \code{\link{survtab_lex}} (see the 
+#' \code{\link{survtab}} (see the 
 #' \link[=pophaz]{dedicated help page} and the help page of
-#' \code{survtab_lex} for more information). Defines the 
+#' \code{survtab} for more information). Defines the 
 #' population hazard in the time window where observed survival is estimated.
 #' @param e1.breaks \code{NULL} or a list of breaks defining the time 
 #' window to compute 
@@ -46,7 +46,7 @@
 #' \code{"autoX"} where \code{X} is an integer;
 #' used to determine the relative survival ratio (RSR) persisting after where 
 #' the estimated obsered survival curve ends. See Details.
-#' @param surv.method passed to \code{survtab_lex}; see that help for more info.
+#' @param surv.method passed to \code{survtab}; see that help for more info.
 #' @param subset a logical condition; e.g. \code{subset = sex == 1}; 
 #' subsets the data before computations
 #' @param verbose \code{logical}; if \code{TRUE}, the function is returns
@@ -56,7 +56,7 @@
 #' 
 #' \code{survmean} computes mean survival times. For median survival times
 #' (i.e. where 50 % of subjects have died or met some other event)
-#' use \code{\link{survtab_lex}}.
+#' use \code{\link{survtab}}.
 #' 
 #' The mean survival time is simply the area under the survival curve.
 #' However, since full follow-up rarely happens, the observed survival curves
@@ -74,7 +74,7 @@
 #' the mean survival time and for computing years of potential life lost (YPLL).
 #' 
 #' Results can be requested by strata and adjusted for e.g. age by using
-#' the \code{formula} argument as in \code{survtab_lex}. See also Examples.
+#' the \code{formula} argument as in \code{survtab}. See also Examples.
 #' 
 #' \strong{Extrapolation tweaks}
 #' 
@@ -349,7 +349,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   if (length(adNames) > 0L) x[, c(tmpAdNames) := foList$adjust]
   if (length(prNames) > 0L) x[, c(tmpPrNames) := foList$print]
   
-  ## formula for survtab_lex: we estimate survivals by all levels of both
+  ## formula for survtab: we estimate survivals by all levels of both
   ## print and adjust; adjusting here means computing directly adjusted
   ## estimates of the mean survival time, so mean survival times are
   ## weighted later on.
@@ -409,7 +409,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   ## NOTE: do not adjust here; adjust in original formula means weighting
   ## the mean survival time results.
   
-  st <- survtab_lex(formula, data = x, breaks = breaks, 
+  st <- survtab(formula, data = x, breaks = breaks, 
                     pophaz = pophaz,
                     relsurv.method = "e2",
                     surv.type = "surv.rel", 

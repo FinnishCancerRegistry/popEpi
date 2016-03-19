@@ -11,7 +11,7 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
                birth  = bi_date, entry = dg_date, exit = ex_date,
                status = statusf,
                breaks=BL)
-  st <- survtab_lex(Surv(fot, event = lex.Xst) ~ 1, data = x, surv.type="cif.obs")
+  st <- survtab(Surv(fot, event = lex.Xst) ~ 1, data = x, surv.type="cif.obs")
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   setDT(st)
@@ -43,7 +43,7 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
 
 # custom status var -------------------------------------------------------
 
-test_that("survtab_lex status argument works as expected", {
+test_that("survtab status argument works as expected", {
   library(survival)
   skip_on_cran()
   BL <- list(fot= seq(0,19,1/12), per=c(2008,2013))
@@ -56,28 +56,28 @@ test_that("survtab_lex status argument works as expected", {
   x <- lexpand(sr, birth  = bi_date, entry = dg_date, 
                exit = ex_date, status = status)
   expect_error({
-    suppressWarnings(st <- survtab_lex(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
+    suppressWarnings(st <- survtab(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
                       breaks = list(fot = 0:5)))
   }, regexp = "Some status indicators \\(4591 values in total\\) were NA as a result of using Surv\\(\\). Usual suspects: original status variable has NA values, or you have numeric status variable with more than two levels and you did not assign e.g. type = 'mstate' \\(e.g. Surv\\(time = c\\(1,1,1\\), event = c\\(0,1,2\\), type = 'mstate'\\) works\\).")
 
   st <- NULL
   x <- lexpand(sr, birth  = bi_date, entry = dg_date, 
                exit = ex_date, status = statusf)
-  st <- survtab_lex(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
+  st <- survtab(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
                     breaks = list(fot = 0:5))
   expect_equal(class(st)[1L], "survtab")
   
   st <- NULL
   x <- lexpand(sr, birth  = bi_date, entry = dg_date, 
                exit = ex_date, status = statusb)
-  st <- survtab_lex(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
+  st <- survtab(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
                     breaks = list(fot = 0:5))
   expect_equal(class(st)[1L], "survtab")
   
 })
 
 
-test_that("survtab_lex works with more complicated estimation", {
+test_that("survtab works with more complicated estimation", {
   library(Epi)
   library(survival)
   
@@ -105,7 +105,7 @@ test_that("survtab_lex works with more complicated estimation", {
   
   
   ## observed survival
-  st1 <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ factor(sex, 0:1, c("male", "female")) + period 
+  st1 <- survtab(Surv(time = FUT, event = lex.Xst) ~ factor(sex, 0:1, c("male", "female")) + period 
                      + adjust(agegr), data = xl, 
                      weights = list(agegr = as.numeric(table(x$agegr))),
                      surv.type = "surv.obs",

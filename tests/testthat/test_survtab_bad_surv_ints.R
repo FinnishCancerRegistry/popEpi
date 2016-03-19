@@ -14,7 +14,7 @@ test_that("removing consecutively bad surv.ints is logical w/ & w/out adjusting"
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   ## NOTE: neither should give any messages!
   expect_message({
-    st1 <-  survtab_lex(Surv(fot, lex.Xst) ~ agegr,
+    st1 <-  survtab(Surv(fot, lex.Xst) ~ agegr,
                         subset = !(agegr == 1L & fot > 8.49),
                         data = x, surv.type="surv.obs")
     }, regexp = NA)
@@ -22,7 +22,7 @@ test_that("removing consecutively bad surv.ints is logical w/ & w/out adjusting"
   ## INTENTION: 7.5+ intervals empty for one age group.
   ## this should make adjusted estimates missing altogether for 7.5+.
   expect_message({
-    st2 <- survtab_lex(Surv(fot, lex.Xst) ~ adjust(agegr), 
+    st2 <- survtab(Surv(fot, lex.Xst) ~ adjust(agegr), 
                       data = x, surv.type="surv.obs",
                       subset = !(agegr == 1L & fot > 8.49),
                       weights = list(agegr = c(0.33, 0.33, 0.33)))
@@ -48,12 +48,12 @@ test_that("survtab_ag messages & results due to non-consecutively bad surv.ints 
                status = status %in% 1:2,
                breaks=BL)
   tf1 <- expression(
-    st1 <-  survtab_lex(Surv(fot, lex.Xst)~1, data = x, surv.type="surv.obs", 
+    st1 <-  survtab(Surv(fot, lex.Xst)~1, data = x, surv.type="surv.obs", 
                         subset=!(fot >= 5 & fot < 7))
   )
   
   tf2 <- expression(
-    st2 <- survtab_lex(Surv(fot, lex.Xst)~adjust(agegr), data = x, surv.type="surv.obs",
+    st2 <- survtab(Surv(fot, lex.Xst)~adjust(agegr), data = x, surv.type="surv.obs",
                        subset=!(agegr==3 & fot >= 5 & fot < 7), 
                        weights = list(agegr = c(0.33, 0.33, 0.33)))
   )

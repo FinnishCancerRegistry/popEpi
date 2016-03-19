@@ -51,9 +51,9 @@ test_that("relative survivals about the same as relsurv's", {
   x[, per := get.yrs(per, year.length = "approx")]
   
   setnames(pm, c("year", "agegroup"), c("per", "age"))
-  st.e2 <- survtab_lex(Surv(fot, event = lex.Xst) ~ 1, data = x, surv.type="surv.rel", 
+  st.e2 <- survtab(Surv(fot, event = lex.Xst) ~ 1, data = x, surv.type="surv.rel", 
                        relsurv.method="e2", pophaz = pm, breaks = list(fot = fb))
-  st.pp <- survtab_lex(Surv(fot, event = lex.Xst) ~ 1, data = x, surv.type="surv.rel", 
+  st.pp <- survtab(Surv(fot, event = lex.Xst) ~ 1, data = x, surv.type="surv.rel", 
                        relsurv.method="pp", pophaz = pm, breaks = list(fot = fb))
   setDT(st.e2)
   setDT(st.pp)

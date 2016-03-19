@@ -2,16 +2,16 @@
 # dt[, fot := as.integer(ex_date-dg_date)/365.24]
 # s <- dt[, Surv(time = rep(0, nrow(dt)), time2 = fot, event = status %in% 1:2)]
 
-#' @describeIn survtab_ag survtab_lex
+#' @describeIn survtab_ag survtab
 #' @export
 #' @importFrom survival Surv
-survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL, 
-                        pophaz = NULL, weights = NULL, surv.type = "surv.rel", 
-                        surv.method = "hazard", relsurv.method = "e2", 
-                        subset = NULL, 
-                        conf.level = 0.95, 
-                        conf.type = "log-log",
-                        verbose = FALSE) {
+survtab <- function(formula, data, adjust = NULL, breaks = NULL, 
+                    pophaz = NULL, weights = NULL, surv.type = "surv.rel", 
+                    surv.method = "hazard", relsurv.method = "e2", 
+                    subset = NULL, 
+                    conf.level = 0.95, 
+                    conf.type = "log-log",
+                    verbose = FALSE) {
   
   TF <- environment()
   PF <- parent.frame()
@@ -309,7 +309,8 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL,
                    
                    weights = TF$weights, 
                    
-                   d = TF$dn, pyrs = "pyrs", d.exp = TF$d.exp, n.cens = TF$n.cens,
+                   d = TF$dn, pyrs = "pyrs", n = "at.risk",
+                   d.exp = TF$d.exp, n.cens = TF$n.cens,
                    
                    n.pp = TF$at.risk.pp,
                    d.pp = TF$d.pp, d.exp.pp = TF$d.exp.pp, d.pp.2 = TF$d.pp.2, 
@@ -335,7 +336,7 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL,
   attributes(st)$survtab.meta$arguments$surv.method <- surv.method
   attributes(st)$survtab.meta$arguments$relsurv.method <- relsurv.method
   
-  if (verbose) cat("Total time taken by survtab_lex: ", timetaken(startTime), "\n")
+  if (verbose) cat("Total time taken by survtab: ", timetaken(startTime), "\n")
   st
 }
 # library(Epi)
@@ -347,23 +348,23 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL,
 #             exit = list(CAL = get.yrs(ex_date)), entry.status = 0L, exit.status = status, merge = TRUE)
 # pm <- copy(popEpi::popmort)
 # setnames(pm, c("agegroup", "year"), c("AGE", "CAL"))
-# st <- survtab_lex(data = dt, formula = Surv(FUT, lex.Xst) ~ 1, #adjust = "agegr", 
+# st <- survtab(data = dt, formula = Surv(FUT, lex.Xst) ~ 1, #adjust = "agegr", 
 #                   # pophaz = pm,
 #                   surv.type = "surv.obs",
 #                   # weights = list(agegr = c(0.2,0.4,0.4)),
 #                   breaks = list(FUT = seq(0,5,1/12)))
-# st <- survtab_lex(dt, print = NULL, #adjust = "agegr", 
+# st <- survtab(dt, print = NULL, #adjust = "agegr", 
 #                   # pophaz = pm,
 #                   surv.type = "surv.obs",
 #                   # weights = list(agegr = c(0.2,0.4,0.4)),
 #                   breaks = list(AGE = seq(0,100, 1)))
-# st <- survtab_lex(dt, print = NULL, #adjust = "agegr", 
+# st <- survtab(dt, print = NULL, #adjust = "agegr", 
 #                   pophaz = pm,
 #                   surv.type = "surv.rel",
 #                   relsurv.method = "pp",
 #                   # weights = list(agegr = c(0.2,0.4,0.4)),
 #                   breaks = list(FUT = seq(0,5,1/12)))
-# st <- survtab_lex(dt, print = NULL, adjust = c("sex","agegr"), 
+# st <- survtab(dt, print = NULL, adjust = c("sex","agegr"), 
 #                   pophaz = pm,
 #                   surv.type = "surv.rel",
 #                   relsurv.method = "pp",
@@ -376,7 +377,7 @@ survtab_lex <- function(formula, data, adjust = NULL, breaks = NULL,
 #               fot = seq(0, 5, 1/12))
 # pm2 <- copy(popEpi::popmort)
 # setnames(pm2, c("year", "agegroup"), c("per", "age"))
-# st <- survtab_lex(ag, print = NULL, #adjust = c("sex","agegr"), 
+# st <- survtab(ag, print = NULL, #adjust = c("sex","agegr"), 
 #                   pophaz = pm2,
 #                   surv.type = "surv.rel",
 #                   relsurv.method = "pp",

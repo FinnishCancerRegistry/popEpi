@@ -1,12 +1,12 @@
 #' @title Estimate Survival Time Functions
-#' @aliases survtab_lex
+#' @aliases survtab
 #' @author Joonas Miettinen, Karri Seppa
 #' @description Estimate survival time functions (survival, relative/net
 #' survival, CIFs) using aggregated data (\code{survtab_ag}) or 
 #' \code{\link[Epi]{Lexis}} data
 #' @param formula a \code{formula} object. For \code{survtab_ag}, the response 
 #' must be the time scale to compute survival time function estimates
-#' over, e.g. \code{fot ~ sex + adjust(agegr)}, and for \code{survtab_lex}
+#' over, e.g. \code{fot ~ sex + adjust(agegr)}, and for \code{survtab}
 #' the response must be a \code{\link[survival]{Surv}} object containing the 
 #' survival time scale and the event indicator, e.g. 
 #' \code{Surv(fot, lex.Xst) ~ sex}.
@@ -15,7 +15,7 @@
 #' @param data for \code{survtab_ag}, a data set of aggregated counts, 
 #' subject-times, etc., as created
 #' by \code{\link{aggre}}; for pre-aggregated data see \code{\link{as.aggre}}.
-#' For \code{survtab_lex}, a \code{Lexis} object.
+#' For \code{survtab}, a \code{Lexis} object.
 #' @param adjust can be used as an alternative to passing variables to 
 #' argument \code{formula} within a call to \code{adjust()}; e.g.
 #' \code{adjust = "agegr"} --- see Details.
@@ -27,19 +27,19 @@
 #' to compute estimates using a subset of the intervals in data or larger intervals
 #' than in data. E.g. one might use \code{surv.breaks = 0:5} when the aggregated
 #' data has intervals with the breaks \code{seq(0, 10, 1/12)}.
-#' @param breaks (\code{survtab_lex} only) a named list of breaks, e.g.
+#' @param breaks (\code{survtab} only) a named list of breaks, e.g.
 #' \code{list(FUT = 0:5)}. If data is not split in advance, \code{breaks}
 #' must at the very least contain a vector of breaks to split the survival time 
 #' scale (mentioned in argument \code{formula}). If data has already been split
 #' (using e.g. \code{\link{splitMulti}}) along at least the used survival time
 #' scale, this may be \code{NULL}.
-#' @param pophaz (\code{survtab_lex} only) a \code{data.frame} containing
+#' @param pophaz (\code{survtab} only) a \code{data.frame} containing
 #' expected hazards for the event of interest to occur. See the
 #' \link[=pophaz]{dedicated help page}. Required when
 #' \code{surv.type = "surv.rel"} or \code{"cif.rel"}. \code{pophaz} must
 #' contain one column named \code{"haz"}, and any number of other columns
 #' identifying levels of variables to do a merge with split data within
-#' \code{survtab_lex}. Some columns may be time scales, which will
+#' \code{survtab}. Some columns may be time scales, which will
 #' allow for the expected hazard to vary by e.g. calendar time and age.
 #' 
 #' @param n variable containing counts of subjects at-risk at the start of a time 
@@ -143,7 +143,7 @@
 #' 
 #' \code{survtab_ag} computes estimates of survival time functions using 
 #' pre-aggregated data. When using subject-level data directly, use 
-#' \code{survtab_lex}. For aggregating data, see \code{\link{lexpand}}
+#' \code{survtab}. For aggregating data, see \code{\link{lexpand}}
 #' and \code{\link{aggre}}. Data sets can be coerced into \code{Lexis}
 #' objects using \code{\link[Epi]{Lexis}}.
 #' 
@@ -158,7 +158,7 @@
 #' so the upper limit of the breaks should
 #' therefore be meaningful and never e.g. \code{Inf}. 
 #' 
-#' \code{survtab_lex} may be a split or unsplit \code{Lexis} data set, but it 
+#' \code{survtab} may be a split or unsplit \code{Lexis} data set, but it 
 #' is recommended to supply the \code{breaks} argument anyway.
 #' 
 #' if \code{surv.type = 'surv.obs'}, only 'raw' observed survival 
@@ -207,7 +207,7 @@
 #' 
 #' \code{formula  = fot ~ sex} and \code{adjust = list(agegr, area)}
 #' 
-#' When using \code{survtab_lex}, the response must be a 
+#' When using \code{survtab}, the response must be a 
 #' \code{\link[survival]{Surv}} object, e.g. 
 #' \code{Surv(time = fot, event = lex.Xst)}, but otherwise the 
 #' syntax is the same.
@@ -263,7 +263,7 @@
 #' @seealso
 #' \code{\link{splitMulti}}, \code{\link{lexpand}}, 
 #' \code{\link{ICSS}}, \code{\link{sire}},
-#' \code{\link{survtab_lex}}
+#' \code{\link{survtab}}
 #' \href{../doc/survtab_examples.html}{The survtab_examples vignette}
 #' 
 #' @references
@@ -299,7 +299,7 @@
 #' ## calculate relative EdererII period method 
 #' st <- survtab_ag(fot ~ 1, data = x)
 #' 
-#' #### survtab_lex usage
+#' #### survtab usage
 #' library(Epi)
 #' library(survival)
 #'
@@ -316,11 +316,11 @@
 #' x$group <- rbinom(nrow(x), 1, 0.5)
 #' 
 #' ## observed survival
-#' st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
+#' st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
 #'                   surv.type = "surv.obs",
 #'                   breaks = list(FUT = seq(0, 5, 1/12)))
 #'
-#'#### using dates with survtab_lex
+#'#### using dates with survtab
 #' x <- Lexis(entry = list(FUT = 0L, AGE = dg_date-bi_date, CAL = dg_date),
 #'            exit = list(CAL = ex_date),
 #'            data = sire[sire$dg_date < sire$ex_date, ],
@@ -331,7 +331,7 @@
 #' set.seed(1L)
 #' x$group <- rbinom(nrow(x), 1, 0.5)
 #' 
-#' st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
+#' st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
 #'                   surv.type = "surv.obs",
 #'                   breaks = list(FUT = seq(0, 5, 1/12)*365.25))    
 #'                   
@@ -345,7 +345,7 @@
 #' pm$CAL <- as.Date(paste0(pm$CAL, "-01-01")) 
 #' pm$AGE <- pm$AGE*365.25 
 #' 
-#' st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
+#' st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
 #'                   surv.type = "surv.rel", relsurv.method = "e2",
 #'                   pophaz = pm,
 #'                   breaks = list(FUT = seq(0, 5, 1/12)*365.25))  
@@ -417,7 +417,10 @@ survtab_ag <- function(formula = NULL,
   found_breaks <- NULL
   attrs <- attributes(data)
   if (is.null(attrs$breaks)) {
-    stop("Data does not have breaks information and surv.breaks not defined; this would be true if data is output from aggre() or lexpand(). If it is and you did not tamper with it, complain to the package maintainer.")
+    stop("Data does not have breaks information and surv.breaks not defined; ",
+         "this would be true if data is output from aggre() or lexpand(). ",
+         "If it is and you did not tamper with it, complain to the ",
+         "package maintainer.")
   } 
   
   breakScales <- names(attrs$breaks)
@@ -430,14 +433,26 @@ survtab_ag <- function(formula = NULL,
   foType <- attr(foTest, "arg.type")
   if (is.null(foType)) foType <- "NULL"
   
-  if (foType != "formula") stop("Argument 'formula' does not appear to be a formula object. Usage: e.g. fot ~ sex")
+  if (foType != "formula") {
+    stop("Argument 'formula' does not appear to be a formula object. ",
+         "Usage: e.g. fot ~ sex")
+  }
   
   formula <- eval(attr(foTest, "quoted.arg"), envir = PF)
-  if (length(formula) != 3L) stop("formula does not appear to be two-sided; supply it as e.g. fot ~ sex")
+  if (length(formula) != 3L) {
+    stop("formula does not appear to be two-sided; supply it as e.g. fot ~ sex")
+  }
   surv.scale <- deparse(formula[[2L]])
-  if (!surv.scale %in% names(data)) stop("Supplied time scale '", surv.scale, "' is not a name of a time scale by which data has been aggregated (no column with that name in data)")
-  if (!surv.scale %in% breakScales) stop("Supplied time scale '", surv.scale, "' is not a name of a time scale by which data has been split AND aggregated by (could not find breaks for that time scale in data's attributes)")
-  
+  if (!surv.scale %in% names(data)) {
+    stop("Supplied time scale '", surv.scale, "' is not a name of a time ",
+         "scale by which data has been aggregated (no column with ",
+         "that name in data)")
+  }
+  if (!surv.scale %in% breakScales) {
+    stop("Supplied time scale '", surv.scale, "' is not a name of a time ",
+         "scale by which data has been split AND aggregated by (could not ",
+         "find breaks for that time scale in data's attributes)")
+  }
   ## check breaks
   
   found_breaks <- attrs$breaks[[ surv.scale ]]
@@ -462,7 +477,7 @@ survtab_ag <- function(formula = NULL,
   # handle count etc. variables ------------------------------------------------
   
   valVars <- c("d")
-  valVars <- c(valVars, if (surv.method == "hazard")  "pyrs" else c("n", "n.cens"))
+  valVars <- c(valVars, if (surv.method == "hazard") "pyrs" else c("n", "n.cens"))
   
   valVars <- c(valVars, if (surv.type == "surv.rel" && relsurv.method == "e2")  "d.exp" else NULL)
   
@@ -557,10 +572,10 @@ survtab_ag <- function(formula = NULL,
   if (is.character(weights)) {
     weights <- match.arg(weights, "internal")
     if (!"n" %in% valVars) {
-      stop("Requested internal weights to be computed and used to standardize", 
+      stop("Requested internal weights to be computed and used to standardize ", 
            "estimates, but argument 'n' not supplied. This is currently ",
            "required for computing internal weights (the values of 'n' ", 
-           "at the first interval will be used for this). Please supply 'n' ",
+           "in the first interval will be used for this). Please supply 'n' ",
            "or supply hand-made weights (preferred for your clarity).")
     } 
     

@@ -10,13 +10,13 @@ survmean(formula, data, adjust = NULL, weights = NULL, breaks = NULL,
 }
 \arguments{
 \item{formula}{a \code{formula}, e.g. \code{Surv(FUT, lex.Xst) ~ V1}.
-Supplied in the same way as to \code{\link{survtab_lex}}, see that help
+Supplied in the same way as to \code{\link{survtab}}, see that help
 for more info.}
 
 \item{data}{a \code{Lexis} data set; see \code{\link[Epi]{Lexis}}.}
 
 \item{adjust}{variables to adjust estimates by, e.g. \code{adjust = "agegr"}.
-Supplied in the same way as to \code{\link{survtab_lex}}; see that help
+Supplied in the same way as to \code{\link{survtab}}; see that help
 for more info.}
 
 \item{weights}{weights to use to adjust mean survival times. See the
@@ -32,9 +32,9 @@ observed survival in, and the intervals used in estimation. E.g.
 data.}
 
 \item{pophaz}{a data set of population hazards passed to 
-\code{\link{survtab_lex}} (see the 
+\code{\link{survtab}} (see the 
 \link[=pophaz]{dedicated help page} and the help page of
-\code{survtab_lex} for more information). Defines the 
+\code{survtab} for more information). Defines the 
 population hazard in the time window where observed survival is estimated.}
 
 \item{e1.breaks}{\code{NULL} or a list of breaks defining the time 
@@ -56,7 +56,7 @@ argument \code{pophaz}.}
 used to determine the relative survival ratio (RSR) persisting after where 
 the estimated obsered survival curve ends. See Details.}
 
-\item{surv.method}{passed to \code{survtab_lex}; see that help for more info.}
+\item{surv.method}{passed to \code{survtab}; see that help for more info.}
 
 \item{subset}{a logical condition; e.g. \code{subset = sex == 1}; 
 subsets the data before computations}
@@ -91,7 +91,7 @@ survival curve. The area under the full survival curve is the mean survival.
 
 \code{survmean} computes mean survival times. For median survival times
 (i.e. where 50 % of subjects have died or met some other event)
-use \code{\link{survtab_lex}}.
+use \code{\link{survtab}}.
 
 The mean survival time is simply the area under the survival curve.
 However, since full follow-up rarely happens, the observed survival curves
@@ -109,7 +109,7 @@ This function returns the mean expected survival time to be omcpared with
 the mean survival time and for computing years of potential life lost (YPLL).
 
 Results can be requested by strata and adjusted for e.g. age by using
-the \code{formula} argument as in \code{survtab_lex}. See also Examples.
+the \code{formula} argument as in \code{survtab}. See also Examples.
 
 \strong{Extrapolation tweaks}
 

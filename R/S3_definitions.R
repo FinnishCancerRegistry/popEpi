@@ -685,7 +685,7 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' set.seed(1L)
 #' x$sex <- rbinom(nrow(x), 1, 0.5)
 #' ## observed survival
-#' st <- survtab_lex(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+#' st <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
 #'                   surv.type = "cif.obs",
 #'                   breaks = list(FUT = seq(0, 5, 1/12)))
 #' 

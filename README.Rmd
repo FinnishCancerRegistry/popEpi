@@ -83,7 +83,7 @@ se
 
 ## (Relative) survival
 
-The `survtab_lex` function computes observed, net/relative and cause-specific
+The `survtab` function computes observed, net/relative and cause-specific
 survivals as well as  cumulative incidence functions for `Lexis` data. 
 Any of the supported survival time functions can be
 easily adjusted by any number of categorical variables if needed.
@@ -110,9 +110,9 @@ x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
            data = sr,
            exit.status = status)
 
-st <- survtab_lex(Surv(FUT, lex.Xst) ~ cancer, data = x,
-                  breaks = list(FUT = seq(0, 5, 1/12)),
-                  surv.type = "cif.obs")
+st <- survtab(Surv(FUT, lex.Xst) ~ cancer, data = x,
+              breaks = list(FUT = seq(0, 5, 1/12)),
+              surv.type = "cif.obs")
 st
 ```
 
