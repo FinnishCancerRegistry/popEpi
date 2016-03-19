@@ -47,11 +47,22 @@
 #'             adjust = agegroup, weights = 'nordic')
 #' r1
 #'
+#' w <- ltable(x, by.vars = "agegroup", expr = sum(pyrs))
+#' w[is.na(w$V1),]$V1 <- 0
+#' 
 #' r2 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat, 
 #'             adjust = agegroup,
-#'             weights = list( agegroup = c(4,5,5,5,5,4,4,3,3,2,2,1,1) ))
+#'             weights = w$V1)
 #' r2
 #' 
+#' ## use data.frame of weights:
+#' names(w) <- c("agegroup", "weights")
+#' r2 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat, 
+#'             adjust = agegroup,
+#'             weights = w)
+#' r2
+#' 
+#' ## internal weights
 #' r3 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat, 
 #'             adjust = agegroup,
 #'             weights = "internal")
@@ -126,14 +137,20 @@ rate <- function( data,
   ## handle weights ------------------------------------------------------------
   weights <- substitute(weights)
   weights <- eval(weights, envir = PF)
+  weights <- copy(weights)
   if (length(inc.adj)) {
+    ## rename adjust variables in inc.adj back to original names
+    ## for more human-readable errors in checkWeights if any occur
     setnames(inc.adj, tmpAdNames, adNames)
   }
   
   checkWeights(weights, inc.adj)
-  if (is.list(weights)) {
+  if (is.list(weights) && !is.data.frame(weights)) {
+    ## ensure weights list / DF names match to temp adjust var names
     weights <- weights[adNames]
     names(weights) <- tmpAdNames
+  } else if (is.data.frame(weights)) {
+    setnames(weights, adNames, tmpAdNames)
   }
   
   ## form table with weights ---------------------------------------------------
