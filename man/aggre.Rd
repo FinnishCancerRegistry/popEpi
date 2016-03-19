@@ -11,13 +11,9 @@ aggre(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
 \item{lex}{a \code{Lexis} object split with e.g. 
 \code{\link[Epi]{splitLexis}} or \code{\link{splitMulti}}}
 
-\item{by}{expression(s) or variables to aggregate by; can be 
-1) a character string vector of variable names (e.g. \code{aggre = c("sex", "area")});
-2) an expression or symbol (e.g. \code{aggre = sex} or 
-\code{aggre = factor(sex, 0:1, c("m", "f"))});
-3) a list of expressions or symbols (e.g. \code{aggre = list(gender = sex, area)});
-automatic aggregation over Lexis time scales mentioned here; 
-see Details and Examples}
+\item{by}{variables to tabulate (aggregate) by.
+\link[=flexible_argument]{Flexible input}, typically e.g.
+\code{by = c("V1", "V2")}. See Details and Examples.}
 
 \item{type}{determines outputted levels to which data is aggregated varying
 from returning only rows with \code{pyrs > 0} (\code{"unique"}) to
