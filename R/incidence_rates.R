@@ -47,6 +47,7 @@
 #'             adjust = agegroup, weights = 'nordic')
 #' r1
 #'
+#' ## use total person-years by stratum as weights (some have zero)
 #' w <- ltable(x, by.vars = "agegroup", expr = sum(pyrs))
 #' w[is.na(w$V1),]$V1 <- 0
 #' 
@@ -62,7 +63,7 @@
 #'             weights = w)
 #' r2
 #' 
-#' ## internal weights
+#' ## internal weights (same result as above)
 #' r3 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat, 
 #'             adjust = agegroup,
 #'             weights = "internal")
