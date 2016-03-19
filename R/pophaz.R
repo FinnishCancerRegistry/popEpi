@@ -19,6 +19,21 @@
 #' \code{\link{popmort}} contains Finnish population mortality hazards
 #' by sex, calendar year, and 1-year age group.
 #' 
+#' \tabular{rrrr}{
+#' sex \tab year \tab agegroup \tab haz \cr
+#' 0 \tab 1951 \tab 0 \tab 0.036363176\cr  
+#' 0 \tab 1951 \tab 1 \tab 0.003616547\cr
+#' 0 \tab 1951 \tab 2 \tab 0.002172384\cr
+#' 0 \tab 1951 \tab 3 \tab 0.001581249\cr
+#' 0 \tab 1951 \tab 4 \tab 0.001180690\cr
+#' 0 \tab 1951 \tab 5 \tab 0.001070595
+#' }
+#' 
+#' The names of the columns should match to the names of the variables
+#' that you have in your subject-level data. Time variables in your pophaz
+#' may also correspond to \code{Lexis} time scales; see 
+#' \code{\link{survtab_lex}}.
+#' 
 #' Any time variables (as they usually have) should be coded consistently:
 #' When using fractional years in your data, the time variables in your pophaz
 #' must also be coded in fractional years. When using e.g. \code{Date}s in your
