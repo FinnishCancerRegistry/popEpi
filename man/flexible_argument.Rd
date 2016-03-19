@@ -133,6 +133,30 @@ This works even with
 
 So no conflicts should occur.
 }
+\examples{
+
+data(sire)
+## prepare data for e.g. 5-year "period analysis" for 2008-2012
+## note: sire is a simulated cohort integrated into popEpi.
+BL <- list(fot=seq(0, 5, by = 1/12),
+           per = c("2008-01-01", "2013-01-01"))
+x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
+             status = status \%in\% 1:2,
+             breaks = BL,
+             pophaz = popmort,
+             aggre = list(fot))
+             
+at.risk <- x$at.risk
+x$at.risk <- NULL
+x$at.risk <- 0L
+TF <- environment()
+             
+## this works
+st <- survtab_ag(fot ~ 1, data = x, 
+                 surv.method = "lifetable")
+## this wont
+st <- survtab_ag(fot ~ 1, data = x, n = at.risk, surv.method = "lifetable")
+}
 \author{
 Joonas Miettinen
 }
