@@ -481,6 +481,7 @@ subset.aggre <- function(x, ...) {
 }
 
 preface_survtab.print <- function(x) {
+  surv.int <- NULL ## APPEASE R CMD CHECK
   at <- attributes(x)$survtab.meta
   arg <- at$arguments
   
@@ -594,6 +595,8 @@ summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
 #' \code{nrow = 100} for number of rows to print, etc.
 #' @export
 print.survtab <- function(x, subset = NULL, ...) {
+  
+  Tstart <- Tstop <- NULL ## APPEASE R CMD CHECK
   
   PF <- parent.frame(1L)
   TF <- environment()
@@ -912,6 +915,7 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclo
 #' @export
 plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
+  Tstop <- delta <- NULL ## APPEASE R CMD CHECK
   ## prep ----------------------------------------------------------------------
   PF <- parent.frame(1L)
   subset <- substitute(subset)
@@ -998,7 +1002,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
 lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL, lty=NULL, ...) {
-  
+  Tstop <- NULL ## APPEASE R CMD CHECK
   ## prep ----------------------------------------------------------------------
   PF <- parent.frame(1L)
   subset <- substitute(subset)

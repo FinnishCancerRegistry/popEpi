@@ -355,7 +355,9 @@ lexpand <- function(data,
   if (!is.data.frame(data)) stop("data must be a data.frame or data.table")
   
   ## to instate global variables to appease R CMD CHECK 
-  .EACHI <- lex.status <- lexpand.id <- lex.exit <- lex.birth <- lex.entry <- lex.event <- temp.id <- cd <- NULL
+  .EACHI <- lex.status <- lexpand.id <- lex.exit <- lex.birth <- 
+    lex.entry <- lex.event <- temp.id <- cd <- fot <- age <- per <- 
+    lex.id <- lex.multi <- pop.haz <- NULL
   
   
   ## test conflicting variable names -------------------------------------------

@@ -58,7 +58,8 @@
 
 rpcurve <- function(object = NULL) {
   
-  FOT <- uni_id <- uni_n <- uni_w <- lo <- hi <- NULL
+  Tstart <- FOT <- uni_id <- uni_n <- uni_w <- 
+    lo <- hi <- NULL  ## APPEASE R CMD CHECK
   ## sanity checks -------------------------------------------------------------
   if (is.null(object)) stop("no relative Poisson excess hazard model given")
   
@@ -66,7 +67,8 @@ rpcurve <- function(object = NULL) {
   
   if (!"FOT" %in% all.vars(object$formula)) stop("No FOT variable in model formula")
   
-  est <- NULL ## appease R CMD CHECK
+  est <- fot <- pop.haz <- delta <- Tstop <- Tstar <- lex.id <- 
+    fot <- lex.multi <- pyrs <- NULL ## appease R CMD CHECK
   
   ## collate surv.ints, breaks, deltas -----------------------------------------
   fotlevs <- as.factor(sort(as.character(unique(object$model$FOT))))

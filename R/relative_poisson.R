@@ -94,7 +94,7 @@ relpois <- function(data,
                      formula, 
                      fot.breaks = NULL, subset = NULL, check=TRUE, ...) {
   ## prep arguments ------------------------------------------------------------
-  excess_cases <-  NULL ## to instate as a global variable to appease R CMD CHECK
+  excess_cases <- fot <- pop.haz <-  NULL ## appease R CMD CHECK
   
   ## somehow the class of the data is being altered by this function
   oldClass <- class(data)

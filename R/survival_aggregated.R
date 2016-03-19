@@ -386,6 +386,9 @@ survtab_ag <- function(formula = NULL,
   
   if (verbose) starttime <- proc.time()
   
+  Tstop <- delta <- Tstart <- surv.int <- n.eff <- n.eff.pp <- surv.obs <- 
+     lag1_surv.obs <- p.obs <- CIF.rel <- NULL ## APPEASE R CMD CHECK
+  
   TF <- environment()
   PF <- parent.frame(1L)
   
@@ -819,6 +822,8 @@ survtab_ag <- function(formula = NULL,
     # compute r.e2 -------------------------------------------------------------
     comp.st.rs <- function(rs.table, rs.by.vars = byVars) {
       
+      p.exp <- delta <- surv.exp <- surv.obs <- n.eff.pp <- 
+        surv.obs <- NULL ## APPEASE R CMD CHECK
       ## EdererII
       
       ##-------------

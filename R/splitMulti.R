@@ -117,10 +117,14 @@ splitMulti <- function(data,
                        drop=TRUE,
                        merge=TRUE,
                        verbose=FALSE) {
+  
+  lex.id <- NULL ## APPEASE R CMD CHECK
+  
   ## basic checks --------------------------------------------------------------
   if (verbose) {stime <- proc.time()}
   
   breaks <- splitMultiPreCheck(data = data, breaks = breaks, ...)
+  
   
   ## check if even need to do splitting ----------------------------------------
   allScales <- attr(data, "time.scales")

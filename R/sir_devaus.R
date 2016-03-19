@@ -615,6 +615,7 @@ sir_est <- function( table,
                      EAR = FALSE,
                      round.by = 2,
                      round.by.pvalue = 4) {
+  pyrs <- NULL ## APPEASE R CMD CHECK
   
   # functions -----------------------------------------------------------
   

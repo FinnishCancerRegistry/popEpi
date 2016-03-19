@@ -262,6 +262,8 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   
   allTime <- proc.time()
   
+  lex.id <- NULL ## APPEASE R CMD CHECK
+  
   PF <- parent.frame(1L)
   TF <- environment()
   

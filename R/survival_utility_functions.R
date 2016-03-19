@@ -164,6 +164,8 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
   ## (expected) hazard level for each row
   TF <- environment()
   
+  lex.id <- pp <- NULL ## APPEASE R CMD CHECK
+  
   style <- match.arg(style, c("delta", "actual"))
   if (!is.data.table(lex)) stop("lex must be a data.table")
   
@@ -383,6 +385,8 @@ test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs
   setDT(x)
   setattr(x, "class", oc)
   
+  surv.int <- NULL ## APPEASE R CMD CHECK
+  
   all_names_present(x, by, msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer.")
   all_names_present(x, sum.over, msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer.")
   all_names_present(x, test.var, msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer.")
@@ -446,7 +450,7 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   ## by 'by' unless individual = TRUE.
   TF <- environment()
   
-  haz <- NULL # R CMD CHECK appeasement
+  haz <- surv.exp <- NULL # R CMD CHECK appeasement
   ## check ---------------------------------------------------------------------
   checkLexisData(x)
   checkBreaksList(x, breaks)

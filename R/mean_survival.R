@@ -264,7 +264,8 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   }
   
   ## appease R CMD CHECK (due to using vars in DT[] only)
-  r.e2 <- last.p.e2 <- surv <- survmean_type <- est <- NULL
+  r.e2 <- last.p.e2 <- surv <- survmean_type <- est <- Tstart <- Tstop <- 
+    lex.id <- surv.int <- delta <- surv.exp <- obs <- NULL
   
   checkLexisData(data, check.breaks = FALSE)
   checkPophaz(data, pophaz, haz.name = "haz")

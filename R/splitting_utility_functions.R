@@ -1008,6 +1008,8 @@ doTestBarrage <- function(dt1, dt2, allScales, testTimes = TRUE, testStatuses = 
   requireNamespace("Epi")
   requireNamespace("testthat")
   
+  lex.id <- NULL ## APPEASE R CMD CHECK
+  
   testthat::expect_equal(sum(dt1$lex.dur), 
                          sum(dt2$lex.dur), 
                          check.attributes = FALSE)
