@@ -1001,6 +1001,49 @@ popArg2ModelNames <- function(arg, type) {
 
 
 
+uses_dollar <- function(q, data.names) {
+  ## INTENTION: determine whether q is an expressions that is evaluated
+  ## outside a data.frame, i.e. one that uses the dollar operator.
+  ## e.g. TF$V1 should not be evaluated in a data.frame even if it has
+  ## the variables TF and V1 since it wont work and was not intended.
+  if (!is.character(q) && (!is.language(q) || inherits(q, "formula"))) {
+    stop("'q' must be a quoted/substituted expression or a ",
+         "character string vector.")
+  }
+  
+  if (is.character(q)) {
+    return(FALSE)
+  } 
+  
+  d <- deparse(q)
+  
+  if (substr(d, 1, 4) == "list") {
+    ## lists are not allowed to work in this manner for now.
+    return(FALSE)
+  }
+  
+  if (!grepl(x = d, pattern = "\\$")) {
+    ## does not use dollar operator.
+    return(FALSE)
+  }
+  
+  ## detect if word$word is used in d
+  t <- regexec(pattern = "\\w+\\$\\w+", text = d)
+  if (t != -1) {
+    ## ok, used word$word
+    ## is there are variable with that name in data.names?
+    m <- unlist(regmatches(d, t))
+    if (m %in% data.names) {
+      return(FALSE)
+    }
+    ## if not, it should be evaluated outside the data.
+    return(TRUE)
+  } 
+  
+  return(FALSE)
+}
+
+
 evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = TRUE, types = c("NULL","character", "list", "expression"), naming = c("DT", "model")) {
   ## arg: an unevaluated AND substitute()'d argument within a function, which may be
   ## * an expression
