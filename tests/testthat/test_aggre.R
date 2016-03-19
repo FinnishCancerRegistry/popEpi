@@ -160,3 +160,19 @@ test_that("subset argument works properly", {
   
 })
 
+
+test_that("at.risk & event columns are congruent", {
+  
+  x <- sire[dg_date < ex_date, ][1:1000,]
+  BL <- list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014))
+  x <- lexpand(x, birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2, breaks=BL)
+  
+  ag <- aggre(x, by = list(sex, surv.int = fot, per, age))
+  setkey(ag, sex, per, age, surv.int)
+  ag[, ndiff := at.risk - c(at.risk[-1], NA), by = list(sex, per, age)]
+  ag[!is.na(ndiff), events := from0to0 + from0to1]
+  
+  expect_equal(ag$ndiff, ag$events)
+})
+
