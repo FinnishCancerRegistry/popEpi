@@ -15,8 +15,9 @@
 #' @param adjust variables to adjust estimates by, e.g. \code{adjust = "agegr"}.
 #' Supplied in the same way as to \code{\link{survtab_lex}}; see that help
 #' for more info.
-#' @param weights weights to use to adjust mean survival times.
-#' See \code{survtab_lex} for more details on weighting; \code{survmean}
+#' @param weights weights to use to adjust mean survival times. See the
+#' \link[=direct_standardization]{dedicated help page} for more details on 
+#' weighting. \code{survmean}
 #' computes curves separately by all variables to adjust by, computes mean
 #' survival times, and computes weighted means of the mean survival times.
 #' See Examples.
@@ -25,7 +26,9 @@
 #' \code{list(FUT = 0:10)} when \code{FUT} is the follow-up time scale in your
 #' data.
 #' @param pophaz a data set of population hazards passed to 
-#' \code{\link{survtab_lex}} (see that help for more info). Defines the 
+#' \code{\link{survtab_lex}} (see the 
+#' \link[=pophaz]{dedicated help page} and the help page of
+#' \code{survtab_lex} for more information). Defines the 
 #' population hazard in the time window where observed survival is estimated.
 #' @param e1.breaks \code{NULL} or a list of breaks defining the time 
 #' window to compute 
@@ -35,10 +38,9 @@
 #' curve ends. \strong{NOTE:} the breaks on the survival time scale
 #' MUST include the breaks supplied to argument \code{breaks}; see Examples.
 #' If \code{NULL}, uses decent defaults (max follow-up time of 50 years).
-#' @param e1.pophaz a data set of population hazards passed to 
-#' \code{\link{survtab_lex}} (see that help for more info). Defines the 
+#' @param e1.pophaz Same as \code{pophaz}, except this defines the 
 #' population hazard in the time window where \strong{expected} 
-#' survival is estimated. By default use the same data as 
+#' survival is estimated. By default uses the same data as 
 #' argument \code{pophaz}.
 #' @param r either a numeric multiplier such as \code{0.995}, \code{"auto"}, or
 #' \code{"autoX"} where \code{X} is an integer;

@@ -34,15 +34,13 @@
 #' (using e.g. \code{\link{splitMulti}}) along at least the used survival time
 #' scale, this may be \code{NULL}.
 #' @param pophaz (\code{survtab_lex} only) a \code{data.frame} containing
-#' expected hazards for the event of interest to occur. Required when
+#' expected hazards for the event of interest to occur. See the
+#' \link[=pophaz]{dedicated help page}. Required when
 #' \code{surv.type = "surv.rel"} or \code{"cif.rel"}. \code{pophaz} must
 #' contain one column named \code{"haz"}, and any number of other columns
 #' identifying levels of variables to do a merge with split data within
 #' \code{survtab_lex}. Some columns may be time scales, which will
 #' allow for the expected hazard to vary by e.g. calendar time and age.
-#' See \code{\link{popmort}} for an example, and 
-#' \href{../doc/survtab_examples.html}{The survtab_examples vignette}
-#' for examples of usage.
 #' 
 #' @param n variable containing counts of subjects at-risk at the start of a time 
 #' interval; e.g. \code{n = "at.risk"}. 
