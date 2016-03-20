@@ -999,23 +999,19 @@ popArg2ModelNames <- function(arg, type) {
   stop("could not determine deparsed-expression-names")
 }
 
-
-
 uses_dollar <- function(q, data.names) {
   ## INTENTION: determine whether q is an expressions that is evaluated
   ## outside a data.frame, i.e. one that uses the dollar operator.
   ## e.g. TF$V1 should not be evaluated in a data.frame even if it has
   ## the variables TF and V1 since it wont work and was not intended.
-  if (!is.character(q) && (!is.language(q) || inherits(q, "formula"))) {
-    stop("'q' must be a quoted/substituted expression or a ",
-         "character string vector.")
+  if (!is.language(q) || inherits(q, "formula")) {
+    return(FALSE)
   }
   
-  if (is.character(q)) {
-    return(FALSE)
-  } 
-  
   d <- deparse(q)
+  ## sometimes d is of length > 1 for some reason...
+  d <- paste0(d, collapse = "")
+  d <- oneWhitespace(d)
   
   if (substr(d, 1, 4) == "list") {
     ## lists are not allowed to work in this manner for now.
@@ -1073,17 +1069,35 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   ## types: allowed popArg types of arguments.
   types <- match.arg(types, c("NULL","character", "list", "expression", "formula"), several.ok = TRUE)
   
-  if (!is.null(enclos) && !is.environment(enclos)) stop("enclos must be NULL or an environment")
+  if (!is.null(enclos) && !is.environment(enclos)) {
+    stop("enclos must be NULL or an environment")
+  }
   if (!is.environment(enclos)) enclos <- parent.frame(n + 1L)
   
-  e <- eval(arg, envir = data, enclos = enclos)
+  ## used data may change if expression uses dollar operator, hence
+  ## arg should not be evaluated within data but only its surroundings.
+  use_data <- data
+  use_enc <- enclos
+  dataNames <- names(data)
+  
+  if (uses_dollar(arg, data.names = dataNames)) {
+    use_data <- enclos
+    use_enc <- baseenv()
+  }
+  e <- eval(arg, envir = use_data, enclos = use_enc)
   if (is.language(e) && !inherits(e, "formula")) {
     if (!recursive) stop("arg is of type language after evaluating, and recursive = FALSE")
     
     tick <- 1L
     while (is.language(e) && !inherits(e, "formula") && tick < 100L) {
       arg <- e
-      e <- eval(arg, envir = data, enclos = enclos)
+      use_data <- data
+      use_enc <- enclos
+      if (uses_dollar(arg, data.names = dataNames)) {
+        use_data <- enclos
+        use_enc <- baseenv()
+      }
+      e <- eval(arg, envir = use_data, enclos = use_enc)
       tick <- tick + 1L
     }
     if (tick == 100L) stop("arg was of type language even after 100 evaluations. Something went wrong here...")
@@ -1121,7 +1135,9 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   
   if (argType == "formula") {
     arg <- e
-    e <- RHS2DT(formula = e, data = data, enclos = enclos)
+    use_data <- data
+    use_enc <- enclos
+    e <- RHS2DT(formula = e, data = use_data, enclos = use_enc)
     if (ncol(e) == 0L || nrow(e) == 0L) e <- data.table() ## e.g. y ~ 1
     
   } else if (is.character(e)) {
