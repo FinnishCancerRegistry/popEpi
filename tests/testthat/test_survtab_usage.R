@@ -118,5 +118,46 @@ test_that("Dates and frac. yrs produce congruent results", {
 
 
 
-
+test_that("hazard and lifetable produce congruent results", {
+  
+  library(Epi)
+  library(survival)
+  
+  x <- data.table(popEpi::sire)
+  x <- x[dg_date<ex_date]
+  
+  ## phony group variable
+  set.seed(1L)
+  x$group <- rbinom(nrow(x), 1, 0.5)
+  
+  
+  xy <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
+              exit = list(CAL = get.yrs(ex_date)), 
+              data = x,
+              exit.status = factor(status, levels = 0:2, 
+                                   labels = c("alive", "canD", "othD")), 
+              merge = TRUE)
+  
+  
+  pmy <- data.table(popEpi::popmort)
+  setnames(pmy, c("year", "agegroup"), c("CAL", "AGE"))
+  BL <- list(FUT = seq(0, 5, 1/12))
+  
+  sth <- survtab(Surv(FUT, lex.Xst) ~ group, data = xy,
+                 pophaz = pmy, breaks = BL,
+                 surv.type = "surv.rel", surv.method = "hazard")
+  
+  stl <- survtab(Surv(FUT, lex.Xst) ~ group, data = xy,
+                 pophaz = pmy, breaks = BL,
+                 surv.type = "surv.rel", surv.method = "lifetable")
+  
+  expect_equal(sth$r.e2, stl$r.e2, scale = 1, tol = 0.0003415)
+  expect_equal(sth$r.e2.lo, stl$r.e2.lo, scale = 1, tol = 0.000354)
+  expect_equal(sth$r.e2.hi, stl$r.e2.hi, scale = 1, tol = 0.00033)
+  
+  expect_equal(sth$surv.obs, stl$surv.obs, scale = 1, tol = 0.00002575)
+  expect_equal(sth$surv.obs.lo, stl$surv.obs.lo, scale = 1, tol = 0.000027)
+  expect_equal(sth$surv.obs.hi, stl$surv.obs.hi, scale = 1, tol = 0.000025)
+  
+})
 
