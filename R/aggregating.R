@@ -275,7 +275,10 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   checkBreaksList(lex, breaks)
   
   allScales <- copy(attr(lex, "time.scales"))
-  if (length(allScales) == 0 ) stop("could not determine names of time scales; is the data a Lexis object?")
+  if (length(allScales) == 0 ) {
+    stop("could not determine names of time scales; ",
+         "is the data a Lexis object?")
+  }
   
   ## subset --------------------------------------------------------------------
   subset <- substitute(subset)
@@ -296,7 +299,9 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   badSum <- names(sum.values)[!sapply(sum.values, is.numeric)]
   if (length(badSum) > 0L) {
     badSum <- paste0("'", badSum, "'", collapse = ", ")
-    stop("Following variables resulting from evaluating supplied sum.values argument are not numeric and cannot be summed: ", badSum, ". Evaluated sum.values: ", deparse(sumSub))
+    stop("Following variables resulting from evaluating supplied sum.values ",
+         "argument are not numeric and cannot be summed: ", badSum, 
+         ". Evaluated sum.values: ", deparse(sumSub))
   }
   
   
@@ -326,24 +331,41 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   ## take copy of lex ----------------------------------------------------------
   ## if lex is a data.table, this function gets really complicated.
   ## if copy is taken only of necessary vars, it should be fine.
-  keepVars <- unique(c("lex.id", names(breaks), "lex.dur", "lex.Cst", "lex.Xst", av, sumVars))
+  keepVars <- unique(c("lex.id", names(breaks), "lex.dur", 
+                       "lex.Cst", "lex.Xst", av, sumVars))
   lex.orig <- lex
-  lex <- if (is.data.table(lex)) lex[subset, copy(.SD), .SDcols = keepVars] else 
-    lex[subset, c(keepVars)]
-  setDT(lex)
-  forceLexisDT(lex, breaks = breaks, allScales = allScales)
+  lex <- subsetDTorDF(lex, subset = subset, select = keepVars)
+  lex <- setDT(copy(lex))
+  forceLexisDT(lex, breaks = breaks, allScales = allScales, key = FALSE)
+  setkeyv(lex, c("lex.id", allScales[1]))
   
   ## cut time scales for aggregating if needed ---------------------------------
-  aggScales <- intersect(allScales, av)
+  aggScales <- intersect(av, allScales)
   if (any(!aggScales %in% names(breaks))) {
     aggScales <- paste0("'", setdiff(aggScales, names(breaks)), "'", collapse = ", ")
-    stop("requested aggregating by time scale(s) by which data has not been split: ", aggScales)
+    stop("Requested aggregating by time scale(s) by which data ",
+         "has not been split: ", aggScales)
   }
+  
+  ## before cutting, find out which rows count towards "at.risk" figure:
+  ## of all scales in aggScales, the last one (or the only one) is assumed
+  ## to be the survival time scale.
+  tmpAtRisk <- makeTempVarName(lex, pre = "at.risk_")
+  set(lex, j = tmpAtRisk, value = TRUE)
+  
+  
   if (length(aggScales) > 0) {
     cutTime <- proc.time()
-    
+    ## "at.risk" counts subjects at risk in the beginning of the survival
+    ## time scale interval.
+    survScale <- aggScales[length(aggScales)]
+    lex[, c(tmpAtRisk) := lex[[survScale]] %in% breaks[[survScale]] ]
     catAggScales <- paste0("'", aggScales, "'", collapse = ", ")
-    if (verbose) cat("Following time scales mentioned in by argument and will be categorized into intervals (defined by breaks in object attributes) for aggregation:", catAggScales, "\n")
+    if (verbose) {
+      cat("Following time scales mentioned in by argument and will be",
+          "categorized into intervals (defined by breaks in object",
+          "attributes) for aggregation:", catAggScales, "\n")
+    }
     
     ## NEW METHOD: use a copy of lex and just modify in place.
     
@@ -360,17 +382,23 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
     cat("Detected the following non-time-scale variables to be utilized in aggregating:", catOthVars, "\n")
   }
   
-  ## eval by ----------------------------------------------------------------
+  ## eval by -------------------------------------------------------------------
   ## NOTE: needed to eval by AFTER cutting time scales!
   by <- evalPopArg(data = lex, arg = ags, DT = TRUE, enclos = PF, recursive = TRUE)
+  byNames <- names(by)
   
   ## computing pyrs ------------------------------------------------------------
+  ## final step in determining at.risk:
+  ## a lex.id is at.risk only once per by-level
   pyrsTime <- proc.time()
-  
-  pyrs <- lex[, .(pyrs = sum(lex.dur), at.risk = sum(!duplicated(lex.id))), keyby = by]
+  vdt <- data.table(pyrs = lex$lex.dur, at.risk = lex[[tmpAtRisk]], 
+                    lex.id = lex$lex.id)
+  pyrs <- vdt[, .(pyrs = sum(pyrs), 
+                  at.risk = sum(!duplicated(lex.id) & at.risk)), 
+              keyby = by]
   setDT(pyrs)
-  byNames <- setdiff(names(pyrs), c("pyrs", "at.risk")) ## this will always be as intended
   
+  rm(vdt)
   sumNames <- NULL
   if (sumType != "NULL") {
     if (sumType == "character") {
@@ -488,6 +516,7 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   ## note: need tmpDum if by = NULL for correct casting & merging
   tmpDum <- makeTempVarName(trans)
   byNames <- c(byNames, tmpDum)
+  byNames <- setdiff(byNames, c("lex.Cst", "lex.Xst"))
   trans[, c(tmpDum) := 1L]
   pyrs[, c(tmpDum) := 1L]
   
