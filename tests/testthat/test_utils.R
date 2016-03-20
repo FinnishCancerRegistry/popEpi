@@ -163,16 +163,19 @@ test_that("detectEvents works as intended", {
   x <- sire[dg_date<ex_date,]
   x <- lexpand(x, birth = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2, pophaz = data.table(popEpi::popmort),
-               breaks = list(fot = seq(0,5,1/12), per = 1993:2013, age = 0:100),
-               drop = FALSE)
+               breaks = list(fot = seq(0,5,1/12), per = c(2007,2012), age = c(50,90)),
+               drop = TRUE)
+  ## this will only work with drop = TRUE.
   setkeyv(x, c("lex.id", "fot", "per", "age"))
-  x[, event := detectEvents(x, breaks = attr(x, "breaks"), by = "lex.id")]
-  x[, inWin := fot >= 0 & per >= 1993 & age >= 0]
-  x[x$inWin, inWin := fot+lex.dur < 5 & per < 2013 & age < 100]
   
-  x[x$inWin, trans := lex.Xst != lex.Cst]
+  ## this leaves observations cut short due to age or period censoring to
+  ## really be censorings.
+  x[, event := detectEvents(x, breaks = attr(x, "breaks")["fot"], by = "lex.id")]
+  
   x[, alt.event := 0L]
-  x[x$inWin & !duplicated(x, by = "lex.id", fromLast = T), alt.event := ifelse(trans, 1L, 2L)]
+  x[!duplicated(lex.id, fromLast = TRUE), alt.event := 2L]
+  x[lex.Cst != lex.Xst, alt.event := 1L]
+  x[fot+lex.dur == 5L, alt.event := 0L]
   
   expect_equal(x$event, x$alt.event)
   
