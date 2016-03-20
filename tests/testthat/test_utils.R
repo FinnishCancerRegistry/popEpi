@@ -157,7 +157,25 @@ test_that("cutLowMerge merges succesfully what is intended", {
   expect_equal(sr4$haz*1e5L, sr5$pop.haz*1e5L, check.attributes = FALSE)
 })
 
-
+test_that("detectEvents works as intended", {
+  skip_on_cran()
+  x <- sire[dg_date<ex_date,]
+  x <- lexpand(x, birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2, pophaz = data.table(popEpi::popmort),
+               breaks = list(fot = seq(0,5,1/12), per = 1993:2013, age = 0:100),
+               drop = FALSE)
+  setkeyv(x, c("lex.id", "fot", "per", "age"))
+  x[, event := detectEvents(x, breaks = attr(x, "breaks"), by = "lex.id")]
+  x[, inWin := fot >= 0 & per >= 1993 & age >= 0]
+  x[x$inWin, inWin := fot+lex.dur < 5 & per < 2013 & age < 100]
+  
+  x[x$inWin, trans := lex.Xst != lex.Cst]
+  x[, alt.event := 0L]
+  x[x$inWin & !duplicated(x, by = "lex.id", fromLast = T), alt.event := ifelse(trans, 1L, 2L)]
+  
+  expect_equal(x$event, x$alt.event)
+  
+})
 
 test_that("comp_pp_weighted_figures produces intended results", {
   set.seed(1L)
