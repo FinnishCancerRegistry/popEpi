@@ -161,18 +161,71 @@ test_that("subset argument works properly", {
 })
 
 
-test_that("at.risk & event columns are congruent", {
-  
+test_that("at.risk column works as intended", {
+  ## normal case - no late entry. Just lots of breaks.
+  skip_on_cran()
   x <- sire[dg_date < ex_date, ][1:1000,]
   BL <- list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014))
-  x <- lexpand(x, birth = bi_date, entry = dg_date, exit = ex_date,
-               status = status %in% 1:2, breaks=BL)
   
-  ag <- aggre(x, by = list(sex, surv.int = fot, per, age))
-  setkey(ag, sex, per, age, surv.int)
-  ag[, ndiff := at.risk - c(at.risk[-1], NA), by = list(sex, per, age)]
-  ag[!is.na(ndiff), events := from0to0 + from0to1]
+  x <- Lexis(data = x, 
+             entry = list(fot = 0, age = dg_age, per = get.yrs(dg_date)),
+             exit = list(per = get.yrs(ex_date)), exit.status = status, 
+             entry.status = 0)
+  
+  x <- splitMulti(x, breaks = BL, drop = TRUE)
+  
+  ag <- aggre(x, by = list(sex, fot))
+  setkey(ag, sex, fot)
+  
+  ## total events and changes in at.risk should be congruent here
+  ag[, ndiff := at.risk - c(at.risk[-1], NA), by = list(sex)]
+  ag[!is.na(ndiff), events := from0to0 + from0to1 + from0to2]
   
   expect_equal(ag$ndiff, ag$events)
+  
+  ## compare at.risk with manually computed at.risk and events
+  x[, evented := detectEvents(x, breaks = attr(x, "breaks"), by = "lex.id") != 0L]
+  x[, normalEntry := fot %in% BL$fot]
+  x[, cutFot := cutLow(fot, BL$fot)]
+  byDT <- CJ(sex = 1, 
+             cutFot = BL$fot[-length(BL$fot)])
+  n.start <- x[byDT, .(sum(normalEntry & !duplicated(lex.id)),
+                       sum(evented)), by = .EACHI,
+               on = names(byDT)]
+  n.start[is.na(ag$ndiff), V2 := NA]
+  expect_equal(ag$at.risk, n.start$V1)
+  expect_equal(ag$ndiff, n.start$V2)
 })
 
+
+
+test_that("at.risk column works as intended, Vol. 2", {
+  skip_on_cran()
+  ## period analysis case - some observations are late entry.
+  data(sire)
+  
+  BL <- list(fot=seq(0, 5, by = 1/12),
+             per = c(2008,2013))
+  
+  x <- Lexis(data = sire[dg_date < ex_date,], 
+             entry = list(fot = 0, age = dg_age, per = get.yrs(dg_date)),
+             exit = list(per = get.yrs(ex_date)), exit.status = status, 
+             entry.status = 0)
+  
+  x <- splitMulti(x, breaks = BL, drop = TRUE)
+  
+  a <- aggre(x, by = list(sex, per, fot))
+  setkey(a, sex, per, fot)
+  a[, ndiff := at.risk - c(at.risk[-1], NA), by = list(sex, per)]
+  a[!is.na(ndiff), events := from0to0 + from0to1 + from0to2]
+  
+  x[, normalEntry := fot %in% BL$fot]
+  x[, cutPer := cutLow(per, BL$per)]
+  x[, cutFot := cutLow(fot, BL$fot)]
+  byDT <- CJ(sex = 1, cutPer = BL$per[-length(BL$per)], 
+             cutFot = BL$fot[-length(BL$fot)])
+  n.start <- x[byDT, sum(normalEntry & !duplicated(lex.id)), by = .EACHI,
+               on = names(byDT)]
+  
+  expect_equal(a$at.risk, n.start$V1)
+})
