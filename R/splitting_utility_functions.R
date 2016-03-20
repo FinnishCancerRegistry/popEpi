@@ -113,6 +113,7 @@ intelliCrop <- function(x, breaks = list(fot = 0:5), allScales = NULL, cropStatu
   
   TF <- environment()
   checkBreaksList(x = x, breaks = breaks)
+  breaks[unlist(lapply(breaks, length)) == 0L] <- NULL
   if (!is.data.table(x)) stop("x needs to be a data.table")
   
   cropScales <- names(breaks)
@@ -265,6 +266,7 @@ intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = 
          "to the package maintainer")
   }
   checkBreaksList(x = x, breaks = breaks)
+  breaks[unlist(lapply(breaks, length)) == 0L] <- NULL
   timeScales <- names(breaks)
   
   if (check) {
