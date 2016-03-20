@@ -580,7 +580,7 @@ survtab_ag <- function(formula = NULL,
       n <- substitute(n)
       mc$n <- evalPopArg(n, data = data, enclos = PF)
       
-      valVars <- c(valVars, "n")
+      valVars <- unique(c(valVars, "n"))
       
       if (is.null(mc$n)) {
         
@@ -842,8 +842,7 @@ survtab_ag <- function(formula = NULL,
         rs.table[, surv.exp := cumprod(p.exp), by = eval(rs.by.vars)]
         comp.st.r.e2.haz(surv.table = rs.table, surv.by.vars = rs.by.vars)
       } else {
-        
-        rs.table[, p.exp := d.exp/n]
+        rs.table[, p.exp := 1 - d.exp/n]
         rs.table[, surv.exp := cumprod(p.exp), by = eval(rs.by.vars)]
         
         if (rs.table[, min(surv.obs, na.rm=T) == 0]) {
