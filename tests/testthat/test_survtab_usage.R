@@ -119,7 +119,7 @@ test_that("Dates and frac. yrs produce congruent results", {
 
 
 test_that("hazard and lifetable produce congruent results", {
-  
+  skip_on_cran()
   library(Epi)
   library(survival)
   

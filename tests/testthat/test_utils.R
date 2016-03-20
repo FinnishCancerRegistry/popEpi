@@ -118,6 +118,7 @@ test_that("evalPopArg produces intended results",{
 
 
 test_that("cutLowMerge merges succesfully what is intended", {
+  skip_on_cran()
   all_names_present(popEpi::popmort, c("sex", "year", "agegroup", "haz"))
   all_names_present(popEpi::sire, c("sex", "bi_date", "dg_date", "ex_date", "status"))
   
