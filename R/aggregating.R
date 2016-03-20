@@ -258,7 +258,7 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   
   allTime <- proc.time()
   
-  lex.id <- NULL ## APPEASE R CMD CHECK
+  lex.id <- at.risk <- NULL ## APPEASE R CMD CHECK
   
   PF <- parent.frame(1L)
   TF <- environment()
@@ -331,13 +331,18 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   ## take copy of lex ----------------------------------------------------------
   ## if lex is a data.table, this function gets really complicated.
   ## if copy is taken only of necessary vars, it should be fine.
-  keepVars <- unique(c("lex.id", names(breaks), "lex.dur", 
+  keepVars <- unique(c("lex.id", allScales, "lex.dur", 
                        "lex.Cst", "lex.Xst", av, sumVars))
   lex.orig <- lex
   lex <- subsetDTorDF(lex, subset = subset, select = keepVars)
   lex <- setDT(copy(lex))
   forceLexisDT(lex, breaks = breaks, allScales = allScales, key = FALSE)
+  
+  ## ensure no observations outside breaks limits are left in
+  lex <- intelliDrop(lex, breaks = breaks)
+  
   setkeyv(lex, c("lex.id", allScales[1]))
+  setcolsnull(lex, delete = setdiff(allScales, names(breaks)))
   
   ## cut time scales for aggregating if needed ---------------------------------
   aggScales <- intersect(av, allScales)
@@ -352,7 +357,7 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   ## to be the survival time scale.
   tmpAtRisk <- makeTempVarName(lex, pre = "at.risk_")
   set(lex, j = tmpAtRisk, value = TRUE)
-  
+  survScale <- NULL
   
   if (length(aggScales) > 0) {
     cutTime <- proc.time()
@@ -487,10 +492,15 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   }
  
   
-  ## sadly, event computations requires information about
-  ## 1) transitions (easy) and 2) end points (harder).
-  ## end points requires sorting at some point!
-  hasEvent <- detectEvents(lex, breaks = breaks, by = "lex.id") %in% 1:2
+  ## NOTE: this will ensure correct detection of censorings:
+  ## observations cut short by e.g. period window's edge
+  ## will be considered a censoring if the breaks along that time scale
+  ## are not passed to detectEvents (assuming the survival time scale is
+  ## used in by). If no time scale mentioned in by, then all endings
+  ## of observations are either censorings or events.
+  detBr <- breaks[survScale]
+  if (!length(survScale)) detBr <- NULL
+  hasEvent <- detectEvents(lex, breaks = detBr, by = "lex.id") %in% 1:2
   ## is language if user supplied by = NULL 
   if (!is.language(by)) by <- by[hasEvent]
   
