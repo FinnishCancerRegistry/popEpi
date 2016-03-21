@@ -459,7 +459,11 @@ makeWeightsDT <- function(data, values = NULL,
     setDT(wm)
     
     weights <- merge(wm, weights, by = adVars, all.x = TRUE, all.y = TRUE)
-    weights[, weights := weights/sum(weights), by = eval(prVars)]
+    
+    byCols <- subsetDTorDF(weights, select = prVars)
+    if (!length(prVars)) byCols <- NULL
+    weights[, weights := weights/sum(weights), by = eval(byCols)]
+    rm(byCols)
     
     data <- merge(data, weights, by = c(prVars, adVars), 
                   all.x = TRUE, all.y = FALSE)
@@ -473,6 +477,7 @@ makeWeightsDT <- function(data, values = NULL,
     
     
   }
+  
   setattr(data, "makeWeightsDT", list(prVars = prVars, adVars = adVars, 
                                       boVars = boVars, vaVars = vaVars, 
                                       NAs = NAs))
