@@ -32,8 +32,9 @@ test_that("makeWeightsDT works with various weights & adjust spesifications", {
                       print = "gender", adjust = "agegr")
   expect_equal(nrow(DT), 24L)
   expect_equal(sum(dt$pyrs), sum(DT$pyrs))
-  expect_equal(sort(intersect(wdt$weights/sum(wdt$weights), unique(DT$weights))),
-               sort(unique(DT$weights)))
+  DTW <- unique(DT, by = c("agegr"))$weights
+  wdt[, ww := weights/sum(weights)]
+  expect_equal(DTW, wdt[agegr %in% DT$agegr, ww])
   expect_equal(DT[, sum(pyrs), keyby = agegr], dt[, sum(pyrs), keyby = agegr], check.attributes = FALSE)
   expect_equal(DT[, sum(pyrs), keyby = gender], dt[, sum(pyrs), keyby = gender], check.attributes = FALSE)
   

@@ -429,15 +429,47 @@ makeWeightsDT <- function(data, values = NULL,
       
     }
     
-    if (!is.data.frame(weights)) stop("Something went wrong: 'weights' was not collated into a data.frame to merge with data. Blame the package maintainer please!")
-    
+    if (!is.data.frame(weights)) {
+      stop("Something went wrong: 'weights' was not collated into a ",
+           "data.frame to merge with data. ",
+           "Blame the package maintainer please!")
+    }
+    ## at this points weights is a data.frame.
     weights <- data.table(weights)
-    weights[, weights := weights/sum(weights)]
+    weights[, weights := as.double(weights)]
     
-    ## it's a data.frame of weights and has corresponding vars to merge by
+    ## ensure repetition by print levels if some adjust levels
+    ## that exist in weights do not exist in data.
+    ## NOTE: weights data.frame has at least as many levels as adjust column
+    ## in data (or it has more sometimes).
+    wm <- lapply(adVars, function(chStr) {
+      col <- weights[[chStr]]
+      if (is.factor(col)) return(levels(col))
+      sort(unique(col))
+      })
+    names(wm) <- adVars
+    if (length(prVars)) {
+      wm[prVars] <- lapply(prVars, function(chStr) {
+        col <- data[[chStr]]
+        if (is.factor(col)) return(levels(col))
+        sort(unique(col))
+      })
+    }
+    wm <- do.call(CJ, wm)
+    setDT(wm)
     
-    data <- merge(data, weights, by = adVars, all.x = TRUE, all.y = FALSE)
+    weights <- merge(wm, weights, by = adVars, all.x = TRUE, all.y = TRUE)
+    weights[, weights := weights/sum(weights), by = eval(prVars)]
     
+    data <- merge(data, weights, by = c(prVars, adVars), 
+                  all.x = TRUE, all.y = FALSE)
+    
+    if (any(is.na(data$weights))) {
+      ## should not be any NAs since we checked for level congruence
+      ## in checkWeights
+      stop("Internal error: some weights were NA after merging to working ",
+           "data. Complain to the package maintainer if you see this.")
+    }
     
     
   }
