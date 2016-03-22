@@ -132,5 +132,22 @@ ws2 <- list(agegr = c(0.33, 0.33, 0.33), sex = c(0.5, 0.5))
 dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
                     adjust = NULL, values = vs, weights = ws2,
                     enclos = NULL)
+
+## international standard pops
+ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
+              status = status \%in\% 1:2, pophaz = popmort, pp = FALSE,
+              aggre = list(sex, agegr = cut(dg_age, c(seq(0, 85, 5), Inf)), fot), 
+              fot = seq(0, 5, 1/12))
+              
+form <- from0to1 ~ fot + adjust(agegr)
+dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
+                    adjust = NULL, values = vs, weights = "world_1966_18of5",
+                    enclos = NULL)
+                    
+form <- from0to1 ~ fot + adjust(agegr, sex)
+dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
+                    adjust = NULL, values = vs, 
+                    weights = list(agegr = "nordic_2000_18of5", sex=c(1,1)),
+                    enclos = NULL)
 }
 
