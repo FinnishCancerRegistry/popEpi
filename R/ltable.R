@@ -193,7 +193,7 @@ expr.by.cj <- function(data,
   
   ## eval subset ---------------------------------------------------------------
   subset <- substitute(subset)
-  subset <- evalLogicalSubset(data, subset, enc = PF)
+  subset <- evalLogicalSubset(data, subset, enclos = PF)
   
   ## retrieve data to use without taking copy ----------------------------------
   
