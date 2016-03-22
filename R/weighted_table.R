@@ -611,15 +611,17 @@ checkWeights <- function(weights, adjust) {
       }
     })
     
-    weLen <- sapply(weights, length)
-    adLen <- sapply(adjust, length)
+    weLen <- unlist(lapply(weights, length))
+    adLen <- unlist(lapply(adjust, length))
     badLen <- names(adjust)[weLen != adLen]
+    
     if (length(badLen) > 0) {
       stop("Mismatch in numbers of levels/unique values in adjusting variables ",
            "and lengths of corresponding weights vectors. ",
            "Names of mismatching variables: ", 
            paste0("'", badLen, "'", collapse = ", "), ". There were ",
-           weLen, " weights and ", adLen, " adjusting variable levels.")
+           weLen[weLen != adLen], " weights and ", adLen[weLen != adLen], 
+           " adjusting variable levels.")
     }
   }
   
