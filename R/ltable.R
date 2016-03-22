@@ -128,7 +128,7 @@ ltable <- function(data,
   
   ## eval subset ---------------------------------------------------------------
   subset <- substitute(subset)
-  subset <- evalLogicalSubset(data, subset, enc = PF)
+  subset <- evalLogicalSubset(data, subset, enclos = PF)
   
   ## create table --------------------------------------------------------------
   res <- expr.by.cj(data = data,
