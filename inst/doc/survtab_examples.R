@@ -1,8 +1,9 @@
+## ----pkgs, eval = FALSE, echo = TRUE-------------------------------------
+#  library(popEpi)
+#  library(Epi)
+#  library(survival)
+
 ## ------------------------------------------------------------------------
-# library(popEpi)
-devtools::load_all()
-library(Epi)
-library(survival)
 
 data(sire)
 ## NOTE: recommended to use factor status variable
