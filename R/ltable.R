@@ -219,8 +219,9 @@ expr.by.cj <- function(data,
   lev_fun <- function(x) {
     if (use.levels && is.factor(x)) {
       levels(x)
-    } else {}
+    } else {
     sort(unique(x))
+    }
   }
   
   cj <- lapply(as.list(tab)[by.vars], lev_fun)
