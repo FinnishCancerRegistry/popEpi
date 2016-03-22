@@ -1607,15 +1607,19 @@ evalRecursive <- function(arg, env, enc, max.n = 100L) {
   argSub <- arg
   
   tick <- 1L
-  while (is.language(arg) && !inherits(arg, "formula") && tick < max.n) {
+  while (!inherits(arg, "try-error") && is.language(arg) && 
+         !inherits(arg, "formula") && tick < max.n) {
     
     argSub <- arg
-    arg <- eval(argSub, envir = env, enclos = enc)
+    arg <- try(eval(argSub, envir = env, enclos = enc), silent = TRUE)
     
     tick <- tick + 1L
   }
   
-  if (tick == max.n) stop("evaluated expression ", max.n, " times and still could not find underlying expression")
+  if (tick == max.n) {
+    stop("evaluated expression ", max.n, 
+         " times and still could not find underlying expression")
+  }
   if (!is.language(argSub)) argSub <- substitute(arg)
   list(arg = arg, argSub = argSub, all.vars = all.vars(argSub))
 }
