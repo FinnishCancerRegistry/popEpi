@@ -18,3 +18,5 @@ VignetteBuilder: knitr
 URL: https://github.com/WetRobot/popEpi
 BugReports: https://github.com/WetRobot/popEpi/issues
 RoxygenNote: 5.0.1
+Remotes: 
+    github::jimhester/covr
