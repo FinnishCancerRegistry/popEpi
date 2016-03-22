@@ -1,20 +1,35 @@
-#' @title Tabulate counts and other functions with multiple factors into a long-format table
+#' @title Tabulate Counts and Other Functions by Multiple Variables into a 
+#' Long-Format Table
 #' @author Joonas Miettinen, Matti Rantanen
-#' @description \code{ltable} makes use of \code{data.table} capabilities to tabulate frequencies or 
-#' arbitrary functions of given variables into a long format \code{data.table}/\code{data.frame}.
-#' @param data individual-level or aggregated data
+#' @description \code{ltable} makes use of \code{data.table} 
+#' capabilities to tabulate frequencies or 
+#' arbitrary functions of given variables into a long format 
+#' \code{data.table}/\code{data.frame}. \code{expr.by.cj} is the 
+#' equivalent for more advanced users.
+#' @param data a \code{data.table}/\code{data.frame}
 #' @param by.vars names of variables that are used for categorization, 
 #' as a character vector, e.g. \code{c('sex','agegroup')}
-#' @param expr object or a list of objects where each object is a function of a variable (see: details)
+#' @param expr object or a list of objects where each object is a function 
+#' of a variable (see: details)
 #' @param subset a logical condition; data is limited accordingly before
-#' evaluating \code{expr}
-#' @param use.levels logical; if \code{TRUE}, uses factor levels of given variables if present; 
-#' if you want e.g. counts for levels
-#' that actually have zero observatios but are levels in a factor variable, use this
-#' @param na.rm logical; if \code{TRUE}, drops rows in table that have more than zero \code{NA} values on 
-#' any \code{by.vars} column
-#' @param robust logical; if \code{TRUE}, runs the outputted data's \code{by.vars} columns 
-#' through \code{robust_values} before outputting
+#' evaluating \code{expr} - but the result of \code{expr} is also
+#' returned as \code{NA} for levels not existing in the subset. See Examples.
+#' @param use.levels logical; if \code{TRUE}, uses factor levels of given 
+#' variables if present;  if you want e.g. counts for levels
+#' that actually have zero observatios but are levels in a factor variable, 
+#' use this
+#' @param na.rm logical; if \code{TRUE}, drops rows in table that have 
+#' \code{NA} as values in any of \code{by.vars} columns
+#' @param robust logical; if \code{TRUE}, runs the outputted data's 
+#' \code{by.vars} columns through \code{robust_values} before outputting
+#' @param .SDcols advanced; a character vector of column names 
+#' passed to inside the data.table's brackets 
+#' \code{DT[, , ...]}; see \code{\link{data.table}}; if \code{NULL},
+#' uses all appropriate columns. See Examples for usage.
+#' @param enclos advanced; an environment; the enclosing
+#' environment of the data.
+#' @param ... advanced; other arguments passed to inside the 
+#' data.table's brackets \code{DT[, , ...]}; see \code{\link{data.table}}
 #' 
 #' @import data.table 
 #' 
@@ -32,7 +47,7 @@
 #' 
 #' The function differs from the
 #' vanilla \code{\link{table}} by giving a long format table of values
-#'  regardless of the number of \code{by.vars} given.
+#' regardless of the number of \code{by.vars} given.
 #' Make use of e.g. \code{\link{cast_simple}} if data needs to be 
 #' presented in a wide format (e.g. a two-way table).
 #' 
@@ -45,10 +60,12 @@
 #' The \code{expr} allows the user to apply any function(s) on all 
 #' levels defined by  \code{by.vars}. Here are some examples:
 #' \itemize{
-#'   \item .N or list(.N) is a function used inside a \code{data.table} to calculate counts in each group
+#'   \item .N or list(.N) is a function used inside a \code{data.table} to 
+#'   calculate counts in each group
 #'   \item list(obs = .N), same as above but user assigned variable name
 #'   \item list(sum(obs), sum(pyrs), mean(dg_age)), multiple objects in a list
-#'   \item list(obs = sum(obs), pyrs = sum(pyrs)), same as above with user defined var names
+#'   \item list(obs = sum(obs), pyrs = sum(pyrs)), same as above with user 
+#'   defined var names
 #' }
 #' 
 #' If  \code{use.levels = FALSE}, no \code{levels} information will
@@ -76,117 +93,12 @@
 #' ltable(sr, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)))
 #' 
 #' ## also returns levels where there are zero rows (expressions as NA)
-#' ltable(sr, "agegroup", list(obs = .N, minage = min(dg_age), maxage = max(dg_age)), 
+#' ltable(sr, "agegroup", list(obs = .N, 
+#'                             minage = min(dg_age), 
+#'                             maxage = max(dg_age)), 
 #'        subset = dg_age < 85)
-#' 
-
-ltable <- function(data, 
-                   by.vars='sex',
-                   expr=list(obs=.N),
-                   subset = NULL,
-                   use.levels = TRUE,
-                   na.rm = FALSE,
-                   robust = TRUE) {
-  if (is.null(by.vars)) {
-    message('No category variables given!')
-    return(nrow(data))
-  }
-  all_names_present(data, by.vars, stops=T)
-  
-  if (!is.data.frame(data)) stop("only data.frame or data.table allowed as data")
-  
-  ## subsetting: no copy of data -----------------------------------------------
-  subset <- substitute(subset)
-  subset <- evalLogicalSubset(data = data, substiset = subset)
-  
-  ## use either original levels or simply unique values
-  if (use.levels) {
-    levsfun <- function(x) {
-      if (is.factor(x)) return(levels(x))
-      return(sort(unique(x), na.last=TRUE))
-    }
-  } else {
-    levsfun <- function(x) sort(unique(x), na.last=TRUE)
-  }
-  
-  ## collect levels of by.vars in list
-  levs <- list()
-  for (k in by.vars) {
-    levs[[k]] <- levsfun(data[[k]])
-  }
-  
-  ## table for picking rows
-  cj <- do.call(CJ, levs)
-  
-  ## treatment of NA values in by.vars
-  if (na.rm) {
-    cj <- na.omit(cj)
-  }
-  
-  ## make the table
-  e <- substitute(expr)
-  
-  ## if any subset defined, need to always take copy;
-  ## same if not data.table
-  if (!all(subset) || !is.data.table(data)) {
-    data <- data[subset,]
-    setDT(data)
-    setkeyv(data, by.vars)
-    tab <- data[cj, eval(e, envir = .SD), by =.EACHI]
-    rm(data)
-  } else {
-    ## otherwise can get away with sorting in place
-    rm(subset)
-    old_key <- key(data)
-    tmpORDER <- makeTempVarName(data, pre = "order_")
-    set(data, j = tmpORDER, value = 1:nrow(data))
-    on.exit(setcolsnull(data, delete = tmpORDER, soft = TRUE), add = TRUE)
-    setkeyv(data, by.vars)
-    tab <- data[cj, eval(e, envir = .SD), by = .EACHI]
-    if (length(old_key) > 0) {
-      setkeyv(data, old_key)
-    } else {
-      setorderv(data, cols = tmpORDER)
-    }
-  }
-  
-  ## robust values output where possible ---------------------------------------
-  if (robust) {
-    for (k in by.vars) {
-      set(tab, j = k, value = robust_values(tab[[k]], force = FALSE, messages = FALSE))
-    }
-    
-  }
-  
-  setDT(tab)
-  setkeyv(tab,by.vars)
-  if (!getOption("popEpi.datatable")) setDFpe(tab)
-  tab[]
-}
-
-
-
-
-#' @title Tabulate counts and other functions with multiple factors into a long-format table
-#' @author Joonas Miettinen
-#' @description Like \code{ltable} except faster and unrobust. For advanced users.
-#' @import data.table 
-#' @param data a data.table
-#' @param by.vars a character string vector specifying the names of variables,
-#' by the combinations of which to evaluate the given \code{expr}
-#' @param expr an arbitrary expression utilizing any available function
-#' on any variable available in the data
-#' @param subset a logical condition; data is limited accordingly before
-#' evaluating \code{expr}
-#' @param .SDcols advanced; passed to inside the data.table's brackets 
-#' \code{DT[, , ...]}; see \code{\link{data.table}}
-#' @param ... advanced; other arguments passed to inside the 
-#' data.table's brackets \code{DT[, , ...]}; see \code{\link{data.table}}
-#' @export expr.by.cj
-#' @examples
-#' sr <- copy(sire)
-#' sr$agegroup <- cut(sr$dg_age, breaks=5)
-#' ## counts by default
+#'        
+#' #### expr.by.cj
 #' expr.by.cj(sr, "agegroup")
 #' 
 #' ## any arbitrary expression can be given
@@ -196,50 +108,145 @@ ltable <- function(data,
 #' ## only uses levels of by.vars present in data
 #' expr.by.cj(sr, "agegroup", list(mage = mean(dg_age), vage = var(dg_age)), 
 #'            subset = dg_age < 70)
-#' 
+#'            
+#' ## .SDcols trick
+#' expr.by.cj(sr, "agegroup", lapply(.SD, mean), 
+#'            subset = dg_age < 70, .SDcols = c("dg_age", "status"))
 
-expr.by.cj <- function(data, 
-                       by.vars='sex',
-                       expr=list(obs=.N),
-                       subset = NULL,
-                       .SDcols,
-                       ...) {
-  if (!is.data.table(data)) stop("data must be a data.table; try ltable instead?")
+ltable <- function(data, 
+                   by.vars = NULL, 
+                   expr = .N, 
+                   subset = NULL, 
+                   use.levels = TRUE, 
+                   na.rm = FALSE,
+                   robust = TRUE) {
   
-  ## subsetting: no copy of data -----------------------------------------------
-  subset <- substitute(subset)
-  subset <- evalLogicalSubset(data = data, substiset = subset)
-  
-  old_key <- key(data)
-  
-  levs <- lapply(data[subset, c(by.vars), with=F], unique)
-  cj <- do.call(CJ, levs)
+  PF <- parent.frame()
+  TF <- environment()
   
   e <- substitute(expr)
   
-  if (!all(subset)) {
-    data <- data[subset,]
-    setDT(data)
-    setkeyv(data, by.vars)
-    tab <- data[cj, eval(e, envir = .SD), by =.EACHI,  .SDcols = .SDcols, ...]
-  } else {
-    ## otherwise can get away with sorting in place
-    rm(subset)
-    old_key <- key(data)
-    tmpORDER <- makeTempVarName(data, pre = "order_")
-    set(data, j = tmpORDER, value = 1:nrow(data))
-    on.exit(setcolsnull(data, delete = tmpORDER, soft = TRUE), add = TRUE)
-    setkeyv(data, by.vars)
-    tab <- data[cj, eval(e, envir = .SD), by = .EACHI,  .SDcols = .SDcols, ...]
-    if (length(old_key) > 0) {
-      setkeyv(data, old_key)
-    } else {
-      setorderv(data, cols = tmpORDER)
-    }
+  ## eval subset ---------------------------------------------------------------
+  subset <- substitute(subset)
+  subset <- evalLogicalSubset(data, subset, enc = PF)
+  
+  ## create table --------------------------------------------------------------
+  res <- expr.by.cj(data = data,
+                    by.vars = by.vars,
+                    expr = e,
+                    subset = subset,
+                    use.levels = use.levels,
+                    na.rm = na.rm,
+                    robust = robust)
+  
+  
+  ## final touch ---------------------------------------------------------------
+  
+  if (!getOption("popEpi.datatable")) {
+    setDFpe(res)
+  }
+  res
+  
+}
+
+
+
+
+#' @describeIn ltable Somewhat more streamlined \code{ltable} with 
+#' defaults for speed. Explicit determination of enclosing environment
+#' of data.
+#' @export expr.by.cj
+
+expr.by.cj <- function(data, 
+                       by.vars = NULL, 
+                       expr = .N, 
+                       subset = NULL, 
+                       use.levels = FALSE, 
+                       na.rm = FALSE,
+                       robust = FALSE,
+                       .SDcols = NULL,
+                       enclos = parent.frame(1L),
+                       ...) {
+  
+  PF <- enclos
+  TF <- environment()
+  
+  
+  ## checks --------------------------------------------------------------------
+  if (!is.data.frame(data)) {
+    stop("Argument 'data' must be data.frame (data.table is fine too)")
   }
   
+  stopifnot(is.environment(enclos))
+  stopifnot(is.logical(na.rm))
+  stopifnot(is.logical(use.levels))
+  
+  stopifnot(is.character(by.vars) || is.null(by.vars))
+  all_names_present(data, c(by.vars))
+  
+  stopifnot(is.character(.SDcols) || is.null(.SDcols))
+  all_names_present(data, .SDcols)
+  
+  tab <- data.table(data[1:min(10, nrow(data)),])
+  e <- substitute(expr)
+  e <- tab[, evalRecursive(e, env = .SD, enc = PF)$argSub]
+  
+  ## eval subset ---------------------------------------------------------------
+  subset <- substitute(subset)
+  subset <- evalLogicalSubset(data, subset, enc = PF)
+  
+  ## retrieve data to use without taking copy ----------------------------------
+  
+  tabVars <- unique(c(by.vars, all.vars(e), .SDcols))
+  tabVars <- intersect(names(data), tabVars)
+  
+  tab <- mget(tabVars, envir = as.environment(data))
   setDT(tab)
-  if (!getOption("popEpi.datatable")) setDFpe(tab)
-  tab[]
+  
+  tmpDum <- makeTempVarName(data, pre = "dummy_")
+  if (!length(by.vars)) {
+    if (!length(tab)) {
+      ## no by.vars nor variables in expr
+      tab <- data.table(rep(1L, nrow(data)))
+      setnames(tab, "V1", tmpDum)
+    } else {
+      tab[, c(tmpDum) := 1L]
+    }
+    by.vars <- tmpDum
+  }
+  
+  ## create joining table ------------------------------------------------------
+  lev_fun <- function(x) {
+    if (use.levels && is.factor(x)) {
+      levels(x)
+    } else {}
+    sort(unique(x))
+  }
+  
+  cj <- lapply(as.list(tab)[by.vars], lev_fun)
+  cj <- do.call(CJ, cj)
+  if (na.rm) cj <- na.omit(cj)
+  
+  
+  ## eval expression -----------------------------------------------------------
+  exprVars <- setdiff(names(tab), by.vars)
+  if (!length(.SDcols)) .SDcols <- exprVars
+  if (!length(.SDcols)) .SDcols <- tabVars
+  res <- tab[subset][cj, eval(e, envir = .SD), 
+                     on = by.vars, 
+                     by = .EACHI, 
+                     .SDcols = .SDcols, ...]
+  
+  setcolsnull(res, delete = tmpDum, soft = TRUE)
+  by.vars <- setdiff(by.vars, tmpDum)
+  
+  ## final touch ---------------------------------------------------------------
+  if (length(res)) setcolorder(res, c(by.vars, setdiff(names(res), by.vars)))
+  if (length(by.vars)) setkeyv(res, by.vars)
+  if (!getOption("popEpi.datatable")) {
+    setDFpe(res)
+  }
+  res
+  
 }
 

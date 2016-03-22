@@ -84,7 +84,7 @@ check_some <- function() {
   
 }
 
-test_some <- function(filter = NULL)  {
+test_as_cran <- function(filter = NULL)  {
   ## runs only the tests that CRAN will run
   old <- Sys.getenv("NOT_CRAN")
   on.exit(Sys.setenv("NOT_CRAN" = old))
@@ -99,6 +99,20 @@ test_all <- function(filter = NULL, examples = FALSE)  {
   Sys.setenv("NOT_CRAN" = "true")
   devtools::test(".", filter = filter)
   if (examples) devtools::run_examples(".", run = TRUE, fresh = TRUE)
+}
+
+test_as_travis <- function(filter = NULL) {
+  ## runs all tests that Travis runs; 
+  ## only with options("popEpi.datatable" = TRUE);
+  oldCR <- Sys.getenv("NOT_CRAN")
+  oldTR <- Sys.getenv("TRAVIS")
+  on.exit({
+    Sys.setenv("NOT_CRAN" = oldCR)
+    Sys.setenv("TRAVIS" = oldTR)
+    })
+  Sys.setenv("NOT_CRAN" = "true")
+  Sys.setenv("TRAVIS" = "true")
+  devtools::test(".", filter = filter)
 }
 
 test_full <- function(filter = NULL) {
