@@ -21,6 +21,8 @@ test_that("Dates and frac. yrs produce congruent results", {
               data = x,
               exit.status = factor(status, levels = 0:2, 
                                    labels = c("alive", "canD", "othD")), 
+              entry.status = factor(0, levels = 0:2, 
+                                   labels = c("alive", "canD", "othD")), 
               merge = TRUE)
   
   ## dates
@@ -29,6 +31,8 @@ test_that("Dates and frac. yrs produce congruent results", {
               data = x,
               exit.status = factor(status, levels = 0:2, 
                                    labels = c("alive", "canD", "othD")), 
+              entry.status = factor(0, levels = 0:2, 
+                                    labels = c("alive", "canD", "othD")), 
               merge = TRUE)
   yd <- 365.242199
   BLy <- list(FUT = seq(0, 5, 1/4))
@@ -136,6 +140,8 @@ test_that("hazard and lifetable produce congruent results", {
               data = x,
               exit.status = factor(status, levels = 0:2, 
                                    labels = c("alive", "canD", "othD")), 
+              entry.status = factor(0, levels = 0:2, 
+                                    labels = c("alive", "canD", "othD")), 
               merge = TRUE)
   
   
@@ -162,6 +168,8 @@ test_that("hazard and lifetable produce congruent results", {
 })
 
 test_that("lifetable counts work with period analysis", {
+  library(Epi)
+  library(survival)
   x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
              exit = list(CAL = get.yrs(ex_date)),
              data = sire[sire$dg_date < sire$ex_date, ],
