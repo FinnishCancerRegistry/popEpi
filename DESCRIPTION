@@ -1,12 +1,12 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
-Authors@R: c( person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", c("aut", "cre")), person("Matti", "Rantanen", ,
-               "matti.rantanen@cancer.fi", "aut"), person("Karri", "Seppa", , "karri.seppa@cancer.fi", "ctb") )
-Version: 0.2.2.9024
-Date: 2016-03-21
+Authors@R: c( person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", c("aut", "cre")), person("Matti", "Rantanen", , "matti.rantanen@cancer.fi", "aut"),
+                 person("Karri", "Seppa", , "karri.seppa@cancer.fi", "ctb") )
+Version: 0.2.2.9025
+Date: 2016-03-22
 Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
-Description: Enables computation of various epidemiological statistics where the use of population data such as population counts and
-               hazards is required. Relatively high computation speed achieved by using data.table.
+Description: Enables computation of various epidemiological statistics where the use of population data such as population counts and hazards is required.
+                 Relatively high computation speed achieved by using data.table.
 Depends: R (>= 3.2.0), data.table (>= 1.9.6)
 Imports: Epi, survival
 Suggests: reshape2, methods, testthat, knitr, rmarkdown, relsurv, ggplot2, mstate, date, splines, roxygen2
@@ -18,5 +18,4 @@ VignetteBuilder: knitr
 URL: https://github.com/WetRobot/popEpi
 BugReports: https://github.com/WetRobot/popEpi/issues
 RoxygenNote: 5.0.1
-Remotes: 
-    github::jimhester/covr
+Remotes: github::jimhester/covr
