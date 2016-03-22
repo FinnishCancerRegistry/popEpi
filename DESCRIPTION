@@ -9,7 +9,7 @@ Description: Enables computation of various epidemiological statistics where the
                hazards is required. Relatively high computation speed achieved by using data.table.
 Depends: R (>= 3.2.0), data.table (>= 1.9.6)
 Imports: Epi, survival
-Suggests: reshape2, methods, testthat, knitr, rmarkdown, relsurv, ggplot2, mstate, date, splines
+Suggests: reshape2, methods, testthat, knitr, rmarkdown, relsurv, ggplot2, mstate, date, splines, roxygen2
 Encoding: UTF-8
 License: GPL-3
 LazyData: true
