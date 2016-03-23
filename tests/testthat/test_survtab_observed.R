@@ -81,7 +81,7 @@ test_that("survtab works with more complicated estimation", {
   library(Epi)
   library(survival)
   
-  x <- popEpi::sire[sire$dg_date < sire$ex_date, ]
+  x <- data.table(popEpi::sire[sire$dg_date < sire$ex_date, ])
   
   ## pretend some are male
   set.seed(1L)
