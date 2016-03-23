@@ -13,6 +13,8 @@ test_that("survmean() agrees with old results", {
              data = sr,
              exit.status = factor(status, levels = 0:2,
                                   labels = c("alive", "canD", "othD")),
+             entry.status = factor(0, levels = 0:2,
+                                   labels = c("alive", "canD", "othD")),
              merge = TRUE)
   
   ## observed survival
@@ -160,6 +162,8 @@ test_that("survmean expected survival curve corresponds to full Ederer I", {
              data = sr,
              exit.status = factor(status, levels = 0:2,
                                   labels = c("alive", "canD", "othD")),
+             entry.status = factor(0, levels = 0:2,
+                                   labels = c("alive", "canD", "othD")),
              merge = TRUE)
   
   pm <- copy(popEpi::popmort)
@@ -201,6 +205,8 @@ test_that("survmean period method is useful", {
              data = sr,
              exit.status = factor(status, levels = 0:2,
                                   labels = c("alive", "canD", "othD")),
+             entry.status = factor(0, levels = 0:2,
+                                   labels = c("alive", "canD", "othD")),
              merge = TRUE)
   
   pm <- data.table(popEpi::popmort)
@@ -253,6 +259,8 @@ test_that("Dates and frac. yrs produce congruent results", {
               data = x,
               exit.status = factor(status, levels = 0:2, 
                                    labels = c("alive", "canD", "othD")), 
+              entry.status = factor(0, levels = 0:2,
+                                    labels = c("alive", "canD", "othD")),
               merge = TRUE)
   
   ## dates
@@ -261,6 +269,8 @@ test_that("Dates and frac. yrs produce congruent results", {
               data = x,
               exit.status = factor(status, levels = 0:2, 
                                    labels = c("alive", "canD", "othD")), 
+              entry.status = factor(0, levels = 0:2,
+                                    labels = c("alive", "canD", "othD")),
               merge = TRUE)
   yd <- 365.242199
   BLy <- list(FUT = seq(0, 9, 1/4))
