@@ -135,7 +135,7 @@ test_full <- function(filter = NULL) {
 
 check_none <- function() {
   ## runs R CMD CHECK without running any tests
-  devtools::check(".", args = "--test-dir=tests/emptyDir/")
+  devtools::check(".", args = "--no-tests")
 }
 
 resaveAllDatas <- function(folder = "data/", ext = ".rdata") {
