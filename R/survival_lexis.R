@@ -118,7 +118,7 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   ## this adjust passed to resulting data's attributes at the end
   adjAttr <- evalPopArg(data = x, arg = substitute(adjust), 
                         enclos = PF, DT = TRUE, recursive = TRUE)
-  l <- usePopFormula(form = formula, adjust = adSub, data = x, enclos = TF)
+  l <- usePopFormula(form = formula, adjust = adSub, data = x, enclos = PF)
   prVars <- names(l$print)
   adVars <- names(l$adjust)
   
