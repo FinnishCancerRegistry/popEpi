@@ -55,6 +55,7 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   if (surv.type == "surv.rel" && relsurv.method == "pp") comp_pp <- TRUE
   if (comp_pp) drop <- FALSE
   
+  
   ## data & subset -------------------------------------------------------------
   subset <- evalLogicalSubset(data, substitute(subset))
   x <- data[subset, ]; rm(subset)
@@ -62,22 +63,19 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   forceLexisDT(x, breaks = NULL, allScales = allScales, key = TRUE)
   
   ## pre-eval of print & adjust ------------------------------------------------
-  adTest <- evalPopArg(x[1:min(10, .N)], substitute(adjust), 
-                       DT = TRUE, recursive = TRUE, enclos = PF)
+  
+  adSub <- substitute(adjust)
+  adTest <- evalRecursive(adSub, env = x, enc = PF)
   if (!is.null(adTest)) {
-    adType <- attr(adTest, "arg.type")
-    adSub <- attr(adTest, "quoted.arg")
-    adVars <- attr(adTest, "all.vars")
+    adSub <- adTest$argSub
+    adVars <- all.vars(adSub)
   } else {
-    adType <- "NULL"
     adSub <- substitute(NULL)
     adVars <- NULL
   } 
   
-  formula <- evalRecursive(substitute(formula), env = TF, enc = PF)$arg
-  foSub <- substitute(formula)
+  formula <- evalRecursive(formula, env = TF, enc = PF)$arg
   foVars <- all.vars(formula)
-  
   
   if (!inherits(formula,"formula")) {
     stop("Argument 'formula' is not a formula object. Usage: e.g. ",
@@ -87,50 +85,37 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
     stop("Argument 'formula'must be two-sided. Usage: e.g. ",
          "Surv(fot, lex.Xst %in% 1:2) ~ sex")
   }
+  ## eval print & adjust -------------------------------------------------------
+  ## this adjust passed to resulting data's attributes at the end
+  adSub <- substitute(adjust)
+  adjust <- evalPopArg(data = x, arg = adSub, 
+                       enclos = PF, DT = TRUE, 
+                       recursive = TRUE)
   
-  foTest <- evalPopArg(x[1:min(10, .N)], foSub, DT = TRUE, 
-                       recursive = TRUE, enclos = PF,
-                       types = "formula", naming = "model")
+  l <- usePopFormula(form = formula, adjust = adjust, data = x, enclos = PF)
+  prVars <- names(l$print)
+  adVars <- names(l$adjust)
+  
+  
+  ## check weights makes sense with respect to adjust --------------------------
+  if (length(adVars) > 0L && !is.null(weights)) {
+    checkWeights(weights, adjust = l$adjust)
+    
+  }
+  
+  ## check pophaz --------------------------------------------------------------
   
   if (surv.type %in% c("surv.rel", "cif.rel")) {
     checkPophaz(x, pophaz, haz.name = "haz")
   }
   pophazVars <- setdiff(names(pophaz), "haz")
   
+  ## only keep necessary variables ---------------------------------------------
+  
   setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, 
-                          "lex.Cst", "lex.Xst", pophazVars, 
-                          adVars, foVars), colorder = TRUE)
-  
-  ## pre-crop data to speed up computations ------------------------------------
-  cropBreaks <- breaks
-  if (surv.type == "surv.rel" && relsurv.method == "pp")  {
-    ## pp-weights have to be computed from entry to follow-up till roof of breaks;
-    ## can only crop along the survival time scale
-    cropBreaks <- breaks[1L]
-    cb <- protectFromDrop(cropBreaks[[1L]], lower = TRUE)
-    cb <- c(min(cb), max(cropBreaks[[1L]]))
-    cropBreaks[[1L]] <- cb
-  }
-  
-  
-  intelliCrop(x = x, breaks = cropBreaks, allScales = allScales, cropStatuses = TRUE)
-  x <- intelliDrop(x, breaks = cropBreaks, dropNegDur = TRUE, check = TRUE)
-  setDT(x)
-  forceLexisDT(x, breaks = oldBreaks, allScales = allScales, key = TRUE)
-  
-  ## eval print & adjust -------------------------------------------------------
-  ## this adjust passed to resulting data's attributes at the end
-  adjAttr <- evalPopArg(data = x, arg = substitute(adjust), 
-                        enclos = PF, DT = TRUE, recursive = TRUE)
-  l <- usePopFormula(form = formula, adjust = adSub, data = x, enclos = PF)
-  prVars <- names(l$print)
-  adVars <- names(l$adjust)
-  
-  ## check weights makes sense with respect to adjust --------------------------
-  if (length(adVars) > 0L && is.null(weights)) {
-    stop("No weights given though attempting by adjust by ", 
-         paste0("'", adVars, "'", collapse = ", "))
-  }
+                          "lex.Cst", "lex.Xst", pophazVars))
+  if (length(prVars)) x[, c(prVars)] <- l$print
+  if (length(adVars)) x[, c(adVars)] <- l$adjust
   
   
   ## simplify event and censoring indicators -----------------------------------
@@ -164,7 +149,8 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
     
     x[, lex.Cst := NULL]
     x[, lex.Cst := 0L]
-    setcolorder(x, intersect(names(data), names(x)))
+    setcolorder(x, c(intersect(names(data), names(x)), 
+                     setdiff(names(x), names(data))))
     
     x[, lex.Xst := as.integer(lex.Xst %in% TF$event.values)]
     cens.values <- 0L
@@ -175,19 +161,27 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
     }
   }
   
-  ## only keep necessary variables ---------------------------------------------
-  
-  setcolsnull(x, keep = c("lex.id", "lex.dur", allScales, 
-                          "lex.Cst", "lex.Xst", pophazVars))
-  if (length(prVars)) x[, c(prVars) := l$print]
-  if (length(adVars)) x[, c(adVars) := l$adjust]
-  
   ## detect which time scale used ----------------------------------------------
   
   survScale <- detectSurvivalTimeScale(lex = x, values = l$y$time)
   
-  ## includes time scale to compute survivals over
-  aggreVars <- c(prVars, adVars, survScale) 
+  
+  ## crop data to speed up computations ----------------------------------------
+  cropBreaks <- breaks
+  if (surv.type == "surv.rel" && relsurv.method == "pp")  {
+    ## pp-weights have to be computed from entry to follow-up till roof of breaks;
+    ## can only crop along the survival time scale
+    cropBreaks <- breaks[1L]
+    cb <- protectFromDrop(cropBreaks[[1L]], lower = TRUE)
+    cb <- c(min(cb), max(cropBreaks[[1L]]))
+    cropBreaks[[1L]] <- cb
+  }
+  
+  
+  intelliCrop(x = x, breaks = cropBreaks, allScales = allScales, cropStatuses = TRUE)
+  x <- intelliDrop(x, breaks = cropBreaks, dropNegDur = TRUE, check = TRUE)
+  setDT(x)
+  forceLexisDT(x, breaks = oldBreaks, allScales = allScales, key = TRUE)
   
   ## splitting -----------------------------------------------------------------
   
@@ -198,13 +192,6 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   setDT(x)
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
   if (verbose) cat("Time taken by splitting Lexis data: ", timetaken(splitTime), "\n")
-  
-#   ## date time scales? ---------------------------------------------------------
-#   ## this actually needs to also handle breaks in an intellgent way!
-#   areDates <- x[, sapply(.SD, is.Date), .SDcols = allScales]
-#   areDifftimes <- x[, sapply(.SD, function(x) inherits(x, "difftime") && units(x) == "days"), .SDcols = allScales]
-#   if (any(areDates)) x[, (allScales[areDates]) := lapply(.SD, get.yrs, year.length = "actual"), .SDcols = allScales[areDates]]
-#   if (any(areDifftimes)) x[, (allScales[areDifftimes]) := lapply(.SD, function(x) x/365.242199), .SDcols = allScales[areDifftimes]]
   
   ## pophaz merge --------------------------------------------------------------
   if (!is.null(pophaz)) {
@@ -263,6 +250,10 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   
   ## aggregation ---------------------------------------------------------------
   aggreTime <- proc.time()
+  
+  ## this includes time scale to compute survivals over
+  aggreVars <- c(prVars, adVars, survScale) 
+  
   setDT(x)
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
   if (verbose) cat("** verbose messages from aggre(): \n")
@@ -332,7 +323,7 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   ## attributes ----------------------------------------------------------------
   
   attributes(st)$survtab.meta$call <- this_call
-  attributes(st)$survtab.meta$arguments$adjust <- adjAttr
+  attributes(st)$survtab.meta$arguments$adjust <- adjust
   attributes(st)$survtab.meta$arguments$conf.type <- conf.type
   attributes(st)$survtab.meta$arguments$conf.level <- conf.level
   
