@@ -199,3 +199,52 @@ test_that("lifetable counts work with period analysis", {
   
 })
 
+
+test_that("its possible to pass dynamically created arguments", {
+  skip_on_cran()
+  library(Epi)
+  library(survival)
+  x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+             exit = list(CAL = get.yrs(ex_date)),
+             data = sire[sire$dg_date < sire$ex_date, ],
+             exit.status = as.integer(status %in% 1:2),
+             entry.status = 0,
+             merge = TRUE)
+  
+  TF <- environment()
+  
+  ## phony group variable
+  set.seed(1L)
+  x$group <- rbinom(nrow(x), 1, 0.5)
+  agegr <- cut(x$dg_age, 4, right = FALSE)
+  x$agegr <- NULL
+  w <- as.data.frame(table(agegr))
+  names(w) <- c("agegr", "weights")
+  
+  BL <- list(FUT = seq(0, 5, 1/12), CAL = c(2008,2013))
+  
+  form <- Surv(FUT, lex.Xst) ~ group
+  
+  
+  st1 <- survtab(form, data = x,
+                 adjust = agegr,
+                 weights = w, breaks = BL,
+                 surv.type = "surv.obs",
+                 surv.method = "hazard")
+  
+  x <- splitMulti(x, breaks = BL)
+  x$agegr <- cut(x$dg_age, 4, right = FALSE)
+  a <- aggre(x, by = list(group, agegr, FUT))
+  
+  group <- a$group
+  a$group <- NULL
+  form <- FUT ~ group + adjust(agegr)
+  st2 <- survtab_ag(form, data = a, surv.type = "surv.obs",
+                    surv.method = "hazard",
+                    d = c("from0to1"),
+                    weights = "internal",
+                    pyrs = "pyrs")
+  
+  expect_equal(st1$surv.obs, st2$surv.obs)
+  
+})
