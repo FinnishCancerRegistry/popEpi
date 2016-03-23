@@ -162,12 +162,14 @@ rate <- function( data,
   }
   
   ## form table with weights ---------------------------------------------------
+  NA.msg <- "Data contains %%NA_COUNT%% NA values."
   data <- makeWeightsDT(data, 
                         values = list(tmpObsNames, tmpPyrNames),
                         print = tmpPrNames, 
                         adjust = tmpAdNames, 
                         weights = weights, 
-                        internal.weights.values = tmpPyrNames)
+                        internal.weights.values = tmpPyrNames,
+                        NA.text = NA.msg)
   
   ## estimate standardized rates -----------------------------------------------
   data <- rate_est(data = data,
@@ -179,6 +181,12 @@ rate <- function( data,
   ## final touch ---------------------------------------------------------------
   setDT(data)
   setattr(data, "class", c("rate", "data.table", "data.frame"))
+  setattr(data, name = 'rate.meta', value = list(obs = obsNames, 
+                                                 pyrs = pyrNames, 
+                                                 weights = weights,
+                                                 adjust = adNames,
+                                                 print = prNames,
+                                                 NAs = NA))
   setnames(data, c(tmpObsNames, tmpPyrNames, tmpPrNames),
            c(obsNames, pyrNames, prNames))
   
