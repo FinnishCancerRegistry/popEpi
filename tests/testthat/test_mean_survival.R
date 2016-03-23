@@ -218,7 +218,7 @@ test_that("survmean period method is useful", {
   sm <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
                  subset = dg_date >= "1998-01-01" & dg_date < "2003-01-01",
                  pophaz = pm, data = x,
-                 r = "auto5",
+                 r = 1,
                  breaks = BL, 
                  e1.breaks = eBL)
   
@@ -229,15 +229,15 @@ test_that("survmean period method is useful", {
   smp <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
                   pophaz = pm, data = x,
                   breaks = BL, 
-                  r = "auto5",
+                  r = 1,
                   e1.breaks = eBL)
   
   
   
   expect_equal(sm$obs, smp$obs)
   expect_equal(sm$exp, smp$exp)
-  expect_equal(sm$est - smp$est, -0.1176758, tol = 0.0005, scale = 1)
-  expect_equal(smp$est, 9.151973, tol = 0.0005, scale = 1)
+  expect_equal(smp$est, 10.01542, tol = 0.0005, scale = 1)
+  expect_equal(sm$est, 10.0216, tol = 0.0005, scale = 1)
   
 })
 
