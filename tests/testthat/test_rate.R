@@ -93,6 +93,7 @@ test_that("rate works with different weights and syntaxies", {
   s1 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = factor(AGEGROUP, 1:18, 1:18), weights = c(.1,.1,.1,.2,.2,.2,.2,.3,.3,.4,.5,.5,.5,.4,.4,.3,.2,.1))
   s2 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = factor(AGEGROUP, 1:18, 1:18), weights = wv)
   #s3 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = factor(AGEGROUP, 1:18, 1:18), weights = NULL) ???
+  expect_is(s1, 'rate')
   
   expect_equal(sum(s1$PYRS), p18[,sum(PYRS)])
   expect_equal(sum(s2$OBS), p18[,sum(OBS)])
@@ -150,9 +151,7 @@ test_that("rate works with different weights and syntaxies", {
   s24a <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = list(AGEGROUP, COV), weights = "internal")
   s24b <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = c('AGEGROUP', 'COV'), weights = "internal")
   
-  expect_equal(s4$rate, p20[AGEGROUP!= 1,list(sum(OBS)/sum(PYRS)), by ='COV'][, V1])
-  expect_equal(s5$rate, p20[COV==1,list(sum(OBS)/sum(PYRS))][, V1])
-  expect_is(s3, 'rate')
+
 })
 
 
