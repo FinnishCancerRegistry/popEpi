@@ -72,6 +72,7 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   
   TF <- environment()
   PF <- parent.frame()
+  do_split <- TRUE
   
   tol <- .Machine$double.eps^0.5
   checkLexisData(lex, check.breaks = FALSE)
@@ -90,13 +91,33 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   lexVars <- intersect(lexVars, names(lex))
   othVars <- setdiff(names(lex), lexVars)
   
+  ## basic checks on breaks
+  if (drop && length(breaks) == 1L) {
+    stop("Length of breaks vector is one, but argument 'drop' is TRUE. ",
+         "Cannot do dropping with only one break. Either supply at least ",
+         "two breaks or set drop = FALSE.")
+  }
+  if (length(breaks) == 0L) {
+    stop("No breaks supplied (length of breaks is zero).")
+  }
+  
   ## remove any existing breaks already split by;
   ## NOTE: setdiff would break Date format breaks!
   orig_breaks <- copy(breaks)
-  breaks <- breaks[!breaks %in% allBreaks[[timeScale]]]
+  if (length(allBreaks[[timeScale]])) {
+    ## because any test like (x %in% NULL) results in FALSE.
+    breaks <- breaks[!breaks %in% allBreaks[[timeScale]]]
+  }
   
   breaks <- matchBreakTypes(lex, breaks, timeScale, modify.lex = FALSE) 
   
+  if (length(breaks) == 0L || (length(orig_breaks) == 2L && drop)) {
+    ## former means no additional splitting to do. (we still crop & drop
+    ## if argument drop = TRUE)
+    ## latter means we only need to crop & drop.
+    do_split <- FALSE
+    breaks <- orig_breaks
+  }
   
   breaks <- sort(breaks)
   if (!drop) breaks <- protectFromDrop(breaks)
@@ -122,12 +143,9 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
                        check = FALSE, tol = tol)
   }
   
-  ## if no breaks left, it means the data has already been split by these
-  ## exact breaks. If length of breaks == 2 AND dropping, only need to
-  ## crop to those times and drop values outside the breaks.
-  if (!length(breaks) || (length(breaks) == 2L && drop)) {
-    breaks <- if (!length(breaks)) range(orig_breaks) else breaks
-    l <- lex
+  if (!do_split) {
+    
+    l <- if (!drop) copy(lex) else lex
     
   } else {
     
