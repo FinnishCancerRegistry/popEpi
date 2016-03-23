@@ -186,6 +186,7 @@ rate <- function( data,
                                                  weights = weights,
                                                  adjust = adNames,
                                                  print = prNames,
+                                                 call = match.call(),
                                                  NAs = NA))
   setnames(data, c(tmpObsNames, tmpPyrNames, tmpPrNames),
            c(obsNames, pyrNames, prNames))
