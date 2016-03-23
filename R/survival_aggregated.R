@@ -431,19 +431,10 @@ survtab_ag <- function(formula = NULL,
   breakScales <- names(attrs$breaks)
   
   ## argument 'formula' pre-check ----------------------------------------------
-  foTest <- evalPopArg(data = data[1:min(10L, nrow(data)), ], 
-                       arg = substitute(formula), 
-                       DT = TRUE, enclos = PF, recursive = TRUE,
-                       types = "formula", naming = "model")
-  foType <- attr(foTest, "arg.type")
-  if (is.null(foType)) foType <- "NULL"
-  
-  if (foType != "formula") {
+  if (!inherits(formula, "formula")) {
     stop("Argument 'formula' does not appear to be a formula object. ",
          "Usage: e.g. fot ~ sex")
   }
-  
-  formula <- eval(attr(foTest, "quoted.arg"), envir = PF)
   if (length(formula) != 3L) {
     stop("formula does not appear to be two-sided; supply it as e.g. fot ~ sex")
   }
@@ -458,7 +449,8 @@ survtab_ag <- function(formula = NULL,
          "scale by which data has been split AND aggregated by (could not ",
          "find breaks for that time scale in data's attributes)")
   }
-  ## check breaks
+  
+  ## check breaks --------------------------------------------------------------
   
   found_breaks <- attrs$breaks[[ surv.scale ]]
   
@@ -466,7 +458,8 @@ survtab_ag <- function(formula = NULL,
   if (is.null(surv.breaks) && !is.null(found_breaks)) {
     surv.breaks <- found_breaks
   } else if (any(!surv.breaks %in% found_breaks)) {
-    stop("given surv.breaks is not a subset of the breaks used to split data; cannot proceed.")
+    stop("given surv.breaks is not a subset of the breaks used to ",
+         "split data; cannot proceed.")
   }
   surv.breaks <- sort(unique(surv.breaks))
   
@@ -622,7 +615,7 @@ survtab_ag <- function(formula = NULL,
   
   iws <- if ("n" %in% names(data)) "n" else "pyrs"
   
-  data <- makeWeightsDT(data = data, values = list(mc), enclos = TF,
+  data <- makeWeightsDT(data = data, values = list(mc), enclos = PF,
                         print = NULL, formula = formula, adjust = adjust, 
                         by.other = surv.scale, Surv.response = FALSE,
                         custom.levels = bl, weights = weights,
@@ -978,8 +971,8 @@ survtab_ag <- function(formula = NULL,
   if (length(prVars) == 0) prVars <- NULL ## might be character(0) 
   
   used_args$data <- origData
-  used_args$formula <- eval(attr(foTest, "quoted.arg"), envir = PF)
-  used_args$weights <- evalRecursive(arg = weights, env = PF)
+  used_args$formula <- formula
+  used_args$weights <- evalRecursive(arg = weights, env = PF)$weights
   
   arglist <- list(call = this_call, 
                   arguments = used_args,
