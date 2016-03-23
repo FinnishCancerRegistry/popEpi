@@ -432,11 +432,16 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   pyrs[is.na(pyrs), pyrs := 0]
   pyrs <- pyrs[pyrs > 0]
   
-  pyrsDiff <- pyrs[, sum(pyrs)] - sum(lex.orig$lex.dur[subset])
-  if (!isTRUE(all.equal(pyrsDiff, 0L))) {
-    warning("Found discrepancy in total aggregated pyrs compared to sum(lex$lex.dur); compare results by hand and make sure settings are right \n")
+  aggPyrs <- pyrs[, sum(pyrs)] 
+  lexPyrs <- sum(lex.orig$lex.dur[subset])
+  pyrsDiff <- aggPyrs - lexPyrs
+  if (!isTRUE(all.equal(aggPyrs, lexPyrs, scale = NULL))) {
+    warning("Found discrepancy of ", abs(round(pyrsDiff, 4)), " ",
+            "in total aggregated pyrs compared to ",
+            "sum(lex$lex.dur); compare results by hand and make sure ",
+            "settings are right \n")
   }
-  rm(subset)
+  rm(subset, aggPyrs, lexPyrs)
   
   ## cartesian output ----------------------------------------------------------
   if (type == "full") {
