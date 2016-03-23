@@ -167,37 +167,40 @@ test_that("hazard and lifetable produce congruent results", {
   
 })
 
-test_that("lifetable counts work with period analysis", {
-  library(Epi)
-  library(survival)
-  x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
-             exit = list(CAL = get.yrs(ex_date)),
-             data = sire[sire$dg_date < sire$ex_date, ],
-             exit.status = as.integer(status %in% 1:2),
-             entry.status = 0,
-             merge = TRUE)
-
-  ## phony group variable
-  set.seed(1L)
-  x$group <- rbinom(nrow(x), 1, 0.5)
-
-  BL <- list(FUT = seq(0, 5, 1/12), CAL = c(2008,2013))
-  x <- splitMulti(x, BL)
-
-  st1 <- survtab(Surv(FUT, lex.Xst) ~ 1, data = x, 
-                 surv.type = "surv.obs",
-                 surv.method = "lifetable")
-  
-  a <- aggre(x, by = FUT)
-  
-  st2 <- survtab_ag(FUT ~ 1, data = a, surv.type = "surv.obs",
-                    surv.method = "lifetable",
-                    n = "at.risk", d = c("from0to1"),
-                    n.cens = "from0to0", pyrs = "pyrs")
-  
-  expect_equal(st1$surv.obs, st2$surv.obs)
-  
-})
+## test below even should not work, since period analysis
+## means that at.risk counts (subjects entering an interval in its beginning)
+## will not necessarily equal the counts of events.
+# test_that("lifetable counts work with period analysis", {
+#   library(Epi)
+#   library(survival)
+#   x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+#              exit = list(CAL = get.yrs(ex_date)),
+#              data = sire[sire$dg_date < sire$ex_date, ],
+#              exit.status = as.integer(status %in% 1:2),
+#              entry.status = 0,
+#              merge = TRUE)
+# 
+#   ## phony group variable
+#   set.seed(1L)
+#   x$group <- rbinom(nrow(x), 1, 0.5)
+# 
+#   BL <- list(FUT = seq(0, 5, 1/12), CAL = c(2008,2013))
+#   x <- splitMulti(x, BL)
+# 
+#   st1 <- survtab(Surv(FUT, lex.Xst) ~ 1, data = x, 
+#                  surv.type = "surv.obs",
+#                  surv.method = "lifetable")
+#   
+#   a <- aggre(x, by = FUT)
+#   
+#   st2 <- survtab_ag(FUT ~ 1, data = a, surv.type = "surv.obs",
+#                     surv.method = "lifetable",
+#                     n = "at.risk", d = c("from0to1"),
+#                     n.cens = "from0to0", pyrs = "pyrs")
+#   
+#   expect_equal(st1$surv.obs, st2$surv.obs)
+#   
+# })
 
 
 test_that("its possible to pass dynamically created arguments", {
