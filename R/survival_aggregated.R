@@ -657,13 +657,24 @@ survtab_ag <- function(formula = NULL,
     
     if (sum(abs(testEvents), na.rm = TRUE)) {
       on.exit({
+        
         data[, "n.cens + d - (n-lead1_n)" := testEvents]
         wh <- testEvents != 0L
         wh <- wh & !is.na(wh)
-        print(data[wh, .SD, .SDcols = c(byVars, "Tstop", "d", "n", "n.cens", "n.cens + d - (n-lead1_n)")])
+        if (interactive()) {
+          printSD <- c(byVars, "Tstop", "d", "n", "n.cens", 
+                       "n.cens + d - (n-lead1_n)")
+          print(data[wh, .SD, .SDcols = printSD], top = 5, nrow = 10)
+          
+        }
+        
       }, add = TRUE)
       
-      stop("Supplied n.cens and d do not sum to total number of events and censorings based on n alone; See table below and check your variables")
+      stop("Supplied n.cens and d do not sum to total number of events and ",
+           "censorings based on n alone. Note that lifetable analysis ",
+           "is currently not supported for period analysis (or other ",
+           "comparable limitations of data).",
+           if (interactive())" See table below and check your variables.")
     }
     rm(testEvents)
     data[, n.eff := n - n.cens/2L]
