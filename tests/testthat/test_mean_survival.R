@@ -212,29 +212,32 @@ test_that("survmean period method is useful", {
   pm <- data.table(popEpi::popmort)
   names(pm) <- c("sex", "CAL", "AGE", "haz")
   
-  BL <- list(FUT = seq(0, 14, 1/12))
+  BL <- list(FUT = seq(0, 10, 1/12))
   eBL <- list(FUT = c(BL$FUT, seq(max(BL$FUT),110,1/2)))
   eBL$FUT <- sort(unique(eBL$FUT))
   sm <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
                  subset = dg_date >= "1998-01-01" & dg_date < "2003-01-01",
                  pophaz = pm, data = x,
+                 r = "auto5",
                  breaks = BL, 
                  e1.breaks = eBL)
   
   
-  BL <- list(FUT = seq(0, 10, 1/12), CAL = c(1998,2003))
-  eBL <- list(FUT = c(BL$FUT, seq(max(BL$FUT), 14, 1/12), seq(14,110,1/2)))
+  BL <- list(FUT = seq(0, 5, 1/12), CAL = c(1998,2003))
+  eBL <- list(FUT = c(BL$FUT, seq(max(BL$FUT), 10, 1/12), seq(10,110,1/2)))
   eBL$FUT <- sort(unique(eBL$FUT))
   smp <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
                   pophaz = pm, data = x,
                   breaks = BL, 
+                  r = "auto5",
                   e1.breaks = eBL)
   
   
   
   expect_equal(sm$obs, smp$obs)
   expect_equal(sm$exp, smp$exp)
-  expect_equal(sm$est - smp$est, 0.5611148, tol = 0.0005, scale = 1)
+  expect_equal(sm$est - smp$est, -0.1176758, tol = 0.0005, scale = 1)
+  expect_equal(smp$est, 9.151973, tol = 0.0005, scale = 1)
   
 })
 
