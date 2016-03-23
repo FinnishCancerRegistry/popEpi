@@ -317,6 +317,7 @@
 #' set.seed(1L)
 #' x$group <- rbinom(nrow(x), 1, 0.5)
 #' 
+#' \dontrun{
 #' ## observed survival
 #' st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
 #'                   surv.type = "surv.obs",
@@ -351,7 +352,7 @@
 #'                   surv.type = "surv.rel", relsurv.method = "e2",
 #'                   pophaz = pm,
 #'                   breaks = list(FUT = seq(0, 5, 1/12)*365.25))  
-#' 
+#' }
 #' @export
 survtab_ag <- function(formula = NULL,
                        
