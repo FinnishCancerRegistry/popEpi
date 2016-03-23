@@ -18,7 +18,7 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   this_call <- match.call()
   startTime <- proc.time()
   
-  if(!requireNamespace("survival")) {
+  if (!requireNamespace("survival")) {
     stop("Need package 'survival' to proceed")
   }
   
@@ -29,14 +29,18 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   
   checkLexisData(data)
   
-  TF <- environment() ## will refer to this explicitly in DT[] to avoid conflicts
   allScales <- attr(data, "time.scales")
   splitScales <- names(breaks)
   
   ## ensure breaks make sense --------------------------------------------------
   oldBreaks <- attr(data, "breaks")
-  if (!is.null(oldBreaks)) checkBreaksList(data, breaks = oldBreaks)
-  if (is.null(breaks) && is.null(oldBreaks)) stop("No breaks supplied via argument 'breaks', and data has not been split in advance. Please supply a list of breaks to argument 'breaks'")
+  checkBreaksList(data, breaks = oldBreaks)
+  testOldBreaks <- setdiff(oldBreaks, list(NULL))
+  if (is.null(breaks) && !length(testOldBreaks)) {
+    stop("No breaks supplied via argument 'breaks', and data has not been ",
+         "split in advance. Please supply a list of breaks ",
+         "to argument 'breaks'")
+  }
   if (is.null(breaks)) breaks <- oldBreaks
   checkBreaksList(data, breaks = breaks)
   ## match break types to time scale types
