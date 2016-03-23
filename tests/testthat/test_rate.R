@@ -62,7 +62,7 @@ test_that("names dont cause problems", {
   expect_equal(w2$pyrs, w1$pyrs)
   expect_equal(wr$obs, w1$obs)
   expect_equal(wr$pyrs, w1$pyrs)
-  expect_equal(w2, w3)
+  expect_equal(w2, w3, check.attributes = FALSE)
 })
 
 
