@@ -18,7 +18,8 @@ test_that("splitLexisDT and splitLexis are congruent", {
   x <- Lexis(data=sire2[dg_date < ex_date], entry=list(fot=0, per=dg_yrs, age=dg_age),
              exit=list(per=ex_yrs), merge=TRUE, exit.status=1L, entry.status = 0L)
   setDT(x)
-  forceLexisDT(x, breaks = NULL, allScales = c("fot", "per", "age"))
+  forceLexisDT(x, breaks = list(fot=NULL,per=NULL,age=NULL),
+               allScales = c("fot", "per", "age"))
   
   
   # x2 <- splitLexis(x, breaks = BL[[3]], time.scale = "fot")
