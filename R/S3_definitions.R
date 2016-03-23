@@ -815,6 +815,24 @@ subset.survmean <- function(x, ...) {
   y
 }
 
+## subsetting for rate objects that retains attributes
+`[.rate` <- function(x, ...) {
+  y <- NextMethod()
+  if (is.data.frame(y)) {
+    setattr(y, "class", class(x))
+    setattr(y, "rate.meta", attr(x, "rate.meta"))
+  }
+  y
+}
+
+subset.rate <- function(x, ...) {
+  y <- NextMethod()
+  if (is.data.frame(y)) {
+    setattr(y, "class", class(x))
+    setattr(y, "rate.meta", attr(x, "rate.meta"))
+  }
+  y
+}
 
 prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclos = parent.frame(1L), ...) {
   
