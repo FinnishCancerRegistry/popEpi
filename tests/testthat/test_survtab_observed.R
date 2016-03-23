@@ -44,8 +44,8 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
 # custom status var -------------------------------------------------------
 
 test_that("survtab status argument works as expected", {
-  library(survival)
   skip_on_cran()
+  library(survival)
   BL <- list(fot= seq(0,19,1/12), per=c(2008,2013))
   sr <- sire[dg_date < ex_date, ]
   
@@ -58,7 +58,7 @@ test_that("survtab status argument works as expected", {
   expect_error({
     suppressWarnings(st <- survtab(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
                       breaks = list(fot = 0:5)))
-  }, regexp = "Some status indicators \\(4591 values in total\\) were NA as a result of using Surv\\(\\). Usual suspects: original status variable has NA values, or you have numeric status variable with more than two levels and you did not assign e.g. type = 'mstate' \\(e.g. Surv\\(time = c\\(1,1,1\\), event = c\\(0,1,2\\), type = 'mstate'\\) works\\).")
+  }, regexp = "Some status indicators \\(3648 values in total\\) were NA as a result of using Surv\\(\\). Usual suspects: original status variable has NA values, or you have numeric status variable with more than two levels and you did not assign e.g. type = 'mstate' \\(e.g. Surv\\(time = c\\(1,1,1\\), event = c\\(0,1,2\\), type = 'mstate'\\) works\\).")
 
   st <- NULL
   x <- lexpand(sr, birth  = bi_date, entry = dg_date, 
