@@ -235,7 +235,7 @@ makeWeightsDT <- function(data, values = NULL,
       pmatch(weights, c("internal", "cohort"), nomatch = 0L)) {
     iw <- substitute(internal.weights.values)
     iw <- evalPopArg(data = origData, iw, DT = TRUE,
-                     enclos = enclos, recursive = TRUE,
+                     enclos = PF, recursive = TRUE,
                      types = c("character", "expression", "list", "NULL"))
     
     if (length(iw) > 1L) stop("Argument 'internal.weights.values' ",
