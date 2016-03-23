@@ -239,11 +239,13 @@ test_that("its possible to pass dynamically created arguments", {
   group <- a$group
   a$group <- NULL
   form <- FUT ~ group + adjust(agegr)
+  pyrs <- a$pyrs
+  a$pyrs <- NULL
   st2 <- survtab_ag(form, data = a, surv.type = "surv.obs",
                     surv.method = "hazard",
                     d = c("from0to1"),
                     weights = "internal",
-                    pyrs = "pyrs")
+                    pyrs = pyrs)
   
   expect_equal(st1$surv.obs, st2$surv.obs)
   
