@@ -425,10 +425,20 @@ test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs
   
   ## we keep non-consecutively bad surv.int stratas in entirety for inspection
   if (nrow(ct) > 0L) {
-    msg <- paste0("Some survival intervals")
-    if (!is.null(sum.to)) msg <- paste0(msg, ", when summed to the variable(s) ", paste0("'", show.sum.to, "',", collapse = ", ")) else
-      msg <- paste0(msg, " summed to the margins (over any stratifying / adjusting variables)")
-    msg <- paste0(msg, " were empty non-consecutively; keeping all survival ",
+    msg <- paste0("The total person-time was zero in some survival intervals")
+    
+    if (!is.null(sum.to)) {
+      msg <- paste0(msg, ", when summed to the variable(s) ", 
+                    paste0("'", show.sum.to, "'", collapse = ", "),
+                    " (i.e. over all other variables, if any)") 
+    } else {
+      msg <- paste0(msg, " summed to the margins (over any stratifying ",
+                    "/ adjusting variables)")
+    }
+      
+    msg <- paste0(msg, " _non-consecutively_, i.e. some intervals after an ",
+                  "empty interval had person-time in them. ",
+                  "Kkeeping all survival ",
                   "intervals with some estimates as NA for inspection.")
     message(msg)
   } else {
