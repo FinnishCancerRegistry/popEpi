@@ -115,7 +115,7 @@
 
 ltable <- function(data, 
                    by.vars = NULL, 
-                   expr = .N, 
+                   expr = list(obs = .N), 
                    subset = NULL, 
                    use.levels = TRUE, 
                    na.rm = FALSE,
@@ -159,7 +159,7 @@ ltable <- function(data,
 
 expr.by.cj <- function(data, 
                        by.vars = NULL, 
-                       expr = .N, 
+                       expr = list(obs = .N), 
                        subset = NULL, 
                        use.levels = FALSE, 
                        na.rm = FALSE,
