@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/WetRobot/popEpi.png?branch=master)](https://travis-ci.org/WetRobot/popEpi) [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/popEpi)](https://cran.r-project.org/web/packages/popEpi/index.html) [![codecov.io](http://codecov.io/github/WetRobot/popEpi/coverage.svg?branch=master)](http://codecov.io/github/WetRobot/popEpi?branch=master) [![CRAN\_DLs\_via\_RStudio](http://cranlogs.r-pkg.org/badges/popEpi)](https://cran.r-project.org/web/packages/popEpi/index.html)
+[![Build Status](https://travis-ci.org/WetRobot/popEpi.png?branch=master)](https://travis-ci.org/WetRobot/popEpi) [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/popEpi)](https://cran.r-project.org/package=popEpi) [![codecov.io](http://codecov.io/github/WetRobot/popEpi/coverage.svg?branch=master)](http://codecov.io/github/WetRobot/popEpi?branch=master) [![CRAN\_DLs\_via\_RStudio](http://cranlogs.r-pkg.org/badges/popEpi)](https://cran.r-project.org/package=popEpi)
 
 popEpi: Epidemiology with population data
 =========================================
