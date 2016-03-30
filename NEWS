@@ -1,3 +1,10 @@
+popEpi 0.3
+======
+* New function: rate for computing e.g. adjusted incidence rates with ease.
+* survtab and survmean functions use (split or unsplit) Lexis data.
+  Implemented formula usage in the spirit of functions in pkg survival.
+* A plethora of bug fixed and improvements.
+
 popEpi 0.2.2
 ======
 * plot.survtab & lines.survtab now plot multiple strata at the same time
