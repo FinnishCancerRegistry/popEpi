@@ -38,7 +38,8 @@ ab <- c(0,45,55,65,70,Inf)
 sr$agegr <- cut(sr$dg_age, breaks = ab, right = FALSE)
 
 BL <- list(fot= seq(0,10,1/12))
-x <- lexpand(sr, breaks=BL, pophaz=popmort, 
+pm <- data.frame(popEpi::popmort)
+x <- lexpand(sr, breaks=BL, pophaz=pm, 
              birth = bi_date, 
              entry = dg_date, exit = ex_date, 
              status  = status \%in\% 1:2)
@@ -48,12 +49,13 @@ rpm <- relpois(x, formula = lex.Xst \%in\% 1:2 ~ -1+ FOT + agegr,
 pmc <- rpcurve(rpm)
 
 ## compare with non-parametric estimates
-st <- survtab(x,relsurv.method = "e2", 
-              agegr.w.breaks=c(0,45,55,65,75,Inf), 
-              event.values = 1)
+names(pm) <- c("sex", "per", "age", "haz")
+x$agegr <- cut(x$dg_age, c(0,45,55,65,75,Inf), right = FALSE)
+st <- survtab(fot ~ adjust(agegr), data = x, weights = "internal",
+              pophaz = pm)
 
-plot(I(c(0.5,1))~I(c(0,10)), type="n", xlab="years", ylab="relative survival")
-matlines(y = st[, list(r.e2.as, r.e2.as.lo, r.e2.as.hi)], x = st$Tstop, col="blue", lty=c(1,2,2))
+
+plot(st, y = "r.e2.as")
 lines(y = pmc$est, x = pmc$Tstop, col="red")
 }
 

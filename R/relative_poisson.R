@@ -91,8 +91,8 @@
 #' # AIC(rpm, rpm2)
 
 relpois <- function(data, 
-                     formula, 
-                     fot.breaks = NULL, subset = NULL, check=TRUE, ...) {
+                    formula, 
+                    fot.breaks = NULL, subset = NULL, check=TRUE, ...) {
   ## prep arguments ------------------------------------------------------------
   excess_cases <- fot <- pop.haz <-  NULL ## appease R CMD CHECK
   
@@ -200,7 +200,7 @@ relpois <- function(data,
            see printed table and try e.g. wider FOT intervals")
     }
   }
- 
+  
   
   ## custom poisson family -----------------------------------------------------
   RPL <- copy(poisson())
@@ -213,7 +213,7 @@ relpois <- function(data,
     if (any(y < 0)) stop(paste("Negative values not allowed for", 
                                "the Poisson family"))
     n <- rep.int(1, nobs)
-        mustart <- pmax(y, rep(1,times=length(y))) + 0.1
+    mustart <- pmax(y, rep(1,times=length(y))) + 0.1
   } )
   
   RPL$initialize <- init_maker
@@ -222,10 +222,10 @@ relpois <- function(data,
   ## glm call ------------------------------------------------------------------
   ## update() won't work
   ## anova() works
-
+  
   
   ml <- glm(formula = formula, data=data[subset,], offset=log(lex.dur),
-#             subset = subset, ## Error in xj[i] : invalid subscript type 'closure' 
+            #             subset = subset, ## Error in xj[i] : invalid subscript type 'closure' 
             family = RPL, ...)
   
   ## final touches -------------------------------------------------------------
@@ -238,7 +238,7 @@ relpois <- function(data,
   
   setattr(data, "class", oldClass) ## see beginning of function
   
-
+  
   ml
 }
 

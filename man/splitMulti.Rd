@@ -90,7 +90,7 @@ x2 <- splitMulti(x, fot=seq(0, 5, by = 3/12), per=c(2008, 2013))
 x <- Lexis(data=sire, entry = list(fot=0, per=dg_date, age=dg_date-bi_date), 
            exit=list(per=ex_date), exit.status=status)
 BL <- list(fot = seq(0, 5, by = 3/12)*365.242199,
-           per = as.IDate(paste0(c(1980:2014),"-01-01")),
+           per = as.Date(paste0(c(1980:2014),"-01-01")),
            age = c(0,45,85,Inf)*365.242199)
 x2 <- splitMulti(x, breaks = BL, verbose=TRUE)
 
