@@ -9,7 +9,8 @@ survmean(formula, data, adjust = NULL, weights = NULL, breaks = NULL,
   surv.method = "hazard", subset = NULL, verbose = FALSE)
 }
 \arguments{
-\item{formula}{a \code{formula}, e.g. \code{Surv(FUT, lex.Xst) ~ V1}.
+\item{formula}{a \code{formula}, e.g. \code{FUT ~ V1} or 
+\code{Surv(FUT, lex.Xst) ~ V1}.
 Supplied in the same way as to \code{\link{survtab}}, see that help
 for more info.}
 
@@ -200,9 +201,13 @@ BL <- list(FUT = seq(0, 10, 1/12))
 sm1 <- survmean(Surv(FUT, lex.Xst != "alive") ~ 1,
                 pophaz = pm, data = x, weights = NULL,
                 breaks = BL)
+                
+sm1 <- survmean(FUT ~ 1,
+                pophaz = pm, data = x, weights = NULL,
+                breaks = BL)             
 \dontrun{
 ## mean survival by group                 
-sm2 <- survmean(Surv(FUT, lex.Xst != "alive") ~ group,
+sm2 <- survmean(FUT ~ group,
                 pophaz = pm, data = x, weights = NULL,
                 breaks = BL)
                 
@@ -210,7 +215,7 @@ sm2 <- survmean(Surv(FUT, lex.Xst != "alive") ~ group,
 ## note: need also longer extrapolation here so that all curves
 ## converge to zero in the end.
 eBL <- list(FUT = c(BL$FUT, 11:75))
-sm3 <- survmean(Surv(FUT, lex.Xst != "alive") ~ group + adjust(agegr),
+sm3 <- survmean(FUT ~ group + adjust(agegr),
                 pophaz = pm, data = x, weights = "internal",
                 breaks = BL, e1.breaks = eBL)
 }
@@ -253,7 +258,7 @@ pm$AGE <- pm$AGE*365.25
 
 BL <- list(FUT = seq(0, 8, 1/12)*365.25)
 eBL <- list(FUT = c(BL$FUT, c(8.25,8.5,9:60)*365.25))
-smd <- survmean(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
+smd <- survmean(FUT ~ group, data = x, 
                 pophaz = pm, verbose = TRUE, r = "auto5",
                 breaks = BL, e1.breaks = eBL)     
 plot(smd)
