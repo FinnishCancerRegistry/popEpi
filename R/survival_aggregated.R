@@ -3,15 +3,19 @@
 #' @author Joonas Miettinen, Karri Seppa
 #' @description Estimate survival time functions (survival, relative/net
 #' survival, CIFs) using aggregated data (\code{survtab_ag}) or 
-#' \code{\link[Epi]{Lexis}} data
+#' \code{\link[Epi]{Lexis}} data (\code{survtab}).
 #' @param formula a \code{formula} object. For \code{survtab_ag}, the response 
 #' must be the time scale to compute survival time function estimates
-#' over, e.g. \code{fot ~ sex + adjust(agegr)}, and for \code{survtab}
-#' the response must be a \code{\link[survival]{Surv}} object containing the 
-#' survival time scale and the event indicator, e.g. 
+#' over, e.g. \code{fot ~ sex + adjust(agegr)}. For \code{survtab} it can
+#' also be the just e.g. \code{fot ~ sex + adjust(agegr)}, whereupon it is
+#' assumed that \code{lex.Xst} in your data is the status variable in the
+#' intended format. To be explicit, use \code{\link[survival]{Surv}}
+#' containing the 
+#' survival time scale and the event indicator as the right-hand-side, e.g. 
 #' \code{Surv(fot, lex.Xst) ~ sex}.
 #' Stratifying variables can be included on the right-hand side
-#' separated by '\code{+}'. May contain usage of \code{adjust()} --- see Details.
+#' separated by '\code{+}'. May contain usage of \code{adjust()} 
+#' --- see Details.
 #' @param data for \code{survtab_ag}, a data set of aggregated counts, 
 #' subject-times, etc., as created
 #' by \code{\link{aggre}}; for pre-aggregated data see \code{\link{as.aggre}}.
@@ -318,10 +322,14 @@
 #' x$group <- rbinom(nrow(x), 1, 0.5)
 #' 
 #' \dontrun{
-#' ## observed survival
+#' ## observed survival. explicit supplying of status:
 #' st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
-#'                   surv.type = "surv.obs",
-#'                   breaks = list(FUT = seq(0, 5, 1/12)))
+#'               surv.type = "surv.obs",
+#'               breaks = list(FUT = seq(0, 5, 1/12)))
+#' ## this assumes the status is lex.Xst (right 99.9 % of the time)
+#' st <- survtab(FUT ~ group, data = x, 
+#'               surv.type = "surv.obs",
+#'               breaks = list(FUT = seq(0, 5, 1/12)))
 #'
 #'#### using dates with survtab
 #' x <- Lexis(entry = list(FUT = 0L, AGE = dg_date-bi_date, CAL = dg_date),
@@ -335,8 +343,8 @@
 #' x$group <- rbinom(nrow(x), 1, 0.5)
 #' 
 #' st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
-#'                   surv.type = "surv.obs",
-#'                   breaks = list(FUT = seq(0, 5, 1/12)*365.25))    
+#'               surv.type = "surv.obs",
+#'               breaks = list(FUT = seq(0, 5, 1/12)*365.25))    
 #'                   
 #' ## NOTE: population hazard should be reported at the same scale
 #' ## as time variables in your Lexis data.
@@ -349,9 +357,9 @@
 #' pm$AGE <- pm$AGE*365.25 
 #' 
 #' st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
-#'                   surv.type = "surv.rel", relsurv.method = "e2",
-#'                   pophaz = pm,
-#'                   breaks = list(FUT = seq(0, 5, 1/12)*365.25))  
+#'               surv.type = "surv.rel", relsurv.method = "e2",
+#'               pophaz = pm,
+#'               breaks = list(FUT = seq(0, 5, 1/12)*365.25))  
 #' }
 #' @export
 survtab_ag <- function(formula = NULL,

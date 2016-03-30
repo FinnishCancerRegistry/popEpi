@@ -18,10 +18,15 @@ x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
 set.seed(1L)
 x$sex <- rbinom(nrow(x), 1, 0.5)
 
-## observed survival
+## observed survival - explicit method
 st <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
-                  surv.type = "surv.obs",
-                  breaks = list(FUT = seq(0, 5, 1/12)))
+              surv.type = "surv.obs",
+              breaks = list(FUT = seq(0, 5, 1/12)))
+
+## observed survival - easy method (assumes lex.Xst in x is the status variable)
+st <- survtab(FUT ~ sex, data = x, 
+              surv.type = "surv.obs",
+              breaks = list(FUT = seq(0, 5, 1/12)))
 
 ## printing gives the used settings and 
 ## estimates at the middle and end of the estimated
@@ -40,18 +45,18 @@ head(pm)
 
 ## ----survtab_e2----------------------------------------------------------
 st.e2 <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
-                     surv.type = "surv.rel", relsurv.method = "e2",
-                     breaks = list(FUT = seq(0, 5, 1/12)),
-                     pophaz = pm)
+                 surv.type = "surv.rel", relsurv.method = "e2",
+                 breaks = list(FUT = seq(0, 5, 1/12)),
+                 pophaz = pm)
 
 ## ------------------------------------------------------------------------
 plot(st.e2, y = "r.e2", col = c("blue", "red"))
 
 ## ----survtab_pp----------------------------------------------------------
 st.pp <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
-                     surv.type = "surv.rel", relsurv.method = "pp",
-                     breaks = list(FUT = seq(0, 5, 1/12)),
-                     pophaz = pm)
+                 surv.type = "surv.rel", relsurv.method = "pp",
+                 breaks = list(FUT = seq(0, 5, 1/12)),
+                 pophaz = pm)
 
 ## ------------------------------------------------------------------------
 plot(st.e2, y = "r.e2", col = c("blue", "red"), lty = 1)
@@ -69,10 +74,10 @@ w <- list(agegr = as.numeric(w))
 
 ## ----survtab_adjust_2----------------------------------------------------
 st.as <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex + adjust(agegr), 
-                     data = x, weights = w,
-                     surv.type = "surv.rel", relsurv.method = "e2",
-                     breaks = list(FUT = seq(0, 5, 1/12)),
-                     pophaz = pm)
+                 data = x, weights = w,
+                 surv.type = "surv.rel", relsurv.method = "e2",
+                 breaks = list(FUT = seq(0, 5, 1/12)),
+                 pophaz = pm)
 
 ## ------------------------------------------------------------------------
 plot(st.as, y = "r.e2.as", col = c("blue", "red"))
@@ -87,40 +92,40 @@ wdf
 
 ## ----survtab_adjust_3----------------------------------------------------
 st.as <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, 
-                     adjust = "agegr",
-                     data = x, weights = w,
-                     surv.type = "surv.rel", relsurv.method = "e2",
-                     breaks = list(FUT = seq(0, 5, 1/12)),
-                     pophaz = pm)
+                 adjust = "agegr",
+                 data = x, weights = w,
+                 surv.type = "surv.rel", relsurv.method = "e2",
+                 breaks = list(FUT = seq(0, 5, 1/12)),
+                 pophaz = pm)
 
 ## ----survtab_cause-------------------------------------------------------
 st.ca <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
-                     data = x, 
-                     surv.type = "surv.cause",
-                     breaks = list(FUT = seq(0, 5, 1/12)))
+                 data = x, 
+                 surv.type = "surv.cause",
+                 breaks = list(FUT = seq(0, 5, 1/12)))
 
 st.pp <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, data = x, 
-                     surv.type = "surv.rel", relsurv.method = "pp",
-                     breaks = list(FUT = seq(0, 5, 1/12)),
-                     pophaz = pm)
+                 surv.type = "surv.rel", relsurv.method = "pp",
+                 breaks = list(FUT = seq(0, 5, 1/12)),
+                 pophaz = pm)
 
 plot(st.ca, y = "surv.obs.canD", col = "blue")
 lines(st.pp, y = "r.pp", col = "red")
 
 ## ----survtab_cif---------------------------------------------------------
 st.cif <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
-                      data = x, 
-                      surv.type = "cif.obs",
-                      breaks = list(FUT = seq(0, 5, 1/12)))
+                  data = x, 
+                  surv.type = "cif.obs",
+                  breaks = list(FUT = seq(0, 5, 1/12)))
 plot(st.cif, y = "CIF_canD", conf.int = FALSE)
 lines(st.cif, y = "CIF_othD", conf.int = FALSE, col = "red")
 
 ## ----survtab_relcif------------------------------------------------------
 st.cir <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
-                      data = x, 
-                      surv.type = "cif.rel",
-                      breaks = list(FUT = seq(0, 5, 1/12)),
-                      pophaz = pm)
+                  data = x, 
+                  surv.type = "cif.rel",
+                  breaks = list(FUT = seq(0, 5, 1/12)),
+                  pophaz = pm)
 plot(st.cif, y = "CIF_canD", conf.int = FALSE, col = "blue")
 lines(st.cir, y = "CIF.rel", conf.int = FALSE, col = "red")
 

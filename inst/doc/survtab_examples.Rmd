@@ -3,32 +3,32 @@ title: "Examples of using survtab"
 author: "Joonas Miettinen"
 date: "`r Sys.Date()`"
 output: 
-  html_document:
-    toc: true
-    toc_depth: 2
-    fig_width: 6
-    fig_height: 6
+html_document:
+toc: true
+toc_depth: 2
+fig_width: 6
+fig_height: 6
 vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteIndexEntry{survtab examples}
   %\usepackage[utf8]{inputenc}
----
-
-# Overview
-
-This vignette aims to clarify the usage of the `survtab_ag` and `survtab` functions included in this package. `survtab_ag` estimates various survival functions and cumulative incidence functions (CIFs) non-parametrically using aggregated data, and `survtab` is a wrapper for `survtab_ag`, to which `Lexis` data is supplied. 
-
-Two methods (`surv.method`) are currently supported: The `"lifetable"` (actuarial) method only makes use of counts when estimating any of the supported survival time functions. The default method (`"hazard"`}) estimates appropriate hazards and transforms them into survival function or CIF estimates.
-
-For relative survival estimation we need also to enumerate the expected hazard levels for the subjects in the data. This is done by merging expected hazards to individuals' subintervals (which divide their survival time lines to a number of small intervals). For Pohar-Perme-weighted analyses one must additionally compute various weighted figures at the level of split subject data. 
-
-If one has subject-level data, the simplest way of computing survival function estimates with `popEpi` is by defining a `Lexis` object and using `survtab`, which will do the rest. For pre-aggregated data one may use the `survtab_ag` function instead. One can also use the `lexpand` function to split, merge population hazards, and aggregate in a single function call and then use `survtab_ag` if that is convenient.
-
-# Using `survtab`
-
-It is straightforward to estimate various survival time functions with `survtab` once a `Lexis` object has been defined (see `?Lexis` in package `Epi` for details):
-
-```{r pkgs, eval = FALSE, echo = TRUE}
+  ---
+  
+  # Overview
+  
+  This vignette aims to clarify the usage of the `survtab_ag` and `survtab` functions included in this package. `survtab_ag` estimates various survival functions and cumulative incidence functions (CIFs) non-parametrically using aggregated data, and `survtab` is a wrapper for `survtab_ag`, to which `Lexis` data is supplied. 
+  
+  Two methods (`surv.method`) are currently supported: The `"lifetable"` (actuarial) method only makes use of counts when estimating any of the supported survival time functions. The default method (`"hazard"`}) estimates appropriate hazards and transforms them into survival function or CIF estimates.
+  
+  For relative survival estimation we need also to enumerate the expected hazard levels for the subjects in the data. This is done by merging expected hazards to individuals' subintervals (which divide their survival time lines to a number of small intervals). For Pohar-Perme-weighted analyses one must additionally compute various weighted figures at the level of split subject data. 
+  
+  If one has subject-level data, the simplest way of computing survival function estimates with `popEpi` is by defining a `Lexis` object and using `survtab`, which will do the rest. For pre-aggregated data one may use the `survtab_ag` function instead. One can also use the `lexpand` function to split, merge population hazards, and aggregate in a single function call and then use `survtab_ag` if that is convenient.
+  
+  # Using `survtab`
+  
+  It is straightforward to estimate various survival time functions with `survtab` once a `Lexis` object has been defined (see `?Lexis` in package `Epi` for details):
+  
+  ```{r pkgs, eval = TRUE, echo = TRUE, message = FALSE}
 library(popEpi)
 library(Epi)
 library(survival)
@@ -49,10 +49,15 @@ x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
 set.seed(1L)
 x$sex <- rbinom(nrow(x), 1, 0.5)
 
-## observed survival
+## observed survival - explicit method
 st <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
-                  surv.type = "surv.obs",
-                  breaks = list(FUT = seq(0, 5, 1/12)))
+              surv.type = "surv.obs",
+              breaks = list(FUT = seq(0, 5, 1/12)))
+
+## observed survival - easy method (assumes lex.Xst in x is the status variable)
+st <- survtab(FUT ~ sex, data = x, 
+              surv.type = "surv.obs",
+              breaks = list(FUT = seq(0, 5, 1/12)))
 
 ## printing gives the used settings and 
 ## estimates at the middle and end of the estimated
@@ -67,9 +72,9 @@ Plotting by strata (men = blue, women = red):
 plot(st, col = c("blue", "red"))
 ```
 
-Note that the correct usage of the `formula` argument in `survtab` specifies the time scale in the `Lexis` object over which survival is computed (here `"FUT"` for follow-up time) as the `time` argument in `Surv()`. This is used to identify the appropriate time scale in the data. Therefore we effectively (and exceptionally) pass the starting times to the `time` argument in `Surv()`, and `time2` is ignored entirely. The function will fail if `time` does not match exactly with a time scale in data.
+Note that the correct usage of the `formula` argument in `survtab` specifies the time scale in the `Lexis` object over which survival is computed (here `"FUT"` for follow-up time). This is used to identify the appropriate time scale in the data. When only supplying the survival time scale as the right-hand-side of the formula, the column `lex.Xst` in the supplied `Lexis` object is assumed to be the (correctly formatted!) status variable. When using `Surv()` to be explicit, we effectively (and exceptionally) pass the starting times to the `time` argument in `Surv()`, and `time2` is ignored entirely. The function will fail if `time` does not match exactly with a time scale in data.
 
-One must also pass the status variable, which can be something other than the `lex.Xst` variable created by `Lexis()`, though usually ``lex.Xst` is what you want to use (especially if the data has already been split using e.g. `splitLexis` or `splitMulti`, which is allowed). It is recommended to use a factor status variable to pass to `Surv()`, though a numeric variable will work in simple cases (0 = alive, 1 = dead; also `FALSE`  = alive, `TRUE` = dead).
+When using `Surv()`, one must also pass the status variable, which can be something other than the `lex.Xst` variable created by `Lexis()`, though usually ``lex.Xst` is what you want to use (especially if the data has already been split using e.g. `splitLexis` or `splitMulti`, which is allowed). It is recommended to use a factor status variable to pass to `Surv()`, though a numeric variable will work in simple cases (0 = alive, 1 = dead; also `FALSE`  = alive, `TRUE` = dead). Using `Surv()` also allows easy passing of transformations of `lex.Xst`, e.g. `Surv(FUT, lex.Xst %in% 1:2)`.
 
 The argument `breaks` must be a named list of breaks by which to split the `Lexis` data (see `?splitMulti`). It is mandatory to assign breaks at least to the survival time scale (`"FUT"` in our example) so that `survtab` knows what intervals to use to estimate the requested survival time function(s). The breaks also determine the window used: It is therefore easy to compute so called period estimates by defining the roof and floor along the calendar time scale, e.g. 
 
@@ -94,9 +99,9 @@ The following causes `survtab` to estimate EdererII relative survival:
 
 ```{r survtab_e2}
 st.e2 <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
-                     surv.type = "surv.rel", relsurv.method = "e2",
-                     breaks = list(FUT = seq(0, 5, 1/12)),
-                     pophaz = pm)
+                 surv.type = "surv.rel", relsurv.method = "e2",
+                 breaks = list(FUT = seq(0, 5, 1/12)),
+                 pophaz = pm)
 ```
 
 ```{r}
@@ -107,9 +112,9 @@ Note that the curves diverge due to merging in the "wrong" population hazards fo
 
 ```{r survtab_pp}
 st.pp <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
-                     surv.type = "surv.rel", relsurv.method = "pp",
-                     breaks = list(FUT = seq(0, 5, 1/12)),
-                     pophaz = pm)
+                 surv.type = "surv.rel", relsurv.method = "pp",
+                 breaks = list(FUT = seq(0, 5, 1/12)),
+                 pophaz = pm)
 ```
 
 Compare with EdererII estimates:
@@ -136,10 +141,10 @@ w <- list(agegr = as.numeric(w))
 
 ```{r survtab_adjust_2}
 st.as <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex + adjust(agegr), 
-                     data = x, weights = w,
-                     surv.type = "surv.rel", relsurv.method = "e2",
-                     breaks = list(FUT = seq(0, 5, 1/12)),
-                     pophaz = pm)
+                 data = x, weights = w,
+                 surv.type = "surv.rel", relsurv.method = "e2",
+                 breaks = list(FUT = seq(0, 5, 1/12)),
+                 pophaz = pm)
 ```
 
 ```{r}
@@ -163,11 +168,11 @@ This adjusting can be done to any survival time function that `survtab` (and `su
 
 ```{r survtab_adjust_3}
 st.as <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, 
-                     adjust = "agegr",
-                     data = x, weights = w,
-                     surv.type = "surv.rel", relsurv.method = "e2",
-                     breaks = list(FUT = seq(0, 5, 1/12)),
-                     pophaz = pm)
+                 adjust = "agegr",
+                 data = x, weights = w,
+                 surv.type = "surv.rel", relsurv.method = "e2",
+                 breaks = list(FUT = seq(0, 5, 1/12)),
+                 pophaz = pm)
 ```
 
 Where `adjust` could also be `adjust = agegr`, `adjust = list(agegr)` or 
@@ -182,14 +187,14 @@ One can also estimate cause-specific survival functions, cumulative incidence fu
 
 ```{r survtab_cause}
 st.ca <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
-                     data = x, 
-                     surv.type = "surv.cause",
-                     breaks = list(FUT = seq(0, 5, 1/12)))
+                 data = x, 
+                 surv.type = "surv.cause",
+                 breaks = list(FUT = seq(0, 5, 1/12)))
 
 st.pp <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, data = x, 
-                     surv.type = "surv.rel", relsurv.method = "pp",
-                     breaks = list(FUT = seq(0, 5, 1/12)),
-                     pophaz = pm)
+                 surv.type = "surv.rel", relsurv.method = "pp",
+                 breaks = list(FUT = seq(0, 5, 1/12)),
+                 pophaz = pm)
 
 plot(st.ca, y = "surv.obs.canD", col = "blue")
 lines(st.pp, y = "r.pp", col = "red")
@@ -199,9 +204,9 @@ Absolute risk:
 
 ```{r survtab_cif}
 st.cif <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
-                      data = x, 
-                      surv.type = "cif.obs",
-                      breaks = list(FUT = seq(0, 5, 1/12)))
+                  data = x, 
+                  surv.type = "cif.obs",
+                  breaks = list(FUT = seq(0, 5, 1/12)))
 plot(st.cif, y = "CIF_canD", conf.int = FALSE)
 lines(st.cif, y = "CIF_othD", conf.int = FALSE, col = "red")
 ```
@@ -210,10 +215,10 @@ The "relative CIF" attempts to be close to the true CIF without using knowledge 
 
 ```{r survtab_relcif}
 st.cir <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1, 
-                      data = x, 
-                      surv.type = "cif.rel",
-                      breaks = list(FUT = seq(0, 5, 1/12)),
-                      pophaz = pm)
+                  data = x, 
+                  surv.type = "cif.rel",
+                  breaks = list(FUT = seq(0, 5, 1/12)),
+                  pophaz = pm)
 plot(st.cif, y = "CIF_canD", conf.int = FALSE, col = "blue")
 lines(st.cir, y = "CIF.rel", conf.int = FALSE, col = "red")
 ```

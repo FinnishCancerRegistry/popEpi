@@ -92,7 +92,8 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
                        enclos = PF, DT = TRUE, 
                        recursive = TRUE)
   
-  l <- usePopFormula(form = formula, adjust = adjust, data = x, enclos = PF)
+  l <- usePopFormula(form = formula, adjust = adjust, data = x, enclos = PF, 
+                     Surv.response = "either")
   prVars <- names(l$print)
   adVars <- names(l$adjust)
   
