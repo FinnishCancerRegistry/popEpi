@@ -292,14 +292,14 @@ intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = 
   min_start <- lapply(ts, function(ch) max(x[[ch]]))
   names(max_end) <- names(min_start) <- ts
   
-  
   for (k in ts) {
     mik <- mi[[k]]
     mak <- ma[[k]]
     
     if (max_end[[k]] < mak + tol) {
-      subset[subset] <- x[e$subset, rowSums(.SD) <=  e$mak + e$tol, 
-                          .SDcols = c(e$k, "lex.dur")]
+      tmpSD <- x[e$subset, .SD, .SDcols = c(e$k, "lex.dur")]
+      tmpSD <- setDT(lapply(tmpSD, as.numeric))
+      subset[subset] <- rowSums(tmpSD)  <=  e$mak + e$tol
     }
     if (min_start[[k]] + tol > mik) {
       subset[subset] <- x[e$subset, .SD[[e$k]]  > e$mik - e$tol, 
