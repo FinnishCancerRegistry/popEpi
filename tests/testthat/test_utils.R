@@ -128,7 +128,7 @@ test_that("cutLowMerge merges succesfully what is intended", {
   sr <- popEpi::sire[1:100,]
   setDT(sr)
   sr1 <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
-                status = status, fot = seq(0, 5, 1/12))
+                 status = status, fot = seq(0, 5, 1/12))
   setattr(sr1, "class", c("Lexis", "data.table", "data.frame"))
   alloc.col(sr1)
   
@@ -307,10 +307,10 @@ test_that("evalPopFormula & usePopFormula output is stable", {
   r9 <- usePopFormula(lex.Xst ~ sex, data = x, adjust = quote(factor(sex+1)),
                       enclos = parent.frame(2L), Surv.response = FALSE) 
   expect_equivalent(r9, 
-               list(y = res[, list(lex.Xst)], 
-                    print = res[, list(sex)], 
-                    adjust = res[, "factor(sex + 1)", with=FALSE],
-                    formula = lex.Xst ~ sex)
+                    list(y = res[, list(lex.Xst)], 
+                         print = res[, list(sex)], 
+                         adjust = res[, "factor(sex + 1)", with=FALSE],
+                         formula = lex.Xst ~ sex)
   )
   expect_equal(lapply(r9, names), list(y = "lex.Xst", print = "sex", adjust = "factor(sex + 1)", formula = NULL))
   
@@ -355,4 +355,30 @@ test_that("evalPopFormula & usePopFormula output is stable", {
                     adjust = "factor(sex + 1)", 
                     formula = NULL))
   
+  ## usePopFormula with "either" response
+  useForms <- paste0("f", 2:9)
+  useForms <- c("f1a", "f1a", useForms)
+  useForms <- intersect(useForms, ls())
+  TF <- environment()
+  l <- list()
+  for (k in seq_along(useForms)) {
+    l[[k]] <- usePopFormula(get(useForms[k], envir = TF), data = x, 
+                            adjust = NULL,
+                            enclos = TF, Surv.response = "either") 
+  }
+  
+  
+  
+  
 })
+
+
+
+
+
+
+
+
+
+
+
