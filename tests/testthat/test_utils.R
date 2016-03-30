@@ -258,11 +258,11 @@ test_that("evalPopFormula & usePopFormula output is stable", {
   fd <- fot ~ adjust(factor(sex+1))
   
   ra <- evalPopFormula(fa, data = x, enclos = TF, Surv.response = "either")
-  expect_equivalent(ra, x[, .(fot)])
+  expect_equivalent(ra, x[, .(fot, lex.Xst)])
   rb <- evalPopFormula(fb, data = x, enclos = parent.frame(1L), Surv.response = FALSE)
   expect_equivalent(rb, x[, .(fot, sex)])
   rc <- evalPopFormula(fc, data = x, enclos = parent.frame(1L), Surv.response = "either")
-  expect_equivalent(rc, x[, .(fot, sex, factor(sex+1))])
+  expect_equivalent(rc, x[, .(fot, lex.Xst, sex, factor(sex+1))])
   rd <- evalPopFormula(fd, data = x, enclos = TF, Surv.response = FALSE)
   expect_equivalent(rd, x[, .(fot, factor(sex+1))])
   
@@ -343,7 +343,7 @@ test_that("evalPopFormula & usePopFormula output is stable", {
                       adjust = NULL,
                       enclos = parent.frame(2L), Surv.response = "either") 
   expect_equal(lapply(rc, names), 
-               list(y = "fot", print = "sex", 
+               list(y = c("time", "status"), print = "sex", 
                     adjust = "factor(sex + 1)", 
                     formula = NULL))
   
