@@ -6,10 +6,10 @@
 \title{Tabulate Counts and Other Functions by Multiple Variables into a 
 Long-Format Table}
 \usage{
-ltable(data, by.vars = NULL, expr = .N, subset = NULL,
+ltable(data, by.vars = NULL, expr = list(obs = .N), subset = NULL,
   use.levels = TRUE, na.rm = FALSE, robust = TRUE)
 
-expr.by.cj(data, by.vars = NULL, expr = .N, subset = NULL,
+expr.by.cj(data, by.vars = NULL, expr = list(obs = .N), subset = NULL,
   use.levels = FALSE, na.rm = FALSE, robust = FALSE, .SDcols = NULL,
   enclos = parent.frame(1L), ...)
 }
