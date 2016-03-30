@@ -1524,8 +1524,8 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
          "this point. If you see this, complain to the package maintainer.")
   }
   if (!is.null(subset)) {
-    data <- data[subset, ]
-    setcolsnull(data, keep = all.vars(formula))
+    keepVars <- c(all.vars(formula), "lex.Xst")
+    data <- subsetDTorDF(data, subset = subset, select = keepVars)
   }
   
   
@@ -1560,7 +1560,19 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
     setnames(y, names(y), c("time", "status")[1:ncol(y)])
   } else {
     y <- data.table(y)
-    setnames(y, deparse(formula[[2L]]))
+    setnames(y, 1, deparse(formula[[2L]]))
+    if (either && inherits(data, "Lexis")) {
+      ## we assume the unmodified lex.Xst to be a useful status variable.
+      if (!"lex.Xst" %in% names(data)) {
+        stop("Supplied a formula without using Surv(), and data was a Lexis ",
+             "object, so assumed you intended to use 'lex.Xst' in data as the ",
+             "status variable in this context, but that column was missing ",
+             "from data.")
+      }
+      setnames(y, 1, "time")
+      y[, "status"] <- data$lex.Xst
+      
+    }
   }
   
   
