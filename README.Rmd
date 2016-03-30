@@ -16,9 +16,9 @@ library(popEpi)
 
 
 [![Build Status](https://travis-ci.org/WetRobot/popEpi.png?branch=master)](https://travis-ci.org/WetRobot/popEpi)
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/popEpi)](https://cran.r-project.org/package=popEpi)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/popEpi)](https://cran.r-project.org/web/packages/popEpi/index.html)
 [![codecov.io](http://codecov.io/github/WetRobot/popEpi/coverage.svg?branch=master)](http://codecov.io/github/WetRobot/popEpi?branch=master)
-[![CRAN_DLs_via_RStudio](http://cranlogs.r-pkg.org/badges/popEpi)](https://cran.rstudio.com/web/packages/popEpi/index.html)
+[![CRAN_DLs_via_RStudio](http://cranlogs.r-pkg.org/badges/popEpi)](https://cran.r-project.org/web/packages/popEpi/index.html)
 
 # popEpi: Epidemiology with population data
 
@@ -110,7 +110,7 @@ x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
            data = sr,
            exit.status = status)
 
-st <- survtab(Surv(FUT, lex.Xst) ~ cancer, data = x,
+st <- survtab(FUT ~ cancer, data = x,
               breaks = list(FUT = seq(0, 5, 1/12)),
               surv.type = "cif.obs")
 st

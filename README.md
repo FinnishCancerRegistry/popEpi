@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/WetRobot/popEpi.png?branch=master)](https://travis-ci.org/WetRobot/popEpi) [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/popEpi)](https://cran.r-project.org/package=popEpi) [![codecov.io](http://codecov.io/github/WetRobot/popEpi/coverage.svg?branch=master)](http://codecov.io/github/WetRobot/popEpi?branch=master) [![CRAN\_DLs\_via\_RStudio](http://cranlogs.r-pkg.org/badges/popEpi)](https://cran.rstudio.com/web/packages/popEpi/index.html)
+[![Build Status](https://travis-ci.org/WetRobot/popEpi.png?branch=master)](https://travis-ci.org/WetRobot/popEpi) [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/popEpi)](https://cran.r-project.org/web/packages/popEpi/index.html) [![codecov.io](http://codecov.io/github/WetRobot/popEpi/coverage.svg?branch=master)](http://codecov.io/github/WetRobot/popEpi?branch=master) [![CRAN\_DLs\_via\_RStudio](http://cranlogs.r-pkg.org/badges/popEpi)](https://cran.r-project.org/web/packages/popEpi/index.html)
 
 popEpi: Epidemiology with population data
 =========================================
@@ -83,15 +83,15 @@ a <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
              fot = 0:5, per = 1994:2000, aggre = list(fot, per))
 print(a)
 #>     fot  per       pyrs at.risk from0to0
-#>  1:   0 1994 0.90958904       1        0
+#>  1:   0 1994 0.90958904       0        0
 #>  2:   0 1995 0.09041096       1        0
-#>  3:   1 1995 0.90958904       1        0
+#>  3:   1 1995 0.90958904       0        0
 #>  4:   1 1996 0.09041096       1        0
-#>  5:   2 1996 0.90958904       1        0
+#>  5:   2 1996 0.90958904       0        0
 #>  6:   2 1997 0.09041096       1        0
-#>  7:   3 1997 0.90958904       1        0
+#>  7:   3 1997 0.90958904       0        0
 #>  8:   3 1998 0.09041096       1        0
-#>  9:   4 1998 0.90958904       1        0
+#>  9:   4 1998 0.90958904       0        0
 #> 10:   4 1999 0.09041096       1        1
 ```
 
@@ -160,13 +160,13 @@ x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
            exit.status = status)
 #> NOTE: entry.status has been set to "alive" for all.
 
-st <- survtab(Surv(FUT, lex.Xst) ~ cancer, data = x,
+st <- survtab(FUT ~ cancer, data = x,
               breaks = list(FUT = seq(0, 5, 1/12)),
               surv.type = "cif.obs")
 st
 #> 
 #> Call: 
-#>  survtab(formula = Surv(FUT, lex.Xst) ~ cancer, data = x, breaks = list(FUT = seq(0, 5, 1/12)), surv.type = "cif.obs") 
+#>  survtab(formula = FUT ~ cancer, data = x, breaks = list(FUT = seq(0, 5, 1/12)), surv.type = "cif.obs") 
 #> 
 #> Type arguments: 
 #>  surv.type: cif.obs --- surv.method: hazard
