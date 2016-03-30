@@ -438,7 +438,7 @@ test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs
       
     msg <- paste0(msg, " _non-consecutively_, i.e. some intervals after an ",
                   "empty interval had person-time in them. ",
-                  "Kkeeping all survival ",
+                  "Keeping all survival ",
                   "intervals with some estimates as NA for inspection.")
     message(msg)
   } else {
