@@ -13,3 +13,5 @@ cran-comments.md
 testers.R
 .png
 .travis.yml
+^.*\.Rmd$
+^.*\.png$
