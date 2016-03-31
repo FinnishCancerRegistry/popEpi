@@ -218,16 +218,15 @@ expr.by.cj <- function(data,
   ## create joining table ------------------------------------------------------
   lev_fun <- function(x) {
     if (use.levels && is.factor(x)) {
-      levels(x)
+      factor(levels(x), levels = levels(x))
     } else {
-    sort(unique(x))
+      sort(unique(x))
     }
   }
   
   cj <- lapply(as.list(tab)[by.vars], lev_fun)
-  cj <- do.call(CJ, cj)
+  cj <- do.call(CJ, c(cj, unique = FALSE, sorted = FALSE))
   if (na.rm) cj <- na.omit(cj)
-  
   
   ## eval expression -----------------------------------------------------------
   exprVars <- setdiff(names(tab), by.vars)
