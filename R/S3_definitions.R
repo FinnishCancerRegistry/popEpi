@@ -1096,6 +1096,92 @@ lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL,
 
 
 
+lines_by <- function(x, y, strata.vars = NULL, data, col, lty, ...) {
+  ## INTENTION: plots lines separately by strata,
+  ## which may have different colours / linetypes.
+  ## @param x a variable to plot y by; a character string
+  ## @param y a character vector of variables to plot by x;
+  ## e.g. the estimate and confidence interval variables
+  ## @param strata.vars a character string vector; variables
+  ## to add lines by, which may have different colours etc for identification
+  ## @param data a data.frame where x, y, and strata.vars are found
+  ## @param col a vector of colors passed to lines(); if vector length 1,
+  ## used for each level of strata. If vector length > 1, 
+  ## has to match to total number of strata. If list, must match
+  ## to number of strata by length and contain elements of length
+  ## length(y).
+  ## @param see col; line type passed to lines().
+  ## @param ... other arguments passed on to lines().
+  
+  TF <- environment()
+  PF <- parent.frame(1L)
+  
+  stopifnot(is.data.frame(data))
+  stopifnot(is.character(x) && length(x) == 1L)
+  stopifnot(is.character(y) && length(y) > 0L)
+  stopifnot(is.character(strata.vars) || is.null(strata.vars))
+  all_names_present(data, c(x,y,strata.vars))
+  
+  d <- mget(c(strata.vars, y, x), envir = as.environment(data))
+  setDT(d)
+  setkeyv(d, c(strata.vars, x))
+  
+  ## create list of datas
+  l <- list(d)
+  inter <- 1L
+  if (length(strata.vars)) {
+    inter <- do.call(interaction, d[, strata.vars, with = FALSE])
+    l <- vector("list", uniqueN(inter))
+    l <- split(d, f = inter, drop = TRUE)
+  }
+  
+  l <- lapply(l, function(tab) {
+    setDT(tab)
+    setcolsnull(tab, keep = c(x, y))
+    tab
+  })
+  
+  
+  ## figure out colours and ltys
+  for (objname in c("col", "lty")) {
+    obj <- TF[[objname]]
+    
+    if (missing(obj) || !length(obj)) obj <- 1
+    if (!length(obj) %in% c(1, length(l))) {
+      stop("Argument ", objname, " is not of length 1 or ",
+           "of length equal to total number of strata (",
+           length(l), ").")
+    }
+    
+    ol <- unlist(lapply(obj, length))
+    if (length(y) > 1 && is.list(obj) && !all(ol %in% c(1, length(y)))) {
+      stop("Argument y is of length > 1, and you passed ",
+           objname, " as a list of values, but at least one element is not ",
+           "of length 1 or length(y).")
+    }
+    
+    ## NOTE: rep works for vector and list just the same
+    if (length(obj) == 1) obj <- rep(obj, length(l))
+    obj <- as.list(obj)
+    
+    assign(x = objname, value = obj)
+  }
+  
+  lapply(seq_along(l), function(i) {
+    
+    tab <- l[[i]]
+    cols <- col[[i]]
+    ltys <- lty[[i]]
+    
+    matlines(x = tab[[x]], y = tab[, y, with = FALSE], 
+             col = cols, lty = ltys, ...)
+    
+  })
+  
+  invisible(NULL)
+}
+
+
 
 
 #' @title Graphically Inspect Curves Used in Mean Survival Computation
