@@ -1264,7 +1264,13 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
   ## mid.scales: use mid-point of interval when merging by these Lexis time scales
   ## computed by adding + 0.5*lex.dur, which must exist
   
-  if ((is.null(by.x) && !is.null(by.y)) || (!is.null(by.x) && is.null(by.y))) stop("one but not both of by.x / by.y is NULL")
+  if (!is.data.table(x)) {
+    stop("x must be a data.table")
+  }
+  
+  if ((is.null(by.x) && !is.null(by.y)) || (!is.null(by.x) && is.null(by.y))) {
+    stop("one but not both of by.x / by.y is NULL")
+  }
   if (!is.null(by)) by.x <- by.y <- by 
   
   if (length(by.x) != length(by.y)) stop("lengths differ for by.y & by.x")
@@ -1293,8 +1299,10 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
     }
     
   }
+  
+  ## ensure x retains order (no copy taken of it)
   xKey <- key(x)
-  if (length(xKey) == 0 && is.data.table(x)) {
+  if (length(xKey) == 0) {
     xKey <- makeTempVarName(x, pre = "sort_")
     on.exit(if ("x" %in% ls()) setcolsnull(x, delete = xKey, soft = TRUE), add = TRUE)
     on.exit(if ("z" %in% ls()) setcolsnull(z, delete = xKey, soft = TRUE), add = TRUE)
@@ -1307,24 +1315,42 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
          "First ensure this is not so before proceeding.")
   }
   
+  ## avoid e.g. using merge.Lexis when x inherits Lexis
   xClass <- class(x)
-  on.exit(setattr(x, "class", xClass), add = TRUE)
-  if (is.data.table(x)) {
-    ## avoid e.g. using merge.Lexis when x inherits Lexis & data.table
-    setattr(x, "class", c("data.table", "data.frame"))
+  on.exit({
+    setattr(x, "class", xClass)
+    }, add = TRUE)
+  setattr(x, "class", c("data.table", "data.frame"))
+  
+  ## return old numeric values of variables that were cutLow()'d
+  ## by keeping them 
+  if (old.nums && length(xScales)) {
+    tmpXScales <- makeTempVarName(names = c(names(x), names(y)), pre = xScales)
+    set(x, j = tmpXScales, value = oldVals)
+    on.exit({
+      xOrder <- setdiff(names(x), tmpXScales)
+      setcolsnull(x, delete = xScales, soft = TRUE)
+      setnames(x, tmpXScales, xScales)
+      setcolorder(x, xOrder)
+      
+    }, add = TRUE)
   }
   
+  ## merge
   z <- merge(x, y, by.x = by.x, by.y = by.y, 
              all.x = all.x, all.y = all.y, all = all, 
              sort = FALSE)
   
   setDT(z)
-  if (old.nums) {
+  if (old.nums && length(xScales)) {
     ## avoid warning due to coercing double to integer
     set(z, j = xScales, value = NULL)
-    set(z, j = xScales, value = oldVals)
+    setnames(z, tmpXScales, xScales)
   }
-  setcolorder(z, c(names(x), setdiff(names(z), names(x))))
+  
+  zOrder <- intersect(names(x), names(z))
+  zOrder <- c(zOrder, setdiff(names(z), names(x)))
+  setcolorder(z, zOrder)
   if (length(xKey) > 0) setkeyv(z, xKey)
   z[]
   
