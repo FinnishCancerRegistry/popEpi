@@ -1019,14 +1019,16 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 #' ## or
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
-lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL, lty=NULL, ...) {
+lines.survtab <- function(x, y = NULL, subset = NULL, 
+                          conf.int = TRUE, col=NULL, lty=NULL, ...) {
   Tstop <- NULL ## APPEASE R CMD CHECK
   ## prep ----------------------------------------------------------------------
   PF <- parent.frame(1L)
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = x, subset, enclos = PF)
   
-  l <- prep_plot_survtab(x = x, y = y, subset = subset, conf.int = conf.int, enclos = environment())
+  l <- prep_plot_survtab(x = x, y = y, subset = subset, 
+                         conf.int = conf.int, enclos = environment())
   x <- l$x
   y <- l$y
   y.ci <- l$y.ci
@@ -1035,61 +1037,29 @@ lines.survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, col=NULL,
   strata <- l$strata ## character vector of var names
   
   
-  ## need to determine total number of strata; also used in casting ------------
-  ## note: if no strata, create a dummy repeating 1L as strata
-  tmpBy <- makeTempVarName(x)
-  if (length(strata) == 0L) {
-    strata <- tmpBy
-    x[, c(tmpBy) := 1L]
-  }
-  x[, c(tmpBy) := interaction(mget(rev(strata)))]
-  x[, c(tmpBy) := factor(get(tmpBy), labels = 1:uniqueN(get(tmpBy)))]
-  x[, c(tmpBy) := robust_values(get(tmpBy))]
-  
-  Nstrata <- x[, uniqueN(get(tmpBy))]
-  
-  ## color and line type matching to strata ------------------------------------
-  if (is.null(lty)) {
-    lty <- if (conf.int) c(1,2,2) else 1
-  } else {
-    lty <- if(conf.int) rep(lty, each = 3) else lty
-  }
-  if (is.null(col)) {
-    col <- if(conf.int) rep(1, 3) else 1
-  } else {
-    col <- if(conf.int) rep(col, each = 3) else col 
-  }
-  
   ## impute first values (time = 0, surv = 1 / cif = 0) ------------------------
   
   is_CIF <- if (substr(y, 1, 3) == "CIF") TRUE else FALSE
-  first <- x[!duplicated(get(tmpBy)), ]
+  setkeyv(x, c(strata, "Tstop"))
+  first <- x[1, ]
+  if (length(strata)) first <- unique(x, by = strata)
   first[, c(y) := ifelse(is_CIF, 0, 1)]
   first[, Tstop := 0]
   
   if (length(y.ci) > 0) first[, (y.ci) := get(y) ]
   x <- rbindlist(list(first, x[, ]), use.names = TRUE)
-  setkeyv(x, c(tmpBy, "surv.int"))
-  
-  ## cast to accommodate strata ------------------------------------------------
-  x <- cast_simple(x, columns = tmpBy, rows = "Tstop", 
-                   values = c(y, y.ci))
-  estVars <- names(x)[1:Nstrata+1]
-  strata <- lapply(rep(y, Nstrata), gsub, replacement = "", x = estVars)
-  strata <- unique(unlist(strata))
-  newOrder <- NULL
-  
-  ## reorder to match col, lty, etc. -------------------------------------------
-  for (k in strata) {
-    newOrder <- c(newOrder, names(x)[grep(k, names(x))])
-  }
-  setcolorder(x, c("Tstop", newOrder))
-  setDF(x)
+  setkeyv(x, c(strata, "Tstop"))
   
   ## plotting ------------------------------------------------------------------
-  graphics::matlines(x = x$Tstop, 
-                     y = x[, setdiff(names(x), "Tstop")], 
-                     col=col, lty=lty, ...)
+  
+  if (is.null(lty)) {
+    lty <- list(c(1,2,2))
+    if (!length(y.ci)) lty <- list(1)
+  }
+  
+  lines_by(x = "Tstop", y = c(y, y.ci), 
+           strata.vars = strata, 
+           data = x, col = col, lty = lty, ...)
   
   
 }
