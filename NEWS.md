@@ -1,10 +1,10 @@
 Changes in 0.3.1
 ================
 
-This is a hotfix. survtab() was causing warnings in certain situations, which this update fixes. Also fixed plotting survtab objects so that multiple strata are plotted correctly when one or more curves end before the longest one.
+This is a hotfix. survtab() was causing warnings in certain situations, which this update fixes. Also fixed plotting survtab objects so that multiple strata are plotted correctly when one or more curves end before the longest one as well other small fixes: See Github issues \#89, \#90, \#91, and \#92.
 
-Changes in 0.3
-==============
+Changes in 0.3.0
+================
 
 Adjusting
 ---------
