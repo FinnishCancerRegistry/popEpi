@@ -32,19 +32,6 @@ comp.st.surv <- function(surv.var = "p", surv.expr = "1-d/(n.eff-n.cens/2)",
     
     pe(tab.surv.expr)
     
-    ## keep uninformative estimates NA if last informative estimate
-    ## was not zero. if zero, repeat zero till the end.
-    ## (in lifetable analysis the survival can drop to zero.)
-    mintest.expr <- paste0(tabname, "[, mintest := FALSE]")
-    pe(mintest.expr)
-    mintest.expr <- paste0(tabname, "[, mintest := min(", surv.var, ", na.rm=T)==0", by.expr, "]")
-    pe(mintest.expr)
-    
-    
-    minexpr <- paste0(tabname, "[is.na(", surv.var, ") & mintest==TRUE, ", surv.var, " := 1L]")
-    pe(minexpr)
-    
-    
     
     if (cumu) pe(cumuexpr)
     
@@ -52,12 +39,8 @@ comp.st.surv <- function(surv.var = "p", surv.expr = "1-d/(n.eff-n.cens/2)",
     pe(tab.SE.expr)
     
     ## zero survival leads to zero SE
-    minexpr <- paste0(tabname, "[",surv.var, "== 0 & mintest==TRUE, ", SE.var, " := 0L]")
+    minexpr <- paste0(tabname, "[",surv.var, "== 0, ", SE.var, " := 0]")
     pe(minexpr)
-    
-    ## remove mintest variable from used table
-    mintest.expr <- paste0(tabname, "[, mintest := NULL]")
-    pe(mintest.expr)
   }
 }
 
