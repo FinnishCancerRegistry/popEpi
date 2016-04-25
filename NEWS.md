@@ -1,3 +1,8 @@
+Changes in 0.3.1
+================
+
+This is a hotfix. survtab() was causing warnings in certain situations, which this update fixes. Also fixed plotting survtab objects so that multiple strata are plotted correctly when one or more curves end before the longest one.
+
 Changes in 0.3
 ==============
 
@@ -55,14 +60,6 @@ st <- survtab(Surv(FUT, event = lex.Xst) ~ cancer, data = x,
               breaks = list(FUT = seq(0, 5, 1/12)),
               surv.type = "surv.rel", pophaz = pm)
 
-plot(st, col = 1:2)
-#> y was NULL; chose r.e2 automatically
-legend("topright", col = 1:2, lty = 1, legend = c("Breast cancer", "Rectal cancer"))
-```
-
-![](README-survtab-1.png)<!-- -->
-
-``` r
 
 ## adjusting
 x$agegr <- cut(x$dg_age, c(0,55,65,75,Inf))
@@ -72,13 +69,7 @@ st <- survtab(Surv(FUT, event = lex.Xst) ~ cancer + adjust(agegr),
               breaks = list(FUT = seq(0, 5, 1/12)),
               surv.type = "surv.rel", 
               pophaz = pm, weights = w)
-
-plot(st, col = 1:2)
-#> y was NULL; chose r.e2.as automatically
-legend("topright", col = 1:2, lty = 1, legend = c("Breast cancer", "Rectal cancer"))
 ```
-
-![](README-survtab-2.png)<!-- -->
 
 Rates
 -----

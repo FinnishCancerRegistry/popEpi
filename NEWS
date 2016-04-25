@@ -1,3 +1,9 @@
+popEpi 0.3.1
+=====
+* hotfix to 0.3.0: fixes issue causing warnings in survtab().
+* also fixes plot.survtab() to correctly plot multiple strata with one or more
+  curves ending before the longest one.
+
 popEpi 0.3
 ======
 * New function: rate for computing e.g. adjusted incidence rates with ease.
