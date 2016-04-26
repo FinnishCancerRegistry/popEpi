@@ -406,7 +406,13 @@ print.yrs <- function(x, ...) {
   print(as.numeric(x))
 }
 
-## yrs objects, from get.yrs
+
+#' @title Retain yrs Attributes in Bracket Operations
+#' @description This internal function enables using e.g. \code{x[V1 == 1, ]} 
+#' whilst keeping attributes specific to \code{yrs} intact.
+#' @param x an yrs object
+#' @param ... unused, needed for conformity with other methods
+#' @export 
 `[.yrs` <- function(x, ...) {
   yl <- attr(x, "year.length")
   structure(NextMethod(), year.length = yl, class = c("yrs", "numeric"))
@@ -459,17 +465,32 @@ as.Date.yrs <- function(x, ...) {
   d
 }
 
-## subsetting for aggre objects that retains attributes
+#' @title Retain aggre Attributes in Bracket Operations
+#' @description This internal function enables using e.g. \code{x[V1 == 1, ]} 
+#' whilst keeping attributes specific to \code{aggre} intact.
+#' @param x an aggre object
+#' @param ... additional arguments passed on to next method - almost always to
+#' \code{\link{[.data.frame}} or \code{\link{[.data.table}} as appropriate.
+#' @export 
 `[.aggre` <- function(x, ...) {
+  xa <- attributes(x)
   y <- NextMethod()
   if (is.data.frame(y)) {
-    setattr(y, "class", class(x))
-    setattr(y, "aggre.meta", attr(x, "aggre.meta"))
-    setattr(y, "breaks", attr(x, "breaks"))
+    setattr(y, "class", xa$class)
+    setattr(y, "aggre.meta", xa$aggre.meta)
+    setattr(y, "breaks", xa$breaks)
   }
   y
 }
 
+#' @title Retain aggre Attributes in Subset
+#' @description This internal function enables using \code{subset()} 
+#' whilst keeping attributes specific to \code{aggre} intact.
+#' @param x an aggre object
+#' @param ... additional arguments passed on to next method - almost always to
+#' \code{\link{subset.data.frame}} or \code{\link{subset.data.table}} 
+#' as appropriate.
+#' @export 
 subset.aggre <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
@@ -773,7 +794,14 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   x
 }
 
-## subsetting for survtab objects that retains attributes
+
+#' @title Retain survtab Attributes in Bracket Operations
+#' @description This internal function enables using e.g. \code{x[V1 == 1, ]} 
+#' whilst keeping attributes specific to \code{survtab} intact.
+#' @param x a survtab object
+#' @param ... additional arguments passed on to next method - almost always to
+#' \code{\link{[.data.frame}} or \code{\link{[.data.table}} as appropriate.
+#' @export 
 `[.survtab` <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
@@ -783,6 +811,14 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   y
 }
 
+#' @title Retain survtab Attributes in Subset
+#' @description This internal function enables using \code{subset()} 
+#' whilst keeping attributes specific to \code{survtab} intact.
+#' @param x a survtab object
+#' @param ... additional arguments passed on to next method - almost always to
+#' \code{\link{subset.data.frame}} or \code{\link{subset.data.table}} 
+#' as appropriate.
+#' @export 
 subset.survtab <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
@@ -792,7 +828,14 @@ subset.survtab <- function(x, ...) {
   y
 }
 
-## subsetting for meansurv objects that retains attributes
+
+#' @title Retain survmean Attributes in Bracket Operations
+#' @description This internal function enables using e.g. \code{x[V1 == 1, ]} 
+#' whilst keeping attributes specific to \code{survmean} intact.
+#' @param x a survmean object
+#' @param ... additional arguments passed on to next method - almost always to
+#' \code{\link{[.data.frame}} or \code{\link{[.data.table}} as appropriate.
+#' @export 
 `[.survmean` <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
@@ -804,6 +847,15 @@ subset.survtab <- function(x, ...) {
   y
 }
 
+
+#' @title Retain survmean Attributes in Subset
+#' @description This internal function enables using \code{subset()} 
+#' whilst keeping attributes specific to \code{survmean} intact.
+#' @param x a survmean object
+#' @param ... additional arguments passed on to next method - almost always to
+#' \code{\link{subset.data.frame}} or \code{\link{subset.data.table}} 
+#' as appropriate.
+#' @export 
 subset.survmean <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
