@@ -1756,6 +1756,10 @@ aliased_cols <- function(data, cols) {
 return_DT <- function() {
   
   x <- getOption("popEpi.datatable")
+  if (!is.null(x) && !is.logical(x)) {
+    stop("the option 'popEpi.datatable' must be either NULL or a logical ",
+         "value (TRUE / FALSE).")
+  }
   if (is.null(x) || isTRUE(x)) {
     return(TRUE)
   }
