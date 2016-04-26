@@ -579,7 +579,7 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   alloc.col(trans) ## some problems with internal errors...
   setaggre(trans, values = c("pyrs", "at.risk", transitions, sumNames), by = byNames)
   setattr(trans, "breaks", breaks)
-  if (!getOption("popEpi.datatable")) setDFpe(trans)
+  if (!return_DT()) setDFpe(trans)
   if (verbose) cat("Time taken by aggre(): ", timetaken(allTime), "\n")
   
   

@@ -768,7 +768,7 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   x <- x[t]
   if (length(pv) > 0L) setnames(x, pv, pv_orig)
   
-  if (!getOption("popEpi.datatable")) setDFpe(x)
+  if (!return_DT()) setDFpe(x)
   
   x
 }

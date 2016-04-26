@@ -158,7 +158,7 @@ rpcurve <- function(object = NULL) {
   setcolsnull(tab, c("lo", "hi"))
   
   setattr(tab, "class", c("data.table", "data.frame"))
-  if (!getOption("popEpi.datatable")) setDFpe(tab)
+  if (!return_DT()) setDFpe(tab)
   tab[]
 }
 

@@ -255,7 +255,7 @@ sir <- function( coh.data,
   
   # Output as data.frame if wanted  
 
-  if (!getOption("popEpi.datatable")) {
+  if (!return_DT()) {
     for (i in 1:3) {
       if (!is.null(results[[i]])) {
         setDFpe(results[[i]])

@@ -142,7 +142,7 @@ ltable <- function(data,
   
   ## final touch ---------------------------------------------------------------
   
-  if (!getOption("popEpi.datatable")) {
+  if (!return_DT()) {
     setDFpe(res)
   }
   res
@@ -243,7 +243,7 @@ expr.by.cj <- function(data,
   ## final touch ---------------------------------------------------------------
   if (length(res)) setcolorder(res, c(by.vars, setdiff(names(res), by.vars)))
   if (length(by.vars)) setkeyv(res, by.vars)
-  if (!getOption("popEpi.datatable")) {
+  if (!return_DT()) {
     setDFpe(res)
   }
   res

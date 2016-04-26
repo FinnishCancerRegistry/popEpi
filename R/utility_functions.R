@@ -1749,3 +1749,17 @@ aliased_cols <- function(data, cols) {
 
 
 
+
+
+
+
+return_DT <- function() {
+  
+  x <- getOption("popEpi.datatable")
+  if (is.null(x) || isTRUE(x)) {
+    return(TRUE)
+  }
+  return(FALSE)
+  
+}
+

@@ -987,7 +987,7 @@ survtab_ag <- function(formula = NULL,
   # attributes -----------------------------------------------------------------
   setkeyv(data, c(prVars, "surv.int"))
   setattr(data, "class", c("survtab", "data.table", "data.frame"))
-  if (!getOption("popEpi.datatable")) setDFpe(data)
+  if (!return_DT()) setDFpe(data)
   if (length(prVars) == 0) prVars <- NULL ## might be character(0) 
   
   used_args$data <- origData

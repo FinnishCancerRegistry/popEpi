@@ -969,7 +969,7 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   setattr(x, "breaks", breaks)
   setattr(x, "time.since", rep("", length(allScales)))
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
-  if (getOption("popEpi.datatable") == FALSE) setDFpe(x)
+  if (!return_DT()) setDFpe(x)
   
   if (verbose) cat("Finished prepExpo run. Time taken: ", timetaken(allTime), "\n")
   

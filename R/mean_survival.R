@@ -631,7 +631,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
              curves = copy(x))
   setattr(sm, "class", c("survmean","data.table", "data.frame"))
   setattr(sm, "survmean.meta", at)
-  if (!getOption("popEpi.datatable")) setDFpe(sm)
+  if (!return_DT()) setDFpe(sm)
   return(sm[])
 }
 

@@ -901,7 +901,7 @@ lexpand <- function(data,
                                        ", paste0(l[[1]]))
     if (verbose) cat("Aggregation done. \n")
     
-    if (!getOption("popEpi.datatable") && is.data.table(l)) setDFpe(l)
+    if (!return_DT() && is.data.table(l)) setDFpe(l)
     
   } else {
     
@@ -916,7 +916,7 @@ lexpand <- function(data,
     setattr(l, "time.scales", c("fot","per","age"))
     setattr(l, "breaks", breaks)
     setattr(l, "class", c("Lexis","data.table","data.frame"))
-    if (!getOption("popEpi.datatable") && is.data.table(l)) setDFpe(l)
+    if (!return_DT() && is.data.table(l)) setDFpe(l)
     
     
     

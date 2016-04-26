@@ -222,7 +222,7 @@ splitMulti <- function(data,
   setattr(l, "time.since", rep("", times=length(allScales)))
   setattr(l, "breaks", breaks)
   setattr(l, "class", c("Lexis","data.table","data.frame"))
-  if (!getOption("popEpi.datatable")) setDFpe(l)
+  if (!return_DT()) setDFpe(l)
   
   l[]
   

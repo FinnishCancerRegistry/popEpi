@@ -192,7 +192,7 @@ rate <- function( data,
            c(obsNames, pyrNames, prNames))
   
   # data.frame output option  
-  if (!getOption("popEpi.datatable")) {
+  if (!return_DT()) {
     setDFpe(data)
   }
   
