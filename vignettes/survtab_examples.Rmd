@@ -12,19 +12,19 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteIndexEntry{survtab examples}
   %\usepackage[utf8]{inputenc}
-  ---
+---
   
-  # Overview
+# Overview
   
-  This vignette aims to clarify the usage of the `survtab_ag` and `survtab` functions included in this package. `survtab_ag` estimates various survival functions and cumulative incidence functions (CIFs) non-parametrically using aggregated data, and `survtab` is a wrapper for `survtab_ag`, to which `Lexis` data is supplied. 
+This vignette aims to clarify the usage of the `survtab_ag` and `survtab` functions included in this package. `survtab_ag` estimates various survival functions and cumulative incidence functions (CIFs) non-parametrically using aggregated data, and `survtab` is a wrapper for `survtab_ag`, to which `Lexis` data is supplied. 
   
-  Two methods (`surv.method`) are currently supported: The `"lifetable"` (actuarial) method only makes use of counts when estimating any of the supported survival time functions. The default method (`"hazard"`}) estimates appropriate hazards and transforms them into survival function or CIF estimates.
+Two methods (`surv.method`) are currently supported: The `"lifetable"` (actuarial) method only makes use of counts when estimating any of the supported survival time functions. The default method (`"hazard"`}) estimates appropriate hazards and transforms them into survival function or CIF estimates.
   
-  For relative survival estimation we need also to enumerate the expected hazard levels for the subjects in the data. This is done by merging expected hazards to individuals' subintervals (which divide their survival time lines to a number of small intervals). For Pohar-Perme-weighted analyses one must additionally compute various weighted figures at the level of split subject data. 
+For relative survival estimation we need also to enumerate the expected hazard levels for the subjects in the data. This is done by merging expected hazards to individuals' subintervals (which divide their survival time lines to a number of small intervals). For Pohar-Perme-weighted analyses one must additionally compute various weighted figures at the level of split subject data. 
   
-  If one has subject-level data, the simplest way of computing survival function estimates with `popEpi` is by defining a `Lexis` object and using `survtab`, which will do the rest. For pre-aggregated data one may use the `survtab_ag` function instead. One can also use the `lexpand` function to split, merge population hazards, and aggregate in a single function call and then use `survtab_ag` if that is convenient.
+If one has subject-level data, the simplest way of computing survival function estimates with `popEpi` is by defining a `Lexis` object and using `survtab`, which will do the rest. For pre-aggregated data one may use the `survtab_ag` function instead. One can also use the `lexpand` function to split, merge population hazards, and aggregate in a single function call and then use `survtab_ag` if that is convenient.
   
-  # Using `survtab`
+# Using `survtab`
   
   It is straightforward to estimate various survival time functions with `survtab` once a `Lexis` object has been defined (see `?Lexis` in package `Epi` for details):
   
