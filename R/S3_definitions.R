@@ -401,8 +401,13 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
   }
 }
 
+#' @title Print Method for yrs Objects
+#' @description This internal function enables a nicer printing for \code{yrs}
+#' objects (see \code{\link{get.yrs}})
+#' @param x an yrs object
+#' @param ... unused, needed for conformity with other methods
+#' @export 
 print.yrs <- function(x, ...) {
-  # NextMethod() ## this still prints attributes
   print(as.numeric(x))
 }
 
