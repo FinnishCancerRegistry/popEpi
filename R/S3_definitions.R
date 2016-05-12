@@ -584,6 +584,7 @@ print.aggre <- function(x, subset = NULL, ...) {
 #' \code{subset = sex == "male"}
 #' @param ... unused
 #' @export
+#' @family aggregation_related
 summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
   
   PF <- parent.frame(1L)
@@ -733,6 +734,7 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' x <- as.data.frame(st)
 #' 
 #' @export
+#' @family survtab_related
 summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   
   PF <- parent.frame(1L)

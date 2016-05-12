@@ -60,6 +60,7 @@ Joonas Miettinen
 }
 \seealso{
 Other aggregation_related: \code{\link{aggre}},
-  \code{\link{lexpand}}, \code{\link{setaggre}}
+  \code{\link{lexpand}}, \code{\link{setaggre}},
+  \code{\link{summary.aggre}}
 }
 

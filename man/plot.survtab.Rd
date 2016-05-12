@@ -57,6 +57,7 @@ Joonas Miettinen
 }
 \seealso{
 Other survtab_related: \code{\link{lines.survtab}},
-  \code{\link{print.survtab}}, \code{\link{survtab_ag}}
+  \code{\link{print.survtab}},
+  \code{\link{summary.survtab}}, \code{\link{survtab_ag}}
 }
 

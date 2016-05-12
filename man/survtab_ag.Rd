@@ -394,6 +394,7 @@ CHIANG, Chin Long. Introduction to stochastic processes in biostatistics. 1968.
 \href{../doc/survtab_examples.html}{The survtab_examples vignette}
 
 Other survtab_related: \code{\link{lines.survtab}},
-  \code{\link{plot.survtab}}, \code{\link{print.survtab}}
+  \code{\link{plot.survtab}}, \code{\link{print.survtab}},
+  \code{\link{summary.survtab}}
 }
 

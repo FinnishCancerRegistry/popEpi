@@ -36,6 +36,7 @@ Joonas Miettinen
 }
 \seealso{
 Other aggregation_related: \code{\link{aggre}},
-  \code{\link{as.aggre}}, \code{\link{lexpand}}
+  \code{\link{as.aggre}}, \code{\link{lexpand}},
+  \code{\link{summary.aggre}}
 }
 

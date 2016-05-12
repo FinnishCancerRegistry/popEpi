@@ -72,4 +72,9 @@ x <- as.data.frame(st)
 \author{
 Joonas Miettinen
 }
+\seealso{
+Other survtab_related: \code{\link{lines.survtab}},
+  \code{\link{plot.survtab}}, \code{\link{print.survtab}},
+  \code{\link{survtab_ag}}
+}
 
