@@ -327,8 +327,9 @@
 #' 
 #' @import data.table
 #' @import Epi
+#' @family splitting_related
 #' @seealso
-#' \code{\link{splitMulti}}, \code{\link[Epi]{Lexis}}, \code{\link{survtab}}, \code{\link{relpois}}, \code{\link{popmort}} \code{\link{sir}}
+#' \code{\link[Epi]{Lexis}}, \code{\link{relpois}}, \code{\link{popmort}}
 #' @export
 lexpand <- function(data, 
                     birth=NULL, entry=NULL, exit=NULL, event=NULL,

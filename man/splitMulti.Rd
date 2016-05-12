@@ -121,6 +121,9 @@ Joonas Miettinen
 }
 \seealso{
 \code{\link[Epi]{splitLexis}}, \code{\link[Epi]{Lexis}},  
-\code{\link[survival]{survSplit}}, \code{\link{splitLexisDT}}
+\code{\link[survival]{survSplit}}
+
+Other splitting_related: \code{\link{lexpand}},
+  \code{\link{splitLexisDT}}
 }
 

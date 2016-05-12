@@ -105,11 +105,11 @@
 #' @import data.table 
 #' @import Epi
 #' 
-#' @export splitMulti
-#' 
+#' @export
+#' @family splitting_related
 #' @seealso
 #' \code{\link[Epi]{splitLexis}}, \code{\link[Epi]{Lexis}},  
-#' \code{\link[survival]{survSplit}}, \code{\link{splitLexisDT}}
+#' \code{\link[survival]{survSplit}}
 #' 
 splitMulti <- function(data,
                        breaks = NULL,

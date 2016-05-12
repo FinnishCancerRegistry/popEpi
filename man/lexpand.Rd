@@ -357,6 +357,9 @@ x <- lexpand(sire, status = status, event = dg_date,
 Joonas Miettinen
 }
 \seealso{
-\code{\link{splitMulti}}, \code{\link[Epi]{Lexis}}, \code{\link{survtab}}, \code{\link{relpois}}, \code{\link{popmort}} \code{\link{sir}}
+\code{\link[Epi]{Lexis}}, \code{\link{relpois}}, \code{\link{popmort}}
+
+Other splitting_related: \code{\link{splitLexisDT}},
+  \code{\link{splitMulti}}
 }
 

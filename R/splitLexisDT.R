@@ -38,7 +38,8 @@
 #' (depending on \code{options("popEpi.datatable")}; see \code{?popEpi}) 
 #' object expanded to accommodate split observations.
 #' 
-#' @export splitLexisDT
+#' @export
+#' @family splitting_related
 #' @examples
 #' library(Epi)
 #' data(sire)

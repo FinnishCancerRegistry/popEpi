@@ -82,4 +82,8 @@ x3 <- splitLexisDT(x3, breaks = BL$per, timeScale = "per", drop = FALSE)
 \author{
 Joonas Miettinen
 }
+\seealso{
+Other splitting_related: \code{\link{lexpand}},
+  \code{\link{splitMulti}}
+}
 
