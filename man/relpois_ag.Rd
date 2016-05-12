@@ -5,7 +5,7 @@
 \title{Excess hazard Poisson model}
 \usage{
 relpois_ag(formula, data, d.exp, offset = NULL, breaks = NULL,
-  subset = NULL, piecewise = TRUE, ...)
+  subset = NULL, piecewise = TRUE, check = TRUE, ...)
 }
 \arguments{
 \item{formula}{a formula with the counts of events as the response.
@@ -50,6 +50,7 @@ Hazards Model
 }
 \examples{
 ## use the simulated rectal cancer cohort
+data(sire, package = "popEpi")
 sr <- copy(sire)
 sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
 

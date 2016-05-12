@@ -283,6 +283,7 @@ relpois <- function(data,
 #' 
 #' @examples
 #' ## use the simulated rectal cancer cohort
+#' data(sire, package = "popEpi")
 #' sr <- copy(sire)
 #' sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
 #' 
@@ -304,7 +305,7 @@ relpois <- function(data,
 #' AIC(rpm, rpm2)
 #' @export
 
-relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subset = NULL, piecewise = TRUE, ...) {
+relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subset = NULL, piecewise = TRUE, check = TRUE, ...) {
   
   TF <- environment()
   PF <- parent.frame(1L)
@@ -368,6 +369,10 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
   if (!is.null(offset)) offset <- rowSums(offset)
   if (length(offset) == nrow(data)) offset <- offset[subset]
   
+  ## check excess cases --------------------------------------------------------
+  d <- eval(formula[[2]], envir = x, enclos = PF)
+  check_excess_cases(d = d, d.exp = d.exp, data = x, 
+                     formula = formula, enclos = PF)
   
   ## custom poisson family -----------------------------------------------------
   RPL <- copy(poisson())
@@ -405,5 +410,39 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
 
 
 
+
+
+
+check_excess_cases <- function(d, d.exp, formula, data, enclos = parent.frame(1)) {
+  # @title Check Excess Counts for a Relative Poisson Model
+  # @description Checks that the excess counts by strata all exceed 0.
+  # @param d a vector of observed counts of cases
+  # @param d.exp a vector of expected counts of cases
+  # @param a formula, the right side of which is inspected for factor-like 
+  # stratifying variables (factors and character variables)
+  
+  
+  by <- RHS2DT(formula, data = data, enclos = enclos)
+  facVars <- names(by)[sapply(by, function(col) is.factor(col) || is.character(col))]
+  
+  if (length(facVars)) {
+    by <- setDT(mget(facVars, as.environment(by)))
+  } else {
+    by <- NULL
+  }
+  
+  dt <- data.table(d = d, d.exp = d.exp)
+  dt[, d.exc := d - d.exp]
+  
+  dt <- dt[, lapply(.SD, sum), keyby = by]
+  
+  dt <- dt[d.exc <= 0L,]
+  
+  if (nrow(dt)) {
+    on.exit(print(dt))
+    stop("Found negative excess cases in the following strata:")
+  }
+  invisible(NULL)
+}
 
 
