@@ -268,8 +268,7 @@
 #' 
 #' @seealso
 #' \code{\link{splitMulti}}, \code{\link{lexpand}}, 
-#' \code{\link{ICSS}}, \code{\link{sire}},
-#' \code{\link{survtab}}
+#' \code{\link{ICSS}}, \code{\link{sire}}
 #' \href{../doc/survtab_examples.html}{The survtab_examples vignette}
 #' 
 #' @references
@@ -362,6 +361,7 @@
 #'               breaks = list(FUT = seq(0, 5, 1/12)*365.25))  
 #' }
 #' @export
+#' @family survtab_related
 survtab_ag <- function(formula = NULL,
                        
                        data, 

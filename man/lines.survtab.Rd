@@ -52,4 +52,8 @@ plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 \author{
 Joonas Miettinen
 }
+\seealso{
+Other survtab_related: \code{\link{plot.survtab}},
+  \code{\link{print.survtab}}, \code{\link{survtab_ag}}
+}
 

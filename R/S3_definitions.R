@@ -620,6 +620,7 @@ summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
 #' if the table is large, 
 #' \code{nrow = 100} for number of rows to print, etc.
 #' @export
+#' @family survtab_related
 print.survtab <- function(x, subset = NULL, ...) {
   
   Tstart <- Tstop <- NULL ## APPEASE R CMD CHECK
@@ -988,6 +989,7 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclo
 #' ## or
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
+#' @family survtab_related
 plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
   Tstop <- delta <- NULL ## APPEASE R CMD CHECK
@@ -1076,6 +1078,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 #' ## or
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
+#' @family survtab_related
 lines.survtab <- function(x, y = NULL, subset = NULL, 
                           conf.int = TRUE, col=NULL, lty=NULL, ...) {
   Tstop <- NULL ## APPEASE R CMD CHECK
