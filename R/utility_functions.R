@@ -703,10 +703,12 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
 #' @param x a \code{ratetable}
 #' @param ... unused but added for compatibility with \code{as.data.frame}
 #' @examples
-#' library(relsurv)
-#' data(slopop)
-#' df <- as.data.frame(slopop)
-#' head(df)
+#' if (requireNamespace("relsurv", quietly = TRUE)) {
+#'   data(slopop, package = "relsurv")
+#'   df <- as.data.frame(slopop)
+#'   head(df)
+#' }
+
 #' @seealso 
 #' \code{\link[survival]{ratetable}}, 
 #' \code{\link{as.data.table.ratetable}}
@@ -736,10 +738,12 @@ as.data.frame.ratetable <- function(x, ...) {
 #' \code{\link{as.data.frame.ratetable}}
 #'
 #' @examples
-#' library(relsurv)
-#' data(slopop)
-#' dt <- as.data.table(slopop)
-#' dt
+#' if (requireNamespace("relsurv", quietly = TRUE)) {
+#'   data(slopop, package = "relsurv")
+#'   dt <- as.data.table(slopop)
+#'   dt
+#' }
+
 #' @export
 as.data.table.ratetable <- function(x, ...) {
   dimids <- attr(x, "dimid")
