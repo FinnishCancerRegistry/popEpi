@@ -35,6 +35,7 @@ setaggre(df, values = c("obs", "pyrs"), by = "sex")
 Joonas Miettinen
 }
 \seealso{
-\code{\link{as.aggre}}
+Other aggregation_related: \code{\link{aggre}},
+  \code{\link{as.aggre}}, \code{\link{lexpand}}
 }
 

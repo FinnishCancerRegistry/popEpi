@@ -15,8 +15,7 @@
 #' without taking a copy as e.g. \code{as.data.frame.XXX} functions do; see e.g. 
 #' \code{\link[data.table]{setDT}}.
 #' 
-#' @seealso 
-#' \code{\link{as.aggre}}
+#' @family aggregation_related
 #' 
 #' @export setaggre
 #' @examples 
@@ -59,8 +58,7 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
 #' @param by a character string vector; the names of variables by which 
 #' \code{values} have been tabulated
 #' @param ... arguments passed to or from methods
-#' @seealso 
-#' \code{\link{setaggre}} for modifying in place
+#' @family aggregation_related
 #' 
 #' 
 #' @examples 
@@ -226,6 +224,7 @@ as.aggre.default <- function(x, ...) {
 #' and \code{\link{ltable}} for a \code{data.table} based aggregator. Neither
 #' are directly applicable to split \code{Lexis} data.
 #' 
+#' @family aggregation_related
 #' 
 #' @examples 
 #' 

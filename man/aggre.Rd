@@ -178,5 +178,8 @@ Joonas Miettinen
 \code{\link{aggregate}} for a similar base R solution,
 and \code{\link{ltable}} for a \code{data.table} based aggregator. Neither
 are directly applicable to split \code{Lexis} data.
+
+Other aggregation_related: \code{\link{as.aggre}},
+  \code{\link{lexpand}}, \code{\link{setaggre}}
 }
 

@@ -359,6 +359,9 @@ Joonas Miettinen
 \seealso{
 \code{\link[Epi]{Lexis}}, \code{\link{relpois}}, \code{\link{popmort}}
 
+Other aggregation_related: \code{\link{aggre}},
+  \code{\link{as.aggre}}, \code{\link{setaggre}}
+
 Other splitting_related: \code{\link{splitLexisDT}},
   \code{\link{splitMulti}}
 }

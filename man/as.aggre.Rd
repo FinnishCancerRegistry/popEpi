@@ -59,6 +59,7 @@ class(dt)
 Joonas Miettinen
 }
 \seealso{
-\code{\link{setaggre}} for modifying in place
+Other aggregation_related: \code{\link{aggre}},
+  \code{\link{lexpand}}, \code{\link{setaggre}}
 }
 

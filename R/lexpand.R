@@ -328,6 +328,7 @@
 #' @import data.table
 #' @import Epi
 #' @family splitting_related
+#' @family aggregation_related
 #' @seealso
 #' \code{\link[Epi]{Lexis}}, \code{\link{relpois}}, \code{\link{popmort}}
 #' @export
