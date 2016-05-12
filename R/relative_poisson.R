@@ -446,3 +446,47 @@ check_excess_cases <- function(d, d.exp, formula, data, enclos = parent.frame(1)
 }
 
 
+
+
+
+
+relpois_lex <- function(formula, 
+                        data, 
+                        pophaz = NULL, 
+                        breaks = NULL, 
+                        subset = NULL, 
+                        check = TRUE, 
+                        ...) {
+  PF <- parent.frame(1)
+  TF <- environment()
+  
+  checkLexisData(data)
+  checkPophaz(pophaz)
+  if (!is.null(breaks)) checkBreaksList(breaks)
+  oldBreaks <- copy(attr(data, "breaks"))
+  
+  sb <- substitute(subset)
+  subset <- evalLogicalSubset(data, sb, enclos = PF)
+  
+  x <- data[subset, ]
+  
+  ## essentially same steps as in survtab() here, maybe make that
+  ## into a function / generalize lexpand.
+  
+  x <- splitMulti(x, breaks = breaks, drop = TRUE)
+  newBreaks <- copy(attr(x, "breaks"))
+  
+  x <- cutLowMerge(x, pophaz, blargh)
+  
+  ag <- aggre(x, blargh)
+  
+  ag_form <- formula
+  ag_form[[2]] <- quote(from0to1)
+  
+  rp <- relpois_ag(ag_form, data = data, breaks = NULL)
+  
+  rp$call <- match.call()
+  rp$formula <- formula
+  
+  rp
+}
