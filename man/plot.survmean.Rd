@@ -32,4 +32,8 @@ where \code{x} is a \code{survmean} object.
 \author{
 Joonas Miettinen
 }
+\seealso{
+Other survmean_related: \code{\link{lines.survmean}},
+  \code{\link{survmean}}
+}
 

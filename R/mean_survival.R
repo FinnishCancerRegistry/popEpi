@@ -249,7 +249,7 @@
 
 #' 
 #' @export survmean
-#' 
+#' @family survmean_related
 #' 
 #' 
 

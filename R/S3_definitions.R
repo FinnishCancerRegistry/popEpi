@@ -1239,6 +1239,7 @@ lines_by <- function(x, y, strata.vars = NULL, data, col, lty, ...) {
 #' 
 #' where \code{x} is a \code{survmean} object.
 #' @export
+#' @family survmean_related
 plot.survmean <- function(x, ...) {
   at <- attr(x, "survmean.meta")
   curves <- at$curves
@@ -1285,6 +1286,7 @@ plot.survmean <- function(x, ...) {
 #' 
 #' where \code{x} is a \code{survmean} object.
 #' @export
+#' @family survmean_related
 lines.survmean <- function(x, ...) {
   at <- copy(attr(x, "survmean.meta"))
   curves <- at$curves

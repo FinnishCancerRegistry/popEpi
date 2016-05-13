@@ -269,4 +269,8 @@ plot(smd)
 \author{
 Joonas Miettinen
 }
+\seealso{
+Other survmean_related: \code{\link{lines.survmean}},
+  \code{\link{plot.survmean}}
+}
 
