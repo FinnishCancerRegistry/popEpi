@@ -314,16 +314,30 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
   PF <- parent.frame(1L)
   original_formula <- formula
   
-  if (!inherits(data, "aggre")) stop("data is not an aggre object. Please aggregate your data first using e.g. lexpand(). If your data is aggregated, use as.aggre() to mark it as such.")
+  if (!inherits(data, "aggre")) {
+    stop("data is not an aggre object. Please aggregate your data first using ",
+         "e.g. lexpand(). If your data is pre-aggregated, use as.aggre() to ",
+         "mark it as such.")
+  }
   
   formula <- evalRecursive(formula, env = TF, enc = PF)$arg
   if (missing(formula) || !inherits(formula, "formula")) stop("formula not defined")
   
+  if (is.numeric(breaks)) {
+    breaks <- list(breaks)
+  }
+  
   ## detect survival time scale ------------------------------------------------
-  oldBreaks <- attr(data, "breaks")
-  if (is.null(oldBreaks)) stop("data does not have breaks information. Is it a result of using aggre() or as.aggre()?")
-  survScale <- intersect(all.vars(formula), names(oldBreaks))
-  if (length(survScale) > 1L) stop("Found several used time scales in formula, which is not supported (found ", paste0("'", survScale, "'", collapse = ", "), ")")
+  oldBreaks <- copy(attr(data, "breaks"))
+  if (is.null(oldBreaks)) {
+    stop("data does not have breaks information. Is it a result of using ",
+         "aggre() or as.aggre()?")
+  }
+  survScale <- intersect(all.vars(formula), allScales)
+  if (length(survScale) > 1L) {
+    stop("Found several used time scales in formula, which is not supported ",
+         "(found ", paste0("'", survScale, "'", collapse = ", "), ")")
+  }
   
   ## pre-find args -------------------------------------------------------------
   sub_d.exp <- evalRecursive(substitute(d.exp), env = data[1L, ], enc = PF)$argSub
@@ -501,20 +515,39 @@ relpois_lex <- function(formula,
   PF <- parent.frame(1)
   TF <- environment()
   
+  
+  ## checks --------------------------------------------------------------------
+  
   checkLexisData(data)
-  checkPophaz(pophaz)
+  checkPophaz(lex = data, ph = pophaz)
   if (!is.null(breaks)) checkBreaksList(breaks)
+  
   oldBreaks <- copy(attr(data, "breaks"))
+  allScales <- copy(attr(data, "time.scales"))
+  
+  
+  ## detect which time scale used ----------------------------------------------
+  
+  survScale <- intersect(all.vars(formula), allScales)
+  if (length(survScale) > 1L) {
+    stop("Found several used time scales in formula, which is not supported ",
+         "(found ", paste0("'", survScale, "'", collapse = ", "), ")")
+  }
+  ## subset --------------------------------------------------------------------
   
   sb <- substitute(subset)
   subset <- evalLogicalSubset(data, sb, enclos = PF)
-  
   x <- data[subset, ]
   
   ## essentially same steps as in survtab() here, maybe make that
   ## into a function / generalize lexpand.
   
-  x <- splitMulti(x, breaks = breaks, drop = TRUE)
+  ## splitting -----------------------------------------------------------------
+  if (is.numeric(breaks) && length(survScale)) {
+    breaks <- list(breaks)
+    names(breaks) <- survScale
+  }
+  if (!is.null(breaks)) x <- splitMulti(x, breaks = breaks, drop = TRUE)
   newBreaks <- copy(attr(x, "breaks"))
   
   x <- cutLowMerge(x, pophaz, blargh)
