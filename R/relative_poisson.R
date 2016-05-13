@@ -422,28 +422,57 @@ check_excess_cases <- function(d, d.exp, formula, data, enclos = parent.frame(1)
   # @param d.exp a vector of expected counts of cases
   # @param a formula, the right side of which is inspected for factor-like 
   # stratifying variables (factors and character variables)
-  
+  # @param data a data set to eval formula in its context
+  # @param enclos passed on to RHS2DT() to evaluate formula to columns;
+  # enclosing environment of data
+  PF <- parent.frame(1)
+  tF <- environment()
   
   by <- RHS2DT(formula, data = data, enclos = enclos)
+  if (!length(by)) by <- list()
   facVars <- names(by)[sapply(by, function(col) is.factor(col) || is.character(col))]
+  
+  d <- substitute(d)
+  d <- eval(d, envir = data, enclos = PF)
+  d.exp <- substitute(d.exp)
+  d.exp <- eval(d.exp, envir = data, enclos = PF)
   
   if (length(facVars)) {
     by <- setDT(mget(facVars, as.environment(by)))
   } else {
-    by <- NULL
+    by <- list()
   }
   
   dt <- data.table(d = d, d.exp = d.exp)
   dt[, d.exc := d - d.exp]
   
-  dt <- dt[, lapply(.SD, sum), keyby = by]
-  
-  dt <- dt[d.exc <= 0L,]
-  
-  if (nrow(dt)) {
-    on.exit(print(dt))
-    stop("Found negative excess cases in the following strata:")
+  for (k in seq_along(names(by))) {
+    bycol <- names(by)[k]
+    
+    tab <- dt[, lapply(.SD, sum), keyby = .(by[[bycol]])][d.exc <= 0L, ]
+    setnames(tab, 1, bycol)
+    if (nrow(tab)) {
+      on.exit(print(tab))
+      stop("There are negative excess cases in the data calculated separately ",
+           "by the factor-like variables ", 
+           paste0("'", facVars, "'", collapse = ", "), ". The model is not ",
+           "estimable with negative excess cases in strata. ",
+           "Infracting levels:")
+    }
+    
   }
+
+  if (!length(by)) {
+    tab <- dt[, lapply(.SD, sum)]
+    if (tab$d.exc <= 0L) {
+      stop("The marginal sum of excess cases is negative; the model cannot ",
+           "be fitted. ")
+    }
+  }
+ 
+  
+ 
+  
   invisible(NULL)
 }
 
