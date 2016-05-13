@@ -289,7 +289,7 @@ relpois <- function(data,
 #' sr <- copy(sire)
 #' sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
 #' 
-#' ## usable straight away after splitting
+#' ## create aggregated example data
 #' fb <- c(0,3/12,6/12,1,2,3,4,5)
 #' x <- lexpand(sr, birth = bi_date, entry = dg_date,
 #'              exit = ex_date, status=status %in% 1:2,
@@ -297,6 +297,7 @@ relpois <- function(data,
 #'              pophaz=popmort, pp = FALSE,
 #'              aggre = list(agegr, fot))
 #'              
+#' ## fit model using aggregated data
 #' rpm <- relpois_ag(formula = from0to1 ~ fot + agegr,  data = x,
 #'                   d.exp = d.exp, offset = log(pyrs))
 #' summary(rpm)
@@ -342,16 +343,25 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
   
   ## handle breaks -------------------------------------------------------------
   if (!is.null(breaks)) {
-    if (!piecewise) stop("Supplied breaks but piecewise = FALSE. Please select piecewise = TRUE if you want piecewise estimates defined by the breaks.")
+    if (!piecewise) {
+      stop("Supplied breaks but piecewise = FALSE. Please select piecewise = ",
+           "TRUE if you want piecewise estimates defined by the breaks.")
+    }
     breaks <- sort(unique(breaks))
-    if (!all(breaks %in% oldBreaks[[survScale]])) stop("Supplied breaks are not a subset of the breaks in data. See the breaks in data using e.g. attr(data, 'breaks')")
+    if (length(survScale) && !all(breaks %in% oldBreaks[[survScale]])) {
+      stop("Supplied breaks are not a subset of the breaks in data. See ",
+           "the breaks in data using e.g. attr(data, 'breaks')")
+    }
     
-  } else breaks <- oldBreaks[[survScale]]
+  } else if (length(survScale)){
+    breaks <- oldBreaks[[survScale]]
+  }
   
   if (piecewise && length(survScale) > 0L) {
     breaks <- breaks - .Machine$double.eps^0.5 ## ensures cutting correctness
     
-    set(x, j = survScale, value = cut(x[[survScale]], breaks = breaks, right = FALSE, labels = FALSE))
+    set(x, j = survScale, value = cut(x[[survScale]], breaks = breaks, 
+                                      right = FALSE, labels = FALSE))
     
     breaks <- round(breaks, 2L)
     pieces <- paste0("[", breaks[-length(breaks)], ", ", breaks[-1L], ")")

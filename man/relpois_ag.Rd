@@ -54,7 +54,7 @@ data(sire, package = "popEpi")
 sr <- copy(sire)
 sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
 
-## usable straight away after splitting
+## create aggregated example data
 fb <- c(0,3/12,6/12,1,2,3,4,5)
 x <- lexpand(sr, birth = bi_date, entry = dg_date,
              exit = ex_date, status=status \%in\% 1:2,
@@ -62,6 +62,7 @@ x <- lexpand(sr, birth = bi_date, entry = dg_date,
              pophaz=popmort, pp = FALSE,
              aggre = list(agegr, fot))
              
+## fit model using aggregated data
 rpm <- relpois_ag(formula = from0to1 ~ fot + agegr,  data = x,
                   d.exp = d.exp, offset = log(pyrs))
 summary(rpm)
