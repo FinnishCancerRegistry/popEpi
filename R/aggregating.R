@@ -23,7 +23,7 @@
 #'                  obs = rpois(10, rep(7,5, each=5)), 
 #'                  pyrs = rpois(10, lambda = 10000))
 #' setaggre(df, values = c("obs", "pyrs"), by = "sex")
-setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
+setaggre <- function(x, values = NULL, by = setdiff(names(x), values), breaks = NULL) {
   ## input: aggregated data in data.frame or data.table format
   ## intention: any user can define their data as an aggregated data set
   ## which will be usable by survtab / sir / other
@@ -43,7 +43,8 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
   }
   
   
-  setattr(x, "aggre.meta", list(values = values, by = by))
+  setattr(x, "aggre.meta", list(values = values, by = by, breaks = breaks))
+  setattr(x, "breaks", breaks)
   invisible(x)
 }
 
@@ -74,24 +75,24 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values)) {
 #' class(dt)
 #' 
 #' @export
-as.aggre <- function(x, values = NULL, by = setdiff(names(x), values), ...) {
+as.aggre <- function(x, values = NULL, by = setdiff(names(x), values), breaks = NULL, ...) {
   UseMethod("as.aggre", x)
 }
 
 #' @describeIn as.aggre Coerces a \code{data.frame} to an \code{aggre} object
 #' @export
-as.aggre.data.frame <- function(x, values = NULL, by = setdiff(names(x), values), ...) {
+as.aggre.data.frame <- function(x, values = NULL, by = setdiff(names(x), values), breaks = NULL, ...) {
   x <- copy(x)
-  setaggre(x, values = values, by = by, ...)
+  setaggre(x, values = values, by = by, breaks = breaks, ...)
   setattr(x, "class", c("aggre", "data.frame"))
   x[]
 }
 
 #' @describeIn as.aggre Coerces a \code{data.table} to an \code{aggre} object
 #' @export
-as.aggre.data.table <- function(x, values = NULL, by = setdiff(names(x), values), ...) {
+as.aggre.data.table <- function(x, values = NULL, by = setdiff(names(x), values), breaks = NULL, ...) {
   x <- copy(x)
-  setaggre(x, values = values, by = by, ...)
+  setaggre(x, values = values, by = by, breaks = breaks, ...)
   setattr(x, "class", c("aggre", "data.table", "data.frame"))
   x[]
 }
@@ -576,8 +577,8 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   ## final touch ---------------------------------------------------------------
   setDT(trans)
   alloc.col(trans) ## some problems with internal errors...
-  setaggre(trans, values = c("pyrs", "at.risk", transitions, sumNames), by = byNames)
-  setattr(trans, "breaks", breaks)
+  setaggre(trans, values = c("pyrs", "at.risk", transitions, sumNames), 
+           by = byNames, breaks = breaks)
   if (!return_DT()) setDFpe(trans)
   if (verbose) cat("Time taken by aggre(): ", timetaken(allTime), "\n")
   

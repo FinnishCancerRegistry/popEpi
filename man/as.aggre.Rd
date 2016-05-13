@@ -7,13 +7,14 @@
 \alias{as.aggre.default}
 \title{Coercion to Class \code{aggre}}
 \usage{
-as.aggre(x, values = NULL, by = setdiff(names(x), values), ...)
+as.aggre(x, values = NULL, by = setdiff(names(x), values), breaks = NULL,
+  ...)
 
 \method{as.aggre}{data.frame}(x, values = NULL, by = setdiff(names(x),
-  values), ...)
+  values), breaks = NULL, ...)
 
 \method{as.aggre}{data.table}(x, values = NULL, by = setdiff(names(x),
-  values), ...)
+  values), breaks = NULL, ...)
 
 \method{as.aggre}{default}(x, ...)
 }
