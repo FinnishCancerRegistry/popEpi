@@ -13,6 +13,12 @@ setaggre(x, values = NULL, by = setdiff(names(x), values), breaks = NULL)
 
 \item{by}{a character string vector; the names of variables by which 
 \code{values} have been tabulated}
+
+\item{breaks}{a list of breaks, where each element is a breaks vector
+as usually passed to e.g. \code{\link{splitLexisDT}}. The list must be
+fully named, with the names corresponding to time scales at the aggregate
+level in your data. Every unique value in a time scale variable in data must
+also exist in the corresponding vector in the breaks list.}
 }
 \description{
 Coerces an R object to an \code{aggre} object, identifying
@@ -29,7 +35,12 @@ without taking a copy as e.g. \code{as.data.frame.XXX} functions do; see e.g.
 df <- data.frame(sex = rep(c("male", "female"), each = 5), 
                  obs = rpois(10, rep(7,5, each=5)), 
                  pyrs = rpois(10, lambda = 10000))
+## without any breaks
 setaggre(df, values = c("obs", "pyrs"), by = "sex")
+df <- data.frame(df)
+df$FUT <- 0:4
+## with breaks list
+setaggre(df, values = c("obs", "pyrs"), by = "sex", breaks = list(FUT = 0:5))
 }
 \author{
 Joonas Miettinen

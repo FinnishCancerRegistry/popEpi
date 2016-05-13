@@ -9,6 +9,11 @@
 #' @param values a character string vector; the names of value variables
 #' @param by a character string vector; the names of variables by which 
 #' \code{values} have been tabulated
+#' @param breaks a list of breaks, where each element is a breaks vector
+#' as usually passed to e.g. \code{\link{splitLexisDT}}. The list must be
+#' fully named, with the names corresponding to time scales at the aggregate
+#' level in your data. Every unique value in a time scale variable in data must
+#' also exist in the corresponding vector in the breaks list.
 #' @details 
 #' 
 #' \code{setaggre} sets \code{x} to the \code{aggre} class in place 
@@ -22,7 +27,12 @@
 #' df <- data.frame(sex = rep(c("male", "female"), each = 5), 
 #'                  obs = rpois(10, rep(7,5, each=5)), 
 #'                  pyrs = rpois(10, lambda = 10000))
+#' ## without any breaks
 #' setaggre(df, values = c("obs", "pyrs"), by = "sex")
+#' df <- data.frame(df)
+#' df$FUT <- 0:4
+#' ## with breaks list
+#' setaggre(df, values = c("obs", "pyrs"), by = "sex", breaks = list(FUT = 0:5))
 setaggre <- function(x, values = NULL, by = setdiff(names(x), values), breaks = NULL) {
   ## input: aggregated data in data.frame or data.table format
   ## intention: any user can define their data as an aggregated data set
@@ -53,11 +63,7 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values), breaks = 
 #' @description Coerces an R object to an \code{aggre} object, identifying
 #' the object as one containing aggregated counts, person-years and other
 #' information. 
-#' @param x an R object to coerce to \code{aggre}; must be 
-#' a \code{data.frame} or \code{data.table}
-#' @param values a character string vector; the names of value variables
-#' @param by a character string vector; the names of variables by which 
-#' \code{values} have been tabulated
+#' @inheritParams setaggre
 #' @param ... arguments passed to or from methods
 #' @family aggregation_related
 #' 
@@ -73,6 +79,10 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values), breaks = 
 #' 
 #' class(df)
 #' class(dt)
+#' 
+#' BL <- list(fot = 0:5)
+#' df <- data.frame(df)
+#' df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex", breaks = BL)
 #' 
 #' @export
 as.aggre <- function(x, values = NULL, by = setdiff(names(x), values), breaks = NULL, ...) {

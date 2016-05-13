@@ -19,13 +19,18 @@ as.aggre(x, values = NULL, by = setdiff(names(x), values), breaks = NULL,
 \method{as.aggre}{default}(x, ...)
 }
 \arguments{
-\item{x}{an R object to coerce to \code{aggre}; must be 
-a \code{data.frame} or \code{data.table}}
+\item{x}{a \code{data.frame} or \code{data.table}}
 
 \item{values}{a character string vector; the names of value variables}
 
 \item{by}{a character string vector; the names of variables by which 
 \code{values} have been tabulated}
+
+\item{breaks}{a list of breaks, where each element is a breaks vector
+as usually passed to e.g. \code{\link{splitLexisDT}}. The list must be
+fully named, with the names corresponding to time scales at the aggregate
+level in your data. Every unique value in a time scale variable in data must
+also exist in the corresponding vector in the breaks list.}
 
 \item{...}{arguments passed to or from methods}
 }
@@ -54,6 +59,10 @@ dt <- as.aggre(dt, values = c("pyrs", "obs"), by = "sex")
 
 class(df)
 class(dt)
+
+BL <- list(fot = 0:5)
+df <- data.frame(df)
+df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex", breaks = BL)
 
 }
 \author{
