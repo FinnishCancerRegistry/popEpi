@@ -5,6 +5,7 @@
 #' @param x a \code{sir} object
 #' @param ... unused
 #' @export
+#' @family sir_related
 print.sir <- function(x, ...) {
   
   cat("SIR Standardized by: ", x[['adjusted']] , fill=TRUE)
@@ -43,6 +44,7 @@ print.sir <- function(x, ...) {
 #' @param ... unused
 #' @import grDevices
 #' @export
+#' @family sir_related
 print.sirspline <- function(x, ...) {
   if ( x$spline.dependent ) {
     if( any( !is.na(x$p.values))) {
@@ -224,7 +226,6 @@ plot.sir <- function(x, plot.type = 'model',
 #' 
 #' @description Plot SIR splines using R base graphics.
 #' 
-#' @seealso \code{\link{sir}},  \code{\link{sirspline}}, \code{\link{lines.sirspline}}
 #' 
 #' @import graphics
 #' 
@@ -248,6 +249,7 @@ plot.sir <- function(x, plot.type = 'model',
 #' On top of the frame it's then possible to add a \code{grid}, 
 #' \code{abline} or text before plotting the lines (see: \code{sirspline}).
 #' @export
+#' @family sir_related
 plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, ylab, xlab,  ...) {
 
   #print(list(...))
@@ -341,7 +343,7 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 #' \code{print.levels}. Printing the levels seperately enables  e.g. to
 #' give different colours for each level.
 #' 
-#' @seealso \code{\link{sir}},  \code{\link{sirspline}}, \code{\link{plot.sirspline}}
+#' @family sir_related
 #' 
 #' @import graphics
 #' @export

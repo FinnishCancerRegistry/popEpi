@@ -178,7 +178,12 @@ se
 Matti Rantanen, Joonas Miettinen
 }
 \seealso{
-\code{\link{plot.sir}}, \code{\link{lexpand}}
+\code{\link{lexpand}}
 \href{../doc/sir.html}{A SIR calculation vignette}
+
+Other sir_related: \code{\link{lines.sirspline}},
+  \code{\link{plot.sirspline}},
+  \code{\link{print.sirspline}}, \code{\link{print.sir}},
+  \code{\link{sirspline}}
 }
 

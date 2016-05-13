@@ -127,7 +127,12 @@ Otherwise the p-value is spline-specific.
 Matti Rantanen, Joonas Miettinen
 }
 \seealso{
-\code{\link{plot.sirspline}}, \code{\link{sir}}, \code{\link{splitMulti}} 
+\code{\link{splitMulti}} 
 \href{../doc/sir.html}{A SIR calculation vignette}
+
+Other sir_related: \code{\link{lines.sirspline}},
+  \code{\link{plot.sirspline}},
+  \code{\link{print.sirspline}}, \code{\link{print.sir}},
+  \code{\link{sir}}
 }
 

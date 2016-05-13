@@ -17,4 +17,10 @@ Prints the results of the \code{sir} function
 \author{
 Matti Rantanen, Joonas Miettinen
 }
+\seealso{
+Other sir_related: \code{\link{lines.sirspline}},
+  \code{\link{plot.sirspline}},
+  \code{\link{print.sirspline}}, \code{\link{sirspline}},
+  \code{\link{sir}}
+}
 

@@ -36,6 +36,8 @@ give different colours for each level.
 Matti Rantanen
 }
 \seealso{
-\code{\link{sir}},  \code{\link{sirspline}}, \code{\link{plot.sirspline}}
+Other sir_related: \code{\link{plot.sirspline}},
+  \code{\link{print.sirspline}}, \code{\link{print.sir}},
+  \code{\link{sirspline}}, \code{\link{sir}}
 }
 

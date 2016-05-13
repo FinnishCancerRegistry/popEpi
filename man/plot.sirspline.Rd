@@ -40,6 +40,8 @@ On top of the frame it's then possible to add a \code{grid},
 Matti Rantanen
 }
 \seealso{
-\code{\link{sir}},  \code{\link{sirspline}}, \code{\link{lines.sirspline}}
+Other sir_related: \code{\link{lines.sirspline}},
+  \code{\link{print.sirspline}}, \code{\link{print.sir}},
+  \code{\link{sirspline}}, \code{\link{sir}}
 }
 

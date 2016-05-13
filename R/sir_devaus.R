@@ -144,8 +144,9 @@
 #' ## for examples see: vignette('sir')
 #' 
 #' 
-#' @seealso \code{\link{plot.sir}}, \code{\link{lexpand}}
+#' @seealso \code{\link{lexpand}}
 #' \href{../doc/sir.html}{A SIR calculation vignette}
+#' @family sir_related
 #' 
 #' @return A list of 5: 3 \code{data.table} objects, vector of starta variables and global p-value.
 #' 
@@ -367,8 +368,9 @@ sir <- function( coh.data,
 #' in \code{spline.seq.A/B/C} for manual plotting
 #' 
 #' 
-#' @seealso \code{\link{plot.sirspline}}, \code{\link{sir}}, \code{\link{splitMulti}} 
+#' @seealso \code{\link{splitMulti}} 
 #' \href{../doc/sir.html}{A SIR calculation vignette}
+#' @family sir_related
 #' 
 #' @export sirspline
 #' @import data.table 
