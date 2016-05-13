@@ -130,6 +130,11 @@ Matti Rantanen, Joonas Miettinen
 \code{\link{splitMulti}} 
 \href{../doc/sir.html}{A SIR calculation vignette}
 
+Other main_functions: \code{\link{rate}},
+  \code{\link{relpois_ag}}, \code{\link{relpois}},
+  \code{\link{sir}}, \code{\link{survmean}},
+  \code{\link{survtab_ag}}
+
 Other sir_related: \code{\link{lines.sirspline}},
   \code{\link{plot.sirspline}},
   \code{\link{print.sirspline}}, \code{\link{print.sir}},

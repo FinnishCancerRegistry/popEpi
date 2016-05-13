@@ -14,5 +14,9 @@ A family object for glm fitting of relative Poisson models
 \author{
 Karri Seppa
 }
+\seealso{
+Other relpois_related: \code{\link{relpois_ag}},
+  \code{\link{relpois}}, \code{\link{rpcurve}}
+}
 \keyword{datasets}
 

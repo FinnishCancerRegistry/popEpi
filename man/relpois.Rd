@@ -103,5 +103,13 @@ Joonas Miettinen, Karri Seppa
 }
 \seealso{
 \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
+
+Other main_functions: \code{\link{rate}},
+  \code{\link{relpois_ag}}, \code{\link{sirspline}},
+  \code{\link{sir}}, \code{\link{survmean}},
+  \code{\link{survtab_ag}}
+
+Other relpois_related: \code{\link{RPL}},
+  \code{\link{relpois_ag}}, \code{\link{rpcurve}}
 }
 

@@ -362,6 +362,7 @@
 #' }
 #' @export
 #' @family survtab_related
+#' @family main_functions
 survtab_ag <- function(formula = NULL,
                        
                        data, 

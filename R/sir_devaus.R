@@ -147,10 +147,12 @@
 #' @seealso \code{\link{lexpand}}
 #' \href{../doc/sir.html}{A SIR calculation vignette}
 #' @family sir_related
+#' @family main_functions
 #' 
-#' @return A list of 5: 3 \code{data.table} objects, vector of starta variables and global p-value.
+#' @return A list of 5: 3 \code{data.table} objects, vector of strata variables 
+#' and global p-value.
 #' 
-#' @export sir
+#' @export
 #' 
 #' @import data.table
 #' @import stats
@@ -371,6 +373,7 @@ sir <- function( coh.data,
 #' @seealso \code{\link{splitMulti}} 
 #' \href{../doc/sir.html}{A SIR calculation vignette}
 #' @family sir_related
+#' @family main_functions
 #' 
 #' @export sirspline
 #' @import data.table 

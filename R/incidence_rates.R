@@ -77,7 +77,9 @@
 #' r3
 #'
 #' @import data.table
-#' @export rate
+#' @export
+#' @family main_functions
+#' @family rate_related
 
 rate <- function( data,
                   obs = NULL,

@@ -20,7 +20,8 @@
 #' the marginal curve is constructed only for those whose follow-up started
 #' in the respective period.
 #' 
-#' @export rpcurve
+#' @export 
+#' @family relpois_related
 #' 
 #' @import data.table
 #' @import Epi
@@ -167,7 +168,8 @@ rpcurve <- function(object = NULL) {
 #' @description A family object for glm fitting of relative Poisson models
 #' @format 
 #' A list very similary to that created by \code{poisson()}.
-#' @export RPL
+#' @export
+#' @family relpois_related
 RPL <- copy(poisson())
 RPL$link <- "glm relative survival model with Poisson error"
 RPL$linkfun <- function(mu, d.exp) log(mu - d.exp)

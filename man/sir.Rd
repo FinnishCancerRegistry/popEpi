@@ -49,7 +49,8 @@ check \code{help(p.adjust)} for options. Default NULL doesn't add adjusted p-val
 \item{round.by.pvalue}{set number of digits in p-values}
 }
 \value{
-A list of 5: 3 \code{data.table} objects, vector of starta variables and global p-value.
+A list of 5: 3 \code{data.table} objects, vector of strata variables 
+and global p-value.
 }
 \description{
 Poisson modelled standardised incidence or mortality ratios (SIRs / SMRs) i.e. 
@@ -180,6 +181,11 @@ Matti Rantanen, Joonas Miettinen
 \seealso{
 \code{\link{lexpand}}
 \href{../doc/sir.html}{A SIR calculation vignette}
+
+Other main_functions: \code{\link{rate}},
+  \code{\link{relpois_ag}}, \code{\link{relpois}},
+  \code{\link{sirspline}}, \code{\link{survmean}},
+  \code{\link{survtab_ag}}
 
 Other sir_related: \code{\link{lines.sirspline}},
   \code{\link{plot.sirspline}},

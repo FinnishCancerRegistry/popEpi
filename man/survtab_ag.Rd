@@ -393,6 +393,11 @@ CHIANG, Chin Long. Introduction to stochastic processes in biostatistics. 1968.
 \code{\link{ICSS}}, \code{\link{sire}}
 \href{../doc/survtab_examples.html}{The survtab_examples vignette}
 
+Other main_functions: \code{\link{rate}},
+  \code{\link{relpois_ag}}, \code{\link{relpois}},
+  \code{\link{sirspline}}, \code{\link{sir}},
+  \code{\link{survmean}}
+
 Other survtab_related: \code{\link{lines.survtab}},
   \code{\link{plot.survtab}}, \code{\link{print.survtab}},
   \code{\link{summary.survtab}}
