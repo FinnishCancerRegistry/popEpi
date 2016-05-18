@@ -327,8 +327,11 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
     breaks <- list(breaks)
   }
   
+  
+  
   ## detect survival time scale ------------------------------------------------
   oldBreaks <- copy(attr(data, "breaks"))
+  allScales <- unique(names(oldBreaks), breaks)
   if (is.null(oldBreaks)) {
     stop("data does not have breaks information. Is it a result of using ",
          "aggre() or as.aggre()?")
