@@ -323,15 +323,12 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
   formula <- evalRecursive(formula, env = TF, enc = PF)$arg
   if (missing(formula) || !inherits(formula, "formula")) stop("formula not defined")
   
-  if (is.numeric(breaks)) {
-    breaks <- list(breaks)
-  }
   
   
   
   ## detect survival time scale ------------------------------------------------
   oldBreaks <- copy(attr(data, "breaks"))
-  allScales <- unique(names(oldBreaks), breaks)
+  allScales <- names(oldBreaks)
   if (is.null(oldBreaks)) {
     stop("data does not have breaks information. Is it a result of using ",
          "aggre() or as.aggre()?")
@@ -342,9 +339,25 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
          "(found ", paste0("'", survScale, "'", collapse = ", "), ")")
   }
   
+  ## check supplied breaks -----------------------------------------------------
+  if (is.numeric(breaks)) {
+    breaks <- list(breaks)
+    names(breaks) <- survScale
+  }
+  
+  if (!is.null(breaks)) {
+    if (!all_breaks_in(breaks, oldBreaks)) {
+      stop("Supplied breaks must be subset of the breaks used in splitting/",
+           "aggregating data. See the latter using e.g. ",
+           "attributes(x)$aggre.meta$breaks where x is your aggregated data.")
+    }
+  }
+  
   ## pre-find args -------------------------------------------------------------
-  sub_d.exp <- evalRecursive(substitute(d.exp), env = data[1L, ], enc = PF)$argSub
-  sub_offset <- evalRecursive(substitute(offset), env = data[1L, ], enc = PF)$argSub
+  desub <- substitute(d.exp)
+  sub_d.exp <- evalRecursive(desub, env = data[1L, ], enc = PF)$argSub
+  offsub <- substitute(offset)
+  sub_offset <- evalRecursive(offsub, env = data[1L, ], enc = PF)$argSub
   
   ## prep & subset data --------------------------------------------------------
   subset <- substitute(subset)
@@ -364,25 +377,24 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
       stop("Supplied breaks but piecewise = FALSE. Please select piecewise = ",
            "TRUE if you want piecewise estimates defined by the breaks.")
     }
-    breaks <- sort(unique(breaks))
-    if (length(survScale) && !all(breaks %in% oldBreaks[[survScale]])) {
-      stop("Supplied breaks are not a subset of the breaks in data. See ",
-           "the breaks in data using e.g. attr(data, 'breaks')")
-    }
     
-  } else if (length(survScale)){
-    breaks <- oldBreaks[[survScale]]
-  }
+  } 
   
-  if (piecewise && length(survScale) > 0L) {
-    breaks <- breaks - .Machine$double.eps^0.5 ## ensures cutting correctness
+  cutBreaks <- breaks
+  othScales <- setdiff(names(oldBreaks), names(cutBreaks))
+  cutBreaks[othScales] <- oldBreaks[othScales]
+  cutBreaks[sapply(cutBreaks, length) < 2L] <- NULL
+  
+  if (piecewise && length(cutBreaks)) {
     
-    set(x, j = survScale, value = cut(x[[survScale]], breaks = breaks, 
-                                      right = FALSE, labels = FALSE))
-    
-    breaks <- round(breaks, 2L)
-    pieces <- paste0("[", breaks[-length(breaks)], ", ", breaks[-1L], ")")
-    set(x, j = survScale, value = pieces[x[[survScale]]])
+    for (sc in names(cutBreaks)) {
+      set(x, j = sc, value = cut(x[[sc]], breaks = cutBreaks[[sc]], 
+                                 right = FALSE, labels = FALSE))
+      
+      pieces <- round(cutBreaks[[sc]], 2L)
+      pieces <- paste0("[", pieces[-length(pieces)], ", ", pieces[-1L], ")")
+      set(x, j = sc, value = pieces[x[[sc]]])
+    }
     
   }
   
