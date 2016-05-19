@@ -309,6 +309,9 @@ relpois <- function(data,
 #' rpm2 <- update(rpm, . ~ fot*agegr)
 #' anova(rpm, rpm2, test="LRT")
 #' AIC(rpm, rpm2)
+#' 
+#' ## other features such as residuals or predicting are not guaranteed
+#' ## to work as intended.
 #' @export
 
 relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subset = NULL, piecewise = TRUE, check = TRUE, ...) {
