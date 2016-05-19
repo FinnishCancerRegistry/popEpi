@@ -87,9 +87,13 @@
 #' rpm <- relpois(x, formula = lex.Xst %in% 1:2 ~ FOT + agegr)
 #'  
 #' ## some methods for glm work. e.g. test for interaction
-#' # rpm2 <- relpois(x, formula = lex.Xst %in% 1:2 ~ FOT*agegr)
-#' # anova(rpm, rpm2, test="LRT")
-#' # AIC(rpm, rpm2)
+#' \dontrun{
+#' rpm2 <- relpois(x, formula = lex.Xst %in% 1:2 ~ FOT*agegr)
+#' anova(rpm, rpm2, test="LRT")
+#' AIC(rpm, rpm2)
+#' ## update won't work currently
+#' }
+
 
 relpois <- function(data, 
                     formula, 
@@ -206,18 +210,17 @@ relpois <- function(data,
   ## custom poisson family -----------------------------------------------------
   RPL <- copy(poisson())
   RPL$link <- "glm relative survival model with Poisson error"
-  RPL$linkfun <- function(mu, d.exp = data[subset, ][[tmpdexp]]) log(mu - d.exp)
-  RPL$linkinv <- function(eta, d.exp = data[subset, ][[tmpdexp]]) d.exp + exp(eta)
+  RPL$linkfun <- function(mu, d.exp = data[[tmpdexp]][subset]) log(mu - d.exp)
+  RPL$linkinv <- function(eta, d.exp = data[[tmpdexp]][subset]) d.exp + exp(eta)
   
   
-  init_maker <- quote( {
+  RPL$initialize <- substitute( {
     if (any(y < 0)) stop(paste("Negative values not allowed for", 
                                "the Poisson family"))
     n <- rep.int(1, nobs)
-    mustart <- pmax(y, rep(1,times=length(y))) + 0.1
-  } )
+    mustart <- pmax(y, d.exp) + 0.1
+  }, list(d.exp = data[[tmpdexp]][subset]) )
   
-  RPL$initialize <- init_maker
   
   
   ## glm call ------------------------------------------------------------------
@@ -306,6 +309,9 @@ relpois <- function(data,
 #' rpm2 <- update(rpm, . ~ fot*agegr)
 #' anova(rpm, rpm2, test="LRT")
 #' AIC(rpm, rpm2)
+#' 
+#' ## other features such as residuals or predicting are not guaranteed
+#' ## to work as intended.
 #' @export
 
 relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subset = NULL, piecewise = TRUE, check = TRUE, ...) {
@@ -425,16 +431,12 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
     d.exp + exp(eta)
   }
   
-  
-  init_maker <- quote( {
+  RPL$initialize <- substitute( {
     if (any(y < 0)) stop(paste("Negative values not allowed for", 
                                "the Poisson family"))
     n <- rep.int(1, nobs)
-    mustart <- pmax(y, rep(1,times=length(y))) + 0.1
-  } )
-  
-  RPL$initialize <- init_maker
-  
+    mustart <- pmax(y, d.exp) + 0.1
+  }, list(d.exp = TF$d.exp) )
   
   ## glm call ------------------------------------------------------------------
   

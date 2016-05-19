@@ -94,9 +94,12 @@ x <- lexpand(sr, birth = bi_date, entry = dg_date,
 rpm <- relpois(x, formula = lex.Xst \%in\% 1:2 ~ FOT + agegr)
  
 ## some methods for glm work. e.g. test for interaction
-# rpm2 <- relpois(x, formula = lex.Xst \%in\% 1:2 ~ FOT*agegr)
-# anova(rpm, rpm2, test="LRT")
-# AIC(rpm, rpm2)
+\dontrun{
+rpm2 <- relpois(x, formula = lex.Xst \%in\% 1:2 ~ FOT*agegr)
+anova(rpm, rpm2, test="LRT")
+AIC(rpm, rpm2)
+## update won't work currently
+}
 }
 \author{
 Joonas Miettinen, Karri Seppa

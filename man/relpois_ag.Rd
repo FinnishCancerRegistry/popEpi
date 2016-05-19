@@ -71,6 +71,9 @@ summary(rpm)
 rpm2 <- update(rpm, . ~ fot*agegr)
 anova(rpm, rpm2, test="LRT")
 AIC(rpm, rpm2)
+
+## other features such as residuals or predicting are not guaranteed
+## to work as intended.
 }
 \author{
 Joonas Miettinen, Karri Seppa
