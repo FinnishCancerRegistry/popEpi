@@ -195,7 +195,7 @@ plot.sir <- function(x, plot.type = 'model',
     logarithm <- ''
     if(log){
       logarithm <- 'x'
-      xlimit[1] <- xlimit[1] + 1
+      if(xlimit[1]==0) xlimit[1] <- xlimit[1] + 0.01
     }
     y.axis.levels <- c(1:length(levels))
     plot(c(xlimit), c(min(y.axis.levels)-0.5, max(y.axis.levels)+0.5), 
