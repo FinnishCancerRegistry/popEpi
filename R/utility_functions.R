@@ -554,63 +554,6 @@ try2int <- function(obj, tol = .Machine$double.eps^0.5) {
 }
 
 
-#' @title Shift a variable to create lag or lead values
-#' @author Joonas Miettinen
-#' @description 
-#' \strong{DEPRECATED}: 
-#' Intended to do what \code{\link[data.table]{shift}} from
-#' \pkg{data.table} does better since \pkg{data.table} 1.9.6. 
-#' Shifts the values of a variable forwards or 
-#' backwards to create lag or lead values. Takes a copy of the whole data
-#' and returns a new copy with the shifted variable.
-#' @export shift.var
-#' @param data a \code{data.frame} or \code{data.table}
-#' @param id.vars a character string vector of variable names; \code{id.vars} are used to identify unique subjects,
-#' for which shifting is done separately; e.g. with a panel data where \code{region} refers to different regions that
-#' all have their own time series, using \code{id.vars = "region"} shifts the time series for each region separately
-#' @param shift.var a character string vector of length one; specifies the variable according to which \code{value.vars}
-#' are shifted; e.g. \code{id.vars = "year"} means shifting forward or backward in years (given one has a var name \code{"year"})
-#' @param value.vars a character string vector; specifies the names of variables whose values that are shifted
-#' @param shift.value an integer; specifies the direction and extent of shifting; e.g. \code{shift.value = -1L} shifts
-#' one row backwards (a lag of one row) and \code{shift.value = 2L} creates a two-row lead
-shift.var <- function(data, id.vars = NULL, shift.var = NULL, value.vars=NULL, shift.value=-1L) {
-  .Deprecated(new = "shift", msg = "popEpi's shift.var is deprecated in 0.3.0 and will be removed in the next release; please use e.g. data.table's shift() function")
-  
-  merge_var <- makeTempVarName(data, pre = "merge_var")
-  if (is.null(shift.var)||is.null(value.vars)) stop("shift.var and value.vars cannot be NULL")
-  all_names_present(data, c(id.vars, shift.var, value.vars))
-  if (shift.value == 0L) return(data)
-  
-  if (is.data.table(data)) old_key <- key(data)
-  
-  data <- data.table(data)
-  setkeyv(data, c(id.vars, shift.var))
-  data[, (merge_var) := as.integer(as.factor(get(shift.var)))]
-  
-  if (any(duplicated(data, by=c(id.vars,shift.var,value.vars)))) {
-    stop("some levels of shift.var are duplicated in data, so shifting is not possible")
-  }
-  
-  lagdata <- data[,c(id.vars, merge_var, value.vars), with=FALSE]
-  lagdata[, (merge_var) := get(merge_var) - shift.value]
-  
-  if (shift.value<=0) {vn <- "lag"}
-  if (shift.value >0) {vn <- "lead"}
-  
-  setnames(lagdata, value.vars, paste0(vn, abs(shift.value),"_", value.vars))
-  
-  setkeyv(data, c(id.vars, merge_var))
-  setkeyv(lagdata, c(id.vars, merge_var))
-  data <- lagdata[data]
-  #   data <- merge(data, lagdata, all.x=TRUE, all.y=FALSE, by = c(id.vars, merge_var))
-  
-  data[, (merge_var) := NULL]
-  setkeyv(data, old_key)
-  return(data[])
-}
-
-
-
 #' @title Get rate and exact Poisson confidence intervals
 #' @author epitools
 #' @description Computes confidence intervals for Poisson rates
