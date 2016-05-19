@@ -11,8 +11,13 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.path = "README-"
 )
-library(popEpi)
+# library(popEpi)
+devtools::load_all()
 ```
+
+# Changes in 0.4.0
+
+* removed previously deprecated shift.var (#35)
 
 # Changes in 0.3.1
 

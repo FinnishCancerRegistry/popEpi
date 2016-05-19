@@ -1,3 +1,7 @@
+popEpi 0.4.0
+=====
+* removed previously deprecated shift.var (#35)
+
 popEpi 0.3.1
 =====
 * hotfix to 0.3.0: fixes issue causing warnings in survtab().

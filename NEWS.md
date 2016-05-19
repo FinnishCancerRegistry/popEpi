@@ -1,3 +1,8 @@
+Changes in 0.4.0
+================
+
+-   removed previously deprecated shift.var (\#35)
+
 Changes in 0.3.1
 ================
 
@@ -33,6 +38,7 @@ sr$status <- factor(sr$status, levels = 0:2,
 
 ## create Lexis object
 library(Epi)
+#> Warning: package 'Epi' was built under R version 3.2.5
 #> 
 #> Attaching package: 'Epi'
 #> The following object is masked from 'package:base':
