@@ -567,9 +567,26 @@ relpois_lex <- function(formula,
   if (!is.null(breaks)) x <- splitMulti(x, breaks = breaks, drop = TRUE)
   newBreaks <- copy(attr(x, "breaks"))
   
-  x <- cutLowMerge(x, pophaz, blargh)
+  ## merge in pophaz -----------------------------------------------------------
+  haz <- makeTempVarName(x, pre = "haz_")
+  ph <- data.table(pophaz)
+  phVars <- setdiff(names(ph), "haz")
+  setnames(ph, "haz", haz)
+  x <- cutLowMerge(x, pophaz, by = phVars, all.x = TRUE, all.y = FALSE, 
+                   old.nums = TRUE, mid.scales = intersect(allScales, phVars))
   
-  ag <- aggre(x, blargh)
+  # expected cases
+  d.exp <- makeTempVarName(x, pre = "d.exp_")
+  set(x, j = d.exp, value = x$lex.dur * x[[haz]])
+  
+  ## aggregating ---------------------------------------------------------------
+  ag <- model.frame(formula[-2], data = x) ## without response
+  setDT(ag)
+  set(ag, j = d.exp, value = x[[d.exp]])
+  d <- makeTempVarName(x, pre = "d_")
+  set(ag, j = d, value = eval(form))
+  ag <- aggre(x, by = agVars, sum.values = d.exp)
+  rm(x)
   
   ag_form <- formula
   ag_form[[2]] <- quote(from0to1)
