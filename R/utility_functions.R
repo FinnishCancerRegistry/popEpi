@@ -1055,7 +1055,7 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   argType <- "NULL"
   if (is.list(e)) argType <- "list" else 
     if (is.character(e)) argType <- "character" else 
-      if (is.vector(e) || is.factor(e)) argType <- "expression" else 
+      if (mode(e) == "numeric" || is.vector(e) || is.factor(e)) argType <- "expression" else 
         if (inherits(e, "formula")) argType <- "formula"
   
   if (!argType %in% types) stop("popArg type of evaluated arg not one of the allowed types (set via argument types). Detected type: '", argType, "'. Allowed types: ", paste0("'", types, "'", collapse = ", "))
@@ -1078,7 +1078,6 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   badNames <- c("$", ":")
   
   byNames[byNames %in% badNames] <- paste0("BV", 1:length(byNames))[byNames %in% badNames]
-  
   
   if (argType == "formula") {
     arg <- e
@@ -1122,7 +1121,7 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
       ## in list may differ, which as.data.table handles correctly
       e <- as.data.table(e)
     }
-  } else if ((is.vector(e) || is.factor(e))) {
+  } else if (mode(e) == "numeric" || is.vector(e) || is.factor(e)) {
     ## is e.g. a numeric vector or a factor
     if (DT) {
       e <- data.table(V1 = e)
