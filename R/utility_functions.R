@@ -1713,3 +1713,153 @@ return_DT <- function() {
   
 }
 
+
+
+
+#' @title Create a Lexis Object with Follow-up Time, Period, and Age
+#' Time Scales
+#' @description 
+#' This is a simple wrapper around \code{\link[Epi]{Lexis}} for creating
+#' a \code{Lexis} object with the time scales \code{fot}, \code{per},
+#' and \code{age}.
+#' @param data a \code{data.frame}; mandatory
+#' @param birth the time of birth; A character string naming the variable in 
+#' data or an expression to evaluate - see 
+#' \link[=flexible_argument]{Flexible input}
+#' @param entry the time at entry to follow-up; supplied the 
+#' same way as \code{birth}
+#' @param exit the time at exit from follow-up; supplied the 
+#' same way as \code{birth}
+#' @param entry.status passed on to \code{\link[Epi]{Lexis}} if not \code{NULL};
+#' supplied the same way as \code{birth}
+#' @param exit.status passed on to \code{\link[Epi]{Lexis}} if not \code{NULL};
+#' supplied the same way as \code{birth}
+#' @param subset a logical condition to subset by before passing data
+#' and arguments to \code{\link[Epi]{Lexis}}
+#' @param ... additional optional arguments passed on to 
+#' \code{\link[Epi]{Lexis}}
+#' @return 
+#' A \code{Lexis} object.
+#' 
+#' @examples 
+#' 
+#' data("sire", package = "popEpi")
+#' 
+#' lex <- Lexis_fpa(sire, 
+#'                  birth = "bi_date", 
+#'                  entry = dg_date, 
+#'                  exit = ex_date + 1L,
+#'                  exit.status = "status")
+#' 
+#' ## some special cases
+#' myVar <- "bi_date"
+#' l <- list(myVar = "bi_date")
+#' sire$l <- sire$myVar <- 1
+#' 
+#' ## conflict: myVar taken from data when "bi_date" was intended
+#' lex <- Lexis_fpa(sire, 
+#'                  birth = myVar, 
+#'                  entry = dg_date, 
+#'                  exit = ex_date + 1L,
+#'                  exit.status = "status")
+#' 
+#' ## no conflict with names in data
+#' lex <- Lexis_fpa(sire, 
+#'                  birth = l$myVar, 
+#'                  entry = dg_date, 
+#'                  exit = ex_date + 1L,
+#'                  exit.status = "status")
+#' @export
+Lexis_fpa <- function(data, 
+                      birth = NULL, 
+                      entry = NULL, 
+                      exit = NULL, 
+                      entry.status = NULL, 
+                      exit.status = NULL, 
+                      subset = NULL,
+                      ...) {
+  if (!requireNamespace("Epi", quietly = TRUE)) {
+    stop("Install package Epi before using this function.")
+  }
+  TF <- environment()
+  PF <- parent.frame(1L)
+  
+  checkVars <- c("fot", "per", "age", 
+                 paste0("lex.", c("dur", "Xst", "Cst", "id")))
+  checkVars <- intersect(names(data), checkVars)
+  if (length(checkVars)) {
+    stop("Following variable name(s) reserved but exist in data: ",
+         paste0(checkVars, collapse = ", "))
+  }
+  
+  
+  sb <- substitute(subset)
+  subset <- evalLogicalSubset(data, sb, enclos = PF)
+  if (all(subset)) subset <- NULL
+  x <- subsetDTorDF(data = data, subset = subset)
+  setDT(x)
+  
+  an <- c("birth", "entry", "exit", "entry.status", "exit.status")
+  
+  l <- vector("list", length(an))
+  names(l) <- an
+  for (stri in an) {
+    e <- paste0("substitute(", stri, ", env = TF)")
+    e <- parse(text = e)[[1]]
+    e <- eval(e, envir = TF) ## e.g. result of substitute(birth)
+    e <- evalPopArg(data = x, arg = e, enclos = PF)[[1]]
+    l[[stri]] <- e
+  }
+  
+  l[sapply(l, is.null)] <- NULL
+  
+  missVars <- setdiff(c("birth", "entry", "exit"), names(l))
+  if (length(missVars)) {
+    stop("Following mandatory arguments were NULL: ",
+         paste0(missVars, collapse = ", "))
+  }
+  
+  fot <- l$entry - l$entry
+  per <- l$entry
+  age <- l$entry - l$birth
+  per_exit <- l$exit
+  
+  en <- list(fot = fot, per = per, age = age)
+  ex <- list(per = per_exit)
+  
+  al <- list(entry = en, exit = ex, entry.status = l$entry.status,
+             exit.status = l$exit.status, data = x)
+  al[sapply(al, is.null)] <- NULL
+  
+  do.call(Epi::Lexis, args = c(al, ...))
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
