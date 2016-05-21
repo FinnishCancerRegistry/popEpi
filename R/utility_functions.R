@@ -1739,7 +1739,17 @@ return_DT <- function() {
 #' @param ... additional optional arguments passed on to 
 #' \code{\link[Epi]{Lexis}}
 #' @return 
-#' A \code{Lexis} object.
+#' A \code{Lexis} object with the usual columns that \code{Lexis} objects
+#' have, with time scale columns \code{fot}, \code{per}, and \code{age}.
+#' They are calculated as
+#' 
+#' \code{fot = entry - entry} (to ensure correct format, e.g. difftime)
+#' 
+#' \code{per = entry}
+#' 
+#' and 
+#' 
+#' \code{age = entry - birth}
 #' 
 #' @examples 
 #' 
