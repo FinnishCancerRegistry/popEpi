@@ -16,21 +16,21 @@ lexpand2 <- function(data,
                      aggre.type = "cartesian",
                      verbose = FALSE,
                      ...) {
-  #' @param data a data set
-  #' @param merge passed on to \code{\link{Lexis_fpa}}
-  #' @param aggre passed on to \code{\link{aggre}}
-  #' @param aggre.type passed on to \code{\link{aggre}}
-  #' @param drop passed on to \code{\link{splitMulti}}
-  #' @param breaks passed on to \code{\link{splitMulti}}
-  #' @examples
-  #' 
-  #' lex <- lexpand2(sire,
-  #'                 birth = "bi_date",
-  #'                 entry = dg_date,
-  #'                 exit = ex_date + 1L,
-  #'                 status = "status")
-  #' 
-  #' 
+  # @param data a data set
+  # @param merge passed on to \code{\link{Lexis_fpa}}
+  # @param aggre passed on to \code{\link{aggre}}
+  # @param aggre.type passed on to \code{\link{aggre}}
+  # @param drop passed on to \code{\link{splitMulti}}
+  # @param breaks passed on to \code{\link{splitMulti}}
+  # @examples
+  # 
+  # lex <- lexpand2(sire,
+  #                 birth = "bi_date",
+  #                 entry = dg_date,
+  #                 exit = ex_date + 1L,
+  #                 status = "status")
+  # 
+
   TF <- environment()
   PF <- parent.frame(1L)
   
