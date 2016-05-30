@@ -20,20 +20,19 @@ to \code{Date} will not be perfect there. With \code{year.length = "actual"}
 the original values are perfectly retrieved.
 }
 \examples{
-
-test <- copy(sire)
+data("sire", package = "popEpi")
 
 ## approximate year lengths: here 20 \% have an extra day added
-test$dg_yrs <- get.yrs(test$dg_date)
-summary(test$dg_yrs)
-dg_date2 <- as.Date(test$dg_yrs)
-summary(as.numeric(dg_date2 - test$dg_date))
+sire$dg_yrs <- get.yrs(sire$dg_date)
+summary(sire$dg_yrs)
+dg_date2 <- as.Date(sire$dg_yrs)
+summary(as.numeric(dg_date2 - sire$dg_date))
 
 ## using actual year lengths
-test$dg_yrs <- get.yrs(test$dg_date, year.length = "actual")
-summary(test$dg_yrs)
-dg_date2 <- as.Date(test$dg_yrs)
-summary(as.numeric(dg_date2 - test$dg_date))
+sire$dg_yrs <- get.yrs(sire$dg_date, year.length = "actual")
+summary(sire$dg_yrs)
+dg_date2 <- as.Date(sire$dg_yrs)
+summary(as.numeric(dg_date2 - sire$dg_date))
 }
 \author{
 Joonas Miettinen

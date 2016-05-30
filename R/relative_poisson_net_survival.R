@@ -30,13 +30,13 @@
 #' @examples
 #' \dontrun{
 #' ## use the simulated rectal cancer cohort
-#' sr <- copy(sire)
+#' data("sire", package = "popEpi")
 #' ab <- c(0,45,55,65,70,Inf)
-#' sr$agegr <- cut(sr$dg_age, breaks = ab, right = FALSE)
+#' sire$agegr <- cut(sire$dg_age, breaks = ab, right = FALSE)
 #'
 #' BL <- list(fot= seq(0,10,1/12))
 #' pm <- data.frame(popEpi::popmort)
-#' x <- lexpand(sr, breaks=BL, pophaz=pm, 
+#' x <- lexpand(sire, breaks=BL, pophaz=pm, 
 #'              birth = bi_date, 
 #'              entry = dg_date, exit = ex_date, 
 #'              status  = status %in% 1:2)

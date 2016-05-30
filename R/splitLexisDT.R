@@ -42,7 +42,7 @@
 #' @family splitting_related
 #' @examples
 #' library(Epi)
-#' data(sire)
+#' data("sire", package = "popEpi")
 #' x <- Lexis(data=sire[1000:1100, ], 
 #'            entry = list(fot=0, per=get.yrs(dg_date), age=dg_age), 
 #'            exit=list(per=get.yrs(ex_date)), exit.status=status)
@@ -68,7 +68,7 @@
 #' x3 <- splitLexisDT(x, breaks = BL$fot, timeScale = "fot", drop = FALSE)
 #' x3 <- splitLexisDT(x3, breaks = BL$per, timeScale = "per", drop = FALSE)
 #' 
-#' ## splitLexis may not work
+#' ## splitLexis may not work when using Dates
 splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   
   TF <- environment()

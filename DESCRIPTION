@@ -3,13 +3,13 @@ Title: Functions for Epidemiological Analysis using Population Data
 Authors@R: c( person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", c("aut", "cre")), 
               person("Matti", "Rantanen", , "matti.rantanen@cancer.fi", "aut"), 
               person("Karri", "Seppa", , "karri.seppa@cancer.fi", "ctb") )
-Version: 0.3.2.1
-Date: 2016-05-19
+Version: 0.3.2.2
+Date: 2016-05-30
 Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
 Description: Enables computation of various epidemiological statistics where the use of population data such as population counts and hazards is required.
                  Relatively high computation speed achieved by using data.table.
-Depends: R (>= 3.2.0), data.table (>= 1.9.6)
-Imports: Epi, survival
+Depends: R (>= 3.2.0)
+Imports: Epi, survival, data.table (>= 1.9.6)
 Suggests: reshape2, methods, testthat, knitr, rmarkdown, relsurv, ggplot2, mstate, date, splines, roxygen2
 Encoding: UTF-8
 License: GPL-3

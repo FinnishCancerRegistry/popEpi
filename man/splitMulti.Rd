@@ -80,6 +80,7 @@ as well, when using e.g. hypothetical years of 365.25 days.
 #### convert to fractional years.
 \dontrun{
 library(Epi)
+data("sire", package = "popEpi")
 x <- Lexis(data=sire, entry = list(fot=0, per=get.yrs(dg_date), age=dg_age), 
            exit=list(per=get.yrs(ex_date)), exit.status=status)
 x2 <- splitMulti(x, breaks = list(fot=seq(0, 5, by = 3/12), per=c(2008, 2013)))
@@ -94,21 +95,24 @@ BL <- list(fot = seq(0, 5, by = 3/12)*365.242199,
            age = c(0,45,85,Inf)*365.242199)
 x2 <- splitMulti(x, breaks = BL, verbose=TRUE)
 
-## multistate (healty - sick - dead)
-## pretend some observation never got cancer
-set.seed(1L)
 
-sire2 <- copy(sire)
-sire2$status <- factor(sire2$status, levels = 0:2)
-levels(sire2$status) <- c("healthy", "dead", "dead")
+## multistate example (healty - sick - dead)
+sire2 <- data.frame(sire)
 
+set.seed(1L) 
 not_sick <- sample.int(nrow(sire2), 6000L, replace = FALSE)
 sire2[not_sick, ]$dg_date <- NA
-sire2[!is.na(dg_date) & status == "healthy", ]$status <- "sick"
+sire2[!is.na(sire2$dg_date) & sire2$status == 0, ]$status <- -1
+
+sire2$status[sire2$status==2] <- 1
+sire2$status <- factor(sire2$status, levels = c(0, -1, 1), 
+                       labels = c("healthy", "sick", "dead"))
 
 xm <- Lexis(data=sire2, entry = list(fot=0, per=get.yrs(bi_date), age=0), 
             exit=list(per=get.yrs(ex_date)), exit.status=status)
-xm2 <- cutLexis(xm, cut = get.yrs(xm$dg_date), timescale = "per", new.state = "sick")
+xm2 <- cutLexis(xm, cut = get.yrs(xm$dg_date), 
+                timescale = "per", 
+                new.state = "sick")
 xm2[xm2$lex.id == 6L, ]
 
 xm2 <- splitMulti(xm2, breaks = list(fot = seq(0,150,25)))

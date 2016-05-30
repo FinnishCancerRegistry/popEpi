@@ -19,6 +19,7 @@ may not match names and levels of variables in your data.
 }
 \examples{
 if (requireNamespace("relsurv", quietly = TRUE)) {
+  library("data.table")
   data(slopop, package = "relsurv")
   dt <- as.data.table(slopop)
   dt

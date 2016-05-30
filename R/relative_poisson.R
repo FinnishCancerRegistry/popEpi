@@ -275,6 +275,9 @@ relpois <- function(data,
 #' Otherwise the time scale left as it is, usually a numeric variable.
 #' E.g. if \code{formula = counts ~ TS1*VAR1}, \code{TS1} is transformed
 #' into a factor before fitting model.
+#' @param check \code{logical}; if \code{TRUE}, performs check on the 
+#' negativity excess cases by factor-like covariates in formula - 
+#' negative excess cases will very likely lead to non-converging model
 #' @param ... any other argument passed on to \code{\link[stats]{glm}} such as 
 #' \code{control} or \code{weights}
 #' @import stats
@@ -289,12 +292,11 @@ relpois <- function(data,
 #' @examples
 #' ## use the simulated rectal cancer cohort
 #' data(sire, package = "popEpi")
-#' sr <- copy(sire)
-#' sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
+#' sire$agegr <- cut(sire$dg_age, c(0,45,60,Inf), right=FALSE)
 #' 
 #' ## create aggregated example data
 #' fb <- c(0,3/12,6/12,1,2,3,4,5)
-#' x <- lexpand(sr, birth = bi_date, entry = dg_date,
+#' x <- lexpand(sire, birth = bi_date, entry = dg_date,
 #'              exit = ex_date, status=status %in% 1:2,
 #'              breaks = list(fot=fb), 
 #'              pophaz=popmort, pp = FALSE,
@@ -469,6 +471,8 @@ check_excess_cases <- function(d, d.exp, formula, data, enclos = parent.frame(1)
   PF <- parent.frame(1)
   tF <- environment()
   
+  d.exc <- NULL
+  
   by <- RHS2DT(formula, data = data, enclos = enclos)
   if (!length(by)) by <- list()
   facVars <- names(by)[sapply(by, function(col) is.factor(col) || is.character(col))]
@@ -531,6 +535,8 @@ relpois_lex <- function(formula,
                         ...) {
   PF <- parent.frame(1)
   TF <- environment()
+  
+  form <- agVars <- NULL
   
   
   ## checks --------------------------------------------------------------------

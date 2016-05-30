@@ -69,6 +69,7 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values), breaks = 
 #' 
 #' 
 #' @examples 
+#' library("data.table")
 #' df <- data.frame(sex = rep(c("male", "female"), each = 5), 
 #'                  obs = rpois(10, rep(7,5, each=5)), 
 #'                  pyrs = rpois(10, lambda = 10000))

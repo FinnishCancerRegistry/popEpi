@@ -51,7 +51,7 @@ as well, when using e.g. hypothetical years of 365.25 days.
 }
 \examples{
 library(Epi)
-data(sire)
+data("sire", package = "popEpi")
 x <- Lexis(data=sire[1000:1100, ], 
            entry = list(fot=0, per=get.yrs(dg_date), age=dg_age), 
            exit=list(per=get.yrs(ex_date)), exit.status=status)
@@ -77,7 +77,7 @@ x2 <- splitMulti(x, breaks = BL, drop = FALSE)
 x3 <- splitLexisDT(x, breaks = BL$fot, timeScale = "fot", drop = FALSE)
 x3 <- splitLexisDT(x3, breaks = BL$per, timeScale = "per", drop = FALSE)
 
-## splitLexis may not work
+## splitLexis may not work when using Dates
 }
 \author{
 Joonas Miettinen

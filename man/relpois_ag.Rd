@@ -38,6 +38,10 @@ Otherwise the time scale left as it is, usually a numeric variable.
 E.g. if \code{formula = counts ~ TS1*VAR1}, \code{TS1} is transformed
 into a factor before fitting model.}
 
+\item{check}{\code{logical}; if \code{TRUE}, performs check on the 
+negativity excess cases by factor-like covariates in formula - 
+negative excess cases will very likely lead to non-converging model}
+
 \item{...}{any other argument passed on to \code{\link[stats]{glm}} such as 
 \code{control} or \code{weights}}
 }
@@ -51,12 +55,11 @@ Hazards Model
 \examples{
 ## use the simulated rectal cancer cohort
 data(sire, package = "popEpi")
-sr <- copy(sire)
-sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
+sire$agegr <- cut(sire$dg_age, c(0,45,60,Inf), right=FALSE)
 
 ## create aggregated example data
 fb <- c(0,3/12,6/12,1,2,3,4,5)
-x <- lexpand(sr, birth = bi_date, entry = dg_date,
+x <- lexpand(sire, birth = bi_date, entry = dg_date,
              exit = ex_date, status=status \%in\% 1:2,
              breaks = list(fot=fb), 
              pophaz=popmort, pp = FALSE,

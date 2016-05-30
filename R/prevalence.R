@@ -26,8 +26,8 @@ prevtab <- function(formula, data, popcounts = NULL, breaks = NULL, adjust = NUL
   
   popVars <- setdiff(names(popcounts), "counts")
   
-  prVars <- ?
-  adVars <- ?
+  prVars <- NULL
+  adVars <- NULL
   
   allVars <- unique(intersect(names(data), c(lexVars, prVars, adVars, popVars)))
   

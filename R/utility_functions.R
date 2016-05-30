@@ -682,6 +682,7 @@ as.data.frame.ratetable <- function(x, ...) {
 #'
 #' @examples
 #' if (requireNamespace("relsurv", quietly = TRUE)) {
+#'   library("data.table")
 #'   data(slopop, package = "relsurv")
 #'   dt <- as.data.table(slopop)
 #'   dt
