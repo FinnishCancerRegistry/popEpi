@@ -1399,19 +1399,37 @@ RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   if (length(l) == 0L) return(data.table())
   adj <- attr(l, "adjust")
   
+  ## foolproofing in case data contains column named e.g. "a:b" and that is 
+  ## intended to be used
   dana <- names(data)
   dana <- gsub(x=dana, pattern=" %.:% ", replacement = ":")
   dana <- gsub(x=dana, pattern="%.:%", replacement = ":")
   
   ld <- lapply(l, deparse)
-  ld <- lapply(ld, function(ch) gsub(x=ch, pattern=" %.:% ", replacement = ":"))
-  ld <- lapply(ld, function(ch) gsub(x=ch, pattern="%.:%", replacement = ":"))
-  ld <- lapply(ld, function(ch) if (ch %in% dana) which(dana %in% ch) else ch)
-  ld <- lapply(ld, function(el) if (is.integer(el)) data[[names(data)[el]]] else NULL)
-  ld[which(unlist(lapply(ld, is.null)))] <- NULL
+  ld <- lapply(ld, function(ch) {
+    ch <- gsub(x=ch, pattern=" %.:% ", replacement = ":")
+    ch <- gsub(x=ch, pattern="%.:%", replacement = ":")
+    int <- if (ch %in% dana) which(dana %in% ch) else ch
+    if (is.integer(int)) data[[names(data)[int]]] else NULL
+    })
+  ld[which(sapply(ld, is.null))] <- NULL
   l[names(ld)] <- ld
   
-  l <- lapply(l, function(elem) eval(expr = elem, envir = data, enclos = enclos))
+  ## foolproofs use of function %.:% by explicit referral, i.e. :::
+  ## (this avoids scoping problem)
+  l <- lapply(l, function(elem) {
+    if (!is.call(elem)) return(elem)
+    ch <- deparse(elem)
+    if (!grepl(x = ch, pattern = "%.:%")) return(elem)
+    ch <- unlist(strsplit(x = ch, split = " %.:% "))
+    ch <- paste0("popEpi:::`%.:%`(", ch[1], ", ", ch[2], ")")
+    ch <- parse(text = ch)[[1]]
+    ch
+  })
+  
+  l <- lapply(l, function(elem) {
+    eval(expr = elem, envir = data, enclos = enclos)
+  })
   
   l <- as.data.table(l)
   setattr(l, "adjust", adj)
