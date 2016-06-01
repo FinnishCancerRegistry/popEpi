@@ -587,3 +587,135 @@ adjust <- function(...) {
   
   mc <- as.list(match.call())[-1L]
   mc
+}
+
+
+
+
+
+
+RHS2DT2 <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
+  
+  
+  ## INTENTION: turns the right-hand side of a formula
+  ## into a list of substituted expressions;
+  ## each element in list is an expressions separated
+  ## by a '+' in the formula. needs to be eval()'d,
+  ## preferably using the appropriate data set.
+  stopifnot(inherits(formula, "formula"))
+  stopifnot(is.environment(enclos))
+  
+  ## no response
+  fo <- formula[c(1, length(formula))]
+  
+  te <- terms(fo)
+  tl <- attr(te, "term.labels")
+  
+  av <- all.vars(fo)
+  av <- intersect(av, names(data))
+  
+  d <- model.frame(formula = fo, data = data)
+  
+  ## non-interactions as they are
+  l <- lapply(tl, function(stri) {
+    if (stri %in% names(d)) return(d[[stri]])
+    stri
+  })
+  
+  whInter <- which(sapply(seq_along(tl), function(i) {
+    identical(l[[i]], tl[[i]])
+  }))
+  whVar <- setdiff(seq_along(l), whInter)
+  
+  
+  if (sum(whInter)) {
+    ## interactions using `:` as if both vars were factors
+    
+    ## find out which variables are used (contained in model frame)
+    ## in which interaction (rows are variables, columns interactions here)
+    interMat <- attr(attributes(d)$terms, "factors")
+    interMat <- interMat[, 1:ncol(interMat)>nrow(interMat), drop = FALSE]
+    interMat <- interMat[apply(interMat, 1, sum) > 0L, , drop = FALSE]
+    interMat <- interMat[,unlist(l[whInter])] ## ensure same order
+    
+    ## list of variables used in each interaction
+    interList <- lapply(colnames(interMat), function(stri) {
+      wh <- interMat[, stri] == 1L
+      ch <- rownames(interMat)[wh]
+      
+      ## to find out order of variables in interaction,
+      ## sub out left-most variables until interaction string is ""
+      ## (e.g. left-most var does not look like ":V1" but others do)
+      ts <- stri
+      tv <- ch
+      res <- NULL
+      tick <- 0L
+      while (length(tv) > 0L && tick < 500) {
+        
+        addChar <- if (length(tv) == 1L) "" else ":"
+        
+        dtv <- paste0(":", tv)
+        
+        leftMost <- NULL
+        if (length(tv) == 1L && identical(tv, ts)) {
+          leftMost <- tv
+        } else {
+          leftMost <- tv[!sapply(dtv, grepl, x = ts, fixed = TRUE)]
+          leftMost <- leftMost[sapply(paste0(leftMost, addChar), grepl, x = ts, fixed = TRUE)]
+        }
+        
+        ts <- sub(x = ts, pattern = paste0(leftMost, addChar), replacement = "", fixed = TRUE)
+        tv <- setdiff(tv, leftMost)
+        res <- c(res, leftMost)
+        
+        tick <- 1L + tick
+      }
+      
+      if (tick >= 500L) {
+        stop("Error in string parsing: could not figure out order of ",
+             "in interactions in formula. This is an internal error and you ",
+             "should complain to the package maintainer. Meanwhile ",
+             "pre-create the interaction term in your data and supply that ",
+             "to the formula.")
+      }
+      
+      res
+    })
+    names(interList) <- colnames(interMat)
+    
+    d <- mget(rownames(interMat), as.environment(d))
+    d <- lapply(d, as.factor)
+    setDT(d)
+    
+    on <- copy(names(d))
+    tn <- paste0("V", seq_along(d))
+    names(tn) <- on
+    names(d) <- tn
+    
+    til <- lapply(interList, function(stri) {
+      tn[stri]
+    })
+    names(til) <- sapply(til, paste0, collapse = ":")
+    
+    
+    l[whInter] <- lapply(names(til), function(stri) {
+      e <- parse(text = stri)
+      eval(e, envir = d, enclos = enclos)
+    })
+    
+  }
+  
+  names(l) <- tl
+  
+  l <- as.data.table(l)
+  
+  l[]
+}
+
+
+
+
+
+adjust2 <- function(x) {
+  x
+}
