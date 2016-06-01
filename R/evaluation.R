@@ -564,3 +564,26 @@ usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(),
 }
 
 
+
+
+
+#' @title Adjust Estimates by Categorical Variables
+#' @description This function is only intended to be used within a formula
+#' when supplied to e.g. \code{\link{survtab_ag}} and should not be
+#' used elsewhere. 
+#' @param ... variables to adjust by, e.g. \code{adjust(factor(v1), v2, v3)}
+#' @return Returns a list of promises of the variables supplied which can be
+#' evaluated.
+#' @examples 
+#' 
+#' y ~ x + adjust(z)
+#' @export
+adjust <- function(...) {
+  
+  call <- sys.call(1L)
+  call <- as.list(call)[1L]
+  
+  if (deparse(call) %in% c("adjust", "list(adjust)")) stop("Function adjust() only intended to be used within the formulas of certain functions of package popEpi. See e.g. ?survtab_ag for usage.")
+  
+  mc <- as.list(match.call())[-1L]
+  mc
