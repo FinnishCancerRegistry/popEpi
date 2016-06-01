@@ -203,6 +203,15 @@ makeWeightsDT <- function(data, values = NULL,
     stop("Variables to adjust by were defined but no weights were supplied.")
   }
   
+  if (!length(adVars)) {
+    
+    if (!is.null(weights)) {
+      message("NOTE: Weights ignored since no adjusting variables given")
+    }
+    
+    weights <- NULL
+  }
+  
   # variables to sum -----------------------------------------------------------
   if (!is.list(values)) stop("Argument 'values' must be a list ",
                              "(internal error: complain to the package",
