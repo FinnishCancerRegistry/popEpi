@@ -1087,8 +1087,11 @@ lines.survtab <- function(x, y = NULL, subset = NULL,
   Tstop <- NULL ## APPEASE R CMD CHECK
   ## prep ----------------------------------------------------------------------
   PF <- parent.frame(1L)
+  global_breaks <- attr(x, "survtab.meta")$surv.breaks
+  
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = x, subset, enclos = PF)
+  
   
   l <- prep_plot_survtab(x = x, y = y, subset = subset, 
                          conf.int = conf.int, enclos = environment())
@@ -1107,7 +1110,7 @@ lines.survtab <- function(x, y = NULL, subset = NULL,
   first <- x[1, ]
   if (length(strata)) first <- unique(x, by = strata)
   first[, c(y) := ifelse(is_CIF, 0, 1)]
-  first[, Tstop := 0]
+  first$Tstop <- min(global_breaks)
   
   if (length(y.ci) > 0) first[, (y.ci) := get(y) ]
   x <- rbindlist(list(first, x[, ]), use.names = TRUE)
