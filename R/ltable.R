@@ -83,7 +83,8 @@
 #' @export ltable
 #' 
 #' @examples
-#' sr <- copy(sire)
+#' data("sire", package = "popEpi")
+#' sr <- sire
 #' sr$agegroup <- cut(sr$dg_age, breaks=c(0,45,60,75,85,Inf))
 #' ## counts by default
 #' ltable(sr, "agegroup")
@@ -220,10 +221,9 @@ expr.by.cj <- function(data,
     if (use.levels && is.factor(x)) {
       factor(levels(x), levels = levels(x))
     } else {
-      sort(unique(x))
+      sort(unique(x), na.last = TRUE)
     }
   }
-  
   cj <- lapply(as.list(tab)[by.vars], lev_fun)
   cj <- do.call(CJ, c(cj, unique = FALSE, sorted = FALSE))
   if (na.rm) cj <- na.omit(cj)

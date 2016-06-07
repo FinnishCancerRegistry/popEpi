@@ -22,6 +22,23 @@ test_that("subsetting in ltable works and ltable has no side effects", {
 
 
 
+test_that("ltable works with NA values", {
+  
+  skip_on_cran()
+  
+  sr <- setDT(popEpi::sire[1:100, ])
+  set.seed(1L)
+  sr[, sex := rbinom(.N, 1, prob = 0.5)]
+  sr[c(1, 50), sex := NA]
+  
+  lt1 <- ltable(sr, by = "sex", na.rm = FALSE)
+  lt2 <- ltable(sr, by = "sex", na.rm = TRUE)
+  
+  expect_equal(lt1[!is.na(sex),], lt2)
+  
+})
+
+
 
 test_that("evalPopArg produces intended results",{
   set.seed(1L)

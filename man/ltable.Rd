@@ -105,7 +105,8 @@ defaults for speed. Explicit determination of enclosing environment
 of data.
 }}
 \examples{
-sr <- copy(sire)
+data("sire", package = "popEpi")
+sr <- sire
 sr$agegroup <- cut(sr$dg_age, breaks=c(0,45,60,75,85,Inf))
 ## counts by default
 ltable(sr, "agegroup")
