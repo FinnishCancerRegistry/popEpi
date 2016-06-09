@@ -1320,4 +1320,13 @@ lines.survmean <- function(x, ...) {
 
 
 
+#' @export
+getCall.survtab <- function(x, ...) {
+  attributes(x)$survtab.meta$call
+}
 
+
+#' @export
+formula.survtab <- function(x, ...) {
+  attr(x, "survtab.meta")$arguments$formula
+}

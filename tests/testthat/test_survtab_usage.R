@@ -253,3 +253,72 @@ test_that("its possible to pass dynamically created arguments", {
   expect_equal(st1$surv.obs, st2$surv.obs)
   
 })
+
+
+test_that("getCall & formula methods for survtab work", {
+  data("sire")
+  BL <- list(fot=seq(0, 5, by = 1/12),
+             per = c("2008-01-01", "2013-01-01"))
+  set.seed(1)
+  x <- lexpand(sire[sample(1:.N, 100)], 
+               birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks = BL,
+               pophaz = popmort,
+               aggre = list(sex, fot))
+  form <- fot ~ sex
+  e <- quote(survtab_ag(formula = form, data = x))
+  st <- eval(e)
+  
+  expect_equal(formula(st), form)
+  expect_equal(getCall(st), e)
+  
+})
+
+
+
+
+test_that("update() works with survtab objects", {
+  data(sire)
+  set.seed(1)
+  sire <- sire[sample(1:.N, 100)]
+  
+  BL <- list(fot=seq(0, 5, by = 1/12),
+             per = c("2008-01-01", "2013-01-01"))
+  x <- lexpand(sire, 
+               birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks = BL,
+               pophaz = popmort,
+               aggre = list(sex, fot))
+  
+  
+  st <- survtab_ag(fot ~ 1, data = x)
+  sts <- survtab_ag(fot ~ sex, data = x)
+  
+  expect_equal(sts, update(st, formula. = fot ~ sex))
+  
+  
+  library(Epi)
+  library(survival)
+  x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
+             exit = list(CAL = get.yrs(ex_date)), 
+             data = sire[sire$dg_date < sire$ex_date, ],
+             exit.status = factor(status, levels = 0:2, 
+                                  labels = c("alive", "canD", "othD")), 
+             merge = TRUE)
+  
+  set.seed(1L)
+  x$group <- rbinom(nrow(x), 1, 0.5)
+  
+  st <- survtab(FUT ~ group, data = x, 
+                surv.type = "surv.obs",
+                breaks = list(FUT = seq(0, 5, 1/12)))
+  
+  sts <- survtab(FUT ~ 1, data = x, 
+                 surv.type = "surv.obs",
+                 breaks = list(FUT = seq(0, 5, 1/12)))
+  
+  expect_equal(sts, update(st, . ~ -group))
+  
+})
