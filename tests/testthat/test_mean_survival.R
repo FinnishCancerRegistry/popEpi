@@ -343,6 +343,47 @@ test_that("Dates and frac. yrs produce congruent results", {
 
 
 
-
+test_that("updating works for survmean objects", {
+  
+  skip_on_cran()
+  
+  
+  library(Epi)
+  library("data.table")
+  library(survival)
+  
+  set.seed(1)
+  sr <- setDT(popEpi::sire[sample(1:.N, 100), ])
+  
+  x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+             exit = list(CAL = get.yrs(ex_date)),
+             data = sr,
+             exit.status = factor(status, levels = 0:2,
+                                  labels = c("alive", "canD", "othD")),
+             entry.status = factor(0, levels = 0:2,
+                                   labels = c("alive", "canD", "othD")),
+             merge = TRUE)
+  
+  pm <- data.table(popEpi::popmort)
+  names(pm) <- c("sex", "CAL", "AGE", "haz")
+  
+  BL <- list(FUT = 1:10)
+  fo <- Surv(time = FUT, event = lex.Xst != "alive") ~ 1
+  e <- quote(
+    survmean(formula = fo, data = x, breaks = BL,pophaz = pm)
+  )
+  sm <- eval(e)
+  
+  fo <- update(fo, ~.+sex)
+  sm2 <- eval(e)
+  
+  sm3 <- update(sm, .~ + sex)
+  
+  expect_equal(data.frame(sm2), data.frame(sm3))
+  expect_equal(formula(sm2), fo)
+  expect_equal(formula(sm3), fo)
+  expect_equal(getCall(sm2), e)
+  
+})
 
 

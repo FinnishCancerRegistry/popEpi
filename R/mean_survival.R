@@ -261,6 +261,8 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   TF <- environment()
   PF <- parent.frame(1L)
   
+  attr_form <- copy(formula)
+  
   surv.method <- match.arg(surv.method, c("hazard", "lifetable"))
   
   if(!requireNamespace("survival")) {
@@ -624,10 +626,14 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   
   this_call <- match.call()
   at <- list(call = this_call, 
-             print = prNames, adjust = adNames, 
-             tprint = tmpPrNames, tadjust = tmpAdNames,
+             formula = attr_form,
+             print = prNames, 
+             adjust = adNames, 
+             tprint = tmpPrNames, 
+             tadjust = tmpAdNames,
              breaks = breaks, 
-             e1.breaks = e1.breaks, survScale = survScale,
+             e1.breaks = e1.breaks, 
+             survScale = survScale,
              curves = copy(x))
   setattr(sm, "class", c("survmean","data.table", "data.frame"))
   setattr(sm, "survmean.meta", at)

@@ -1288,3 +1288,21 @@ getCall.survtab <- function(x, ...) {
 formula.survtab <- function(x, ...) {
   attr(x, "survtab.meta")$arguments$formula
 }
+
+
+
+
+
+#' @export
+getCall.survmean <- function(x, ...) {
+  attributes(x)$survmean.meta$call
+}
+
+
+#' @export
+formula.survmean <- function(x, ...) {
+  attr(x, "survmean.meta")$formula
+}
+
+
+
