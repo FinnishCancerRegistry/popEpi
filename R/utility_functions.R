@@ -194,13 +194,13 @@ fac2num <- function(x) {
 #' 
 #' @examples
 #' 
-#' test <- copy(sire)
-#' test$dg_yrs <- get.yrs(test$dg_date)
-#' summary(test$dg_yrs)
+#' data("sire")
+#' sire$dg_yrs <- get.yrs(sire$dg_date)
+#' summary(sire$dg_yrs)
 #' 
 #' ## see: ?as.Date.yrs
-#' dg_date2 <- as.Date(test$dg_yrs)
-#' summary(as.numeric(dg_date2 - test$dg_date))
+#' dg_date2 <- as.Date(sire$dg_yrs)
+#' summary(as.numeric(dg_date2 - sire$dg_date))
 #' 
 #' ## Epi's cal.yr versus get.yrs
 #' Epi::cal.yr("2000-01-01") ## 1999.999
