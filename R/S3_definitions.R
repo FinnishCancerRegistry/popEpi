@@ -668,8 +668,9 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' \code{t = c(2.5, 5.1)}
 #' with data that was split by the breaks \code{seq(0, 5, 1/12)}
 #' causes the times \code{c(2.5, 5.0)} to be used. 
-#' Since the estimates at the time points closest to \code{t} are selected,
-#' values of \code{t} are compared with column \code{Tstop} in the data.
+#' Values to show belong to the interval within which each time point
+#' exists, e.g. for \code{t = 2.51}, the values for interval \code{[2.5, 3)}
+#' are shown. If the time point is not in any interval, NA values are returned.
 #' If \code{NULL}, prints all rows.
 #' @param q a named \code{list} of quantiles to include in returned data set.
 #' E.g. \code{list(surv.obs = 0.5)} for rows closest to the median survival
@@ -719,7 +720,8 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   PF <- parent.frame(1L)
   at <- attr(object, "survtab.meta")
   
-  subset <- evalLogicalSubset(object, substitute(subset), enclos = PF)
+  sb <- substitute(subset)
+  subset <- evalLogicalSubset(object, sb, enclos = PF)
   x <- object[subset, ]
   setDT(x)
   setattr(x, "class", class(object))
@@ -735,35 +737,48 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   if (!is.null(q) && !is.null(t)) stop("Only define use argument 't' or argument 'q'")
   if (is.null(q)) q <- list()
   bn <- setdiff(names(q), at$est.vars)
-  if (length(bn) > 0L) stop("No survival time function estimates named ",
-                            paste0("'", bn, "'", collapse = ", "), 
-                            " found in supplied survtab object. Available survival time function estimates: ", 
-                            paste0("'", at$est.vars, "'", collapse = ", "))
+  if (length(bn) > 0L) {
+    stop("No survival time function estimates named ",
+         paste0("'", bn, "'", collapse = ", "), 
+         " found in supplied survtab object. Available ",
+         "survival time function estimates: ", 
+         paste0("'", at$est.vars, "'", collapse = ", "))
+  }
   q <- lapply(q, function(x) eval(x, envir = PF))
   
-  lapply(q, function(x) if (min(x < 0L) || max(x > 1L)) stop("Quantiles must be expressed as numbers between 0 and 1, e.g. surv.obs = 0.5."))
+  lapply(q, function(x) {
+    if (min(x < 0L) || max(x > 1L)) {
+      stop("Quantiles must be expressed as numbers between 0 and 1, ",
+           "e.g. surv.obs = 0.5.")
+    }
+  })
   
   for (k in names(q)) {
     
-    q[[k]] <- rbindlist(lapply(q[[k]], function(y) x[, list(Tstop = .SD[[2L]][which.min(abs(.SD[[1L]] - y))]), 
-                                                     .SDcols = c(k, "Tstop"), by = eval(pv)]))
+    q[[k]] <- rbindlist(lapply(q[[k]], function(y) {
+      x[, list(Tstop = .SD[[2L]][which.min(abs(.SD[[1L]] - y))]), 
+        .SDcols = c(k, "Tstop"), by = eval(pv)]
+    }))
     
   }
   q <- rbindlist(q)
   
   
   ## time point detection ------------------------------------------------------
+  
+  ts <- x$Tstop - x$delta
+  tsu <- unique(ts)
+  
   if (is.null(t) && length(q) == 0L) t <- sort(unique(x$Tstop))
   if (length(q) == 0L && !is.null(t)) {
     
     t <- sort(unique(t))
     
-    t <- lapply(t, function(y) x[, list(Tstop = .SD[[1L]][which.min(abs(.SD[[1L]] - y))]), 
-                                 .SDcols = "Tstop", by = eval(pv)])
-    t <- rbindlist(t)
-    
-    setkeyv(t, c(pv, "Tstop"))
+    t <- sapply(t, function(val) {
+      tail(tsu[tsu < val] , 1)
+    })
     t <- unique(t)
+    
   }
   
   if (length(q) > 0L && is.null(t)) t <- q 
@@ -773,7 +788,7 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   
   x <- data.table(x)
   setkeyv(x, c(pv, "Tstop"))
-  x <- x[t]
+  x <- x[ts %in% t]
   if (length(pv) > 0L) setnames(x, pv, pv_orig)
   
   if (!return_DT()) setDFpe(x)
