@@ -403,11 +403,6 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
   }
 }
 
-#' @title Print Method for yrs Objects
-#' @description This internal function enables a nicer printing for \code{yrs}
-#' objects (see \code{\link{get.yrs}})
-#' @param x an yrs object
-#' @param ... unused, needed for conformity with other methods
 #' @export 
 print.yrs <- function(x, ...) {
   print(as.numeric(x))
@@ -471,12 +466,7 @@ as.Date.yrs <- function(x, ...) {
   d
 }
 
-#' @title Retain aggre Attributes in Bracket Operations
-#' @description This internal function enables using e.g. \code{x[V1 == 1, ]} 
-#' whilst keeping attributes specific to \code{aggre} intact.
-#' @param x an aggre object
-#' @param ... additional arguments passed on to next method - almost always to
-#' \code{\link{[.data.frame}} or \code{\link{[.data.table}} as appropriate.
+
 #' @export 
 `[.aggre` <- function(x, ...) {
   xa <- attributes(x)
@@ -489,13 +479,6 @@ as.Date.yrs <- function(x, ...) {
   y
 }
 
-#' @title Retain aggre Attributes in Subset
-#' @description This internal function enables using \code{subset()} 
-#' whilst keeping attributes specific to \code{aggre} intact.
-#' @param x an aggre object
-#' @param ... additional arguments passed on to next method - almost always to
-#' \code{\link{subset.data.frame}} or \code{\link{subset.data.table}} 
-#' as appropriate.
 #' @export 
 subset.aggre <- function(x, ...) {
   y <- NextMethod()
@@ -803,13 +786,6 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   x
 }
 
-
-#' @title Retain survtab Attributes in Bracket Operations
-#' @description This internal function enables using e.g. \code{x[V1 == 1, ]} 
-#' whilst keeping attributes specific to \code{survtab} intact.
-#' @param x a survtab object
-#' @param ... additional arguments passed on to next method - almost always to
-#' \code{\link{[.data.frame}} or \code{\link{[.data.table}} as appropriate.
 #' @export 
 `[.survtab` <- function(x, ...) {
   y <- NextMethod()
@@ -820,13 +796,6 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   y
 }
 
-#' @title Retain survtab Attributes in Subset
-#' @description This internal function enables using \code{subset()} 
-#' whilst keeping attributes specific to \code{survtab} intact.
-#' @param x a survtab object
-#' @param ... additional arguments passed on to next method - almost always to
-#' \code{\link{subset.data.frame}} or \code{\link{subset.data.table}} 
-#' as appropriate.
 #' @export 
 subset.survtab <- function(x, ...) {
   y <- NextMethod()
@@ -838,12 +807,6 @@ subset.survtab <- function(x, ...) {
 }
 
 
-#' @title Retain survmean Attributes in Bracket Operations
-#' @description This internal function enables using e.g. \code{x[V1 == 1, ]} 
-#' whilst keeping attributes specific to \code{survmean} intact.
-#' @param x a survmean object
-#' @param ... additional arguments passed on to next method - almost always to
-#' \code{\link{[.data.frame}} or \code{\link{[.data.table}} as appropriate.
 #' @export 
 `[.survmean` <- function(x, ...) {
   y <- NextMethod()
@@ -857,13 +820,6 @@ subset.survtab <- function(x, ...) {
 }
 
 
-#' @title Retain survmean Attributes in Subset
-#' @description This internal function enables using \code{subset()} 
-#' whilst keeping attributes specific to \code{survmean} intact.
-#' @param x a survmean object
-#' @param ... additional arguments passed on to next method - almost always to
-#' \code{\link{subset.data.frame}} or \code{\link{subset.data.table}} 
-#' as appropriate.
 #' @export 
 subset.survmean <- function(x, ...) {
   y <- NextMethod()
@@ -877,6 +833,7 @@ subset.survmean <- function(x, ...) {
 }
 
 ## subsetting for rate objects that retains attributes
+#' @export 
 `[.rate` <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
@@ -886,6 +843,7 @@ subset.survmean <- function(x, ...) {
   y
 }
 
+#' @export 
 subset.rate <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
