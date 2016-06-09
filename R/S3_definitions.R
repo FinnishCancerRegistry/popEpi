@@ -409,11 +409,6 @@ print.yrs <- function(x, ...) {
 }
 
 
-#' @title Retain yrs Attributes in Bracket Operations
-#' @description This internal function enables using e.g. \code{x[V1 == 1, ]} 
-#' whilst keeping attributes specific to \code{yrs} intact.
-#' @param x an yrs object
-#' @param ... unused, needed for conformity with other methods
 #' @export 
 `[.yrs` <- function(x, ...) {
   yl <- attr(x, "year.length")
@@ -832,7 +827,6 @@ subset.survmean <- function(x, ...) {
   y
 }
 
-## subsetting for rate objects that retains attributes
 #' @export 
 `[.rate` <- function(x, ...) {
   y <- NextMethod()
