@@ -304,6 +304,7 @@
 #' ## calculate relative EdererII period method 
 #' st <- survtab_ag(fot ~ 1, data = x)
 #' 
+#' \dontrun{
 #' #### survtab usage
 #' library(Epi)
 #' library(survival)
@@ -320,7 +321,6 @@
 #' set.seed(1L)
 #' x$group <- rbinom(nrow(x), 1, 0.5)
 #' 
-#' \dontrun{
 #' ## observed survival. explicit supplying of status:
 #' st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
 #'               surv.type = "surv.obs",

@@ -316,6 +316,7 @@ x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
 ## calculate relative EdererII period method 
 st <- survtab_ag(fot ~ 1, data = x)
 
+\dontrun{
 #### survtab usage
 library(Epi)
 library(survival)
@@ -332,7 +333,6 @@ x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
 set.seed(1L)
 x$group <- rbinom(nrow(x), 1, 0.5)
 
-\dontrun{
 ## observed survival. explicit supplying of status:
 st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
               surv.type = "surv.obs",
