@@ -2,6 +2,7 @@ popEpi 0.4.0
 =====
 * removed previously deprecated shift.var (#35)
 * popEpi no longer depends on package data.table but imports it - this means the user will have to do library(data.table) separately to make data.table's functions become usable. Formerly popEpi effectively did library(data.table) when it was library'd.
+* summary.survtab: args t and q behaviour changed
 
 popEpi 0.3.1
 =====

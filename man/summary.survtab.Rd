@@ -9,31 +9,30 @@
 \arguments{
 \item{object}{a \code{survtab} object}
 
-\item{t}{a vector of times at which time points to print
-summary table of survival function estimates by strata;
-will automatically use values in breaks used to split data
-for aggregation closest to these values, so e.g. supplyig 
-\code{t = c(2.5, 5.1)}
-with data that was split by the breaks \code{seq(0, 5, 1/12)}
-causes the times \code{c(2.5, 5.0)} to be used. 
-Since the estimates at the time points closest to \code{t} are selected,
-values of \code{t} are compared with column \code{Tstop} in the data.
-If \code{NULL}, prints all rows.}
+\item{t}{a vector of times at which time points (actually intervals that
+contain t) to print summary table of survival function estimates by strata;
+values not existing in any interval cause rows containing only \code{NAs} to
+be returned.}
 
 \item{subset}{a logical condition to subset results table by
 before printing; use this to limit to a certain stratum. E.g.
 \code{subset = sex == "male"}}
 
-\item{q}{a named \code{list} of quantiles to include in returned data set.
-E.g. \code{list(surv.obs = 0.5)} for rows closest to the median survival
-for each strata in the \code{survtab} object. See Examples.}
+\item{q}{a named \code{list} of quantiles to include in returned data set,
+where names must match to estimates in \code{object};
+returns intervals where the quantiles are reached first;
+e.g. \code{list(surv.obs = 0.5)} might find an interval where \code{surv.obs}
+is 0.45 and 0.55 at the beginning and end of the interval, respectively;
+returns rows with \code{NA} values for quantiles not reached in estimates
+(e.g. if \code{q = list(surv.obs = 0.5)} but lowest estimate is 0.6);
+see Examples.}
 
 \item{...}{unused; required for congruence with other \code{summary} methods}
 }
 \description{
 Summary method function for \code{survtab} objects; see
 \code{\link{survtab_ag}}. Returns estimates at given time points
-or all time points.
+or all time points if \code{t} and \code{q} are both \code{NULL}.
 }
 \examples{
 

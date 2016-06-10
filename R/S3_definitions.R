@@ -659,22 +659,20 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' @author Joonas Miettinen
 #' @description Summary method function for \code{survtab} objects; see
 #' \code{\link{survtab_ag}}. Returns estimates at given time points
-#' or all time points.
+#' or all time points if \code{t} and \code{q} are both \code{NULL}.
 #' @param object a \code{survtab} object
-#' @param t a vector of times at which time points to print
-#' summary table of survival function estimates by strata;
-#' will automatically use values in breaks used to split data
-#' for aggregation closest to these values, so e.g. supplyig 
-#' \code{t = c(2.5, 5.1)}
-#' with data that was split by the breaks \code{seq(0, 5, 1/12)}
-#' causes the times \code{c(2.5, 5.0)} to be used. 
-#' Values to show belong to the interval within which each time point
-#' exists, e.g. for \code{t = 2.51}, the values for interval \code{[2.5, 3)}
-#' are shown. If the time point is not in any interval, NA values are returned.
-#' If \code{NULL}, prints all rows.
-#' @param q a named \code{list} of quantiles to include in returned data set.
-#' E.g. \code{list(surv.obs = 0.5)} for rows closest to the median survival
-#' for each strata in the \code{survtab} object. See Examples.
+#' @param t a vector of times at which time points (actually intervals that
+#' contain t) to print summary table of survival function estimates by strata;
+#' values not existing in any interval cause rows containing only \code{NAs} to
+#' be returned. 
+#' @param q a named \code{list} of quantiles to include in returned data set,
+#' where names must match to estimates in \code{object};
+#' returns intervals where the quantiles are reached first;
+#' e.g. \code{list(surv.obs = 0.5)} might find an interval where \code{surv.obs}
+#' is 0.45 and 0.55 at the beginning and end of the interval, respectively;
+#' returns rows with \code{NA} values for quantiles not reached in estimates
+#' (e.g. if \code{q = list(surv.obs = 0.5)} but lowest estimate is 0.6);
+#' see Examples.
 #' @param subset a logical condition to subset results table by
 #' before printing; use this to limit to a certain stratum. E.g.
 #' \code{subset = sex == "male"}
@@ -718,13 +716,16 @@ print.survtab <- function(x, subset = NULL, ...) {
 summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   
   PF <- parent.frame(1L)
-  at <- attr(object, "survtab.meta")
+  at <- copy(attr(object, "survtab.meta"))
+  subr <- copy(at$surv.breaks)
+  
+  if (!is.null(t) && !is.null(q)) {
+    stop("Only supply either t or q.")
+  } 
   
   sb <- substitute(subset)
   subset <- evalLogicalSubset(object, sb, enclos = PF)
   x <- object[subset, ]
-  setDT(x)
-  setattr(x, "class", class(object))
   
   ## to avoid e.g. 'factor(V1, 1:2)' going bonkers
   pv_orig <- pv <- at$print.vars
@@ -733,62 +734,80 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
     setnames(x, pv_orig, pv)
   }
   
+  setDT(x)
+  
   ## quantile detection --------------------------------------------------------
-  if (!is.null(q) && !is.null(t)) stop("Only define use argument 't' or argument 'q'")
-  if (is.null(q)) q <- list()
-  bn <- setdiff(names(q), at$est.vars)
-  if (length(bn) > 0L) {
-    stop("No survival time function estimates named ",
-         paste0("'", bn, "'", collapse = ", "), 
-         " found in supplied survtab object. Available ",
-         "survival time function estimates: ", 
-         paste0("'", at$est.vars, "'", collapse = ", "))
-  }
-  q <- lapply(q, function(x) eval(x, envir = PF))
-  
-  lapply(q, function(x) {
-    if (min(x < 0L) || max(x > 1L)) {
-      stop("Quantiles must be expressed as numbers between 0 and 1, ",
-           "e.g. surv.obs = 0.5.")
+  if (!is.null(q)) {
+    bn <- setdiff(names(q), at$est.vars)
+    if (length(bn) > 0L) {
+      stop("No survival time function estimates named ",
+           paste0("'", bn, "'", collapse = ", "), 
+           " found in supplied survtab object. Available ",
+           "survival time function estimates: ", 
+           paste0("'", at$est.vars, "'", collapse = ", "))
     }
-  })
-  
-  for (k in names(q)) {
     
-    q[[k]] <- rbindlist(lapply(q[[k]], function(y) {
-      x[, list(Tstop = .SD[[2L]][which.min(abs(.SD[[1L]] - y))]), 
-        .SDcols = c(k, "Tstop"), by = eval(pv)]
-    }))
+    lapply(q, function(x) {
+      if (min(x <= 0L) || max(x >= 1L)) {
+        stop("Quantiles must be expressed as numbers between 0 and 1, ",
+             "e.g. surv.obs = 0.5.")
+      }
+    })
     
+    
+    m <- x[, .SD[1, ], keyby = eval(pv)][, c(pv, "Tstop"), with = FALSE]
+    setDF(m)
+    
+    rollVars <- makeTempVarName(x, pre = names(q))
+    x[, c(rollVars) := lapply(.SD, copy), .SDcols = names(q)]
+    
+    m <- lapply(seq_along(q), function(i) {
+      m <- merge(m, q[[i]])
+      setnames(m, "y", rollVars[i])
+      if (length(pv)) setorderv(m, pv)
+      m[, c(pv, rollVars[i]), drop = FALSE]
+    })
+    names(m) <- names(q)
+    
+    l <- vector("list", length(q))
+    names(l) <- names(q)
+    for (k in names(q)) {
+      
+      l[[k]] <- setDT(x[m[[k]], on = names(m[[k]]), roll = 1L])
+      
+    }
+    l <- rbindlist(l)
+    set(l, j = rollVars, value = NULL)
+    if (length(pv)) setkeyv(l, pv)
+    x <- l
   }
-  q <- rbindlist(q)
-  
   
   ## time point detection ------------------------------------------------------
   
-  ts <- x$Tstop - x$delta
-  tsu <- unique(ts)
-  
-  if (is.null(t) && length(q) == 0L) t <- sort(unique(x$Tstop))
-  if (length(q) == 0L && !is.null(t)) {
+  if (!is.null(t)) {
     
-    t <- sort(unique(t))
+    tcutv <- makeTempVarName(x, pre = "cut_time_")
     
-    t <- sapply(t, function(val) {
-      tail(tsu[tsu < val] , 1)
-    })
-    t <- unique(t)
+    set(x, j = tcutv, value = cut(x$Tstop, breaks = subr, right = T, 
+                                  include.lowest = F))
+    cutt <- cut(t, breaks = subr, right = T, include.lowest = F)
     
+    l <- list(cutt)
+    names(l) <- tcutv
+    if (length(pv)) {
+      pvdt <- setDF(unique(x, by = pv))[, pv, drop = FALSE]
+      l <- setDT(merge(pvdt, as.data.frame(l)))
+      setkeyv(l, pv)
+    }
+    
+    x <- x[l, on = c(pv, tcutv)]
+    
+    set(x, j = tcutv, value = NULL)
+    if (length(pv)) setkeyv(x, pv)
   }
   
-  if (length(q) > 0L && is.null(t)) t <- q 
   
   ## final touches -------------------------------------------------------------
-  # preface_survtab.print(x)
-  
-  x <- data.table(x)
-  setkeyv(x, c(pv, "Tstop"))
-  x <- x[ts %in% t]
   if (length(pv) > 0L) setnames(x, pv, pv_orig)
   
   if (!return_DT()) setDFpe(x)
