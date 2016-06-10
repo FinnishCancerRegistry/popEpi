@@ -76,12 +76,12 @@
 #' 
 #' @examples
 #' ## use the simulated rectal cancer cohort
-#' sr <- copy(sire)
-#' sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
+#' data("sire", package = "popEpi")
+#' sire$agegr <- cut(sire$dg_age, c(0,45,60,Inf), right=FALSE)
 #' 
 #' ## usable straight away after splitting
 #' fb <- c(0,3/12,6/12,1,2,3,4,5)
-#' x <- lexpand(sr, birth = bi_date, entry = dg_date,
+#' x <- lexpand(sire, birth = bi_date, entry = dg_date,
 #'              exit = ex_date, status=status,
 #'              breaks = list(fot=fb), pophaz=popmort)
 #' rpm <- relpois(x, formula = lex.Xst %in% 1:2 ~ FOT + agegr)

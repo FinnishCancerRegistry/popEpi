@@ -80,6 +80,7 @@ test_that("survtab status argument works as expected", {
 test_that("survtab works with more complicated estimation", {
   library(Epi)
   library(survival)
+  library(data.table)
   
   x <- data.table(popEpi::sire[sire$dg_date < sire$ex_date, ])
   

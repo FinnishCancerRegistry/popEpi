@@ -37,6 +37,7 @@
 #' E.g. \code{"Missing \%\%NA_COUNTS\%\% observations due to derpness."}
 #' @examples 
 #' library(survival)
+#' library(data.table)
 #' 
 #' makeWeightsDT <- popEpi:::makeWeightsDT ## this avoids errors during tests
 #' 

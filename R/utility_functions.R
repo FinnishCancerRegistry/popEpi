@@ -306,6 +306,7 @@ is_leap_year <- function(years) {
 #' date::is.date(da) ## FALSE
 #' 
 #' ## IDate format from data.table
+#' library("data.table")
 #' da <- as.IDate("2000-01-01")
 #' is.Date(da) ## TRUE
 #' date::is.date(da) ## FALSE
