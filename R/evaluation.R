@@ -313,11 +313,11 @@ RHS2list <- function(formula, handle.adjust=TRUE) {
   if (length(adj) == 0L) adj <- NULL
   if (handle.adjust && !is.null(adj)) {
     tl <- setdiff(tl, adj)
-    adjNames <- substr(adj, 8, nchar(adj)-1L)
-    adj <- lapply(adj, function(x) parse(text = x))
-    adj <- unlist(lapply(adj, eval), recursive = FALSE)
-    adj <- lapply(adj, deparse)
-    adj <- unlist(adj)
+    adj <- unlist(lapply(adj, function(stri) {
+      e <- parse(text = stri)[[1]]
+      e <- as.list(e)[-1]
+      unlist(lapply(e, deparse))
+    }))
     
     tl <- c(tl, adj)
   }
@@ -333,6 +333,29 @@ RHS2list <- function(formula, handle.adjust=TRUE) {
   l
 }
 
+uses_colon <- function(e) {
+  if (is.character(e)) e <- parse(text = e)[[1]]
+  stopifnot(is.call(e) || is.name(e))
+  stopifnot(!inherits(e, "formula"))
+  
+  l <- as.list(e)
+  if (deparse(l[[1]]) %in% c(":", "%.:%") && length(l) == 3) {
+    return(TRUE)
+  }
+  FALSE
+}
+
+replace_colon <- function(e) {
+  stopifnot(is.call(e) || is.name(e))
+  stopifnot(!inherits(e, "formula"))
+  
+  if (!uses_colon(e)) return(e)
+  
+  l <- as.list(e)
+  l[[1]] <- quote(popEpi:::`%.:%`)
+  as.call(l)
+}
+
 RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   l <- RHS2list(formula)
   if (length(l) == 0L) return(data.table())
@@ -343,6 +366,7 @@ RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   dana <- names(data)
   dana <- gsub(x=dana, pattern=" %.:% ", replacement = ":")
   dana <- gsub(x=dana, pattern="%.:%", replacement = ":")
+  
   
   ld <- lapply(l, deparse)
   ld <- lapply(ld, function(ch) {
@@ -358,12 +382,10 @@ RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   ## (this avoids scoping problem)
   l <- lapply(l, function(elem) {
     if (!is.call(elem)) return(elem)
-    ch <- deparse(elem)
-    if (!grepl(x = ch, pattern = "%.:%")) return(elem)
-    ch <- unlist(strsplit(x = ch, split = " %.:% "))
-    ch <- paste0("popEpi:::`%.:%`(", ch[1], ", ", ch[2], ")")
-    ch <- parse(text = ch)[[1]]
-    ch
+    if (!uses_colon(elem)) return(elem)
+    
+    replace_colon(elem)
+    
   })
   
   l <- lapply(l, function(elem) {
@@ -383,15 +405,23 @@ Surv2DT <- function(Surv) {
   
   type <- attr(Surv, "type")
   statNA <- sum(is.na(dt$status))
-  if (statNA) 
-    stop("Some status indicators (", statNA  ," values in total) were NA as a result of using Surv(). Usual suspects: original status variable has NA values, or you have numeric status variable with more than two levels and you did not assign e.g. type = 'mstate' (e.g. Surv(time = c(1,1,1), event = c(0,1,2), type = 'mstate') works).")
+  if (statNA) {
+    stop("Some status indicators (", statNA  ," values in total) were NA as ",
+         "a result of using Surv(). Usual suspects: original status variable ",
+         "has NA values, or you have numeric status variable with more than ",
+         "two levels and you did not assign e.g. type = 'mstate' (e.g. ",
+         "Surv(time = c(1,1,1), event = c(0,1,2), type = 'mstate') works).")
+    
+  }
   
   
   setattr(dt, "type", type)
   testClass <- sa$inputAttributes$time2$class
-  if (!is.null(testClass) && testClass == "factor") dt[, status := factor(status, labels = sa$inputAttributes$time2$levels)]
+  if (!is.null(testClass) && testClass == "factor") 
+    dt[, status := factor(status, labels = sa$inputAttributes$time2$levels)]
   testClass <- sa$inputAttributes$event$class
-  if (!is.null(testClass) && testClass == "factor") dt[, status := factor(status, labels = sa$inputAttributes$event$levels)]
+  if (!is.null(testClass) && testClass == "factor") 
+    dt[, status := factor(status, labels = sa$inputAttributes$event$levels)]
   
   dt[]
 }
@@ -578,35 +608,75 @@ usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(),
 #' 
 #' y ~ x + adjust(z)
 #' @export
-adjust <- function(...) {
+adjust <- function(x) {
   
-  call <- sys.call(1L)
-  call <- as.list(call)[1L]
+  # call <- sys.call(1L)
+  # call <- as.list(call)[1L]
   
-  if (deparse(call) %in% c("adjust", "list(adjust)")) stop("Function adjust() only intended to be used within the formulas of certain functions of package popEpi. See e.g. ?survtab_ag for usage.")
+  # if (deparse(call) %in% c("adjust", "list(adjust)")) stop("Function adjust() only intended to be used within the formulas of certain functions of package popEpi. See e.g. ?survtab_ag for usage.")
   
-  mc <- as.list(match.call())[-1L]
-  mc
+  # mc <- as.list(match.call())[-1L]
+  # mc
+  x
 }
 
 
 
 
 
+parse_adjust_formula <- function(f) {
+  
+  env <- environment(f)
+  t <- attr(terms(f), "term.labels")
+  
+  l <- sapply(t, grepl, pattern = "adjust(", fixed = TRUE)
+  
+  a <- t[l]
+  
+  if (!any(l)) return(f)
+  
+  f <- deparse(f)
+  f <- paste0(f, collapse = "")
+  f <- oneWhitespace(f)
+  
+  for (k in seq_along(a)) {
+    f <- sub(x = f, pattern = paste0(" + ", a[k]), replacement = "", fixed = TRUE)
+  }
+  
+  a <- lapply(a, function(stri) {
+    e <- parse(text = stri)[[1]]
+    as.list(e)[-1]
+  })
+  
+  a <- unlist(a, recursive = FALSE)
+  
+  a <- sapply(a, function(e) {
+    
+    e <- substitute(adjust(e), list(e = e))
+    deparse(e)
+    
+  })
+  
+  f <- paste0(f, " + ", paste0(a, collapse = " + "))
+  f <- eval(parse(text = f)[[1]])
+  environment(f) <- env
+  f
+}
 
-RHS2DT2 <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
+
+
+
+
+model_frame_robust <- function(formula, data, enc) {
   
-  
-  ## INTENTION: turns the right-hand side of a formula
-  ## into a list of substituted expressions;
-  ## each element in list is an expressions separated
-  ## by a '+' in the formula. needs to be eval()'d,
-  ## preferably using the appropriate data set.
   stopifnot(inherits(formula, "formula"))
-  stopifnot(is.environment(enclos))
+  stopifnot(is.environment(enc))
   
-  ## no response
-  fo <- formula[c(1, length(formula))]
+  pe <- function(x, ...) {
+    eval(parse(text = x), ...)
+  }
+  
+  fo <- formula
   
   te <- terms(fo)
   tl <- attr(te, "term.labels")
@@ -614,83 +684,51 @@ RHS2DT2 <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   av <- all.vars(fo)
   av <- intersect(av, names(data))
   
-  d <- model.frame(formula = fo, data = data)
-  
   ## non-interactions as they are
   l <- lapply(tl, function(stri) {
-    if (stri %in% names(d)) return(d[[stri]])
-    stri
+    if (stri %in% names(data)) return(data[[stri]])
+    e <- try(pe(stri, envir = data, enclos = enc), silent = TRUE)
+    if (inherits(e, "try-error")) e <- stri
+    e
   })
   
-  whInter <- which(sapply(seq_along(tl), function(i) {
-    identical(l[[i]], tl[[i]])
+  fa <- attr(te, "factors")
+  
+  whInter <- colnames(fa)[colSums(fa) > 1]
+  
+  whInter <- which(sapply(l, function(elem) {
+    is.character(elem) && length(elem) == 1L && elem %in% whInter
   }))
   whVar <- setdiff(seq_along(l), whInter)
   
-  
   if (sum(whInter)) {
-    ## interactions using `:` as if both vars were factors
     
-    ## find out which variables are used (contained in model frame)
-    ## in which interaction (rows are variables, columns interactions here)
-    interMat <- attr(attributes(d)$terms, "factors")
-    interMat <- interMat[, 1:ncol(interMat)>nrow(interMat), drop = FALSE]
-    interMat <- interMat[apply(interMat, 1, sum) > 0L, , drop = FALSE]
-    interMat <- interMat[,unlist(l[whInter])] ## ensure same order
-    
-    ## list of variables used in each interaction
-    interList <- lapply(colnames(interMat), function(stri) {
-      wh <- interMat[, stri] == 1L
-      ch <- rownames(interMat)[wh]
+    fa <- fa[, whInter, drop = FALSE]
+    interList <- lapply(colnames(fa), function(stri) {
       
-      ## to find out order of variables in interaction,
-      ## sub out left-most variables until interaction string is ""
-      ## (e.g. left-most var does not look like ":V1" but others do)
-      ts <- stri
-      tv <- ch
-      res <- NULL
-      tick <- 0L
-      while (length(tv) > 0L && tick < 500) {
-        
-        addChar <- if (length(tv) == 1L) "" else ":"
-        
-        dtv <- paste0(":", tv)
-        
-        leftMost <- NULL
-        if (length(tv) == 1L && identical(tv, ts)) {
-          leftMost <- tv
-        } else {
-          leftMost <- tv[!sapply(dtv, grepl, x = ts, fixed = TRUE)]
-          leftMost <- leftMost[sapply(paste0(leftMost, addChar), grepl, x = ts, fixed = TRUE)]
-        }
-        
-        ts <- sub(x = ts, pattern = paste0(leftMost, addChar), replacement = "", fixed = TRUE)
-        tv <- setdiff(tv, leftMost)
-        res <- c(res, leftMost)
-        
-        tick <- 1L + tick
-      }
+      e <- parse(text = stri)[[1]]
+      e <- as.list(e)[-1]
+      e <- sapply(e, deparse)
       
-      if (tick >= 500L) {
-        stop("Error in string parsing: could not figure out order of ",
-             "in interactions in formula. This is an internal error and you ",
-             "should complain to the package maintainer. Meanwhile ",
-             "pre-create the interaction term in your data and supply that ",
-             "to the formula.")
-      }
-      
-      res
     })
-    names(interList) <- colnames(interMat)
     
-    d <- mget(rownames(interMat), as.environment(d))
-    d <- lapply(d, as.factor)
-    setDT(d)
+    names(interList) <- colnames(fa)
     
-    on <- copy(names(d))
-    tn <- paste0("V", seq_along(d))
+    interVars <- unique(unlist(interList))
+    
+    
+    interData <- lapply(interVars, function(stri) {
+      if (stri %in% names(data)) return(data[[stri]])
+      eval(parse(text = stri), envir = data, enclos = enc)
+    })
+    
+    interData <- setDT(lapply(interData, as.factor))
+    names(interData) <- interVars
+    
+    on <- copy(names(interData))
+    tn <- paste0("V", seq_along(interData))
     names(tn) <- on
-    names(d) <- tn
+    names(interData) <- tn
     
     til <- lapply(interList, function(stri) {
       tn[stri]
@@ -698,24 +736,28 @@ RHS2DT2 <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
     names(til) <- sapply(til, paste0, collapse = ":")
     
     
-    l[whInter] <- lapply(names(til), function(stri) {
-      e <- parse(text = stri)
-      eval(e, envir = d, enclos = enclos)
+    
+    l[whInter] <- lapply(seq_along(til), function(i) {
+      
+      tmpExpr <- til[[i]]
+      realExpr <- l[whInter][[i]]
+      e <- try(pe(tmpExpr, envir = interData), silent = TRUE)
+      
+      if (inherits(e, "try-error")) {
+        e <- pe(realExpr, envir = data, enc = enclos)
+      }
+      e
     })
     
   }
   
   names(l) <- tl
-  
   l <- as.data.table(l)
-  
-  l[]
+  l
 }
 
 
 
 
 
-adjust2 <- function(x) {
-  x
-}
+
