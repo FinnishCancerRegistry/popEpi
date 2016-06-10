@@ -1,5 +1,139 @@
 
 
+is_expression <- function(e) {
+  
+  ifelse(any(c("call", "name") %in% class(e)), TRUE, FALSE)
+  
+}
+
+is_list_expression <- function(e) {
+  
+  ifelse(is_expression(e) && deparse(as.list(e)[[1]]) == "list", TRUE, FALSE)
+  
+}
+
+is_dollar_expression <- function(e) {
+  
+  ifelse(is_expression(e) && deparse(as.list(e)[[1]]) == "$", TRUE, FALSE)
+  
+}
+
+
+is_variable <- function(x) {
+  
+  varModes <- c("numeric", "complex", "logical", "character", "raw")
+  
+  ifelse(mode(x) %in% varModes, TRUE, FALSE)
+  
+}
+
+
+evalArg <- function(arg, ...) {
+  UseMethod("evalArg")
+}
+
+
+evalArg.default <- function(arg, env, enc) {
+  if (is.list(arg)) {
+    arg <- as.list(arg)
+  } else if (is_variable(arg)) {
+    l <- list(arg)
+  }
+  return(arg)
+}
+
+evalArg.name <- function(arg, env, enc) {
+  d <- deparse(arg)
+  out <- try(get(d, envir = env, inherits = FALSE), silent = TRUE)
+  if (inherits(out, "try-error")) {
+    out <- try(get(d, envir = enc, inherits = FALSE), silent = TRUE)
+  }
+  if (inherits(out, "try-error")) {
+    stop("Could not find object ", d, ".")
+  }
+  out <- list(out)
+  names(out) <- d
+  out
+}
+
+evalArg.call <- function(arg, env, enc) {
+  
+  out <- eval(arg, env = env, enc = enc)
+  if (is.list(out)) {
+    out <- as.list(out)
+  } else if (is_variable(out)) {
+    out <- list(out)
+    names(out) <- paste0(deparse(arg), collapse = "")
+  }
+  out
+}
+
+evalArg.character <- function(arg, env, enc) {
+  ## NOTE: enc unused
+  se <- substitute(env)
+  out <- lapply(arg, function(stri) {
+    try({
+      get(stri, envir = as.environment(env), inherits = FALSE)
+    }, silent = TRUE)
+  })
+  
+  notFound <- arg[sapply(out, inherits, "try-error")]
+  
+  if (length(notFound)) {
+    stop("Could not find object(s): ", 
+         paste0(head(notFound, 5), collapse = ", "), ".")
+  }
+  names(out) <- arg
+  out
+}
+
+evalArg.formula <- function(arg, env, enc) {
+  
+  rhsl <- as.list(RHS2DT(arg, data = env, enclos = enc))
+  
+  rhsl
+  
+}
+
+
+method_classes <- function(f) {
+  
+  stopifnot(is.character(f))
+  e <- utils::methods(f)
+  e <- sapply(e, as.character)
+  sapply(e, sub, pattern = paste0(f, "."), replacement = "")
+  
+}
+
+
+evalPopArg2 <- function(data, arg, enclos, DT = TRUE) {
+  
+  tick <- 1L
+  use_env <- data
+  use_enc <- enclos
+  r <- arg
+  eam <- setdiff(method_classes("evalArg"), "default")
+  while (any(class(r) %in% eam)) {
+    if (is_dollar_expression(r)) {
+      use_env <- use_enc
+      use_enc <- baseenv()
+    }
+    
+    r <- evalArg(arg, env = use_env, enc = use_enc)
+    
+    
+    use_env <- data
+    use_enc <- enclos
+    tick <- tick + 1L
+  }
+  
+  r
+}
+
+
+
+
+
 evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = TRUE, types = c("NULL","character", "list", "expression"), naming = c("DT", "model")) {
   ## arg: an unevaluated AND substitute()'d argument within a function, which may be
   ## * an expression
@@ -231,6 +365,7 @@ popArg2ModelNames <- function(arg, type) {
         }
   stop("could not determine deparsed-expression-names")
 }
+
 
 
 
