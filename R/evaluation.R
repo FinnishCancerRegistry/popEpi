@@ -352,7 +352,7 @@ replace_colon <- function(e) {
   if (!uses_colon(e)) return(e)
   
   l <- as.list(e)
-  l[[1]] <- quote(popEpi:::`%.:%`)
+  l[[1]] <- parse(text = "popEpi:::`%.:%`")[[1]]
   as.call(l)
 }
 
@@ -608,16 +608,19 @@ usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(),
 #' 
 #' y ~ x + adjust(z)
 #' @export
-adjust <- function(x) {
+adjust <- function(...) {
   
-  # call <- sys.call(1L)
-  # call <- as.list(call)[1L]
+  call <- sys.call(1L)
+  call <- as.list(call)[1L]
+
+  if (deparse(call) %in% c("adjust", "list(adjust)")) {
+    stop("Function adjust() only intended to be used within the formulas of ",
+         "certain functions of package popEpi. See e.g. ?survtab_ag for usage.")
+  }
   
-  # if (deparse(call) %in% c("adjust", "list(adjust)")) stop("Function adjust() only intended to be used within the formulas of certain functions of package popEpi. See e.g. ?survtab_ag for usage.")
-  
-  # mc <- as.list(match.call())[-1L]
-  # mc
-  x
+  mc <- as.list(match.call())[-1L]
+  if (is.list(mc) && length(mc) == 1) mc <- mc[[1]]
+  mc
 }
 
 
@@ -744,7 +747,7 @@ model_frame_robust <- function(formula, data, enc) {
       e <- try(pe(tmpExpr, envir = interData), silent = TRUE)
       
       if (inherits(e, "try-error")) {
-        e <- pe(realExpr, envir = data, enc = enclos)
+        e <- pe(realExpr, envir = data, enclos = enc)
       }
       e
     })
