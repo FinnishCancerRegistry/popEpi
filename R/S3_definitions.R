@@ -403,52 +403,6 @@ print.yrs <- function(x, ...) {
   structure(NextMethod(), year.length = yl, class = c("yrs", "numeric"))
 }
 
-#' @title Coerce Fractional Year Values to Date Values
-#' @author Joonas Miettinen
-#' @param x an \code{yrs} object created by \code{get.yrs}
-#' @param ... unused, included for compatibility with other \code{as.Date}
-#' methods
-#' @description Coerces an \code{yrs} object to a \code{Date} object.
-#' Some loss of information comes if \code{year.length = "approx"} 
-#' was set when using \code{\link{get.yrs}}, so the transformation back
-#' to \code{Date} will not be perfect there. With \code{year.length = "actual"}
-#' the original values are perfectly retrieved.
-#' @examples 
-#' data("sire", package = "popEpi")
-#' 
-#' ## approximate year lengths: here 20 % have an extra day added
-#' sire$dg_yrs <- get.yrs(sire$dg_date)
-#' summary(sire$dg_yrs)
-#' dg_date2 <- as.Date(sire$dg_yrs)
-#' summary(as.numeric(dg_date2 - sire$dg_date))
-#' 
-#' ## using actual year lengths
-#' sire$dg_yrs <- get.yrs(sire$dg_date, year.length = "actual")
-#' summary(sire$dg_yrs)
-#' dg_date2 <- as.Date(sire$dg_yrs)
-#' summary(as.numeric(dg_date2 - sire$dg_date))
-#' @export
-as.Date.yrs <- function(x, ...) {
-  
-  yl <- attr(x, "year.length")
-  if (is.null(yl)) {
-    warning("x did not contain meta information about year length used ",
-            "when forming the yrs object. Assuming 'approx'.")
-    yl <- "approx"
-  }
-  
-  y <- as.integer(x)
-  
-  mu <- 365.242199
-  if (yl == "actual") {
-    mu <- ifelse(is_leap_year(y), rep(365L, length(x)), rep(364L, length(x)))
-  }
-  x <- x + 1L/mu
-  yd <- as.integer((x-y)*mu)
-  d <- as.Date(paste0(y, "-01-01")) + yd
-  d
-}
-
 
 #' @export 
 `[.aggre` <- function(x, ...) {
