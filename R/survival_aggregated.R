@@ -26,8 +26,10 @@
 #' @param weights typically a list of weights or a \code{character} string
 #' specifying an age group standardization scheme; see
 #' the \link[=direct_standardization]{dedicated help page} 
-#' and examples.
-#' @param surv.breaks (\code{survtab_ag} only) a vector of breaks on the survival time scale. Only used
+#' and examples. NOTE: \code{weights = "internal"} is based on the counts
+#' of persons in follow-up at the start of follow-up (typically T = 0)
+#' @param surv.breaks (\code{survtab_ag} only) a vector of breaks on the 
+#' survival time scale. Only used
 #' to compute estimates using a subset of the intervals in data or larger intervals
 #' than in data. E.g. one might use \code{surv.breaks = 0:5} when the aggregated
 #' data has intervals with the breaks \code{seq(0, 10, 1/12)}.
@@ -319,18 +321,20 @@
 #' 
 #' ## age standardisation using internal weights (age distribution of 
 #' ## patients diagnosed within the period window)
-#' in_period <- sire$dg_date>=BL$per[1] & sire$dg_date<BL$per[2]
-#' w <- as.numeric(table(sire$agegr[in_period]))
-#' w <- list(agegr = w)
+#' ## (NOTE: what is done here is equivalent to using weights = "internal")
+#' w <- aggregate(at.risk ~ agegr, data = x[x$fot == 0], FUN = sum)
+#' names(w) <- c("agegr", "weights")
 #' 
-#' st <- survtab_ag(fot ~ adjust(agegr), data = x, weights=w)
+#' st <- survtab_ag(fot ~ adjust(agegr), data = x, weights = w)
 #' plot(st, y = "r.e2.as", col = c("blue"))
 #' 
 #' ## age standardisation using ICSS1 weights
 #' data(ICSS)
 #' cut <- c(0, 45, 55, 65, 75, Inf)
 #' agegr <- cut(ICSS$age, cut, right = FALSE)
-#' w <- list(agegr = aggregate(ICSS1~agegr, data = ICSS, FUN = sum)$ICSS1)
+#' w <- aggregate(ICSS1~agegr, data = ICSS, FUN = sum)
+#' names(w) <- c("agegr", "weights")
+#'
 #' st <- survtab_ag(fot ~ adjust(agegr), data = x, weights=w)
 #' lines(st, y = "r.e2.as", col = c("red"))
 #' 
@@ -672,7 +676,17 @@ survtab_ag <- function(formula = NULL,
   
   adjust <- evalPopArg(data, adjust, enclos = PF, naming = "model")
   
-  iws <- if ("n" %in% names(data)) "n" else "pyrs"
+  iws <- NULL
+  if (is.character(weights) && pmatch(weights, c("internal", "cohort"), 0)) {
+    if (!"n" %in% names(data)) {
+      stop("Need 'n' specified for when using internal weights: Internal ",
+           "weights are computed as the counts of subjects at the start of ",
+           "follow-up.")
+    }
+    iws <- makeTempVarName(data, pre = "internal_weights_")
+    data[, c(iws) := 0.0]
+    data[data[[surv.scale]] == surv.breaks[1], c(iws) := n]
+  }
   
   data <- makeWeightsDT(data = data, values = list(mc), enclos = PF,
                         print = NULL, formula = formula, adjust = adjust, 

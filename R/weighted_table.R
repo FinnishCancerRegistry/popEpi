@@ -404,16 +404,14 @@ makeWeightsDT <- function(data, values = NULL,
                             "to the pkg maintainer if you see this."
                           ))
         
-        weights <- mapply(function(levs, colname) {
-          setkeyv(data, colname)
-          data[.(levs), lapply(.SD, sum), .SDcols = eval(iwVar), by = .EACHI]
-        }, 
-        colname = names(adjust), levs = adjust,
-        SIMPLIFY = FALSE)
-        
-        weights <- lapply(weights, function(x) {
-          x[[iwVar]]
+        weights <- lapply(seq_along(adjust), function(i) {
+          cn <- names(adjust)[i]
+          le <- unique(adjust[[i]])
+          le <- structure(list(le), names = cn)
+          data[le, lapply(.SD, sum), .SDcols = iwVar, by = .EACHI, on = cn][[iwVar]]
         })
+        names(weights) <- names(adjust)
+        
         
         setcolsnull(data, iwVar)
         setkeyv(data, c(prVars, adVars, boVars))

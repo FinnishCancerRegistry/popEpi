@@ -322,3 +322,37 @@ test_that("update() works with survtab objects", {
   expect_equal(sts, update(st, . ~ -group))
   
 })
+
+
+
+
+
+test_that("internal weights work as intended", {
+  library("data.table")
+  data("sire")
+  sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=F)
+  BL <- list(fot=seq(0, 5, by = 1/12),
+             per = c("2008-01-01", "2013-01-01"))
+  x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks = BL,
+               pophaz = popmort,
+               aggre = list(fot,agegr))
+
+  ## age standardisation using internal weights (age distribution of
+  ## patients diagnosed within the period window)
+  w <- x[fot == 0, .(weights = sum(at.risk)), keyby = agegr]
+
+  st <- survtab_ag(fot ~ adjust(agegr), data = x, weights=w)
+  
+  st2 <- survtab_ag(fot ~ adjust(agegr), data = x, weights = "internal")
+  
+  expect_equal(st$surv.obs.as.lo, st2$surv.obs.as.lo)
+  
+})
+
+
+
+
+
+

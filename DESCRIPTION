@@ -3,7 +3,7 @@ Title: Functions for Epidemiological Analysis using Population Data
 Authors@R: c( person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", c("aut", "cre")), 
               person("Matti", "Rantanen", , "matti.rantanen@cancer.fi", "aut"), 
               person("Karri", "Seppa", , "karri.seppa@cancer.fi", "ctb") )
-Version: 0.3.2.7
+Version: 0.3.2.8
 Date: 2016-06-10
 Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
 Description: Enables computation of various epidemiological statistics where the use of population data such as population counts and hazards is required.

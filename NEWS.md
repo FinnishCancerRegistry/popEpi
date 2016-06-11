@@ -2,6 +2,9 @@ Changes in 0.4.0
 ================
 
 -   removed previously deprecated shift.var (\#35)
+-   popEpi no longer depends on package data.table but imports it - this means the user will have to do library(data.table) separately to make data.table's functions become usable. Formerly popEpi effectively did library(data.table) when it was library'd.
+-   summary.survtab: args t and q behaviour changed
+-   survtab: internal weights now based on counts of subjects in follow-up at the start of follow-up (used to be sum of counts/pyrs over all of follow-up)
 
 Changes in 0.3.1
 ================
@@ -38,7 +41,6 @@ sr$status <- factor(sr$status, levels = 0:2,
 
 ## create Lexis object
 library(Epi)
-#> Warning: package 'Epi' was built under R version 3.2.5
 #> 
 #> Attaching package: 'Epi'
 #> The following object is masked from 'package:base':
