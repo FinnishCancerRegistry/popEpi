@@ -1,11 +1,5 @@
 
-#' @title Print method for \code{sir} objects
-#' @author Matti Rantanen, Joonas Miettinen
-#' @description Prints the results of the \code{sir} function
-#' @param x a \code{sir} object
-#' @param ... unused
 #' @export
-#' @family sir_related
 print.sir <- function(x, ...) {
   
   cat("SIR Standardized by: ", x[['adjusted']] , fill=TRUE)
@@ -37,14 +31,8 @@ print.sir <- function(x, ...) {
   return(invisible())
 }
 
-#' @title Print method for \code{sirspline} objects
-#' @author Matti Rantanen, Joonas Miettinen
-#' @description Prints the results of the \code{sirspline} function
-#' @param x a \code{sir} object
-#' @param ... unused
 #' @import grDevices
 #' @export
-#' @family sir_related
 print.sirspline <- function(x, ...) {
   if ( x$spline.dependent ) {
     if( any( !is.na(x$p.values))) {

@@ -136,8 +136,6 @@ Other main_functions: \code{\link{rate}},
   \code{\link{survtab_ag}}
 
 Other sir_related: \code{\link{lines.sirspline}},
-  \code{\link{plot.sirspline}},
-  \code{\link{print.sirspline}}, \code{\link{print.sir}},
-  \code{\link{sir}}
+  \code{\link{plot.sirspline}}, \code{\link{sir}}
 }
 
