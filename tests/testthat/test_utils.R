@@ -409,8 +409,6 @@ test_that("fractional years computation works", {
   my <- year(D) + (yday(D) - 1L)/yl
   
   expect_equal(as.numeric(get.yrs(D, year.length = "actual")), my)
-  
-  expect_equal(get.yrs(D), get.yrs_old(D))
 })
 
 
