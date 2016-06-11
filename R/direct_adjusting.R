@@ -62,6 +62,10 @@
 #' \item 'world_2000_101of1' - world standard (2000), 101 agegroups
 #' }
 #' 
+#' Additionally, \code\link{ICSS} contains internation weights used in cancer 
+#' survival cancer analysis, but they are not currently usable by passing
+#' a string to \code{weights} and must be supplied by hand.
+#' 
 #' You may also supply \code{weights = "internal"} to use internally
 #' computed weights, i.e. usually simply the counts of subjects / person-time
 #' experienced in each stratum. E.g.

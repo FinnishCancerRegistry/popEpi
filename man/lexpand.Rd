@@ -357,7 +357,7 @@ x <- lexpand(sire, status = status, event = dg_date,
 Joonas Miettinen
 }
 \seealso{
-\code{\link[Epi]{Lexis}}, \code{\link{relpois}}, \code{\link{popmort}}
+\code{\link[Epi]{Lexis}}, \code{\link{popmort}}
 
 Other aggregation_related: \code{\link{aggre}},
   \code{\link{as.aggre}}, \code{\link{setaggre}},

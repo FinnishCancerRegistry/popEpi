@@ -329,8 +329,28 @@
 #' st <- survtab(FUT ~ group, data = x, 
 #'               surv.type = "surv.obs",
 #'               breaks = list(FUT = seq(0, 5, 1/12)))
-#'
-#'#### using dates with survtab
+#'               
+#' ## relative survival (ederer II)
+#' data("popmort", package = "popEpi")
+#' pm <- data.frame(popmort)
+#' names(pm) <- c("sex", "CAL", "AGE", "haz")
+#' st <- survtab(FUT ~ group, data = x, 
+#'               surv.type = "surv.rel",
+#'               pophaz = pm,
+#'               breaks = list(FUT = seq(0, 5, 1/12)))
+#' 
+#' ## ICSS weights usage
+#' data("ICSS", package = "popEpi")
+#' cut <- c(0, 30, 50, 70, Inf)
+#' agegr <- cut(ICSS$age, cut, right = FALSE)
+#' w <- aggregate(ICSS1~agegr, data = ICSS, FUN = sum)
+#' x$agegr <- cut(x$dg_age, cut, right = FALSE)
+#' st <- survtab(FUT ~ group + adjust(agegr), data = x, 
+#'               surv.type = "surv.rel",
+#'               pophaz = pm, weights = w$ICSS1,
+#'               breaks = list(FUT = seq(0, 5, 1/12)))
+#' 
+#' #### using dates with survtab
 #' x <- Lexis(entry = list(FUT = 0L, AGE = dg_date-bi_date, CAL = dg_date),
 #'            exit = list(CAL = ex_date),
 #'            data = sire[sire$dg_date < sire$ex_date, ],

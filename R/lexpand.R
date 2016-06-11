@@ -330,7 +330,7 @@
 #' @family splitting_related
 #' @family aggregation_related
 #' @seealso
-#' \code{\link[Epi]{Lexis}}, \code{\link{relpois}}, \code{\link{popmort}}
+#' \code{\link[Epi]{Lexis}}, \code{\link{popmort}}
 #' @export
 lexpand <- function(data, 
                     birth=NULL, entry=NULL, exit=NULL, event=NULL,
