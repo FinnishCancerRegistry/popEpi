@@ -7,23 +7,25 @@
 get.yrs(x, year.length = "approx", ...)
 }
 \arguments{
+\item{x}{a \code{Date} obbject, or anything that \code{link{as.Date}}
+accepts}
+
 \item{year.length}{character string, either \code{'actual'} or 
 \code{'approx'}; can be abbreviated; see Details}
 
-\item{dates}{a vector or column of Date objects or right kind of character strings, see Details}
-
-\item{format}{a character string; if \code{dates} is a character vector, 
-specifies the format; see \code{\link{as.Date}}}
+\item{...}{additional arguments passed on to \code{\link{as.Date}};
+typically \code{format} when \code{x} is a character string variable,
+and \code{origin} when \code{x} is numeric}
 }
 \description{
 Using Date objects, calculates given 
 dates as fractional years.
 }
 \details{
-\code{dates} should preferably be a \code{date}, \code{Date} or \code{IDate} 
-object, 
-although they can also be character strings in a format
-specified by \code{format} (passed to \code{\link{as.Date}}).
+\code{x} should preferably be a \code{date}, \code{Date} or \code{IDate} 
+object, although it can also be a character string variable 
+which is coerced internally to \code{Date} format 
+using \code{\link{as.Date.character}}.
 
 When \code{ year.length = 'actual' }, fractional years are calculated as 
 \code{ year + day_in_year/365 } for non-leap-years

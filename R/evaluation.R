@@ -58,7 +58,7 @@ evalArg.name <- function(arg, env, enc) {
 
 evalArg.call <- function(arg, env, enc) {
   
-  out <- eval(arg, env = env, enc = enc)
+  out <- eval(arg, envir = env, enclos = enc)
   if (is.list(out)) {
     out <- as.list(out)
   } else if (is_variable(out)) {
@@ -80,8 +80,9 @@ evalArg.character <- function(arg, env, enc) {
   notFound <- arg[sapply(out, inherits, "try-error")]
   
   if (length(notFound)) {
+    if (length(notFound) > 5) notFound <- notFound[1:5]
     stop("Could not find object(s): ", 
-         paste0(head(notFound, 5), collapse = ", "), ".")
+         paste0(notFound, collapse = ", "), ".")
   }
   names(out) <- arg
   out
