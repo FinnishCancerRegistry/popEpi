@@ -317,6 +317,35 @@ x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
 st <- survtab_ag(fot ~ 1, data = x)
 
 \dontrun{
+## calculate age-standardised 5-year relative survival ratio using 
+## Ederer II method and period approach 
+
+sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=F)
+BL <- list(fot=seq(0, 5, by = 1/12),
+           per = c("2008-01-01", "2013-01-01"))
+x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
+             status = status \%in\% 1:2,
+             breaks = BL,
+             pophaz = popmort,
+             aggre = list(fot,agegr))
+
+## age standardisation using internal weights (age distribution of 
+## patients diagnosed within the period window)
+in_period <- sire$dg_date>=BL$per[1] & sire$dg_date<BL$per[2]
+w <- as.numeric(table(sire$agegr[in_period]))
+w <- list(agegr = w)
+
+st <- survtab_ag(fot ~ adjust(agegr), data = x, weights=w)
+plot(st, y = "r.e2.as", col = c("blue"))
+
+## age standardisation using ICSS1 weights
+data(ICSS)
+cut <- c(0, 45, 55, 65, 75, Inf)
+agegr <- cut(ICSS$age, cut, right = FALSE)
+w <- list(agegr = aggregate(ICSS1~agegr, data = ICSS, FUN = sum)$ICSS1)
+st <- survtab_ag(fot ~ adjust(agegr), data = x, weights=w)
+lines(st, y = "r.e2.as", col = c("red"))
+
 #### survtab usage
 library(Epi)
 library(survival)
