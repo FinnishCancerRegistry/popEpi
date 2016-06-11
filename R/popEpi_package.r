@@ -3,7 +3,6 @@
 #' @name popEpi
 #' @docType package
 #' @title popEpi: Functions for large-scale epidemiological analysis
-#' @author Janne Pitkaniemi, Joonas Miettinen, Karri Seppa, Matti Rantanen
 #' @description 
 #' \pkg{popEpi} is built for the needs of registry-based (large-scale)
 #' epidemiological analysis. This is in most part enabled by the 
@@ -27,6 +26,5 @@
 #' usage is recommended due to better performance and testing coverage. 
 #' \code{data.table} is used
 #' by most functions internally in both cases.
-#' 
 #' 
 NULL

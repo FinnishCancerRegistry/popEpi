@@ -32,7 +32,4 @@ by most functions internally in both cases.
 \details{
 popEpi
 }
-\author{
-Janne Pitkaniemi, Joonas Miettinen, Karri Seppa, Matti Rantanen
-}
 
