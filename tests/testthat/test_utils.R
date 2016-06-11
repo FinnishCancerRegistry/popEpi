@@ -393,7 +393,25 @@ test_that("evalPopFormula & usePopFormula output is stable", {
 
 
 
-
+test_that("fractional years computation works", {
+  library("data.table")
+  c <- paste0("2004-", c("01-01", "07-01", "12-31", "02-01"))
+  D <- as.Date(c)
+  
+  expect_equal(get.yrs(c), get.yrs(D))
+  
+  yl <- 365.242199
+  my <- year(D) + (yday(D) - 1L)/yl
+  
+  expect_equal(as.numeric(get.yrs(D)), my)
+  
+  yl <- ifelse(is_leap_year(year(D)), 366L, 365L)
+  my <- year(D) + (yday(D) - 1L)/yl
+  
+  expect_equal(as.numeric(get.yrs(D, year.length = "actual")), my)
+  
+  expect_equal(get.yrs(D), get.yrs_old(D))
+})
 
 
 

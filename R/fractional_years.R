@@ -67,7 +67,7 @@
 #' 
 #' 
 get.yrs <- function(x, year.length = "approx", ...) {
-  as.yrs(x, ...)
+  as.yrs(x, year.length = year.length, ...)
 }
 
 
@@ -81,7 +81,7 @@ as.yrs.Date <- function(x, year.length = "approx", ...) {
   yl <- 365.242199
   y <- year(x)
   if (year.length == "actual") {
-    yl <- ifelse(is_leap_year(y), 365L, 366L)
+    yl <- ifelse(is_leap_year(y), 366L, 365L)
   }
   d <- yday(x)
   
@@ -94,7 +94,7 @@ as.yrs.Date <- function(x, year.length = "approx", ...) {
 as.yrs.default <- function(x, year.length = "approx", ...) {
   
   x <- as.Date(x, ...)
-  as.yrs(x)
+  as.yrs(x, year.length = year.length)
   
 }
 
@@ -146,3 +146,5 @@ as.Date.yrs <- function(x, ...) {
   d <- as.Date(paste0(y, "-01-01")) + yd
   d
 }
+
+
