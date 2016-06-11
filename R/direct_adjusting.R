@@ -62,7 +62,7 @@
 #' \item 'world_2000_101of1' - world standard (2000), 101 agegroups
 #' }
 #' 
-#' Additionally, \code\link{ICSS} contains internation weights used in cancer 
+#' Additionally, \code{\link{ICSS}} contains internation weights used in cancer 
 #' survival cancer analysis, but they are not currently usable by passing
 #' a string to \code{weights} and must be supplied by hand.
 #' 
@@ -125,7 +125,8 @@
 #' \code{wdf <- as.data.frame(x$V1, x$V2, x$V3)}
 #' \code{names(wdf) <- c("V1", "V2", "V3", "weights")}
 #' 
-#' @seealso \code{\link{flexible_arguments}}
+#' @family weights
+#' @family popEpi_argument
 #' 
 #' @references
 #' Source of the Nordic standard population in 5-year age groups 

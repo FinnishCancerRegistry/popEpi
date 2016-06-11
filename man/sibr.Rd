@@ -28,4 +28,11 @@ available only up to that point --- hence the maximum possible \code{ex_date} is
 \author{
 Karri Seppa
 }
+\seealso{
+Other popEpi_data: \code{\link{ICSS}},
+  \code{\link{popmort}}, \code{\link{sire}},
+  \code{\link{stdpop101}}, \code{\link{stdpop18}}
+
+Other survival_data: \code{\link{sire}}
+}
 

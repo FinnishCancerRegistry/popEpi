@@ -24,6 +24,8 @@
 #' }
 #' @author Karri Seppa
 #' @name sire
+#' @family popEpi_data
+#' @family survival_data
 NULL
 
 
@@ -51,6 +53,8 @@ NULL
 #' }
 #' @author Karri Seppa
 #' @name sibr
+#' @family popEpi_data
+#' @family survival_data
 NULL
 
 
@@ -74,6 +78,8 @@ NULL
 #'  \item ICSS3 - third set of weights, sums to 100 000
 #' }
 #' @name ICSS
+#' @family popEpi_data
+#' @family weights
 #' @examples 
 #' ## aggregate weights to a subset of age groups
 #' data(ICSS)
@@ -97,6 +103,8 @@ NULL
 #'  \item haz the average population mortality rate per person year
 #' }
 #' @name popmort
+#' @family popEpi_data
+#' @seealso \code{\link{pophaz}}
 NULL
 
 
@@ -117,6 +125,8 @@ NULL
 #'  \item nordic std (numeric)
 #' }
 #' @name stdpop18
+#' @family popEpi_data
+#' @family weights
 NULL
 
 
@@ -134,6 +144,8 @@ NULL
 #'  \item \code{agegroup} age group from 1 to 101 (numeric)
 #' }
 #' @name stdpop101
+#' @family popEpi_data
+#' @family weights
 NULL
 
 

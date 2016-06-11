@@ -4,8 +4,6 @@
 #' @title Flexible Variable Usage in \pkg{popEpi} Functions
 #' @author Joonas Miettinen
 #' @name flexible_argument
-#' @aliases flexible_popEpi_arguments, flexible_arg,
-#' flexible_args, flexible_arguments
 #' @description Certain arguments in \pkg{popEpi} can be passed in multiple 
 #' ways. This document shows the usage and a pitfall in the
 #' usage of such flexible arguments.
@@ -126,6 +124,7 @@
 #' \code{FUN(arg = TF$V1, data = x)}
 #' 
 #' So no conflicts should occur.
+#' @family popEpi_argument
 #' @examples 
 #' 
 #' data(sire)

@@ -18,4 +18,11 @@ Statistics Finland
 Population mortality rates in Finland 1951 - 2013 in 101 age groups and
 by gender
 }
+\seealso{
+\code{\link{pophaz}}
+
+Other popEpi_data: \code{\link{ICSS}}, \code{\link{sibr}},
+  \code{\link{sire}}, \code{\link{stdpop101}},
+  \code{\link{stdpop18}}
+}
 

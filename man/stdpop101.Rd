@@ -15,4 +15,13 @@ Standard population is from:
 \description{
 World standard population by 1 year agegroups from 1 to 101. Sums to 100 000.
 }
+\seealso{
+Other popEpi_data: \code{\link{ICSS}},
+  \code{\link{popmort}}, \code{\link{sibr}},
+  \code{\link{sire}}, \code{\link{stdpop18}}
+
+Other weights: \code{\link{ICSS}},
+  \code{\link{direct_standardization}},
+  \code{\link{stdpop18}}
+}
 

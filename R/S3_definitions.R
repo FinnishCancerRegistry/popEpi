@@ -551,7 +551,7 @@ print.aggre <- function(x, subset = NULL, ...) {
   
 }
 
-#' @title Summaryize an aggre Object
+#' @title Summarize an aggre Object
 #' @author Joonas Miettinen
 #' @description \code{summary} method function for \code{aggre} objects; see
 #' \code{\link{as.aggre}} and \code{\link{aggre}}.

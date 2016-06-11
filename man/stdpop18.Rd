@@ -16,4 +16,13 @@ Nordcan, 2000
 \description{
 World, europe, nordic standard populations by 18 age categories. Sums to 100000.
 }
+\seealso{
+Other popEpi_data: \code{\link{ICSS}},
+  \code{\link{popmort}}, \code{\link{sibr}},
+  \code{\link{sire}}, \code{\link{stdpop101}}
+
+Other weights: \code{\link{ICSS}},
+  \code{\link{direct_standardization}},
+  \code{\link{stdpop101}}
+}
 

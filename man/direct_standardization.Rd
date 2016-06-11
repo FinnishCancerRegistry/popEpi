@@ -60,7 +60,7 @@ to one of the age group standardization schemes integrated into \pkg{popEpi}:
 \item 'world_2000_101of1' - world standard (2000), 101 agegroups
 }
 
-Additionally, \code\link{ICSS} contains internation weights used in cancer 
+Additionally, \code{\link{ICSS}} contains internation weights used in cancer 
 survival cancer analysis, but they are not currently usable by passing
 a string to \code{weights} and must be supplied by hand.
 
@@ -146,6 +146,9 @@ Source of 2000 world standard population in 1-year age groups:
 \url{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}
 }
 \seealso{
-\code{\link{flexible_arguments}}
+Other popEpi_argument: \code{\link{flexible_argument}}
+
+Other weights: \code{\link{ICSS}}, \code{\link{stdpop101}},
+  \code{\link{stdpop18}}
 }
 
