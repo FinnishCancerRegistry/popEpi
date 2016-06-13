@@ -1191,10 +1191,140 @@ Lexis_fpa <- function(data,
 
 
 
+get_breaks <- function(x) {
+  UseMethod("get_breaks")
+}
+
+get_breaks.survtab <- function(x) {
+  
+  ss <- attributes(x)$survtab.meta$surv.scale
+  sb <- attributes(x)$survtab.meta$surv.breaks
+  
+  l <- list(sb)
+  names(l) <- ss
+  as.list(l)
+  
+}
+
+
+get_breaks.aggre <- function(x) {
+  
+  as.list(attributes(x)$aggre.meta$breaks)
+  
+}
+
+get_breaks.Lexis <- function(x) {
+  as.list(attributes(x)$breaks)
+}
+
+get_breaks.default <- function(x) {
+  NULL
+}
+
+
+select_breaks <- function(data, ...) {
+  UseMethod("select_breaks")
+}
+
+select_breaks.default <- function(data, ts, br = NULL, ...) {
+  br <- do_select_breaks(data = data, ts = ts, br = br)
+  if (is.null(br)) {
+    stop("Data did not contain breaks and no breaks were supplied ",
+         "by hand.")
+  }
+  br
+}
+
+select_breaks.aggre <- function(data, ts, br = NULL, ...) {
+  
+  
+  br <- do_select_breaks(data = data, ts = ts, br = br)
+  
+  select_breaks_subcheck(br, get_breaks(data)[[ts]], 
+                         "Manually supplied breaks were not a ",
+                         "subset of the breaks in aggre data. ",
+                         "Data has breaks as a result of being split and ",
+                         "aggregated; see ?as.aggre and ?aggre")
+  
+  if (is.null(br)) {
+    stop("aggre object did not contain breaks and no breaks were supplied ",
+         "by hand.")
+  }
+  
+  br
+}
+
+select_breaks.Lexis <- function(data, ts, br = NULL, ...) {
+  
+  checkLexisData(data)
+  
+  br <- do_select_breaks(data = data, ts = ts, br = br)
+  
+  select_breaks_subcheck(br, get_breaks(data)[[ts]], 
+                         "Manually supplied breaks were not a ",
+                         "subset of the breaks in Lexis data. ",
+                         "Data has breaks as a result of being a split Lexis ",
+                         "object; see ?Lexis and e.g. ?splitMulti")
+  
+  if (is.null(br)) {
+    stop("Lexis object did not contain breaks and no breaks were supplied ",
+         "by hand.")
+  }
+  bl <- list(br)
+  names(bl) <- ts
+  checkBreaksList(data, breaks = bl)
+  
+  br
+}
+
+
+select_breaks_subcheck <- function(b1, b2, ...) {
+  l1 <- list(b1)
+  l2 <- list(b2)
+  names(l1) <- names(l2) <- "TS"
+  
+  if (!is.null(b1) && !is.null(b2) && !all_breaks_in(l1, l2)) {
+    stop(...)
+  }
+}
+
+do_select_breaks <- function(data, ts, br = NULL) {
+  # @description selects breaks from data or from br depending on
+  # which one is NULL. If both exist, br must be a subset of the breaks
+  # in data.
+  
+  stopifnot(is.data.frame(data))
+  stopifnot(is.character(ts) && length(ts) == 1L && ts %in% names(data))
+  
+  dbr <- get_breaks(data)[[ts]]
+  
+  dbl <- list(dbr)
+  bl <- list(br)
+  names(dbl) <- names(bl) <- "TS"
+  
+  
+  
+  if (is.null(br)) br <- dbr
+  
+  br
+}
 
 
 
 
+breaks_in_data <- function(br, ts, data) {
+  ## note: last break does not usually appear in data, unless intentionally
+  ## limiting from e.g. 0:5 to 0:4
+  stopifnot(length(ts) == 1 && ts %in% names(data))
+  u <- unique(data[[ts]])
+  
+  br <- sort(unique(br))
+  if (length(br)<2) stop("There must be at least two breaks to form intervals")
+  
+  br <- if (max(br) <= max(u)) br else br[-length(br)]
+  all(br %in% u)
+  
+}
 
 
 

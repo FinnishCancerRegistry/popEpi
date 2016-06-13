@@ -32,9 +32,11 @@ Stratifying variables can be included on the right-hand side
 separated by '\code{+}'. May contain usage of \code{adjust()} 
 --- see Details.}
 
-\item{data}{for \code{survtab_ag}, a data set of aggregated counts, 
-subject-times, etc., as created
-by \code{\link{aggre}}; for pre-aggregated data see \code{\link{as.aggre}}.
+\item{data}{for \code{survtab_ag} (since popEpi 0.4.0), a \code{data.frame}
+containing variables used in \code{formula} and other arguments.
+\code{aggre} objects are recommended as they are safer; see 
+\code{\link{as.aggre}} when your data is already aggregated and \code{aggre}
+for aggregating split \code{Lexis} objects.
 For \code{survtab}, a \code{Lexis} object.}
 
 \item{adjust}{can be used as an alternative to passing variables to 
@@ -48,10 +50,11 @@ and examples. NOTE: \code{weights = "internal"} is based on the counts
 of persons in follow-up at the start of follow-up (typically T = 0)}
 
 \item{surv.breaks}{(\code{survtab_ag} only) a vector of breaks on the 
-survival time scale. Only used
-to compute estimates using a subset of the intervals in data or larger intervals
-than in data. E.g. one might use \code{surv.breaks = 0:5} when the aggregated
-data has intervals with the breaks \code{seq(0, 10, 1/12)}.}
+survival time scale. Optional if \code{data} is an \code{aggre} object
+and mandatory otherwise. Must be a vector
+of breaks corresponding to all the survival intervals you want to use;
+e.g. one might use \code{surv.breaks = 0:5} when an \code{aggre} object
+has intervals with the breaks \code{seq(0, 10, 1/12)}.}
 
 \item{n}{variable containing counts of subjects at-risk at the start of a time 
 interval; e.g. \code{n = "at.risk"}. 
@@ -315,8 +318,15 @@ x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
              pophaz = popmort,
              aggre = list(fot))
              
-## calculate relative EdererII period method 
+## calculate relative EdererII period method
+## NOTE: x is an aggre object here, so surv.breaks are deduced
+## automatically
 st <- survtab_ag(fot ~ 1, data = x)
+
+## non-aggre data: first call to survtab_ag would fail
+df <- data.frame(x)
+# st <- survtab_ag(fot ~ 1, data = x)
+st <- survtab_ag(fot ~ 1, data = x, surv.breaks = BL$fot)
 
 \dontrun{
 ## calculate age-standardised 5-year relative survival ratio using 

@@ -33,7 +33,7 @@
 #' df$FUT <- 0:4
 #' ## with breaks list
 #' setaggre(df, values = c("obs", "pyrs"), by = "sex", breaks = list(FUT = 0:5))
-setaggre <- function(x, values = NULL, by = setdiff(names(x), values), breaks = NULL) {
+setaggre <- function(x, values = NULL, by = NULL, breaks = NULL) {
   ## input: aggregated data in data.frame or data.table format
   ## intention: any user can define their data as an aggregated data set
   ## which will be usable by survtab / sir / other
@@ -41,6 +41,9 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values), breaks = 
   ## sets "aggre.meta" attribute, a list of names of various variables.
   ## survtab for aggregated data will need this attribute to work.
   all_names_present(x, c(values, by))
+  
+  if (!length(by) && length(values)) by <- setdiff(names(x), values)
+  if (length(by) && !length(values)) values <- setdiff(names(x), by)
   
   if (!inherits(x, "aggre")) {
     cl <- class(x)
@@ -86,13 +89,13 @@ setaggre <- function(x, values = NULL, by = setdiff(names(x), values), breaks = 
 #' df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex", breaks = BL)
 #' 
 #' @export
-as.aggre <- function(x, values = NULL, by = setdiff(names(x), values), breaks = NULL, ...) {
+as.aggre <- function(x, values = NULL, by = NULL, breaks = NULL, ...) {
   UseMethod("as.aggre", x)
 }
 
 #' @describeIn as.aggre Coerces a \code{data.frame} to an \code{aggre} object
 #' @export
-as.aggre.data.frame <- function(x, values = NULL, by = setdiff(names(x), values), breaks = NULL, ...) {
+as.aggre.data.frame <- function(x, values = NULL, by = NULL, breaks = NULL, ...) {
   x <- copy(x)
   setaggre(x, values = values, by = by, breaks = breaks, ...)
   setattr(x, "class", c("aggre", "data.frame"))
@@ -101,7 +104,7 @@ as.aggre.data.frame <- function(x, values = NULL, by = setdiff(names(x), values)
 
 #' @describeIn as.aggre Coerces a \code{data.table} to an \code{aggre} object
 #' @export
-as.aggre.data.table <- function(x, values = NULL, by = setdiff(names(x), values), breaks = NULL, ...) {
+as.aggre.data.table <- function(x, values = NULL, by = NULL, breaks = NULL, ...) {
   x <- copy(x)
   setaggre(x, values = values, by = by, breaks = breaks, ...)
   setattr(x, "class", c("aggre", "data.table", "data.frame"))

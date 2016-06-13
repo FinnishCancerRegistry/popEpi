@@ -16,9 +16,11 @@
 #' Stratifying variables can be included on the right-hand side
 #' separated by '\code{+}'. May contain usage of \code{adjust()} 
 #' --- see Details.
-#' @param data for \code{survtab_ag}, a data set of aggregated counts, 
-#' subject-times, etc., as created
-#' by \code{\link{aggre}}; for pre-aggregated data see \code{\link{as.aggre}}.
+#' @param data for \code{survtab_ag} (since popEpi 0.4.0), a \code{data.frame}
+#' containing variables used in \code{formula} and other arguments.
+#' \code{aggre} objects are recommended as they are safer; see 
+#' \code{\link{as.aggre}} when your data is already aggregated and \code{aggre}
+#' for aggregating split \code{Lexis} objects.
 #' For \code{survtab}, a \code{Lexis} object.
 #' @param adjust can be used as an alternative to passing variables to 
 #' argument \code{formula} within a call to \code{adjust()}; e.g.
@@ -29,10 +31,11 @@
 #' and examples. NOTE: \code{weights = "internal"} is based on the counts
 #' of persons in follow-up at the start of follow-up (typically T = 0)
 #' @param surv.breaks (\code{survtab_ag} only) a vector of breaks on the 
-#' survival time scale. Only used
-#' to compute estimates using a subset of the intervals in data or larger intervals
-#' than in data. E.g. one might use \code{surv.breaks = 0:5} when the aggregated
-#' data has intervals with the breaks \code{seq(0, 10, 1/12)}.
+#' survival time scale. Optional if \code{data} is an \code{aggre} object
+#' and mandatory otherwise. Must be a vector
+#' of breaks corresponding to all the survival intervals you want to use;
+#' e.g. one might use \code{surv.breaks = 0:5} when an \code{aggre} object
+#' has intervals with the breaks \code{seq(0, 10, 1/12)}.
 #' @param breaks (\code{survtab} only) a named list of breaks, e.g.
 #' \code{list(FUT = 0:5)}. If data is not split in advance, \code{breaks}
 #' must at the very least contain a vector of breaks to split the survival time 
@@ -303,8 +306,15 @@
 #'              pophaz = popmort,
 #'              aggre = list(fot))
 #'              
-#' ## calculate relative EdererII period method 
+#' ## calculate relative EdererII period method
+#' ## NOTE: x is an aggre object here, so surv.breaks are deduced
+#' ## automatically
 #' st <- survtab_ag(fot ~ 1, data = x)
+#' 
+#' ## non-aggre data: first call to survtab_ag would fail
+#' df <- data.frame(x)
+#' # st <- survtab_ag(fot ~ 1, data = x)
+#' st <- survtab_ag(fot ~ 1, data = x, surv.breaks = BL$fot)
 #' 
 #' \dontrun{
 #' ## calculate age-standardised 5-year relative survival ratio using 
@@ -464,10 +474,10 @@ survtab_ag <- function(formula = NULL,
   used_args <- used_args[names(fl)]
   rm(fl)
   
+  attrs <- copy(attributes(data))
+  
   # check data -----------------------------------------------------------------
   if (missing(data) || nrow(data) == 0) stop("data missing or has no rows")
-  
-  if (!inherits(data, "aggre")) stop("Data must be an aggre object; see ?aggre")
   
   # check arguments ------------------------------------------------------------
   
@@ -480,51 +490,26 @@ survtab_ag <- function(formula = NULL,
   conf.type <- match.arg(conf.type, c("log","log-log","plain"))
   
   
-  # handle breaks in attributes ------------------------------------------------
-  
-  found_breaks <- NULL
-  attrs <- attributes(data)
-  if (is.null(attrs$breaks)) {
-    stop("Data does not have breaks information and surv.breaks not defined; ",
-         "this would be true if data is output from aggre() or lexpand(). ",
-         "If it is and you did not tamper with it, complain to the ",
-         "package maintainer.")
-  } 
-  
-  breakScales <- names(attrs$breaks)
-  
   ## argument 'formula' pre-check ----------------------------------------------
-  if (!inherits(formula, "formula")) {
-    stop("Argument 'formula' does not appear to be a formula object. ",
+  if (!(inherits(formula, "formula") && length(formula) == 3L)) {
+    stop("Argument 'formula' does not appear to be a two-sided formula. ",
          "Usage: e.g. fot ~ sex")
   }
-  if (length(formula) != 3L) {
-    stop("formula does not appear to be two-sided; supply it as e.g. fot ~ sex")
-  }
-  surv.scale <- deparse(formula[[2L]])
+  surv.scale <- deparse(formula[[2]])
   if (!surv.scale %in% names(data)) {
-    stop("Supplied time scale '", surv.scale, "' is not a name of a time ",
-         "scale by which data has been aggregated (no column with ",
-         "that name in data)")
-  }
-  if (!surv.scale %in% breakScales) {
-    stop("Supplied time scale '", surv.scale, "' is not a name of a time ",
-         "scale by which data has been split AND aggregated by (could not ",
-         "find breaks for that time scale in data's attributes)")
+    stop("Left-hand-side of formula must be a column in data; e.g. ",
+         "fot ~ sex, where 'fot' is the name of a column in data.")
   }
   
   ## check breaks --------------------------------------------------------------
   
-  found_breaks <- attrs$breaks[[ surv.scale ]]
-  
-  
-  if (is.null(surv.breaks) && !is.null(found_breaks)) {
-    surv.breaks <- found_breaks
-  } else if (any(!surv.breaks %in% found_breaks)) {
-    stop("given surv.breaks is not a subset of the breaks used to ",
-         "split data; cannot proceed.")
-  }
+  surv.breaks <- select_breaks(data = data, ts = surv.scale, br = surv.breaks)
   surv.breaks <- sort(unique(surv.breaks))
+  # if (!breaks_in_data(surv.breaks, surv.scale, data)) {
+  #   stop("Used breaks do not all appear to exist in data. Make sure the ",
+  #        "breaks match to the values that your time scale variable has in the ",
+  #        "data.")
+  # }
   
   # data prep & subsetting -----------------------------------------------------
   subset <- substitute(subset)
@@ -1060,6 +1045,7 @@ survtab_ag <- function(formula = NULL,
   
   arglist <- list(call = this_call, 
                   arguments = used_args,
+                  surv.scale = surv.scale,
                   surv.breaks = surv.breaks,
                   print.vars = prVars,
                   adjust.vars = adVars,

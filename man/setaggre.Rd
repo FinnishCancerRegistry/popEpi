@@ -4,7 +4,7 @@
 \alias{setaggre}
 \title{Set 'aggre' attributes to an object by modifying in place}
 \usage{
-setaggre(x, values = NULL, by = setdiff(names(x), values), breaks = NULL)
+setaggre(x, values = NULL, by = NULL, breaks = NULL)
 }
 \arguments{
 \item{x}{a \code{data.frame} or \code{data.table}}

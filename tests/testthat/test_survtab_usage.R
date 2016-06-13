@@ -355,4 +355,36 @@ test_that("internal weights work as intended", {
 
 
 
+test_that("survtab_ag works with bare data.frames", {
+  
+  data(sire)
+  
+  BL <- list(fot = 0:5,
+             per = c("2008-01-01", "2013-01-01"))
+  x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status %in% 1:2,
+               breaks = BL,
+               aggre = list(fot))
+  
+  e <- quote(survtab_ag(fot ~ 1, data = x, surv.type = "surv.obs"))
+  eb <- quote(survtab_ag(fot ~ 1, data = x, surv.type = "surv.obs", 
+                         surv.breaks = 0:5))
+  
+  la <- list(eval(e), eval(eb))
+  expect_equal(la[[1]]$surv.obs.hi, la[[2]]$surv.obs.hi)
+  
+  
+  x <- data.frame(x)
+  er <- paste0("Data did not contain breaks and no breaks ",
+               "were supplied by hand.")
+  expect_error(eval(e), regexp = er)
+  expect_equal(eval(eb)$surv.obs.hi, la[[2]]$surv.obs.hi)
+  
+})
+
+
+
+
+
+
 
