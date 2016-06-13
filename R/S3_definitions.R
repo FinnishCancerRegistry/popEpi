@@ -783,9 +783,7 @@ subset.survtab <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
     setattr(y, "class", class(x))
-    setattr(y, "surv.breaks", attr(x, "surv.breaks"))
-    setattr(y, "by.vars", attr(x, "by.vars"))
-    setattr(y, "curves", attr(x, "curves"))
+    setattr(y, "survmean.mean", attr(x, "survmean.mean"))
   }
   y
 }
@@ -796,9 +794,7 @@ subset.survmean <- function(x, ...) {
   y <- NextMethod()
   if (is.data.frame(y)) {
     setattr(y, "class", class(x))
-    setattr(y, "surv.breaks", attr(x, "surv.breaks"))
-    setattr(y, "by.vars", attr(x, "by.vars"))
-    setattr(y, "curves", attr(x, "curves"))
+    setattr(y, "survmean.mean", attr(x, "survmean.mean"))
   }
   y
 }
