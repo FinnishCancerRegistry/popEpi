@@ -1,8 +1,112 @@
-# library(survival)
-# dt[, fot := as.integer(ex_date-dg_date)/365.24]
-# s <- dt[, Surv(time = rep(0, nrow(dt)), time2 = fot, event = status %in% 1:2)]
-
-#' @describeIn survtab_ag survtab
+#' @template survival_doc_template
+#' @param formula a \code{formula}; e.g. \code{fot ~ sex},
+#' where \code{fot} is the time scale over which you wish to estimate a
+#' survival time function; this
+#' assumes that \code{lex.Xst} in your data is the status variable in the
+#' intended format (almost always right). 
+#' To be explicit, use \code{\link[survival]{Surv}}: e.g. 
+#' \code{Surv(fot, lex.Xst) ~ sex}. 
+#' Variables on the right-hand side of the formula
+#' separated by \code{+} are considered stratifying variables, for which 
+#' estimates are computed separately. May contain usage of \code{adjust()} 
+#' --- see Details and Examples.
+#' @param data a \code{Lexis} object with at least the survival time scale
+#' @param breaks a named list of breaks, e.g.
+#' \code{list(FUT = 0:5)}. If data is not split in advance, \code{breaks}
+#' must at the very least contain a vector of breaks to split the survival time 
+#' scale (mentioned in argument \code{formula}). If data has already been split
+#' (using e.g. \code{\link{splitMulti}}) along at least the used survival time
+#' scale, this may be \code{NULL}. It is generally recommended (and sufficient; 
+#' see Seppa, Dyban and Hakulinen (2015)) to use monthly
+#' intervals where applicable.
+#' @param pophaz a \code{data.frame} containing
+#' expected hazards for the event of interest to occur. See the
+#' \link[=pophaz]{dedicated help page}. Required when
+#' \code{surv.type = "surv.rel"} or \code{"cif.rel"}. \code{pophaz} must
+#' contain one column named \code{"haz"}, and any number of other columns
+#' identifying levels of variables to do a merge with split data within
+#' \code{survtab}. Some columns may be time scales, which will
+#' allow for the expected hazard to vary by e.g. calendar time and age.
+#'  
+#' 
+#' 
+#' @examples
+#' \dontrun{
+#' data("sire", package = "popEpi")
+#' library(Epi)
+#' library(survival)
+#'
+#' ## NOTE: recommended to use factor status variable
+#' x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
+#'            exit = list(CAL = get.yrs(ex_date)), 
+#'            data = sire[sire$dg_date < sire$ex_date, ],
+#'            exit.status = factor(status, levels = 0:2, 
+#'                                 labels = c("alive", "canD", "othD")), 
+#'            merge = TRUE)
+#' 
+#' ## phony group variable
+#' set.seed(1L)
+#' x$group <- rbinom(nrow(x), 1, 0.5)
+#' 
+#' ## observed survival. explicit supplying of status:
+#' st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
+#'               surv.type = "surv.obs",
+#'               breaks = list(FUT = seq(0, 5, 1/12)))
+#' ## this assumes the status is lex.Xst (right 99.9 % of the time)
+#' st <- survtab(FUT ~ group, data = x, 
+#'               surv.type = "surv.obs",
+#'               breaks = list(FUT = seq(0, 5, 1/12)))
+#'               
+#' ## relative survival (ederer II)
+#' data("popmort", package = "popEpi")
+#' pm <- data.frame(popmort)
+#' names(pm) <- c("sex", "CAL", "AGE", "haz")
+#' st <- survtab(FUT ~ group, data = x, 
+#'               surv.type = "surv.rel",
+#'               pophaz = pm,
+#'               breaks = list(FUT = seq(0, 5, 1/12)))
+#' 
+#' ## ICSS weights usage
+#' data("ICSS", package = "popEpi")
+#' cut <- c(0, 30, 50, 70, Inf)
+#' agegr <- cut(ICSS$age, cut, right = FALSE)
+#' w <- aggregate(ICSS1~agegr, data = ICSS, FUN = sum)
+#' x$agegr <- cut(x$dg_age, cut, right = FALSE)
+#' st <- survtab(FUT ~ group + adjust(agegr), data = x, 
+#'               surv.type = "surv.rel",
+#'               pophaz = pm, weights = w$ICSS1,
+#'               breaks = list(FUT = seq(0, 5, 1/12)))
+#' 
+#' #### using dates with survtab
+#' x <- Lexis(entry = list(FUT = 0L, AGE = dg_date-bi_date, CAL = dg_date),
+#'            exit = list(CAL = ex_date),
+#'            data = sire[sire$dg_date < sire$ex_date, ],
+#'            exit.status = factor(status, levels = 0:2, 
+#'                                 labels = c("alive", "canD", "othD")), 
+#'            merge = TRUE)
+#' ## phony group variable
+#' set.seed(1L)
+#' x$group <- rbinom(nrow(x), 1, 0.5)
+#' 
+#' st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
+#'               surv.type = "surv.obs",
+#'               breaks = list(FUT = seq(0, 5, 1/12)*365.25))    
+#'                   
+#' ## NOTE: population hazard should be reported at the same scale
+#' ## as time variables in your Lexis data.
+#' data(popmort, package = "popEpi")
+#' pm <- data.frame(popmort)
+#' names(pm) <- c("sex", "CAL", "AGE", "haz")
+#' ## from year to day level
+#' pm$haz <- pm$haz/365.25 
+#' pm$CAL <- as.Date(paste0(pm$CAL, "-01-01")) 
+#' pm$AGE <- pm$AGE*365.25 
+#' 
+#' st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
+#'               surv.type = "surv.rel", relsurv.method = "e2",
+#'               pophaz = pm,
+#'               breaks = list(FUT = seq(0, 5, 1/12)*365.25))  
+#' }
 #' @export
 #' @importFrom survival Surv
 survtab <- function(formula, data, adjust = NULL, breaks = NULL, 
@@ -409,7 +513,7 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
   oldKey <- key(x)
   if (length(oldKey) == 0L) {
     tmp$order <- makeTempVarName(x, pre = "order_")
-    on.exit(setorderv(x, tmp$order), add = TRUE)
+    on.exit(if (tmp$order %in% names(x)) setorderv(x, tmp$order), add = TRUE)
     on.exit(setcolsnull(x, tmp$order, soft = TRUE), add = TRUE)
     set(x, j = tmp$order, value = 1:nrow(x))
   } else on.exit(setkeyv(x, oldKey), add = TRUE)

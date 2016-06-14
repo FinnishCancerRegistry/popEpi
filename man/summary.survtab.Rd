@@ -21,7 +21,7 @@ before printing; use this to limit to a certain stratum. E.g.
 \item{q}{a named \code{list} of quantiles to include in returned data set,
 where names must match to estimates in \code{object};
 returns intervals where the quantiles are reached first;
-e.g. \code{list(surv.obs = 0.5)} might find an interval where \code{surv.obs}
+e.g. \code{list(surv.obs = 0.5)} finds the interval where \code{surv.obs}
 is 0.45 and 0.55 at the beginning and end of the interval, respectively;
 returns rows with \code{NA} values for quantiles not reached in estimates
 (e.g. if \code{q = list(surv.obs = 0.5)} but lowest estimate is 0.6);
@@ -33,6 +33,16 @@ see Examples.}
 Summary method function for \code{survtab} objects; see
 \code{\link{survtab_ag}}. Returns estimates at given time points
 or all time points if \code{t} and \code{q} are both \code{NULL}.
+}
+\details{
+Note that this function returns the intervals and NOT the time points
+corresponding to quantiles / estimates corresponding to time points.
+If you want precise estimates at time points that are not interval breaks,
+add the time points as breaks and re-estimate the survival time function.
+In interval-based estimation, the estimates denote e.g. probability of 
+dying \emph{during} the interval, so time points within the intervals
+are not usually considered at all. See e.g. Seppa, Dyba, and Hakulinen 
+(2015).
 }
 \examples{
 
@@ -71,9 +81,14 @@ x <- as.data.frame(st)
 \author{
 Joonas Miettinen
 }
+\references{
+Seppa K., Dyba T. and Hakulinen T.: Cancer Survival, 
+Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015 
+doi: 10.1016/B978-0-12-801238-3.02745-8.
+}
 \seealso{
 Other survtab_related: \code{\link{lines.survtab}},
   \code{\link{plot.survtab}}, \code{\link{print.survtab}},
-  \code{\link{survtab_ag}}
+  \code{\link{survtab_ag}}, \code{\link{survtab}}
 }
 

@@ -98,6 +98,6 @@ Matti Rantanen, Joonas Miettinen
 Other main_functions: \code{\link{relpois_ag}},
   \code{\link{relpois}}, \code{\link{sirspline}},
   \code{\link{sir}}, \code{\link{survmean}},
-  \code{\link{survtab_ag}}
+  \code{\link{survtab_ag}}, \code{\link{survtab}}
 }
 

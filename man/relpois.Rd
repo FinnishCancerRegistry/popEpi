@@ -110,7 +110,7 @@ Joonas Miettinen, Karri Seppa
 Other main_functions: \code{\link{rate}},
   \code{\link{relpois_ag}}, \code{\link{sirspline}},
   \code{\link{sir}}, \code{\link{survmean}},
-  \code{\link{survtab_ag}}
+  \code{\link{survtab_ag}}, \code{\link{survtab}}
 
 Other relpois_related: \code{\link{RPL}},
   \code{\link{relpois_ag}}, \code{\link{rpcurve}}
