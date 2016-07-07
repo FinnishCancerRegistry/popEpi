@@ -28,7 +28,7 @@ is_variable <- function(x) {
 }
 
 
-evalArg <- function(arg, ...) {
+evalArg <- function(arg, env, enc, ...) {
   UseMethod("evalArg")
 }
 
@@ -59,6 +59,7 @@ evalArg.name <- function(arg, env, enc) {
 evalArg.call <- function(arg, env, enc) {
   
   out <- eval(arg, envir = env, enclos = enc)
+  
   if (is.list(out)) {
     out <- as.list(out)
   } else if (is_variable(out)) {
@@ -101,36 +102,72 @@ method_classes <- function(f) {
   
   stopifnot(is.character(f))
   e <- utils::methods(f)
-  e <- sapply(e, as.character)
-  sapply(e, sub, pattern = paste0(f, "."), replacement = "")
+  e <- unlist(lapply(e, as.character))
+  e <- unlist(lapply(e, sub, pattern = paste0(f, "."), replacement = ""))
+  setdiff(e, "default")
   
 }
 
 
-evalPopArg2 <- function(data, arg, enclos, DT = TRUE) {
+do_evalPopArg <- function(arg, env, enc) {
+  eam <- method_classes("evalArg")
   
-  tick <- 1L
-  use_env <- data
-  use_enc <- enclos
+  ne <- list(env = env, enc = enc)
+  de <- list(env = enc, enc = baseenv())
+  
   r <- arg
-  eam <- setdiff(method_classes("evalArg"), "default")
+  tick <- 1L
   while (any(class(r) %in% eam)) {
-    if (is_dollar_expression(r)) {
-      use_env <- use_enc
-      use_enc <- baseenv()
-    }
     
-    r <- evalArg(arg, env = use_env, enc = use_enc)
+    envs <-  if (is_dollar_expression(r)) de else ne
+    r <- evalArg(arg = r, env = envs$env, enc = envs$enc)
     
-    
-    use_env <- data
-    use_enc <- enclos
     tick <- tick + 1L
+    if (tick == 100L) stop("No result after 100 evaluations")
   }
   
   r
 }
 
+
+
+argType <- function(arg) {
+  
+  tl <- list("NULL" = "NULL", character = "character",
+             list = "call", formula = "formula", 
+             expression = c("call", "name"))
+  
+  tl <- sapply(tl, function(ch) {
+    t <- tryCatch(inherits(arg, ch), 
+                  error = function(e) e,
+                  warning = function(w) w)
+    isTRUE(t)
+  })
+  if (!any(tl)) tl[names(tl) == "expression"] <- TRUE
+  if (tl["list"]) tl["list"] <- substr(deparse(arg), 1, 5) == "list("
+  names(tl)[tl & !duplicated(tl)]
+  
+}
+
+
+
+
+
+evalPopArg2 <- function(data, arg, enclos, DT = TRUE, 
+                        types = c("NULL","character", "list", "expression")) {
+  
+  allowed_types <- c("NULL", "character", "list", "expression", "formula")
+  types <- match.arg(types, allowed_types, 
+                     several.ok = TRUE)
+  if (!argType(arg) %in% types) {
+    stop("Supplied argument not allowed type. Current type: ",
+         argType(arg), ". Allowed types: ",
+         paste0(types, collapse = ", "))
+  }
+  
+  l <- do_evalPopArg(arg = arg, env = data, enc = enclos)
+  l
+}
 
 
 
