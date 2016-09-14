@@ -2,9 +2,9 @@
 #' @author Matti Rantanen
 #' @description Calculate ratio of two SIRs/SMRs and the confidence intervals of the ratio.
 #' 
-#' @details Function works with sir-objects so that the pooled SIR is used.
+#' @details Function works with pooled sir-objects i.e. the \code{print} argument in \code{sir} is ignored.
 #' Also \code{x} and \code{y} can be a vector of two where first index is the
-#' observed cases and second is expected cases.
+#' observed cases and second is expected cases (see examples).
 #' Note that the ratio of two SIR's is only applicable when the age distributions are similar
 #' in both populations.
 #'
@@ -19,15 +19,15 @@
 #' @param x a sir-object or a vector of two; observed and expected cases.
 #' @param y a sir-object or a vector of two; observed and expected cases.
 #' @param conf.level the type-I error in confidence intervals, default 0.95 for 95\% CI.
-#' @param type How the binomial confidence intervals are calculated (default is) \code{exact} or \code{asymptotic}.
-#' @param alternative The null-hypothesis test: default is \code{two.sided}, \code{less}, \code{greater}
+#' @param type How the binomial confidence intervals are calculated (default:) \code{exact} or \code{asymptotic}.
+#' @param alternative The null-hypothesis test: (default:) \code{two.sided}, \code{less}, \code{greater}
 #' 
 #' @note
 #' Parameter \code{alternative} is always \code{two.sided} when parameter 
 #' \code{type} is set to \code{asymptotic}.
 #' 
 #' @examples 
-#' ## Ratio for sir-object and equal values given manually:
+#' ## Ratio for sir-object and the same values given manually:
 #' 
 #' ## create example dataset
 #' dt1 <- data.table(obs = rep(c(5,7), 10),
@@ -44,12 +44,14 @@
 #' ## Ratio is simply 1:
 #' sir_ratio(s1, c(120, 150))
 #' 
-#' @seealso
+#' @seealso \code{\link{sir}}
 #' \href{../doc/sir.html}{A SIR calculation vignette}
-#' @family sir_related
-#' @family main_functions
 #' 
-#' @return A vector og three: ratio, and lower and upper confidence intervals.
+#' @references Statistics with Confidence: Confidence Intervals and Statistical Guidelines, Douglas Altman
+#' 
+#' @family sir_related
+#' 
+#' @return A vector length of three: sir_ratio, and lower and upper confidence intervals.
 #' 
 #' @export sir_ratio
 #' 

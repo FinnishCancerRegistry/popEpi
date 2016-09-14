@@ -12,22 +12,22 @@ sir_ratio(x, y, digits = 3, alternative = "two.sided", conf.level = 0.95,
 
 \item{y}{a sir-object or a vector of two; observed and expected cases.}
 
-\item{alternative}{The null-hypothesis test: default is \code{two.sided}, \code{less}, \code{greater}}
+\item{alternative}{The null-hypothesis test: (default:) \code{two.sided}, \code{less}, \code{greater}}
 
 \item{conf.level}{the type-I error in confidence intervals, default 0.95 for 95\% CI.}
 
-\item{type}{How the binomial confidence intervals are calculated (default is) \code{exact} or \code{asymptotic}.}
+\item{type}{How the binomial confidence intervals are calculated (default:) \code{exact} or \code{asymptotic}.}
 }
 \value{
-A vector og three: ratio, and lower and upper confidence intervals.
+A vector length of three: sir_ratio, and lower and upper confidence intervals.
 }
 \description{
 Calculate ratio of two SIRs/SMRs and the confidence intervals of the ratio.
 }
 \details{
-Function works with sir-objects so that the pooled SIR is used.
+Function works with pooled sir-objects i.e. the \code{print} argument in \code{sir} is ignored.
 Also \code{x} and \code{y} can be a vector of two where first index is the
-observed cases and second is expected cases.
+observed cases and second is expected cases (see examples).
 Note that the ratio of two SIR's is only applicable when the age distributions are similar
 in both populations.
 
@@ -44,7 +44,7 @@ Parameter \code{alternative} is always \code{two.sided} when parameter
 \code{type} is set to \code{asymptotic}.
 }
 \examples{
-## Ratio for sir-object and equal values given manually:
+## Ratio for sir-object and the same values given manually:
 
 ## create example dataset
 dt1 <- data.table(obs = rep(c(5,7), 10),
@@ -65,14 +65,12 @@ sir_ratio(s1, c(120, 150))
 \author{
 Matti Rantanen
 }
+\references{
+Statistics with Confidence: Confidence Intervals and Statistical Guidelines, Douglas Altman
+}
 \seealso{
+\code{\link{sir}}
 \href{../doc/sir.html}{A SIR calculation vignette}
-
-Other main_functions: \code{\link{rate}},
-  \code{\link{relpois_ag}}, \code{\link{relpois}},
-  \code{\link{sirspline}}, \code{\link{sir}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
 
 Other sir_related: \code{\link{lines.sirspline}},
   \code{\link{plot.sirspline}}, \code{\link{sirspline}},

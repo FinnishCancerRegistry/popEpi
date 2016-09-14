@@ -96,9 +96,8 @@ Matti Rantanen, Joonas Miettinen
 \code{\link{lexpand}}, \code{\link{ltable}}
 
 Other main_functions: \code{\link{relpois_ag}},
-  \code{\link{relpois}}, \code{\link{sir_ratio}},
-  \code{\link{sirspline}}, \code{\link{sir}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+  \code{\link{relpois}}, \code{\link{sirspline}},
+  \code{\link{sir}}, \code{\link{survmean}},
+  \code{\link{survtab_ag}}, \code{\link{survtab}}
 }
 

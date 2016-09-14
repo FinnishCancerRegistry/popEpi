@@ -184,9 +184,8 @@ Matti Rantanen, Joonas Miettinen
 
 Other main_functions: \code{\link{rate}},
   \code{\link{relpois_ag}}, \code{\link{relpois}},
-  \code{\link{sir_ratio}}, \code{\link{sirspline}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+  \code{\link{sirspline}}, \code{\link{survmean}},
+  \code{\link{survtab_ag}}, \code{\link{survtab}}
 
 Other sir_related: \code{\link{lines.sirspline}},
   \code{\link{plot.sirspline}}, \code{\link{sir_ratio}},

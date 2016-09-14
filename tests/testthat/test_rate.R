@@ -31,6 +31,37 @@ test_that("rate works with different weights", {
   }
 })
 
+test_that("rate CIs and SEs are correct", {
+  
+  ci <-data.table(agegroup = c(1,2,3,4),
+                  obs=c(4,13,8,7),
+                  pyrs=c(96,237,105,32),
+                  rate=c(4.2,5.5,7.6,21.9),
+                  std.pop=c(2773,2556,1113,184))
+  
+  a1 <- ci[,sum(obs/pyrs*std.pop)/sum(std.pop)] # oikea estimaatti
+  a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)] # myös oikea tulos  
+  
+  ci0 <- rate(data = ci, obs = 'obs', pyrs = 'pyrs', print = NULL, adjust = 'agegroup', weights = list(agegroup = c(2773,2556,1113,184)))
+  expect_equal(ci0[,SE.rate.adj], 100*a2, tolerance=0.1) # test
+  expect_equal(ci0[,rate.adj],a1)
+
+  # another...
+  ci <-data.table(agegroup = c(1,2,3,4),
+                  obs=c(4,13,8,7),
+                  pyrs=c(960,2370,1050,320),
+                  rate=c(4.2,5.5,7.6,21.9),
+                  std.pop=c(2773,2556,1113,184))
+  
+  a1 <- ci[,sum(obs/pyrs*std.pop)/sum(std.pop)] # oikea estimaatti
+  a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)] # myös oikea tulos  
+  
+  ci0 <- rate(data = ci, obs = 'obs', pyrs = 'pyrs', print = NULL, adjust = 'agegroup', weights = list(agegroup = c(2773,2556,1113,184)))
+  expect_equal(c(ci0$rate.adj.lo, ci0$rate.adj.hi),c(a1 - a2*1.96, a1 + a2*1.96), tolerance = 0.0006)
+  expect_gt(ci0[,SE.rate.adj], a2) # WHYY?!
+  expect_equal(ci0[,rate.adj],a1) # ok
+})
+
 test_that("makeWeightsDT works in rate", {
   set.seed(5)
   p18 <- data.table( OBS=round(runif(36)*10), PYRS=round(runif(36)*10000), AGEGROUP=1:18, COV = rep(c(1,2), each = 18))
