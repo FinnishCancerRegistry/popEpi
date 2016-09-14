@@ -37,6 +37,7 @@ Matti Rantanen
 }
 \seealso{
 Other sir_related: \code{\link{plot.sirspline}},
-  \code{\link{sirspline}}, \code{\link{sir}}
+  \code{\link{sir_ratio}}, \code{\link{sirspline}},
+  \code{\link{sir}}
 }
 

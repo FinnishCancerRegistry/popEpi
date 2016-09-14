@@ -85,9 +85,10 @@ Joonas Miettinen, Karri Seppa
 \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
 
 Other main_functions: \code{\link{rate}},
-  \code{\link{relpois}}, \code{\link{sirspline}},
-  \code{\link{sir}}, \code{\link{survmean}},
-  \code{\link{survtab_ag}}, \code{\link{survtab}}
+  \code{\link{relpois}}, \code{\link{sir_ratio}},
+  \code{\link{sirspline}}, \code{\link{sir}},
+  \code{\link{survmean}}, \code{\link{survtab_ag}},
+  \code{\link{survtab}}
 
 Other relpois_related: \code{\link{RPL}},
   \code{\link{relpois}}, \code{\link{rpcurve}}

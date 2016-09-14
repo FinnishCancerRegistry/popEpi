@@ -185,3 +185,39 @@ test_that("print accepts a function and subset works", {
 })
 
 
+test_that("sir_ratio", {
+  ## don't skip on CRAN
+  dt1 <- data.table(obs = rep(c(5,7), 10),
+                    pyrs = rep(c(250,300,350,400), 5),
+                    var = 1:20)
+
+  dt2 <- data.table(obs = rep(c(10,13), 10),
+                    pyrs = rep(c(250,300,350,400), 5),
+                    var = 1:20)
+  
+  Ref <- data.table(obs = rep(c(50,70,80,100), 5),
+                    pyrs = rep(c(2500,3000,3500,4000), 5),
+                    var = 1:20)
+  
+  suppressMessages(
+    s1 <- sir(coh.data = dt1, coh.obs = obs, coh.pyrs = pyrs, 
+              ref.data = Ref, ref.obs = obs, ref.pyrs = pyrs,
+              adjust = var)
+  )
+  suppressMessages(
+    s2 <- sir(coh.data = dt2, coh.obs = obs, coh.pyrs = pyrs, 
+              ref.data = Ref, ref.obs = obs, ref.pyrs = pyrs,
+              adjust = var)
+  )
+
+  ## SIR w/ coh=ref=popEpi::sire
+  ## don't skip on CRAN
+  # Test the example from the book (statistics with confidence):
+  expect_equal( sir_ratio(x = c(64, 45.6), y = c(25,23.7), digits=2)[2:3], c(lower=0.83, upper=2.21))
+  # other tests
+  expect_message(sir_ratio(s1, s2, digits = 2, alternative = 'less', conf.level = 0.95, type = 'asymptotic'))
+  expect_equal(sir_ratio(s1, s2), sir_ratio(c(120,150), c(230,150)), tolerance=0.001)
+  expect_equal(sir_ratio(s1, c(230,150)), sir_ratio(c(120,150), s2), tolerance=0.001)
+  expect_equal(sir_ratio(s1, s2)[1], c(sir_ratio =round((120/150)/(230/150),3)), tolerance=0.001)
+})
+

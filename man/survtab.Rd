@@ -298,8 +298,9 @@ doi: 10.1016/B978-0-12-801238-3.02745-8.
 
 Other main_functions: \code{\link{rate}},
   \code{\link{relpois_ag}}, \code{\link{relpois}},
-  \code{\link{sirspline}}, \code{\link{sir}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}}
+  \code{\link{sir_ratio}}, \code{\link{sirspline}},
+  \code{\link{sir}}, \code{\link{survmean}},
+  \code{\link{survtab_ag}}
 
 Other survtab_related: \code{\link{lines.survtab}},
   \code{\link{plot.survtab}}, \code{\link{print.survtab}},
