@@ -12,6 +12,8 @@ sir_ratio(x, y, digits = 3, alternative = "two.sided", conf.level = 0.95,
 
 \item{y}{a sir-object or a vector of two; observed and expected cases.}
 
+\item{digits}{number of digits in the output}
+
 \item{alternative}{The null-hypothesis test: (default:) \code{two.sided}, \code{less}, \code{greater}}
 
 \item{conf.level}{the type-I error in confidence intervals, default 0.95 for 95\% CI.}

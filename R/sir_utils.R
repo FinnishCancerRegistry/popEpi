@@ -21,6 +21,7 @@
 #' @param conf.level the type-I error in confidence intervals, default 0.95 for 95\% CI.
 #' @param type How the binomial confidence intervals are calculated (default:) \code{exact} or \code{asymptotic}.
 #' @param alternative The null-hypothesis test: (default:) \code{two.sided}, \code{less}, \code{greater}
+#' @param digits number of digits in the output
 #' 
 #' @note
 #' Parameter \code{alternative} is always \code{two.sided} when parameter 
