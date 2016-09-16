@@ -186,6 +186,22 @@ test_that("rate works with different weights and syntaxies", {
 })
 
 
+test_that("in rate levels of adjust are printable", {
+  w1 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = list(COV, AG=findInterval(AGEGROUP, c(0,8,20))), adjust ='AGEGROUP', weights = 'cohort')
+  w2 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = list(COV, ag=findInterval(AGEGROUP, c(1,8,20))), adjust ='AGEGROUP', weights = 'world_2000_20of5')
+  expect_equal(w1[,.N]  ,4)
+})
+
+test_that("rate.plot doesnt throw an error", {
+  w1 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = list(COV, AG=findInterval(AGEGROUP, c(0,8,20))), adjust ='AGEGROUP', weights = 'cohort')
+  w2 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = list(COV), adjust ='AGEGROUP', weights = 'world_2000_20of5')
+  w3 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS')
+  expect_silent(plot(w1))
+  expect_silent(plot(w2, col = 4:5, conf.int = FALSE))
+  expect_silent(plot(w3, eps = 0.01))
+})
+
+
 test_that("rate works with missing values", {
   p18c <- copy(p18)
   p18c[c(1,6), PYRS := NA]

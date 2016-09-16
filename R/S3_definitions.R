@@ -229,7 +229,7 @@ plot.sir <- function(x, plot.type = 'model',
 #' @param ... arguments passed on to plot()
 #' 
 #' @details
-#' In \code{plot.sirspline} almost every graphical parameter is user
+#' In \code{plot.sirspline} almost every graphical parameter are user
 #' adjustable, such as \code{ylim}, \code{xlim}.
 #' \code{plot.sirsplines} calls \code{lines.splines} to add lines.
 #' 
@@ -310,7 +310,7 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 
 
 #' @title lines method for sirspline-object
-#' @description Plot SIR spline lines wtih R base graphics
+#' @description Plot SIR spline lines with R base graphics
 #' 
 #' 
 #' @author Matti Rantanen
@@ -390,6 +390,117 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
     }
   }
 }
+
+#' @title Print an rate object
+#' @author Matti Rantanen
+#' @description Print method function for \code{rate} objects; see
+#' \code{\link{rate}}.
+#' @param x an \code{rate} object
+#' @param ... arguments for data.tables print method, e.g. row.names = FALSE suppresses row numbers.
+#' @export
+print.rate <- function(x, ...) {
+  ra <- attributes(x)$rate.meta
+  # pre texts:
+  cat('\n')
+  if(!is.null(ra$adjust)){
+    if(is.character(ra$weights)) {
+      a <- paste(ra$weights, collapse = ',')
+    }
+    if(all(is.numeric(ra$weights))) {
+      a <- length(ra$weights)
+    }
+    if(is.list(ra$weights)) {
+      a <- sapply(ra$weights, length)
+    }
+    
+    b <- paste(ra$adjust,a, collapse = ', ', sep = '; ')
+    cat('Adjusted rates (', b,') ', sep = '')
+  }
+  else{
+    cat('Crude rates ')
+  }
+  cat('and', '95%', 'confidence intervals:', fill=TRUE)
+  cat('\n')
+  # table itself
+  print(data.table(x), ...)
+}
+
+
+#' @title plot method for rate object
+#' @description Plot rate estimates with confidence intervals lines using R base graphics
+#' @author Matti Rantanen
+#' 
+#' @param x a rate object (see \code{\link{rate}})
+#' @param conf.int logical; default TRUE draws the confidence intervals
+#' @param eps is the height of the ending of the error bars
+#' @param left.margin set a custom left margin for long variable names. Function
+#' tries to do it by default.
+#' @param xlim change the x-axis location
+#' @param ... arguments passed on to grafical functions points and segment (e.g. col, lwd, pch and cex)
+#' 
+#' @details This is limited explonatory tool but most graphical parameters are user 
+#' adjustable. 
+#' 
+#' @import graphics
+#' @export
+plot.rate <- function(x, conf.int = TRUE, eps = 0.2, left.margin, xlim, ...) {
+  
+  ra <- attributes(x)$rate.meta
+  varcol <- ra$print
+  
+  if(is.null(varcol)) {
+    lvl.name <- 'Crude'
+  }
+  else {
+    pp <- paste0('paste(', paste(varcol, collapse=','),',sep = ":")')
+    q <- parse(text=pp)
+    lvl.name <- x[,eval(q)]
+  }
+  lvls <- 1:length(lvl.name)
+  
+  # WHICH RATE:
+  if('rate.adj' %in% names(x)) {
+    r <- x$rate.adj
+    hi <- x$rate.adj.hi
+    lo <- x$rate.adj.lo
+  }
+  else {
+    r <- x$rate
+    hi <- x$rate.hi
+    lo <- x$rate.lo
+  }
+  # X-AXIS LIMITs
+  if(missing(xlim)) {
+    t <- range(na.omit(c(lo , r, hi)))
+    t0 <- (t[2]-t[1])/4
+    xlimit <- c(pmax(t[1]-t0, 0), t[2] + t0)
+  } 
+  else {
+    xlimit <- xlim
+  }
+  
+  # MARGINS  
+  if(missing(left.margin)) {
+   old.margin <- new.margin <- par("mar")
+   new.margin[2] <- 4.1 + sqrt( max(nchar(as.character(lvl.name))) )*2
+  }
+  else {
+   new.margin[2] <- left.margin
+  }
+  par(mar = new.margin)
+  
+  plot(c(xlimit), c(min(lvls)-0.5, max(lvls)+0.5), type='n', yaxt = 'n', ylab = '', xlab='')
+  axis(side = 2, at = lvls, labels = lvl.name, las = 1)
+  points(r, lvls, ...)
+  
+  if(conf.int) {
+    segments(lo, lvls, hi, lvls, ...)
+    segments(lo, lvls - eps, lo, lvls + eps, ...)
+    segments(hi, lvls - eps, hi, lvls + eps, ...)
+  }
+  par(mar = old.margin) # revert margins
+}
+
 
 #' @export 
 print.yrs <- function(x, ...) {

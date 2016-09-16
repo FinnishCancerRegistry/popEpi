@@ -19,7 +19,7 @@
 \item{...}{arguments passed on to lines()}
 }
 \description{
-Plot SIR spline lines wtih R base graphics
+Plot SIR spline lines with R base graphics
 }
 \details{
 In \code{lines.sirspline} most of graphical parameters is user 

@@ -28,7 +28,7 @@
 Plot SIR splines using R base graphics.
 }
 \details{
-In \code{plot.sirspline} almost every graphical parameter is user
+In \code{plot.sirspline} almost every graphical parameter are user
 adjustable, such as \code{ylim}, \code{xlim}.
 \code{plot.sirsplines} calls \code{lines.splines} to add lines.
 
