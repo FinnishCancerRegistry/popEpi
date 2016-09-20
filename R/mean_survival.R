@@ -448,7 +448,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   pt <- proc.time()
   setkeyv(x, c("lex.id", survScale))
   tol <- .Machine$double.eps^0.5
-  xe <- unique(x)[x[[survScale]] < TF$tol, ] ## pick rows with entry to FU
+  xe <- unique(x, by = key(x))[x[[survScale]] < TF$tol, ] ## pick rows with entry to FU
   
   if (length(breaks) > 1L) {
     ## e.g. a period window was defined and we only use subjects

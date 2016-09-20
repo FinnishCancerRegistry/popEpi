@@ -242,8 +242,8 @@ test_that("evalPopFormula & usePopFormula output is stable", {
   TF <- environment()
   
   res <- data.table(time = rep(0, 5), status = c(1,1,0,1,1), sex = c(1,0,1,0,1))
-  res[, "factor(sex + 1)" := factor(sex+1)]
-  res[, lex.Xst := c(1,1,0,1,1)]
+  res[["factor(sex + 1)"]] <- factor(res$sex+1)
+  res$lex.Xst <- as.integer(c(1,1,0,1,1))
   
   
   ## evalPopFormula

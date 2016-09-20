@@ -588,7 +588,7 @@ doCutLexisDT <- function(lex, cut = dg_date, timeScale = "per", by = "lex.id", n
   ## OR it is equal to lowest/highest value
   setkeyv(x, c(by, allScales))
   setkeyv(x, by)
-  x <- x[!((duplicated(x) | duplicated(x, fromLast = TRUE)) & get(tmp$isCut) == 0L)]
+  x <- x[!((duplicated(x, by = key(x)) | duplicated(x, by = key(x), fromLast = TRUE)) & x[[tmp$isCut]] == 0L)]
   stop("not ready")
 }
 
@@ -653,7 +653,7 @@ lexpile <- function(lex, by = "lex.id", subset = NULL) {
   
   ## check for need for lexpiling ----------------------------------------------
   setkeyv(x, by)
-  if (sum(duplicated(x)) == 0L) return(lex)
+  if (sum(duplicated(x, by = key(x))) == 0L) return(lex)
   
   
   ## figure out what statuses are used -----------------------------------------
@@ -669,7 +669,7 @@ lexpile <- function(lex, by = "lex.id", subset = NULL) {
   ## one being a transition will not be allowed.
   setkeyv(x, c(by, tmp$scEnds[1L]))
   
-  whDup <- duplicated(x, fromLast = FALSE) | duplicated(x, fromLast = TRUE)
+  whDup <- duplicated(x, fromLast = FALSE, by = key(x)) | duplicated(x, fromLast = TRUE, by = key(x))
   dupTest <- x[whDup, 1L %in% unique(.SD), .SDcols = tmp$ev]
   rm(whDup)
   
@@ -680,7 +680,7 @@ lexpile <- function(lex, by = "lex.id", subset = NULL) {
   setkeyv(x, c(tmp$scEnds, "lex.Cst", "lex.Xst"))
   setorderv(x, c(allScales,tmp$scEnds, "lex.Cst", "lex.Xst"))
   
-  x <- unique(x)
+  x <- unique(x, by = key(x))
   stop("unfinished")
   
 }
@@ -886,7 +886,7 @@ prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(g
   x[, (l$LCS)  := shift(get(l$cutScale), n = 1L, type = c("lead"), fill = NA), by = c(l$by)]
   
   
-  x[!duplicated(x, fromLast = TRUE), c(l$LCS, l$CSE) := get(l$ex)]
+  x[!duplicated(x, fromLast = TRUE, by = key(x)), c(l$LCS, l$CSE) := get(l$ex)]
   x[, (l$CSE) := pmin(get(l$LCS), get(l$CSE))]
   x[, (l$cutScale) := sort(c(get(l$en)[1L],shift(get(l$CSE), n = 1L, type = "lag", fill = NA)[-1])), by = c(l$by)]
   x[, lex.dur := get(l$CSE) - get(l$cutScale)]

@@ -206,8 +206,8 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
     ## cumulation starting from first record for subject in each surv.int
     
     ## some records are the only one for a lex.id in a surv.int; these are easy
-    first_in_surv.int <- !duplicated(lex, fromLast = FALSE)
-    last_in_surv.int <- !duplicated(lex, fromLast = TRUE)
+    first_in_surv.int <- !duplicated(lex, fromLast = FALSE, by = key(lex))
+    last_in_surv.int <- !duplicated(lex, fromLast = TRUE, by = key(lex))
     only_in_surv.int <- first_in_surv.int & last_in_surv.int
     
     lex[only_in_surv.int, c(tmpPCSM) := .SD[[1L]] * exp(.SD[[2L]] * (.SD[[3L]] - .SD[[4L]])/2L),

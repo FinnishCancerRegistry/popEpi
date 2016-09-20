@@ -188,7 +188,7 @@ splitMulti <- function(data,
       l[, (tmpIE) := get(v1) + lex.dur]
       setkeyv(l, c(tmpID, tmpIE))
       
-      l <- unique(l)
+      l <- unique(l, by = key(l))
       ## time scale minima and lex.dur as cumulative duration --------------------
       l[, (allScales) := lapply(.SD, min), .SDcols = allScales, by = c(tmpID)]
       l[, lex.dur := get(tmpIE) - get(v1)]

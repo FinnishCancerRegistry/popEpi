@@ -523,7 +523,7 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
   setkeyv(x, by)
   ## rows that actually can be events: transitions and last rows by subject
   whTr <- x[, lex.Cst != lex.Xst]
-  whLa <- !duplicated(x, fromLast = TRUE)
+  whLa <- !duplicated(x, fromLast = TRUE, by=key(x))
   whEv <- whTr | whLa
   
   if (!is.null(breaks)) {
