@@ -4,10 +4,14 @@
 \alias{print.rate}
 \title{Print an rate object}
 \usage{
-\method{print}{rate}(x, ...)
+\method{print}{rate}(x, subset = NULL, ...)
 }
 \arguments{
 \item{x}{an \code{rate} object}
+
+\item{subset}{a logical condition to subset results table by
+before printing; use this to limit to a certain stratum. E.g.
+\code{subset = sex == "female"}}
 
 \item{...}{arguments for data.tables print method, e.g. row.names = FALSE suppresses row numbers.}
 }

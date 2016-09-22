@@ -396,10 +396,19 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
 #' @description Print method function for \code{rate} objects; see
 #' \code{\link{rate}}.
 #' @param x an \code{rate} object
+#' @param subset a logical condition to subset results table by
+#' before printing; use this to limit to a certain stratum. E.g.
+#' \code{subset = sex == "female"}
 #' @param ... arguments for data.tables print method, e.g. row.names = FALSE suppresses row numbers.
 #' @export
-print.rate <- function(x, ...) {
+print.rate <- function(x, subset = NULL, ...) {
+  
   ra <- attributes(x)$rate.meta
+  PF <- parent.frame(1L)
+  TF <- environment()
+  subset <- evalLogicalSubset(x, substitute(subset), enclos = PF)
+  x <- x[subset, ]
+  
   # pre texts:
   cat('\n')
   if(!is.null(ra$adjust)){
@@ -422,7 +431,10 @@ print.rate <- function(x, ...) {
   cat('and', '95%', 'confidence intervals:', fill=TRUE)
   cat('\n')
   # table itself
-  print(data.table(x), ...)
+
+  
+  setDT(x)
+  print(x, ...)
 }
 
 
