@@ -590,7 +590,8 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   
   ## final touch ---------------------------------------------------------------
   setDT(trans)
-  alloc.col(trans) ## some problems with internal errors...
+  ## some problems with internal errors...
+  alloc.col(trans, n = max(truelength(trans), ncol(trans) + 1024L)) 
   setaggre(trans, values = c("pyrs", "at.risk", transitions, sumNames), 
            by = byNames, breaks = breaks)
   if (!return_DT()) setDFpe(trans)
