@@ -253,73 +253,6 @@ stdr.weights <- function(wp = 'world00_1') {
 globalVariables(c('stdpop18','stdpop101','agegroup','world_std'))
 
 
-# rate_table <- function(data, 
-#                        obs = 'obs',
-#                        pyrs = 'pyrs',
-#                        adjust = NULL,
-#                        print = NULL,
-#                        weight.data = 'world66_5',
-#                        weights = NULL
-# ) {
-#   ## This one fetches and merges the standard population
-#   ## or transforms the population already in the data to standard format.
-#   
-#   colsum1 <- function(c) c/sum(c)
-#   # merge WHO weights to data
-#   # Everything should sum to one on each level of print
-#   data <- data.table(data)
-#   if (!is.null(weights) && all(weights %in% colnames(data)) ) {
-#     ## use predefined weights
-#     if ( !is.null(print)) {
-#       data[, reference := colsum1(.SD), .SDcols = weights, by = c(print)]
-#     }
-#     else {
-#       data[, reference := colsum1(.SD), .SDcols = weights]
-#     }
-#     data[, (weights) := NULL]
-#   }
-#   else if ( !is.null(adjust) ) { # add: if ( !is.null(adjust) )
-#     ## aggregate data before adding weights
-#     eval0 <- paste0('list(obs = sum(',obs,',na.rm=TRUE),pyrs = sum(',pyrs,', na.rm=TRUE))')
-#     eval0 <- parse(text = eval0)
-#     data <- data[, eval(eval0), by = c(adjust, print) ] 
-#     setnames(data, c('obs','pyrs'), c(obs, pyrs))
-#     stdr.list <- c('world66_5','europe','nordic',"world00_1",
-#                    "world00_20of5","world00_18of5")
-#     
-#     if ( !is.null(weight.data) && weight.data %in% stdr.list) {
-#       ## get preloaded WHO std data
-#       
-#       if (length(adjust) > 1) stop('Set only one variable name for indicating age group')
-# 
-#       wd <- stdr.weights(wp = weight.data)
-#       wd <- wd[, reference := colsum1(.SD), .SDcols = 'agegroup']
-#       setnames(wd, 'agegroup', adjust)
-#     }
-#   
-#     else if (is.null(weight.data) || weight.data=='cohort') {
-#       # get cohort std
-#       p1 <- paste0('sum(',pyrs,', na.rm=TRUE)')
-#       p1 <- parse(text = p1)
-#       wd <- data[,list( pyrs = eval(p1)), by = c(unique(adjust))]
-#       wd[, reference := colsum1(.SD), .SDcols = 'pyrs']
-#       wd[,c('pyrs') := NULL]
-#     }
-# 
-#     data <- merge(x  = data, y  = wd[, c('reference', adjust) , with=FALSE],
-#                   by = adjust, all.x = TRUE)
-#   }
-#   else {
-#     if (!is.null(print)) {
-#       data <- data[, list(obs = sum(get(obs), na.rm=TRUE), pyrs = sum(get(pyrs), na.rm=TRUE)), by = c(print) ]
-#       setnames(data, c('obs','pyrs'), c(obs, pyrs))
-#     }
-#   }
-#   return(data[])
-# }
-# 
-# globalVariables(('reference'))
-
 rate_est <- function(data = data, 
                      obs = 'obs', 
                      pyrs = 'pyrs', 
@@ -404,4 +337,4 @@ rate_est <- function(data = data,
   return(data[])
 }
 
-globalVariables(c('var.temp','lam.temp','rate.adj','SE.rate.adj','SE.rate'))
+globalVariables(c('var.temp','lam.temp','rate.adj','SE.rate.adj','SE.rate','SE.log.rate','SE.log.rate.adj'))
