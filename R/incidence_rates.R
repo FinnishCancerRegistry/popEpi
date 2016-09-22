@@ -371,11 +371,12 @@ rate_est <- function(data = data,
 
     data <- data[, eval(l), by=print]
     # rate.adj: S.E.
-    data[, SE.rate.adj := exp( sqrt((1/lam.temp)^2 * var.temp)) ]
+    data[, SE.log.rate.adj := sqrt((1/lam.temp)^2 * var.temp) ] # tämä on log-rate
+    data[, SE.rate.adj := sqrt(var.temp)]
     # rate.adj: CI
-    data[, ':='(rate.adj.lo = exp(log(rate.adj)-log(SE.rate.adj)*1.96),
-                rate.adj.hi = exp(log(rate.adj)+log(SE.rate.adj)*1.96)) ]
-    data[,c('lam.temp','var.temp') := NULL]
+    data[, ':='(rate.adj.lo = exp( log(rate.adj) - SE.log.rate.adj*1.96 ),
+                rate.adj.hi = exp( log(rate.adj) + SE.log.rate.adj*1.96 )) ]
+    data[,c('lam.temp','var.temp','SE.log.rate.adj') := NULL]
   }
   
   else {
@@ -383,14 +384,23 @@ rate_est <- function(data = data,
     l <- parse(text = ie)
     data <- data[, eval(l), by=print]
   }
+  # rate
   ia <- paste0('rate := ',obs,'/', pyrs)
   k <- parse(text = ia)
   data[, eval(k), by = print]
-  eval.me3 <- paste('exp(1/',obs,')')
+  
+  # var(rate)
+  var_r <- paste0('SE.rate := sqrt(',obs,'/(',pyrs,'*',pyrs,'))')
+  k <- parse(text = var_r)
+  data[, eval(k), by = print]
+  
+  # var(log(rate)) and CI
+  eval.me3 <- paste('exp(sqrt(1/',obs,'))')
   eval.me3 <- parse(text = eval.me3)
-  data[, SE.rate := eval(eval.me3)]
-  data[, ':='(rate.lo = exp(log(rate)-log(SE.rate)*1.96),
-              rate.hi = exp(log(rate)+log(SE.rate)*1.96)) ]
+  data[, SE.log.rate := eval(eval.me3)]
+  data[, ':='(rate.lo = exp(log(rate)-log(SE.log.rate)*1.96),
+              rate.hi = exp(log(rate)+log(SE.log.rate)*1.96)) ]
+  data[, SE.log.rate := NULL]
   return(data[])
 }
 
