@@ -43,7 +43,7 @@ test_that("rate CIs and SEs are correct", {
   a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)] # myös oikea tulos  
   
   ci0 <- rate(data = ci, obs = 'obs', pyrs = 'pyrs', print = NULL, adjust = 'agegroup', weights = list(agegroup = c(2773,2556,1113,184)))
-  expect_equal(ci0[,SE.rate.adj], a2, tolerance=0.000005) # test
+  expect_equal(ci0[,SE.rate.adj], a2, tolerance=0.0005) # test
   expect_equal(ci0[,rate.adj],a1)
 
   # another...
