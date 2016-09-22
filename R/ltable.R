@@ -229,13 +229,12 @@ expr.by.cj <- function(data,
   if (na.rm) cj <- na.omit(cj)
   
   ## eval expression -----------------------------------------------------------
-  exprVars <- setdiff(names(tab), by.vars)
-  if (!length(.SDcols)) .SDcols <- exprVars
-  if (!length(.SDcols)) .SDcols <- tabVars
-  res <- tab[subset][cj, eval(e, envir = .SD), 
-                     on = by.vars, 
-                     by = .EACHI, 
-                     .SDcols = .SDcols, ...]
+  tabe <- "tab[subset][cj, eval(e), 
+                       on = by.vars, 
+                       by = .EACHI, ..."
+  tabe <- if (is.null(.SDcols)) tabe else paste0(tabe, ", .SDcols = .SDcols")
+  tabe <- paste0(tabe ,"]")
+  res <- eval(parse(text = tabe))
   
   setcolsnull(res, delete = tmpDum, soft = TRUE)
   by.vars <- setdiff(by.vars, tmpDum)
