@@ -36,6 +36,9 @@ test_that("relative survivals about the same as relsurv's", {
   
   ## rs.surv
   ## sex must be coded c(1,2) (male, female)
+  x[, paste0(c("bi", "dg", "ex"), "_date") := lapply(.SD, as.Date),
+    .SDcols = paste0(c("bi", "dg", "ex"), "_date")]
+  x[, per := as.Date(per)]
   x[, sex := 2L]
   rs.e2 <- rs.surv(Surv(lex.dur, lex.Xst!=0) ~ 1 + ratetable(age=age, sex=sex, year=per),
                    ratetable = popm, data = x, method = 'ederer2', type = "fleming-harrington", fin.date=ex_date)
@@ -108,6 +111,9 @@ test_that("relpois congruent with relsurv::rsadd", {
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   sire2[, sex := 2L]
+  sire2[, paste0(c("bi", "dg", "ex"), "_date") := lapply(.SD, as.Date),
+        .SDcols = paste0(c("bi", "dg", "ex"), "_date")]
+  
   rs <- relsurv::rsadd(Surv(Tstop, event = status %in% 1:2) ~ ratetable(age=dg_age, sex=sex, year=dg_date) + agegr,
                        int = 0:5,
                        ratetable = popm, data = sire2, method = "glm.poi")
@@ -152,6 +158,7 @@ test_that("Ederer I expected survival curve agrees with survival::survexp", {
              entry.status = 0L, data = sire2)
   setDT(x)
   setattr(x, "class", c("Lexis","data.table", "data.frame"))
+  x[, per := as.Date(per)]
   
   ## rs.surv
   ## sex must be coded c(1,2) (male, female)

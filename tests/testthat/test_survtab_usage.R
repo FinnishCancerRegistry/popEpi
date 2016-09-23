@@ -240,10 +240,12 @@ test_that("its possible to pass dynamically created arguments", {
   a <- aggre(x, by = list(group, agegr, FUT))
   
   group <- a$group
-  a$group <- NULL
+  set(a, j = "group", value = NULL)
+  
   form <- FUT ~ group + adjust(agegr)
   pyrs <- a$pyrs
-  a$pyrs <- NULL
+  set(a, j = "pyrs", value = NULL)
+  
   st2 <- survtab_ag(form, data = a, surv.type = "surv.obs",
                     surv.method = "hazard",
                     d = c("from0to1"),
