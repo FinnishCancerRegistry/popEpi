@@ -707,12 +707,16 @@ print.survtab <- function(x, subset = NULL, ...) {
   setkeyv(x, c(pv, "Tstop"))
   x <- x[medmax]
   
-  x[, c(sa$est.vars, sa$CI.vars, sa$misc.vars) := lapply(.SD, function(x) round(x, 4L)), 
-       .SDcols = c(sa$est.vars, sa$CI.vars, sa$misc.vars)]
+  rv <- intersect(names(x), c(sa$est.vars, sa$CI.vars, sa$misc.vars))
+  if (length(rv)) {
+    x[, (rv) := lapply(.SD, round, digits = 4L),  .SDcols = rv]
+  }
   
-  if (length(sa$SE.vars) > 0L) x[, c(sa$SE.vars) := lapply(.SD, function(x) signif(x, 4L)), .SDcols = c(sa$SE.vars)]
+  sv <- intersect(names(x), sa$SE.vars)
+  if (length(sv > 0L)) {
+    x[, c(sv) := lapply(.SD, signif, digits = 4L), .SDcols = sv]
+  }
   
-  # x[, c(sa$value.vars) := lapply(.SD, function(x) round(x, 2L)), .SDcols = c(sa$value.vars)]  
   
   setcolsnull(x, keep = c(pv, "Tstop", sa$surv.vars), colorder = TRUE)
   if (length(pv)) setnames(x, pv, pv_orig)
