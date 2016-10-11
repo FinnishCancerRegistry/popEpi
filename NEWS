@@ -1,3 +1,7 @@
+popEpi 0.4.1
+=====
+* lexpand bug fixed (#120): observations were dropped if their entry by age was smaller than the smallest age value, though entry at exit is correct and used now.
+
 popEpi 0.4.0
 =====
 * removed previously deprecated shift.var (#35)

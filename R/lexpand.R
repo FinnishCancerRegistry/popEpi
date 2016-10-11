@@ -589,7 +589,7 @@ lexpand <- function(data,
     l_subset <- test_times(lex.exit < min(breaks$per), "subjects left follow-up before earliest per breaks value")
   }
   if (!is.null(breaks$age)) {
-    l_subset <- test_times(lex.entry - lex.birth < min(breaks$age), "subjects left follow-up before lowest age breaks value")
+    l_subset <- test_times(lex.exit - lex.birth < min(breaks$age), "subjects left follow-up before lowest age breaks value")
   }
   if (!is.null(breaks$fot)) {
     l_subset <- test_times(lex.exit - lex.entry < min(breaks$fot), "subjects left follow-up before lowest fot breaks value")
