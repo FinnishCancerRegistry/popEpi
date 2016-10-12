@@ -280,6 +280,47 @@ test_that("getCall & formula methods for survtab work", {
 
 
 
+
+test_that("survtab_ag allows for certain arguments to be length > 1", {
+  data(sire)
+  set.seed(1)
+  sire <- sire[sample(1:.N, 100)]
+  
+  BL <- list(fot=0:5)
+  x <- lexpand(sire, 
+               birth = bi_date, entry = dg_date, exit = ex_date,
+               status = status,
+               breaks = BL,
+               pophaz = popmort,
+               aggre = list(fot))
+  
+  st <- survtab_ag(fot ~ 1, data = x, 
+                   surv.method = "lifetable",
+                   n.cens = c("from0to0", "from0to2"), d = "from0to1")
+  st <- survtab_ag(fot ~ 1, data = x, 
+                   surv.method = "lifetable",
+                   relsurv.method = "pp",
+                   n.cens = c("from0to0", "from0to2"), 
+                   d = "from0to1",
+                   d.pp = "from0to1.pp",
+                   d.pp.2 = "from0to1.pp.2",
+                   n.pp = "at.risk.pp",
+                   n.cens.pp = c("from0to0.pp", "from0to2.pp"))
+  st <- survtab_ag(fot ~ 1, data = x, 
+                   surv.method = "lifetable",
+                   relsurv.method = "pp",
+                   d = c("from0to0", "from0to2"), 
+                   n.cens = "from0to1",
+                   n.cens.pp = "from0to1.pp",
+                   n.pp = "at.risk.pp",
+                   d.pp = c("from0to0.pp", "from0to2.pp"),
+                   d.pp.2 = c("from0to0.pp.2", "from0to2.pp.2"))
+})
+
+
+
+
+
 test_that("update() works with survtab objects", {
   data(sire)
   set.seed(1)
