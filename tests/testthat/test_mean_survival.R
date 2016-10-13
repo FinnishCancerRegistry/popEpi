@@ -83,7 +83,7 @@ test_that("survmean() agrees with results computed using pkg survival", {
   setattr(xe$per, "year.length", "approx")
   setattr(xe$age, "year.length", "approx")
   xe[, perdate := as.date.Date(as.Date.yrs(per))]
-  xe[, agedate := as.integer(as.Date.yrs(per)-bi_date)]
+  xe[, agedate := as.integer(as.Date.yrs(per)-as.Date(bi_date))]
   
   
   ## form ratetable

@@ -1,10 +1,17 @@
+Changes in 0.4.1
+================
+
+-   lexpand bug fixed (\#120): observations were dropped if their entry by age was smaller than the smallest age value, though entry at exit is correct and used now.
+
 Changes in 0.4.0
 ================
 
 -   removed previously deprecated shift.var (\#35)
--   popEpi no longer depends on package data.table but imports it - this means the user will have to do library(data.table) separately to make data.table's functions become usable. Formerly popEpi effectively did library(data.table) when it was library'd.
+-   popEpi no longer depends on package data.table but imports it - this means the user will have to do library(data.table) separately to make data.table's functions become usable. Formerly popEpi effectively did library(data.table) when you did library(popEpi).
 -   summary.survtab: args t and q behaviour changed
 -   survtab: internal weights now based on counts of subjects in follow-up at the start of follow-up (used to be sum of counts/pyrs over all of follow-up)
+-   new functions: `rate_ratio()`, `sir_ratio()`
+-   small internal changes in preparation for data.table 1.9.8
 
 Changes in 0.3.1
 ================
@@ -43,6 +50,9 @@ sr$status <- factor(sr$status, levels = 0:2,
 library(Epi)
 #> 
 #> Attaching package: 'Epi'
+#> The following object is masked from 'package:popEpi':
+#> 
+#>     [.Lexis
 #> The following object is masked from 'package:base':
 #> 
 #>     merge.data.frame
@@ -97,9 +107,12 @@ a$pyrs <- rbinom(nrow(a), 1e4, 0.75)
 ## so called "world" standard rates (weighted to hypothetical world pop in 2000)
 r <- rate(data = a, obs = obs, pyrs = pyrs, print = sex, 
           adjust = agegroup, weights = 'world_2000_18of5')
+#> Warning in pyrDSMNspOBEl * pyrDSMNspOBEl: NAs produced by integer overflow
+
+#> Warning in pyrDSMNspOBEl * pyrDSMNspOBEl: NAs produced by integer overflow
 ```
 
-|  sex|  obs|    pyrs|   rate.adj|  SE.rate.adj|  rate.adj.lo|  rate.adj.hi|       rate|   SE.rate|    rate.lo|    rate.hi|
-|----:|----:|-------:|----------:|------------:|------------:|------------:|----------:|---------:|----------:|----------:|
-|    0|  933|  134986|  0.0069947|     1.036992|    0.0065140|    0.0075108|  0.0069118|  1.001072|  0.0068973|  0.0069264|
-|    1|  875|  134849|  0.0064453|     1.038402|    0.0059865|    0.0069394|  0.0064887|  1.001143|  0.0064742|  0.0065033|
+|  sex|  obs|    pyrs|   rate.adj|  SE.rate.adj|  rate.adj.lo|  rate.adj.hi|       rate|  SE.rate|    rate.lo|    rate.hi|
+|----:|----:|-------:|----------:|------------:|------------:|------------:|----------:|--------:|----------:|----------:|
+|    0|  933|  134986|  0.0069947|    0.0002541|    0.0065140|    0.0075108|  0.0069118|       NA|  0.0064822|  0.0073699|
+|    1|  875|  134849|  0.0064453|    0.0002429|    0.0059865|    0.0069394|  0.0064887|       NA|  0.0060727|  0.0069332|

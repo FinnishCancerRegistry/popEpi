@@ -284,8 +284,6 @@ intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = 
   
   if (dropNegDur) subset[subset] <- subset[subset] & x$lex.dur[subset] > 0L
   
-  e <- environment()
-  
   ## figure out latest exit and first entry; don't need to test for dropping
   ## if e.g. all left follow-up before the max in breaks
   max_end <- lapply(ts, function(ch) min(x[[ch]] + x$lex.dur))
@@ -297,13 +295,12 @@ intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = 
     mak <- ma[[k]]
     
     if (max_end[[k]] < mak + tol) {
-      tmpSD <- x[e$subset, .SD, .SDcols = c(e$k, "lex.dur")]
+      tmpSD <- x[subset, .SD, .SDcols = c(k, "lex.dur")]
       tmpSD <- setDT(lapply(tmpSD, as.numeric))
-      subset[subset] <- rowSums(tmpSD)  <=  e$mak + e$tol
+      subset[subset] <- rowSums(tmpSD)  <=  mak + tol
     }
     if (min_start[[k]] + tol > mik) {
-      subset[subset] <- x[e$subset, .SD[[e$k]]  > e$mik - e$tol, 
-                          .SDcols = c(e$k)]
+      subset[subset] <- x[subset,][[k]] > mik - tol
     }
     
     if (all(!subset)) {
@@ -316,7 +313,7 @@ intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = 
   }
   
   
-  x[e$subset, ]
+  x[subset, ]
 }
 
 

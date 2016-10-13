@@ -67,7 +67,8 @@ st <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x,
 ## estimates at full years of follow-up
 summary(st, t = 1:5)
 
-## interval estimate closest to 75th percentile 
+## interval estimate closest to 75th percentile, i.e.
+## first interval where surv.obs < 0.75 at end
 ## (just switch 0.75 to 0.5 for median survival, etc.)
 summary(st, q = list(surv.obs = 0.75))
 ## multiple quantiles

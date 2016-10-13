@@ -317,5 +317,35 @@ test_that("different specifications of time vars work with event defined and ove
 })
 
 
-
+test_that("lexpand drops persons outside breaks window correctly", {
+  skip_on_cran()
+  
+  dt <- data.table(bi_date = as.Date('1949-01-01'), 
+                   dg_date = as.Date(paste0(2000, "-01-01")), 
+                   start = as.Date("1997-01-01"),
+                   end = as.Date('2002-01-01'), 
+                   status = c(2), id=1)
+  
+  ## by age
+  x1 <- lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = start, exit = end, event = dg_date, 
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE, breaks = list(age = 50:55))
+  expect_equal(x1$age, c(50, 51, 52))
+  
+  ## by period
+  x1 <- lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = start, exit = end, event = dg_date, 
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE, breaks = list(per = 2000:2005))
+  expect_equal(x1$per, c(2000, 2001))
+  
+  
+  ## by fot
+  x1 <- lexpand(data = dt, subset = NULL, 
+                birth = bi_date, entry = start, exit = end, event = dg_date, 
+                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                merge = FALSE, breaks = list(fot = 2:5))
+  expect_equal(x1$fot, c(2, 3, 4))
+})
 

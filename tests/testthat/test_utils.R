@@ -146,8 +146,8 @@ test_that("cutLowMerge merges succesfully what is intended", {
   setDT(sr)
   sr1 <- lexpand(sr, birth = bi_date, entry = dg_date, exit = ex_date,
                  status = status, fot = seq(0, 5, 1/12))
+  sr1 <- data.table(sr1)
   setattr(sr1, "class", c("Lexis", "data.table", "data.frame"))
-  alloc.col(sr1)
   
   sr1[, year := per + 0.5*lex.dur]
   sr1[, agegroup := age + 0.5*lex.dur]

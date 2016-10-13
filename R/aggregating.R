@@ -366,14 +366,16 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
                        "lex.Cst", "lex.Xst", av, sumVars))
   lex.orig <- lex
   lex <- subsetDTorDF(lex, subset = subset, select = keepVars)
-  lex <- setDT(copy(lex))
+  lex <- data.table(lex)
   forceLexisDT(lex, breaks = breaks, allScales = allScales, key = FALSE)
+  
   
   ## ensure no observations outside breaks limits are left in
   lex <- intelliDrop(lex, breaks = breaks)
   
   setkeyv(lex, c("lex.id", allScales[1]))
   setcolsnull(lex, delete = setdiff(allScales, names(breaks)))
+  
   
   ## cut time scales for aggregating if needed ---------------------------------
   aggScales <- intersect(av, allScales)
@@ -389,6 +391,7 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   tmpAtRisk <- makeTempVarName(lex, pre = "at.risk_")
   set(lex, j = tmpAtRisk, value = TRUE)
   survScale <- NULL
+  
   
   if (length(aggScales) > 0) {
     cutTime <- proc.time()
@@ -526,7 +529,7 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
       set(by, j = var, value = lex[[var]])
     }
   }
- 
+  
   
   ## NOTE: this will ensure correct detection of censorings:
   ## observations cut short by e.g. period window's edge
@@ -589,9 +592,7 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   
   
   ## final touch ---------------------------------------------------------------
-  setDT(trans)
-  ## some problems with internal errors...
-  alloc.col(trans, n = max(truelength(trans), ncol(trans) + 1024L)) 
+  trans <- data.table(trans)
   setaggre(trans, values = c("pyrs", "at.risk", transitions, sumNames), 
            by = byNames, breaks = breaks)
   if (!return_DT()) setDFpe(trans)

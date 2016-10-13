@@ -297,7 +297,7 @@ x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
 st <- survtab_ag(fot ~ 1, data = x)
 
 summary(st, t = 1:5) ## annual estimates
-summary(st, q = list(r.e2 = 0.75)) ## 1st interval where r.e2 >= 0.75 at end
+summary(st, q = list(r.e2 = 0.75)) ## 1st interval where r.e2 < 0.75 at end
 \dontrun{
 plot(st)
 

@@ -15,7 +15,7 @@ test_that("rpcurve and survtab e2 are approximately congruent", {
   rp <- relpois(x, formula = lex.Xst %in% 1:2 ~ -1 + FOT+agegr)
   mc <- rpcurve(rp)
   
-  x$pop.haz <- NULL
+  x[, pop.haz := NULL]
   pm <- data.table(popEpi::popmort)
   setnames(pm, c("year", "agegroup"), c("per", "age"))
   w <- as.numeric(table(x$agegr))

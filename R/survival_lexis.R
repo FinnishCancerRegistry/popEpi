@@ -1,3 +1,20 @@
+`[.Lexis` <- function(x, ...) {
+  ## intended to override Epi::`[.Lexis`
+
+  y <- NextMethod(x)
+  if (is.data.frame(y)) {
+    for (a in c("class", "time.scales", "time.since", "breaks")) {
+      setattr(y ,a, attr(x, a))
+    }
+  }
+  y
+}
+
+
+
+
+
+
 #' @template survival_doc_template
 #' @param formula a \code{formula}; e.g. \code{fot ~ sex},
 #' where \code{fot} is the time scale over which you wish to estimate a

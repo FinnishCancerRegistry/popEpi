@@ -130,7 +130,7 @@
 #' st <- survtab_ag(fot ~ 1, data = x)
 #' 
 #' summary(st, t = 1:5) ## annual estimates
-#' summary(st, q = list(r.e2 = 0.75)) ## 1st interval where r.e2 >= 0.75 at end
+#' summary(st, q = list(r.e2 = 0.75)) ## 1st interval where r.e2 < 0.75 at end
 #' \dontrun{
 #' plot(st)
 #' 
@@ -301,9 +301,26 @@ survtab_ag <- function(formula = NULL,
   
   mc <- mc[valVars]
   
+  
   mc <- lapply(mc, function(elem) {
     evalPopArg(data = data, arg = elem, DT = TRUE, enclos = PF, recursive = TRUE)
     })
+  
+  
+  ## if given as multiple vars, combine these into one (e.g. n  = c("v1", "v2"))
+  combValVars <- c("n", "n.cens", "d.exp", "d.pp", "d.exp.pp", "d.pp.2",
+                   "pyrs", "pyrs.pp", "n.cens.pp", "n.pp")
+  combValVars <- intersect(names(mc), combValVars)
+  mc[combValVars] <- lapply(combValVars, function(val_var) {
+    tab <- mc[[val_var]]
+    if (!is.data.frame(tab) || length(tab) == 1L) return(tab)
+    tab_na <- names(tab)
+    e <- paste0(tab_na, collapse = " + ")
+    e <- parse(text = e)
+    tab <- data.table(V1 = tab[, eval(e)])
+    setnames(tab, "V1", val_var)
+    tab
+  })
   
   ## NOTE: this does not delete but sets the value to NULL.
   mc[unlist(lapply(mc, function(x) {
@@ -319,11 +336,6 @@ survtab_ag <- function(formula = NULL,
   }
   
   eventVars <- NULL
-  ## NOTE: not sure if other arguments than 'd' should be allowed to be of 
-  ## length > 1 (cause-specific 'd'); restricted for now to 'd' but easy to
-  ## allow in the procedure below.
-  ## nl will contain the names of the variables corresponding to each argument,
-  ## e.g. d = c("d.1", "d.2"), etc.
   mc[[1]] <- data.table(mc[[1L]]) ## this avoids an exotic error in set().
   nl <- lapply(mc, names)
   for (k in 1:length(mc)) {
@@ -357,22 +369,12 @@ survtab_ag <- function(formula = NULL,
     valVars <- unique(c(valVars, "d", eventVars))
   }
   
-  ## sum e.g. d.pp.1 + d.pp.2 = d.pp
-  dna <- names(nl)[names(nl) %in% c("d.pp", "d.pp.2")]
-  if (length(dna)) dna <- dna[unlist(lapply(nl[dna], function(x) length(x) > 1L))]
-  if (length(dna)) {
-    
-    for (k in dna) {
-      set(mc, j = k, value = mc[, rowSums(.SD), .SDcols = nl[[k]]])
-    }
-    setcolsnull(mc, unlist(nl[dna]))
-    valVars <- setdiff(valVars, unlist(nl[dna]))
-    valVars <- c(valVars, dna)
-    valVars <- unique(valVars)
-  }
   
-  
-  all_names_present(mc, valVars)
+  all_names_present(mc, valVars, 
+                    msg = paste0("Expected internal temp data to have ",
+                                 "variables %%VARS%% at this point, but didn't",
+                                 ". This is most likely a bug and should be ",
+                                 "reported to pkg maintainer."))
   setcolorder(mc, valVars)
   
   ## addition: internal weights use n at beginning of first interval
