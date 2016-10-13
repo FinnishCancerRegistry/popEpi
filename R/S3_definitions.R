@@ -4,8 +4,6 @@
 print.sir <- function(x, subset = NULL, ...) {
   
   at <- attributes(x)$sir.meta
-  #ta <- attributes(x)$tables
-  
   PF <- parent.frame(1L)
   subset <- evalLogicalSubset(x, substitute(subset), enclos = PF)
   x <- x[subset, ]
@@ -67,7 +65,6 @@ print.sir <- function(x, subset = NULL, ...) {
   if (is.data.frame(y)) {
     setattr(y, "class", class(x))
     setattr(y, "sir.meta", attr(x, "sir.meta"))
-    setattr(y, "tables", attr(x, "tables"))
   }
   y
 }

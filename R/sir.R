@@ -799,6 +799,8 @@ sir_est <- function( table,
   return(results)
 }
 
+
+#' @export
 getCall.sir <- function (x, ...) {
   attributes(x)$sir.meta$call
 }
