@@ -4,14 +4,11 @@
 \alias{plot.sir}
 \title{Plot method for sir-object}
 \usage{
-\method{plot}{sir}(x, plot.type = "model", conf.int = TRUE, ylab, xlab,
-  xlim, main, eps = 0.2, abline = TRUE, lang = "fi", log = FALSE,
-  left.margin, ...)
+\method{plot}{sir}(x, conf.int = TRUE, ylab, xlab, xlim, main, eps = 0.2,
+  abline = TRUE, log = FALSE, left.margin, ...)
 }
 \arguments{
 \item{x}{an object returned by function \code{sir}}
-
-\item{plot.type}{select 'model'(=default), 'univariate'}
 
 \item{conf.int}{default TRUE draws confidence intervals}
 
@@ -27,13 +24,11 @@
 
 \item{abline}{logical; draws a gray line in SIR = 1}
 
-\item{lang}{language:  'fi'(default) or 'en'}
-
 \item{log}{logical; SIR is not in log scale by default}
 
 \item{left.margin}{adjust left marginal of the plot to fit long variablenames}
 
-\item{...}{arguments passed on to plot()}
+\item{...}{arguments passed on to plot(), segment and lines()}
 }
 \description{
 Plot SIR estimates with error bars

@@ -2,6 +2,7 @@
 
 S3method("[",aggre)
 S3method("[",rate)
+S3method("[",sir)
 S3method("[",survmean)
 S3method("[",survtab)
 S3method("[",yrs)

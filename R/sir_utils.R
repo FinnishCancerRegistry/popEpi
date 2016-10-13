@@ -66,8 +66,8 @@ sir_ratio <- function(x, y, digits = 3, alternative = 'two.sided',
   # prepare input values: x
   # Tests are located in test_sir script.
   if(inherits(x = x, what = 'sir')){
-    O1 <- x[[1]]$obs
-    E1 <- x[[1]]$exp
+    O1 <- sum(x$observed)
+    E1 <- sum(x$expected)
   }
   else if(is.vector(x) && length(x) == 2) {
     O1 <- x[1]
@@ -78,8 +78,8 @@ sir_ratio <- function(x, y, digits = 3, alternative = 'two.sided',
   }
   # prepare y:
   if(inherits(y,'sir')){
-    O2 <- y[[1]]$obs
-    E2 <- y[[1]]$exp
+    O2 <- sum(y$observed)
+    E2 <- sum(y$expected)
   }
   else if(is.vector(y) && length(y) == 2) {
     O2 <- y[1]

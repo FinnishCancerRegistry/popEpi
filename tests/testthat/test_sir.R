@@ -31,10 +31,10 @@ test_that("SIR w/ coh=ref=popEpi::sire", {
   )
   ## SIR w/ coh=ref=popEpi::sire
   ## don't skip on CRAN
-  expect_equal(sl$total$sir, 1)
-  expect_equal(sl$total$pyrs, 13783.81, tolerance=0.01)
-  expect_equal(sl$total$expected, 4595)
-  expect_equal(sl$total$observed, 4595)
+  expect_equal(sl$sir, 1)
+  expect_equal(sl$pyrs, 13783.81, tolerance=0.01)
+  expect_equal(sl$expected, 4595)
+  expect_equal(sl$observed, 4595)
   
   suppressMessages(
     sl <- sir(coh.data=ltre, coh.obs="obs", coh.pyrs="pyrs",
@@ -42,10 +42,10 @@ test_that("SIR w/ coh=ref=popEpi::sire", {
               adjust= c("agegroup","ex_y"))
   )
   ## SIR w/ coh=ref=popEpi::sire"
-  expect_equal(sl$total$sir, 1.39, tolerance=0.01)
-  expect_equal(sl$total$pyrs, 13783.81, tolerance=0.01)
-  expect_equal(sl$total$expected, 3305.04, tolerance=0.01)
-  expect_equal(sl$total$observed, 4595)
+  expect_equal(sl$sir, 1.39, tolerance=0.01)
+  expect_equal(sl$pyrs, 13783.81, tolerance=0.01)
+  expect_equal(sl$expected, 3305.04, tolerance=0.01)
+  expect_equal(sl$observed, 4595)
 })
 
 
@@ -62,11 +62,69 @@ c2 <- lexpand( popEpi::sire[dg_date<ex_date,], status = status, birth = bi_date,
                aggre = list(fot, agegroup = age, year = per, sex) )
 
 
+test_that("confidence intervals an other options works", {
+  
+  # CI's
+  ci1 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type = 'profile',
+              ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
+              adjust = c('agegroup','year','sex'), 
+              print = list(FOT = fot, age.cat = cut(agegroup, c(0,75,120)), per = cut(year, c(1990,2010,2014), dig.lab = 8) ))
+  expect_message( ci2 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type = 'wald',
+              ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
+              adjust = c('agegroup','year','sex'), 
+              print = list(FOT = fot, sex, age.cat = cut(agegroup, c(0,75,120)), per = cut(year, c(1990,2010,2014), dig.lab = 8) )))
+  ci3 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type = 'univariate',
+              ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
+              adjust = c('agegroup','year','sex'), 
+              print = list(FOT = fot, age.cat = cut(agegroup, c(0,75,120)), per = cut(year, c(1990,2010,2014), dig.lab = 8) ))
+  
+  expect_equal(attributes(ci1)$sir.meta$conf.type,'profile')
+  expect_equal(attributes(ci2)$sir.meta$conf.type,'wald')
+  expect_equal(attributes(ci3)$sir.meta$conf.type,'univariate')
+  
+  expect_message( sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type = 'wald',
+                       ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
+                       adjust = c('agegroup','year','sex'), 
+                       print = list(sex )))
+                  
+  expect_message( ci4 <-  sir( coh.data = c, coh.obs = c('from0to2'), coh.pyrs = 'pyrs', conf.type = 'profile',
+                               ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
+                               adjust = c('agegroup','year','sex'), 
+                               print = list(dg = cut(agegroup, c(0,5,10,20,40,75,120)) )) )
+  expect_equal(attributes(ci4)$sir.meta$conf.type,'wald')
+    
+  
+  expect_message( ci5 <- sir( coh.data = c, coh.obs = c('from0to2'), coh.pyrs = 'pyrs', conf.type = 'profile',
+                              ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
+                              adjust = c('agegroup','year','sex'), 
+                              print = list(sex=sex,FOT = fot, 
+                                           age.cat = cut(agegroup, c(0,50,75,120)), 
+                                           per = cut(year, c(1990,2010,2014), dig.lab = 8) )) )
+  # ear
+  ea <- sir( coh.data = c, coh.obs = c('from0to2'), coh.pyrs = 'pyrs', conf.type = 'wald', EAR = TRUE,
+             ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
+             adjust = c('agegroup','year','sex'), conf.level = 0.95) 
+  expect_equal(ea[,EAR], round((1490-1482.13)/39905.92*1000,3))  
+  
+  # Update
+  ud1 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type = 'profile',
+              ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
+              adjust = c('agegroup','year','sex'), 
+              print = list(fot))
+  ud2 <- update(ud1, print = list(fot,  age.cat = cut(agegroup, c(0,75,120))))
+  
+  ud3 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type = 'profile',
+              ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
+              adjust = c('agegroup','year','sex'), 
+              print = list(fot,  age.cat = cut(agegroup, c(0,75,120))))
+  expect_equal(ud2, ud3)
+})
+
 
 test_that("SIR works with multistate aggregated lexpand data", {
   ## don't skip on CRAN
   suppressMessages(
-    suppressWarnings(  
+    suppressWarnings(
       se <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs', 
                  subset = year %in% 1990:2009,
                  ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
@@ -83,7 +141,7 @@ test_that("SIR works with multistate aggregated lexpand data", {
                ref.data = dummy.ref, ref.obs = 'obs', ref.pyrs = 'pyrs', mstate = 'categ2',
                adjust = c('agegroup','sex','categ2'), print =c('categ2'))
   )
-  # please finish this
+  
   suppressMessages(
     s1 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', subset = year %in% 1990:2009,
                ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
@@ -94,8 +152,8 @@ test_that("SIR works with multistate aggregated lexpand data", {
                ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                adjust = c('agegroup','year','sex'), print =c('fot'))
   )
-  s12 <- rbind( cbind(cause=1L, s1[[3]]), 
-                cbind(cause=2L, s2[[3]]))
+  s12 <- rbind( cbind(cause=1L, data.table(s1)), 
+                cbind(cause=2L, data.table(s2)))
   
   # compare by hand calculated sir
   
@@ -103,12 +161,12 @@ test_that("SIR works with multistate aggregated lexpand data", {
   setDT(r)
   r[, exp := haz*pyrs]
   est <- r[, list(observed=sum(from0to1, na.rm=TRUE),expected=sum(exp, na.rm=TRUE)), by=.(fot)]
-  est <- round(est,2)
+  est <- round(est,3)
   
   expect_is(object = se, class = 'sir')
-  expect_equivalent(se[[3]], s12)
-  setDT(s1[[3]])
-  expect_equivalent(s1[[3]][,1:3, with=FALSE], est)
+  expect_equivalent(se, s12)
+  setDT(s1)
+  expect_equivalent(s1[,1:3, with=FALSE], est)
 })
 
 
@@ -117,6 +175,17 @@ test_that("SIR works with multistate aggregated lexpand data", {
 
 test_that('Util functions work', {
   expect_equal( poisson.ci(5,5)$rate, 1)
+  expect_equal(p.round(0.0000001), "< 0.001")
+})
+
+test_that("data.table subsettin works", {
+  suppressMessages(
+    ss <- sir( coh.data = c2, coh.obs = c('from0to2'), coh.pyrs = 'pyrs',
+               ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
+               adjust = c('agegroup','year','sex'), print =c('fot'))
+  )
+  a <- c(ss[,.(fot)])
+  expect_equal(a, list(fot = c(0,10)))
 })
 
 
@@ -179,10 +248,11 @@ test_that("print accepts a function and subset works", {
                 adjust = c('agegroup','year','sex'), print = list(year.int = findInterval(year,c(1989,2000,2010)), sex),
                 mstate = 'cause')
   )
-  setDT(pl1[[2]])
-  expect_equal( pl1[[2]][,year.int], 1:2)
+  setDT(pl1)
+  expect_equal( pl1[,year.int], 1:2)
   expect_is(object=pl2, 'sir')
 })
+
 
 
 test_that("sir_ratio", {

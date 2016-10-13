@@ -1,35 +1,77 @@
 
+
 #' @export
-print.sir <- function(x, ...) {
+print.sir <- function(x, subset = NULL, ...) {
   
-  cat("SIR Standardized by: ", x[['adjusted']] , fill=TRUE)
+  at <- attributes(x)$sir.meta
+  #ta <- attributes(x)$tables
   
-  cat('\n',"Total observed:", data.frame(x[[1]])[,'observed'], '\n',
-      "Total expected:", data.frame(x[[1]])[,'expected'], '\n',
-      #"Total SIR:", data.frame(x[[1]])[,'sir'], '\n',
-      "Total person-years:", data.frame(x[[1]])[,'pyrs'], '\n',
-      fill=TRUE)
+  PF <- parent.frame(1L)
+  subset <- evalLogicalSubset(x, substitute(subset), enclos = PF)
+  x <- x[subset, ]
+  setDT(x)
   
-  if ( is.null(x$model) ) {
-    cat("Univariate SIR/SMR:", '\n')
-    print( x$univariate[] )
+  t1 <- paste0("SIR (adjusted by ", paste(at$adjust, collapse = ', '),')',
+               ' with ', at$conf.level*100, '% ', 'confidence intervals (', at$conf.type,')')
+  
+  
+  # cat
+  t3 <- paste0(' Total sir: ', round(at$pooled.sir$sir,2),' (', 
+               round(at$pooled.sir$sir.lo,2),'-', round(at$pooled.sir$sir.hi, 2),')\n',
+               ' Total observed: ', at$pooled.sir$observed, '\n',
+               ' Total expected: ', round(at$pooled.sir$expected,2), '\n',
+               ' Total person-years: ', round(at$pooled.sir$pyrs))
+
+  rv <- intersect(names(x), c('sir','sir.lo','sir.hi','observed','expected','pyrs'))
+  if (length(rv)) {
+    x[, (rv) := lapply(.SD, round, digits = 2L),  .SDcols = rv]
+  }
+  
+  rv <- intersect(names(x), c('p_value'))
+  if (length(rv)) {
+    x[, (rv) := lapply(.SD, round, digits = 4),  .SDcols = rv]
+  }
+
+  
+  if(is.null(at$lrt.test)) {
+    d <- paste("Could not test", at$lrt.test.type)
   } else {
-    cat("Poisson modelled SIR:", '\n')
-    print( x$model[] )
+    if(at$lrt.test.type == 'homogeneity') {
+      d <- paste("Test for homogeneity: p", p.round( c(at$lrt.test)))
+    }
+    if(at$lrt.test.type == 'trend') {
+      d <- paste("Test for trend: p", p.round( c(at$lrt.test)))
+    }
+  }
+  #b <- round(c(ta$total$sir, ta$total$sir.lo, ta$total$sir.hi), 2)
+  # cat('\n',"Total observed", ta$total$observed, '\n',
+  #     "Total expected:", ta$total$expected, '\n',
+  #     "SIR:", paste0(b[1], ' (',b[2], '-',b[3],')'), '\n',
+  #     "Person-years:", ta$total$pyrs, '\n',
+  #     fill=TRUE)
+  
+  cat(t1, '\n')
+  if(x[,.N] > 1) {
+    cat(d, '\n')
   }
   cat(fill=TRUE)
-  if (is.null( x[['lrt.test']] )) {
-    cat("Couldn't test homogeneity.",'\n')
-  } 
-  else if(x$test.type == 'homogeneity') {
-    cat("Test for homogeneity p", p.round( c(x$lrt.test)), '\n' )
-  }
-  else if(x$test.type == 'trend') {
-    cat("Test for trend p", p.round( c(x$lrt.test)), '\n' )
-  }
+  cat(t3, '\n', fill=TRUE)  
   
+  print(data.table(x), ...)
   return(invisible())
 }
+
+#' @export 
+`[.sir` <- function(x, ...) {
+  y <- NextMethod()
+  if (is.data.frame(y)) {
+    setattr(y, "class", class(x))
+    setattr(y, "sir.meta", attr(x, "sir.meta"))
+    setattr(y, "tables", attr(x, "tables"))
+  }
+  y
+}
+
 
 #' @import grDevices
 #' @export
@@ -72,18 +114,16 @@ print.sirspline <- function(x, ...) {
 #' @author Matti Rantanen
 #' 
 #' @param x an object returned by function \code{sir}
-#' @param plot.type select 'model'(=default), 'univariate'
 #' @param conf.int default TRUE draws confidence intervals
 #' @param xlab overwrites default x-axis label
 #' @param ylab overwrites default y-axis label
 #' @param xlim x-axis minimum and maximum values
 #' @param main optional plot title
 #' @param abline logical; draws a gray line in SIR = 1
-#' @param lang language:  'fi'(default) or 'en'
 #' @param log logical; SIR is not in log scale by default
 #' @param eps error bar vertical bar height (works only in 'model' or 'univariate')
 #' @param left.margin adjust left marginal of the plot to fit long variablenames
-#' @param ... arguments passed on to plot()
+#' @param ... arguments passed on to plot(), segment and lines()
 #' 
 #' 
 #' @details Plot SIR estimates and confidence intervals 
@@ -115,99 +155,75 @@ print.sirspline <- function(x, ...) {
 #'#      main = 'SIR by gender', abline=TRUE)
 #' }
 #' @export
-plot.sir <- function(x, plot.type = 'model', 
-                     conf.int = TRUE, ylab, xlab, xlim, main, 
-                     eps=0.2, abline = TRUE, lang = 'fi', log = FALSE, left.margin, ...) {
+
+plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main, 
+                     eps=0.2, abline = TRUE, log = FALSE, left.margin, ...) {
   
-  if (plot.type %in% c('model','univariate')) {
-    if ( !is.null(x[[3]]) & plot.type == 'model' ) {
-      pick <- 3
-    }
-    else {
-      pick <- 2
-    }
-    a <- data.frame( x[[pick]] )
-    
-    # variable levels / y-axis
-    variable.columns <- which(names(a) == 'observed') - 1
-    if( variable.columns > 0) {
-      levels.org <- a[, 1:variable.columns]
-      if( variable.columns == 1 ) {
-        levels <- levels.org
-      }
-      if(variable.columns > 1) {
-        levels <- levels.org[,1]
-        for(i in 2:variable.columns){
-          levels <- paste(levels, levels.org[,i], sep = ':')
-        }  
-      }
-    }
-    else {
-      levels.org <- 1
-      levels <- 'Crude'
-      if(lang=='en') {
-        levels <- 'Total'
-      }
-    }
-    
-    # predefined parameters
-    if( missing(main) ){
-      main <- NA
-    }
-    if( missing(xlab) ){
-      xlab <- 'SIR'
-    }
-    if( missing(ylab) ){
-      ylab <- NA
-    }
-    if( missing(xlim) ) {
-      xlimit <- c(0, max( a[['X97.5..']][a[['X97.5..']]<Inf] ) )
-    } 
-    else {
-      xlimit <- xlim
-    }
-    
-    # par options
-    op <- par(no.readonly = TRUE)
-    
-    if(missing(left.margin)) {
-      new.margin <- par("mar")
-      new.margin[2] <- 4.1 + sqrt( max(nchar(as.character(levels))) )*2
-    } 
-    else {
-      new.margin[2] <- left.margin
-    }
-    par(mar = new.margin)
-    
-    # plot frame, estimates and CI (optional abline)
-    logarithm <- ''
-    if(log){
-      logarithm <- 'x'
-      if(xlimit[1]==0) xlimit[1] <- xlimit[1] + 0.01
-    }
-    y.axis.levels <- c(1:length(levels))
-    plot(c(xlimit), c(min(y.axis.levels)-0.5, max(y.axis.levels)+0.5), 
-         type='n', yaxt = 'n', xlab=xlab, ylab=ylab, log=logarithm, main = main, ...)
-    axis(side = 2, at = y.axis.levels, labels = levels, las=1)
-    
-    if(abline) {
-      abline(v=1, col = 'darkgray')
-    }
-    
-    points(a$sir, factor(y.axis.levels, labels=levels), ...) 
-    if(conf.int) {
-      segments(a[['X2.5..']], y.axis.levels , a[['X97.5..']], y.axis.levels, ...)
-      segments(a[['X2.5..']], y.axis.levels - eps, a[['X2.5..']], y.axis.levels +eps, ... )
-      segments(a[['X97.5..']], y.axis.levels - eps, a[['X97.5..']], y.axis.levels +eps, ... )    
-    }
-    
-    # reset margins
-    par(op)
-    
+  a <- data.table(x)
+  at <- attributes(x)$sir.meta
+  level_names <- at$print
+  
+  if(is.null(level_names)) {
+    level_names <- 'Crude'
   }
   else {
-    message('Select plot.type: "model" or "univarite"')
+    q <- paste0('paste(', paste(level_names, collapse=', '),', sep = ":")' )
+    q <- parse(text = q)
+    levels <- a[, eval(q)]
   }
+  
+  # predefined parameters
+  if( missing(main) ){
+    main <- NA
+  }
+  if( missing(xlab) ){
+    xlab <- 'SIR'
+  }
+  if( missing(ylab) ){
+    ylab <- NA
+  }
+  if( missing(xlim) ) {
+    xlimit <- c(min(a$sir.lo[a$sir.lo <Inf]), max(a$sir.hi[a$sir.hi <Inf]))
+  } 
+  else {
+    xlimit <- xlim
+  }
+  
+  # par options
+  old.margin <- par("mar")
+  new.margin <- old.margin
+  if(missing(left.margin)) {
+    new.margin[2] <- 4.1 + sqrt( max(nchar(as.character(level_names))) )*2
+  } 
+  else {
+    new.margin[2] <- left.margin
+  }
+  par(mar = new.margin)
+  
+  # plot frame, estimates and CI (optional abline)
+  logarithm <- ''
+  if(log){
+    logarithm <- 'x'
+    if(xlimit[1]==0) xlimit[1] <- xlimit[1] + 0.01
+  }
+  y.axis.levels <- 1:length(levels)
+  plot(c(xlimit), c(min(y.axis.levels)-0.5, max(y.axis.levels)+0.5), 
+       type='n', yaxt = 'n', xlab=xlab, ylab=ylab, log=logarithm, main = main, ...)
+  axis(side = 2, at = y.axis.levels, labels = levels, las=1)
+  
+  if(abline) {
+    abline(v=1, col = 'darkgray')
+  }
+  
+  points(a$sir, factor(y.axis.levels, labels=levels), ...) 
+  if(conf.int) {
+    segments(a$sir.lo, y.axis.levels , a$sir.hi, y.axis.levels, ...)
+    segments(a$sir.lo, y.axis.levels - eps, a$sir.lo, y.axis.levels +eps, ... )
+    segments(a$sir.hi, y.axis.levels - eps, a$sir.hi, y.axis.levels +eps, ... )
+  }
+  
+  # reset margins
+  par(mar = old.margin)
 }
 
 #' @title \code{plot} method for sirspline-object
