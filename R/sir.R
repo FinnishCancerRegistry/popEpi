@@ -631,6 +631,9 @@ sir_est <- function( table,
   pyrs <- NULL ## APPEASE R CMD CHECK
   setDT(table)
 
+  if(!is.numeric(conf.level) | conf.level > 1) {
+    stop('Confidence level must be a numeric value between 0-1')
+  }
   # function to SIR p-value
   chi.p <- function(o, e) {
     pchisq( ( (abs(o - e) - 0.5)^2)/e, df=1, lower.tail=FALSE)
@@ -649,30 +652,31 @@ sir_est <- function( table,
   
   # write model formula
   fa <- a <- NULL
+  sir.formula <- paste('observed ~ 1') 
   if(!is.null(print)){
-    fa <- rev(print)
+    fa <- rev(print) #  fa <- print
     
     # drop variables with only one value
     u <- c(t(table[, lapply(.SD, uniqueN), .SDcols = fa]))
-    l <- length(u[u==1])
-    if (l>0){
-      message('Variable "', paste(fa[which(u==1)], collapse = '","'),'" (has only one value) removed from model.')
+    if (length(u[u==1]) > 0){
+      message('Variable "', paste(fa[which(u==1)], collapse = '","'),'" (has only one level) removed from model.')
       fa <- fa[-which(u==1)]
     }
-    
-    # model formula
-    a <- paste0('as.factor(',paste( fa, collapse = '):as.factor('),')')
-    sir.formula <- paste('observed ~ 0 +', a)
-  } else {
-    sir.formula <- paste('observed ~ 1') 
+    if(length(fa)>0){
+      # model formula
+      a <- paste0('as.factor(',paste( fa, collapse = '):as.factor('),')')
+      sir.formula <- paste('observed ~ 0 +', a)
+    }
   }
-
   # fit model if possible -----------------------------------------------------
   
-  fit <- tryCatch(do.call("glm", list(formula = terms(as.formula(sir.formula)), 
+  fit <- tryCatch(do.call("glm", list(formula = terms(as.formula(sir.formula), keep.order = FALSE), 
                                       offset = log(table[,expected]), 
                                       data = table, family = poisson(log))), 
                   error=function(f) NULL )
+  
+  if(!is.null(fit)) eg <- expand.grid(fit$xlevels) # for further testing
+  
   
   # LRT test (homogeneity or trend) --------------------------------------------
   
@@ -734,8 +738,7 @@ sir_est <- function( table,
     ))
     if(!is.null(ci)) {
       ci <- as.data.table(ci)
-      if (is.null(print)) ci <- data.table(t(ci)) # transpose if only one row
-      #ci.info <- 'Confidence intervals calculated from profile-likelihood.'
+      if (is.null(print) | length(fa)==0) ci <- data.table(t(ci)) # transpose if only one row
     } else {
       conf.type <- 'wald'
       ci.info <- 'Could not solve profile-likelihood. Wald confidence intervals selected.'
@@ -756,7 +759,6 @@ sir_est <- function( table,
 
   # collect results -----------------------------------------------------
   
-  stopifnot(is.data.table(ci))
   setnames(ci, 1:2, c('sir.lo','sir.hi'))
   
   table[, ':=' ( sir = observed/expected,
@@ -782,6 +784,15 @@ sir_est <- function( table,
     warning('CIs might be incorrect')
   }
 
+  if(!is.null(fit) & length(fa)>0) {
+    # pseudo test if the modelled confidence intervals are merged correctly:
+    t1 <- copy(table)[,lapply(.SD, factor),.SDcols = fa]
+    if(any(t1 != data.table(eg))) {
+      message('CIs levels might not match. Contact the package maintainer and use univariate CIs.')
+      print(head(eg))
+      print(head(t1))
+    }
+  }
   
   # EAR -----------------------------------------------------------------
   if (EAR) {
@@ -1168,6 +1179,77 @@ data_list <- function( data, arg.list, env ) {
     return(data) 
   }
 }
+
+
+
+#' @export
+sir_lexpand <- function(x, print = NULL, obs = NULL, 
+                        conf.type = 'profile', test.type = 'homogeneity', 
+                        conf.level = 0.95, subset = NULL) {
+  
+  if(inherits(x, 'Lexis')) {
+    stop('Lexis object is not (yet) supported.')
+  }
+  if(!inherits(x, 'aggre')) {
+    stop('x is not in a supported format. Use lexpand with aggre.')
+  }
+  
+  att <- attributes(x)$aggre.meta
+  
+  # subsetting
+  subset <- substitute(subset)
+  subset <- evalLogicalSubset(data = x, substiset = subset)
+  x <- x[subset,]
+  
+  # evalPopArg
+  print <- substitute(print)
+  c.pri <- evalPopArg(data = x, arg = print)
+  print <- names(c.pri)
+  
+  if(!is.null(print)) {
+    p <- intersect(names(x), print)
+    if(length(p) > 0) x[ ,(print) := NULL]
+    x <- cbind(x, c.pri)
+  }
+  
+  all_names_present(x, c('from0to1','d.exp','pyrs'))
+  
+  # not aggregated
+  y <- x[, list(observed = sum(from0to1), expected = sum(d.exp), pyrs = sum(pyrs)), keyby = print] # keyby is must
+  
+  results <- sir_est( table = y,
+                      print = print,
+                      adjust = NULL,
+                      conf.type = conf.type, 
+                      test.type = test.type,
+                      conf.level = conf.level,
+                      EAR = FALSE)
+  
+  #setDT(data)
+  if (!return_DT()) {
+    for (i in 1:3) {
+      if (!is.null(results[[i]])) {
+        setDFpe(results[[i]])
+      }
+    }  
+  }
+  
+  data <- copy(results[[2]])
+  setattr(data, name = 'sir.meta', value = list(adjust = NULL,
+                                                print = print,
+                                                call = match.call(),
+                                                lrt.test= results$'lrt.test',
+                                                conf.type = results$'conf.type',
+                                                conf.level = conf.level,
+                                                lrt.test.type = results$'test.type',
+                                                pooled.sir = results[[1]]))
+  setattr(data, "class", c("sir", "data.table", "data.frame"))
+  return(data)
+}
+
+
+
+
 
 
 globalVariables(c('observed','expected','p_adj','p_value','temp','coh.observations','coh.personyears'))

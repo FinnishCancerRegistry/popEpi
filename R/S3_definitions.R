@@ -161,7 +161,8 @@ plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main,
   level_names <- at$print
   
   if(is.null(level_names)) {
-    level_names <- 'Crude'
+    levels <- 'Crude'
+    level_names <- levels
   }
   else {
     q <- paste0('paste(', paste(level_names, collapse=', '),', sep = ":")' )
@@ -181,6 +182,7 @@ plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main,
   }
   if( missing(xlim) ) {
     xlimit <- c(min(a$sir.lo[a$sir.lo <Inf]), max(a$sir.hi[a$sir.hi <Inf]))
+    xlimit <- xlimit + diff(xlimit)*c(-.3,.3)
   } 
   else {
     xlimit <- xlim
