@@ -374,7 +374,7 @@ sir <- function( coh.data,
 #' Otherwise the p-value is spline-specific.
 #' 
 #' 
-#' @return A list of date.frames and vectors.
+#' @return A list of data.frames and vectors.
 #' Three spline estimates are named as \code{spline.est.A/B/C} and the corresponding values
 #' in \code{spline.seq.A/B/C} for manual plotting
 #' 
@@ -580,8 +580,12 @@ sir_table <- function( coh.data,
                          by.vars = unique( sort(c(adjust, print, spline)) ), 
                          expr = list(coh.observations = sum(coh.observations), 
                                      coh.personyears  = sum(coh.personyears)))
+  #coh.data <- na2zero(coh.data)
   #coh.data <- na.omit(coh.data) 
-  coh.data <- na2zero(coh.data)
+
+  coh.data[is.na(coh.observations), coh.observations := 0]
+  coh.data[is.na(coh.personyears), coh.personyears := 0]
+  coh.data <- na.omit(coh.data)
   
   # rates
   if( !is.null(ref.rate) ){
@@ -789,8 +793,6 @@ sir_est <- function( table,
     t1 <- copy(table)[,lapply(.SD, factor),.SDcols = fa]
     if(any(t1 != data.table(eg))) {
       message('CIs levels might not match. Contact the package maintainer and use univariate CIs.')
-      print(head(eg))
-      print(head(t1))
     }
   }
   
@@ -1180,21 +1182,67 @@ data_list <- function( data, arg.list, env ) {
   }
 }
 
-
+#' @export
+coef.sir <- function(object, ...) {
+  return(object$sir)
+}
 
 #' @export
-sir_lexpand <- function(x, print = NULL, obs = NULL, 
-                        conf.type = 'profile', test.type = 'homogeneity', 
-                        conf.level = 0.95, subset = NULL) {
-  
-  if(inherits(x, 'Lexis')) {
-    stop('Lexis object is not (yet) supported.')
-  }
-  if(!inherits(x, 'aggre')) {
-    stop('x is not in a supported format. Use lexpand with aggre.')
-  }
-  
-  att <- attributes(x)$aggre.meta
+confint.sir <- function(object, parm, level, ...) {
+  return( cbind(object$sir.lo, object$sir.hi) )
+}
+
+
+#' @title Calculate SMR
+#' @author Matti Rantanen
+#' @description Calculate SMRs using a single data set which includes
+#' observed and expected cases and person-years.
+#' 
+#' @details These functions are for simple SMRs . tofrom a data 
+#' that has been merged with population death rates calculated ready in lexpand (\code{pop.haz}).
+#' 
+#' @param x Data in a aggre or Lexis object (see: \code{\link{lexpand}})
+#' @param obs Variable name of the observed cases in the data set
+#' @param exp Name or expression of expected cases
+#' @param pyrs Variable name for person-years
+#' @param print Variables or expression to stratify the results
+#' @param test.type Test for equal SIRs. Test available are 'homogeneity' and 'trend'
+#' @param conf.level Level of type-I error in confidence intervals, default 0.05 is 95\% CI
+#' @param conf.type select confidence interval type: (default=) `profile`, `wald`, `univariate`
+#' @param subset a logical vector for subsetting data
+#' 
+#' @seealso \code{\link{lexpand}}
+#' \href{../doc/sir.html}{A SIR calculation vignette}
+#' @family sir_related
+#' 
+#' @return A sir-object that is a \code{data.table} with meta information in the attributes.
+#' 
+#' @examples 
+#' 
+#' \dontrun{
+#' BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
+#' 
+#' ## Aggregated data
+#' x1 <- lexpand(sire, breaks = BL, status = status != 0, 
+#'               birth = bi_date, entry = dg_date, exit = ex_date,
+#'               pophaz=popmort,
+#'               aggre=list(sex, period = per, surv.int = fot))
+#' sir_ag(x1, print = 'period')
+#'
+#'
+#' # no aggreate or breaks
+#' x2 <- lexpand(sire, status = status != 0, 
+#'               birth = bi_date, entry = dg_date, exit = ex_date,
+#'               pophaz=popmort)
+#' sir_lex(x2, breaks = BL, print = 'per')
+#' }
+#' 
+#' @import data.table
+#' @import stats
+#' @export
+sir_exp <- function(x, obs, exp, pyrs, print = NULL, 
+                    conf.type = 'profile', test.type = 'homogeneity',
+                    conf.level = 0.95, subset = NULL) {
   
   # subsetting
   subset <- substitute(subset)
@@ -1202,20 +1250,31 @@ sir_lexpand <- function(x, print = NULL, obs = NULL,
   x <- x[subset,]
   
   # evalPopArg
+  obs <- substitute(obs)
+  c.obs <- evalPopArg(data = x, arg = obs)
+  obs <- names(c.obs)
+  
+  pyrs <- substitute(pyrs)
+  c.pyr <- evalPopArg(data = x, arg = pyrs)
+  pyrs <- names(c.pyr)
+  
   print <- substitute(print)
   c.pri <- evalPopArg(data = x, arg = print)
   print <- names(c.pri)
   
-  if(!is.null(print)) {
-    p <- intersect(names(x), print)
-    if(length(p) > 0) x[ ,(print) := NULL]
-    x <- cbind(x, c.pri)
-  }
+  exp <- substitute(exp)
+  c.exp <- evalPopArg(data = x, arg = exp)
+  exp <- names(c.exp)
   
-  all_names_present(x, c('from0to1','d.exp','pyrs'))
+  # collect data
+  x <- cbind(c.obs, c.pyr, c.exp)
+  if(any(is.na(x))) stop('Missing values in expected cases.')
+  if(!is.null(print))  x<- cbind(x, c.pri) 
   
-  # not aggregated
-  y <- x[, list(observed = sum(from0to1), expected = sum(d.exp), pyrs = sum(pyrs)), keyby = print] # keyby is must
+  express <- paste0('list(observed = sum(', obs, '), expected = sum(',exp,'), pyrs = sum(', pyrs,'))')
+  # aggregate
+  es <- parse(text = express)
+  y <- x[, eval(es), keyby = print] # keyby is must
   
   results <- sir_est( table = y,
                       print = print,
@@ -1227,7 +1286,7 @@ sir_lexpand <- function(x, print = NULL, obs = NULL,
   
   #setDT(data)
   if (!return_DT()) {
-    for (i in 1:3) {
+    for (i in 1:2) {
       if (!is.null(results[[i]])) {
         setDFpe(results[[i]])
       }
@@ -1249,8 +1308,89 @@ sir_lexpand <- function(x, print = NULL, obs = NULL,
 
 
 
+#' sir method for Lexis object
+#' @description \code{sir_lex} solves SMR from a \code{\link{Lexis}} object.
+#' 
+#' @param breaks not yet fully implemented
+#' @param ... pass arguments to \code{sir_exp}
+#' 
+#' @details sir_lex automatically export the transition fromXtoY using the first
+#' state in lex.Str as \code{0} and all other as \code{1}. No missing values
+#' is allowed in observed, pop.haz or pyrs.
+#' 
+#' @describeIn sir_exp
+#' 
+#' @export
+
+sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
+  if(!inherits(x, 'Lexis')) {
+    stop('x has to be a Lexis object (see lexpand or Lexis)')
+  }
+
+  # reformat date breaks
+  if(!is.null(breaks)) {
+    breaks <- lapply(breaks, function(x) {
+      if(is.character(x)) c(cal.yr(as.Date(x)))
+      else x
+    })
+  }
+  print <- substitute(print)
+  x <- copy(x)
+
+  first_value <- lapply(c("lex.Cst", "lex.Xst"), function(var) {
+    if (is.factor(x[[var]])) levels(x[[var]]) else sort(unique(x[[var]]))
+  })
+  first_value <- unique(unlist(first_value))[1]
+  
+  col <- x$lex.Xst
+  set(x, j = "lex.Cst", value = 0L)
+  set(x, j = "lex.Xst", value = ifelse(col == first_value, 0L, 1L))
+  
+  # maybe works:
+  if(!is.null(breaks)) {
+    x <- splitMulti(x, breaks = breaks)
+  }
+
+  a <- names(get_breaks(x))
+  x[, d.exp := pop.haz*lex.dur]
+  
+  if(any(is.na(x[,d.exp]))) stop('Missing values in either pop.haz or lex.dur.')
+  
+  x <- aggre(x, by = a, sum.values = 'd.exp')
+  if(!'from0to1' %in% names(x)) {
+    stop('Could not find any transitions between states in lexis')
+  }
+  x <- sir_exp(x = x, obs = 'from0to1', print = print, exp = 'd.exp', pyrs = 'pyrs', ...)
+  attr(x, 'sir.meta')$call <- match.call()
+  return(x)
+}
+
+
+#' sir method for an aggre object
+#' 
+#' @description \code{sir_ag} solves SMR from a \code{\link{aggre}} object that is 
+#' calculated using \code{\link{lexpand}}.
+#' 
+#' @describeIn sir_exp
+#' 
+#' @export
+
+sir_ag <- function(x, obs = 'from0to1', print = attr(x, 'aggre.meta')$by, exp = 'd.exp', pyrs = 'pyrs', ... ) {
+  
+  if(!inherits(x, 'aggre')) {
+    stop('x should be an aggre object (see lexpand or sir_lex)')
+  }
+  obs <- substitute(obs)
+  print <- substitute(print)
+  
+  x <- copy(x)
+  x <- sir_exp(x = x, obs = obs, print = print, exp = 'd.exp', pyrs = 'pyrs', ...) # original
+  attr(x, 'sir.meta')$call <- match.call()
+  x
+}
 
 
 
-globalVariables(c('observed','expected','p_adj','p_value','temp','coh.observations','coh.personyears'))
+globalVariables(c('observed','expected','p_adj','p_value','temp','coh.observations','coh.personyears',
+                  'd.exp', 'lower', 'pop.haz', 'sir.hi','sir.lo','upper'))
 

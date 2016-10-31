@@ -1339,7 +1339,17 @@ breaks_in_data <- function(br, ts, data) {
 
 
 
-
+set2 <- function(x, j, ...) {
+  cols_exst <- intersect(names(x), j)
+  old_order <- copy(names(x))
+  if (length(cols_exst)) {
+    set(x, j = cols_exst, value = NULL)
+  }
+  set(x = x, j = j, ...)
+  new_cols <- setdiff(names(x), old_order)
+  setcolorder(x, c(old_order, new_cols))
+  invisible(x)
+}
 
 
 

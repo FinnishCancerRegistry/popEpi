@@ -189,7 +189,7 @@ Other main_functions: \code{\link{rate}},
   \code{\link{survtab_ag}}, \code{\link{survtab}}
 
 Other sir_related: \code{\link{lines.sirspline}},
-  \code{\link{plot.sirspline}}, \code{\link{sir_ratio}},
-  \code{\link{sirspline}}
+  \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
+  \code{\link{sir_ratio}}, \code{\link{sirspline}}
 }
 
