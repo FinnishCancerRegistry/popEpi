@@ -32,7 +32,10 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
   
   su.cif <- survfit(Surv(time=fot, time2=fot+lex.dur, lex.Xst)~1, data=x)
   su.cif <- summary(su.cif, times = fb)
-  su.cif <- cbind(data.table(time = su.cif$time), data.table(su.cif$prev))
+  ## see issue #125
+  prev_var <- intersect(names(su.cif), c("prev", "pstate"))
+  stopifnot(length(prev_var) == 1L)
+  su.cif <- cbind(data.table(time = su.cif$time), data.table(su.cif[[prev_var]]))
   
   expect_equal(st[, surv.obs] ,  su.km[, V1], tolerance = 0.0032, scale=1)
   
