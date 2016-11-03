@@ -46,7 +46,7 @@ Ignored if \code{dependent.splines = FALSE}}
 \item{dependent.splines}{logical; if TRUE, all splines are fitted in same model.}
 }
 \value{
-A list of date.frames and vectors.
+A list of data.frames and vectors.
 Three spline estimates are named as \code{spline.est.A/B/C} and the corresponding values
 in \code{spline.seq.A/B/C} for manual plotting
 }
@@ -136,7 +136,7 @@ Other main_functions: \code{\link{rate}},
   \code{\link{survtab_ag}}, \code{\link{survtab}}
 
 Other sir_related: \code{\link{lines.sirspline}},
-  \code{\link{plot.sirspline}}, \code{\link{sir_ratio}},
-  \code{\link{sir}}
+  \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
+  \code{\link{sir_ratio}}, \code{\link{sir}}
 }
 

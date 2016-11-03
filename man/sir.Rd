@@ -6,13 +6,13 @@
 \usage{
 sir(coh.data, coh.obs, coh.pyrs, ref.data = NULL, ref.obs = NULL,
   ref.pyrs = NULL, ref.rate = NULL, subset = NULL, print = NULL,
-  adjust = NULL, mstate = NULL, test.type = "homogeneity", alpha = 0.95,
-  p.adj = NULL, EAR = FALSE, round.by = 2, round.by.pvalue = 4)
+  adjust = NULL, mstate = NULL, test.type = "homogeneity",
+  conf.type = "profile", conf.level = 0.95, EAR = FALSE)
 }
 \arguments{
 \item{coh.data}{aggregated cohort data, see e.g. \code{\link{lexpand}}}
 
-\item{coh.obs}{variable name for observed cases; quoted or unquoted}
+\item{coh.obs}{variable name for observed cases; quoted or unquoted. A vector when using \code{mstata}.}
 
 \item{coh.pyrs}{variable name for person years in cohort data; quoted or unquoted}
 
@@ -36,21 +36,15 @@ when \code{coh.obs} length is two or more. See details.}
 
 \item{test.type}{Test for equal SIRs. Test available are 'homogeneity' and 'trend'.}
 
-\item{alpha}{level of type-I error in confidence intervals, default 0.05 is 95\% CI.}
+\item{conf.type}{Confidence interval type: 'profile'(=default), 'wald' or 'univariate'.}
 
-\item{p.adj}{add multiple comparison p-value adjust type for univariate model, 
-check \code{help(p.adjust)} for options. Default NULL doesn't add adjusted p-values.}
+\item{conf.level}{Level of type-I error in confidence intervals, default 0.05 is 95\% CI.}
 
 \item{EAR}{logical; TRUE calculates Excess Absolute Risks for univarite SIRs.
 (see details)}
-
-\item{round.by}{set number of digits in results}
-
-\item{round.by.pvalue}{set number of digits in p-values}
 }
 \value{
-A list of 5: 3 \code{data.table} objects, vector of strata variables 
-and global p-value.
+A sir-object that is a \code{data.table} with meta information in the attributes.
 }
 \description{
 Poisson modelled standardised incidence or mortality ratios (SIRs / SMRs) i.e. 
@@ -60,16 +54,16 @@ corresponding person-years of the cohort.
 }
 \details{
 \code{sir} is a comprehensive tool for modelling SIRs/SMRs with flexible 
-options to adjust and print SIR's, test homogeneity and utilize 
+options to adjust and print SIRs, test homogeneity and utilize 
 multistate data. The cohort data and the variable names for observation 
 counts and person-years are required.
 The reference data is optional, since the cohort data 
-can be stratified (with \code{print}) and compared to total.
+can be stratified (\code{print}) and compared to total.
 
 
 \strong{Adjust and print}
 
-A SIR can be adjusted by the covariates found in both \code{coh.data} and \code{ref.data}.
+A SIR can be adjusted or standardised using the covariates found in both \code{coh.data} and \code{ref.data}.
 Variable to adjust are given in \code{adjust}.
 Variable names needs to match in both \code{coh.data} and \code{ref.data}. 
 Typical variables to adjust by are gender, age group and calendar period.
@@ -80,12 +74,13 @@ Variable levels are treaded as categorical.
 Variables can be assigned in both \code{print} and \code{adjust}. 
 This means the output it adjusted and printed by these variables.
 
-\code{print} can also be a list of expressions. This allows changing variable 
-names or transforming variables with functions such as \code{cut} and\code{round}.
+\code{print} can also be a list of expressions. This enables changing variable 
+names or transforming variables with functions such as \code{cut} and \code{round}.
 For example, the existing variables \code{agegroup} and \code{year} could be
 transformed to new levels using \code{cut} by
 
-\code{print = list( age.category = cut(agegroup, breaks = c(seq(0,85,5), 120)), year.cat = cut(year, seq(1950,2015,10)))}
+\code{print = list( age.category = cut(agegroup, breaks = c(0,50,75,100)), 
+year.cat = cut(year, seq(1950,2010,20)))}
 
 
 \strong{ref.rate or ref.obs & ref.pyrs}
@@ -107,7 +102,7 @@ and person-years are available.
 
 \strong{mstate}
 
-E.g. with \code{lexpand} it's possible to compute counts for several outcomes
+E.g. using \code{lexpand} it's possible to compute counts for several outcomes
 so that the population at risk is same for each 
 outcome such as a certain kind of cancer. 
 The transition counts are in wide data format, 
@@ -116,6 +111,7 @@ in a vector via the \code{coh.obs} argument.
 The name of the corresponding new column in \code{ref.data} is given in
 \code{mstate}. It's recommended to include the \code{mstate} variable in \code{adjust},
 so the corresponding information should also be available in \code{ref.data}.
+More examples in sir-vignette.
 
 This approach is analogous to where SIRs are calculated separately their 
 own function calls.
@@ -123,32 +119,37 @@ own function calls.
 
 \strong{Other parameters}
 
-The univariate multiple-comparison-adjusted p-value uses \code{\link[stats]{p.adjust}}.
-Univariate confidence intervals are calculated using exact 
-Poisson intervals (poisson.ci). The multivariate result
-is based on a poisson regression model with profile-likelihood confidence intervals 
-when possible. Otherwise Wald's normal-approximation is used.
+\code{univariate} confidence intervals are calculated using exact 
+Poisson intervals (poisson.ci). The options \code{profile} and \code{wald} are
+is based on a poisson regression model: profile-likelihood confidence intervals 
+or Wald's normal-approximation. P-value is Poisson model based \code{conf.type}
+or calculated using the method described by Breslow and Day. Function automatically
+switches to another conf.type if calculation is not possible with a message.
+Usually model fit fails if there is print stratum with zero expected values.
 
-The p-value is a test for the levels of \code{print}. The test can be either 
-\code{"homogeneity"}, a likelihood ratio test where the model with variable(s) in
-\code{print} (categorical factor) is compared to the constant model. 
-Option \code{"trend"} is the same likelihood ratio test except the 
-variable(s) in \code{print} are/is continous.
+
+The LRT p-value tests the levels of \code{print}. The test can be either 
+\code{"homogeneity"}, a likelihood ratio test where the model varibles defined in
+\code{print} (factor) is compared to the constant model.
+Option \code{"trend"} tests if the linear trend of the continous variable in
+\code{print} is significant (using model comparison).
 
 
 \strong{EAR: Excess Absolute Risk}
 
-A simple way to quantify the absolute difference between cohort risk and 
+Excess Absolute Risk is a simple way to quantify the absolute difference between cohort risk and 
 population risk.
-Make sure that the person-years are calculated accordingly before using EAR.
+Make sure that the person-years are calculated accordingly before using EAR. (when using mstate)
 
 Formula for EAR:
 \deqn{EAR = \frac{observed - expected}{person years} \times 1000.}{EAR = (obs - exp)/pyrs * 1000.}
 
 \strong{Data format}
 
-The data should be given in aggregated format, i.e the number of observations 
+The data should be given in tabulated format. That is the number of observations 
 and person-years are represented for each stratum.
+Note that also individual data is allowed as long as each observeations, 
+person-years, and print and adjust variables are presented in columns.
 The extra variables and levels are reduced automatically before estimating SIRs. 
 Example of data format:
 
@@ -188,7 +189,7 @@ Other main_functions: \code{\link{rate}},
   \code{\link{survtab_ag}}, \code{\link{survtab}}
 
 Other sir_related: \code{\link{lines.sirspline}},
-  \code{\link{plot.sirspline}}, \code{\link{sir_ratio}},
-  \code{\link{sirspline}}
+  \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
+  \code{\link{sir_ratio}}, \code{\link{sirspline}}
 }
 

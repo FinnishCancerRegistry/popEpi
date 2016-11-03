@@ -76,7 +76,7 @@ Statistics with Confidence: Confidence Intervals and Statistical Guidelines, Dou
 \href{../doc/sir.html}{A SIR calculation vignette}
 
 Other sir_related: \code{\link{lines.sirspline}},
-  \code{\link{plot.sirspline}}, \code{\link{sirspline}},
-  \code{\link{sir}}
+  \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
+  \code{\link{sirspline}}, \code{\link{sir}}
 }
 

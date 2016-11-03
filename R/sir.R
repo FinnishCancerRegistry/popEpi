@@ -6,16 +6,16 @@
 #' corresponding person-years of the cohort.
 #' 
 #' @details \code{sir} is a comprehensive tool for modelling SIRs/SMRs with flexible 
-#' options to adjust and print SIR's, test homogeneity and utilize 
+#' options to adjust and print SIRs, test homogeneity and utilize 
 #' multistate data. The cohort data and the variable names for observation 
 #' counts and person-years are required.
 #' The reference data is optional, since the cohort data 
-#' can be stratified (with \code{print}) and compared to total.
+#' can be stratified (\code{print}) and compared to total.
 #' 
 #' 
 #' \strong{Adjust and print}
 #' 
-#' A SIR can be adjusted by the covariates found in both \code{coh.data} and \code{ref.data}.
+#' A SIR can be adjusted or standardised using the covariates found in both \code{coh.data} and \code{ref.data}.
 #' Variable to adjust are given in \code{adjust}.
 #' Variable names needs to match in both \code{coh.data} and \code{ref.data}. 
 #' Typical variables to adjust by are gender, age group and calendar period.
@@ -26,12 +26,13 @@
 #' Variables can be assigned in both \code{print} and \code{adjust}. 
 #' This means the output it adjusted and printed by these variables.
 #' 
-#' \code{print} can also be a list of expressions. This allows changing variable 
-#' names or transforming variables with functions such as \code{cut} and\code{round}.
+#' \code{print} can also be a list of expressions. This enables changing variable 
+#' names or transforming variables with functions such as \code{cut} and \code{round}.
 #' For example, the existing variables \code{agegroup} and \code{year} could be
 #' transformed to new levels using \code{cut} by
 #' 
-#' \code{print = list( age.category = cut(agegroup, breaks = c(seq(0,85,5), 120)), year.cat = cut(year, seq(1950,2015,10)))}
+#' \code{print = list( age.category = cut(agegroup, breaks = c(0,50,75,100)), 
+#' year.cat = cut(year, seq(1950,2010,20)))}
 #' 
 #' 
 #' \strong{ref.rate or ref.obs & ref.pyrs}
@@ -53,7 +54,7 @@
 #' 
 #' \strong{mstate}
 #' 
-#' E.g. with \code{lexpand} it's possible to compute counts for several outcomes
+#' E.g. using \code{lexpand} it's possible to compute counts for several outcomes
 #' so that the population at risk is same for each 
 #' outcome such as a certain kind of cancer. 
 #' The transition counts are in wide data format, 
@@ -62,6 +63,7 @@
 #' The name of the corresponding new column in \code{ref.data} is given in
 #' \code{mstate}. It's recommended to include the \code{mstate} variable in \code{adjust},
 #' so the corresponding information should also be available in \code{ref.data}.
+#' More examples in sir-vignette.
 #' 
 #' This approach is analogous to where SIRs are calculated separately their 
 #' own function calls.
@@ -69,32 +71,37 @@
 #' 
 #' \strong{Other parameters}
 #' 
-#' The univariate multiple-comparison-adjusted p-value uses \code{\link[stats]{p.adjust}}.
-#' Univariate confidence intervals are calculated using exact 
-#' Poisson intervals (poisson.ci). The multivariate result
-#' is based on a poisson regression model with profile-likelihood confidence intervals 
-#' when possible. Otherwise Wald's normal-approximation is used.
-#'
-#' The p-value is a test for the levels of \code{print}. The test can be either 
-#' \code{"homogeneity"}, a likelihood ratio test where the model with variable(s) in
-#' \code{print} (categorical factor) is compared to the constant model. 
-#' Option \code{"trend"} is the same likelihood ratio test except the 
-#' variable(s) in \code{print} are/is continous.
+#' \code{univariate} confidence intervals are calculated using exact 
+#' Poisson intervals (poisson.ci). The options \code{profile} and \code{wald} are
+#' is based on a poisson regression model: profile-likelihood confidence intervals 
+#' or Wald's normal-approximation. P-value is Poisson model based \code{conf.type}
+#' or calculated using the method described by Breslow and Day. Function automatically
+#' switches to another conf.type if calculation is not possible with a message.
+#' Usually model fit fails if there is print stratum with zero expected values.
+#' 
+#' 
+#' The LRT p-value tests the levels of \code{print}. The test can be either 
+#' \code{"homogeneity"}, a likelihood ratio test where the model varibles defined in
+#' \code{print} (factor) is compared to the constant model.
+#' Option \code{"trend"} tests if the linear trend of the continous variable in
+#' \code{print} is significant (using model comparison).
 #' 
 #' 
 #' \strong{EAR: Excess Absolute Risk}
 #' 
-#' A simple way to quantify the absolute difference between cohort risk and 
+#' Excess Absolute Risk is a simple way to quantify the absolute difference between cohort risk and 
 #' population risk.
-#' Make sure that the person-years are calculated accordingly before using EAR.
+#' Make sure that the person-years are calculated accordingly before using EAR. (when using mstate)
 #' 
 #' Formula for EAR:
 #' \deqn{EAR = \frac{observed - expected}{person years} \times 1000.}{EAR = (obs - exp)/pyrs * 1000.}
 #' 
 #' \strong{Data format}
 #' 
-#' The data should be given in aggregated format, i.e the number of observations 
+#' The data should be given in tabulated format. That is the number of observations 
 #' and person-years are represented for each stratum.
+#' Note that also individual data is allowed as long as each observeations, 
+#' person-years, and print and adjust variables are presented in columns.
 #' The extra variables and levels are reduced automatically before estimating SIRs. 
 #' Example of data format:
 #' 
@@ -109,7 +116,7 @@
 #' 
 #' @param coh.data aggregated cohort data, see e.g. \code{\link{lexpand}}
 #' @param coh.pyrs variable name for person years in cohort data; quoted or unquoted
-#' @param coh.obs variable name for observed cases; quoted or unquoted
+#' @param coh.obs variable name for observed cases; quoted or unquoted. A vector when using \code{mstata}.
 #' @param ref.data population data. Can be left NULL if \code{coh.data} is stratified in \code{print}.
 #' @param ref.rate population rate variable (cases/person-years). Overwrites arguments
 #' \code{ref.pyrs} and \code{ref.obs}; quoted or unquoted
@@ -121,13 +128,10 @@
 #' @param mstate set column names for cause specific observations; quoted or unquoted. Relevant only
 #' when \code{coh.obs} length is two or more. See details.
 #' @param test.type Test for equal SIRs. Test available are 'homogeneity' and 'trend'.
+#' @param conf.type Confidence interval type: 'profile'(=default), 'wald' or 'univariate'.
+#' @param conf.level Level of type-I error in confidence intervals, default 0.05 is 95\% CI.
 #' @param EAR logical; TRUE calculates Excess Absolute Risks for univarite SIRs.
 #' (see details)
-#' @param alpha level of type-I error in confidence intervals, default 0.05 is 95\% CI.
-#' @param p.adj add multiple comparison p-value adjust type for univariate model, 
-#' check \code{help(p.adjust)} for options. Default NULL doesn't add adjusted p-values.
-#' @param round.by set number of digits in results
-#' @param round.by.pvalue set number of digits in p-values
 
 #' 
 #' @examples 
@@ -149,8 +153,7 @@
 #' @family sir_related
 #' @family main_functions
 #' 
-#' @return A list of 5: 3 \code{data.table} objects, vector of strata variables 
-#' and global p-value.
+#' @return A sir-object that is a \code{data.table} with meta information in the attributes.
 #' 
 #' @export
 #' 
@@ -171,11 +174,9 @@ sir <- function( coh.data,
                  adjust = NULL,
                  mstate = NULL,
                  test.type = 'homogeneity',
-                 alpha = 0.95,
-                 p.adj = NULL,
-                 EAR = FALSE,
-                 round.by = 2,
-                 round.by.pvalue = 4){
+                 conf.type = 'profile',
+                 conf.level = 0.95,
+                 EAR = FALSE){
 
   coh.data <- data.table(coh.data)
   
@@ -233,7 +234,7 @@ sir <- function( coh.data,
 
 
   # print(coh.data)
-  
+
   st <- sir_table( coh.data = coh.data, 
                    coh.obs = coh.obs,
                    coh.pyrs = coh.pyrs,
@@ -244,20 +245,19 @@ sir <- function( coh.data,
                    print = print,
                    adjust = adjust,
                    mstate = mstate)
-  
- 
+
   results <- sir_est( table = st,
                       print = print,
-                      adjust = adjust,                 
+                      adjust = adjust,
+                      conf.type = conf.type, 
                       test.type = test.type,
-                      alpha = alpha,
-                      p.adj = p.adj,
-                      EAR = EAR,
-                      round.by = round.by,
-                      round.by.pvalue = round.by.pvalue)
+                      conf.level = conf.level,
+                      EAR = EAR)
   
-  # Output as data.frame if wanted  
+  ## final touch ---------------------------------------------------------------
+  
 
+  #setDT(data)
   if (!return_DT()) {
     for (i in 1:3) {
       if (!is.null(results[[i]])) {
@@ -266,8 +266,17 @@ sir <- function( coh.data,
     }  
   }
   
-  setclass(results, c('sir', 'pe', class(results)))
-  return(results)
+  data <- copy(results[[2]])
+  setattr(data, name = 'sir.meta', value = list(adjust = adjust,
+                                                print = print,
+                                                call = match.call(),
+                                                lrt.test= results$'lrt.test',
+                                                conf.type = results$'conf.type',
+                                                conf.level = conf.level,
+                                                lrt.test.type = results$'test.type',
+                                                pooled.sir = results[[1]]))
+  setattr(data, "class", c("sir", "data.table", "data.frame"))
+  return(data)
 }
 
 
@@ -365,7 +374,7 @@ sir <- function( coh.data,
 #' Otherwise the p-value is spline-specific.
 #' 
 #' 
-#' @return A list of date.frames and vectors.
+#' @return A list of data.frames and vectors.
 #' Three spline estimates are named as \code{spline.est.A/B/C} and the corresponding values
 #' in \code{spline.seq.A/B/C} for manual plotting
 #' 
@@ -571,7 +580,13 @@ sir_table <- function( coh.data,
                          by.vars = unique( sort(c(adjust, print, spline)) ), 
                          expr = list(coh.observations = sum(coh.observations), 
                                      coh.personyears  = sum(coh.personyears)))
+  #coh.data <- na2zero(coh.data)
+  #coh.data <- na.omit(coh.data) 
+
+  coh.data[is.na(coh.observations), coh.observations := 0]
+  coh.data[is.na(coh.personyears), coh.personyears := 0]
   coh.data <- na.omit(coh.data)
+  
   # rates
   if( !is.null(ref.rate) ){
     setnames(ref.data, ref.rate, 'ref.rate')
@@ -602,7 +617,6 @@ sir_table <- function( coh.data,
                                   expected = sum(expected),
                                   pyrs = sum(coh.personyears))]
   }
-  
   return(sir.table)
 }
 
@@ -614,211 +628,196 @@ sir_table <- function( coh.data,
 sir_est <- function( table,
                      print = NULL,
                      adjust = NULL,
-                     test.type = 'homogeneity',
-                     alpha = 0.95,
-                     p.adj = NULL,
                      EAR = FALSE,
-                     round.by = 2,
-                     round.by.pvalue = 4) {
+                     test.type = 'homogeneity',
+                     conf.level = 0.95,
+                     conf.type = 'profile') {
   pyrs <- NULL ## APPEASE R CMD CHECK
-  
-  # functions -----------------------------------------------------------
-  
+  setDT(table)
+
+  if(!is.numeric(conf.level) | conf.level > 1) {
+    stop('Confidence level must be a numeric value between 0-1')
+  }
   # function to SIR p-value
   chi.p <- function(o, e) {
     pchisq( ( (abs(o - e) - 0.5)^2)/e, df=1, lower.tail=FALSE)
   }
-  
-  # Univariate and Total SIR ----------------------------------------------
-  sir.table <- data.table(table)  
-  sir.table[ ,':='(sir = observed / expected,
-                   lower_ci = poisson.ci(observed, expected, conf.level=alpha)[,4],
-                   upper_ci = poisson.ci(observed, expected, conf.level=alpha)[,5],
-                   p_value  = chi.p(observed, expected)) ]
-  # adjusted p-value
-  if( !is.null(p.adj) ) {
-    sir.table[ ,p_adj := p.adjust(p_value, method = p.adj)]
-  }
-  
+
   # total sir
-  combined <- data.table(table)
-  combined <- combined[,list(observed = sum(observed), 
+  combined <- data.table(table)[,list(observed = sum(observed), 
                              expected = sum(expected),
                              pyrs = sum(pyrs))]
   combined[ ,':='(sir = observed/expected,
-                  lower_ci = poisson.ci(observed, expected, conf.level=alpha)[,4],
-                  upper_ci = poisson.ci(observed, expected, conf.level=alpha)[,5],
+                  sir.lo = poisson.ci(observed, expected, conf.level=conf.level)[,4],
+                  sir.hi = poisson.ci(observed, expected, conf.level=conf.level)[,5],
                   p_value  = chi.p(observed, expected))]
-  
-  # set proper column names to CI
-  lower_name <- paste( (1 - alpha)/2*100, '%')
-  upper_name <- paste( (1 - (1 - alpha)/2)*100, '%')
-  setnames(sir.table, c('lower_ci','upper_ci'), c(lower_name, upper_name))
-  setnames(combined, c('lower_ci','upper_ci'), c(lower_name, upper_name))
-  
   
   # Poisson regression ------------------------------------------------------
   
-  # write model
+  # write model formula
   fa <- a <- NULL
-  
-  #print <- c('fot','year')
-  sir.table
+  sir.formula <- paste('observed ~ 1') 
   if(!is.null(print)){
-    fa <- rev(print)
-  }
+    fa <- rev(print) #  fa <- print
     
-  # model formula
-  if (!is.null(fa)){
-    a <- paste0('as.factor(',paste( fa, collapse = '):as.factor('),')')
-    sir.formula <- paste('observed ~ 0 +', a)
+    # drop variables with only one value
+    u <- c(t(table[, lapply(.SD, uniqueN), .SDcols = fa]))
+    if (length(u[u==1]) > 0){
+      message('Variable "', paste(fa[which(u==1)], collapse = '","'),'" (has only one level) removed from model.')
+      fa <- fa[-which(u==1)]
+    }
+    if(length(fa)>0){
+      # model formula
+      a <- paste0('as.factor(',paste( fa, collapse = '):as.factor('),')')
+      sir.formula <- paste('observed ~ 0 +', a)
+    }
   }
-  else {
-    sir.formula <- paste('observed ~ 1') 
-  }
-
   # fit model if possible -----------------------------------------------------
-  sir.multi <- data.table(table)
-  multi <- NULL
-  fit <- tryCatch(do.call("glm", list(formula = terms(as.formula(sir.formula),
-                                                      keep.order = FALSE), 
-                                      offset = log(sir.table[,expected]), 
-                                      data = sir.table, family=poisson(log))), 
+  
+  fit <- tryCatch(do.call("glm", list(formula = terms(as.formula(sir.formula), keep.order = FALSE), 
+                                      offset = log(table[,expected]), 
+                                      data = table, family = poisson(log))), 
                   error=function(f) NULL )
-  # LRT test (homogeneity) ----------------------------------------------------
+  
+  if(!is.null(fit)) eg <- expand.grid(fit$xlevels) # for further testing
+  
+  
+  # LRT test (homogeneity or trend) --------------------------------------------
+  
+  test.type <- match.arg(test.type, c('homogeneity','trend'))
   
   lrt_sig <- NULL  
   if( sir.formula != 'observed ~ 1' & !is.null(fit) ) {
+    if (test.type == 'homogeneity') covariates <- a
+    if (test.type == 'trend') covariates <- paste(print, collapse=' + ')
+     
+    fit_full <- tryCatch(
+      do.call("glm", list(formula = terms(as.formula( paste0('observed ~ 1 + ', a) )), 
+                          offset = log(table[,expected]), 
+                          data = table, family=poisson(log))), 
+      error=function(f) NULL )
     
-    # fit null-model
-    
-    # homogeneity test
-    if( test.type == 'homogeneity' ){    
-      fit_full <- tryCatch(
-        do.call("glm", list(formula = terms(as.formula( paste0('observed ~ 1 + ', a) )), 
-                            offset = log(sir.table[,expected]), 
-                            data = sir.table, family=poisson(log))), 
-        error=function(f) NULL )
-    }
-    
-    # trend test
-    else if( test.type == 'trend' ){
-      fit_full <- tryCatch(
-        do.call("glm", list(formula = terms(as.formula( paste0('observed ~ 1 + ', paste(print, collapse=' + ') ) )), 
-                            offset = log(sir.table[,expected]), 
-                            data = sir.table, family=poisson(log))), 
-        error=function(f) NULL )
-    } 
-    else {
-      stop('Select test.type: "homogeneity" or "trend".')
-    }        
     fit_null <- tryCatch(
       do.call("glm", list(formula = terms(as.formula('observed ~ 1') ), 
-                          offset = log(sir.table[,expected]), 
-                          data = sir.table, family=poisson(log))), 
+                          offset = log(table[,expected]), 
+                          data = table, family=poisson(log))), 
       error=function(f) NULL )
-    if(!is.null(fit_full) ) {
+    
+    if (!is.null(fit_full)){
       lrt <- anova(fit_full, fit_null, test = 'Chisq')
       lrt_sig <- lrt[['Pr(>Chi)']][2]    
     }
   }
   
-  # confidence intervals
+  # confidence intervals ----------------------------------------------------
   
-  if (!is.null(fit)) {
-    ci <- NULL
-    ci <- suppressMessages( suppressWarnings( 
-      tryCatch(exp(confint(fit, level=alpha)), error=function(e) NULL )
-    ) )
-    ci.info <- 'Confidence intervals calculated from profile-likelihood.'
-    wald <- FALSE
-    if(is.null(ci)) {
-      ci <- cbind(lower_name=as.vector(exp(fit[[1]] - sqrt(diag(vcov(fit)))*qnorm((1-alpha)/2, mean = 0, sd = 1, lower.tail = FALSE))), 
-                  upper_name=as.vector(exp(fit[[1]] + sqrt(diag(vcov(fit)))*qnorm((1-alpha)/2, mean = 0, sd = 1, lower.tail = FALSE))))
-      ci.info <- 'Confidence intervals are normal-approximated (Wald)'
-      wald <- TRUE
+  conf.type <- match.arg(conf.type, c('wald','profile','univariate'))
+  ci.info <- NULL
+  ci <- NULL
+  
+  if (is.null(fit) & conf.type %in% c('wald','profile')) {
+    conf.type <- 'univariate'
+    ci.info <- 'Model fitting failed. Univariate confidence intervals selected.'
+    if(any(table$expected == 0)) {
+      ci.info <- paste(ci.info, '(zero values in expected)')
     }
-    message(ci.info)
-    
-    # collect results
-    
-    if ( !is.null(print) ) {
-      multi <- tryCatch( data.table(sir.multi, 
-                                    sir = na.omit(exp(as.numeric(coef(fit)))),
-                                    data.table(na.omit(ci)),
-                                    p_value = as.vector(summary(fit)$coef[, "Pr(>|z|)"]) ),
-                         error = function(e) NULL )
-    } 
-    else {
-      multi <- tryCatch( data.table(sir.multi, 
-                                    sir = na.omit(exp(as.numeric(coef(fit)))),
-                                    lower_name = ci[1], upper_name = ci[2], 
-                                    p_value = as.vector(summary(fit)$coef[, "Pr(>|z|)"]) ),
-                         error = function(e) NULL )
-      setnames(multi, c('lower_name','upper_name'), c(lower_name, upper_name))
-      wald <- FALSE 
-    }
-    if ( wald ){
-      setnames(multi, c('lower_name','upper_name'), c(lower_name, upper_name))
-    }
-  } 
-  # model fit failed
-  else {
-    warning('Could not fit glm')
-    Model <- NULL
   }
   
+  if (conf.type == 'profile') {
+    
+    confint_glm <- function(object, parm, level = 0.95, trace = FALSE, ...) {
+      pnames <- names(coef(object))
+      if (missing(parm)) {
+        parm <- seq_along(pnames)
+      }
+      else if (is.character(parm)) {
+        parm <- match(parm, pnames, nomatch = 0L)
+      }
+      object <- profile(object, which = parm, alpha = (1 - level)/4,  trace = trace)
+      confint(object, parm = parm, level = level, trace = trace, ...)
+    }
+
+    ci <- suppressMessages( suppressWarnings( 
+      tryCatch(exp(confint_glm(fit, level=conf.level)), error=function(e) NULL )
+    ))
+    if(!is.null(ci)) {
+      ci <- as.data.table(ci)
+      if (is.null(print) | length(fa)==0) ci <- data.table(t(ci)) # transpose if only one row
+    } else {
+      conf.type <- 'wald'
+      ci.info <- 'Could not solve profile-likelihood. Wald confidence intervals selected.'
+    }
+  }
+  
+  if (conf.type == 'wald') { 
+    ci <- data.table( exp(confint.default(fit)) )
+  }
+  
+  if(conf.type == 'univariate') {
+    ci <- data.table(poisson.ci(table$observed, table$expected, conf.level = conf.level))[,.(lower, upper)]
+    pv <- chi.p(table$observed, table$expected)
+  } else {
+    pv <- as.vector(summary(fit)$coef[, "Pr(>|z|)"]) 
+  }
+  if(!is.null(ci.info)) message(ci.info)
+
+  # collect results -----------------------------------------------------
+  
+  setnames(ci, 1:2, c('sir.lo','sir.hi'))
+  
+  table[, ':=' ( sir = observed/expected,
+              sir.lo = ci[, sir.lo],
+              sir.hi = ci[, sir.hi],
+              p_value = round(pv,5))]
+  
+
   # Round results -----------------------------------------------------------
   
-  round2 <- function(x, by=round.by){
-    round(x, by)
+  cols1 <- c('sir','sir.lo','sir.hi','expected','pyrs')
+  
+  table[,(cols1) := lapply(.SD, round, digits=3), .SDcols=cols1]
+  combined[,(cols1) := lapply(.SD, round, digits=3), .SDcols=cols1]
+
+  
+  # tests -----------------------------------
+  
+  if (table[!is.na(sir) & (sir < sir.lo | sir > sir.hi), .N] > 0) {
+    warning('There is something wrong with confidence intervals')
   }
-  round3 <- function(x, by=round.by.pvalue){
-    round(x, by)
+  if (table[!is.na(sir.lo) & !is.na(sir.hi)][sir.lo > sir.hi, .N] > 0) {
+    warning('CIs might be incorrect')
   }
-  round_cols <- function(data){
-    if(!is.null(data)) {
-      cols <- names(data)
-      # drop p-values
-      adjust.cols <- which(cols == 'observed'):length(cols)
-      cols <- cols[adjust.cols]
-      cols1 <- cols[ which(substr(cols, 1, 2) != 'p_')]
-      cols2 <- cols[ which(substr(cols, 1, 2) == 'p_')]
-      data[,(cols1) := lapply(.SD, round2), .SDcols=cols1]
-      data[,(cols2) := lapply(.SD, round3), .SDcols=cols2]
+
+  if(!is.null(fit) & length(fa)>0) {
+    # pseudo test if the modelled confidence intervals are merged correctly:
+    t1 <- copy(table)[,lapply(.SD, factor),.SDcols = fa]
+    if(any(t1 != data.table(eg))) {
+      message('CIs levels might not match. Contact the package maintainer and use univariate CIs.')
     }
   }
   
-  multi <- round_cols(multi)
-  sir.table <- round_cols(sir.table)
-  combined <- round_cols(combined)
-  
-  # check that univar and model SIR match -----------------------------------
-  
-  if(!is.null(multi)) {
-    if( !identical( sir.table[,floor(sir)],  multi[,floor(sir)]) ) {
-      warning("SIR's in model and univariate output doesn't match")
-    }
-  }
-  
-  # EAR
+  # EAR -----------------------------------------------------------------
   if (EAR) {
-    sir.table[,EAR := round((observed - expected)/pyrs * 1000, 2)]
-    if(!is.null(multi)) {
-      multi[,EAR := round((observed - expected)/pyrs * 1000, 2)]
-    }
+    table[,EAR := round((observed - expected)/pyrs * 1000, 3)]
   }
   
   
-  # Print results -----------------------------------------------------------
   results <- list(total = combined, 
-                  univariate = sir.table, 
-                  model = multi,
+                  table = table, 
                   adjusted = adjust,
                   lrt.test = lrt_sig,
-                  test.type = test.type)
+                  test.type = test.type,
+                  conf.type = conf.type,
+                  ci.info = ci.info)
   return(results)
 }
+
+
+#' @export
+getCall.sir <- function (x, ...) {
+  attributes(x)$sir.meta$call
+}
+
 
 # Input: sir.table
 # Output: estimates and sequences for plotting splines
@@ -1183,6 +1182,215 @@ data_list <- function( data, arg.list, env ) {
   }
 }
 
+#' @export
+coef.sir <- function(object, ...) {
+  return(object$sir)
+}
 
-globalVariables(c('observed','expected','p_adj','p_value','temp','coh.observations','coh.personyears'))
+#' @export
+confint.sir <- function(object, parm, level, ...) {
+  return( cbind(object$sir.lo, object$sir.hi) )
+}
+
+
+#' @title Calculate SMR
+#' @author Matti Rantanen
+#' @description Calculate SMRs using a single data set which includes
+#' observed and expected cases and person-years.
+#' 
+#' @details These functions are for simple SMRs . tofrom a data 
+#' that has been merged with population death rates calculated ready in lexpand (\code{pop.haz}).
+#' 
+#' @param x Data in a aggre or Lexis object (see: \code{\link{lexpand}})
+#' @param obs Variable name of the observed cases in the data set
+#' @param exp Name or expression of expected cases
+#' @param pyrs Variable name for person-years
+#' @param print Variables or expression to stratify the results
+#' @param test.type Test for equal SIRs. Test available are 'homogeneity' and 'trend'
+#' @param conf.level Level of type-I error in confidence intervals, default 0.05 is 95\% CI
+#' @param conf.type select confidence interval type: (default=) `profile`, `wald`, `univariate`
+#' @param subset a logical vector for subsetting data
+#' 
+#' @seealso \code{\link{lexpand}}
+#' \href{../doc/sir.html}{A SIR calculation vignette}
+#' @family sir_related
+#' 
+#' @return A sir-object that is a \code{data.table} with meta information in the attributes.
+#' 
+#' @examples 
+#' 
+#' \dontrun{
+#' BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
+#' 
+#' ## Aggregated data
+#' x1 <- lexpand(sire, breaks = BL, status = status != 0, 
+#'               birth = bi_date, entry = dg_date, exit = ex_date,
+#'               pophaz=popmort,
+#'               aggre=list(sex, period = per, surv.int = fot))
+#' sir_ag(x1, print = 'period')
+#'
+#'
+#' # no aggreate or breaks
+#' x2 <- lexpand(sire, status = status != 0, 
+#'               birth = bi_date, entry = dg_date, exit = ex_date,
+#'               pophaz=popmort)
+#' sir_lex(x2, breaks = BL, print = 'per')
+#' }
+#' 
+#' @import data.table
+#' @import stats
+#' @export
+sir_exp <- function(x, obs, exp, pyrs, print = NULL, 
+                    conf.type = 'profile', test.type = 'homogeneity',
+                    conf.level = 0.95, subset = NULL) {
+  
+  # subsetting
+  subset <- substitute(subset)
+  subset <- evalLogicalSubset(data = x, substiset = subset)
+  x <- x[subset,]
+  
+  # evalPopArg
+  obs <- substitute(obs)
+  c.obs <- evalPopArg(data = x, arg = obs)
+  obs <- names(c.obs)
+  
+  pyrs <- substitute(pyrs)
+  c.pyr <- evalPopArg(data = x, arg = pyrs)
+  pyrs <- names(c.pyr)
+  
+  print <- substitute(print)
+  c.pri <- evalPopArg(data = x, arg = print)
+  print <- names(c.pri)
+  
+  exp <- substitute(exp)
+  c.exp <- evalPopArg(data = x, arg = exp)
+  exp <- names(c.exp)
+  
+  # collect data
+  x <- cbind(c.obs, c.pyr, c.exp)
+  if(any(is.na(x))) stop('Missing values in expected cases.')
+  if(!is.null(print))  x<- cbind(x, c.pri) 
+  
+  express <- paste0('list(observed = sum(', obs, '), expected = sum(',exp,'), pyrs = sum(', pyrs,'))')
+  # aggregate
+  es <- parse(text = express)
+  y <- x[, eval(es), keyby = print] # keyby is must
+  
+  results <- sir_est( table = y,
+                      print = print,
+                      adjust = NULL,
+                      conf.type = conf.type, 
+                      test.type = test.type,
+                      conf.level = conf.level,
+                      EAR = FALSE)
+  
+  #setDT(data)
+  if (!return_DT()) {
+    for (i in 1:2) {
+      if (!is.null(results[[i]])) {
+        setDFpe(results[[i]])
+      }
+    }  
+  }
+  
+  data <- copy(results[[2]])
+  setattr(data, name = 'sir.meta', value = list(adjust = NULL,
+                                                print = print,
+                                                call = match.call(),
+                                                lrt.test= results$'lrt.test',
+                                                conf.type = results$'conf.type',
+                                                conf.level = conf.level,
+                                                lrt.test.type = results$'test.type',
+                                                pooled.sir = results[[1]]))
+  setattr(data, "class", c("sir", "data.table", "data.frame"))
+  return(data)
+}
+
+
+
+#' sir method for Lexis object
+#' @description \code{sir_lex} solves SMR from a \code{\link{Lexis}} object.
+#' 
+#' @param breaks not yet fully implemented
+#' @param ... pass arguments to \code{sir_exp}
+#' 
+#' @details sir_lex automatically export the transition fromXtoY using the first
+#' state in lex.Str as \code{0} and all other as \code{1}. No missing values
+#' is allowed in observed, pop.haz or pyrs.
+#' 
+#' @describeIn sir_exp
+#' 
+#' @export
+
+sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
+  if(!inherits(x, 'Lexis')) {
+    stop('x has to be a Lexis object (see lexpand or Lexis)')
+  }
+
+  # reformat date breaks
+  if(!is.null(breaks)) {
+    breaks <- lapply(breaks, function(x) {
+      if(is.character(x)) c(cal.yr(as.Date(x)))
+      else x
+    })
+  }
+  print <- substitute(print)
+  x <- copy(x)
+
+  first_value <- lapply(c("lex.Cst", "lex.Xst"), function(var) {
+    if (is.factor(x[[var]])) levels(x[[var]]) else sort(unique(x[[var]]))
+  })
+  first_value <- unique(unlist(first_value))[1]
+  
+  col <- x$lex.Xst
+  set(x, j = "lex.Cst", value = 0L)
+  set(x, j = "lex.Xst", value = ifelse(col == first_value, 0L, 1L))
+  
+  # maybe works:
+  if(!is.null(breaks)) {
+    x <- splitMulti(x, breaks = breaks)
+  }
+
+  a <- names(get_breaks(x))
+  x[, d.exp := pop.haz*lex.dur]
+  
+  if(any(is.na(x[,d.exp]))) stop('Missing values in either pop.haz or lex.dur.')
+  
+  x <- aggre(x, by = a, sum.values = 'd.exp')
+  if(!'from0to1' %in% names(x)) {
+    stop('Could not find any transitions between states in lexis')
+  }
+  x <- sir_exp(x = x, obs = 'from0to1', print = print, exp = 'd.exp', pyrs = 'pyrs', ...)
+  attr(x, 'sir.meta')$call <- match.call()
+  return(x)
+}
+
+
+#' sir method for an aggre object
+#' 
+#' @description \code{sir_ag} solves SMR from a \code{\link{aggre}} object that is 
+#' calculated using \code{\link{lexpand}}.
+#' 
+#' @describeIn sir_exp
+#' 
+#' @export
+
+sir_ag <- function(x, obs = 'from0to1', print = attr(x, 'aggre.meta')$by, exp = 'd.exp', pyrs = 'pyrs', ... ) {
+  
+  if(!inherits(x, 'aggre')) {
+    stop('x should be an aggre object (see lexpand or sir_lex)')
+  }
+  obs <- substitute(obs)
+  print <- substitute(print)
+  
+  x <- copy(x)
+  x <- sir_exp(x = x, obs = obs, print = print, exp = 'd.exp', pyrs = 'pyrs', ...) # original
+  attr(x, 'sir.meta')$call <- match.call()
+  x
+}
+
+
+
+globalVariables(c('observed','expected','p_adj','p_value','temp','coh.observations','coh.personyears',
+                  'd.exp', 'lower', 'pop.haz', 'sir.hi','sir.lo','upper'))
 
