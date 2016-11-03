@@ -1,9 +1,11 @@
 Changes in 0.4.1
 ================
 
--   lexpand bug fixed (\#120): observations were dropped if their entry by age was smaller than the smallest age value, though entry at exit is correct and used now.
--   `sir` rewrite. New more consistent output, updates on plotting and minor changes in arguments. Introduce very simple `coef()` and `confint()` methods for sir class.
+-   `lexpand()` bug fixed (\#120): observations were dropped if their entry by age was smaller than the smallest age value, though entry at exit is correct and used now.
+-   `sir()` rewrite (\#118, \#122). New more consistent output, updates on plotting and minor changes in arguments. Introduce very simple `coef()` and `confint()` methods for sir class.
 -   new functions in sir family: `sir_ag()`, `sir_lex()` and `sir_exp()` for extracting SMRs from `aggre` and `Lexis` objects.
+-   fixed issue in internal test brought by pkg survival version 2.39.5; no changes in functions were needed (\#125)
+-   robustified `aggre()`; there were issues with Epi pkg dev version which are definitely avoided (\#119)
 
 Changes in 0.4.0
 ================
@@ -52,6 +54,9 @@ sr$status <- factor(sr$status, levels = 0:2,
 library(Epi)
 #> 
 #> Attaching package: 'Epi'
+#> The following object is masked from 'package:popEpi':
+#> 
+#>     [.Lexis
 #> The following object is masked from 'package:base':
 #> 
 #>     merge.data.frame
