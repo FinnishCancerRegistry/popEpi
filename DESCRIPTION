@@ -1,13 +1,10 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
-Authors@R: c( person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", c("aut", "cre")), 
-              person("Matti", "Rantanen", , "matti.rantanen@cancer.fi", "aut"), 
-              person("Karri", "Seppa", , "karri.seppa@cancer.fi", "ctb") )
+Authors@R: c(person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", c("aut", "cre")), person("Matti", "Rantanen", , "matti.rantanen@cancer.fi", "aut"), person("Karri", "Seppa", , "karri.seppa@cancer.fi", "ctb") )
 Version: 0.4.1
-Date: 2016-11-03
+Date: 2016-11-07
 Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
-Description: Enables computation of various epidemiological statistics where the use of population data such as population counts and hazards is required.
-                 Relatively high computation speed achieved by using data.table.
+Description: Enables computation of epidemiological statistics where e.g. counts or mortality rates of the reference population are used. Currently supported: excess hazard models, rates, mean survival times, relative survival, and SIRs/SMRs, all of which can be easily adjusted for e.g. age. Fast splitting and aggregation of Lexis objects (from package Epi) and other computations achieved using data.table. 
 Depends: R (>= 3.2.0)
 Imports: Epi, survival, data.table (>= 1.9.6)
 Suggests: reshape2, methods, testthat, knitr, rmarkdown, relsurv, ggplot2, mstate, date, splines, roxygen2
