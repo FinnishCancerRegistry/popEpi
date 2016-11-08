@@ -20,13 +20,13 @@ Possibly mis-spelled words in DESCRIPTION:
 
 The words are not mis-spelled.
 
-## Notes to CRAN maintainer
+## Re-submission notes
 
-In our previous submission, the description text was asked to be made more specific. The old text was
-
-> Enables computation of various epidemiological statistics where the use of population data such as population counts and hazards is required. Relatively high computation speed achieved by using data.table.
-
-and new text is 
+In our previous submission, non-English words in the Description field were asked to be single-quoted, and abbreviations explained. The previous text was
 
 > Enables computation of epidemiological statistics where population data such as population counts and hazards are used. Currently supported: excess hazard models, rates,  mean survival times, relative survival, and SIRs/SMRs, all of which can be easily adjusted for e.g. age. Fast splitting of Lexis objects and other computations achieved using data.table.
+
+and the new text is 
+
+> Enables computation of epidemiological statistics where e.g. counts or mortality rates of the reference population are used. Currently supported: excess hazard models, rates, mean survival times, relative survival, and standardized incidence / mortality ratios (SIRs/SMRs), all of which can be easily adjusted for e.g. age. Fast splitting and aggregation of 'Lexis' objects (from package 'Epi') and other computations achieved using 'data.table'. 
 
