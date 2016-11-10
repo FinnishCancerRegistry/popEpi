@@ -775,8 +775,8 @@ sir_est <- function( table,
   
   cols1 <- c('sir','sir.lo','sir.hi','expected','pyrs')
   
-  table[,(cols1) := lapply(.SD, round, digits=3), .SDcols=cols1]
-  combined[,(cols1) := lapply(.SD, round, digits=3), .SDcols=cols1]
+  table[,(cols1) := lapply(.SD, round, digits=4), .SDcols=cols1]
+  combined[,(cols1) := lapply(.SD, round, digits=4), .SDcols=cols1]
 
   
   # tests -----------------------------------
@@ -1184,12 +1184,45 @@ data_list <- function( data, arg.list, env ) {
 
 #' @export
 coef.sir <- function(object, ...) {
-  return(object$sir)
+  factors <- attr(object, 'sir.meta')$print
+  
+  q <- paste("paste(",paste(factors,collapse=","),", sep = ':')")
+  q <- parse(text=q)
+  n <- object[,eval(q)]
+  
+  res <- object$sir
+  attr(res, 'names') <- n
+  
+  res
 }
 
+
+
+
 #' @export
-confint.sir <- function(object, parm, level, ...) {
-  return( cbind(object$sir.lo, object$sir.hi) )
+confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile', 
+                        test.type = 'homogeneity', ...) {
+
+  meta <- attr(object, 'sir.meta')
+  object <- copy(object)
+  object <- popEpi:::sir_est(table = object,
+                               print = meta$print,
+                               adjust = NULL,
+                               conf.type = conf.type, 
+                               test.type = test.type,
+                               conf.level = level,
+                               EAR = FALSE)
+  object <- object$table
+  q <- paste("paste(",paste(meta$print,collapse=","),", sep = ':')")
+  q <- parse(text=q)
+  n <- object[,eval(q)]
+
+  res <- cbind(object$sir.lo, object$sir.hi)
+  
+  rownames(res) <- n
+  colnames(res) <- paste( c( (1-level)/2*100, (1 - (1-level)/2)*100), '%')
+
+  res
 }
 
 

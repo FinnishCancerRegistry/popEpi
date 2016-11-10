@@ -70,12 +70,15 @@ test_that("misc things work", {
   plot(ms1)
   
   # only one print level with no variation
-  ms2 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type= 'profile',
-              ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
-              adjust = c('agegroup','year','sex'), 
-              print = list(sex))
+  expect_message( ms2 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type= 'profile',
+                              ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
+                              adjust = c('agegroup','year','sex'), 
+                              print = list(sex)) )
   expect_equal(attributes(ms2)$sir.meta$conf.type, 'profile')
   
+  # coef and confint ---
+  expect_equal(as.numeric(coef(ms1)), ms1$sir)
+  expect_equal(data.table(confint(ms1)), data.table('2.5 %' = ms1$sir.lo, '97.5 %' = ms1$sir.hi), tolerance = 0.001)
 })
 
 
@@ -183,7 +186,7 @@ test_that("SIR works with multistate aggregated lexpand data", {
   setDT(r)
   r[, exp := haz*pyrs]
   est <- r[, list(observed=sum(from0to1, na.rm=TRUE),expected=sum(exp, na.rm=TRUE)), by=.(fot)]
-  est <- round(est,3)
+  est <- round(est,4)
   
   expect_is(object = se, class = 'sir')
   expect_equivalent(se, s12)
