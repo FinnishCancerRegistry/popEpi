@@ -335,7 +335,6 @@ test_that("sir_exp and sir_ag and sir_lexis are working", {
                  pophaz=popmort)
   )
 
-  # To do:
   suppressMessages(
     x3 <- lexpand(sire, status = status != 0,
                   birth = bi_date, entry = dg_date, exit = ex_date,
@@ -346,8 +345,19 @@ test_that("sir_exp and sir_ag and sir_lexis are working", {
                   birth = bi_date, entry = bi_date, exit = ex_date,
                   pophaz=popmort)
   )
-
-    
+  # library(Epi)
+  # # no aggreate but breaks
+  # suppressMessages(
+  #   x5 <- Lexis(entry = list(FUT = 0, AGE = 0, CAL = get.yrs(bi_date)), 
+  #              exit = list(CAL = get.yrs(ex_date)), 
+  #              data = sire[sire$dg_date < sire$ex_date, ],
+  #              exit.status = factor(status, levels = 0:2, 
+  #                                   labels = c("alive", "canD", "othD")), 
+  #              merge = TRUE)
+  #   )
+  
+   
+   
   # AGGRE
   expect_message( a1 <- sir_ag(x1, obs = 'from0to1', conf.type = 'profile') )
   expect_message( a0 <- sir_ag(x1, obs = from0to1, conf.type = 'profile') )
@@ -383,6 +393,13 @@ test_that("sir_exp and sir_ag and sir_lexis are working", {
   l2 <- sir_lex(x2, print = per)
   l3 <- sir_lex(x2, print = NULL)
   expect_equal(l3[,.N], 1)
+  
+  l1 <- sir_lex(x2, print = NULL)
+  l2 <- sir_lex(x2, print = 'per')
+  l2 <- sir_lex(x2, print = per)
+  l3 <- sir_lex(x2, print = NULL)
+  
+  
   # breaks...
   BL1 <- list(fot = 0:5, per = c(2003,2008,2013))
   b1 <- sir_lex(x3, breaks = BL1, print = c('fot','per')) 
@@ -402,6 +419,8 @@ test_that("sir_exp and sir_ag and sir_lexis are working", {
   expect_equal(data.table(b5), data.table(b6), tolerance = 0.001)
   
   # EXPECTED
+  # without pyrs;
+  e0 <- sir_exp(x1, obs = "from0to1", exp = "d.exp", pyrs = , print = period)
   e1 <- sir_exp(x1, obs = "from0to1", exp = "d.exp", pyrs = "pyrs", print = period)
   e1 <- sir_exp(x1, obs = from0to1, exp = d.exp, pyrs = pyrs, print = period)
   e2 <- sir_exp(x2, obs = "lex.Xst", exp = list(exp = pop.haz*lex.dur), pyrs = "lex.dur", 

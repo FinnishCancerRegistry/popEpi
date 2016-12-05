@@ -1228,16 +1228,22 @@ confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile',
 
 #' @title Calculate SMR
 #' @author Matti Rantanen
-#' @description Calculate SMRs using a single data set which includes
-#' observed and expected cases and person-years.
+#' @description Calculate Standardized Mortality Ratios (SMRs) using 
+#' a single data set that includes
+#' observed and expected cases and additionally person-years.
 #' 
-#' @details These functions are for simple SMRs . tofrom a data 
-#' that has been merged with population death rates calculated ready in lexpand (\code{pop.haz}).
+#' @details These functions are intented to calculate SMRs from a single data set 
+#' that includes both observed and expected number of cases. For example utilizing the
+#' argument \code{pop.haz} of the \code{\link{lexpand}}.
 #' 
-#' @param x Data in a aggre or Lexis object (see: \code{\link{lexpand}})
+#' \code{sir_lex} automatically exports the transition \code{fromXtoY} using the first
+#' state in \code{lex.Str} as \code{0} and all other as \code{1}. No missing values
+#' is allowed in observed, pop.haz or person-years.
+#' 
+#' @param x Data set e.g. aggre or Lexis object (see: \code{\link{lexpand}})
 #' @param obs Variable name of the observed cases in the data set
-#' @param exp Name or expression of expected cases
-#' @param pyrs Variable name for person-years
+#' @param exp Variable name or expression for expected cases
+#' @param pyrs Variable name for person-years (optional)
 #' @param print Variables or expression to stratify the results
 #' @param test.type Test for equal SIRs. Test available are 'homogeneity' and 'trend'
 #' @param conf.level Level of type-I error in confidence intervals, default 0.05 is 95\% CI
@@ -1248,7 +1254,7 @@ confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile',
 #' \href{../doc/sir.html}{A SIR calculation vignette}
 #' @family sir_related
 #' 
-#' @return A sir-object that is a \code{data.table} with meta information in the attributes.
+#' @return A sir object
 #' 
 #' @examples 
 #' 
@@ -1273,7 +1279,7 @@ confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile',
 #' @import data.table
 #' @import stats
 #' @export
-sir_exp <- function(x, obs, exp, pyrs, print = NULL, 
+sir_exp <- function(x, obs, exp, pyrs=NULL, print = NULL, 
                     conf.type = 'profile', test.type = 'homogeneity',
                     conf.level = 0.95, subset = NULL) {
   
@@ -1287,9 +1293,6 @@ sir_exp <- function(x, obs, exp, pyrs, print = NULL,
   c.obs <- evalPopArg(data = x, arg = obs)
   obs <- names(c.obs)
   
-  pyrs <- substitute(pyrs)
-  c.pyr <- evalPopArg(data = x, arg = pyrs)
-  pyrs <- names(c.pyr)
   
   print <- substitute(print)
   c.pri <- evalPopArg(data = x, arg = print)
@@ -1298,6 +1301,11 @@ sir_exp <- function(x, obs, exp, pyrs, print = NULL,
   exp <- substitute(exp)
   c.exp <- evalPopArg(data = x, arg = exp)
   exp <- names(c.exp)
+  
+  pyrs <- substitute(pyrs)
+  c.pyr <- evalPopArg(data = x, arg = pyrs)
+  if(is.null(c.pyr)) c.pyr <- data.table(pyrs=0)
+  pyrs <- names(c.pyr)
   
   # collect data
   x <- cbind(c.obs, c.pyr, c.exp)
@@ -1341,15 +1349,14 @@ sir_exp <- function(x, obs, exp, pyrs, print = NULL,
 
 
 
-#' sir method for Lexis object
-#' @description \code{sir_lex} solves SMR from a \code{\link{Lexis}} object.
+#' Calculate SMRs from a splitted Lexis object  
 #' 
-#' @param breaks not yet fully implemented
+#' @description \code{sir_lex} solves SMR from a \code{\link{Lexis}} object 
+#' calculated with \code{lexpand}.
+#' 
+#' @param breaks a named list to split age group (age), period (per) or follow-up (fot). 
 #' @param ... pass arguments to \code{sir_exp}
 #' 
-#' @details sir_lex automatically export the transition fromXtoY using the first
-#' state in lex.Str as \code{0} and all other as \code{1}. No missing values
-#' is allowed in observed, pop.haz or pyrs.
 #' 
 #' @describeIn sir_exp
 #' 
@@ -1359,6 +1366,10 @@ sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
   if(!inherits(x, 'Lexis')) {
     stop('x has to be a Lexis object (see lexpand or Lexis)')
   }
+  if(!"pop.haz" %in% names(x)) {
+    stop("Variable pop.haz not found in the data.")
+  }
+
 
   # reformat date breaks
   if(!is.null(breaks)) {
@@ -1367,9 +1378,12 @@ sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
       else x
     })
   }
+  
   print <- substitute(print)
+  # copy to retain the attributes
   x <- copy(x)
-
+  
+  # guess the first value
   first_value <- lapply(c("lex.Cst", "lex.Xst"), function(var) {
     if (is.factor(x[[var]])) levels(x[[var]]) else sort(unique(x[[var]]))
   })
@@ -1379,29 +1393,28 @@ sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
   set(x, j = "lex.Cst", value = 0L)
   set(x, j = "lex.Xst", value = ifelse(col == first_value, 0L, 1L))
   
-  # maybe works:
   if(!is.null(breaks)) {
     x <- splitMulti(x, breaks = breaks)
   }
-
+  
   a <- names(get_breaks(x))
   x[, d.exp := pop.haz*lex.dur]
   
   if(any(is.na(x[,d.exp]))) stop('Missing values in either pop.haz or lex.dur.')
-  
   x <- aggre(x, by = a, sum.values = 'd.exp')
   if(!'from0to1' %in% names(x)) {
     stop('Could not find any transitions between states in lexis')
   }
   x <- sir_exp(x = x, obs = 'from0to1', print = print, exp = 'd.exp', pyrs = 'pyrs', ...)
+  # override the match.call from sir_exp 
   attr(x, 'sir.meta')$call <- match.call()
   return(x)
 }
 
 
-#' sir method for an aggre object
+#' SMR method for an \code{aggre} object.
 #' 
-#' @description \code{sir_ag} solves SMR from a \code{\link{aggre}} object that is 
+#' @description \code{sir_ag} solves SMR from a \code{\link{aggre}} object 
 #' calculated using \code{\link{lexpand}}.
 #' 
 #' @describeIn sir_exp
@@ -1418,7 +1431,7 @@ sir_ag <- function(x, obs = 'from0to1', print = attr(x, 'aggre.meta')$by, exp = 
   
   x <- copy(x)
   x <- sir_exp(x = x, obs = obs, print = print, exp = 'd.exp', pyrs = 'pyrs', ...) # original
-  attr(x, 'sir.meta')$call <- match.call()
+  attr(x, 'sir.meta')$call <- match.call() # override the call from sir_exp
   x
 }
 

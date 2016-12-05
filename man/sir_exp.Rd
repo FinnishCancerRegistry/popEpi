@@ -6,7 +6,7 @@
 \alias{sir_lex}
 \title{Calculate SMR}
 \usage{
-sir_exp(x, obs, exp, pyrs, print = NULL, conf.type = "profile",
+sir_exp(x, obs, exp, pyrs = NULL, print = NULL, conf.type = "profile",
   test.type = "homogeneity", conf.level = 0.95, subset = NULL)
 
 sir_lex(x, print = NULL, breaks = NULL, ...)
@@ -15,13 +15,13 @@ sir_ag(x, obs = "from0to1", print = attr(x, "aggre.meta")$by,
   exp = "d.exp", pyrs = "pyrs", ...)
 }
 \arguments{
-\item{x}{Data in a aggre or Lexis object (see: \code{\link{lexpand}})}
+\item{x}{Data set e.g. aggre or Lexis object (see: \code{\link{lexpand}})}
 
 \item{obs}{Variable name of the observed cases in the data set}
 
-\item{exp}{Name or expression of expected cases}
+\item{exp}{Variable name or expression for expected cases}
 
-\item{pyrs}{Variable name for person-years}
+\item{pyrs}{Variable name for person-years (optional)}
 
 \item{print}{Variables or expression to stratify the results}
 
@@ -33,29 +33,32 @@ sir_ag(x, obs = "from0to1", print = attr(x, "aggre.meta")$by,
 
 \item{subset}{a logical vector for subsetting data}
 
-\item{breaks}{not yet fully implemented}
+\item{breaks}{a named list to split age group (age), period (per) or follow-up (fot).}
 
 \item{...}{pass arguments to \code{sir_exp}}
 }
 \value{
-A sir-object that is a \code{data.table} with meta information in the attributes.
+A sir object
 }
 \description{
-Calculate SMRs using a single data set which includes
-observed and expected cases and person-years.
+Calculate Standardized Mortality Ratios (SMRs) using 
+a single data set that includes
+observed and expected cases and additionally person-years.
 
-\code{sir_lex} solves SMR from a \code{\link{Lexis}} object.
+\code{sir_lex} solves SMR from a \code{\link{Lexis}} object 
+calculated with \code{lexpand}.
 
-\code{sir_ag} solves SMR from a \code{\link{aggre}} object that is 
+\code{sir_ag} solves SMR from a \code{\link{aggre}} object 
 calculated using \code{\link{lexpand}}.
 }
 \details{
-These functions are for simple SMRs . tofrom a data 
-that has been merged with population death rates calculated ready in lexpand (\code{pop.haz}).
+These functions are intented to calculate SMRs from a single data set 
+that includes both observed and expected number of cases. For example utilizing the
+argument \code{pop.haz} of the \code{\link{lexpand}}.
 
-sir_lex automatically export the transition fromXtoY using the first
-state in lex.Str as \code{0} and all other as \code{1}. No missing values
-is allowed in observed, pop.haz or pyrs.
+\code{sir_lex} automatically exports the transition \code{fromXtoY} using the first
+state in \code{lex.Str} as \code{0} and all other as \code{1}. No missing values
+is allowed in observed, pop.haz or person-years.
 }
 \section{Functions}{
 \itemize{
