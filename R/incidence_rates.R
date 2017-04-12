@@ -201,7 +201,10 @@ rate <- function( data,
   return(data[])
 }
 
-
+#' @export
+getCall.rate <- function (x, ...) {
+  attributes(x)$rate.meta$call
+}
 
 stdr.weights <- function(wp = 'world00_1') {
   
