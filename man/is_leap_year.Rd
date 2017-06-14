@@ -26,4 +26,3 @@ df[is_leap_year(df$yrs),] # 2nd row
 \author{
 Joonas Miettinen
 }
-

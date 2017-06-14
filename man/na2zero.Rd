@@ -25,4 +25,3 @@ all variables if \code{vars = NULL}.
 \author{
 Joonas Miettinen
 }
-

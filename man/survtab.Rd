@@ -194,6 +194,7 @@ To calculate e.g. period analysis (delayed entry) estimates,
 limit the data when/before supplying to this function.See 
 \href{../doc/survtab_examples.html}{survtab_examples}.
 }
+
 \examples{
 \dontrun{
 data("sire", package = "popEpi")
@@ -305,4 +306,3 @@ Other survtab_related: \code{\link{lines.survtab}},
   \code{\link{plot.survtab}}, \code{\link{print.survtab}},
   \code{\link{summary.survtab}}, \code{\link{survtab_ag}}
 }
-

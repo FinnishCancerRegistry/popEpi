@@ -1205,13 +1205,13 @@ confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile',
 
   meta <- attr(object, 'sir.meta')
   object <- copy(object)
-  object <- popEpi:::sir_est(table = object,
-                               print = meta$print,
-                               adjust = NULL,
-                               conf.type = conf.type, 
-                               test.type = test.type,
-                               conf.level = level,
-                               EAR = FALSE)
+  object <- sir_est(table = object,
+                    print = meta$print,
+                    adjust = NULL,
+                    conf.type = conf.type, 
+                    test.type = test.type,
+                    conf.level = level,
+                    EAR = FALSE)
   object <- object$table
   q <- paste("paste(",paste(meta$print,collapse=","),", sep = ':')")
   q <- parse(text=q)

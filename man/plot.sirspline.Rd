@@ -36,12 +36,11 @@ The plot axis without lines can be plotted using option \code{type = 'n'}.
 On top of the frame it's then possible to add a \code{grid}, 
 \code{abline} or text before plotting the lines (see: \code{sirspline}).
 }
-\author{
-Matti Rantanen
-}
 \seealso{
 Other sir_related: \code{\link{lines.sirspline}},
   \code{\link{sir_exp}}, \code{\link{sir_ratio}},
   \code{\link{sirspline}}, \code{\link{sir}}
 }
-
+\author{
+Matti Rantanen
+}

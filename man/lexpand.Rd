@@ -353,17 +353,16 @@ x <- lexpand(sire, status = status, event = dg_date,
 }
 
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 \code{\link[Epi]{Lexis}}, \code{\link{popmort}}
+
+Other splitting_related: \code{\link{splitLexisDT}},
+  \code{\link{splitMulti}}
 
 Other aggregation_related: \code{\link{aggre}},
   \code{\link{as.aggre}}, \code{\link{setaggre}},
   \code{\link{summary.aggre}}
-
-Other splitting_related: \code{\link{splitLexisDT}},
-  \code{\link{splitMulti}}
 }
-
+\author{
+Joonas Miettinen
+}

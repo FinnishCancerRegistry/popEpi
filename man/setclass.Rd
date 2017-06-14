@@ -25,4 +25,3 @@ by replacing or adding
 \author{
 Joonas Miettinen
 }
-

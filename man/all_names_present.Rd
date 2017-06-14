@@ -23,10 +23,9 @@ variable names will be inserted there (quoted, separated by comma, e.g.
 Given a character vector, checks if all names are present in \code{names(data)}.
 Throws error if \code{stops=TRUE}, else returns \code{FALSE} if some variable name is not present.
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 \code{\link{robust_values}}
 }
-
+\author{
+Joonas Miettinen
+}

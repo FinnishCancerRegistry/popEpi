@@ -32,12 +32,11 @@ specific level can be selected using argument
 \code{print.levels}. Printing the levels seperately enables  e.g. to
 give different colours for each level.
 }
-\author{
-Matti Rantanen
-}
 \seealso{
 Other sir_related: \code{\link{plot.sirspline}},
   \code{\link{sir_exp}}, \code{\link{sir_ratio}},
   \code{\link{sirspline}}, \code{\link{sir}}
 }
-
+\author{
+Matti Rantanen
+}

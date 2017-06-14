@@ -35,4 +35,3 @@ fac2num(factor(c("5","7","a"))) ## result: c(5,7,NA) with warning
 \seealso{
 \code{\link{robust_values}}
 }
-

@@ -26,11 +26,10 @@ the \code{survmean} output using
 
 where \code{x} is a \code{survmean} object.
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 Other survmean_related: \code{\link{plot.survmean}},
   \code{\link{survmean}}
 }
-
+\author{
+Joonas Miettinen
+}

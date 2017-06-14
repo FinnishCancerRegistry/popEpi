@@ -16,4 +16,3 @@ on that the value starts from index 2 and end in comma ",".
 \author{
 Matti Rantanen
 }
-

@@ -78,9 +78,6 @@ AIC(rpm, rpm2)
 ## other features such as residuals or predicting are not guaranteed
 ## to work as intended.
 }
-\author{
-Joonas Miettinen, Karri Seppa
-}
 \seealso{
 \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
 
@@ -92,4 +89,6 @@ Other main_functions: \code{\link{rate}},
 Other relpois_related: \code{\link{RPL}},
   \code{\link{relpois}}, \code{\link{rpcurve}}
 }
-
+\author{
+Joonas Miettinen, Karri Seppa
+}

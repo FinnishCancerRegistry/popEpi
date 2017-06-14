@@ -20,12 +20,11 @@ to an array, and in turn to a \code{\link[survival]{ratetable}},
 which can be used in e.g. \pkg{survival}'s expected survival computations
 and \pkg{relsurv}'s relative survival computations.
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 \code{\link[survival]{ratetable}}, 
 \code{\link{as.data.table.ratetable}}, 
 \code{\link{as.data.frame.ratetable}}
 }
-
+\author{
+Joonas Miettinen
+}

@@ -25,4 +25,3 @@ Other weights: \code{\link{ICSS}},
   \code{\link{direct_standardization}},
   \code{\link{stdpop101}}
 }
-

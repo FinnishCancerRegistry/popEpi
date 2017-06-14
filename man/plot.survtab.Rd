@@ -52,13 +52,12 @@ lines(st, "surv.obs", subset = cancer == "rectal", col = "red")
 ## or
 plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 Other survtab_related: \code{\link{lines.survtab}},
   \code{\link{print.survtab}},
   \code{\link{summary.survtab}}, \code{\link{survtab_ag}},
   \code{\link{survtab}}
 }
-
+\author{
+Joonas Miettinen
+}

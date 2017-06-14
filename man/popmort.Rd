@@ -25,4 +25,3 @@ Other popEpi_data: \code{\link{ICSS}}, \code{\link{sibr}},
   \code{\link{sire}}, \code{\link{stdpop101}},
   \code{\link{stdpop18}}
 }
-

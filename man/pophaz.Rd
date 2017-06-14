@@ -55,4 +55,3 @@ Life-Table Database supply life-table data.
 \author{
 Joonas Miettinen
 }
-

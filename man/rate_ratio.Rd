@@ -60,12 +60,11 @@ rate_ratio(x= c(0.003, 0.001), y= c(0.005, 0.002), SE.method = TRUE)
 rate_ratio(x = c(10, 30000), y = c(20, 40000), SE.method = FALSE)
 
 }
-\author{
-Matti Rantanen
-}
 \seealso{
 \code{\link{rate}}
 
 Other rate_related: \code{\link{rate}}
 }
-
+\author{
+Matti Rantanen
+}

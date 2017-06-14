@@ -89,9 +89,6 @@ r3 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat,
 r3
 
 }
-\author{
-Matti Rantanen, Joonas Miettinen
-}
 \seealso{
 \code{\link{lexpand}}, \code{\link{ltable}}
 
@@ -102,4 +99,6 @@ Other main_functions: \code{\link{relpois_ag}},
 
 Other rate_related: \code{\link{rate_ratio}}
 }
-
+\author{
+Matti Rantanen, Joonas Miettinen
+}

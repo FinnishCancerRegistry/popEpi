@@ -22,13 +22,12 @@ if the table is large,
 Print method function for \code{survtab} objects; see
 \code{\link{survtab_ag}}.
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 Other survtab_related: \code{\link{lines.survtab}},
   \code{\link{plot.survtab}},
   \code{\link{summary.survtab}}, \code{\link{survtab_ag}},
   \code{\link{survtab}}
 }
-
+\author{
+Joonas Miettinen
+}

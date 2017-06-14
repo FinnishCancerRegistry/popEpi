@@ -22,4 +22,3 @@ Print method function for \code{rate} objects; see
 \author{
 Matti Rantanen
 }
-

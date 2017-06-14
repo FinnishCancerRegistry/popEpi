@@ -30,4 +30,3 @@ adjustable.
 \author{
 Matti Rantanen
 }
-

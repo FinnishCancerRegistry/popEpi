@@ -48,4 +48,3 @@ cast_simple(tab, columns='dg_y', rows="ex_y", values="obs")
 \author{
 Matti Rantanen, Joonas Miettinen
 }
-

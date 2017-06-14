@@ -79,11 +79,10 @@ x3 <- splitLexisDT(x3, breaks = BL$per, timeScale = "per", drop = FALSE)
 
 ## splitLexis may not work when using Dates
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 Other splitting_related: \code{\link{lexpand}},
   \code{\link{splitMulti}}
 }
-
+\author{
+Joonas Miettinen
+}

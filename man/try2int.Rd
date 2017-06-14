@@ -25,4 +25,3 @@ are not zero for even one value in \code{obj})
 \author{
 James Arnold
 }
-

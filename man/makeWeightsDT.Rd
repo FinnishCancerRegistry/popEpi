@@ -151,4 +151,3 @@ dt <- makeWeightsDT(ag, formula = form, Surv.response = FALSE,
                     weights = list(agegr = "nordic_2000_18of5", sex=c(1,1)),
                     enclos = NULL)
 }
-

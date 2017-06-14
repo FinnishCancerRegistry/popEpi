@@ -24,4 +24,3 @@ poisson.ci(x = 4, pt = 5, conf.level = 0.95)
 \author{
 epitools
 }
-

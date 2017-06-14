@@ -43,4 +43,3 @@ values <- robust_values(values, force=TRUE)
 \author{
 Joonas Miettinen
 }
-

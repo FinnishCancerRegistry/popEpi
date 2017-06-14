@@ -33,4 +33,3 @@ Other popEpi_data: \code{\link{popmort}},
 Other weights: \code{\link{direct_standardization}},
   \code{\link{stdpop101}}, \code{\link{stdpop18}}
 }
-

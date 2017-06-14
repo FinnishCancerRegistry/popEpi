@@ -47,6 +47,7 @@ information.
 \item \code{default}: Default method for \code{as.aggre} (stops computations
 if no class-specific method found)
 }}
+
 \examples{
 library("data.table")
 df <- data.frame(sex = rep(c("male", "female"), each = 5), 
@@ -65,12 +66,11 @@ df <- data.frame(df)
 df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex", breaks = BL)
 
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 Other aggregation_related: \code{\link{aggre}},
   \code{\link{lexpand}}, \code{\link{setaggre}},
   \code{\link{summary.aggre}}
 }
-
+\author{
+Joonas Miettinen
+}

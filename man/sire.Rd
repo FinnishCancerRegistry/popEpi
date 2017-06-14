@@ -24,9 +24,6 @@ via modest randomization within several time windows.
 The closing date for the pertinent data was 2012-12-31, meaning status information was
 available only up to that point --- hence the maximum possible \code{ex_date} is \code{2012-12-31}.
 }
-\author{
-Karri Seppa
-}
 \seealso{
 Other popEpi_data: \code{\link{ICSS}},
   \code{\link{popmort}}, \code{\link{sibr}},
@@ -34,4 +31,6 @@ Other popEpi_data: \code{\link{ICSS}},
 
 Other survival_data: \code{\link{sibr}}
 }
-
+\author{
+Karri Seppa
+}

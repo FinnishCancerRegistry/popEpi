@@ -42,12 +42,11 @@ df$FUT <- 0:4
 ## with breaks list
 setaggre(df, values = c("obs", "pyrs"), by = "sex", breaks = list(FUT = 0:5))
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 Other aggregation_related: \code{\link{aggre}},
   \code{\link{as.aggre}}, \code{\link{lexpand}},
   \code{\link{summary.aggre}}
 }
-
+\author{
+Joonas Miettinen
+}

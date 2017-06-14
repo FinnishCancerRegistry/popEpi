@@ -80,4 +80,3 @@ lex <- Lexis_fpa(sire,
                  exit = ex_date + 1L,
                  exit.status = "status")
 }
-

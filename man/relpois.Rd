@@ -101,9 +101,6 @@ AIC(rpm, rpm2)
 ## update won't work currently
 }
 }
-\author{
-Joonas Miettinen, Karri Seppa
-}
 \seealso{
 \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
 
@@ -115,4 +112,6 @@ Other main_functions: \code{\link{rate}},
 Other relpois_related: \code{\link{RPL}},
   \code{\link{relpois_ag}}, \code{\link{rpcurve}}
 }
-
+\author{
+Joonas Miettinen, Karri Seppa
+}

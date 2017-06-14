@@ -26,4 +26,3 @@ cut_bound("[1900, 1910)") ## "1900-1909"
 \author{
 Matti Rantanen
 }
-

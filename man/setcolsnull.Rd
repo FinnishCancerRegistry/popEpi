@@ -30,4 +30,3 @@ May only delete columns that are found silently. Sometimes useful in e.g.
 \author{
 Joonas Miettinen
 }
-

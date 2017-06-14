@@ -266,16 +266,15 @@ plot(smd)
 
 
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
+Other survmean_related: \code{\link{lines.survmean}},
+  \code{\link{plot.survmean}}
+
 Other main_functions: \code{\link{rate}},
   \code{\link{relpois_ag}}, \code{\link{relpois}},
   \code{\link{sirspline}}, \code{\link{sir}},
   \code{\link{survtab_ag}}, \code{\link{survtab}}
-
-Other survmean_related: \code{\link{lines.survmean}},
-  \code{\link{plot.survmean}}
 }
-
+\author{
+Joonas Miettinen
+}

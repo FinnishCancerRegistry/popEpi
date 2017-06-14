@@ -65,9 +65,6 @@ s1 <- sir(coh.data = dt1, coh.obs = obs, coh.pyrs = pyrs,
 sir_ratio(s1, c(120, 150))
 
 }
-\author{
-Matti Rantanen
-}
 \references{
 Statistics with Confidence: Confidence Intervals and Statistical Guidelines, Douglas Altman
 }
@@ -79,4 +76,6 @@ Other sir_related: \code{\link{lines.sirspline}},
   \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
   \code{\link{sirspline}}, \code{\link{sir}}
 }
-
+\author{
+Matti Rantanen
+}

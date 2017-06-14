@@ -62,10 +62,9 @@ settings. This works only when \code{plot.type} is 'splines'.
 #      main = 'SIR by gender', abline=TRUE)
 }
 }
-\author{
-Matti Rantanen
-}
 \seealso{
 \code{\link{sir}},  \code{\link{sirspline}}
 }
-
+\author{
+Matti Rantanen
+}

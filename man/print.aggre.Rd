@@ -25,4 +25,3 @@ Print method function for \code{aggre} objects; see
 \author{
 Joonas Miettinen
 }
-

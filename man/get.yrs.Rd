@@ -70,10 +70,9 @@ get.yrs(100, origin = "1970-01-01")
 
 
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 \code{\link[Epi]{cal.yr}}, \code{\link{as.Date.yrs}}, \code{\link{as.Date}}
 }
-
+\author{
+Joonas Miettinen
+}

@@ -103,4 +103,3 @@ at the facility, if the two are not exactly the same. On the other hand
 one might use the same time scale for different exposure types, supply them
 as separate rows, and identify the different exposures using a dummy variable.
 }
-

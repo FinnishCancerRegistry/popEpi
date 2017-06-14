@@ -275,6 +275,7 @@ also calculated based on whichever breaks ares used,
 so the upper limit of the breaks should
 therefore be meaningful and never e.g. \code{Inf}.
 }
+
 \examples{
 ## see more examples with explanations in vignette("survtab_examples")
 
@@ -388,4 +389,3 @@ Other survtab_related: \code{\link{lines.survtab}},
   \code{\link{plot.survtab}}, \code{\link{print.survtab}},
   \code{\link{summary.survtab}}, \code{\link{survtab}}
 }
-

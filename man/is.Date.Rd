@@ -33,10 +33,9 @@ is.Date(da) ## FALSE
 date::is.date(da) ## TRUE
  
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 \code{\link{get.yrs}}, \code{\link{is_leap_year}}, \code{\link{as.Date}}
 }
-
+\author{
+Joonas Miettinen
+}

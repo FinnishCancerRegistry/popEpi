@@ -129,6 +129,7 @@ This works even with
 
 So no conflicts should occur.
 }
+
 \examples{
 
 data(sire)
@@ -158,10 +159,9 @@ st <- survtab_ag(fot ~ 1, data = x, surv.type = "surv.obs",
                  pyrs = pyrs, d = from0to1,
                  surv.method = "hazard")
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 Other popEpi_argument: \code{\link{direct_standardization}}
 }
-
+\author{
+Joonas Miettinen
+}

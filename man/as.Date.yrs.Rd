@@ -34,10 +34,9 @@ summary(sire$dg_yrs)
 dg_date2 <- as.Date(sire$dg_yrs)
 summary(as.numeric(dg_date2 - sire$dg_date))
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 \code{\link{get.yrs}}
 }
-
+\author{
+Joonas Miettinen
+}

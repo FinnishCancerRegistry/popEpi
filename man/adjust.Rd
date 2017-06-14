@@ -22,4 +22,3 @@ used elsewhere.
 
 y ~ x + adjust(z)
 }
-

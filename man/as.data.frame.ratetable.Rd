@@ -24,11 +24,10 @@ if (requireNamespace("relsurv", quietly = TRUE)) {
   head(df)
 }
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 \code{\link[survival]{ratetable}}, 
 \code{\link{as.data.table.ratetable}}
 }
-
+\author{
+Joonas Miettinen
+}

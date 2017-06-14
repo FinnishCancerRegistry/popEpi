@@ -171,9 +171,6 @@ a6 <- aggre(x, by = c("sex", "age", "fot"),
              sum.values = c("d.exp", "d.exp.pp"))
 ## or equivalently e.g. sum.values = list(expCases = d.exp, expCases.p = d.exp.pp).
 }
-\author{
-Joonas Miettinen
-}
 \seealso{
 \code{\link{aggregate}} for a similar base R solution,
 and \code{\link{ltable}} for a \code{data.table} based aggregator. Neither
@@ -183,4 +180,6 @@ Other aggregation_related: \code{\link{as.aggre}},
   \code{\link{lexpand}}, \code{\link{setaggre}},
   \code{\link{summary.aggre}}
 }
-
+\author{
+Joonas Miettinen
+}
