@@ -1,15 +1,3 @@
-`[.Lexis` <- function(x, ...) {
-  ## intended to override Epi::`[.Lexis`
-
-  y <- NextMethod(x)
-  if (is.data.frame(y)) {
-    for (a in c("class", "time.scales", "time.since", "breaks")) {
-      setattr(y ,a, attr(x, a))
-    }
-  }
-  y
-}
-
 
 
 

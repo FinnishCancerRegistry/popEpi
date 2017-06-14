@@ -1,7 +1,7 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
 Authors@R: c(person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", c("aut", "cre")), person("Matti", "Rantanen", , "matti.rantanen@cancer.fi", "aut"), person("Karri", "Seppa", , "karri.seppa@cancer.fi", "ctb") )
-Version: 0.4.1.2
+Version: 0.4.1.3
 Date: 2017-06-14
 Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
 Description: Enables computation of epidemiological statistics where e.g. 
@@ -12,7 +12,7 @@ Description: Enables computation of epidemiological statistics where e.g.
     Fast splitting and aggregation of 'Lexis' objects (from package 'Epi') 
     and other computations achieved using 'data.table'. 
 Depends: R (>= 3.2.0)
-Imports: Epi, survival, data.table (>= 1.9.6)
+Imports: Epi (>= 2.0), survival, data.table (>= 1.9.6)
 Suggests: reshape2, methods, testthat, knitr, rmarkdown, relsurv, ggplot2, mstate, date, splines, roxygen2
 Encoding: UTF-8
 License: GPL-3
