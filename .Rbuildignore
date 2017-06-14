@@ -16,3 +16,4 @@ testers.R
 ^.*\.Rmd$
 ^.*\.png$
 man-roxygen
+^data-raw$
