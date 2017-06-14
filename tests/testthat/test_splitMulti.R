@@ -68,9 +68,10 @@ test_that("splitMulti and splitLexis are congruent", {
   
   # multistate using Lexis -----------------------------------------------------
   
-    
-  sire2[, EX := suppressWarnings(factor(status, levels = 0:2, labels = c("ok", "dead", "dead"), ordered = T))]    
-  sire2[, EN := suppressWarnings(factor(0L, levels = 0:2, labels = c("ok", "dead", "dead"), ordered = T))]
+  
+  sire2[, "EX" := factor(status, levels = 0:2, ordered = TRUE)]    
+  sire2[, "EN" := factor(0L, levels = 0:2, ordered = TRUE)]
+  levels(sire2$EX) <- levels(sire2$EN) <- c("ok", "dead", "dead")
   
   x <- Lexis(data=sire2[dg_date < ex_date & !duplicated(id)], entry=list(fot=0, per=bi_yrs, age=0),
              exit=list(per=ex_yrs), merge=TRUE, exit.status=EX, entry.status = EN, id = id)
