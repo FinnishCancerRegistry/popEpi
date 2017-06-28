@@ -1330,9 +1330,47 @@ breaks_in_data <- function(br, ts, data) {
 
 
 
+is_named_list <- function(x) is.list(x) && length(unique(names(x))) == length(x)
 
 
 
+
+fuse_breakslists <- function(bl.old, bl.new, drop) {
+  # @description given two lists of breaks, uses all timescales found
+  # in both lists to fuse into one list. For common timescales an 
+  # interval-based subset is taken, so that the new always limits the old
+  # when drop = TRUE.
+  
+  stopifnot(
+    is_named_list(bl.old), is_named_list(bl.new)
+  )
+  
+  bl <- bl.old
+  new_scales <- setdiff(names(bl.old), names(bl.new))
+  if (length(new_scales)) {
+    bl[new_scales] <- bl.new[new_scales]
+  }
+  common_scales <- intersect(names(bl.old), names(bl.new))
+  if (length(common_scales)) {
+    
+    bl[common_scales] <- lapply(common_scales, function(time_scale) {
+      new <- bl.new[[time_Scale]]
+      old <- bl.old[time_scale]
+      fuse <- sort(union(old, new))
+      if (drop) {
+        r.new <- range(new)
+        r.old <- range(old)
+        r <- c(max(r.new[1], r.old[1]), min(r.new[2], r.old[2]))
+        fuse <- fuse[between(fuse, r[1], r[2], incbounds = TRUE)]
+      }
+      fuse
+    })
+    
+  }
+  
+  bl
+  
+}
 
 
 
