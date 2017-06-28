@@ -51,7 +51,7 @@
 #' 
 #' @references Statistics with Confidence: Confidence Intervals and Statistical Guidelines, Douglas Altman
 #' 
-#' @family sir_related
+#' @family sir functions
 #' 
 #' @return A vector length of three: sir_ratio, and lower and upper confidence intervals.
 #' 

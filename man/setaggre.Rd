@@ -43,7 +43,7 @@ df$FUT <- 0:4
 setaggre(df, values = c("obs", "pyrs"), by = "sex", breaks = list(FUT = 0:5))
 }
 \seealso{
-Other aggregation_related: \code{\link{aggre}},
+Other aggregation functions: \code{\link{aggre}},
   \code{\link{as.aggre}}, \code{\link{lexpand}},
   \code{\link{summary.aggre}}
 }

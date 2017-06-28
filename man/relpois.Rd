@@ -106,10 +106,10 @@ AIC(rpm, rpm2)
 
 Other main_functions: \code{\link{rate}},
   \code{\link{relpois_ag}}, \code{\link{sirspline}},
-  \code{\link{sir}}, \code{\link{survmean}},
-  \code{\link{survtab_ag}}, \code{\link{survtab}}
+  \code{\link{sir}}, \code{\link{survtab_ag}},
+  \code{\link{survtab}}
 
-Other relpois_related: \code{\link{RPL}},
+Other relpois functions: \code{\link{RPL}},
   \code{\link{relpois_ag}}, \code{\link{rpcurve}}
 }
 \author{

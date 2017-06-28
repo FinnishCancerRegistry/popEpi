@@ -50,7 +50,7 @@ lines(st, "surv.obs", subset = cancer == "rectal", col = "red")
 plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 }
 \seealso{
-Other survtab_related: \code{\link{plot.survtab}},
+Other survtab functions: \code{\link{plot.survtab}},
   \code{\link{print.survtab}},
   \code{\link{summary.survtab}}, \code{\link{survtab_ag}},
   \code{\link{survtab}}

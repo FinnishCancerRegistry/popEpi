@@ -23,7 +23,7 @@ before summarizing; use this to limit to a certain stratum. E.g.
 \code{\link{as.aggre}} and \code{\link{aggre}}.
 }
 \seealso{
-Other aggregation_related: \code{\link{aggre}},
+Other aggregation functions: \code{\link{aggre}},
   \code{\link{as.aggre}}, \code{\link{lexpand}},
   \code{\link{setaggre}}
 }

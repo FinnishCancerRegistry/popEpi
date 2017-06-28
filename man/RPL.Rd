@@ -12,7 +12,7 @@ RPL
 A family object for glm fitting of relative Poisson models
 }
 \seealso{
-Other relpois_related: \code{\link{relpois_ag}},
+Other relpois functions: \code{\link{relpois_ag}},
   \code{\link{relpois}}, \code{\link{rpcurve}}
 }
 \author{

@@ -67,7 +67,7 @@ df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex", breaks = BL)
 
 }
 \seealso{
-Other aggregation_related: \code{\link{aggre}},
+Other aggregation functions: \code{\link{aggre}},
   \code{\link{lexpand}}, \code{\link{setaggre}},
   \code{\link{summary.aggre}}
 }

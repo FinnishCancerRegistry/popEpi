@@ -92,7 +92,7 @@ sir_lex(x2, breaks = BL, print = 'per')
 \code{\link{lexpand}}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir_related: \code{\link{lines.sirspline}},
+Other sir functions: \code{\link{lines.sirspline}},
   \code{\link{plot.sirspline}}, \code{\link{sir_ratio}},
   \code{\link{sirspline}}, \code{\link{sir}}
 }

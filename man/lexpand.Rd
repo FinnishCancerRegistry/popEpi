@@ -356,10 +356,10 @@ x <- lexpand(sire, status = status, event = dg_date,
 \seealso{
 \code{\link[Epi]{Lexis}}, \code{\link{popmort}}
 
-Other splitting_related: \code{\link{splitLexisDT}},
+Other splitting functions: \code{\link{splitLexisDT}},
   \code{\link{splitMulti}}
 
-Other aggregation_related: \code{\link{aggre}},
+Other aggregation functions: \code{\link{aggre}},
   \code{\link{as.aggre}}, \code{\link{setaggre}},
   \code{\link{summary.aggre}}
 }

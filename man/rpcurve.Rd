@@ -63,7 +63,7 @@ lines(y = pmc$est, x = pmc$Tstop, col="red")
 
 }
 \seealso{
-Other relpois_related: \code{\link{RPL}},
+Other relpois functions: \code{\link{RPL}},
   \code{\link{relpois_ag}}, \code{\link{relpois}}
 }
 \author{

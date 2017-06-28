@@ -33,7 +33,7 @@ specific level can be selected using argument
 give different colours for each level.
 }
 \seealso{
-Other sir_related: \code{\link{plot.sirspline}},
+Other sir functions: \code{\link{plot.sirspline}},
   \code{\link{sir_exp}}, \code{\link{sir_ratio}},
   \code{\link{sirspline}}, \code{\link{sir}}
 }

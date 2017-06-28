@@ -80,7 +80,7 @@ x3 <- splitLexisDT(x3, breaks = BL$per, timeScale = "per", drop = FALSE)
 ## splitLexis may not work when using Dates
 }
 \seealso{
-Other splitting_related: \code{\link{lexpand}},
+Other splitting functions: \code{\link{lexpand}},
   \code{\link{splitMulti}}
 }
 \author{

@@ -127,14 +127,14 @@ Otherwise the p-value is spline-specific.
 \code{\link{splitMulti}} 
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir_related: \code{\link{lines.sirspline}},
+Other sir functions: \code{\link{lines.sirspline}},
   \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
   \code{\link{sir_ratio}}, \code{\link{sir}}
 
 Other main_functions: \code{\link{rate}},
   \code{\link{relpois_ag}}, \code{\link{relpois}},
-  \code{\link{sir}}, \code{\link{survmean}},
-  \code{\link{survtab_ag}}, \code{\link{survtab}}
+  \code{\link{sir}}, \code{\link{survtab_ag}},
+  \code{\link{survtab}}
 }
 \author{
 Matti Rantanen, Joonas Miettinen

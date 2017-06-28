@@ -150,7 +150,7 @@
 #' 
 #' @seealso \code{\link{lexpand}}
 #' \href{../doc/sir.html}{A SIR calculation vignette}
-#' @family sir_related
+#' @family sir functions
 #' @family main_functions
 #' 
 #' @return A sir-object that is a \code{data.table} with meta information in the attributes.
@@ -381,7 +381,7 @@ sir <- function( coh.data,
 #' 
 #' @seealso \code{\link{splitMulti}} 
 #' \href{../doc/sir.html}{A SIR calculation vignette}
-#' @family sir_related
+#' @family sir functions
 #' @family main_functions
 #' 
 #' @export sirspline
@@ -1252,7 +1252,7 @@ confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile',
 #' 
 #' @seealso \code{\link{lexpand}}
 #' \href{../doc/sir.html}{A SIR calculation vignette}
-#' @family sir_related
+#' @family sir functions
 #' 
 #' @return A sir object
 #' 

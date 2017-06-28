@@ -85,7 +85,7 @@ Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015
 doi: 10.1016/B978-0-12-801238-3.02745-8.
 }
 \seealso{
-Other survtab_related: \code{\link{lines.survtab}},
+Other survtab functions: \code{\link{lines.survtab}},
   \code{\link{plot.survtab}}, \code{\link{print.survtab}},
   \code{\link{survtab_ag}}, \code{\link{survtab}}
 }

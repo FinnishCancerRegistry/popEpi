@@ -249,8 +249,8 @@
 
 #' 
 #' @export survmean
-#' @family survmean_related
-#' @family main_functions
+#' @family survmean functions
+#' @family main functions
 #' 
 
 survmean <- function(formula, data, adjust = NULL, weights = NULL, 

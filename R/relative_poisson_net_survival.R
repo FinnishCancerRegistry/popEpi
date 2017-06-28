@@ -21,7 +21,7 @@
 #' in the respective period.
 #' 
 #' @export 
-#' @family relpois_related
+#' @family relpois functions
 #' 
 #' @import data.table
 #' @import Epi
@@ -169,7 +169,7 @@ rpcurve <- function(object = NULL) {
 #' @format 
 #' A list very similary to that created by \code{poisson()}.
 #' @export
-#' @family relpois_related
+#' @family relpois functions
 RPL <- copy(poisson())
 RPL$link <- "glm relative survival model with Poisson error"
 RPL$linkfun <- function(mu, d.exp) log(mu - d.exp)

@@ -39,7 +39,7 @@
 #' object expanded to accommodate split observations.
 #' 
 #' @export
-#' @family splitting_related
+#' @family splitting functions
 #' @examples
 #' library(Epi)
 #' data("sire", package = "popEpi")

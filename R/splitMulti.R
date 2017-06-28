@@ -110,7 +110,7 @@
 #' @import Epi
 #' 
 #' @export
-#' @family splitting_related
+#' @family splitting functions
 #' @seealso
 #' \code{\link[Epi]{splitLexis}}, \code{\link[Epi]{Lexis}},  
 #' \code{\link[survival]{survSplit}}

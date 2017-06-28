@@ -49,7 +49,7 @@
 #' 
 #' @seealso \code{\link{rate}}
 #' 
-#' @family rate_related
+#' @family rate functions
 #' 
 #' @return A vector length of three: rate_ratio, and lower and upper confidence intervals.
 #' 

@@ -327,8 +327,8 @@
 #' 
 #' @import data.table
 #' @import Epi
-#' @family splitting_related
-#' @family aggregation_related
+#' @family splitting functions
+#' @family aggregation functions
 #' @seealso
 #' \code{\link[Epi]{Lexis}}, \code{\link{popmort}}
 #' @export

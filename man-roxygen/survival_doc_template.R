@@ -171,4 +171,4 @@
 #' doi: 10.1016/B978-0-12-801238-3.02745-8.
 #' 
 #' @family main_functions
-#' @family survtab_related
+#' @family survtab functions

@@ -37,7 +37,7 @@ On top of the frame it's then possible to add a \code{grid},
 \code{abline} or text before plotting the lines (see: \code{sirspline}).
 }
 \seealso{
-Other sir_related: \code{\link{lines.sirspline}},
+Other sir functions: \code{\link{lines.sirspline}},
   \code{\link{sir_exp}}, \code{\link{sir_ratio}},
   \code{\link{sirspline}}, \code{\link{sir}}
 }

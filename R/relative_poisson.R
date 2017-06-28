@@ -71,7 +71,7 @@
 #' @seealso
 #' \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
 #' @family main_functions
-#' @family relpois_related
+#' @family relpois functions
 #' @export relpois
 #' 
 #' @examples
@@ -288,7 +288,7 @@ relpois <- function(data,
 #' @seealso
 #' \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
 #' @family main_functions
-#' @family relpois_related
+#' @family relpois functions
 #' @examples
 #' ## use the simulated rectal cancer cohort
 #' data(sire, package = "popEpi")

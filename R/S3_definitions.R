@@ -252,7 +252,7 @@ plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main,
 #' On top of the frame it's then possible to add a \code{grid}, 
 #' \code{abline} or text before plotting the lines (see: \code{sirspline}).
 #' @export
-#' @family sir_related
+#' @family sir functions
 plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, ylab, xlab,  ...) {
 
   #print(list(...))
@@ -346,7 +346,7 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 #' \code{print.levels}. Printing the levels seperately enables  e.g. to
 #' give different colours for each level.
 #' 
-#' @family sir_related
+#' @family sir functions
 #' 
 #' @import graphics
 #' @export
@@ -643,7 +643,7 @@ print.aggre <- function(x, subset = NULL, ...) {
 #' \code{subset = sex == "male"}
 #' @param ... unused
 #' @export
-#' @family aggregation_related
+#' @family aggregation functions
 summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
   
   PF <- parent.frame(1L)
@@ -680,7 +680,7 @@ summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
 #' if the table is large, 
 #' \code{nrow = 100} for number of rows to print, etc.
 #' @export
-#' @family survtab_related
+#' @family survtab functions
 print.survtab <- function(x, subset = NULL, ...) {
   
   Tstart <- Tstop <- NULL ## APPEASE R CMD CHECK
@@ -812,7 +812,7 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' x <- as.data.frame(st)
 #' 
 #' @export
-#' @family survtab_related
+#' @family survtab functions
 summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   
   PF <- parent.frame(1L)
@@ -1074,7 +1074,7 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclo
 #' ## or
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
-#' @family survtab_related
+#' @family survtab functions
 plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
   Tstop <- delta <- NULL ## APPEASE R CMD CHECK
@@ -1162,7 +1162,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 #' ## or
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
-#' @family survtab_related
+#' @family survtab functions
 lines.survtab <- function(x, y = NULL, subset = NULL, 
                           conf.int = TRUE, col=NULL, lty=NULL, ...) {
   Tstop <- NULL ## APPEASE R CMD CHECK
@@ -1322,7 +1322,7 @@ lines_by <- function(x, y, strata.vars = NULL, data, col, lty, ...) {
 #' 
 #' where \code{x} is a \code{survmean} object.
 #' @export
-#' @family survmean_related
+#' @family survmean functions
 plot.survmean <- function(x, ...) {
   at <- attr(x, "survmean.meta")
   curves <- at$curves
@@ -1369,7 +1369,7 @@ plot.survmean <- function(x, ...) {
 #' 
 #' where \code{x} is a \code{survmean} object.
 #' @export
-#' @family survmean_related
+#' @family survmean functions
 lines.survmean <- function(x, ...) {
   at <- copy(attr(x, "survmean.meta"))
   curves <- at$curves
