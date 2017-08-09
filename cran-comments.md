@@ -1,4 +1,20 @@
 
+# popEpi CRAN upload, v.0.4.2
+
+## Checked on:
+* Windows 10, R 3.4.1
+* Ubuntu 17.04, R 3.4.1
+
+
+## Checking results
+
+Finished with `Status: OK` with no `WARNING`s nor `ERROR`s. Only got this `NOTE` from R-devel:
+
+```
+* checking CRAN incoming feasibility ... NOTE
+Maintainer: 'Joonas Miettinen <joonas.miettinen@cancer.fi>'
+```
+
 # popEpi CRAN upload, v.0.4.1
 
 ## Checked on R-hub:
