@@ -36,37 +36,41 @@ test_that("survmean() agrees with old results", {
 
 
 
-test_that("survmean() agrees with results computed using pkg survival", {
-  skip_on_cran()
-  
-  
-  BL <- list(fot= seq(0,15,1/24))
-  eBL <- list(fot = unique(c(BL$fot, seq(15, 115,0.5))))
-  
-  sire2 <- data.table(popEpi::sire)[dg_date<ex_date, ]
-  sire2$statusf <- factor(sire2$status, levels = 0:2, 
-                          labels = c("alive", "canD", "othD"))
-  
-  x <- lexpand(sire2, 
-               birth  = bi_date, entry = dg_date, exit = ex_date,
-               status = statusf,
-               breaks = NULL)
-  
-  popmort_sm <- setDT(copy(popEpi::popmort))
-  setnames(popmort_sm, c("agegroup", "year"), c("age", "per"))
-  
-  sm <- survmean(Surv(fot, event = lex.Xst) ~ 1, 
-                 breaks = BL, e1.breaks = eBL,
-                 pophaz = popmort_sm, data = x)
-  
-  sm_curve <- copy(attr(sm, "survmean.meta")$curve)
-  td01 <- readRDS("tests/testthat/survmean_test_data_01.rds")
-  
-  expect_equal(sm_curve[survmean_type == "est", surv], 
-               td01$est, 
-               scale = 1L, 
-               tolerance = 0.001)
-})
+# test_that("survmean() agrees with results computed using pkg survival", {
+#   skip_on_cran()
+#   
+#   
+#   BL <- list(fot= seq(0,15,1/24))
+#   eBL <- list(fot = unique(c(BL$fot, seq(15, 115,0.5))))
+#   
+#   sire2 <- data.table(popEpi::sire)[dg_date<ex_date, ]
+#   sire2$statusf <- factor(sire2$status, levels = 0:2, 
+#                           labels = c("alive", "canD", "othD"))
+#   
+#   x <- lexpand(sire2, 
+#                birth  = bi_date, entry = dg_date, exit = ex_date,
+#                status = statusf,
+#                breaks = NULL)
+#   
+#   popmort_sm <- setDT(copy(popEpi::popmort))
+#   setnames(popmort_sm, c("agegroup", "year"), c("age", "per"))
+#   
+#   sm <- survmean(Surv(fot, event = lex.Xst) ~ 1, 
+#                  breaks = BL, e1.breaks = eBL, r = 1,
+#                  pophaz = popmort_sm, data = x)
+#   
+#   st <- survtab(Surv(fot, event = lex.Xst) ~ 1, 
+#                 breaks = BL, 
+#                 pophaz = popmort_sm, data = x)
+#   
+#   sm_curve <- copy(attr(sm, "survmean.meta")$curve)
+#   td01 <- readRDS("tests/testthat/survmean_test_data_01.rds")
+#   
+#   expect_equal(sm_curve[survmean_type == "est", surv], 
+#                td01$est, 
+#                scale = 1L, 
+#                tolerance = 0.001)
+# })
 
 
 test_that("survmean expected survival curve corresponds to full Ederer I", {
