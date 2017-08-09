@@ -4,8 +4,8 @@ library(Epi)
 library(survival)
 
 ## ------------------------------------------------------------------------
-
 data(sire)
+
 ## NOTE: recommended to use factor status variable
 x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
            exit = list(CAL = get.yrs(ex_date)), 
@@ -117,6 +117,7 @@ st.cif <- survtab(Surv(time = FUT, event = lex.Xst) ~ 1,
                   data = x, 
                   surv.type = "cif.obs",
                   breaks = list(FUT = seq(0, 5, 1/12)))
+
 plot(st.cif, y = "CIF_canD", conf.int = FALSE)
 lines(st.cif, y = "CIF_othD", conf.int = FALSE, col = "red")
 
