@@ -1,15 +1,15 @@
 ## Copied from test_mean_survival: 
 ## source: git changeset 64d8e79cacb01b2cd104760206b7c9af469133a3
+## note: contains logic for computing also popEpi-based extrapolated
+## survival curve and mean survival, but those results are not saved.
+## kept here because why not.
+## last computed this on changeset 
 
 library("data.table")
 library("survival")
 library("Epi")
 library("relsurv")
 library("git2r")
-
-stopifnot(
-  commits(repository())[[1]]@sha == "64d8e79cacb01b2cd104760206b7c9af469133a3"
-)
 
 
 as.date.Date <- function(x, ...) {
@@ -43,7 +43,13 @@ fb <- setdiff(BL$fot, 0)
 su.km  <- survfit(Surv(time=fot, time2=fot+lex.dur, lex.Xst!="alive") ~ 1, 
                   data = x)
 su.km  <- summary(su.km, times = fb)
-su.km  <- cbind(data.table(time = su.km$time), data.table(su.km$surv))
+su.km  <- data.table("time" = su.km$time, "est" = su.km$surv)
+
+stopifnot(
+  all.equal(
+    su.km[time <= 15][["est"]], st[["surv.obs"]], tol = 0.001
+  )
+)
 
 #### compute expected survivals for all subjects
 BL <- list(fot = seq(0,100, 1/2))
@@ -52,8 +58,8 @@ setattr(xe$age, "class", c("yrs", "numeric"))
 setattr(xe$per, "class", c("yrs", "numeric"))
 setattr(xe$per, "year.length", "approx")
 setattr(xe$age, "year.length", "approx")
-xe[, perdate := as.date.Date(as.Date.yrs(per))]
-xe[, agedate := as.integer(as.Date.yrs(per)-as.Date(bi_date))]
+xe[, "perdate" := as.date.Date(as.Date.yrs(per))]
+xe[, "agedate" := as.integer(as.Date.yrs(per)-as.Date(bi_date))]
 
 
 ## form ratetable
@@ -100,11 +106,11 @@ st[(nrow_obs+1):.N, "fot" := fot + st[nrow_obs, fot]]
 st[(nrow_obs+1):.N, "surv.obs" := surv.obs*st[nrow_obs, surv.obs]]
 
 
-su.exp[, surv.exp := surv.exp * su.km[.N, V1]]
+su.exp[, surv.exp := surv.exp * su.km[.N, est]]
 su <- rbindlist(list(su.km, su.exp))
 
 su[, "est_type" := c(rep("observed", nrow_obs), rep("extrapolated", nrow_exp))]
-setnames(su, c("time", "V1"), c("Tstop", "est"))
+setnames(su, c("time"), c("Tstop"))
 setcolorder(su, c("est_type", "Tstop", "est"))
 
 
