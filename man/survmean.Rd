@@ -105,10 +105,10 @@ This function also computes the "full" expected survival curve from
 T = 0 till e.g. T = 50 depending on supplied arguments. The
 expected mean survival time is the area under the 
 mean expected survival curve.
-This function returns the mean expected survival time to be omcpared with 
+This function returns the mean expected survival time to be compared with 
 the mean survival time and for computing years of potential life lost (YPLL).
 
-Results can be requested by strata and adjusted for e.g. age by using
+Results can be formed by strata and adjusted for e.g. age by using
 the \code{formula} argument as in \code{survtab}. See also Examples.
 
 \strong{Extrapolation tweaks}
