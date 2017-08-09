@@ -1,6 +1,6 @@
 popEpi 0.4.2
 =====
-* survtab()`bug fix: standard errors were misspecificied for adjusted curves, e.g. age-adjusted Ederer II estimates. This resulted in too wide confidence intervals! (#135)
+* survtab()`bug fix: standard errors were misspecificied for adjusted curves, e.g. age-adjusted Ederer II estimates. This resulted in too wide confidence intervals! (#135) (SEE https://github.com/WetRobot/popEpi/issues/135 FOR EXAMPLE)
 * survtab() bug fix: confidence level was always 95 % regardless of `conf.level` (#134)
 
 
