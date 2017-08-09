@@ -977,15 +977,28 @@ subset.rate <- function(x, ...) {
   y
 }
 
-prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclos = parent.frame(1L), ...) {
+
+
+
+
+prep_plot_survtab <- function(x, 
+                              y = NULL, 
+                              subset = NULL, 
+                              conf.int = TRUE, 
+                              enclos = parent.frame(1L), 
+                              ...) {
   
   ## subsetting ----------------------------------------------------------------
-  subset <- evalLogicalSubset(data = x, substiset = substitute(subset), enclos = environment())
+  subset <- evalLogicalSubset(data = x, substiset = substitute(subset), 
+                              enclos = environment())
   
   attrs <- attributes(x)
   
   if (!inherits(x, "survtab")) stop("x is not a survtab object")
-  if (is.null(attrs$survtab.meta)) stop("Missing meta information (attributes) in survtab object; have you tampered with it after estimation?")
+  if (is.null(attrs$survtab.meta)) {
+    stop("Missing meta information (attributes) in survtab object; ",
+         "have you tampered with it after estimation?")
+  }
   strata.vars <- attrs$survtab.meta$print.vars
   x <- copy(x)
   setDT(x)
@@ -999,21 +1012,34 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclo
   }
   surv_vars <- names(x)[wh]
   surv_vars <- surv_vars[!substr(surv_vars, nchar(surv_vars)-1, nchar(surv_vars)) %in% c("hi","lo")]
-  if (length(surv_vars) == 0) stop("x does not appear to have any survival variables; did you tamper with it after estimation?")
+  if (length(surv_vars) == 0) {
+    stop("x does not appear to have any survival variables; ",
+         "did you tamper with it after estimation?")
+  }
   
   
   ## getting y -----------------------------------------------------------------
   if (!is.null(y)) {
-    if (!is.character(y)) stop("please supply y as a character string indicating the name of a variable in x")
+    if (!is.character(y)) {
+      stop("please supply y as a character string indicating ",
+           "the name of a variable in x")
+    }
     if (length(y) > 1) stop("y must be of length 1 or NULL")
-    if (!all_names_present(x, y, stops = FALSE)) stop("Given survival variable in argument 'y' not present in survtab object ('", y, "')")
+    if (!all_names_present(x, y, stops = FALSE)) {
+      stop("Given survival variable in argument 'y' ",
+           "not present in survtab object ('", y, "')")
+    }
   } else {
     y <- surv_vars[length(surv_vars)]
     if (length(surv_vars) > 1L) message("y was NULL; chose ", y, " automatically")
   }
   rm(surv_vars)
   
-  if (substr(y, 1, 3) == "CIF" && conf.int) stop("No confidence intervals currently supported for CIFs. Hopefully they will be added in a future version; meanwhile use conf.int = FALSE when plotting CIFs.")
+  if (substr(y, 1, 3) == "CIF" && conf.int) {
+    stop("No confidence intervals currently supported for CIFs. ",
+         "Hopefully they will be added in a future version; ",
+         "meanwhile use conf.int = FALSE when plotting CIFs.")
+  }
   
   
   ## confidence intervals ------------------------------------------------------
@@ -1025,13 +1051,21 @@ prep_plot_survtab <- function(x, y = NULL, subset = NULL, conf.int = TRUE, enclo
     y.ci <- c(y.lo, y.hi)
     
     badCIvars <- setdiff(y.ci, names(x))
-    if (sum(length(badCIvars))) stop("conf.int = TRUE, but missing confidence interval variables in data for y = '", y, "' (could not detect variables named", paste0("'", badCIvars, "'", collapse = ", ") ,")")
+    if (sum(length(badCIvars))) {
+      stop("conf.int = TRUE, but missing confidence interval ",
+           "variables in data for y = '", y, "' (could not detect ",
+           "variables named", paste0("'", badCIvars, "'", collapse = ", ") ,")")
+    }
     
   } 
   
-  list(x = x, y = y, y.ci = y.ci, y.lo = y.lo, y.hi = y.hi, strata = strata.vars, attrs = attrs)
+  list(x = x, y = y, y.ci = y.ci, y.lo = y.lo, y.hi = y.hi, 
+       strata = strata.vars, attrs = attrs)
   
 }
+
+
+
 
 
 #' \code{plot} method for survtab objects
@@ -1083,7 +1117,8 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = x, subset, enclos = PF)
   
-  l <- prep_plot_survtab(x = x, y = y, subset = subset, conf.int = conf.int, enclos = PF)
+  l <- prep_plot_survtab(x = x, y = y, subset = subset, 
+                         conf.int = conf.int, enclos = PF)
   x <- l$x
   y <- l$y
   y.ci <- l$y.ci
@@ -1091,10 +1126,14 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
   y.hi <- l$y.hi
   
   ## figure out limits, etc. to pass to plot() ---------------------------------
-  min_y <- min(x[, c(y,y.lo), with=FALSE], na.rm=TRUE)
-  min_y <- max(min_y, 0)
   
-  max_y <- max(x[, c(y), with=FALSE], na.rm=TRUE) + 0.025
+  min_y <- do.call("min", c(mget(c(y, y.lo), as.environment(x)), na.rm = TRUE))
+  min_y <- max(min_y, 0)
+  if (substr(y, 1, 3) == "CIF") {
+    min_y <- 0.0
+  }
+  
+  max_y <- max(x[[y]], na.rm=TRUE)
   
   max_x <- max(x[, Tstop])
   min_x <- min(x[, Tstop-delta])
