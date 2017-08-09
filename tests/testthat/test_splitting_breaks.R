@@ -1,11 +1,10 @@
 context("breaks attributes resulting from splitting")
 
 
-
-
 test_that("splitMulti produces intended breaks list", {
   
   x <- data.table(popEpi::sibr)
+  x <- x[dg_date < ex_date & bi_date < dg_date]
   
   x <- Lexis(
     data = x, 
@@ -78,31 +77,4 @@ test_that("splitLexisDT produces intended breaks list", {
 
 
 
-
-test_that("splitLexisDT produces intended breaks list", {
-  
-  x <- data.table(popEpi::sibr)
-  
-  x <- lexpand(x, entry = "dg_date", exit = "ex_date", birth = "bi_date", 
-               status = "status")
-  
-  br <- 0:10
-  xx <- splitLexis(x, breaks = br, time.scale = "fot")
-  
-  br2 <- 2:8
-  xxx <- splitLexis(xx, breaks = br, time.scale = "fot")
-  
-  expect_equal(breaks(xx, "fot"), br)
-  expect_equal(breaks(xxx, "fot"), br2)
-  
-  
-  br <- 2:8
-  xx <- splitLexis(x, breaks = br, time.scale = "fot")
-  
-  br2 <- 0:10
-  xxx <- splitLexis(xx, breaks = br, time.scale = "fot")
-  
-  expect_equal(unique(breaks(xx, "fot")), br)
-  expect_equal(unique(breaks(xxx, "fot")), br2)
-})
 
