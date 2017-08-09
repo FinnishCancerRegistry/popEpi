@@ -2,9 +2,13 @@
 .onAttach <- function(...) {
   if (interactive()) {
     msg <- paste0("Using popEpi. See news(package='popEpi') for changes. \n",
-                  "popEpi's appropriate data outputs are in data.table",
+                  "popEpi's appropriate data outputs are in data.table ",
                   "(enhanced data.frame) format by default; \n",
-                  "see ?popEpi for changing this.")
+                  "see ?popEpi for changing this. \n", 
+                  "*** IMPORTANT: there was an error in survtab's adjusted outputs ",
+                  "in versions <= 0.4.1 \n", 
+                  "*** leading to inflated confidence intervals; see ",
+                  "news(package='popEpi')")
     packageStartupMessage(msg)
   }
 }
