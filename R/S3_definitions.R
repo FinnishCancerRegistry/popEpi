@@ -1129,11 +1129,13 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
   
   min_y <- do.call("min", c(mget(c(y, y.lo), as.environment(x)), na.rm = TRUE))
   min_y <- max(min_y, 0)
+  max_y <- max(x[[y]], na.rm=TRUE)
+  
   if (substr(y, 1, 3) == "CIF") {
     min_y <- 0.0
+  } else {
+    max_y <- max(1.0, max_y)
   }
-  
-  max_y <- max(x[[y]], na.rm=TRUE)
   
   max_x <- max(x[, Tstop])
   min_x <- min(x[, Tstop-delta])
