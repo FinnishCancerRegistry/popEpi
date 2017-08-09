@@ -729,20 +729,31 @@ survtab_ag <- function(formula = NULL,
   
   # compute adjusted estimates -------------------------------------------------
   if ("weights" %in% names(data)) {
-    adEsts <- names(data)[substr(names(data), 1, 8) == "surv.obs"]
-    adEsts <- c(adEsts, "r.e2", "r.pp")
-    adEsts <- c(adEsts,  names(data)[substr(names(data),1,3)=="CIF"])
-    adEsts <- intersect(adEsts, names(data))
-    adEsts <- adEsts[unlist(lapply(adEsts, function(x) !substr(x, nchar(x)-2L, nchar(x)) %in% c(".lo", ".hi")))]
-    adSEs <- paste0("SE.", adEsts)
+    w_est_vars <- names(data)[substr(names(data), 1, 8) == "surv.obs"]
+    w_est_vars <- c(w_est_vars, "r.e2", "r.pp")
+    w_est_vars <- c(w_est_vars,  names(data)[substr(names(data),1,3)=="CIF"])
+    w_est_vars <- intersect(w_est_vars, names(data))
+    w_est_vars <- w_est_vars[unlist(lapply(w_est_vars, function(x) {
+      !substr(x, nchar(x)-2L, nchar(x)) %in% c(".lo", ".hi")
+      }))]
+    w_se_vars <- paste0("SE.", w_est_vars)
     
-    data.w <- data[, lapply(mget(c(adEsts, adSEs)), function(x) sum(x*weights)), keyby = c(prVars, "surv.int")]
-    data <- data[, lapply(mget(valVars), sum), keyby = c(prVars, "surv.int", "Tstart", "Tstop", "delta")]
-    data <- merge(data, data.w, by = c(prVars, "surv.int"), all = TRUE)
-    setnames(data, c(adEsts, adSEs), paste0(c(adEsts, adSEs), ".as"))
+    w_est <- data[, lapply(.SD, function(x) sum(x*weights)), 
+                   keyby = c(prVars, "surv.int"), .SDcols = w_est_vars]
+    w_se <- data[, lapply(.SD, function(x) sqrt(sum((x^2)*(weights^2)))),
+                   keyby = c(prVars, "surv.int"), .SDcols = w_se_vars]
     
-    for (var in paste0(adEsts, ".as")) {
-      data <- comp.st.conf.ints(data, al=1-conf.level, surv=var, transform =conf.type)
+    data <- data[, lapply(mget(valVars), sum), 
+                 keyby = c(prVars, "surv.int", "Tstart", "Tstop", "delta")]
+    set(data, j = w_se_vars, value = mget(w_se_vars, as.environment(w_se)))
+    set(data, j = w_est_vars, value = mget(w_est_vars, as.environment(w_est)))
+    
+    setnames(data, old = c(w_est_vars, w_se_vars), 
+             new = paste0(c(w_est_vars, w_se_vars), ".as"))
+    
+    for (var in paste0(w_est_vars, ".as")) {
+      data <- comp.st.conf.ints(data, al = 1-conf.level, 
+                                surv = var, transform = conf.type)
     }
     
     

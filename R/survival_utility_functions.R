@@ -123,7 +123,7 @@ comp.st.conf.ints <- function(tab = pp.table, al=0.05, surv="r.pp", transform ="
   }
   
   ## zero SE means zero uncertainty means lo=hi=estimate
-  tab[get(SE.surv) == 0, c(surv.lo, surv.hi) := get(surv)]
+  tab[tab[[SE.surv]] == 0, c(surv.lo, surv.hi) := .SD, .SDcols = surv]
   
   tab[]
 }
