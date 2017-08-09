@@ -1354,7 +1354,7 @@ fuse_breakslists <- function(bl.old, bl.new, drop) {
   if (length(common_scales)) {
     
     bl[common_scales] <- lapply(common_scales, function(time_scale) {
-      new <- bl.new[[time_Scale]]
+      new <- bl.new[[time_scale]]
       old <- bl.old[time_scale]
       fuse <- sort(union(old, new))
       if (drop) {
