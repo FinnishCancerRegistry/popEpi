@@ -5,15 +5,25 @@
 * Windows 10, R 3.4.1
 * Ubuntu 17.04, R 3.4.1
 
+* R-hub: macOS 10.11 El Capitan, R-release (experimental)
+* R-hub: Debian Linux, R-devel, GCC
+
+* win-builder: R Under development (unstable) (2017-08-08 r73068)
 
 ## Checking results
 
-Finished with `Status: OK` with no `WARNING`s nor `ERROR`s. Only got this `NOTE` from R-devel:
+Finished with `Status: OK` with no `WARNING`s nor `ERROR`s. Only got this `NOTE` from win-builder R-devel:
 
 ```
 * checking CRAN incoming feasibility ... NOTE
 Maintainer: 'Joonas Miettinen <joonas.miettinen@cancer.fi>'
+
+Possibly mis-spelled words in DESCRIPTION:
+  SIRs (10:71)
+  SMRs (10:76)
 ```
+
+The words are not mis-spelled.
 
 # popEpi CRAN upload, v.0.4.1
 
