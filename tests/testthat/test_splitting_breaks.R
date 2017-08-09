@@ -37,7 +37,7 @@ test_that("splitMulti produces intended breaks list", {
 
 test_that("splitLexisDT produces intended breaks list", {
   skip_on_cran()
-  x <- data.table(popEpi::sibr)
+  x <- data.table(popEpi::sibr)[dg_date < ex_date, ]
   
   x <- Lexis(
     data = x, 
