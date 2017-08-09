@@ -3,7 +3,7 @@
 ## note: contains logic for computing also popEpi-based extrapolated
 ## survival curve and mean survival, but those results are not saved.
 ## kept here because why not.
-## last computed this on changeset 
+## last computed this on changeset 7842fb3eebee37cff7aca2b3261749da5d1cadd7
 
 library("data.table")
 library("survival")
