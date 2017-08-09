@@ -1,6 +1,7 @@
 context("adjusted curves from survtab")
 
 test_that("adjusted SEs and curves are what expected", {
+  skip_on_cran()
   
   sire <- data.table::data.table(popEpi::sire)
   
