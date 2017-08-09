@@ -1,6 +1,15 @@
 ## Copied from test_mean_survival: 
 ## source: git changeset 64d8e79cacb01b2cd104760206b7c9af469133a3
-## small changes were made from that version --- mostly clean up
+
+library("data.table")
+library("survival")
+library("Epi")
+library("relsurv")
+library("git2r")
+
+stopifnot(
+  commits(repository())[[1]]@sha == "64d8e79cacb01b2cd104760206b7c9af469133a3"
+)
 
 
 as.date.Date <- function(x, ...) {
@@ -8,11 +17,6 @@ as.date.Date <- function(x, ...) {
   as.date(x)
 }
 #### compute observed survivals
-library("data.table")
-library("survival")
-library("Epi")
-library("relsurv")
-
 BL <- list(fot= seq(0,15,1/24))
 eBL <- list(fot = unique(c(BL$fot, seq(15, 115,0.5))))
 sire2 <- sire[dg_date<ex_date, ]
@@ -103,6 +107,6 @@ su[, "est_type" := c(rep("observed", nrow_obs), rep("extrapolated", nrow_exp))]
 setnames(su, c("time", "V1"), c("Tstop", "est"))
 setcolorder(su, c("est_type", "Tstop", "est"))
 
-data.table::fwrite(su, file = "data-raw/pkg_survival_to_115_yrs.csv", 
-                   row.names = FALSE)
+
+saveRDS(su, file = "tests/testthat/survmean_test_data_01.rds")
 

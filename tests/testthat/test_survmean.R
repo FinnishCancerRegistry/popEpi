@@ -1,11 +1,12 @@
 context("mean survival testing")
+library("data.table")
+library("Epi")
+library("survival")
 
 test_that("survmean() agrees with old results", {
   skip_on_cran()
-  library(Epi)
-  library(survival)
   
-  sr <- copy(sire)[dg_date < ex_date, ]
+  sr <- data.table(popEpi::sire)[dg_date < ex_date, ]
   sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
   
   x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
@@ -18,7 +19,7 @@ test_that("survmean() agrees with old results", {
              merge = TRUE)
   
   ## observed survival
-  pm <- copy(popEpi::popmort)
+  pm <- data.table(popEpi::popmort)
   names(pm) <- c("sex", "CAL", "AGE", "haz")
   sm <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ agegr,
                  pophaz = pm, data = x,
@@ -38,15 +39,11 @@ test_that("survmean() agrees with old results", {
 test_that("survmean() agrees with results computed using pkg survival", {
   skip_on_cran()
   
-  #### compute observed survivals
-  library("data.table")
-  library("survival")
-  library("Epi")
   
   BL <- list(fot= seq(0,15,1/24))
   eBL <- list(fot = unique(c(BL$fot, seq(15, 115,0.5))))
   
-  sire2 <- sire[dg_date<ex_date, ]
+  sire2 <- data.table(popEpi::sire)[dg_date<ex_date, ]
   sire2$statusf <- factor(sire2$status, levels = 0:2, 
                           labels = c("alive", "canD", "othD"))
   
@@ -63,7 +60,7 @@ test_that("survmean() agrees with results computed using pkg survival", {
                  pophaz = popmort_sm, data = x)
   
   sm_curve <- copy(attr(sm, "survmean.meta")$curve)
-  td01 <- popEpi::survmean_test_data_01
+  td01 <- readRDS("tests/testthat/survmean_test_data_01.rds")
   
   expect_equal(sm_curve[survmean_type == "est", surv], 
                td01$est, 
@@ -74,10 +71,8 @@ test_that("survmean() agrees with results computed using pkg survival", {
 
 test_that("survmean expected survival curve corresponds to full Ederer I", {
   skip_on_cran()
-  library(Epi)
-  library(survival)
   
-  sr <- copy(sire)[dg_date < ex_date, ]
+  sr <- data.table(sire)[dg_date < ex_date, ]
   sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
   
   x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
@@ -106,8 +101,8 @@ test_that("survmean expected survival curve corresponds to full Ederer I", {
   e1 <- comp_e1(x = x, breaks = eBL, 
                 pophaz = pm, survScale = "FUT")
   setkeyv(e1, "FUT")
-  e1[, delta := diff(eBL$FUT)]
-  e1[, l1 := c(1,surv.exp[-.N])]
+  e1[, "delta" := diff(eBL$FUT)]
+  e1[, "l1" := c(1,surv.exp[-.N])]
   sm.e1 <- e1[, sum((l1+surv.exp)/2L*delta)]
   
   
@@ -117,10 +112,8 @@ test_that("survmean expected survival curve corresponds to full Ederer I", {
 
 test_that("survmean period method is useful", {
   skip_on_cran()
-  library(Epi)
-  library(survival)
   
-  sr <- copy(sire)[dg_date < ex_date, ]
+  sr <- data.table(popEpi::sire)[dg_date < ex_date, ]
   sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
   
   x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
@@ -168,8 +161,6 @@ test_that("survmean period method is useful", {
 
 test_that("Dates and frac. yrs produce congruent results", {
   skip_on_cran()
-  library(Epi)
-  library(survival)
   
   x <- data.table(popEpi::sire)
   x <- x[dg_date<ex_date]
@@ -269,11 +260,6 @@ test_that("Dates and frac. yrs produce congruent results", {
 test_that("updating works for survmean objects", {
   
   skip_on_cran()
-  
-  
-  library(Epi)
-  library("data.table")
-  library(survival)
   
   set.seed(1)
   sr <- setDT(popEpi::sire[sample(1:.N, 100), ])
