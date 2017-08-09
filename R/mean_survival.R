@@ -248,7 +248,7 @@
 #' 
 
 #' 
-#' @export survmean
+#' @export
 #' @family survmean functions
 #' @family main functions
 #' 
@@ -259,7 +259,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
                      surv.method = "hazard", subset = NULL, verbose = FALSE) {
   pt <- proc.time()
   TF__ <- environment()
-  PF <- parent.frame(1L)
+  PF__ <- parent.frame(1L)
   
   attr_form <- copy(formula)
   
@@ -292,15 +292,15 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
     r <- "auto"
   }
   
-  allScales <- attr(data, "time.scales")
-  oldBreaks <- attr(data, "breaks")
+  tscales_all <- attr(data, "time.scales")
+  breaks_old <- attr(data, "breaks")
   
   
   
   ## breaks --------------------------------------------------------------------
   
-  if (!is.null(oldBreaks)) checkBreaksList(data, oldBreaks)
-  if (is.null(breaks)) breaks <- oldBreaks
+  if (!is.null(breaks_old)) checkBreaksList(data, breaks_old)
+  if (is.null(breaks)) breaks <- breaks_old
   
   checkBreaksList(data, breaks)
   
@@ -311,51 +311,56 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data, subset)
   
-  x <- copy(data[subset, ])
-  setDT(x)
-  forceLexisDT(x, breaks = oldBreaks, allScales = allScales)
+  x <- setDT(data[subset, ])
+  forceLexisDT(x, breaks = breaks_old, allScales = tscales_all)
   
   ## ensure variables to merge pophaz datas by are kept ------------------------
   ## NOTE: temp var names avoid conflicts down the line
   avoid <- unique(c(names(data), names(x), names(pophaz), names(e1.pophaz)))
   
-  phNames <- c(names(pophaz), names(e1.pophaz))
-  phNames <- setdiff(phNames, c(allScales, "haz"))
-  phNames <- intersect(phNames, names(x))
-  tmpPhNames <- makeTempVarName(names = avoid, pre = phNames)
-  if (!length(phNames)) {
-    tmpPhNames <- NULL
+  pophaz_vars <- c(names(pophaz), names(e1.pophaz))
+  pophaz_vars <- setdiff(pophaz_vars, c(tscales_all, "haz"))
+  pophaz_vars <- intersect(pophaz_vars, names(x))
+  pophaz_vars_tmp <- makeTempVarName(names = avoid, pre = pophaz_vars)
+  if (!length(pophaz_vars)) {
+    pophaz_vars_tmp <- NULL
   } else {
-    phna <- which(phNames %in% names(pophaz))
-    if (sum(phna)) setnames(pophaz, phNames[phna], tmpPhNames[phna])
-    phna <- which(phNames %in% names(e1.pophaz))
-    if (sum(phna)) setnames(e1.pophaz, phNames[phna], tmpPhNames[phna])
-    x[, c(tmpPhNames) := copy(.SD), .SDcols = phNames]
+    pophaz_vars_wh <- which(pophaz_vars %in% names(pophaz))
+    if (sum(pophaz_vars_wh)) {
+      setnames(pophaz, old = pophaz_vars[pophaz_vars_wh], 
+               new = pophaz_vars_tmp[pophaz_vars_wh])
+    }
+    pophaz_vars_wh <- which(pophaz_vars %in% names(e1.pophaz))
+    if (sum(pophaz_vars_wh)) {
+      setnames(e1.pophaz, old = pophaz_vars[pophaz_vars_wh], 
+               new = pophaz_vars_tmp[pophaz_vars_wh])
+    }
+    x[, (pophaz_vars_tmp) := copy(.SD), .SDcols = pophaz_vars]
   }
   
   ## determine printing & adjusting vars ---------------------------------------
   adSub <- substitute(adjust)
-  foList <- usePopFormula(formula, adjust = adSub, data = x, enclos = PF, 
+  foList <- usePopFormula(formula, adjust = adSub, data = x, enclos = PF__, 
                           Surv.response = "either")
   
   ## will avoid conflicts using temp names for tabulating variables
-  adNames <- names(foList$adjust)
-  prNames <- names(foList$print)
-  byNames <- c(prNames, adNames)
+  adjust_vars <- names(foList$adjust)
+  print_vars <- names(foList$print)
+  by_vars <- c(print_vars, adjust_vars)
   
   avoid <- unique(c(names(data), names(x), names(pophaz), names(e1.pophaz)))
-  tmpAdNames <- makeTempVarName(names = avoid, pre = adNames)
-  if (!length(adNames)) tmpAdNames <- NULL
+  adjust_vars_tmp <- makeTempVarName(names = avoid, pre = adjust_vars)
+  if (!length(adjust_vars)) adjust_vars_tmp <- NULL
   avoid <- unique(c(names(data), names(x), names(pophaz), names(e1.pophaz)))
-  tmpPrNames <- makeTempVarName(names = avoid, pre = prNames)
-  if (!length(prNames)) tmpPrNames <- NULL
-  tmpByNames  <- c(tmpPrNames, tmpAdNames)
+  print_vars_tmp <- makeTempVarName(names = avoid, pre = print_vars)
+  if (!length(print_vars)) print_vars_tmp <- NULL
+  by_vars_tmp  <- c(print_vars_tmp, adjust_vars_tmp)
   
   
-  lexVars <- c("lex.id", allScales, "lex.dur", "lex.Cst", "lex.Xst")
-  setcolsnull(x, keep = c(lexVars, tmpPhNames), soft = FALSE)
-  if (length(adNames) > 0L) x[, c(tmpAdNames) := foList$adjust]
-  if (length(prNames) > 0L) x[, c(tmpPrNames) := foList$print]
+  lex_vars <- c("lex.id", tscales_all, "lex.dur", "lex.Cst", "lex.Xst")
+  setcolsnull(x, keep = c(lex_vars, pophaz_vars_tmp), soft = FALSE)
+  if (length(adjust_vars) > 0L) x[, (adjust_vars_tmp) := foList$adjust]
+  if (length(print_vars) > 0L) x[, (print_vars_tmp) := foList$print]
   
   ## formula for survtab: we estimate survivals by all levels of both
   ## print and adjust; adjusting here means computing directly adjusted
@@ -363,8 +368,8 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   ## weighted later on.
   
   formula <- paste0(deparse(formula[[2L]]), " ~ ")
-  if (length(c(tmpAdNames, tmpPrNames)) > 0L) {
-    formula <- paste0(formula, paste0(c(tmpPrNames, tmpAdNames), 
+  if (length(c(adjust_vars_tmp, print_vars_tmp)) > 0L) {
+    formula <- paste0(formula, paste0(c(print_vars_tmp, adjust_vars_tmp), 
                                       collapse = " + "))
   } else {
     formula <- paste0(formula, "1")
@@ -372,37 +377,37 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   formula <- as.formula(formula)
   
   ## detect survival time scale ------------------------------------------------
-  survScale <- detectSurvivalTimeScale(lex = x, values = foList$y$time)
+  tscale_surv <- detectSurvivalTimeScale(lex = x, values = foList$y$time)
   
   ## check weights & adjust ----------------------------------------------------
-  test_obs <- x[, .(obs=.N),  keyby=eval(TF__$tmpByNames)]
-  if (length(byNames)) setnames(test_obs, tmpByNames, byNames)
-  if (length(weights) && !length(adNames)) {
+  test_obs <- x[, .(obs=.N),  keyby=eval(TF__$by_vars_tmp)]
+  if (length(by_vars)) setnames(test_obs, by_vars_tmp, by_vars)
+  if (length(weights) && !length(adjust_vars)) {
     weights <- NULL
     warning("Replaced weights with NULL due to not supplying variables to ",
             "adjust by.")
   }
-  mwDTtest <- makeWeightsDT(test_obs, values = list("obs"), print = prNames,
-                            adjust = adNames, weights = weights, 
+  mwDTtest <- makeWeightsDT(test_obs, values = list("obs"), print = print_vars,
+                            adjust = adjust_vars, weights = weights, 
                             internal.weights.values = "obs")
-  if (length(byNames)) setnames(test_obs, byNames, tmpByNames)
+  if (length(by_vars)) setnames(test_obs, by_vars, by_vars_tmp)
   
   ## figure out extrapolation breaks -------------------------------------------
   ## now that the survival time scale is known this can actually be done.
   
   if (is.null(e1.breaks)) {
-    e1.breaks <- copy(breaks[survScale])
-    addBreaks <- max(e1.breaks[[survScale]]) + 
+    e1.breaks <- copy(breaks[tscale_surv])
+    addBreaks <- max(e1.breaks[[tscale_surv]]) + 
       c(seq(0,1,1/12), seq(1.2, 1.8, 0.2), 2:19, seq(20, 50, 5))
-    e1.breaks[[survScale]] <- unique(c(e1.breaks[[survScale]], addBreaks))
+    e1.breaks[[tscale_surv]] <- unique(c(e1.breaks[[tscale_surv]], addBreaks))
     
     checkBreaksList(x, e1.breaks)
   }
-  if (!survScale %in% names(e1.breaks)) {
+  if (!tscale_surv %in% names(e1.breaks)) {
     stop("The survival time scale must be included in the list of breaks ",
          "to extrapolate by ('e1.breaks').")
   }
-  if (!all(breaks[[survScale]] %in% e1.breaks[[survScale]])) {
+  if (!all(breaks[[tscale_surv]] %in% e1.breaks[[tscale_surv]])) {
     stop("The vector of breaks in 'breaks' for the survival time scale MUST",
          "be a subset of the breaks for the survival time scale in ",
          "'e1.breaks'. E.g. the former could be 0:10 and the latter 0:100.")
@@ -423,22 +428,22 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
                 surv.type = "surv.rel", 
                 surv.method = surv.method)
   
-  bareVars <- c(tmpByNames, "Tstop", "r.e2", "surv.obs")
+  st_keep_vars <- c(by_vars_tmp, "Tstop", "r.e2", "surv.obs")
   all_names_present(
-    st,  bareVars, 
+    st,  st_keep_vars, 
     msg = paste0("Internal error: expected to have variables ",
                  "%%VARS%% after computing observed survivals ",
                  "but didn't. Blame the package maintainer if you ",
                  "see this.")
   )
-  setcolsnull(st, keep = bareVars, colorder = TRUE)
+  setcolsnull(st, keep = st_keep_vars, colorder = TRUE)
   setDT(st)
-  setkeyv(st, c(tmpByNames, "Tstop"))
-  st[, "Tstart" := c(0, Tstop[-.N]), by = eval(tmpByNames)]
+  setkeyv(st, c(by_vars_tmp, "Tstop"))
+  st[, "Tstart" := c(0, Tstop[-.N]), by = eval(by_vars_tmp)]
   
   ## decumulate for later cumulation
   st[, c("r.e2", "surv.obs") := lapply(.SD, function(col) col/c(1, col[-.N])), 
-     by = eval(tmpByNames),
+     by = eval(by_vars_tmp),
      .SDcols = c("r.e2", "surv.obs")
      ]
   
@@ -452,20 +457,20 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   ## 1) take only those individuals that were diagnosed in the time window
   ##    defined by breaks list in argument 'breaks'
   pt <- proc.time()
-  setkeyv(x, c("lex.id", survScale))
+  setkeyv(x, c("lex.id", tscale_surv))
   tol <- .Machine$double.eps^0.5
-  xe <- unique(x, by = key(x))[x[[survScale]] < TF__$tol, ] ## pick rows with entry to FU
+  xe <- unique(x, by = key(x))[x[[tscale_surv]] < TF__$tol, ] ## pick rows with entry to FU
   
   if (length(breaks) > 1L) {
     ## e.g. a period window was defined and we only use subjects
     ## entering follow-up in the time window.
-    tmpDropBreaks <- setdiff(names(breaks), survScale)
-    tmpDropBreaks <- breaks[tmpDropBreaks]
-    tmpDropBreaks <- lapply(tmpDropBreaks, range)
+    breaks_drop_tmp <- setdiff(names(breaks), tscale_surv)
+    breaks_drop_tmp <- breaks[breaks_drop_tmp]
+    breaks_drop_tmp <- lapply(breaks_drop_tmp, range)
     
     expr <- mapply(function(ch, ra) {
       paste0("between(", ch, ", ", ra[1], ", ", ra[2] - tol, ", incbounds = TRUE)")
-    }, ch = names(tmpDropBreaks), ra = tmpDropBreaks, SIMPLIFY = FALSE)
+    }, ch = names(breaks_drop_tmp), ra = breaks_drop_tmp, SIMPLIFY = FALSE)
     
     expr <- lapply(expr, function(e) eval(parse(text = e), envir = xe))
     setDT(expr)
@@ -474,19 +479,19 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   }
   
   xe <- x[lex.id %in% unique(xe[["lex.id"]])]
-  forceLexisDT(xe, breaks = oldBreaks, allScales = allScales, key = FALSE)
+  forceLexisDT(xe, breaks = breaks_old, allScales = tscales_all, key = FALSE)
   
   ## 2) compute Ederer I expected survival curves from T = 0 till e.g. T = 100
   e1 <- comp_e1(xe, breaks = e1.breaks, pophaz = e1.pophaz, immortal = TRUE, 
-                survScale = survScale, by = tmpByNames, id = "lex.id")
-  setnames(e1, survScale, "Tstop")
-  e1[, "Tstart" := c(0, Tstop[-.N]), by = eval(tmpByNames)]
-  e1[, "surv.int" := cut(Tstart, breaks = e1.breaks[[survScale]], 
+                survScale = tscale_surv, by = by_vars_tmp, id = "lex.id")
+  setnames(e1, tscale_surv, "Tstop")
+  e1[, "Tstart" := c(0, Tstop[-.N]), by = eval(by_vars_tmp)]
+  e1[, "surv.int" := cut(Tstart, breaks = e1.breaks[[tscale_surv]], 
                          right = FALSE, labels = FALSE)]
   e1[, "delta" := Tstop - Tstart]
   
   ## decumulate for later cumulation
-  e1[, "surv.exp" := surv.exp/c(1, surv.exp[-.N]), by = eval(tmpByNames)]
+  e1[, "surv.exp" := surv.exp/c(1, surv.exp[-.N]), by = eval(by_vars_tmp)]
   
   if (verbose) {
     cat("Time taken by computing overall expected survival curves:", 
@@ -499,18 +504,18 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   ## we only use subjects entering follow-up in the period window.
   N_subjects <- xe[!duplicated(lex.id)][, 
                                         list(obs=.N), 
-                                        keyby=eval(tmpByNames)
+                                        keyby=eval(by_vars_tmp)
                                         ]
   
   ## combine all estimates into one data set -----------------------------------
   pt <- proc.time()
   
-  st[, "surv.int" := cut(Tstart, breaks = e1.breaks[[survScale]], 
+  st[, "surv.int" := cut(Tstart, breaks = e1.breaks[[tscale_surv]], 
                          right = FALSE, labels = FALSE)]
   
-  x <- merge(e1, st[, .SD, .SDcols = c(tmpByNames, "surv.int", "r.e2", "surv.obs")], 
-             by = c(tmpByNames,"surv.int"), all = TRUE)
-  setkeyv(x, c(tmpByNames, "surv.int"))
+  x <- merge(e1, st[, .SD, .SDcols = c(by_vars_tmp, "surv.int", "r.e2", "surv.obs")], 
+             by = c(by_vars_tmp,"surv.int"), all = TRUE)
+  setkeyv(x, c(by_vars_tmp, "surv.int"))
   
   ## extrapolation RSR definition ----------------------------------------------
   if (is.numeric(r)) {
@@ -522,13 +527,13 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   } else {
     ## add last non-NA values as separate column
     
-    st <- st[, .SD[(.N-TF__$auto_ints+1):.N], by = eval(tmpByNames)]
+    st <- st[, .SD[(.N-TF__$auto_ints+1):.N], by = eval(by_vars_tmp)]
     
     st[, "delta" := Tstop - Tstart]
     st[, "r.e2" := r.e2^(1/delta)] ## "annualized" RSRs
     
     ## mean annualized RSR in last N intervas by strata
-    st <- st[, .(last.p.e2 = mean(r.e2)), by = eval(tmpByNames)]
+    st <- st[, .(last.p.e2 = mean(r.e2)), by = eval(by_vars_tmp)]
     st[, "last.p.e2" := pmin(1, last.p.e2)]
     if (verbose) {
       cat("Using following table of mean RSR estimates",
@@ -537,12 +542,12 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
           "based on", auto_ints, "interval(s) from the end of the relative",
           "survival curve by strata: \n")
       prST <- data.table(st)
-      setnames(prST, c(tmpByNames, "last.p.e2"), c(byNames, "RSR"))
+      setnames(prST, c(by_vars_tmp, "last.p.e2"), c(by_vars, "RSR"))
       print(prST)
     }
     
-    if (length(tmpByNames)) {
-      x <- merge(x, st, by = tmpByNames, all = TRUE)
+    if (length(by_vars_tmp)) {
+      x <- merge(x, st, by = by_vars_tmp, all = TRUE)
     } else {
       set(x, j = "last.p.e2", value = st$last.p.e2)
     }
@@ -557,9 +562,9 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   # x[is.na(surv), "surv" := surv.exp*last.p.e2]
   
   ## cumulate again
-  setkeyv(x, c(tmpByNames, "surv.int"))
+  setkeyv(x, c(by_vars_tmp, "surv.int"))
   x[, c("surv", "surv.exp") := lapply(.SD, cumprod),
-    .SDcols = c("surv", "surv.exp"), by = eval(tmpByNames)]
+    .SDcols = c("surv", "surv.exp"), by = eval(by_vars_tmp)]
   
   x2 <- copy(x)
   x[, "surv.exp" := NULL]
@@ -568,16 +573,19 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   x <- rbind(x, x2)
   x[, "survmean_type" := rep(c("est", "exp"), each = nrow(x2))]
   
-  setcolsnull(x, keep = c(tmpByNames, "survmean_type", 
-                          "surv.int", "Tstart", "Tstop", 
-                          "delta", "surv", "surv.exp"),
-              colorder = TRUE)
+  setcolsnull(
+    x, 
+    keep = c(by_vars_tmp, "survmean_type", 
+             "surv.int", "Tstart", "Tstop", 
+             "delta", "surv", "surv.exp"),
+    colorder = TRUE
+  )
   
   ## check curve convergence to zero -------------------------------------------
   ## a good integration is based on curves that get very close to 
   ## zero in the end
   mi <- x[, .(surv = round(min(surv),4)*100), 
-          keyby = eval(c(tmpByNames, "survmean_type"))]
+          keyby = eval(c(by_vars_tmp, "survmean_type"))]
   
   if (any(mi$surv > 1)) {
     warning("One or several of the curves used to compute mean survival times ",
@@ -592,7 +600,7 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
                                  c("Observed", "Expected"))]
   setnames(mi, c("survmean_type", "surv"), 
            c("Obs./Exp. curve", "Lowest value"))
-  if (length(byNames)) setnames(mi, tmpByNames, byNames)
+  if (length(by_vars)) setnames(mi, by_vars_tmp, by_vars)
   if (verbose) {
     cat("Lowest points in observed / expected survival curves by strata:\n")
     print(mi)
@@ -603,17 +611,17 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   ## so we compute "average interval survivals" for each interval t_i
   ## and multiply with interval length.
   
-  setkeyv(x, c(tmpByNames, "survmean_type",  "Tstop"))
+  setkeyv(x, c(by_vars_tmp, "survmean_type",  "Tstop"))
   sm <- x[, .(survmean = sum(delta*(surv + c(1, surv[-.N]))/2L)), 
-          keyby = c(tmpByNames, "survmean_type")]
+          keyby = c(by_vars_tmp, "survmean_type")]
   
   ## cast ----------------------------------------------------------------------
   
   sm <- cast_simple(sm, columns = "survmean_type", 
-                    rows = tmpByNames, values = "survmean")
+                    rows = by_vars_tmp, values = "survmean")
   
   ## add numbers of subjects, compute YPLL -------------------------------------
-  setkeyv(sm, tmpByNames); setkeyv(N_subjects, tmpByNames)
+  setkeyv(sm, by_vars_tmp); setkeyv(N_subjects, by_vars_tmp)
   sm[, "obs" := N_subjects$obs]
   sm[, "YPLL" := (exp-est)*obs]
   
@@ -621,13 +629,13 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   ## adjusting -----------------------------------------------------------------
   
   sm <- makeWeightsDT(sm, values = list(c("est", "exp", "obs", "YPLL")),
-                      print = tmpPrNames, adjust = tmpAdNames,
+                      print = print_vars_tmp, adjust = adjust_vars_tmp,
                       weights = weights, internal.weights.values = "obs")
-  if (length(adNames)) {
+  if (length(adjust_vars)) {
     vv <- c("est", "exp", "obs", "YPLL")
     sm[, c("est", "exp") := lapply(.SD, function(col) col*sm$weights), 
        .SDcols = c("est", "exp")]
-    sm <- sm[, lapply(.SD, sum), .SDcols = vv, by = eval(tmpPrNames)]
+    sm <- sm[, lapply(.SD, sum), .SDcols = vv, by = eval(print_vars_tmp)]
   }
   
   if (verbose) {
@@ -635,18 +643,17 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   }
   
   ## final touch ---------------------------------------------------------------
-  if (length(prNames)) setnames(sm, tmpPrNames, prNames)
+  if (length(print_vars)) setnames(sm, print_vars_tmp, print_vars)
   
-  this_call <- match.call()
-  at <- list(call = this_call, 
+  at <- list(call = match.call(), 
              formula = attr_form,
-             print = prNames, 
-             adjust = adNames, 
-             tprint = tmpPrNames, 
-             tadjust = tmpAdNames,
+             print = print_vars, 
+             adjust = adjust_vars, 
+             tprint = print_vars_tmp, 
+             tadjust = adjust_vars_tmp,
              breaks = breaks, 
              e1.breaks = e1.breaks, 
-             survScale = survScale,
+             survScale = tscale_surv,
              curves = copy(x))
   setattr(sm, "class", c("survmean","data.table", "data.frame"))
   setattr(sm, "survmean.meta", at)
