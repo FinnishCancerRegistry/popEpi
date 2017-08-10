@@ -184,10 +184,10 @@ Other sir functions: \code{\link{lines.sirspline}},
   \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
   \code{\link{sir_ratio}}, \code{\link{sirspline}}
 
-Other main_functions: \code{\link{rate}},
+Other main functions: \code{\link{rate}},
   \code{\link{relpois_ag}}, \code{\link{relpois}},
-  \code{\link{sirspline}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+  \code{\link{sirspline}}, \code{\link{survmean}},
+  \code{\link{survtab_ag}}, \code{\link{survtab}}
 }
 \author{
 Matti Rantanen, Joonas Miettinen

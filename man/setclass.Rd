@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility_functions.R
 \name{setclass}
 \alias{setclass}
-\title{Set the class of an object (convencience function for
+\title{Set the class of an object (convenience function for
  \code{setattr(obj, "class", CLASS)}); can add instead of replace}
 \usage{
 setclass(obj, cl, add = FALSE, add.place = "first")

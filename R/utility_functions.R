@@ -387,7 +387,7 @@ cut_bound <- function(t, factor=TRUE) {
 
 
 
-#' @title Set the class of an object (convencience function for
+#' @title Set the class of an object (convenience function for
 #'  \code{setattr(obj, "class", CLASS)}); can add instead of replace
 #' @description Sets the class of an object in place to \code{cl}
 #' by replacing or adding

@@ -151,7 +151,7 @@
 #' @seealso \code{\link{lexpand}}
 #' \href{../doc/sir.html}{A SIR calculation vignette}
 #' @family sir functions
-#' @family main_functions
+#' @family main functions
 #' 
 #' @return A sir-object that is a \code{data.table} with meta information in the attributes.
 #' 
@@ -382,7 +382,7 @@ sir <- function( coh.data,
 #' @seealso \code{\link{splitMulti}} 
 #' \href{../doc/sir.html}{A SIR calculation vignette}
 #' @family sir functions
-#' @family main_functions
+#' @family main functions
 #' 
 #' @export sirspline
 #' @import data.table 

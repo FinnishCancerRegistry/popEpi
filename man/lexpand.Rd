@@ -189,7 +189,7 @@ contain at a minimum the variables named
 \code{agegroup}, \code{year}, and \code{haz}. \code{pophaz} may contain additional variables to specify
 different population hazard levels in different strata; e.g. \code{popmort} includes \code{sex}.
 All the strata-defining variables must be present in the supplied \code{data}. \code{lexpand} will
-automatically detect variables with common names in the two datas and merge using them.
+automatically detect variables with common names in the two datasets and merge using them.
 
 Currently \code{year} must be an integer variable specifying the appropriate year. \code{agegroup}
 must currently also specify one-year age groups, e.g. \code{popmort} specifies 101 age groups

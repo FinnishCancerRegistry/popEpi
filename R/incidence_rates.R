@@ -78,7 +78,7 @@
 #'
 #' @import data.table
 #' @export
-#' @family main_functions
+#' @family main functions
 #' @family rate functions
 
 rate <- function( data,

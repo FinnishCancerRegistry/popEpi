@@ -380,10 +380,10 @@ doi: 10.1016/B978-0-12-801238-3.02745-8.
 \code{\link{ICSS}}, \code{\link{sire}}
 \href{../doc/survtab_examples.html}{The survtab_examples vignette}
 
-Other main_functions: \code{\link{rate}},
+Other main functions: \code{\link{rate}},
   \code{\link{relpois_ag}}, \code{\link{relpois}},
   \code{\link{sirspline}}, \code{\link{sir}},
-  \code{\link{survtab}}
+  \code{\link{survmean}}, \code{\link{survtab}}
 
 Other survtab functions: \code{\link{lines.survtab}},
   \code{\link{plot.survtab}}, \code{\link{print.survtab}},

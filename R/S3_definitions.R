@@ -463,7 +463,8 @@ print.rate <- function(x, subset = NULL, ...) {
 #' @param left.margin set a custom left margin for long variable names. Function
 #' tries to do it by default.
 #' @param xlim change the x-axis location
-#' @param ... arguments passed on to graphical functions points and segment (e.g. col, lwd, pch and cex)
+#' @param ... arguments passed on to graphical functions points and segment 
+#' (e.g. \code{col}, \code{lwd}, \code{pch} and \code{cex})
 #' 
 #' @details This is limited explanatory tool but most graphical 
 #' parameters are user adjustable. 

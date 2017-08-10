@@ -170,5 +170,5 @@
 #' Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015 
 #' doi: 10.1016/B978-0-12-801238-3.02745-8.
 #' 
-#' @family main_functions
+#' @family main functions
 #' @family survtab functions
