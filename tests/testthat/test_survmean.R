@@ -5,6 +5,7 @@ library("survival")
 
 test_that("survmean() agrees with old results", {
   skip_on_cran()
+  skip_on_travis()
   
   sr <- data.table(popEpi::sire)[dg_date < ex_date, ]
   sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
@@ -75,6 +76,7 @@ test_that("survmean() agrees with old results", {
 
 test_that("survmean expected survival curve corresponds to full Ederer I", {
   skip_on_cran()
+  skip_on_travis()
   
   sr <- data.table(sire)[dg_date < ex_date, ]
   sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)

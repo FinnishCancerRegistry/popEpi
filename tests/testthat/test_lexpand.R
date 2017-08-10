@@ -43,11 +43,12 @@ test_that("original total pyrs equals pyrs after splitting w/ large number of br
 
 
 test_that("pp not added to data if pp = FALSE but pop.haz is", {
-  skip_on_cran()
-  x <- lexpand(sire[dg_date < ex_date, ], 
+  x <- lexpand(sire[dg_date < ex_date, ][0:100], 
                birth  = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2,
-               breaks=list(fot=0:5), pophaz=data.table(popEpi::popmort), pp = FALSE)
+               breaks=list(fot=0:5), 
+               pophaz=data.table(popEpi::popmort), 
+               pp = FALSE)
   expect_equal(intersect(names(x), c("pp", "pop.haz")),  "pop.haz")
   expect_true(!any(is.na(x$pop.haz)))
 })
@@ -56,14 +57,17 @@ test_that("pp not added to data if pp = FALSE but pop.haz is", {
 
 test_that("lexpand produces the same results with internal/external dropping", {
   skip_on_cran()
+  skip_on_travis()
   x <- lexpand(sire[dg_date < ex_date, ], 
                birth  = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2,
-               breaks=list(fot=0:5), pophaz=data.table(popEpi::popmort), pp = TRUE, drop = TRUE)
+               breaks=list(fot=0:5), pophaz=data.table(popEpi::popmort), 
+               pp = TRUE, drop = TRUE)
   x2 <-lexpand(sire[dg_date < ex_date, ], 
                birth  = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2,
-               breaks=list(fot=0:5), pophaz=data.table(popEpi::popmort), pp = TRUE, drop = FALSE)
+               breaks=list(fot=0:5), pophaz=data.table(popEpi::popmort), 
+               pp = TRUE, drop = FALSE)
   x2 <-popEpi:::intelliDrop(x2, breaks = list(fot=0:5), dropNegDur = TRUE)
   setDT(x)
   setDT(x2)
@@ -73,13 +77,16 @@ test_that("lexpand produces the same results with internal/external dropping", {
 
 test_that("lexpanding with aggre.type = 'unique' works", {
   skip_on_cran()
+  skip_on_travis()
+  
   BL <- list(fot = 0:5, age = seq(0,100, 5))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
                  breaks = BL, status = status,
                  birth = bi_date, entry = dg_date, exit = ex_date)
   setDT(ag1)
   ag1 <- ag1[, list(pyrs = sum(lex.dur), from0to1 = sum(lex.Xst == 1L)), 
-           keyby = list(fot = popEpi:::cutLow(fot, BL$fot), age = popEpi:::cutLow(age, BL$age))]
+           keyby = list(fot = popEpi:::cutLow(fot, BL$fot), 
+                        age = popEpi:::cutLow(age, BL$age))]
   ag2 <- lexpand(sire[dg_date < ex_date, ], 
                  breaks = BL, status = status,
                  birth = bi_date, entry = dg_date, exit = ex_date,
@@ -92,6 +99,8 @@ test_that("lexpanding with aggre.type = 'unique' works", {
 
 test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used", {
   skip_on_cran()
+  skip_on_travis()
+  
   BL <- list(fot = c(0,Inf))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
                  breaks = BL, status = status, entry.status = 0L,
@@ -129,6 +138,8 @@ test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used",
 
 test_that("lexpanding with aggre.type = 'cartesian' works; only time scales used", {
   skip_on_cran()
+  skip_on_travis()
+  
   BL <- list(fot = 0:5, age = seq(0,100, 5))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
                  breaks = BL, status = status, entry.status = 0L,
@@ -224,13 +235,15 @@ test_that("lexpand aggre produces correct results", {
 })
 
 test_that('lexpand aggre: multistate column names correct', {
-  skip_on_cran()
-  x <- lexpand(sire[dg_date < ex_date, ], 
+  
+  x <- lexpand(sire[dg_date < ex_date, ][0:100], 
                birth = bi_date, entry = dg_date, exit = ex_date,
-               breaks=list(fot=c(0,5,10,50,Inf), age=c(seq(0,85,5),Inf), per = 1993:2013), 
+               breaks=list(fot=c(0,5,10,50,Inf), age=c(seq(0,85,5),Inf), 
+                           per = 1993:2013), 
                status=status, aggre = list(fot, age, per))
   
-  expect_equal(intersect(names(x), c('from0to0','from0to1','from0to2')), c('from0to0','from0to1','from0to2'))  
+  expect_equal(intersect(names(x), c('from0to0','from0to1','from0to2')), 
+               c('from0to0','from0to1','from0to2'))  
 })
 
 
@@ -238,6 +251,7 @@ test_that('lexpand aggre: multistate column names correct', {
 
 test_that('lexpansion w/ overlapping = TRUE/FALSE produces double/undoubled pyrs', {
   skip_on_cran()
+  skip_on_travis()
   
   sire2 <- copy(sire)[dg_date < ex_date, ][1:100]
   sire2[, dg_yrs := get.yrs(dg_date, "actual")]
@@ -250,14 +264,17 @@ test_that('lexpansion w/ overlapping = TRUE/FALSE produces double/undoubled pyrs
   sire2[, dg_age := dg_yrs-bi_yrs]
   
   x <- lexpand(sire2, birth = "bi_yrs", entry = "bi_yrs", event="dg_yrs", 
-               exit = "ex_yrs", status="status", entry.status = 0L, id = "id", overlapping = TRUE)
+               exit = "ex_yrs", status="status", entry.status = 0L, id = "id", 
+               overlapping = TRUE)
   setDT(x)
   expect_equal(x[, sum(lex.dur), keyby=lex.id]$V1, sire2[, sum(ex_yrs-bi_yrs), keyby=id]$V1)  
   
   x <- lexpand(sire2, birth = "bi_yrs", entry = "bi_yrs", event="dg_yrs", 
-               exit = "ex_yrs", status="status", entry.status = 0L, id = "id", overlapping = FALSE)
+               exit = "ex_yrs", status="status", entry.status = 0L, id = "id", 
+               overlapping = FALSE)
   setDT(x)
-  expect_equal(x[, sum(lex.dur), keyby=lex.id]$V1, sire2[!duplicated(id), sum(ex_yrs-bi_yrs), keyby=id]$V1)  
+  expect_equal(x[, sum(lex.dur), keyby=lex.id]$V1, 
+               sire2[!duplicated(id), sum(ex_yrs-bi_yrs), keyby=id]$V1)  
 })
 
 
@@ -281,16 +298,20 @@ test_that("different specifications of time vars work with event defined and ove
   expect_equal(x1$lex.Xst, c(1,2,2))
   
   ## birth -> entry = event -> exit
-  expect_error(lexpand(data = dt, subset = NULL, 
-                birth = bi_date, entry = dg_date, exit = end, event = dg_date,
-                id = id, overlapping = FALSE,  entry.status = 0, status = status,
-                merge = FALSE), 
-               regexp = "some rows have simultaneous 'entry' and 'event', which is not supported with overlapping = FALSE; perhaps separate them by one day?")
+  expect_error(
+    lexpand(data = dt, subset = NULL, 
+            birth = bi_date, entry = dg_date, exit = end, event = dg_date,
+            id = id, overlapping = FALSE,  entry.status = 0, status = status,
+            merge = FALSE), 
+    regexp = paste0("some rows have simultaneous 'entry' and 'event', ",
+                    "which is not supported with overlapping = FALSE; ",
+                    "perhaps separate them by one day?")
+    )
   
   ## birth = entry -> event -> exit
   x3 <- lexpand(data = dt, subset = NULL, 
                 birth = bi_date, entry = bi_date, exit = end, event = dg_date,
-                id = id, overlapping = FALSE,  entry.status = 0, status = status,
+                id = id, overlapping = FALSE, entry.status = 0, status = status,
                 merge = FALSE)
   expect_equal(x3$lex.dur, c(50,1,2))
   expect_equal(x3$age, c(0,50,51))
@@ -298,11 +319,16 @@ test_that("different specifications of time vars work with event defined and ove
   expect_equal(x3$lex.Xst, c(1,2,2))
   
   ## birth -> entry -> event = exit
-  expect_error(lexpand(data = dt, subset = NULL, 
-                birth = bi_date, entry = dg_date, exit = end, event = end,
-                id = id, overlapping = FALSE,  entry.status = 0, status = status,
-                merge = FALSE), 
-               regexp = "subject\\(s\\) defined by lex.id had several rows where 'event' time had the same value, which is not supported with overlapping = FALSE; perhaps separate them by one day?")
+  expect_error(
+    lexpand(data = dt, subset = NULL, 
+            birth = bi_date, entry = dg_date, exit = end, event = end,
+            id = id, overlapping = FALSE,  entry.status = 0, status = status,
+            merge = FALSE), 
+    regexp = paste0("subject\\(s\\) defined by lex.id had several rows ",
+                    "where 'event' time had the same value, which is not ",
+                    "supported with overlapping = FALSE; perhaps separate ",
+                    "them by one day?")
+  )
   
   ## birth = entry -> event -> exit
   x6 <- lexpand(data = dt, subset = NULL, 
@@ -319,6 +345,7 @@ test_that("different specifications of time vars work with event defined and ove
 
 test_that("lexpand drops persons outside breaks window correctly", {
   skip_on_cran()
+  skip_on_travis()
   
   dt <- data.table(bi_date = as.Date('1949-01-01'), 
                    dg_date = as.Date(paste0(2000, "-01-01")), 
