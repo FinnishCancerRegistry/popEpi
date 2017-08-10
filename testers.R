@@ -159,3 +159,24 @@ resaveAllDatas <- function(folder = "data/", ext = ".rdata") {
   invisible()
   
 }
+
+
+
+
+
+run_examples_all <- function(pkg = ".", 
+                             start = NULL, 
+                             uncomment.dontrun = TRUE, 
+                             uncomment.dontshow = TRUE, 
+                             uncomment.donttest = TRUE, 
+                             fresh = TRUE) {
+  
+  devtools::run_examples(run = !uncomment.dontrun, show = !uncomment.dontshow,
+                         test = !uncomment.donttest, pkg = pkg, start = start,
+                         fresh = fresh)
+  
+}
+
+
+
+
