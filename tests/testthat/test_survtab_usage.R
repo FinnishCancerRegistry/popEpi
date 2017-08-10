@@ -19,20 +19,16 @@ test_that("Dates and frac. yrs produce congruent results", {
   xy <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
               exit = list(CAL = get.yrs(ex_date)), 
               data = x,
-              exit.status = factor(status, levels = 0:2, 
-                                   labels = c("alive", "canD", "othD")), 
-              entry.status = factor(0, levels = 0:2, 
-                                   labels = c("alive", "canD", "othD")), 
+              entry.status = 0L,
+              exit.status = as.integer(status %in% 1:2), 
               merge = TRUE)
   
   ## dates
   xd <- Lexis(entry = list(FUT = 0L, AGE = dg_date-bi_date, CAL = dg_date),
               exit = list(CAL = ex_date),
               data = x,
-              exit.status = factor(status, levels = 0:2, 
-                                   labels = c("alive", "canD", "othD")), 
-              entry.status = factor(0, levels = 0:2, 
-                                    labels = c("alive", "canD", "othD")), 
+              entry.status = 0L,
+              exit.status = as.integer(status %in% 1:2), 
               merge = TRUE)
   yd <- 365.242199
   BLy <- list(FUT = seq(0, 5, 1/4))
@@ -138,10 +134,8 @@ test_that("hazard and lifetable produce congruent results", {
   xy <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
               exit = list(CAL = get.yrs(ex_date)), 
               data = x,
-              exit.status = factor(status, levels = 0:2, 
-                                   labels = c("alive", "canD", "othD")), 
-              entry.status = factor(0, levels = 0:2, 
-                                    labels = c("alive", "canD", "othD")), 
+              entry.status = 0L,
+              exit.status = as.integer(status %in% 1:2), 
               merge = TRUE)
   
   
@@ -347,8 +341,8 @@ test_that("update() works with survtab objects", {
   x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
              exit = list(CAL = get.yrs(ex_date)), 
              data = sire[sire$dg_date < sire$ex_date, ],
-             exit.status = factor(status, levels = 0:2, 
-                                  labels = c("alive", "canD", "othD")), 
+             entry.status = 0L,
+             exit.status = as.integer(status %in% 1:2), 
              merge = TRUE)
   
   set.seed(1L)
@@ -425,6 +419,59 @@ test_that("survtab_ag works with bare data.frames", {
   
 })
 
+
+
+
+
+
+test_that("confidence intervals are as intended", {
+  skip_on_cran()
+  
+  library(Epi)
+  library(survival)
+
+  ## NOTE: recommended to use factor status variable
+  x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+             exit = list(CAL = get.yrs(ex_date)),
+             data = popEpi::sire[sire$dg_date < sire$ex_date, ],
+             entry.status = 0L,
+             exit.status = as.integer(status %in% 1:2),
+             merge = TRUE)
+
+  ## phony group variable
+  set.seed(1L)
+  x$group <- rbinom(nrow(x), 1, 0.5)
+
+  ## log-log transformation
+  st <- survtab(FUT ~ group, data = x,
+                surv.type = "surv.obs",
+                breaks = list(FUT = seq(0, 5, 1/12)),
+                conf.type = "log-log", conf.level = 0.99)
+  
+  dt <- data.table(st)
+  dt[, "SE.A" := sqrt(SE.surv.obs^2*(1/(surv.obs*log(surv.obs)))^2)]
+  dt[, "s.lo" := surv.obs^exp(qnorm(0.995)*SE.A)]
+  dt[, "s.hi" := surv.obs^exp(qnorm(0.005)*SE.A)]
+  
+  expect_equal(dt[, .(lo = surv.obs.lo, hi = surv.obs.hi)], 
+               dt[, .(lo = s.lo, hi = s.hi)])
+  
+  ## log transformation
+  st <- survtab(FUT ~ group, data = x,
+                surv.type = "surv.obs",
+                breaks = list(FUT = seq(0, 5, 1/12)),
+                conf.type = "log", conf.level = 0.80)
+  
+  dt <- data.table(st)
+  dt[, "SE.A" := SE.surv.obs/surv.obs]
+  dt[, "s.lo" := surv.obs*exp(qnorm(0.10)*SE.A)]
+  dt[, "s.hi" := surv.obs*exp(qnorm(0.90)*SE.A)]
+  
+  expect_equal(dt[, .(lo = surv.obs.lo, hi = surv.obs.hi)], 
+               dt[, .(lo = s.lo, hi = s.hi)])
+  
+  
+})
 
 
 

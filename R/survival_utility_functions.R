@@ -87,6 +87,8 @@ comp.st.conf.ints <- function(tab = pp.table, al=0.05, surv="r.pp", transform ="
   surv.hi <- paste0(surv, ".hi")
   surv.lo <- paste0(surv, ".lo")
   
+  tmp_se <- makeTempVarName(names = names(tab), pre = "delta_method_SE_", length = 15L)
+  
   pe <- function(...) {
     eval(parse(text=paste0(...)), envir=tab)
   }
@@ -95,32 +97,35 @@ comp.st.conf.ints <- function(tab = pp.table, al=0.05, surv="r.pp", transform ="
     ## assume S(t)~N(mu, sigma)
     
     ex <- paste0(surv,  " ", zlo, "*", SE.surv)
-    tab[, c(surv.lo)  := pe(ex)]
+    tab[, (surv.lo)  := pe(ex)]
     ex <- paste0(surv, " +", zhi, "*", SE.surv)
-    tab[, c(surv.hi)  := pe(ex)]
-  }
-  
-  if (transform =="log-log") {
+    tab[, (surv.hi)  := pe(ex)]
+    
+  } else if (transform =="log-log") {
     ## assume log(H(t))~N(mu, sigma)
+    ## -> delta method SE: sqrt( SE^2 * (1/(log(SURV)*SURV))^2 )
+    
     ex <- paste0(SE.surv,"/(abs(log(",surv,"))*",surv,")")
-    tab[,  SE.A := pe(ex)]
+    tab[,  (tmp_se) := pe(ex)]
     
-    ex <- paste0(surv, "^exp(", zhi, "*SE.A)")
-    tab[, c(surv.lo)  := pe(ex)]
-    ex <- paste0(surv, "^exp(", zlo, "*SE.A)")
-    tab[, c(surv.hi)  := pe(ex)]
-  }
-  
-  if (transform =="log") {
+    ex <- paste0(surv, "^exp(", zhi, "*", tmp_se,")")
+    tab[, (surv.lo)  := pe(ex)]
+    ex <- paste0(surv, "^exp(", zlo, "*", tmp_se,")")
+    tab[, (surv.hi)  := pe(ex)]
+    
+  } else if (transform =="log") {
     ## assume log(S(t))~N(mu, sigma)
-    ex <- paste0(SE.surv,"/",surv)
-    tab[,  SE.A := pe(ex)]
+    ## -> delta method SE: SE/SURV
     
-    ex <- paste0(surv, "*exp(", zlo, "*SE.A)")
-    tab[, c(surv.lo)  := pe(ex)]
-    ex <- paste0(surv, "*exp(", zhi, "*SE.A)")
-    tab[, c(surv.hi)  := pe(ex)]
+    ex <- paste0(SE.surv,"/",surv)
+    tab[,  (tmp_se) := pe(ex)]
+    
+    ex <- paste0(surv, "*exp(", zlo, "*", tmp_se,")")
+    tab[, (surv.lo)  := pe(ex)]
+    ex <- paste0(surv, "*exp(", zhi, "*", tmp_se,")")
+    tab[, (surv.hi)  := pe(ex)]
   }
+  if (tmp_se %in% names(tab)) tab[, (tmp_se) := NULL]
   
   ## zero SE means zero uncertainty means lo=hi=estimate
   tab[tab[[SE.surv]] == 0, c(surv.lo, surv.hi) := .SD, .SDcols = surv]
