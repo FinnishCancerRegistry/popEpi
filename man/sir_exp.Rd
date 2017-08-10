@@ -52,7 +52,7 @@ calculated with \code{lexpand}.
 calculated using \code{\link{lexpand}}.
 }
 \details{
-These functions are intented to calculate SMRs from a single data set 
+These functions are intended to calculate SMRs from a single data set 
 that includes both observed and expected number of cases. For example utilizing the
 argument \code{pop.haz} of the \code{\link{lexpand}}.
 

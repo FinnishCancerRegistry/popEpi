@@ -106,7 +106,7 @@ cast_simple <- function(data=NULL, columns=NULL, rows=NULL, values=NULL) {
 #' if \code{NULL}, uses all variable names in \code{DT}
 #' @export na2zero
 #' @details Given a \code{data.table} object, converts \code{NA} values
-#' to numeric (double) zeroes for all variables named in \code{vars} or
+#' to numeric (double) zeros for all variables named in \code{vars} or
 #' all variables if \code{vars = NULL}.
 na2zero = function(DT, vars = NULL) { 
   if (!is.data.table(DT)) stop("DT must be a data.table")

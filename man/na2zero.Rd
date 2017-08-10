@@ -19,7 +19,7 @@ original data and returns the modified copy.
 }
 \details{
 Given a \code{data.table} object, converts \code{NA} values
-to numeric (double) zeroes for all variables named in \code{vars} or
+to numeric (double) zeros for all variables named in \code{vars} or
 all variables if \code{vars = NULL}.
 }
 \author{

@@ -103,7 +103,7 @@
 #' \code{surv.breaks} must be a subset of the pertinent 
 #' pre-existing breaks. When data is not an \code{aggre} object, breaks
 #' must always be specified. Interval lengths (\code{delta} in output) are 
-#' also calculated based on whichever breaks ares used, 
+#' also calculated based on whichever breaks are used, 
 #' so the upper limit of the breaks should
 #' therefore be meaningful and never e.g. \code{Inf}. 
 #' 
@@ -615,7 +615,7 @@ survtab_ag <- function(formula = NULL,
     setnames(data, paste0(surv_names, ".orig"), surv_names)
   }
   
-  # compute cause-specifc/excess-case CIFs -------------------------------------
+  # compute cause-specific/excess-case CIFs ------------------------------------
   if (surv.type %in% c("cif.obs", "cif.rel")) {
     
     data[, "lag1_surv.obs" := shift(surv.obs, n = 1L, type = "lag", fill = 1), by = eval(byVars)]

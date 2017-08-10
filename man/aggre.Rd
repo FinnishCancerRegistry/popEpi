@@ -15,7 +15,7 @@ aggre(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
 \link[=flexible_argument]{Flexible input}, typically e.g.
 \code{by = c("V1", "V2")}. See Details and Examples.}
 
-\item{type}{determines outputted levels to which data is aggregated varying
+\item{type}{determines output levels to which data is aggregated varying
 from returning only rows with \code{pyrs > 0} (\code{"unique"}) to
 returning all possible combinations of variables given in \code{aggre} even
 if those combinations are not represented in data (\code{"full"}); 
@@ -57,7 +57,7 @@ and/or age.
 \details{
 \strong{Basics}
 
-\code{aggre} is intented for aggregation of split \code{Lexis} data only.
+\code{aggre} is intended for aggregation of split \code{Lexis} data only.
 See \code{\link[Epi]{Lexis}} for forming \code{Lexis} objects by hand
 and e.g. \code{\link[Epi]{splitLexis}}, \code{\link{splitLexisDT}}, and
 \code{\link{splitMulti}} for splitting the data. \code{\link{lexpand}}

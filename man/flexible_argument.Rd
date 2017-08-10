@@ -13,7 +13,7 @@ Flexible arguments in \pkg{popEpi} are used to pass variables existing
 in your data or in the environment where the function is used 
 (for everyday users this is the global environment - in simple terms,
 where your data is / your work space). The flexible arguments
-are modeled after the \code{by} argument in \code{data.tables} - 
+are modelled after the \code{by} argument in \code{data.tables} - 
 see \code{?data.table}. There are many ways to supply the same information
 to certain functions in \pkg{popEpi}, but the possible ways listed below
 may be limited in some of them to only allow for using only a part of them.
@@ -82,7 +82,7 @@ use \code{x$vars} and NOT \code{x$V2}.
 \section{Advanced}{
 
 
-Function programmers are adviced to pass character strings
+Function programmers are advised to pass character strings
 whenever possible. To fool-proof against conflicts as described in the
 section above, refer to the calling environment explicitly when
 passing the variable containing the character strings:

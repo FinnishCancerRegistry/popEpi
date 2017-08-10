@@ -408,7 +408,7 @@ test_that("sir_exp and sir_ag and sir_lexis are working", {
   expect_equal(b3[,.N], 24)
   
   BL2 <- list(fot = 0:5, age = c(0,50,70,100))
-  b3 <- sir_lex(x2, breaks = BL2, print = c('fot','age')) # already splitted data
+  b3 <- sir_lex(x2, breaks = BL2, print = c('fot','age')) # already split data
   expect_equal(b3[,.N], 15)
   
   # Character date

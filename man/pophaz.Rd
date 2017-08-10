@@ -39,7 +39,7 @@ data, ensure that the pophaz time variables are coded at the level of days
 
 The \code{haz} variable in your pophaz should also be coded consistently
 with the used time variables. E.g. \code{haz} values in life-tables
-reported as deaths per person-year should be multipleid by 365.25 when
+reported as deaths per person-year should be multiplied by 365.25 when
 using day-level time variables.
 
 If you have your population hazards in a \code{ratetable} object

@@ -35,9 +35,9 @@ test_that("original total pyrs equals pyrs after splitting w/ large number of br
                status = status %in% 1:2,
                breaks=list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014)))
   setDT(x)
-  totpyrs_splitted <- x[, sum(lex.dur)]
+  totpyrs_split <- x[, sum(lex.dur)]
   
-  expect_equal(totpyrs, totpyrs_splitted, tolerance = 1e-05)
+  expect_equal(totpyrs, totpyrs_split, tolerance = 1e-05)
 })
 
 

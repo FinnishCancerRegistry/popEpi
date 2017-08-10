@@ -7,7 +7,7 @@
 get.yrs(x, year.length = "approx", ...)
 }
 \arguments{
-\item{x}{a \code{Date} obbject, or anything that \code{link{as.Date}}
+\item{x}{a \code{Date} object, or anything that \code{link{as.Date}}
 accepts}
 
 \item{year.length}{character string, either \code{'actual'} or 

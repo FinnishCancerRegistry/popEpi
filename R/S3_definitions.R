@@ -116,16 +116,16 @@ print.sirspline <- function(x, ...) {
 #' @param ylab overwrites default y-axis label
 #' @param xlim x-axis minimum and maximum values
 #' @param main optional plot title
-#' @param abline logical; draws a gray line in SIR = 1
+#' @param abline logical; draws a grey line in SIR = 1
 #' @param log logical; SIR is not in log scale by default
 #' @param eps error bar vertical bar height (works only in 'model' or 'univariate')
-#' @param left.margin adjust left marginal of the plot to fit long variablenames
+#' @param left.margin adjust left marginal of the plot to fit long variable names
 #' @param ... arguments passed on to plot(), segment and lines()
 #' 
 #' 
 #' @details Plot SIR estimates and confidence intervals 
 #' \itemize{
-#'  \item univariate - plots SIR with univariates confidence intervals
+#'  \item univariate - plots SIR with univariate confidence intervals
 #'  \item model - plots SIR with Poisson modelled confidence intervals
 #' }
 #' 
@@ -138,10 +138,10 @@ print.sirspline <- function(x, ...) {
 #'  \item \code{lwd} - point/line size
 #' }
 #'
-#' \strong{Tips for plottin splines}
+#' \strong{Tips for plotting splines}
 #' It's possible to use \code{plot} to first draw the 
 #' confidence intervals using specific line type or colour and then plotting 
-#' againg the estimate using \code{lines(... , conf.int = FALSE)} with different 
+#' again the estimate using \code{lines(... , conf.int = FALSE)} with different 
 #' settings. This works only when \code{plot.type} is 'splines'.
 #' 
 #' 
@@ -332,7 +332,7 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 #' 
 #' @param x an object returned by function sirspline
 #' @param conf.int logical; default TRUE draws also the 95 confidence intervals
-#' @param print.levels name(s) to be plottet. Default plots all levels.
+#' @param print.levels name(s) to be plotted. Default plots all levels.
 #' @param select.spline select which spline variable (a number or a name) is plotted.
 #' @param ... arguments passed on to lines()
 #' 
@@ -343,7 +343,7 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 #' several levels, e.g. gender (these are the levels of \code{print}
 #' from \code{sirspline}). All levels are printed by default, but a
 #' specific level can be selected using argument
-#' \code{print.levels}. Printing the levels seperately enables  e.g. to
+#' \code{print.levels}. Printing the levels separately enables  e.g. to
 #' give different colours for each level.
 #' 
 #' @family sir functions
@@ -463,10 +463,10 @@ print.rate <- function(x, subset = NULL, ...) {
 #' @param left.margin set a custom left margin for long variable names. Function
 #' tries to do it by default.
 #' @param xlim change the x-axis location
-#' @param ... arguments passed on to grafical functions points and segment (e.g. col, lwd, pch and cex)
+#' @param ... arguments passed on to graphical functions points and segment (e.g. col, lwd, pch and cex)
 #' 
-#' @details This is limited explonatory tool but most graphical parameters are user 
-#' adjustable. 
+#' @details This is limited explanatory tool but most graphical 
+#' parameters are user adjustable. 
 #' 
 #' @import graphics
 #' @export

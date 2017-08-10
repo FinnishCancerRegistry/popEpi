@@ -4,12 +4,12 @@
 \name{RPL}
 \alias{RPL}
 \title{Relative Poisson family object}
-\format{A list very similary to that created by \code{poisson()}.}
+\format{A list very similar to that created by \code{poisson()}.}
 \usage{
 RPL
 }
 \description{
-A family object for glm fitting of relative Poisson models
+A family object for GLM fitting of relative Poisson models
 }
 \seealso{
 Other relpois functions: \code{\link{relpois_ag}},

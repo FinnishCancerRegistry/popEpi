@@ -307,7 +307,7 @@ makeWeightsDT <- function(data, values = NULL,
   ## on the other hand we aggregate data to levels of print, adjust and 
   ## by.other; on the other hand the data will always have tabulating variables
   ## represented as cross-joined, e.g. merge(1:5, 1:2).
-  ## this means some rows might have zeroes as values in the 'values'
+  ## this means some rows might have zeros as values in the 'values'
   ## columns.
   ## (necessary for correct standardization with weights)
   

@@ -41,11 +41,11 @@ The same workflow applies for standardised mortality ratios.
 
 # Splines
 
-A continous spline function can be fitted for time variables, e.g. age-group. Idea of the splines is to smooth the SMR estimates and do inference from the curve figure. This requires pre-defined knots/nodes that are used to fit the spline curve. Selecting the number of knots and knot places is a very subjective matter and there are three options to pass spline knots to function.
+A continuous spline function can be fitted for time variables, e.g. age-group. Idea of the splines is to smooth the SMR estimates and do inference from the curve figure. This requires pre-defined knots/nodes that are used to fit the spline curve. Selecting the number of knots and knot places is a very subjective matter and there are three options to pass spline knots to function.
 
 It's good practice to try between different knot settings for realistic spline estimates. Overfitting might cause unintentioal artefacts in the estimate and underfitting might smooth away interesting patterns.
 
-The spline variable should be as continous as possible, say from 18 to 100 time points. But when splitting time in too narrow intervals, random variation might occur in the expected or population rate values. Therefore it's also possible to do two variables for age or period: first with wider intervals for standardation and second with narrow intervals for the spline.
+The spline variable should be as continuous as possible, say from 18 to 100 time points. But when splitting time in too narrow intervals, random variation might occur in the expected or population rate values. Therefore it's also possible to do two variables for age or period: first with wider intervals for standardation and second with narrow intervals for the spline.
 
 ## Knots
 

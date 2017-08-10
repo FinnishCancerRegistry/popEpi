@@ -186,7 +186,7 @@ test_that("detectEvents works as intended", {
   setkeyv(x, c("lex.id", "fot", "per", "age"))
   
   ## this leaves observations cut short due to age or period censoring to
-  ## really be censorings.
+  ## really be censoring.
   x[, event := detectEvents(x, breaks = attr(x, "breaks")["fot"], by = "lex.id")]
   
   x[, alt.event := 0L]

@@ -154,7 +154,7 @@ Returns some of the following estimates of survival time functions:
 
 \itemize{
  \item \code{surv.obs} - observed (raw, overall) survival
- \item \code{surv.obs.K} - observed cause-specifc survival for cause K
+ \item \code{surv.obs.K} - observed cause-specific survival for cause K
  \item \code{CIF_k} - cumulative incidence function for cause \code{k}
  \item \code{CIF.rel} - cumulative incidence function using excess cases
  \item \code{r.e2} -  relative survival, EdererII
@@ -271,7 +271,7 @@ necessary to specify any \code{surv.breaks}. If specified, the
 \code{surv.breaks} must be a subset of the pertinent 
 pre-existing breaks. When data is not an \code{aggre} object, breaks
 must always be specified. Interval lengths (\code{delta} in output) are 
-also calculated based on whichever breaks ares used, 
+also calculated based on whichever breaks are used, 
 so the upper limit of the breaks should
 therefore be meaningful and never e.g. \code{Inf}.
 }

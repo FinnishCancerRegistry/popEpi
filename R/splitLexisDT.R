@@ -2,7 +2,7 @@
 #' @author Joonas Miettinen
 #' @description Split a \code{Lexis} object along one time scale
 #' (as \code{\link[Epi]{splitLexis}}) with speed
-#' @param lex a Lexis object, splitted or not
+#' @param lex a Lexis object, split or not
 #' @param breaks a vector of \code{[a,b)} breaks to split \code{data} by
 #' @param timeScale a character string; name of the time scale to split by
 #' @param merge logical; if \code{TRUE}, retains all variables 

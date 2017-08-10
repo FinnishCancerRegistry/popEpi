@@ -8,7 +8,7 @@ relpois(data, formula, fot.breaks = NULL, subset = NULL, check = TRUE,
   ...)
 }
 \arguments{
-\item{data}{a dataset splitted with e.g. \code{\link{lexpand}};
+\item{data}{a dataset split with e.g. \code{\link{lexpand}};
 must have expected hazard merged within}
 
 \item{formula}{a formula which is passed on to \code{glm}; see Details}
@@ -23,7 +23,7 @@ limits the data before estimation}
 
 \item{check}{logical; if \code{TRUE}, tabulates excess cases by all
 factor variables in the formula to check for negative / \code{NA} 
-excess cases before fitting the glm}
+excess cases before fitting the GLM}
 
 \item{...}{any argument passed on to \code{glm}}
 }

@@ -12,7 +12,7 @@
 
 \item{conf.int}{logical; default TRUE draws also the 95 confidence intervals}
 
-\item{print.levels}{name(s) to be plottet. Default plots all levels.}
+\item{print.levels}{name(s) to be plotted. Default plots all levels.}
 
 \item{select.spline}{select which spline variable (a number or a name) is plotted.}
 
@@ -29,7 +29,7 @@ can be plotted at a time. The spline variable can include
 several levels, e.g. gender (these are the levels of \code{print}
 from \code{sirspline}). All levels are printed by default, but a
 specific level can be selected using argument
-\code{print.levels}. Printing the levels seperately enables  e.g. to
+\code{print.levels}. Printing the levels separately enables  e.g. to
 give different colours for each level.
 }
 \seealso{

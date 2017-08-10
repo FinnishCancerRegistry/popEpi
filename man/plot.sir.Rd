@@ -22,11 +22,11 @@
 
 \item{eps}{error bar vertical bar height (works only in 'model' or 'univariate')}
 
-\item{abline}{logical; draws a gray line in SIR = 1}
+\item{abline}{logical; draws a grey line in SIR = 1}
 
 \item{log}{logical; SIR is not in log scale by default}
 
-\item{left.margin}{adjust left marginal of the plot to fit long variablenames}
+\item{left.margin}{adjust left marginal of the plot to fit long variable names}
 
 \item{...}{arguments passed on to plot(), segment and lines()}
 }
@@ -36,7 +36,7 @@ Plot SIR estimates with error bars
 \details{
 Plot SIR estimates and confidence intervals 
 \itemize{
- \item univariate - plots SIR with univariates confidence intervals
+ \item univariate - plots SIR with univariate confidence intervals
  \item model - plots SIR with Poisson modelled confidence intervals
 }
 
@@ -49,10 +49,10 @@ Normal plot parameters can be passed to \code{plot}. These can be a vector when 
  \item \code{lwd} - point/line size
 }
 
-\strong{Tips for plottin splines}
+\strong{Tips for plotting splines}
 It's possible to use \code{plot} to first draw the 
 confidence intervals using specific line type or colour and then plotting 
-againg the estimate using \code{lines(... , conf.int = FALSE)} with different 
+again the estimate using \code{lines(... , conf.int = FALSE)} with different 
 settings. This works only when \code{plot.type} is 'splines'.
 }
 \examples{

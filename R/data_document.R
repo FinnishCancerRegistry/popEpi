@@ -112,17 +112,18 @@ NULL
 
 # stdpop18 ------------------------------------------------------------------
 
-#' Standard populations from 2000: world, europe and nordic.
+#' Standard populations from 2000: world, Europe and Nordic.
 #'
-#' World, europe, nordic standard populations by 18 age categories. Sums to 100000.
+#' World, European, and Nordic standard populations by 18 age categories. 
+#' Sums to 100000.
 #'
 #' @source Nordcan, 2000
 #' @format data.table with columns
 #' \itemize{
-#'  \item agegroup (character)
-#'  \item world std (numeric)
-#'  \item europe std (numeric)
-#'  \item nordic std (numeric)
+#'  \item \code{agegroup}, age group in 18 categories (character)
+#'  \item \code{world}, World 2000 standard population (numeric)
+#'  \item \code{europe}, European standard population (numeric)
+#'  \item \code{nordic}, Nordic standard population (numeric)
 #' }
 #' @name stdpop18
 #' @family popEpi_data

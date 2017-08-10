@@ -4,7 +4,7 @@
 #' @author Joonas Miettinen
 #' @description Using Date objects, calculates given 
 #' dates as fractional years.
-#' @param x a \code{Date} obbject, or anything that \code{link{as.Date}}
+#' @param x a \code{Date} object, or anything that \code{link{as.Date}}
 #' accepts
 #' @param year.length character string, either \code{'actual'} or 
 #' \code{'approx'}; can be abbreviated; see Details

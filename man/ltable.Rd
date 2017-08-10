@@ -28,13 +28,13 @@ returned as \code{NA} for levels not existing in the subset. See Examples.}
 
 \item{use.levels}{logical; if \code{TRUE}, uses factor levels of given 
 variables if present;  if you want e.g. counts for levels
-that actually have zero observatios but are levels in a factor variable, 
+that actually have zero observations but are levels in a factor variable, 
 use this}
 
 \item{na.rm}{logical; if \code{TRUE}, drops rows in table that have 
 \code{NA} as values in any of \code{by.vars} columns}
 
-\item{robust}{logical; if \code{TRUE}, runs the outputted data's 
+\item{robust}{logical; if \code{TRUE}, runs the output data's 
 \code{by.vars} columns through \code{robust_values} before outputting}
 
 \item{.SDcols}{advanced; a character vector of column names 
@@ -86,7 +86,7 @@ levels defined by  \code{by.vars}. Here are some examples:
   \item list(obs = .N), same as above but user assigned variable name
   \item list(sum(obs), sum(pyrs), mean(dg_age)), multiple objects in a list
   \item list(obs = sum(obs), pyrs = sum(pyrs)), same as above with user 
-  defined var names
+  defined variable names
 }
 
 If  \code{use.levels = FALSE}, no \code{levels} information will

@@ -7,7 +7,7 @@
 #' 
 #' @details \code{sir} is a comprehensive tool for modelling SIRs/SMRs with flexible 
 #' options to adjust and print SIRs, test homogeneity and utilize 
-#' multistate data. The cohort data and the variable names for observation 
+#' multi-state data. The cohort data and the variable names for observation 
 #' counts and person-years are required.
 #' The reference data is optional, since the cohort data 
 #' can be stratified (\code{print}) and compared to total.
@@ -22,7 +22,7 @@
 #' 
 #' \code{print} is used to stratify the SIR output. In other words, the variables 
 #' assigned to \code{print} are the covariates of the Poisson model.
-#' Variable levels are treaded as categorical.
+#' Variable levels are treated as categorical.
 #' Variables can be assigned in both \code{print} and \code{adjust}. 
 #' This means the output it adjusted and printed by these variables.
 #' 
@@ -44,7 +44,7 @@
 #' 
 #' 
 #' Note that if all the stratifying variables in 
-#' \code{ref.data} aren't listed in \code{adjust}, 
+#' \code{ref.data} are not listed in \code{adjust}, 
 #' or when the categories are otherwise combined,
 #' the (unweighted) mean of rates is used for computing expected cases.
 #' This might incur a small bias in comparison to when exact numbers of observations
@@ -72,18 +72,18 @@
 #' \strong{Other parameters}
 #' 
 #' \code{univariate} confidence intervals are calculated using exact 
-#' Poisson intervals (poisson.ci). The options \code{profile} and \code{wald} are
-#' is based on a poisson regression model: profile-likelihood confidence intervals 
+#' Poisson intervals (\code{poisson.ci}). The options \code{profile} and \code{wald} are
+#' is based on a Poisson regression model: profile-likelihood confidence intervals 
 #' or Wald's normal-approximation. P-value is Poisson model based \code{conf.type}
 #' or calculated using the method described by Breslow and Day. Function automatically
-#' switches to another conf.type if calculation is not possible with a message.
+#' switches to another \code{conf.type} if calculation is not possible with a message.
 #' Usually model fit fails if there is print stratum with zero expected values.
 #' 
 #' 
 #' The LRT p-value tests the levels of \code{print}. The test can be either 
-#' \code{"homogeneity"}, a likelihood ratio test where the model varibles defined in
+#' \code{"homogeneity"}, a likelihood ratio test where the model variables defined in
 #' \code{print} (factor) is compared to the constant model.
-#' Option \code{"trend"} tests if the linear trend of the continous variable in
+#' Option \code{"trend"} tests if the linear trend of the continuous variable in
 #' \code{print} is significant (using model comparison).
 #' 
 #' 
@@ -100,7 +100,7 @@
 #' 
 #' The data should be given in tabulated format. That is the number of observations 
 #' and person-years are represented for each stratum.
-#' Note that also individual data is allowed as long as each observeations, 
+#' Note that also individual data is allowed as long as each observations, 
 #' person-years, and print and adjust variables are presented in columns.
 #' The extra variables and levels are reduced automatically before estimating SIRs. 
 #' Example of data format:
@@ -130,7 +130,7 @@
 #' @param test.type Test for equal SIRs. Test available are 'homogeneity' and 'trend'.
 #' @param conf.type Confidence interval type: 'profile'(=default), 'wald' or 'univariate'.
 #' @param conf.level Level of type-I error in confidence intervals, default 0.05 is 95\% CI.
-#' @param EAR logical; TRUE calculates Excess Absolute Risks for univarite SIRs.
+#' @param EAR logical; TRUE calculates Excess Absolute Risks for univariate SIRs.
 #' (see details)
 
 #' 
@@ -284,8 +284,8 @@ sir <- function( coh.data,
 #' @author Matti Rantanen, Joonas Miettinen
 #' 
 #' @description Splines for standardised incidence or mortality ratio. A useful 
-#' tool to e.g. check whether a constant SIR can be assumed for all calendar periods, a
-#' gegroups or follow-up intervals. Splines can be fitted for these time dimensions
+#' tool to e.g. check whether a constant SIR can be assumed for all calendar periods,
+#' agegroups or follow-up intervals. Splines can be fitted for these time dimensions
 #' separately or in the same model.
 #' 
 #' @param coh.data cohort data with observations and at risk time variables
@@ -300,7 +300,7 @@ sir <- function( coh.data,
 #' @param adjust variable names for adjusting the expected cases
 #' @param print variable names for which to estimate SIRs/SMRs and 
 #' associated splines separately 
-#' @param mstate set column names for cause spesific observations. Relevant only
+#' @param mstate set column names for cause specific observations. Relevant only
 #' when coh.obs length is two or more. See help for \code{sir}.
 #' @param spline variable name(s) for the splines
 #' @param knots number knots (vector),  pre-defined knots (list of vectors) or for optimal number of knots left NULL
@@ -365,7 +365,7 @@ sir <- function( coh.data,
 #' 
 #' \strong{p-values}
 #' 
-#' The outputted p-value is a test of whether the splines are equal (homogenous)
+#' The output p-value is a test of whether the splines are equal (homogenous)
 #' at different levels of \code{print}. 
 #' The test is based on the likelihood ratio test, where the full model 
 #' includes \code{print} and is 
@@ -1232,7 +1232,7 @@ confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile',
 #' a single data set that includes
 #' observed and expected cases and additionally person-years.
 #' 
-#' @details These functions are intented to calculate SMRs from a single data set 
+#' @details These functions are intended to calculate SMRs from a single data set 
 #' that includes both observed and expected number of cases. For example utilizing the
 #' argument \code{pop.haz} of the \code{\link{lexpand}}.
 #' 
@@ -1349,7 +1349,7 @@ sir_exp <- function(x, obs, exp, pyrs=NULL, print = NULL,
 
 
 
-#' Calculate SMRs from a splitted Lexis object  
+#' Calculate SMRs from a split Lexis object  
 #' 
 #' @description \code{sir_lex} solves SMR from a \code{\link{Lexis}} object 
 #' calculated with \code{lexpand}.

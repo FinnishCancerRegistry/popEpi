@@ -165,9 +165,9 @@ rpcurve <- function(object = NULL) {
 
 #' @title Relative Poisson family object
 #' @author Karri Seppa
-#' @description A family object for glm fitting of relative Poisson models
+#' @description A family object for GLM fitting of relative Poisson models
 #' @format 
-#' A list very similary to that created by \code{poisson()}.
+#' A list very similar to that created by \code{poisson()}.
 #' @export
 #' @family relpois functions
 RPL <- copy(poisson())

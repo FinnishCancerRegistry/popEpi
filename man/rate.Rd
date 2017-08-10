@@ -36,7 +36,7 @@ and examples.}
 }
 \value{
 Returns a \code{data.table} with observations, person-years, rates and
-adjusted rates, if availble. Results are stratified by \code{print}.
+adjusted rates, if available. Results are stratified by \code{print}.
 Adjusted rates are identified with suffix \code{.adj} and  
 \code{.lo} and \code{.hi} are for confidence intervals lower and upper 
 95\% bounds, respectively.

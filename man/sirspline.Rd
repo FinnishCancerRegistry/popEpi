@@ -32,7 +32,7 @@ associated splines separately}
 
 \item{adjust}{variable names for adjusting the expected cases}
 
-\item{mstate}{set column names for cause spesific observations. Relevant only
+\item{mstate}{set column names for cause specific observations. Relevant only
 when coh.obs length is two or more. See help for \code{sir}.}
 
 \item{spline}{variable name(s) for the splines}
@@ -52,8 +52,8 @@ in \code{spline.seq.A/B/C} for manual plotting
 }
 \description{
 Splines for standardised incidence or mortality ratio. A useful 
-tool to e.g. check whether a constant SIR can be assumed for all calendar periods, a
-gegroups or follow-up intervals. Splines can be fitted for these time dimensions
+tool to e.g. check whether a constant SIR can be assumed for all calendar periods,
+agegroups or follow-up intervals. Splines can be fitted for these time dimensions
 separately or in the same model.
 }
 \details{
@@ -110,7 +110,7 @@ This allows for searching interactions, e.g. by fitting spline for period
 
 \strong{p-values}
 
-The outputted p-value is a test of whether the splines are equal (homogenous)
+The output p-value is a test of whether the splines are equal (homogenous)
 at different levels of \code{print}. 
 The test is based on the likelihood ratio test, where the full model 
 includes \code{print} and is 

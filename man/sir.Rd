@@ -40,7 +40,7 @@ when \code{coh.obs} length is two or more. See details.}
 
 \item{conf.level}{Level of type-I error in confidence intervals, default 0.05 is 95\% CI.}
 
-\item{EAR}{logical; TRUE calculates Excess Absolute Risks for univarite SIRs.
+\item{EAR}{logical; TRUE calculates Excess Absolute Risks for univariate SIRs.
 (see details)}
 }
 \value{
@@ -55,7 +55,7 @@ corresponding person-years of the cohort.
 \details{
 \code{sir} is a comprehensive tool for modelling SIRs/SMRs with flexible 
 options to adjust and print SIRs, test homogeneity and utilize 
-multistate data. The cohort data and the variable names for observation 
+multi-state data. The cohort data and the variable names for observation 
 counts and person-years are required.
 The reference data is optional, since the cohort data 
 can be stratified (\code{print}) and compared to total.
@@ -70,7 +70,7 @@ Typical variables to adjust by are gender, age group and calendar period.
 
 \code{print} is used to stratify the SIR output. In other words, the variables 
 assigned to \code{print} are the covariates of the Poisson model.
-Variable levels are treaded as categorical.
+Variable levels are treated as categorical.
 Variables can be assigned in both \code{print} and \code{adjust}. 
 This means the output it adjusted and printed by these variables.
 
@@ -92,7 +92,7 @@ will be ignored if \code{ref.rate} is supplied.
 
 
 Note that if all the stratifying variables in 
-\code{ref.data} aren't listed in \code{adjust}, 
+\code{ref.data} are not listed in \code{adjust}, 
 or when the categories are otherwise combined,
 the (unweighted) mean of rates is used for computing expected cases.
 This might incur a small bias in comparison to when exact numbers of observations
@@ -120,18 +120,18 @@ own function calls.
 \strong{Other parameters}
 
 \code{univariate} confidence intervals are calculated using exact 
-Poisson intervals (poisson.ci). The options \code{profile} and \code{wald} are
-is based on a poisson regression model: profile-likelihood confidence intervals 
+Poisson intervals (\code{poisson.ci}). The options \code{profile} and \code{wald} are
+is based on a Poisson regression model: profile-likelihood confidence intervals 
 or Wald's normal-approximation. P-value is Poisson model based \code{conf.type}
 or calculated using the method described by Breslow and Day. Function automatically
-switches to another conf.type if calculation is not possible with a message.
+switches to another \code{conf.type} if calculation is not possible with a message.
 Usually model fit fails if there is print stratum with zero expected values.
 
 
 The LRT p-value tests the levels of \code{print}. The test can be either 
-\code{"homogeneity"}, a likelihood ratio test where the model varibles defined in
+\code{"homogeneity"}, a likelihood ratio test where the model variables defined in
 \code{print} (factor) is compared to the constant model.
-Option \code{"trend"} tests if the linear trend of the continous variable in
+Option \code{"trend"} tests if the linear trend of the continuous variable in
 \code{print} is significant (using model comparison).
 
 
@@ -148,7 +148,7 @@ Formula for EAR:
 
 The data should be given in tabulated format. That is the number of observations 
 and person-years are represented for each stratum.
-Note that also individual data is allowed as long as each observeations, 
+Note that also individual data is allowed as long as each observations, 
 person-years, and print and adjust variables are presented in columns.
 The extra variables and levels are reduced automatically before estimating SIRs. 
 Example of data format:

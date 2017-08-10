@@ -7,7 +7,7 @@
 splitLexisDT(lex, breaks, timeScale, merge = TRUE, drop = TRUE)
 }
 \arguments{
-\item{lex}{a Lexis object, splitted or not}
+\item{lex}{a Lexis object, split or not}
 
 \item{breaks}{a vector of \code{[a,b)} breaks to split \code{data} by}
 

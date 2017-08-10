@@ -54,16 +54,16 @@
 #' to one of the age group standardization schemes integrated into \pkg{popEpi}:
 #' 
 #' \itemize{
-#' \item 'europe_1976_18of5' - european std. popupulation (1976), 18 age groups
-#' \item 'nordic_2000_18of5' - nordic std. popupulation (2000), 18 age groups
+#' \item 'europe_1976_18of5' - European std. population (1976), 18 age groups
+#' \item 'nordic_2000_18of5' - Nordic std. population (2000), 18 age groups
 #' \item 'world_1966_18of5' - world standard (1966), 18 age groups
 #' \item 'world_2000_18of5' - world standard (2000), 18 agegroups
 #' \item 'world_2000_20of5' - world standard (2000), 20 agegroups 
 #' \item 'world_2000_101of1' - world standard (2000), 101 agegroups
 #' }
 #' 
-#' Additionally, \code{\link{ICSS}} contains internation weights used in cancer 
-#' survival cancer analysis, but they are not currently usable by passing
+#' Additionally, \code{\link{ICSS}} contains international weights used in 
+#' cancer survival analysis, but they are not currently usable by passing
 #' a string to \code{weights} and must be supplied by hand.
 #' 
 #' You may also supply \code{weights = "internal"} to use internally

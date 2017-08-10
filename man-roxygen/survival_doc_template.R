@@ -134,7 +134,7 @@
 #' 
 #' \itemize{
 #'  \item \code{surv.obs} - observed (raw, overall) survival
-#'  \item \code{surv.obs.K} - observed cause-specifc survival for cause K
+#'  \item \code{surv.obs.K} - observed cause-specific survival for cause K
 #'  \item \code{CIF_k} - cumulative incidence function for cause \code{k}
 #'  \item \code{CIF.rel} - cumulative incidence function using excess cases
 #'  \item \code{r.e2} -  relative survival, EdererII

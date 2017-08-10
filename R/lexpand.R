@@ -202,7 +202,7 @@
 #' Certain analyses such as SIR/SMR calculations require tables of events and
 #' person-years by the unique combinations (interactions) of several variables. 
 #' For this, \code{aggre} can be specified as a list of such variables 
-#' (preferably \code{factor} variables but nto mandatory)
+#' (preferably \code{factor} variables but not mandatory)
 #'  and any arbitrary functions of the 
 #' variables at one's disposal. E.g. 
 #' 
@@ -212,7 +212,7 @@
 #' variable. Every ad-hoc-created variable should be named.
 #' 
 #' \code{fot}, \code{per}, and \code{age} are special reserved variables which,
-#' when present in the \code{aggre} list, are outputted as categories of the
+#' when present in the \code{aggre} list, are output as categories of the
 #' corresponding time scale variables by using 
 #' e.g. 
 #' 
@@ -226,14 +226,14 @@
 #' 
 #' \code{breaks = list(fot=0:5)}.
 #' 
-#' The outputted variable \code{fot.int} in the above example will have
+#' The output variable \code{fot.int} in the above example will have
 #' the lower limits of the appropriate intervals as values.
 #' 
 #' \code{aggre} as a named list will output numbers of events and person-years
 #' with the given new names as categorizing variable names, e.g. 
 #' \code{aggre = list(follow_up = fot, gender = sex, agegroup = age)}.
 #' 
-#' The ouputted table has person-years (\code{pyrs}) and event counts
+#' The output table has person-years (\code{pyrs}) and event counts
 #' (e.g. \code{from0to1}) as columns. Event counts are the numbers of transitions
 #' (\code{lex.Cst != lex.Xst}) or the \code{lex.Xst} value at a subject's 
 #' last record (subject possibly defined by \code{id}).
@@ -252,7 +252,7 @@
 #' 
 #' If \code{aggre} is not \code{NULL} and \code{pophaz} has been supplied,
 #' \code{lexpand} also aggregates the expected counts of events, which
-#' appears in the outputted data by the reserved name \code{d.exp}. Additionally,
+#' appears in the output data by the reserved name \code{d.exp}. Additionally,
 #' having \code{pp = TRUE} causes \code{lexpand} to also compute various
 #' Pohar-Perme weighted figures necessary for computing Pohar-Perme net survivals
 #' with \code{\link{survtab_ag}}. This can be slow, so consider what is really

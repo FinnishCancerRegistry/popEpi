@@ -24,7 +24,7 @@ Calculate rate ratio with confidence intervals for rate objects or observations 
 }
 \details{
 Calculate rate ratio of two age standardized rate objects (see \code{\link{rate}}). 
-Multiple rates for each objects is supported if theres equal number of rates. 
+Multiple rates for each objects is supported if there are an equal number of rates. 
 Another option is to set \code{x} and \code{y} as a vector of two.
 \enumerate{
   \item rate and its standard error, and  set \code{SE.method = TRUE}.
