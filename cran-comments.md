@@ -5,7 +5,7 @@
 * Windows 10, R 3.4.1
 * Ubuntu 17.04, R 3.4.1
 
-## R-hub checks:
+## R-hub checks: (R-release = 3.4.1, R-oldrel = 3.3.3, R-patched = 2017-07-15 r72920, R-devel = 2017-08-06 r73046)
 * macOS 10.11 El Capitan, R-release (experimental)
 * macOS 10.9 Mavericks, R-oldrel (experimental)
 * Debian Linux, R-devel, GCC
@@ -25,7 +25,8 @@
 * Fedora Linux, R-devel, GCC
 
 ## win-builder checks:
-* win-builder: R Under development (unstable) (2017-08-08 r73068)
+* R Under development (unstable) (2017-08-08 r73068)
+* R 3.4.1
 
 ## Checking results
 
