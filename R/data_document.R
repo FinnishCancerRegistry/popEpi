@@ -97,10 +97,10 @@ NULL
 #' @source Statistics Finland
 #' @format \code{data.table} with columns
 #' \itemize{
-#'  \item sex gender coded as male, female (0, 1)
-#'  \item year calendar year
-#'  \item agegroup - coded 0 to 100; one-year age groups
-#'  \item haz the average population mortality rate per person year
+#'  \item \code{sex} gender coded as male, female (0, 1)
+#'  \item \code{year} calendar year
+#'  \item \code{agegroup} - coded 0 to 100; one-year age groups
+#'  \item \code{haz} the average population mortality rate per person year
 #' }
 #' @name popmort
 #' @family popEpi_data
@@ -133,15 +133,15 @@ NULL
 
 # stdpop101 -----------------------------------------------------------------
 
-#' World standard population by 1 year agegroups from 1 to 101. Sums to 100 000.
+#' World standard population by 1 year age groups from 1 to 101. Sums to 100 000.
 #'
 #'
 #' @source Standard population is from:
-#' \href{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}{world standard pop "101of1"}
+#' \href{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}{world standard population "101of1"}
 #' 
 #' @format data.table with columns
 #' \itemize{
-#'  \item \code{world_std} weight in 100000 years (numeric)
+#'  \item \code{world_std} weight that sums to 100000 (numeric)
 #'  \item \code{agegroup} age group from 1 to 101 (numeric)
 #' }
 #' @name stdpop101

@@ -1,5 +1,5 @@
 
-#' @title Set 'aggre' attributes to an object by modifying in place
+#' @title Set \code{aggre} attributes to an object by modifying in place
 #' @author Joonas Miettinen
 #' @description Coerces an R object to an \code{aggre} object, identifying
 #' the object as one containing aggregated counts, person-years and other

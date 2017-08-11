@@ -285,7 +285,7 @@ sir <- function( coh.data,
 #' 
 #' @description Splines for standardised incidence or mortality ratio. A useful 
 #' tool to e.g. check whether a constant SIR can be assumed for all calendar periods,
-#' agegroups or follow-up intervals. Splines can be fitted for these time dimensions
+#' age groups or follow-up intervals. Splines can be fitted for these time dimensions
 #' separately or in the same model.
 #' 
 #' @param coh.data cohort data with observations and at risk time variables
@@ -360,7 +360,7 @@ sir <- function( coh.data,
 #' ratio test is valid.
 #' Splines are also fitted independently for each level of \code{print}.
 #' This allows for searching interactions, e.g. by fitting spline for period 
-#' (\code{splines='period'}) for each agegroup (\code{print = 'agegroup'}).
+#' (\code{splines='period'}) for each age group (\code{print = 'agegroup'}).
 #' 
 #' 
 #' \strong{p-values}
@@ -1240,7 +1240,8 @@ confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile',
 #' state in \code{lex.Str} as \code{0} and all other as \code{1}. No missing values
 #' is allowed in observed, pop.haz or person-years.
 #' 
-#' @param x Data set e.g. aggre or Lexis object (see: \code{\link{lexpand}})
+#' @param x Data set e.g. \code{aggre} or \code{Lexis} object 
+#' (see: \code{\link{lexpand}})
 #' @param obs Variable name of the observed cases in the data set
 #' @param exp Variable name or expression for expected cases
 #' @param pyrs Variable name for person-years (optional)

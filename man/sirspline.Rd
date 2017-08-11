@@ -53,7 +53,7 @@ in \code{spline.seq.A/B/C} for manual plotting
 \description{
 Splines for standardised incidence or mortality ratio. A useful 
 tool to e.g. check whether a constant SIR can be assumed for all calendar periods,
-agegroups or follow-up intervals. Splines can be fitted for these time dimensions
+age groups or follow-up intervals. Splines can be fitted for these time dimensions
 separately or in the same model.
 }
 \details{
@@ -105,7 +105,7 @@ are placed globally for all levels of \code{print}. This also ensures that the l
 ratio test is valid.
 Splines are also fitted independently for each level of \code{print}.
 This allows for searching interactions, e.g. by fitting spline for period 
-(\code{splines='period'}) for each agegroup (\code{print = 'agegroup'}).
+(\code{splines='period'}) for each age group (\code{print = 'agegroup'}).
 
 
 \strong{p-values}

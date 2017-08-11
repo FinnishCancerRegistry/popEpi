@@ -15,7 +15,8 @@ sir_ag(x, obs = "from0to1", print = attr(x, "aggre.meta")$by,
   exp = "d.exp", pyrs = "pyrs", ...)
 }
 \arguments{
-\item{x}{Data set e.g. aggre or Lexis object (see: \code{\link{lexpand}})}
+\item{x}{Data set e.g. \code{aggre} or \code{Lexis} object 
+(see: \code{\link{lexpand}})}
 
 \item{obs}{Variable name of the observed cases in the data set}
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/S3_definitions.R
 \name{print.aggre}
 \alias{print.aggre}
-\title{Print an aggre Object}
+\title{Print an \code{aggre} Object}
 \usage{
 \method{print}{aggre}(x, subset = NULL, ...)
 }

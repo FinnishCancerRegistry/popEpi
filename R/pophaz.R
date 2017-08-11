@@ -20,7 +20,7 @@
 #' by sex, calendar year, and 1-year age group.
 #' 
 #' \tabular{rrrr}{
-#' sex \tab year \tab agegroup \tab haz \cr
+#' \code{sex} \tab \code{year} \tab \code{agegroup} \tab \code{haz} \cr
 #' 0 \tab 1951 \tab 0 \tab 0.036363176\cr  
 #' 0 \tab 1951 \tab 1 \tab 0.003616547\cr
 #' 0 \tab 1951 \tab 2 \tab 0.002172384\cr

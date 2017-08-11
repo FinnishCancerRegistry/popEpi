@@ -57,9 +57,9 @@
 #' \item \code{'europe_1976_18of5'} - European std. population (1976), 18 age groups
 #' \item \code{'nordic_2000_18of5'} - Nordic std. population (2000), 18 age groups
 #' \item \code{'world_1966_18of5'} - world standard (1966), 18 age groups
-#' \item \code{'world_2000_18of5'} - world standard (2000), 18 agegroups
-#' \item \code{'world_2000_20of5'} - world standard (2000), 20 agegroups 
-#' \item \code{'world_2000_101of1'} - world standard (2000), 101 agegroups
+#' \item \code{'world_2000_18of5'} - world standard (2000), 18 age groups
+#' \item \code{'world_2000_20of5'} - world standard (2000), 20 age groups 
+#' \item \code{'world_2000_101of1'} - world standard (2000), 101 age groups
 #' }
 #' 
 #' Additionally, \code{\link{ICSS}} contains international weights used in 

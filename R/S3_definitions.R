@@ -605,7 +605,7 @@ preface_survtab.print <- function(x) {
 }
 
 
-#' @title Print an aggre Object
+#' @title Print an \code{aggre} Object
 #' @author Joonas Miettinen
 #' @description Print method function for \code{aggre} objects; see
 #' \code{\link{as.aggre}} and \code{\link{aggre}}.
@@ -632,7 +632,7 @@ print.aggre <- function(x, subset = NULL, ...) {
   
 }
 
-#' @title Summarize an aggre Object
+#' @title Summarize an \code{aggre} Object
 #' @author Joonas Miettinen
 #' @description \code{summary} method function for \code{aggre} objects; see
 #' \code{\link{as.aggre}} and \code{\link{aggre}}.

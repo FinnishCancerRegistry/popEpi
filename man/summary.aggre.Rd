@@ -2,7 +2,7 @@
 % Please edit documentation in R/S3_definitions.R
 \name{summary.aggre}
 \alias{summary.aggre}
-\title{Summarize an aggre Object}
+\title{Summarize an \code{aggre} Object}
 \usage{
 \method{summary}{aggre}(object, by = NULL, subset = NULL, ...)
 }

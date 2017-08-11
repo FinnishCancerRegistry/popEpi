@@ -2,7 +2,7 @@
 % Please edit documentation in R/aggregating.R
 \name{setaggre}
 \alias{setaggre}
-\title{Set 'aggre' attributes to an object by modifying in place}
+\title{Set \code{aggre} attributes to an object by modifying in place}
 \usage{
 setaggre(x, values = NULL, by = NULL, breaks = NULL)
 }
