@@ -1,8 +1,8 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
 Authors@R: c(person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", c("aut", "cre")), person("Matti", "Rantanen", , "matti.rantanen@cancer.fi", "aut"), person("Karri", "Seppa", , "karri.seppa@cancer.fi", "ctb") )
-Version: 0.4.2
-Date: 2017-08-11
+Version: 0.4.2.1
+Date: 2017-08-15
 Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
 Description: Enables computation of epidemiological statistics where e.g. 
     counts or mortality rates of the reference population are used. Currently 
@@ -13,7 +13,7 @@ Description: Enables computation of epidemiological statistics where e.g.
     and other computations achieved using 'data.table'. 
 Depends: R (>= 3.2.0)
 Imports: Epi (>= 2.0), survival, data.table (>= 1.9.6)
-Suggests: reshape2, methods, testthat, knitr, rmarkdown, relsurv, ggplot2, mstate, date, splines, roxygen2
+Suggests: reshape2, methods, testthat, knitr, rmarkdown, relsurv, ggplot2, mstate, date, splines, roxygen2, covr
 Encoding: UTF-8
 License: GPL-3
 LazyData: true

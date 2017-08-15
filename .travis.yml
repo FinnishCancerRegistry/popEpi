@@ -1,14 +1,11 @@
 language: R
 warnings_are_errors: true
 sudo: false
-
-install:
-  - Rscript -e "if (!require('devtools')) install.packages('devtools')"
-  - Rscript -e "devtools::install_deps(dep = TRUE)"
-  - Rscript -e "devtools::install_github('jimhester/covr')"
+cache: packages
   
 after_success:
   - Rscript -e 'covr::codecov()'
   
 env:
   - NOT_CRAN=true
+  
