@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/WetRobot/popEpi.png?branch=master)](https://travis-ci.org/WetRobot/popEpi) [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/popEpi)](https://cran.r-project.org/package=popEpi) [![codecov.io](http://codecov.io/github/WetRobot/popEpi/coverage.svg?branch=master)](http://codecov.io/github/WetRobot/popEpi?branch=master) [![CRAN\_DLs\_via\_RStudio](http://cranlogs.r-pkg.org/badges/popEpi)](https://cran.r-project.org/package=popEpi)
+[![Build Status](https://travis-ci.org/WetRobot/popEpi.png?branch=master)](https://travis-ci.org/WetRobot/popEpi) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/WetRobot/popEpi?branch=master&svg=true)](https://ci.appveyor.com/project/WetRobot/popepi) [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/popEpi)](https://cran.r-project.org/package=popEpi) [![codecov.io](http://codecov.io/github/WetRobot/popEpi/coverage.svg?branch=master)](http://codecov.io/github/WetRobot/popEpi?branch=master) [![CRAN\_DLs\_via\_RStudio](http://cranlogs.r-pkg.org/badges/popEpi)](https://cran.r-project.org/package=popEpi)
 
 popEpi: Epidemiology with population data
 =========================================
@@ -111,21 +111,19 @@ c <- lexpand( sire, status = status %in% 1:2, birth = bi_date, exit = ex_date, e
 se <- sir( coh.data = c, coh.obs = 'from0to1', coh.pyrs = 'pyrs', 
            ref.data = popmort, ref.rate = 'haz', 
            adjust = c('agegroup', 'year', 'sex'), print = 'fot')
-#> Confidence intervals calculated from profile-likelihood.
 se
-#> SIR Standardized by:  agegroup year sex
+#> SIR (adjusted by agegroup, year, sex) with 95% confidence intervals (profile) 
+#> Test for homogeneity: p < 0.001 
 #> 
-#>  Total observed: 4559 
-#>  Total expected: 1482.13 
-#>  Total person-years: 
-#> 39905.92 
+#>  Total sir: 3.08 (2.99-3.17)
+#>  Total observed: 4559
+#>  Total expected: 1482.13
+#>  Total person-years: 39906 
 #> 
-#> Poisson modelled SIR: 
-#>    fot observed expected     pyrs  sir 2.5 % 97.5 % p_value
-#> 1:   0     4264  1214.54 34445.96 3.51  3.41   3.62   0.000
-#> 2:  10      295   267.59  5459.96 1.10  0.98   1.23   0.094
 #> 
-#> Test for homogeneity p < 0.001
+#>    fot observed expected     pyrs  sir sir.lo sir.hi p_value
+#> 1:   0     4264  1214.54 34445.96 3.51   3.41   3.62   0.000
+#> 2:  10      295   267.59  5459.96 1.10   0.98   1.23   0.094
 ```
 
 (Relative) survival
