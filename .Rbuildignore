@@ -12,3 +12,5 @@
 ^NEWS$
 ^NEWS\.Rmd$
 ^man-roxygen$
+^codecov.yml$
+^appveyor.yml$
