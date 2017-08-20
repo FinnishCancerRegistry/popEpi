@@ -19,8 +19,9 @@ Sums to 100000.
 }
 \seealso{
 Other popEpi_data: \code{\link{ICSS}},
-  \code{\link{popmort}}, \code{\link{sibr}},
-  \code{\link{sire}}, \code{\link{stdpop101}}
+  \code{\link{meanpop_fi}}, \code{\link{popmort}},
+  \code{\link{sibr}}, \code{\link{sire}},
+  \code{\link{stdpop101}}
 
 Other weights: \code{\link{ICSS}},
   \code{\link{direct_standardization}},

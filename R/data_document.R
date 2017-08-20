@@ -150,3 +150,25 @@ NULL
 NULL
 
 
+
+
+
+# meanpop_fi -------------------------------------------------------------------
+#' Mean population counts in Finland year, sex, and age group.
+#'
+#' @source Statistics Finland
+#' @format \code{data.table} with columns
+#' \itemize{
+#'  \item \code{sex} gender coded as male, female (0, 1)
+#'  \item \code{year} calendar year 1981-2016
+#'  \item \code{agegroup} - coded 0 to 100; one-year age groups
+#'  \item \code{meanpop} the mean population count; that is, the mean of the
+#'  annual population counts of two consecutive years; e.g. for 1990 
+#'  \code{meanpop} is the mean of population counts for 1990 and 1991 
+#'  (counted at 1990-01-01 and 1991-01-01, respectively)
+#' }
+#' @name meanpop_fi
+#' @family popEpi_data 
+#' @seealso \href{http://pxnet2.stat.fi/PXWeb/pxweb/fi/StatFin/StatFin__vrm__vaerak/071_vaerak_tau_109.px/?rxid=81efcb98-00c6-46ba-9f8f-8bc6f110895f}{Table on the web}
+NULL
+

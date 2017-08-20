@@ -26,8 +26,9 @@ available only up to that point --- hence the maximum possible \code{ex_date} is
 }
 \seealso{
 Other popEpi_data: \code{\link{ICSS}},
-  \code{\link{popmort}}, \code{\link{sibr}},
-  \code{\link{stdpop101}}, \code{\link{stdpop18}}
+  \code{\link{meanpop_fi}}, \code{\link{popmort}},
+  \code{\link{sibr}}, \code{\link{stdpop101}},
+  \code{\link{stdpop18}}
 
 Other survival_data: \code{\link{sibr}}
 }
