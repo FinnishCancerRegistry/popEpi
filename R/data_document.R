@@ -24,8 +24,8 @@
 #' }
 #' @author Karri Seppa
 #' @name sire
-#' @family popEpi_data
-#' @family survival_data
+#' @family popEpi data
+#' @family survival data
 NULL
 
 
@@ -53,8 +53,8 @@ NULL
 #' }
 #' @author Karri Seppa
 #' @name sibr
-#' @family popEpi_data
-#' @family survival_data
+#' @family popEpi data
+#' @family survival data
 NULL
 
 
@@ -78,7 +78,7 @@ NULL
 #'  \item ICSS3 - third set of weights, sums to 100 000
 #' }
 #' @name ICSS
-#' @family popEpi_data
+#' @family popEpi data
 #' @family weights
 #' @examples 
 #' ## aggregate weights to a subset of age groups
@@ -103,7 +103,7 @@ NULL
 #'  \item \code{haz} the average population mortality rate per person year
 #' }
 #' @name popmort
-#' @family popEpi_data
+#' @family popEpi data
 #' @seealso \code{\link{pophaz}}
 NULL
 
@@ -126,7 +126,7 @@ NULL
 #'  \item \code{nordic}, Nordic standard population (numeric)
 #' }
 #' @name stdpop18
-#' @family popEpi_data
+#' @family popEpi data
 #' @family weights
 NULL
 
@@ -145,7 +145,7 @@ NULL
 #'  \item \code{agegroup} age group from 1 to 101 (numeric)
 #' }
 #' @name stdpop101
-#' @family popEpi_data
+#' @family popEpi data
 #' @family weights
 NULL
 
@@ -168,7 +168,7 @@ NULL
 #'  (counted at 1990-01-01 and 1991-01-01, respectively)
 #' }
 #' @name meanpop_fi
-#' @family popEpi_data 
+#' @family popEpi data 
 #' @seealso \href{http://pxnet2.stat.fi/PXWeb/pxweb/fi/StatFin/StatFin__vrm__vaerak/071_vaerak_tau_109.px/?rxid=81efcb98-00c6-46ba-9f8f-8bc6f110895f}{Table on the web}
 NULL
 

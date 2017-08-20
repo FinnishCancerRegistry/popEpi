@@ -25,12 +25,12 @@ The closing date for the pertinent data was 2012-12-31, meaning status informati
 available only up to that point --- hence the maximum possible \code{ex_date} is \code{2012-12-31}.
 }
 \seealso{
-Other popEpi_data: \code{\link{ICSS}},
+Other popEpi data: \code{\link{ICSS}},
   \code{\link{meanpop_fi}}, \code{\link{popmort}},
   \code{\link{sibr}}, \code{\link{stdpop101}},
   \code{\link{stdpop18}}
 
-Other survival_data: \code{\link{sibr}}
+Other survival data: \code{\link{sibr}}
 }
 \author{
 Karri Seppa

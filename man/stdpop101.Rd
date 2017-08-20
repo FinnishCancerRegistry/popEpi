@@ -16,7 +16,7 @@ Standard population is from:
 World standard population by 1 year age groups from 1 to 101. Sums to 100 000.
 }
 \seealso{
-Other popEpi_data: \code{\link{ICSS}},
+Other popEpi data: \code{\link{ICSS}},
   \code{\link{meanpop_fi}}, \code{\link{popmort}},
   \code{\link{sibr}}, \code{\link{sire}},
   \code{\link{stdpop18}}
