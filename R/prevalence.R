@@ -33,6 +33,10 @@ prevtab <- function(
   
   all_vars <- unique(intersect(names(data), c(lexis_vars, print_vars, adjust_vars, meanpop_vars)))
   
+  ## appease R CMD CHECK -------------------------------------------------------
+  at.risk <- NULL
+  
+  
   ## subsetting ----------------------------------------------------------------
   sb <- substitute(subset)
   subset <- evalLogicalSubset(data, substiset = sb, enclos = PF)
