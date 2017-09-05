@@ -1,3 +1,8 @@
+Changes in 0.4.3
+================
+
+-   survtab adjusting was broken with older versions of data.table (tested 1.9.6); therefore popEpi now requires the newest version of data.table!
+
 Changes in 0.4.2
 ================
 

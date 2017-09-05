@@ -15,6 +15,11 @@ knitr::opts_chunk$set(
 devtools::load_all()
 ```
 
+# Changes in 0.4.3
+
+* survtab adjusting was broken with older versions of data.table (tested 1.9.6);
+therefore popEpi now requires the newest version of data.table!
+
 # Changes in 0.4.2
 
 * __`survtab()` bug fix: standard errors were misspecificied for adjusted curves, e.g. age-adjusted Ederer II estimates. This resulted in too wide confidence intervals! SEE HERE FOR EAXMPLE: [#135](https://github.com/WetRobot/popEpi/issues/135)__. The standard errors and confidence intervals of non-adjusted curves have always been correct.
