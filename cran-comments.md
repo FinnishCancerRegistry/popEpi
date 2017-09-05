@@ -4,6 +4,8 @@
 ## Checked manually on:
 * Windows 8, R 3.4.0
 * Ubuntu 17.04, R 3.4.1
+* Windows Server 2008 SP1, R 3.4.0
+* Windows 10, R 3.4.1
 
 ## win-builder checks:
 * R Under development (unstable) (2017-09-04 r73204)
