@@ -193,4 +193,37 @@ check_on_rhub <- function(platforms = NULL, show.status, ...) {
 
 
 
+force_build_vignettes <- function() {
+  
+  slash <- if (.Platform$OS.type == "windows") "\\" else "/"
+  
+  
+  stopifnot(
+    "inst" %in% dir(),
+    "vignettes" %in% dir(),
+    "doc" %in% dir("inst"),
+    length(dir("vignettes", pattern = "\\.Rmd", full.names = TRUE)) > 0
+  )
+  
+  vignette_src <- dir("vignettes", pattern = "\\.Rmd", full.names = TRUE)
+  vignette_nms <-  dir("vignettes", pattern = "\\.Rmd", full.names = FALSE)
+  vignette_tgt <- paste0("inst", slash,"doc", slash, vignette_nms)
+  
+  file.copy(vignette_src, to = vignette_tgt, overwrite = TRUE)
+  
+  setwd("inst/doc")
+  on.exit(setwd("../.."))
+  lapply(vignette_nms, rmarkdown::render, clean = TRUE, quiet = TRUE,
+         encoding = "UTF-8", envir = new.env())
+  
+  NULL
+}
+
+
+
+
+
+
+
+
 
