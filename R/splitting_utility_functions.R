@@ -221,6 +221,10 @@ harmonizeNumericTimeScales <- function(x, times = NULL) {
   invisible(NULL)
 }
 
+
+
+
+
 harmonizeNumeric <- function(x, v1="lex.Cst", v2="lex.Xst") {
   ## assumes v1, v2 are numeric variable names in x  
   
@@ -242,6 +246,10 @@ harmonizeNumeric <- function(x, v1="lex.Cst", v2="lex.Xst") {
   
 }
 
+
+
+
+
 harmonizeFactors <- function(x, v1="lex.Cst", v2="lex.Xst") {
   ## assumes v1, v2 are factor names in x
   
@@ -258,6 +266,10 @@ harmonizeFactors <- function(x, v1="lex.Cst", v2="lex.Xst") {
   setattr(x[[v2]], "levels", glab2)
   
 }
+
+
+
+
 
 intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = FALSE, tol = .Machine$double.eps^0.5, subset = NULL)  {
   
@@ -1136,26 +1148,24 @@ roll_lexis_status_inplace <- function(unsplit.data, split.data, id.var) {
   status_vars <- c("lex.Cst", "lex.Xst")
   status_ud <- mget_cols(c(id.var, status_vars), unsplit.data)
   
-  wh_last_row <- which(!duplicated(split.data, by = id.var, fromLast = TRUE))
-  
   join <- structure(list(split.data[[id.var]]), names = id.var)
-  set(split.data, j = status_vars, value = {
-    status_ud[
-      i = join, 
-      j = .SD, 
-      on = id.var,
-      .SDcols = c("lex.Cst", "lex.Cst")
-      ]
-  })
+  lex_cst <- status_ud[
+    i = join, 
+    j = lex.Cst, 
+    on = id.var
+    ]
+  storage.mode(lex_cst) <- storage.mode(split.data[["lex.Cst"]])
+  set(split.data, j = status_vars, value = list(lex_cst, lex_cst))
   
+  wh_last_row <- which(!duplicated(split.data, by = id.var, fromLast = TRUE))
   join <- structure(list(split.data[[id.var]][wh_last_row]), names = id.var)
-  set(split.data, i = wh_last_row, j = "lex.Xst", value = {
-    status_ud[
-      i = join, 
-      j = lex.Xst, 
-      on = id.var
-      ]
-  })
+  last_lex_xst <- status_ud[
+    i = join, 
+    j = lex.Xst, 
+    on = id.var
+    ]
+  storage.mode(last_lex_xst) <- storage.mode(split.data[["lex.Xst"]])
+  set(split.data, i = wh_last_row, j = "lex.Xst", value = last_lex_xst)
   
   
   NULL

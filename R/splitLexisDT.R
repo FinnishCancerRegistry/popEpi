@@ -156,6 +156,14 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
     N_expand <- length(breaks)
     N_subjects <- nrow(lex)
     
+    ## use tmp id to ensure correct status rolling -----------------------------
+    id_dt <- data.table(
+      tmp_id_values = 1:nrow(lex),
+      orig_id_values = lex[["lex.id"]]
+    )
+    on.exit(set(lex, j = "lex.id", value = id_dt$orig_id_values))
+    set(lex, j = "lex.id", value = id_dt$tmp_id_values)
+    
     ## quick data expansion ------------------------------------------------------
     
     l <- vector(mode = "list", length = N_expand)
@@ -179,13 +187,6 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
     set(l, j = tmpIE,  value = c(rep(breaks, each = N_subjects)) )
     set(l, j = tmpIE,  value = pmin(l[[tmpIE]], l[[timeScale]] + l$lex.dur) )
     set(l, j = timeScale, value = c(ts_values, pmax(ts_values, rep(breaks[-length(breaks)], each = N_subjects))) )
-    
-    
-    ## status determination ------------------------------------------------------
-    ## note: lex.dur still the original value (maximum possible)
-    harmonizeStatuses(x = l, C = "lex.Cst", X = "lex.Xst")
-    not_event <- ts_values + l$lex.dur != l[[tmpIE]]
-    l[not_event, lex.Xst := lex.Cst]
     
     set(l, j = "lex.dur", value = l[[tmpIE]] - l[[timeScale]] )
     
@@ -220,19 +221,25 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
       
     }
     
-    
     ## roll states -------------------------------------------------------------
     # this avoids duplicate deaths, etc., where appropriate.
-    setkeyv(l, c(tmpID, timeScale))
-    lex_id <- mget_cols(c("lex.Cst", "lex.Xst"), data = orig_lex)
+    setkeyv(l, c("lex.id", timeScale))
+    lex_id <- mget_cols(c("lex.Cst", "lex.Xst", "lex.id"), data = lex)
     setattr(lex_id, "time.scales", allScales)
-    set(lex_id, j = tmpID, value = 1:nrow(lex_id))
     roll_lexis_status_inplace(
-      unsplit.data = lex_id, split.data = l, id.var = tmpID
+      unsplit.data = lex_id, split.data = l, id.var = "lex.id"
     )
     rm("lex_id")
     
+    harmonizeStatuses(x = l, C = "lex.Cst", X = "lex.Xst")
+    
     set(l, j = c(tmpIE, tmpID), value = NULL)
+    
+    ## revert to original IDs --------------------------------------------------
+    set(l, j = "lex.id", value = {
+      id_dt[list(tmp_id_values = l$lex.id), orig_id_values, on = "tmp_id_values"]
+    })
+    
     
   }
   
