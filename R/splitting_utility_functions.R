@@ -1175,3 +1175,73 @@ roll_lexis_status_inplace <- function(unsplit.data, split.data, id.var) {
 
 
 
+huge_splitting_test <- function(
+  n.tests = 100, 
+  n.rows = 1000,
+  n.time.scales = 1:10,
+  n.breaks = 10:100,
+  n.statuses = 1:5
+) {
+  
+  neql <- vector("list", n.tests)
+  
+  for (i in 1:n.tests) {
+    
+    drop <- sample(list(TRUE, FALSE), 1)[[1]]
+    drop <- FALSE
+    
+    row_n <- sample(as.list(n.rows), 1)[[1]]
+    
+    ts_n <- sample(as.list(n.time.scales), 1)[[1]]
+    ts_means <- as.list(rlnorm(n = ts_n, meanlog = 1, sdlog = 2))
+    
+    st_n <- sample(as.list(n.statuses), 1)[[1]]
+    
+    dt <- setDT(lapply(ts_means, rlnorm, n = row_n, sdlog = 2))
+    ts_names <- copy(names(dt))
+    names(ts_means) <- ts_names
+    
+    dt[, "lex.Cst" := sample(1:st_n, size = .N, replace = TRUE)]
+    dt[, "lex.Xst" := sample(1:st_n, size = .N, replace = TRUE)]
+    dt[, "lex.id" := 1:.N]
+    dt[, "lex.dur" := rlnorm(n = .N, meanlog = 0.5, sdlog = 1)]
+    
+    dt_bl <- lapply(ts_names, function(x) NULL)
+    names(dt_bl) <- ts_names
+    forceLexisDT(dt, breaks = dt_bl, allScales = ts_names)
+    
+    br_n <- unlist(sample(as.list(n.breaks), ts_n))
+    names(br_n) <- ts_names
+    BL <- lapply(ts_names, function(ts_name) {
+      rnorm(n = br_n[[ts_name]], mean = ts_means[[ts_name]], sd = 7.5)
+    })
+    names(BL) <- ts_names
+    
+    BL <- BL[sample(ts_names, ts_n)]
+    
+    split_pop <- splitMulti(dt, breaks = BL, drop = drop)
+    split_epi <- splitMultiEpi(dt, breaks = BL, drop = drop)
+    
+    setkeyv(split_epi, c("lex.id", ts_names[1]))
+    setkeyv(split_pop, c("lex.id", ts_names[1]))
+    
+    eq <- all.equal(split_epi, split_pop, check.attributes = FALSE)
+    if (!isTRUE(eq)) {
+      message("split_epi, split_pop not equal in tick ", i, "")
+      neql[[i]] <- mget(c(
+        "drop", "row_n", "ts_n", "ts_names", 
+        "dt", "dt_bl", "br_n", "BL",
+        "split_epi", "split_pop", "eq"
+      ))
+    }
+  }
+  
+  neql[vapply(neql, is.null, logical(1))]
+  neql
+}
+
+
+
+
+
+
