@@ -171,8 +171,8 @@ splitMulti <- function(data,
       key = "temp_id_values"
     )
     
-    on.exit(set(dt, j = "lex.id", value = id_dt$orig_id_values))
-    set(dt, j = "lex.id", value = id_dt$temp_id_values)
+    on.exit(set(dt, j = "lex.id", value = id_dt[["orig_id_values"]]))
+    set(dt, j = "lex.id", value = id_dt[["temp_id_values"]])
     
     l <- vector(mode = "list", length = length(splitScales))
     setattr(l, "names", splitScales)
@@ -217,11 +217,15 @@ splitMulti <- function(data,
     on.exit()
     set(dt, j = "lex.id", value = id_dt$lex.id)
     
+    
     tmpID <- makeTempVarName(names = names(l), pre = "TEMP_SPLITMULTI_ID_")
     setnames(l, old = "lex.id", new = tmpID)
-    set(l, j = "lex.id", value = {
-      id_dt[i = .(l[[tmpID]]), j = orig_id_values, on = "temp_id_values"]
-    })
+    set(l, j = "lex.id", value = {id_dt[
+      i = .(l[[tmpID]]), 
+      j = .SD, 
+      on = "temp_id_values",
+      .SDcols = "orig_id_values"
+      ]})
     set(l, j = tmpID, value = NULL)
     rm("id_dt")
     

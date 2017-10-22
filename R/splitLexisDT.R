@@ -161,8 +161,8 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
       tmp_id_values = 1:nrow(lex),
       orig_id_values = lex[["lex.id"]]
     )
-    on.exit(set(lex, j = "lex.id", value = id_dt$orig_id_values))
-    set(lex, j = "lex.id", value = id_dt$tmp_id_values)
+    on.exit(set(lex, j = "lex.id", value = id_dt[["orig_id_values"]]))
+    set(lex, j = "lex.id", value = id_dt[["tmp_id_values"]])
     
     ## quick data expansion ------------------------------------------------------
     
@@ -237,7 +237,12 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
     
     ## revert to original IDs --------------------------------------------------
     set(l, j = "lex.id", value = {
-      id_dt[list(tmp_id_values = l$lex.id), orig_id_values, on = "tmp_id_values"]
+      id_dt[
+        i = list(tmp_id_values = l$lex.id), 
+        j = .SD, 
+        on = "tmp_id_values", 
+        .SDcols = "orig_id_values"
+        ]
     })
     
     
