@@ -88,13 +88,50 @@ test_that("splitMulti and splitLexis are congruent", {
     })
   }
   
-  # multistate using mstate ----------------------------------------------------
-  
-#   test_that("splitMulti works with data produced by mstate", {
-#     
-#   }
   
 })
+
+
+
+
+test_that("splitMulti agrees with splitLexis, vol. II", {
+  skip_on_cran()
+  skip_on_travis()
+  
+  library("Epi")
+  
+  data(nickel, package = "Epi")
+  
+  lex <- Lexis( entry = list(age=agein,
+                             per=agein+dob),
+                exit = list(age=ageout),
+                exit.status = factor(icd>0, labels=c("Alive","Dead")),
+                entry.status = factor(0, 0:1, labels = c("Alive", "Dead")),
+                data = nickel )
+  
+  lex$lex.id <- 1:nrow(lex)
+  
+  BL <- list(
+    per = 1920:1990,
+    age = 0:100
+  )
+  
+  epi_s1 <- splitLexis(lex, breaks = BL$per, time.scale = "per")
+  epi_s2 <- splitLexis(epi_s1, breaks = BL$age, time.scale = "age")
+  
+  pop_sm <- splitMulti(lex, breaks = BL, drop = FALSE)
+  
+  expect_equal(
+    setDT(epi_s2), setDT(pop_sm), check.attributes = FALSE
+  )
+  
+})
+
+
+
+
+
+
 
 
 

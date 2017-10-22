@@ -1086,3 +1086,74 @@ compareSMWithEpi <- function(data, breaks = list(fot=0:5)) {
   
   invisible(NULL)
 }
+
+
+
+
+
+summarize_Lexis <- function(x) {
+  
+  dur <- sum(x$lex.dur)
+  status_vars <- paste0("lex.", c("Cst", "Xst"))
+  time_scales <- copy(attr(x, "time.scales"))
+  dt <- copy(setDT(
+    mget(c(status_vars, "lex.id", time_scales[1]), as.environment(x))
+  ))
+  setkeyv(dt, c("lex.id", time_scales[1]))
+  dt <- unique(dt, by = c("lex.id"), fromLast = TRUE)
+  
+  n <- dt[, .N, keyby = status_vars]
+  rm("dt")
+  n[, "transition" := paste0(lex.Cst, "->", lex.Xst)]
+  n <- cast_simple(data = n, columns = "transition", values = "N")
+  return(cbind(lex.dur = dur, n))
+}
+
+
+
+
+
+roll_lexis_status_inplace <- function(unsplit.data, split.data, id.var) {
+  
+  stopifnot(
+    is.data.table(split.data),
+    length(key(split.data)) > 1,
+    key(split.data)[1] == "lex.id",
+    key(split.data)[2] %in% attr(unsplit.data, "time.scales"),
+    id.var %in% names(unsplit.data),
+    id.var %in% names(split.data),
+    uniqueN(unsplit.data[[id.var]]) == nrow(unsplit.data)
+  )
+  
+  status_vars <- c("lex.Cst", "lex.Xst")
+  status_ud <- mget_cols(c(id.var, status_vars), unsplit.data)
+  
+  wh_last_row <- which(!duplicated(split.data, by = id.var, fromLast = TRUE))
+  
+  join <- structure(list(split.data[[id.var]]), names = id.var)
+  set(split.data, j = status_vars, value = {
+    status_ud[
+      i = join, 
+      j = .SD, 
+      on = id.var,
+      .SDcols = c("lex.Cst", "lex.Cst")
+      ]
+  })
+  
+  join <- structure(list(split.data[[id.var]][wh_last_row]), names = id.var)
+  set(split.data, i = wh_last_row, j = "lex.Xst", value = {
+    status_ud[
+      i = join, 
+      j = lex.Xst, 
+      on = id.var
+      ]
+  })
+  
+  
+  NULL
+}
+
+
+
+
+

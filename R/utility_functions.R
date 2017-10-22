@@ -1392,3 +1392,14 @@ set2 <- function(x, j, ...) {
 
 
 
+
+mget_cols <- function(cols, data) {
+  
+  stopifnot(all(cols %in% names(data)))
+  
+  setDT(mget(x = cols, envir = as.environment(data), inherits = FALSE))
+}
+
+
+
+
