@@ -1084,8 +1084,11 @@ splitMultiEpi <- function(data, breaks = list(fot = 0:5), drop) {
     data <- splitLexis(data, breaks = breaks[[k]], time.scale = k)
   }
   
-  forceLexisDT(data, breaks = attr(data, "breaks"), 
-               allScales = attr(data, "time.scales"))
+  forceLexisDT(
+    data, breaks = attr(data, "breaks"), 
+    allScales = attr(data, "time.scales"), 
+    key = FALSE
+  )
   if (drop) data <- intelliDrop(data, breaks = breaks)
   data
 }
@@ -1187,24 +1190,28 @@ huge_splitting_test <- function(
   
   for (i in 1:n.tests) {
     
+    used_seed <- as.character(as.numeric(Sys.time())*10000)
+    used_seed <- as.integer(substr(used_seed, nchar(used_seed)-5, nchar(used_seed)))
+    set.seed(used_seed)
+    
     drop <- sample(list(TRUE, FALSE), 1)[[1]]
     drop <- FALSE
     
     row_n <- sample(as.list(n.rows), 1)[[1]]
     
     ts_n <- sample(as.list(n.time.scales), 1)[[1]]
-    ts_means <- as.list(rlnorm(n = ts_n, meanlog = 1, sdlog = 2))
     
     st_n <- sample(as.list(n.statuses), 1)[[1]]
     
-    dt <- setDT(lapply(ts_means, rlnorm, n = row_n, sdlog = 2))
+    dt <- setDT(lapply(1:ts_n, function(i) {
+      runif(min = 0, max = 1000, n = row_n)
+    }))
     ts_names <- copy(names(dt))
-    names(ts_means) <- ts_names
     
     dt[, "lex.Cst" := sample(1:st_n, size = .N, replace = TRUE)]
     dt[, "lex.Xst" := sample(1:st_n, size = .N, replace = TRUE)]
     dt[, "lex.id" := 1:.N]
-    dt[, "lex.dur" := rlnorm(n = .N, meanlog = 0.5, sdlog = 1)]
+    dt[, "lex.dur" := runif(n = .N, min = 0, max = 10)]
     
     dt_bl <- lapply(ts_names, function(x) NULL)
     names(dt_bl) <- ts_names
@@ -1213,7 +1220,7 @@ huge_splitting_test <- function(
     br_n <- unlist(sample(as.list(n.breaks), ts_n))
     names(br_n) <- ts_names
     BL <- lapply(ts_names, function(ts_name) {
-      rnorm(n = br_n[[ts_name]], mean = ts_means[[ts_name]], sd = 7.5)
+      runif(n = br_n[[ts_name]], min = -100, max = 100)
     })
     names(BL) <- ts_names
     
@@ -1225,13 +1232,18 @@ huge_splitting_test <- function(
     setkeyv(split_epi, c("lex.id", ts_names[1]))
     setkeyv(split_pop, c("lex.id", ts_names[1]))
     
-    eq <- all.equal(split_epi, split_pop, check.attributes = FALSE)
+    summary_epi <- summarize_Lexis(split_epi)
+    summary_pop <- summarize_Lexis(split_pop)
+    
+    eq <- all.equal(summary_pop, summary_epi, check.attributes = FALSE)
     if (!isTRUE(eq)) {
       message("split_epi, split_pop not equal in tick ", i, "")
       neql[[i]] <- mget(c(
         "drop", "row_n", "ts_n", "ts_names", 
         "dt", "dt_bl", "br_n", "BL",
-        "split_epi", "split_pop", "eq"
+        "split_epi", "split_pop", "eq",
+        "summary_epi", "summary_pop",
+        "used_seed"
       ))
     }
   }
