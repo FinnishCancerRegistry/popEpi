@@ -71,8 +71,6 @@
 #' ## splitLexis may not work when using Dates
 splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   
-  TF <- environment()
-  PF <- parent.frame()
   do_split <- TRUE
   
   tol <- .Machine$double.eps^0.5
@@ -187,7 +185,7 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
     ## note: lex.dur still the original value (maximum possible)
     harmonizeStatuses(x = l, C = "lex.Cst", X = "lex.Xst")
     not_event <- ts_values + l$lex.dur != l[[tmpIE]]
-    l[TF$not_event, lex.Xst := lex.Cst]
+    l[not_event, lex.Xst := lex.Cst]
     
     set(l, j = "lex.dur", value = l[[tmpIE]] - l[[timeScale]] )
     
@@ -201,17 +199,19 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
       }
     }
     
-    ## dropping ------------------------------------------------------------------
+    ## dropping ----------------------------------------------------------------
     ## drops very very small intervals as well as dur <= 0
-    l <- l[lex.dur > 0L + TF$tol]
+    has_zero_dur <- l[["lex.dur"]] < tol
+    if (any(has_zero_dur)) {
+      l <- l[!has_zero_dur]
+    }
     
     setkeyv(l, c(tmpID, timeScale))
-    set(l, j = c(tmpIE, tmpID), value = NULL)
     
-    ## ensure time scales and lex.dur have same (ish) class as before ------------
+    ## ensure time scales and lex.dur have same (ish) class as before ----------
     for (k in c(allScales, "lex.dur")) {
       
-      if (inherits(orig_lex[[k]], "difftime") && !inherits(l[[k]], "difftime")) {
+      if (inherits(orig_lex[[k]], "difftime") && !inherits(l[[k]], "difftime")){
         setattr(l[[k]], "class", "difftime")
         setattr(l[[k]], "units", attr(orig_lex[[k]], "units"))
       } else if (is.numeric(orig_lex[[k]]) && inherits(l[[k]], "difftime")) {
@@ -220,12 +220,27 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
       
     }
     
+    
+    ## roll states -------------------------------------------------------------
+    # this avoids duplicate deaths, etc., where appropriate.
+    setkeyv(l, c(tmpID, timeScale))
+    lex_id <- mget_cols(c("lex.Cst", "lex.Xst"), data = orig_lex)
+    setattr(lex_id, "time.scales", allScales)
+    set(lex_id, j = tmpID, value = 1:nrow(lex_id))
+    roll_lexis_status_inplace(
+      unsplit.data = lex_id, split.data = l, id.var = tmpID
+    )
+    rm("lex_id")
+    
+    set(l, j = c(tmpIE, tmpID), value = NULL)
+    
   }
   
   ## harmonize time scales -----------------------------------------------------
   ## numeric time scales are forced to the lowest common denominator:
   ## difftime -> integer -> double (though difftime is not numeric class)
   harmonizeNumericTimeScales(l, times = c(allScales, "lex.dur"))
+  
   
   ## final touch & attributes --------------------------------------------------
   setcolorder(l, neworder = intersect(c(lexVars, othVars), names(l))) #merge=T/F

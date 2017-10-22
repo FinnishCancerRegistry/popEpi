@@ -1062,17 +1062,25 @@ compareSLDTWithEpi <- function(data, breaks, timeScale) {
   invisible(NULL)
 }
 
+
+
+
+
 splitMultiEpi <- function(data, breaks = list(fot = 0:5), drop) {
   
   for (k in names(breaks)) {
     data <- splitLexis(data, breaks = breaks[[k]], time.scale = k)
   }
   
+  forceLexisDT(data, breaks = attr(data, "breaks"), 
+               allScales = attr(data, "time.scales"))
   if (drop) data <- intelliDrop(data, breaks = breaks)
-  setDT(data)
-  
   data
 }
+
+
+
+
 
 compareSMWithEpi <- function(data, breaks = list(fot=0:5)) {
   requireNamespace("Epi")
@@ -1118,7 +1126,7 @@ roll_lexis_status_inplace <- function(unsplit.data, split.data, id.var) {
   stopifnot(
     is.data.table(split.data),
     length(key(split.data)) > 1,
-    key(split.data)[1] == "lex.id",
+    key(split.data)[1] == id.var,
     key(split.data)[2] %in% attr(unsplit.data, "time.scales"),
     id.var %in% names(unsplit.data),
     id.var %in% names(split.data),

@@ -119,10 +119,16 @@ test_that("splitMulti agrees with splitLexis, vol. II", {
   epi_s1 <- splitLexis(lex, breaks = BL$per, time.scale = "per")
   epi_s2 <- splitLexis(epi_s1, breaks = BL$age, time.scale = "age")
   
+  pop_s1 <- splitLexisDT(lex, breaks=BL$per, timeScale="per", drop = FALSE)
+  pop_s2 <- splitLexisDT(pop_s1, breaks=BL$age, timeScale="age" , drop = FALSE)
+  
   pop_sm <- splitMulti(lex, breaks = BL, drop = FALSE)
   
   expect_equal(
     setDT(epi_s2), setDT(pop_sm), check.attributes = FALSE
+  )
+  expect_equal(
+    setDT(epi_s2), setDT(pop_s2), check.attributes = FALSE
   )
   
 })
