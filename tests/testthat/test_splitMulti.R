@@ -95,8 +95,8 @@ test_that("splitMulti and splitLexis are congruent", {
 
 
 test_that("splitMulti agrees with splitLexis, vol. II", {
-  skip_on_cran()
-  skip_on_travis()
+  # skip_on_cran()
+  # skip_on_travis()
   
   library("Epi")
   
@@ -109,7 +109,10 @@ test_that("splitMulti agrees with splitLexis, vol. II", {
                 entry.status = factor(0, 0:1, labels = c("Alive", "Dead")),
                 data = nickel )
   
-  lex$lex.id <- 1:nrow(lex)
+  set.seed(1337)
+  lex$lex.id <- sample(paste0("abcd_", 1:nrow(lex)), size = nrow(lex))
+  
+  lex_copy <- copy(lex)
   
   BL <- list(
     per = 1920:1990,
@@ -129,6 +132,9 @@ test_that("splitMulti agrees with splitLexis, vol. II", {
   )
   expect_equal(
     setDT(epi_s2), setDT(pop_s2), check.attributes = FALSE
+  )
+  expect_identical(
+    lex, lex_copy
   )
   
 })

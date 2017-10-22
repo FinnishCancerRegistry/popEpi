@@ -141,7 +141,8 @@ splitMulti <- function(data,
   }
   # this is not a copy!
   dt <- mget_cols(keep_nms, data = data)
-  forceLexisDT(dt, breaks = attr(data, "breaks"), allScales = allScales)
+  forceLexisDT(dt, breaks = attr(data, "breaks"), allScales = allScales,
+               key = FALSE)
   
   ## check if even need to do splitting ----------------------------------------
   
@@ -206,6 +207,7 @@ splitMulti <- function(data,
     }
     
     ## ensure statuses are as expected -----------------------------------------
+    
     
     setkeyv(l, c("lex.id", s1))
     roll_lexis_status_inplace(
