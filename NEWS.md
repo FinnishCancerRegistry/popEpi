@@ -1,3 +1,8 @@
+Changes in 0.4.4
+================
+
+-   splitLexisDT/splitMulti bug fix: splitting along multiple time scales *sometimes* produced duplicate transitions (e.g. alive -&gt; dead in the last two rows). see <https://github.com/WetRobot/popEpi/issues/138> for details.
+
 Changes in 0.4.3
 ================
 

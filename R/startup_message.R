@@ -5,11 +5,15 @@
                   "  popEpi's appropriate data outputs are in data.table ",
                   "(enhanced data.frame) format \n",
                   "  by default; see ?popEpi for changing this. \n", 
-                  "  *** IMPORTANT: there was an error in survtab's ",
-                  "adjusted outputs ",
+                  "  *** IMPORTANT FIXES \n",
+                  "      - there was an error in survtab's adjusted outputs ",
                   "in versions <= 0.4.1 \n", 
-                  "  *** leading to inflated confidence intervals; see ",
-                  "news(package='popEpi')")
+                  "        leading to inflated confidence intervals; see ",
+                  "news(package='popEpi')\n",
+                  "      - splitMulti/splitLexisDT in 0.4.3 sometimes produced",
+                  " duplicated transitions\n",
+                  "        when splitting along multiple ",
+                  "time scales; see news(package='popEpi')")
     packageStartupMessage(msg)
   }
 }

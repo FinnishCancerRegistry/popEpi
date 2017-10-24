@@ -15,10 +15,13 @@ knitr::opts_chunk$set(
 devtools::load_all()
 ```
 
+# Changes in 0.4.4
+
+* splitLexisDT/splitMulti bug fix: splitting along multiple time scales _sometimes_ produced duplicate transitions (e.g. alive -> dead in the last two rows). see https://github.com/WetRobot/popEpi/issues/138 for details.
+
 # Changes in 0.4.3
 
-* survtab adjusting was broken with older versions of data.table (tested 1.9.6);
-therefore popEpi now requires the newest version of data.table!
+* survtab adjusting was broken with older versions of data.table (tested 1.9.6); therefore popEpi now requires the newest version of data.table!
 
 # Changes in 0.4.2
 
