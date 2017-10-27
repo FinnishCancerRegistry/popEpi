@@ -246,6 +246,11 @@ splitMulti <- function(data,
   
   if (verbose) cat("time taken by splitting process: ", timetaken(stime), "\n")
   
+  breaks <- lapply(allScales, function(scale_nm) {
+    breaks[[scale_nm]] ## intentionally NULL if not there
+  }) 
+  names(breaks) <- allScales
+  
   setattr(l, "time.scales", allScales)
   setattr(l, "time.since", rep("", times=length(allScales)))
   setattr(l, "breaks", breaks)

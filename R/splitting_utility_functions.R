@@ -278,7 +278,7 @@ intelliDrop <- function(x, breaks = list(fot = 0:5), dropNegDur = TRUE, check = 
          "to the package maintainer")
   }
   checkBreaksList(x = x, breaks = breaks)
-  breaks[unlist(lapply(breaks, length)) == 0L] <- NULL
+  breaks[unlist(lapply(breaks, length)) < 2] <- NULL
   timeScales <- names(breaks)
   
   if (check) {
@@ -1177,7 +1177,7 @@ roll_lexis_status_inplace <- function(unsplit.data, split.data, id.var) {
 
 
 
-test_splitting_on <- function(
+random_splitting_on <- function(
   lex,
   n.max.breaks = 20
 ) {
@@ -1200,9 +1200,12 @@ test_splitting_on <- function(
   n_split_ts <- sample(seq_along(ts_nms), 1)
   split_ts_nms <- sample(ts_nms, size = n_split_ts)
   
+  do_drop <- sample(list(FALSE, TRUE), size = 1)[[1]]
+  
   bl <- lapply(split_ts_nms, function(split_ts_nm) {
     ts <- lex[[split_ts_nm]]
-    n_br <- sample(1:n.max.breaks, 1)
+    br_r <- if (do_drop) 2:n.max.breaks else 1:n.max.breaks
+    n_br <- sample(br_r, 1)
     r <- range(ts)
     d <- diff(r)
     
@@ -1211,14 +1214,13 @@ test_splitting_on <- function(
   })
   names(bl) <- split_ts_nms
   
-  do_drop <- sample(list(FALSE, TRUE), size = 1)[[1]]
   es <- ps  <- lex
   for (ts_nm in split_ts_nms) {
     es <- Epi::splitLexis(es, breaks = bl[[ts_nm]], time.scale = ts_nm)
     popEpi:::forceLexisDT(es, breaks = attr(es, "breaks"), allScales = ts_nms,
                           key = FALSE)
     if (do_drop) {
-      es <- popEpi:::intelliDrop(es, breaks = bl[[ts_nm]])
+      es <- popEpi:::intelliDrop(es, breaks = bl[ts_nm])
     }
     ps <- popEpi::splitLexisDT(ps, breaks = bl[[ts_nm]], timeScale = ts_nm, 
                                drop = do_drop)
@@ -1226,47 +1228,82 @@ test_splitting_on <- function(
   
   psm <- popEpi::splitMulti(lex, breaks = bl, drop = do_drop)
   
-  list(es, ps, psm)
+  list(es = es, ps = ps, psm = psm)
 }
 
 
 
 
 
-huge_splitting_test <- function(
-  n.tests = 100, 
+random_Lexis <- function(
+  n.rows = c(100, 1000, 2000), 
+  n.time.scales = 1:10,
+  n.statuses = 2:10,
+  n.other.vars = 1
+  ) {
+  
+  row_n <- sample(as.list(n.rows), 1)[[1]]
+  
+  ts_n <- sample(as.list(n.time.scales), 1)[[1]]
+  
+  st_n <- sample(as.list(n.statuses), 1)[[1]]
+  
+  dt <- setDT(lapply(1:ts_n, function(i) {
+    runif(min = 0, max = 1000, n = row_n)
+  }))
+  ts_nms <- paste0("lex_ts_", formatC(seq_len(ncol(dt)), flag = "0", width = 3))
+  setnames(dt, names(dt), ts_nms)
+  
+  dt[, "lex.Cst" := sample(1:st_n, size = .N, replace = TRUE)]
+  dt[, "lex.Xst" := sample(1:st_n, size = .N, replace = TRUE)]
+  dt[, "lex.id" := 1:.N]
+  dt[, "lex.dur" := runif(n = .N, min = 0, max = 10)]
+  
+  oth_n <- sample(as.list(n.other.vars), 1)[[1]]
+  lapply(seq_len(oth_n), function(i) {
+    set(
+      dt, j = makeTempVarName(names = names(dt), pre = "nonlexvar_"), 
+      value = sample(1:100, size = nrow(dt), replace = TRUE)
+    )
+  })
+  
+  brks <- lapply(ts_nms, function(nm) NULL)
+  names(brks) <- ts_nms
+  
+  forceLexisDT(dt, breaks = brks, allScales = ts_nms, key = TRUE)
+  checkLexisData(dt, check.breaks = TRUE)
+  dt[]
+}
+
+
+
+
+
+random_splitting_on_random_data <- function(
+  n.datasets = 100, 
   n.rows = 1000,
   n.time.scales = 1:10,
   n.breaks = 10:100,
-  n.statuses = 1:5
+  n.statuses = 1:5,
+  n.other.vars = 1
 ) {
   
-  neql <- vector("list", n.tests)
+  neql <- vector("list", n.datasets)
   
-  for (i in 1:n.tests) {
+  for (i in 1:n.datasets) {
     
-    used_seed <- as.character(as.numeric(Sys.time())*10000)
-    used_seed <- as.integer(substr(used_seed, nchar(used_seed)-5, nchar(used_seed)))
-    set.seed(used_seed)
+    
+    set.seed(get_random_seed())
     
     drop <- sample(list(TRUE, FALSE), 1)[[1]]
     drop <- FALSE
     
-    row_n <- sample(as.list(n.rows), 1)[[1]]
-    
-    ts_n <- sample(as.list(n.time.scales), 1)[[1]]
-    
-    st_n <- sample(as.list(n.statuses), 1)[[1]]
-    
-    dt <- setDT(lapply(1:ts_n, function(i) {
-      runif(min = 0, max = 1000, n = row_n)
-    }))
-    ts_names <- copy(names(dt))
-    
-    dt[, "lex.Cst" := sample(1:st_n, size = .N, replace = TRUE)]
-    dt[, "lex.Xst" := sample(1:st_n, size = .N, replace = TRUE)]
-    dt[, "lex.id" := 1:.N]
-    dt[, "lex.dur" := runif(n = .N, min = 0, max = 10)]
+    dt <- random_Lexis(
+      n.rows = n.rows,
+      n.time.scales = n.time.scales,
+      n.statuses = n.statuses,
+      n.other.vars = n.other.vars
+    )
     
     dt_bl <- lapply(ts_names, function(x) NULL)
     names(dt_bl) <- ts_names

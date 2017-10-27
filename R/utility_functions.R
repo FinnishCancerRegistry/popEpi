@@ -1403,3 +1403,19 @@ mget_cols <- function(cols, data) {
 
 
 
+
+get_random_seed <- function() {
+  t <- Sys.time()
+  s <- as.numeric(t) %% as.integer(t)
+  nc <- nchar(s)
+  s <- as.integer(substr(s, nc-8, nc))
+  s
+}
+
+
+
+
+
+
+
+
