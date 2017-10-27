@@ -1398,11 +1398,14 @@ sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
     x <- splitMulti(x, breaks = breaks)
   }
   
-  a <- names(get_breaks(x))
+  a <- copy(attr(x, "time.scales"))
+  a <- a[!vapply(get_breaks(x), is.null, logical(1))]
   x[, d.exp := pop.haz*lex.dur]
   
+  TF <- environment()
+  
   if(any(is.na(x[,d.exp]))) stop('Missing values in either pop.haz or lex.dur.')
-  x <- aggre(x, by = a, sum.values = 'd.exp')
+  x <- aggre(x, by = TF$a, sum.values = 'd.exp')
   if(!'from0to1' %in% names(x)) {
     stop('Could not find any transitions between states in lexis')
   }
