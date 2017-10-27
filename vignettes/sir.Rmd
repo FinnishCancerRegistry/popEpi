@@ -13,7 +13,6 @@ vignette: >
   %\usepackage[utf8]{inputenc}
 ---
 
-
 ```{r, echo=TRUE, warning=FALSE, message=FALSE}
 library(popEpi)
 library(Epi)

@@ -26,7 +26,7 @@ If one has subject-level data, the simplest way of computing survival function e
   
 # Using `survtab`
   
-  It is straightforward to estimate various survival time functions with `survtab` once a `Lexis` object has been defined (see `?Lexis` in package `Epi` for details):
+It is straightforward to estimate various survival time functions with `survtab` once a `Lexis` object has been defined (see `?Lexis` in package `Epi` for details):
   
 ```{r pkgs, eval = TRUE, echo = TRUE, message = FALSE}
 library(popEpi)
