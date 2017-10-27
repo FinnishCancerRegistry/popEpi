@@ -56,8 +56,7 @@ test_that("pp not added to data if pp = FALSE but pop.haz is", {
 
 
 test_that("lexpand produces the same results with internal/external dropping", {
-  skip_on_cran()
-  skip_on_travis()
+  skip_usually()
   x <- lexpand(sire[dg_date < ex_date, ], 
                birth  = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2,
@@ -76,8 +75,7 @@ test_that("lexpand produces the same results with internal/external dropping", {
 
 
 test_that("lexpanding with aggre.type = 'unique' works", {
-  skip_on_cran()
-  skip_on_travis()
+  skip_usually()
   
   BL <- list(fot = 0:5, age = seq(0,100, 5))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
@@ -98,8 +96,7 @@ test_that("lexpanding with aggre.type = 'unique' works", {
 })
 
 test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used", {
-  skip_on_cran()
-  skip_on_travis()
+  skip_usually()
   
   BL <- list(fot = c(0,Inf))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
@@ -137,8 +134,7 @@ test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used",
 })
 
 test_that("lexpanding with aggre.type = 'cartesian' works; only time scales used", {
-  skip_on_cran()
-  skip_on_travis()
+  skip_usually()
   
   BL <- list(fot = 0:5, age = seq(0,100, 5))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
@@ -250,8 +246,7 @@ test_that('lexpand aggre: multistate column names correct', {
 # overlapping time lines --------------------------------------------------
 
 test_that('lexpansion w/ overlapping = TRUE/FALSE produces double/undoubled pyrs', {
-  skip_on_cran()
-  skip_on_travis()
+  skip_usually()
   
   sire2 <- copy(sire)[dg_date < ex_date, ][1:100]
   sire2[, dg_yrs := get.yrs(dg_date, "actual")]
@@ -344,8 +339,7 @@ test_that("different specifications of time vars work with event defined and ove
 
 
 test_that("lexpand drops persons outside breaks window correctly", {
-  skip_on_cran()
-  skip_on_travis()
+  skip_usually()
   
   dt <- data.table(bi_date = as.Date('1949-01-01'), 
                    dg_date = as.Date(paste0(2000, "-01-01")), 

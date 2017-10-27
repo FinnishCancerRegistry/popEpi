@@ -36,8 +36,6 @@ test_that("aggre works with by = NULL", {
 })
 
 test_that("aggre and lexpand produce the same results", {
-  # skip_on_cran()
-  
   sr <- popEpi::sire[dg_date < ex_date,][1:1000,]
   
   BL <- list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014))
@@ -96,8 +94,6 @@ test_that("aggre and lexpand produce the same results", {
 
 
 test_that("aggre()'s by argument works flexibly", {
-  # skip_on_cran()
-  
   library(Epi)
   BL <- list(fot = 0:5, per = c(1995,2015))
   for (cond in c(FALSE, TRUE)) {

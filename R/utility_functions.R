@@ -1416,6 +1416,21 @@ get_random_seed <- function() {
 
 
 
+skip_usually <- function() {
+  requireNamespace("testthat")
+  testthat::skip_on_cran()
+  testthat::skip_on_travis()
+  testthat::skip_on_appveyor()
+}
+
+
+
+
+
+
+
+
+
 
 
 

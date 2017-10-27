@@ -6,9 +6,7 @@ context(
 
 test_that("splitting funs congruent with random splitting and fixed data", {
 
-  skip_on_cran()
-  skip_on_travis()
-  skip_on_appveyor()
+  skip_usually()
 
   library("Epi")
   library("data.table")
@@ -101,9 +99,7 @@ test_that("splitting funs congruent with random splitting and fixed data", {
 
 test_that("splitting funs congruent with random splitting and random data", {
   
-  skip_on_cran()
-  skip_on_travis()
-  skip_on_appveyor()
+  skip_usually()
   
   library("Epi")
   library("data.table")
