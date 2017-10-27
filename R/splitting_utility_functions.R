@@ -1305,6 +1305,9 @@ random_splitting_on_random_data <- function(
       n.other.vars = n.other.vars
     )
     
+    ts_names <- copy(attr(dt, "time.scales"))
+    ts_n <- length(ts_names)
+    
     dt_bl <- lapply(ts_names, function(x) NULL)
     names(dt_bl) <- ts_names
     forceLexisDT(dt, breaks = dt_bl, allScales = ts_names)
