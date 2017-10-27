@@ -1190,12 +1190,12 @@ random_splitting_on <- function(
   timesince <- attr(lex, "time.since")
   lex_vars <- c(paste0("lex.", c("id", "Cst", "Xst", "dur")), ts_nms)
   non_lex_vars <- setdiff(names(lex), lex_vars)
-  lex <- popEpi:::mget_cols(lex_vars, lex)
+  lex <- mget_cols(lex_vars, lex)
   setattr(lex, "time.scales", ts_nms)
   setattr(lex, "breaks", brks)
   setattr(lex, "time.since", timesince)
   setattr(lex, "class", c("Lexis", "data.table", "data.frame"))
-  popEpi:::checkLexisData(lex)
+  checkLexisData(lex)
   
   n_split_ts <- sample(seq_along(ts_nms), 1)
   split_ts_nms <- sample(ts_nms, size = n_split_ts)
@@ -1217,16 +1217,16 @@ random_splitting_on <- function(
   es <- ps  <- lex
   for (ts_nm in split_ts_nms) {
     es <- Epi::splitLexis(es, breaks = bl[[ts_nm]], time.scale = ts_nm)
-    popEpi:::forceLexisDT(es, breaks = attr(es, "breaks"), allScales = ts_nms,
+    forceLexisDT(es, breaks = attr(es, "breaks"), allScales = ts_nms,
                           key = FALSE)
     if (do_drop) {
-      es <- popEpi:::intelliDrop(es, breaks = bl[ts_nm])
+      es <- intelliDrop(es, breaks = bl[ts_nm])
     }
-    ps <- popEpi::splitLexisDT(ps, breaks = bl[[ts_nm]], timeScale = ts_nm, 
+    ps <- splitLexisDT(ps, breaks = bl[[ts_nm]], timeScale = ts_nm, 
                                drop = do_drop)
   }
   
-  psm <- popEpi::splitMulti(lex, breaks = bl, drop = do_drop)
+  psm <- splitMulti(lex, breaks = bl, drop = do_drop)
   
   list(es = es, ps = ps, psm = psm)
 }
