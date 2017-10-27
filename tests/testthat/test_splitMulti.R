@@ -2,51 +2,6 @@ context("Compare splitMulti results with splitLexis results")
 
 
 
-test_that("splitMulti has correct attributes", {
-  
-  library("Epi")
-  
-  sire <- setDT(copy(popEpi::sire))
-  sire[, "dg_yrs" := get.yrs(dg_date, "actual")]
-  sire[, "ex_yrs" := get.yrs(ex_date, "actual")]
-  sire[, "bi_yrs" := get.yrs(bi_date, "actual")]
-  sire[, "id" := 1:.N]
-  
-  sire <- Lexis(
-    data = sire[dg_date < ex_date], 
-    entry = list(fot=0, per=dg_yrs, age=dg_age),
-    exit = list(per=ex_yrs),
-    merge = TRUE, 
-    exit.status = 1L, entry.status = 0L
-  )
-  BL <- list(age = c(0, 50), fot = c(0, 5))
-  sm_1 <- splitMulti(sire, breaks = BL["fot"], drop = TRUE)
-  sm_1 <- splitMulti(sm, breaks = BL["age"], drop = TRUE)
-  
-  sm_2 <- splitMulti(sm, breaks = BL, 
-                     drop = TRUE)
-  
-  sl <- splitLexisDT(sire, breaks = BL$fot, timeScale = "fot", drop = TRUE)
-  sl <- splitLexisDT(sl, breaks = BL$age, timeScale = "age", drop = TRUE)
-  
-  lp <- lexpand(data.table(sire)[, .(bi_yrs, dg_yrs, ex_yrs, status)], 
-                birth = bi_yrs, entry = dg_yrs, exit = ex_yrs, status = status,
-                breaks = BL)
-  
-  lapply(list(sm_2, sl, lp), function(lex) {
-    expect_identical(
-      attr(lex, "breaks"),
-      list(fot = c(0, 5), per = NULL, age = c(0, 50))
-    )
-    expect_identical(
-      attr(lex, "time.scales"),
-      c("fot", "per", "age")
-    ) 
-  })
-  
-})
-
-
 
 
 test_that("splitMulti and splitLexis are congruent", {
@@ -79,15 +34,6 @@ test_that("splitMulti and splitLexis are congruent", {
              exit=list(per=ex_yrs), merge=TRUE, exit.status=1L, entry.status = 0L)
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
-  
-  #   x2 <- splitMulti(x, breaks = BL[[6]], drop = F)
-  #   x3 <- splitMultiEpi(x, breaks = BL[[6]], drop = F)
-  #   
-  #   x2d <- splitMulti(x, breaks = BL[[6]], drop = T)
-  #   x3d <- splitMultiEpi(x, breaks = BL[[6]], drop = T)
-  #   x2d <- intelliDrop(x2, breaks = BL[[6]])
-  #   x3d <- intelliDrop(x3, breaks = BL[[6]])
-  #   compareSMWithEpi(x, BL[[6]], drop = F)
   
   
   # one row per id ---------------------------------------------------------------
