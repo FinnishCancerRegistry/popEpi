@@ -912,6 +912,11 @@ lexpand <- function(data,
     ## sometimes problems with releasing memory
     gc()
     
+    breaks <- lapply(c("fot","per","age"), function(ts_nm) {
+      breaks[[ts_nm]]
+    })
+    names(breaks) <- c("fot","per","age")
+    
     ## handle attributes
     setkeyv(l, c("lex.id", "lex.multi"))
     set(l, j = "lex.multi", value = NULL)
@@ -924,7 +929,7 @@ lexpand <- function(data,
     
   }
   
-  if (verbose) cat("Time taken by lexpand(): ",timetaken(start_time), "\n")
+  if (verbose) cat("Time taken by lexpand(): ", timetaken(start_time), "\n")
   
   return(l[])
 }

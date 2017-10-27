@@ -146,7 +146,7 @@ splitMulti <- function(data,
   
   ## check if even need to do splitting ----------------------------------------
   
-  oldBreaks <- attr(data, "breaks")
+  oldBreaks <- copy(attr(data, "breaks"))
   tryCatch(checkBreaksList(data, oldBreaks), error = function(e) {
     stop("Error in splitMulti: \n",
          "Old breaks existing in Lexis data did not pass testing. Error ",
@@ -246,8 +246,12 @@ splitMulti <- function(data,
   
   if (verbose) cat("time taken by splitting process: ", timetaken(stime), "\n")
   
+  
   breaks <- lapply(allScales, function(scale_nm) {
-    breaks[[scale_nm]] ## intentionally NULL if not there
+    ## allowed to NULL also
+    br <- c(breaks[[scale_nm]], oldBreaks[[scale_nm]])
+    if (is.null(br)) return(br)
+    sort(unique(br))
   }) 
   names(breaks) <- allScales
   
