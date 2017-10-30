@@ -52,3 +52,43 @@ test_that("popEpi splitters produce correct attributes", {
 
 
 
+test_that("popEpi splitters retain time.since attribute", {
+  ## based on simLexis example from Epi 2.19
+  library("Epi")
+  library("data.table")
+  library("splines")
+  
+  data("DMlate", package = "Epi")
+  dml <- Lexis( entry = list(Per=dodm, Age=dodm-dobth, DMdur=0 ),
+                exit = list(Per=dox),
+                exit.status = factor(!is.na(dodth),labels=c("DM","Dead")),
+                data = DMlate[runif(nrow(DMlate))<0.1,] )
+  # Split follow-up at insulin, introduce a new timescale,
+  # and split non-precursor states
+  dmi <- cutLexis( dml, cut = dml$doins,
+                   pre = "DM",
+                   new.state = "Ins",
+                   new.scale = "t.Ins",
+                   split.states = TRUE )
+  
+  # Split the follow in 1-year intervals for modelling
+  Si <- splitLexis( dmi, 0:30/2, "DMdur" )
+  
+  
+  sldt <- splitLexisDT(dmi, breaks = 0:30/2, timeScale = "DMdur")
+  sm <- splitMulti(dmi, breaks = list(DMdur = 0:30/2))
+  
+  lex_attr_nms <- c("time.since", "breaks", "time.scales")
+  expect_identical(
+    attributes(Si)[lex_attr_nms], attributes(sm)[lex_attr_nms]
+  )
+  expect_identical(
+    attributes(Si)[lex_attr_nms], attributes(sldt)[lex_attr_nms]
+  )
+  
+})
+
+
+
+
+

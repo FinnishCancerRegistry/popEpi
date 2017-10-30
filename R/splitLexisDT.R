@@ -76,11 +76,12 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   tol <- .Machine$double.eps^0.5
   checkLexisData(lex, check.breaks = FALSE)
   
-  allScales <- attr(lex, "time.scales")
-  allBreaks <- attr(lex, "breaks")
+  attr_list <- copy(attributes(lex)[c("time.scales", "breaks", "time.since")])
+  allScales <- attr_list[["time.scales"]]
+  allBreaks <- attr_list[["breaks"]]
   
   if (!timeScale %in% allScales) {
-    stop("timeScale not among following existing time scales: ", 
+    stop("timeScale '", timeScale,"' not among following existing time scales: ", 
          paste0("'", allScales, "'", collapse = ", "))
   }
   
@@ -266,7 +267,7 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
   
   setattr(l, "breaks", allBreaks)
   setattr(l, "time.scales", allScales)
-  setattr(l, "time.since", rep("", times = length(allScales)))
+  setattr(l, "time.since", attr_list[["time.since"]])
   setattr(l, "class", c("Lexis","data.table","data.frame"))
   if (!return_DT()) setDFpe(l)
   

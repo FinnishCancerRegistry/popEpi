@@ -654,6 +654,7 @@ lexpand <- function(data,
                        "lex.dur", "lex.Cst", "lex.Xst", "lex.event", "temp.id"))
   setattr(l, "class", c("Lexis", "data.table", "data.frame"))
   setattr(l, "time.scales", c("fot","per","age"))
+  setattr(l, "time.since", c("","",""))
   
   if (verbose) cat("data just after Lexis coercion: \n")
   if (verbose) print(l)  
@@ -921,6 +922,7 @@ lexpand <- function(data,
     setkeyv(l, c("lex.id", "lex.multi"))
     set(l, j = "lex.multi", value = NULL)
     setattr(l, "time.scales", c("fot","per","age"))
+    setattr(l, "time.since", c("","",""))
     setattr(l, "breaks", breaks)
     setattr(l, "class", c("Lexis","data.table","data.frame"))
     if (!return_DT() && is.data.table(l)) setDFpe(l)

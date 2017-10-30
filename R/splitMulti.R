@@ -130,7 +130,8 @@ splitMulti <- function(data,
   breaks <- splitMultiPreCheck(data = data, breaks = breaks, ...)
   
   ## collect necessary data ----------------------------------------------------
-  allScales <- copy(attr(data, "time.scales"))
+  attr_list <- copy(attributes(data)[c("time.scales", "breaks", "time.since")])
+  allScales <- attr_list$time.scales
   splitScales <- names(breaks)
   
   keep_nms <- if (merge) names(data) else {
@@ -256,7 +257,7 @@ splitMulti <- function(data,
   names(breaks) <- allScales
   
   setattr(l, "time.scales", allScales)
-  setattr(l, "time.since", rep("", times=length(allScales)))
+  setattr(l, "time.since", attr_list[["time.since"]])
   setattr(l, "breaks", breaks)
   setattr(l, "class", c("Lexis","data.table","data.frame"))
   if (!return_DT()) setDFpe(l)
