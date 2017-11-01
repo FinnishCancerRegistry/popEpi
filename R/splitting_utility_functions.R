@@ -1203,14 +1203,19 @@ random_splitting_on <- function(
   do_drop <- sample(list(FALSE, TRUE), size = 1)[[1]]
   
   bl <- lapply(split_ts_nms, function(split_ts_nm) {
-    ts <- lex[[split_ts_nm]]
-    br_r <- if (do_drop) 2:n.max.breaks else 1:n.max.breaks
-    n_br <- sample(br_r, 1)
-    r <- range(ts)
+    r <- c(min(lex[[split_ts_nm]]), max(lex[[split_ts_nm]] + lex[["lex.dur"]]))
     d <- diff(r)
     
+    br_r <- if (do_drop) 2:n.max.breaks else 1:n.max.breaks
+    n_br <- sample(br_r, 1)
+    
+    ## allow breaks outside observed data, but at least one break must be
+    ## not outside range of values in data
     extrema <- r + c(-1,1)*d*0.05
-    runif(min = extrema[1], max = extrema[2], n = n_br)
+    l <- rep(extrema[1], n_br)
+    u <- rep(extrema[2], n_br)
+    u[1] <- l[1] <- mean(r)
+    unique(runif(min = l, max = u, n = n_br))
   })
   names(bl) <- split_ts_nms
   
