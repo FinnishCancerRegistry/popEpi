@@ -149,6 +149,16 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
     
   } else {
     
+    ## currently cannot handle NA values in split time scale; will add them in
+    ## the end
+    ts_is_na <- is.na(lex[[timeScale]])
+    ts_any_na <- any(ts_is_na)
+    if (ts_any_na) {
+      lex_na <- lex[ts_is_na, ]
+      lex <- lex[!ts_is_na, ]
+    }
+    
+    
     ## will use this due to step below (and laziness)
     ts_values <- lex[[timeScale]]
     ## Date objects are based on doubles and therefore keep the most information
@@ -185,9 +195,12 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
     l <- rbindlist(l)
     
     ## time scale value determination --------------------------------------------
-    set(l, j = tmpIE,  value = c(rep(breaks, each = N_subjects)) )
+    set(l, j = tmpIE,  value = rep(breaks, each = N_subjects))
     set(l, j = tmpIE,  value = pmin(l[[tmpIE]], l[[timeScale]] + l$lex.dur) )
-    set(l, j = timeScale, value = c(ts_values, pmax(ts_values, rep(breaks[-length(breaks)], each = N_subjects))) )
+    set(l, j = timeScale, value = c(
+      ts_values, 
+      pmax(ts_values, rep(breaks[-length(breaks)], each = N_subjects))
+    ))
     
     set(l, j = "lex.dur", value = l[[tmpIE]] - l[[timeScale]] )
     
@@ -208,19 +221,7 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
       l <- l[!has_zero_dur]
     }
     
-    setkeyv(l, c(tmpID, timeScale))
     
-    ## ensure time scales and lex.dur have same (ish) class as before ----------
-    for (k in c(allScales, "lex.dur")) {
-      
-      if (inherits(orig_lex[[k]], "difftime") && !inherits(l[[k]], "difftime")){
-        setattr(l[[k]], "class", "difftime")
-        setattr(l[[k]], "units", attr(orig_lex[[k]], "units"))
-      } else if (is.numeric(orig_lex[[k]]) && inherits(l[[k]], "difftime")) {
-        set(l, j = k, value = as.numeric(l[[k]]))
-      }
-      
-    }
     
     ## roll states -------------------------------------------------------------
     # this avoids duplicate deaths, etc., where appropriate.
@@ -232,7 +233,6 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
     )
     rm("lex_id")
     
-    harmonizeStatuses(x = l, C = "lex.Cst", X = "lex.Xst")
     
     set(l, j = c(tmpIE, tmpID), value = NULL)
     
@@ -246,6 +246,26 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
         ]
     })
     
+    if (ts_any_na) {
+      l <- rbind(l, lex_na)
+      setkeyv(l, c("lex.id", timeScale))
+    }
+    
+  }
+  
+  ## harmonize statuses --------------------------------------------------------
+  harmonizeStatuses(x = l, C = "lex.Cst", X = "lex.Xst")
+  
+  
+  ## ensure time scales and lex.dur have same (ish) class as before ------------
+  for (k in c(allScales, "lex.dur")) {
+    
+    if (inherits(orig_lex[[k]], "difftime") && !inherits(l[[k]], "difftime")){
+      setattr(l[[k]], "class", "difftime")
+      setattr(l[[k]], "units", attr(orig_lex[[k]], "units"))
+    } else if (is.numeric(orig_lex[[k]]) && inherits(l[[k]], "difftime")) {
+      set(l, j = k, value = as.numeric(l[[k]]))
+    }
     
   }
   
