@@ -89,6 +89,10 @@ test_that("splitting funs congruent with random splitting and fixed data", {
     sire = sire,
     sibr = sibr
   )
+  lex_list[] <- lapply(lex_list, function(df) {
+    df$lex.id <- sample(df$lex.id, nrow(df), replace = FALSE)
+    df
+  })
 
   n_random_splits <- 500
   invisible(lapply(names(lex_list), function(lex_nm) {

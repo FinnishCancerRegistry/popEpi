@@ -1261,7 +1261,7 @@ random_Lexis <- function(
   
   dt[, "lex.Cst" := sample(1:st_n, size = .N, replace = TRUE)]
   dt[, "lex.Xst" := sample(1:st_n, size = .N, replace = TRUE)]
-  dt[, "lex.id" := 1:.N]
+  dt[, "lex.id" := sample(1:.N, .N, replace = FALSE)]
   dt[, "lex.dur" := runif(n = .N, min = 0, max = 10)]
   
   oth_n <- sample(as.list(n.other.vars), 1)[[1]]
