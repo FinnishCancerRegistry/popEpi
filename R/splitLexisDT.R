@@ -154,6 +154,11 @@ splitLexisDT <- function(lex, breaks, timeScale, merge = TRUE, drop = TRUE) {
     ts_is_na <- is.na(lex[[timeScale]])
     ts_any_na <- any(ts_is_na)
     if (ts_any_na) {
+      warning("NA values in the time scale you are splitting along ('", 
+              timeScale,"'). Results may deviate from that produced by ",
+              "splitLexis from package Epi. For safety you may want to split ",
+              "using only the data with no NA values and combine the the split",
+              " data with the NA-valued data using rbind.")
       lex_na <- lex[ts_is_na, ]
       lex <- lex[!ts_is_na, ]
     }

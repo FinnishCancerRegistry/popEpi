@@ -2,6 +2,7 @@ popEpi 0.4.4
 =====
 * splitLexisDT/splitMulti bug fix: splitting along multiple time scales _sometimes_ produced duplicate transitions (e.g. alive -> dead in the last two rows). see https://github.com/WetRobot/popEpi/issues/138 for details.
 * splitLexisDT/splitMulti now retain time.since attribute; this attribute plays a role in cutLexis
+* known issue: splitLexisDT/splitMulti not guaranteed to work identically to splitLexis from Epi when there are NA values in the time scale one is splitting along.
 
 
 popEpi 0.4.3
