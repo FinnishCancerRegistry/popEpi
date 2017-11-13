@@ -419,6 +419,9 @@ unprotectFromDrop <- function(breaks) {
 
 setLexisDT <- function(data, entry, exit, entry.status, exit.status, id = NULL, select = NULL) {
   
+  ## appease R CMD CHECK
+  lex.Cst <- lex.Xst <- NULL
+  
   if (!is.data.table(data)) stop("not a data.table")
   if (inherits(data, "Lexis")) stop("already a Lexis object")
   
@@ -812,6 +815,8 @@ contractLexis <- function(x, breaks, drop = TRUE) {
 prepExpo <- function(lex, freezeScales = "work", cutScale = "per", entry = min(get(cutScale)),
                      exit = max(get(cutScale)), by = "lex.id", breaks = NULL, freezeDummy = NULL, subset = NULL,
                      verbose = FALSE, ...) {
+  ## R CMD CHECK appeasement
+  lex.dur <- NULL
   
   if (verbose) allTime <- proc.time()
   
@@ -1035,7 +1040,7 @@ doTestBarrage <- function(dt1, dt2, allScales, testTimes = TRUE, testStatuses = 
   requireNamespace("Epi")
   requireNamespace("testthat")
   
-  lex.id <- NULL ## APPEASE R CMD CHECK
+  lex.id <- lex.dur <- NULL ## APPEASE R CMD CHECK
   
   testthat::expect_equal(sum(dt1$lex.dur), 
                          sum(dt2$lex.dur), 
@@ -1130,6 +1135,8 @@ compareSMWithEpi <- function(data, breaks = list(fot=0:5)) {
 
 summarize_Lexis <- function(x) {
   
+  lex.Cst <- lex.Xst <- NULL ## appease R CMD CHECK
+  
   dur <- sum(x$lex.dur)
   status_vars <- paste0("lex.", c("Cst", "Xst"))
   time_scales <- copy(attr(x, "time.scales"))
@@ -1151,6 +1158,9 @@ summarize_Lexis <- function(x) {
 
 
 roll_lexis_status_inplace <- function(unsplit.data, split.data, id.var) {
+  
+  ## R CMD CHECK appeasement
+  lex.Cst <- lex.Xst <- NULL
   
   stopifnot(
     is.data.table(split.data),
@@ -1371,6 +1381,7 @@ random_splitting_on_random_data <- function(
 
 
 do_split <- function(x, ts, all.ts, breaks, drop = TRUE, merge = TRUE) {
+  
   ## unfinished v2 splitlexisDT work horse
   stopifnot(
     is.integer(x[["lex.id"]])
@@ -1402,7 +1413,7 @@ do_split <- function(x, ts, all.ts, breaks, drop = TRUE, merge = TRUE) {
   set(split, j = tmp_ie_nm,  value = {
     pmin(split[[tmp_ie_nm]], split[[ts]] + split[["lex.dur"]])
   })
-  set(split, j = timeScale, value = c(
+  set(split, j = ts, value = c(
     ts_values, 
     pmax(ts_values, rep(breaks[-length(breaks)], each = n_subjects))
   ))

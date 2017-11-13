@@ -62,7 +62,7 @@
 rpcurve <- function(object = NULL) {
   
   Tstart <- FOT <- uni_id <- uni_n <- uni_w <- 
-    lo <- hi <- NULL  ## APPEASE R CMD CHECK
+    lo <- hi <- lex.Xst <- NULL  ## APPEASE R CMD CHECK
   ## sanity checks -------------------------------------------------------------
   if (is.null(object)) stop("no relative Poisson excess hazard model given")
   

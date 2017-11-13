@@ -131,6 +131,8 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
     stop("Need package 'survival' to proceed")
   }
   
+  ## appease R CMD CHECK -------------------------------------------------------
+  lex.Cst <- lex.Xst <- lex.dur <- NULL
   
   ## checks --------------------------------------------------------------------
   
@@ -513,6 +515,8 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
     breaks[unlist(lapply(breaks, length)) == 0L] <- NULL
   }
   
+  ## R CMD CHECK appeasement
+  lex.Cst <- lex.Xst <- NULL
   
   tmp <- list()
   oldKey <- key(x)

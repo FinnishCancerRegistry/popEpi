@@ -151,7 +151,7 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
   ## (expected) hazard level for each row
   TF <- environment()
   
-  lex.id <- pp <- NULL ## APPEASE R CMD CHECK
+  lex.dur <- lex.id <- pp <- NULL ## APPEASE R CMD CHECK
   
   style <- match.arg(style, c("delta", "actual"))
   if (!is.data.table(lex)) stop("lex must be a data.table")
@@ -277,6 +277,9 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
   ## events are transitions and end points as detected by detectEvents,
   ## and include censorings.
   ## OUTPUT: a DT of pp-weighted things.
+  
+  ## appease R CMD CHECK
+  lex.Cst <- lex.Xst <- NULL
   
   checkLexisData(lex, check.breaks = TRUE)
   if (!is.data.table(lex)) stop("lex must be a data.table")
@@ -447,7 +450,7 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   ## by 'by' unless individual = TRUE.
   TF <- environment()
   
-  haz <- surv.exp <- NULL # R CMD CHECK appeasement
+  lex.dur <- haz <- surv.exp <- NULL # R CMD CHECK appeasement
   ## check ---------------------------------------------------------------------
   checkLexisData(x)
   checkBreaksList(x, breaks)

@@ -359,7 +359,7 @@ lexpand <- function(data,
   ## to instate global variables to appease R CMD CHECK 
   .EACHI <- lex.status <- lexpand.id <- lex.exit <- lex.birth <- 
     lex.entry <- lex.event <- temp.id <- cd <- fot <- age <- per <- 
-    lex.id <- lex.multi <- pop.haz <- NULL
+    lex.id <- lex.multi <- pop.haz <- lex.Cst <- lex.Xst <- lex.dur <- NULL
   
   
   ## test conflicting variable names -------------------------------------------

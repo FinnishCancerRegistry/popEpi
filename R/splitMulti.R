@@ -122,7 +122,7 @@ splitMulti <- function(data,
                        merge=TRUE,
                        verbose=FALSE) {
   
-  lex.id <- NULL ## APPEASE R CMD CHECK
+  lex.id <- lex.dur <- NULL ## APPEASE R CMD CHECK
   
   ## basic checks --------------------------------------------------------------
   if (verbose) {stime <- proc.time()}

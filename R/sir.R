@@ -1364,6 +1364,10 @@ sir_exp <- function(x, obs, exp, pyrs=NULL, print = NULL,
 #' @export
 
 sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
+  
+  ## R CMD CHECK appeasement
+  lex.dur <- NULL
+  
   if(!inherits(x, 'Lexis')) {
     stop('x has to be a Lexis object (see lexpand or Lexis)')
   }

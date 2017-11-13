@@ -98,6 +98,9 @@
 relpois <- function(data, 
                     formula, 
                     fot.breaks = NULL, subset = NULL, check=TRUE, ...) {
+  ## R CMD CHECK appeasement
+  lex.dur <- NULL
+  
   ## prep arguments ------------------------------------------------------------
   excess_cases <- fot <- pop.haz <-  NULL ## appease R CMD CHECK
   
