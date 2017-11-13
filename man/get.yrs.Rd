@@ -28,10 +28,10 @@ which is coerced internally to \code{Date} format
 using \code{\link{as.Date.character}}.
 
 When \code{ year.length = 'actual' }, fractional years are calculated as 
-\code{ year + day_in_year/365 } for non-leap-years
-and as \code{ year + day_in_year/366 } for leap years. 
+\code{ year + (day_in_year-1)/365 } for non-leap-years
+and as \code{ year + (day_in_year-1)/366 } for leap years. 
 If \code{ year.length = 'approx' }, fractional years are always
-calculated as in \code{ year + day_in_year/365.242199 }. 
+calculated as in \code{ year + (day_in_year-1)/365.242199 }. 
 
 There is a slight difference, then, between the two methods
 when calculating durations between fractional years. For
