@@ -10,8 +10,8 @@
                   "in versions <= 0.4.1 \n", 
                   "        leading to inflated confidence intervals; see ",
                   "news(package='popEpi')\n",
-                  "      - splitMulti/splitLexisDT in 0.4.3 sometimes produced",
-                  " duplicated transitions\n",
+                  "      - splitMulti/splitLexisDT pre-0.4.4 sometimes ",
+                  "produced duplicated transitions\n",
                   "        when splitting along multiple ",
                   "time scales; see news(package='popEpi')")
     packageStartupMessage(msg)
