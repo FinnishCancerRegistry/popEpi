@@ -29,6 +29,9 @@
 #' and person-years. For individual data use \code{\link{lexpand}}, or
 #' \code{\link{ltable}} and merge person-years manually.
 #' 
+#' The confidence intervals are based on the normal approximation of the logarithm of the rate.
+#' The variance of the log rate that is used to derive the confidence intervals 
+#' is derived using the delta method. 
 #' 
 #' @return Returns a \code{data.table} with observations, person-years, rates and
 #' adjusted rates, if available. Results are stratified by \code{print}.
