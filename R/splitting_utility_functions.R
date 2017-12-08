@@ -1239,7 +1239,7 @@ random_splitting_on <- function(
     l <- rep(extrema[1], n_br)
     u <- rep(extrema[2], n_br)
     u[1] <- l[1] <- mean(r)
-    unique(runif(min = l, max = u, n = n_br))
+    sort(unique(runif(min = l, max = u, n = n_br)))
   })
   names(bl) <- split_ts_nms
   
