@@ -50,6 +50,10 @@ preloaded weights data or user specified weights.
 Input data needs to be in aggregated format with observations 
 and person-years. For individual data use \code{\link{lexpand}}, or
 \code{\link{ltable}} and merge person-years manually.
+
+The confidence intervals are based on the normal approximation of the logarithm of the rate.
+The variance of the log rate that is used to derive the confidence intervals 
+is derived using the delta method.
 }
 \examples{
 ## Prepare data with lexpand and then reformat agegroup.
