@@ -573,7 +573,7 @@ RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
 Surv2DT <- function(Surv) {
   sa <- attributes(Surv)
   dt <- copy(Surv)
-  setattr(dt, "class", "array")
+  setattr(dt, "class", "matrix")
   dt <- data.table(dt)
   
   type <- attr(Surv, "type")
