@@ -570,13 +570,16 @@ RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   l
 }
 
+
+
+
+
 Surv2DT <- function(Surv) {
   sa <- attributes(Surv)
-  dt <- copy(Surv)
-  setattr(dt, "class", "array")
-  dt <- data.table(dt)
+  type <- sa$type
   
-  type <- attr(Surv, "type")
+  dt <- as.data.table(as.matrix(Surv))
+  
   statNA <- sum(is.na(dt$status))
   if (statNA) {
     stop("Some status indicators (", statNA  ," values in total) were NA as ",
@@ -589,15 +592,22 @@ Surv2DT <- function(Surv) {
   
   
   setattr(dt, "type", type)
-  testClass <- sa$inputAttributes$time2$class
-  if (!is.null(testClass) && testClass == "factor") 
-    dt[, status := factor(status, labels = sa$inputAttributes$time2$levels)]
-  testClass <- sa$inputAttributes$event$class
-  if (!is.null(testClass) && testClass == "factor") 
-    dt[, status := factor(status, labels = sa$inputAttributes$event$levels)]
+  
+  label_sources <- c("time2", "event")
+  lapply(label_sources, function(lbl_src) {
+    if (identical(sa$inputAttributes[[lbl_src]]$class, "factor")) {
+      set(
+        dt, j = "status", 
+        value = factor(dt$status, labels = sa$inputAttributes[[lbl_src]]$levels)
+      )
+    }
+    NULL
+  })
   
   dt[]
 }
+
+
 
 
 
