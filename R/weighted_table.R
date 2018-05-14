@@ -483,7 +483,7 @@ makeWeightsDT <- function(data, values = NULL,
     wm <- setDT(do.call(CJ, wm))
     
     weights <- merge(wm, weights, by = adVars, all.x = TRUE, all.y = TRUE)
-    weights[, "weights" := weights/sum(weights), by = eval(c(prVars))]
+    weights[, "weights" := weights/sum(weights), by = prVars]
     
     
     data[i = weights, on = c(prVars, adVars), j = "weights" := weights]
