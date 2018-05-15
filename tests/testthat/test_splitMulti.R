@@ -38,6 +38,7 @@ test_that("splitMulti and splitLexis are congruent", {
   # one row per id ---------------------------------------------------------------
   
   test_that("splitMulti and splitLexis congruent with one row per id", {
+    expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
       compareSMWithEpi(x, BL[[sc]])
     }
