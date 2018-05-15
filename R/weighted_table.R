@@ -450,7 +450,7 @@ makeWeightsDT <- function(data, values = NULL,
       ## NOTE: weights will be repeated for each level of print,
       ## and for each level of print the weights must sum to one for things
       ## to work.
-      weights[, weights := weights/sum(weights)]
+      weights[, "weights" := weights/sum(weights)]
       
     }
     
@@ -483,8 +483,11 @@ makeWeightsDT <- function(data, values = NULL,
     wm <- setDT(do.call(CJ, wm))
     
     weights <- merge(wm, weights, by = adVars, all.x = TRUE, all.y = TRUE)
-    weights[, "weights" := weights/sum(weights), by = prVars]
     
+    dt_robust_by(
+      'weights[, "weights" := weights/sum(weights), by = %%BY_VAR_NMS%%]',
+      by.var.nms = prVars
+    )
     
     data[i = weights, on = c(prVars, adVars), j = "weights" := weights]
     

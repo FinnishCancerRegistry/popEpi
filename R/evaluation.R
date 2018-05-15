@@ -946,4 +946,27 @@ model_frame_robust <- function(formula, data, enc) {
 
 
 
+dt_robust_by <- function(e, by.var.nms) {
+  stopifnot(
+    length(e) == 1,
+    is.character(e),
+    grepl(x = e, pattern = "by\\s{0,}=\\s{0,}%%BY_VAR_NMS%%"),
+    length(by.var.nms) == 0 || is.character(by.var.nms)
+  )
+  
+  le <- paste0("list(", paste0("`", by.var.nms, "`", collapse = ", "), ")")
+  if (!length(by.var.nms)) le <- "NULL"
+  
+  e <- gsub(x = e, pattern = "%%BY_VAR_NMS%%", fixed = TRUE, replacement = le)
+  eval(parse(text = e), envir = parent.frame(1L))
+  NULL
+}
+
+
+
+
+
+
+
+
 
