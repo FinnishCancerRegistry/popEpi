@@ -14,3 +14,4 @@
 ^man-roxygen$
 ^codecov.yml$
 ^appveyor.yml$
+^R/nse\.R$

@@ -15,6 +15,10 @@ knitr::opts_chunk$set(
 devtools::load_all()
 ```
 
+# Changes in 0.4.5
+
+* fixed errors arising from new data.table version
+
 # Changes in 0.4.4
 
 * splitLexisDT/splitMulti bug fix: splitting along multiple time scales _sometimes_ produced duplicate transitions (e.g. alive -> dead in the last two rows). see https://github.com/WetRobot/popEpi/issues/138 for details.

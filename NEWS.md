@@ -1,3 +1,8 @@
+Changes in 0.4.5
+================
+
+-   fixed errors arising from new data.table version
+
 Changes in 0.4.4
 ================
 
@@ -70,11 +75,6 @@ sr$status <- factor(sr$status, levels = 0:2,
 
 ## create Lexis object
 library(Epi)
-#> 
-#> Attaching package: 'Epi'
-#> The following object is masked from 'package:base':
-#> 
-#>     merge.data.frame
 x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
            exit = list(CAL = get.yrs(ex_date)), 
            data = sr,
