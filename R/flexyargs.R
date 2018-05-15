@@ -124,7 +124,7 @@
 #' \code{FUN(arg = TF$V1, data = x)}
 #' 
 #' So no conflicts should occur.
-#' @family popEpi_argument
+#' @family popEpi argument evaluation docs
 #' @examples 
 #' 
 #' data(sire)

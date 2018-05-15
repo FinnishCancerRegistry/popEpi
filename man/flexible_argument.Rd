@@ -160,7 +160,7 @@ st <- survtab_ag(fot ~ 1, data = x, surv.type = "surv.obs",
                  surv.method = "hazard")
 }
 \seealso{
-Other popEpi_argument: \code{\link{direct_standardization}}
+Other popEpi argument evaluation docs: \code{\link{direct_standardization}}
 }
 \author{
 Joonas Miettinen

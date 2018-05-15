@@ -147,7 +147,7 @@ Source of 2000 world standard population in 1-year age groups:
 Other weights: \code{\link{ICSS}}, \code{\link{stdpop101}},
   \code{\link{stdpop18}}
 
-Other popEpi_argument: \code{\link{flexible_argument}}
+Other popEpi argument evaluation docs: \code{\link{flexible_argument}}
 }
 \author{
 Joonas Miettinen

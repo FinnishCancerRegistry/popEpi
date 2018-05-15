@@ -126,7 +126,7 @@
 #' \code{names(wdf) <- c("V1", "V2", "V3", "weights")}
 #' 
 #' @family weights
-#' @family popEpi_argument
+#' @family popEpi argument evaluation docs
 #' 
 #' @references
 #' Source of the Nordic standard population in 5-year age groups 
