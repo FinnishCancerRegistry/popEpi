@@ -578,7 +578,10 @@ Surv2DT <- function(Surv) {
   sa <- attributes(Surv)
   type <- sa$type
   
-  dt <- as.data.table(as.matrix(Surv))
+  dt <- as.data.table(lapply(sa$dimnames[[2]], function(col_nm) {
+    Surv[, col_nm]
+  }))
+  setnames(dt, names(dt), sa$dimnames[[2]])
   
   statNA <- sum(is.na(dt$status))
   if (statNA) {
