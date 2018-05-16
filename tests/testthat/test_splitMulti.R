@@ -5,6 +5,7 @@ context("Compare splitMulti results with splitLexis results")
 
 
 test_that("splitMulti and splitLexis are congruent", {
+  expect_identical(1L, 1L) ## to trigger testing...
   skip_usually()
   library(Epi)
   
@@ -57,6 +58,7 @@ test_that("splitMulti and splitLexis are congruent", {
   
   for (sc in seq_along(BL)) {
     test_that(paste0("splitLexisDT and splitLexis congruent with multiple rows per id with breaks no. ", sc), {
+      expect_identical(1L, 1L) ## to trigger testing...
       compareSMWithEpi(x, BL[[sc]])
     })
   }
@@ -79,6 +81,7 @@ test_that("splitMulti and splitLexis are congruent", {
   
   for (sc in seq_along(BL)) {
     test_that(paste0("splitLexisDT and splitLexis congruent with multiple Lexis states per id using breaks list no. ", sc), {
+      expect_identical(1L, 1L) ## to trigger testing...
       compareSMWithEpi(x, BL[[sc]])
     })
   }

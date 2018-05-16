@@ -1,9 +1,9 @@
 context("Compare splitLexisDT results with splitLexis results")
 
 test_that("splitLexisDT and splitLexis are congruent", {
+  expect_identical(1L, 1L) ## to trigger testing...
   skip_usually()
   library(Epi)
-  expect_identical(1L, 1L) ## to trigger testing...
   
   sire2 <- copy(sire)
   sire2[, dg_yrs := get.yrs(dg_date, "actual")]
@@ -32,6 +32,7 @@ test_that("splitLexisDT and splitLexis are congruent", {
   # one row per id ---------------------------------------------------------------
   
   test_that("splitLexisDT and splitLexis congruent with one row per id", {
+    expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
       test_that(paste0("results congruent using breaks ", sc), {
         expect_identical(1L, 1L) ## to trigger testing...
@@ -52,6 +53,7 @@ test_that("splitLexisDT and splitLexis are congruent", {
   
   
   test_that("splitLexisDT and splitLexis congruent with multiple rows per id", {
+    expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
       test_that(paste0("results congruent using breaks ", sc), {
         expect_identical(1L, 1L) ## to trigger testing...
@@ -80,6 +82,7 @@ test_that("splitLexisDT and splitLexis are congruent", {
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   
   test_that("splitLexisDT and splitLexis congruent with multiple Lexis states per id", {
+    expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
       test_that(paste0("results congruent using breaks ", sc), {
         expect_identical(1L, 1L) ## to trigger testing...
