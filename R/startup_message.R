@@ -1,5 +1,10 @@
 
+
+
+
+
 .onAttach <- function(...) {
+  
   if (interactive()) {
     msg <- paste0("Using popEpi. See news(package='popEpi') for changes. \n",
                   "  popEpi's appropriate data outputs are in data.table ",
@@ -16,7 +21,18 @@
                   "time scales; see news(package='popEpi')")
     packageStartupMessage(msg)
   }
+  
+  using_r_devel <- grepl(pattern = "devel", x = R.version$status)
+  if (using_r_devel) {
+    ## memory leak problem in data.table 1.11.2 in R-devel (3.6.0 atm)
+    requireNamespace("data.table")
+    data.table::setDTthreads(threads = 1L)
+  }
 }
+
+
+
+
 
 .onLoad <- function(...) {
   opt <- getOption("popEpi.datatable")
@@ -27,6 +43,11 @@
   options("popEpi.datatable" = TRUE)
   
 }
+
+
+
+
+
 
 
 
