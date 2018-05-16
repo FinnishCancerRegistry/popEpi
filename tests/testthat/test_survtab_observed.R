@@ -58,10 +58,19 @@ test_that("survtab status argument works as expected", {
   st <- NULL
   x <- lexpand(sr, birth  = bi_date, entry = dg_date, 
                exit = ex_date, status = status)
-  expect_error({
-    suppressWarnings(st <- survtab(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
-                      breaks = list(fot = 0:5)))
-  }, regexp = "Some status indicators \\(3648 values in total\\) were NA as a result of using Surv\\(\\). Usual suspects: original status variable has NA values, or you have numeric status variable with more than two levels and you did not assign e.g. type = 'mstate' \\(e.g. Surv\\(time = c\\(1,1,1\\), event = c\\(0,1,2\\), type = 'mstate'\\) works\\).")
+  expect_error(
+    suppressWarnings(
+      st <- survtab(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
+                    breaks = list(fot = 0:5))
+    ), 
+    regexp = paste0("Some status indicators (3648 values in total) were NA. ",
+                    "Usual suspects: original status variable has NA values, ",
+                    "or you have numeric status variable with more than two ",
+                    "levels and you did not assign e.g. type = 'mstate' ",
+                    "(e.g. Surv(time = c(1,1,1), event = c(0,1,2), ",
+                    "type = 'mstate') works)."),
+    fixed = TRUE
+  )
 
   st <- NULL
   x <- lexpand(sr, birth  = bi_date, entry = dg_date, 

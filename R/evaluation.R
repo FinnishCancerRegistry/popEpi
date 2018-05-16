@@ -585,7 +585,7 @@ Surv2DT <- function(Surv) {
   
   statNA <- sum(is.na(dt$status))
   if (statNA) {
-    stop("Some status indicators (", statNA  ," values in total) were NA .",
+    stop("Some status indicators (", statNA  ," values in total) were NA. ",
          "Usual suspects: original status variable ",
          "has NA values, or you have numeric status variable with more than ",
          "two levels and you did not assign e.g. type = 'mstate' (e.g. ",
