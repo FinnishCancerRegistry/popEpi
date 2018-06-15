@@ -115,11 +115,13 @@
 #' 
 #' 
 #' @param coh.data aggregated cohort data, see e.g. \code{\link{lexpand}}
-#' @param coh.pyrs variable name for person years in cohort data; quoted or unquoted
+#' @param coh.pyrs variable name for person years in cohort data; 
+#' quoted (as a string \code{'myvar'}) or unquoted (AKA as a name; \code{myvar})
 #' @param coh.obs variable name for observed cases; quoted or unquoted. A vector when using \code{mstata}.
-#' @param ref.data population data. Can be left NULL if \code{coh.data} is stratified in \code{print}.
-#' @param ref.rate population rate variable (cases/person-years). Overwrites arguments
-#' \code{ref.pyrs} and \code{ref.obs}; quoted or unquoted
+#' @param ref.data population data. Can be left NULL if \code{coh.data} 
+#' is stratified in \code{print}. See \code{\link{pophaz}} for details.
+#' @param ref.rate population rate variable (cases/person-years). Overwrites 
+#' arguments \code{ref.pyrs} and \code{ref.obs}. Quoted or unquoted
 #' @param ref.pyrs variable name for person-years in population data; quoted or unquoted
 #' @param ref.obs variable name for observed cases; quoted or unquoted
 #' @param subset logical condition to select data from \code{coh.data} before any computations

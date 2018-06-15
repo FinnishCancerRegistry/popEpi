@@ -3,20 +3,23 @@
 \name{popmort}
 \alias{popmort}
 \title{Population mortality rates in Finland 1951 - 2013 in 101 age groups and
-by gender}
+by gender. This is an example of a population hazard table as used in 
+\pkg{popEpi}; for the general help page, see \code{\link{pophaz}}.}
 \format{\code{data.table} with columns
 \itemize{
  \item \code{sex} gender coded as male, female (0, 1)
  \item \code{year} calendar year
  \item \code{agegroup} - coded 0 to 100; one-year age groups
- \item \code{haz} the average population mortality rate per person year
+ \item \code{haz} the average population mortality rate per person year 
+ (deaths/(personyears))
 }}
 \source{
 Statistics Finland
 }
 \description{
 Population mortality rates in Finland 1951 - 2013 in 101 age groups and
-by gender
+by gender. This is an example of a population hazard table as used in 
+\pkg{popEpi}; for the general help page, see \code{\link{pophaz}}.
 }
 \seealso{
 \code{\link{pophaz}}

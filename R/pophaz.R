@@ -43,7 +43,9 @@
 #' The \code{haz} variable in your pophaz should also be coded consistently
 #' with the used time variables. E.g. \code{haz} values in life-tables
 #' reported as deaths per person-year should be multiplied by 365.25 when
-#' using day-level time variables.
+#' using day-level time variables. Typically you'll have calendar time and age
+#' expressed in years, which means \code{haz} should be expressed as the number
+#' of deaths per person-year.
 #' 
 #' If you have your population hazards in a \code{ratetable} object
 #' usable by functions in \pkg{survival} and \pkg{relsurv}, you may

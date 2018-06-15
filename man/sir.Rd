@@ -14,16 +14,18 @@ sir(coh.data, coh.obs, coh.pyrs, ref.data = NULL, ref.obs = NULL,
 
 \item{coh.obs}{variable name for observed cases; quoted or unquoted. A vector when using \code{mstata}.}
 
-\item{coh.pyrs}{variable name for person years in cohort data; quoted or unquoted}
+\item{coh.pyrs}{variable name for person years in cohort data; 
+quoted (as a string \code{'myvar'}) or unquoted (AKA as a name; \code{myvar})}
 
-\item{ref.data}{population data. Can be left NULL if \code{coh.data} is stratified in \code{print}.}
+\item{ref.data}{population data. Can be left NULL if \code{coh.data} 
+is stratified in \code{print}. See \code{\link{pophaz}} for details.}
 
 \item{ref.obs}{variable name for observed cases; quoted or unquoted}
 
 \item{ref.pyrs}{variable name for person-years in population data; quoted or unquoted}
 
-\item{ref.rate}{population rate variable (cases/person-years). Overwrites arguments
-\code{ref.pyrs} and \code{ref.obs}; quoted or unquoted}
+\item{ref.rate}{population rate variable (cases/person-years). Overwrites 
+arguments \code{ref.pyrs} and \code{ref.obs}. Quoted or unquoted}
 
 \item{subset}{logical condition to select data from \code{coh.data} before any computations}
 
