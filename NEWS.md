@@ -1,3 +1,8 @@
+Changes in 0.4.6
+================
+
+-   implemented small internal changes due to upcoming data.table version
+
 Changes in 0.4.5
 ================
 
