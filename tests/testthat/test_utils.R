@@ -421,25 +421,25 @@ test_that("subsetDTorDF works as intended", {
   df <- data.frame(a = 1:5, b = 5:1)
   
   sub <- c(TRUE, TRUE, FALSE, FALSE, TRUE)
-  
+  col_nms <- rep("a", 50)
   settings <- list(
     list(subset = sub, select = NULL),
-    list(subset = NULL, select = c("a", "a")),
+    list(subset = NULL, select = col_nms),
     list(subset = NULL, select = NULL),
-    list(subset = sub, select = c("a", "a"))
+    list(subset = sub, select = col_nms)
   )
   
   expected_df <- list(
     df[sub, ],
-    df[, c("a", "a")],
+    df[, col_nms],
     df,
-    df[sub, c("a", "a")]
+    df[sub, col_nms]
   )
   expected_dt <- list(
     dt[sub, ],
-    dt[, .SD, .SDcols = c("a", "a")],
+    dt[, .SD, .SDcols = col_nms],
     dt,
-    dt[sub, .SD, .SDcols = c("a", "a")]
+    dt[sub, .SD, .SDcols = col_nms]
   )
   
   unused <- lapply(seq_along(settings), function(i) {

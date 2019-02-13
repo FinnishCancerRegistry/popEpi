@@ -731,7 +731,7 @@ subsetDTorDF <- function(data, subset = NULL, select = NULL) {
   } else {
     select <- names(data)
   }
-  expr <- sub("select", deparse(select), expr)
+  expr <- sub("select", paste0(deparse(select), collapse = " "), expr)
   
   if (is.null(subset)) {
     expr <- sub("^data\\[subset, ", "data[, ", expr)
