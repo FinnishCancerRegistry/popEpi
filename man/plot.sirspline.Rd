@@ -4,8 +4,8 @@
 \alias{plot.sirspline}
 \title{\code{plot} method for sirspline-object}
 \usage{
-\method{plot}{sirspline}(x, conf.int = TRUE, abline = TRUE, log = FALSE,
-  type, ylab, xlab, ...)
+\method{plot}{sirspline}(x, conf.int = TRUE, abline = TRUE,
+  log = FALSE, type, ylab, xlab, ...)
 }
 \arguments{
 \item{x}{an object returned by function sirspline}
@@ -44,3 +44,4 @@ Other sir functions: \code{\link{lines.sirspline}},
 \author{
 Matti Rantanen
 }
+\concept{sir functions}

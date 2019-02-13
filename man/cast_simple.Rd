@@ -4,7 +4,8 @@
 \alias{cast_simple}
 \title{Cast \code{data.table}/\code{data.frame} from long format to wide format}
 \usage{
-cast_simple(data = NULL, columns = NULL, rows = NULL, values = NULL)
+cast_simple(data = NULL, columns = NULL, rows = NULL,
+  values = NULL)
 }
 \arguments{
 \item{data}{a \code{data.table} or \code{data.frame}}
@@ -19,8 +20,7 @@ levels of these variable will be different columns}
 on rows and columns as specified by \code{columns} and \code{rows}}
 }
 \description{
-Convenience function for using \code{\link[data.table]{dcast.data.table}}
-and \code{\link[reshape2]{dcast}};
+Convenience function for using \code{\link[data.table]{dcast.data.table}};
 inputs are character strings (names of variables) instead of a formula.
 }
 \details{

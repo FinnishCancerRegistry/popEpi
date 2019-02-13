@@ -6,7 +6,7 @@
 ^\.Rproj\.user$
 ^\.Rhistory$
 ^cran\-comments\.md$
-^testers\.R$
+^dev_utils\.R$
 ^README\.Rmd$
 ^README-.*\.png$
 ^NEWS$

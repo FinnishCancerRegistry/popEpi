@@ -30,3 +30,4 @@ Other aggregation functions: \code{\link{aggre}},
 \author{
 Joonas Miettinen
 }
+\concept{aggregation functions}

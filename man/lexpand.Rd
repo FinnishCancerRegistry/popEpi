@@ -4,11 +4,12 @@
 \alias{lexpand}
 \title{Split case-level observations}
 \usage{
-lexpand(data, birth = NULL, entry = NULL, exit = NULL, event = NULL,
-  status = status != 0, entry.status = NULL, breaks = list(fot = c(0,
-  Inf)), id = NULL, overlapping = TRUE, aggre = NULL,
-  aggre.type = c("unique", "cartesian"), drop = TRUE, pophaz = NULL,
-  pp = TRUE, subset = NULL, merge = TRUE, verbose = FALSE, ...)
+lexpand(data, birth = NULL, entry = NULL, exit = NULL,
+  event = NULL, status = status != 0, entry.status = NULL,
+  breaks = list(fot = c(0, Inf)), id = NULL, overlapping = TRUE,
+  aggre = NULL, aggre.type = c("unique", "cartesian"), drop = TRUE,
+  pophaz = NULL, pp = TRUE, subset = NULL, merge = TRUE,
+  verbose = FALSE, ...)
 }
 \arguments{
 \item{data}{dataset of e.g. cancer cases as rows}
@@ -366,3 +367,5 @@ Other aggregation functions: \code{\link{aggre}},
 \author{
 Joonas Miettinen
 }
+\concept{aggregation functions}
+\concept{splitting functions}

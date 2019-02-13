@@ -18,4 +18,5 @@ Other relpois functions: \code{\link{relpois_ag}},
 \author{
 Karri Seppa
 }
+\concept{relpois functions}
 \keyword{datasets}

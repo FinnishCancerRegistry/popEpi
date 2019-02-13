@@ -139,3 +139,5 @@ Other main functions: \code{\link{rate}},
 \author{
 Matti Rantanen, Joonas Miettinen
 }
+\concept{main functions}
+\concept{sir functions}

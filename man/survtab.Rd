@@ -306,3 +306,5 @@ Other survtab functions: \code{\link{lines.survtab}},
   \code{\link{plot.survtab}}, \code{\link{print.survtab}},
   \code{\link{summary.survtab}}, \code{\link{survtab_ag}}
 }
+\concept{main functions}
+\concept{survtab functions}

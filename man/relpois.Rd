@@ -4,8 +4,8 @@
 \alias{relpois}
 \title{Excess hazard Poisson model}
 \usage{
-relpois(data, formula, fot.breaks = NULL, subset = NULL, check = TRUE,
-  ...)
+relpois(data, formula, fot.breaks = NULL, subset = NULL,
+  check = TRUE, ...)
 }
 \arguments{
 \item{data}{a dataset split with e.g. \code{\link{lexpand}};
@@ -115,3 +115,5 @@ Other relpois functions: \code{\link{RPL}},
 \author{
 Joonas Miettinen, Karri Seppa
 }
+\concept{main functions}
+\concept{relpois functions}

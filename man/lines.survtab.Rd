@@ -58,3 +58,4 @@ Other survtab functions: \code{\link{plot.survtab}},
 \author{
 Joonas Miettinen
 }
+\concept{survtab functions}

@@ -6,8 +6,9 @@
 \alias{sir_ag}
 \title{Calculate SMR}
 \usage{
-sir_exp(x, obs, exp, pyrs = NULL, print = NULL, conf.type = "profile",
-  test.type = "homogeneity", conf.level = 0.95, subset = NULL)
+sir_exp(x, obs, exp, pyrs = NULL, print = NULL,
+  conf.type = "profile", test.type = "homogeneity",
+  conf.level = 0.95, subset = NULL)
 
 sir_lex(x, print = NULL, breaks = NULL, ...)
 
@@ -100,3 +101,4 @@ Other sir functions: \code{\link{lines.sirspline}},
 \author{
 Matti Rantanen
 }
+\concept{sir functions}

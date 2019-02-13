@@ -92,3 +92,5 @@ Other relpois functions: \code{\link{RPL}},
 \author{
 Joonas Miettinen, Karri Seppa
 }
+\concept{main functions}
+\concept{relpois functions}

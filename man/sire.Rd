@@ -35,3 +35,5 @@ Other survival data: \code{\link{sibr}}
 \author{
 Karri Seppa
 }
+\concept{popEpi data}
+\concept{survival data}

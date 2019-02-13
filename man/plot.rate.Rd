@@ -4,7 +4,8 @@
 \alias{plot.rate}
 \title{plot method for rate object}
 \usage{
-\method{plot}{rate}(x, conf.int = TRUE, eps = 0.2, left.margin, xlim, ...)
+\method{plot}{rate}(x, conf.int = TRUE, eps = 0.2, left.margin, xlim,
+  ...)
 }
 \arguments{
 \item{x}{a rate object (see \code{\link{rate}})}

@@ -25,3 +25,5 @@ Other weights: \code{\link{ICSS}},
   \code{\link{direct_standardization}},
   \code{\link{stdpop18}}
 }
+\concept{popEpi data}
+\concept{weights}

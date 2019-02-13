@@ -36,3 +36,4 @@ Other survmean functions: \code{\link{lines.survmean}},
 \author{
 Joonas Miettinen
 }
+\concept{survmean functions}

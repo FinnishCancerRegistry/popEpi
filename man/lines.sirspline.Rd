@@ -40,3 +40,4 @@ Other sir functions: \code{\link{plot.sirspline}},
 \author{
 Matti Rantanen
 }
+\concept{sir functions}

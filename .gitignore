@@ -1,6 +1,5 @@
 .Rproj.user
 .Rhistory
 .RData
-popepi.Rproj
-popEpi.Rproj
+*.Rproj
 revdep

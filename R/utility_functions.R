@@ -4,8 +4,7 @@
 #' @author Matti Rantanen, Joonas Miettinen
 #'
 #' @description 
-#' Convenience function for using \code{\link[data.table]{dcast.data.table}}
-#' and \code{\link[reshape2]{dcast}};
+#' Convenience function for using \code{\link[data.table]{dcast.data.table}};
 #' inputs are character strings (names of variables) instead of a formula.
 #' 
 #' @param data a \code{data.table} or \code{data.frame}

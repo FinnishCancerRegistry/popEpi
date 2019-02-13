@@ -86,3 +86,4 @@ Other splitting functions: \code{\link{lexpand}},
 \author{
 Joonas Miettinen
 }
+\concept{splitting functions}

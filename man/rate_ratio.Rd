@@ -68,3 +68,4 @@ Other rate functions: \code{\link{rate}}
 \author{
 Matti Rantanen
 }
+\concept{rate functions}

@@ -278,3 +278,5 @@ Other main functions: \code{\link{rate}},
 \author{
 Joonas Miettinen
 }
+\concept{main functions}
+\concept{survmean functions}

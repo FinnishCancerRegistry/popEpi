@@ -106,3 +106,5 @@ Other rate functions: \code{\link{rate_ratio}}
 \author{
 Matti Rantanen, Joonas Miettinen
 }
+\concept{main functions}
+\concept{rate functions}

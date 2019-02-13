@@ -9,11 +9,11 @@
 \usage{
 as.aggre(x, values = NULL, by = NULL, breaks = NULL, ...)
 
-\method{as.aggre}{data.frame}(x, values = NULL, by = NULL, breaks = NULL,
-  ...)
+\method{as.aggre}{data.frame}(x, values = NULL, by = NULL,
+  breaks = NULL, ...)
 
-\method{as.aggre}{data.table}(x, values = NULL, by = NULL, breaks = NULL,
-  ...)
+\method{as.aggre}{data.table}(x, values = NULL, by = NULL,
+  breaks = NULL, ...)
 
 \method{as.aggre}{default}(x, ...)
 }
@@ -74,3 +74,4 @@ Other aggregation functions: \code{\link{aggre}},
 \author{
 Joonas Miettinen
 }
+\concept{aggregation functions}

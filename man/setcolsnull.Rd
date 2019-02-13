@@ -4,8 +4,8 @@
 \alias{setcolsnull}
 \title{Delete \code{data.table} columns if there}
 \usage{
-setcolsnull(DT = NULL, delete = NULL, keep = NULL, colorder = FALSE,
-  soft = TRUE)
+setcolsnull(DT = NULL, delete = NULL, keep = NULL,
+  colorder = FALSE, soft = TRUE)
 }
 \arguments{
 \item{DT}{a \code{data.table}}

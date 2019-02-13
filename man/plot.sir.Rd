@@ -4,8 +4,8 @@
 \alias{plot.sir}
 \title{Plot method for sir-object}
 \usage{
-\method{plot}{sir}(x, conf.int = TRUE, ylab, xlab, xlim, main, eps = 0.2,
-  abline = TRUE, log = FALSE, left.margin, ...)
+\method{plot}{sir}(x, conf.int = TRUE, ylab, xlab, xlim, main,
+  eps = 0.2, abline = TRUE, log = FALSE, left.margin, ...)
 }
 \arguments{
 \item{x}{an object returned by function \code{sir}}

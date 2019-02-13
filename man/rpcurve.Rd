@@ -69,3 +69,4 @@ Other relpois functions: \code{\link{RPL}},
 \author{
 Joonas Miettinen
 }
+\concept{relpois functions}

@@ -183,3 +183,4 @@ Other aggregation functions: \code{\link{as.aggre}},
 \author{
 Joonas Miettinen
 }
+\concept{aggregation functions}

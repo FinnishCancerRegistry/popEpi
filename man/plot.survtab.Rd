@@ -61,3 +61,4 @@ Other survtab functions: \code{\link{lines.survtab}},
 \author{
 Joonas Miettinen
 }
+\concept{survtab functions}

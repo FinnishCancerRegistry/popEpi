@@ -9,9 +9,9 @@ Long-Format Table}
 ltable(data, by.vars = NULL, expr = list(obs = .N), subset = NULL,
   use.levels = TRUE, na.rm = FALSE, robust = TRUE)
 
-expr.by.cj(data, by.vars = NULL, expr = list(obs = .N), subset = NULL,
-  use.levels = FALSE, na.rm = FALSE, robust = FALSE, .SDcols = NULL,
-  enclos = parent.frame(1L), ...)
+expr.by.cj(data, by.vars = NULL, expr = list(obs = .N),
+  subset = NULL, use.levels = FALSE, na.rm = FALSE, robust = FALSE,
+  .SDcols = NULL, enclos = parent.frame(1L), ...)
 }
 \arguments{
 \item{data}{a \code{data.table}/\code{data.frame}}

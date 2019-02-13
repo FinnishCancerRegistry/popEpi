@@ -4,8 +4,8 @@
 \alias{sir_ratio}
 \title{Confidence intervals for the ratio of two SIRs/SMRs}
 \usage{
-sir_ratio(x, y, digits = 3, alternative = "two.sided", conf.level = 0.95,
-  type = "exact")
+sir_ratio(x, y, digits = 3, alternative = "two.sided",
+  conf.level = 0.95, type = "exact")
 }
 \arguments{
 \item{x}{a sir-object or a vector of two; observed and expected cases.}
@@ -79,3 +79,4 @@ Other sir functions: \code{\link{lines.sirspline}},
 \author{
 Matti Rantanen
 }
+\concept{sir functions}

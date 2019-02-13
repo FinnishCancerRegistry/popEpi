@@ -4,7 +4,8 @@
 \alias{summary.survtab}
 \title{Summarize a survtab Object}
 \usage{
-\method{summary}{survtab}(object, t = NULL, subset = NULL, q = NULL, ...)
+\method{summary}{survtab}(object, t = NULL, subset = NULL, q = NULL,
+  ...)
 }
 \arguments{
 \item{object}{a \code{survtab} object}
@@ -92,3 +93,4 @@ Other survtab functions: \code{\link{lines.survtab}},
 \author{
 Joonas Miettinen
 }
+\concept{survtab functions}

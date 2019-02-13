@@ -33,3 +33,4 @@ Other survmean functions: \code{\link{plot.survmean}},
 \author{
 Joonas Miettinen
 }
+\concept{survmean functions}

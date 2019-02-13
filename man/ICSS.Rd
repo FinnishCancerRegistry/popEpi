@@ -34,3 +34,5 @@ Other popEpi data: \code{\link{meanpop_fi}},
 Other weights: \code{\link{direct_standardization}},
   \code{\link{stdpop101}}, \code{\link{stdpop18}}
 }
+\concept{popEpi data}
+\concept{weights}

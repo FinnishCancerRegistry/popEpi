@@ -5,9 +5,9 @@
 \title{Prepare Exposure Data for Aggregation}
 \usage{
 prepExpo(lex, freezeScales = "work", cutScale = "per",
-  entry = min(get(cutScale)), exit = max(get(cutScale)), by = "lex.id",
-  breaks = NULL, freezeDummy = NULL, subset = NULL, verbose = FALSE,
-  ...)
+  entry = min(get(cutScale)), exit = max(get(cutScale)),
+  by = "lex.id", breaks = NULL, freezeDummy = NULL, subset = NULL,
+  verbose = FALSE, ...)
 }
 \arguments{
 \item{lex}{a \code{\link[Epi]{Lexis}} object with ONLY periods of exposure
