@@ -467,7 +467,7 @@ survtab_ag <- function(formula = NULL,
   
   # formulate some needed variables --------------------------------------------
   setkeyv(data, c(byVars, surv.scale))
-  data[, "Tstop" := surv.breaks[-1]]
+  data[, "Tstop" := rep(surv.breaks[-1],length.out=.N)]
   setnames(data, surv.scale, "Tstart")
   data[, "delta" := Tstop - Tstart]
   data[, "surv.int" := 1:.N, by = eval(byVars)]
