@@ -321,7 +321,7 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
   evN <- length(events)
   evdt <- data.table(rn = rep(1:nrow(lex), times = evN))
   set(evdt, j = "eventType", value = factor(rep(1:evN, each = nrow(lex)), levels = 1:evN, labels = events))
-  set(evdt, j = "pp", value = lex[[pp]])
+  set(evdt, j = "pp", value = rep(lex[[pp]],length.out=nrow(evdt)))
   
   
   ## need to still determine which rows are not their eventType's events -------
