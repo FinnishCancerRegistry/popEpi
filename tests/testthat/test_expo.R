@@ -11,7 +11,9 @@ test_that("prepExpo works in the simple case", {
   # Define as Lexis object with timescales calendar time and age
   x <- Lexis( entry = list(work = 0, per=entry ),
                  exit = list( per=exit, age=exit-birth ),
-                 exit.status = fail, id = id,
+                 exit.status = fail,
+                 entry.status = 0,
+                 id = id,
                  data = df )
   
   x2 <- prepExpo(x, freezeScales = "work", 

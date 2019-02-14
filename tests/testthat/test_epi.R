@@ -21,6 +21,7 @@ test_that("[.Epi exists and works", {
   Lcoh <- Lexis( entry = list( per=entry ),
                  exit = list( per=exit, age=exit-birth ),
                  exit.status = fail,
+                 entry.status = 0,
                  data = xcoh )
   
   e1 <- subset(Lcoh, fail == 1)

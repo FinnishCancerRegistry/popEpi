@@ -78,12 +78,12 @@ check_bare <- function(...) {
 
 
 
-check_on_rhub <- function(platforms = NULL, ...) {
+check_on_rhub <- function(platforms = NULL, show_status = FALSE, ...) {
   requireNamespace("rhub") ## 1.0.1 on github only
   if (is.null(platforms)) {
     platforms <- rhub::platforms()$name
   }
-  rhub::check(platform = platforms, ...)
+  rhub::check(platform = platforms, show_status = show_status, ...)
 }
 
 

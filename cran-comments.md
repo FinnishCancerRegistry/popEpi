@@ -4,7 +4,7 @@
 * R-release = R version 3.5.2 (2018-12-20)
 * R-oldrel = R version 3.3.3 (2017-03-06) 
 * R-patched = R version 3.5.2 Patched (2019-02-05 r76080) -- "Eggshell Igloo"
-* R-devel = R (2019-02-09 r76080) -- "Unsuffered Consequences"
+* R-devel = R Under development (unstable) (2019-02-13 r76098)
 
 
 ## win builder checks
