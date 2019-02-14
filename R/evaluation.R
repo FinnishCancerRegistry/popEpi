@@ -172,7 +172,16 @@ evalPopArg2 <- function(data, arg, enclos, DT = TRUE,
 
 
 
-evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = TRUE, types = c("NULL","character", "list", "expression"), naming = c("DT", "model")) {
+evalPopArg <- function(
+  data, 
+  arg, 
+  n = 1L, 
+  DT = TRUE, 
+  enclos = NULL, 
+  recursive = TRUE, 
+  types = c("NULL","character", "list", "expression"), 
+  naming = c("DT", "model")
+) {
   ## arg: an unevaluated AND substitute()'d argument within a function, which may be
   ## * an expression
   ## * a list of expressions
@@ -243,8 +252,12 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
       if (mode(e) == "numeric" || is.vector(e) || is.factor(e)) argType <- "expression" else 
         if (inherits(e, "formula")) argType <- "formula"
   
-  if (!argType %in% types) stop("popArg type of evaluated arg not one of the allowed types (set via argument types). Detected type: '", argType, "'. Allowed types: ", paste0("'", types, "'", collapse = ", "))
-  
+  if (!argType %in% types) {
+    stop(
+      "popArg type of evaluated arg not one of the allowed types ",
+      "(set via argument types). Detected type: '", deparse(argType), 
+      "'. Allowed types: ", deparse(types))
+  }
   if (argType == "NULL") return(NULL)
   
   av <- all.vars(arg)
@@ -252,13 +265,18 @@ evalPopArg <- function(data, arg, n = 1L, DT = TRUE, enclos = NULL, recursive = 
   
   ## byNames: names of columns resulting from aggre argument, by which
   ## pyrs and such are aggregated. same functionality
-  ## as in results seen in e.g.DT[, .N, by = list(factor(x), y, z = w)] ## factor, y, z
+  ## as in results seen in e.g.
+  ## dt[, .N, by = list(factor(x), y, z = w)] ## factor, y, z
   ## note: first object in ags with list or expression aggre is "list"
   byNames <- NULL
-  
-  if (is.character(e)) byNames <- e
-  else if (argType == "list" && substr(paste0(deparse(arg)), 1, 5) == "list(") byNames <- sapply(arg[-1], function(x) all.names(x)[1]) 
-  else if (argType == "expression") byNames <- all.names(arg)[1]
+  arg_substr5 <- substr(paste0(deparse(arg), collapse = " "), 1, 5)
+  if (is.character(e)) {
+    byNames <- e
+  } else if (argType == "list" && arg_substr5 == "list(") {
+    byNames <- sapply(arg[-1], function(x) all.names(x)[1]) 
+  } else if (argType == "expression") {
+    byNames <- all.names(arg)[1]
+  }
   
   badNames <- c("$", ":")
   
