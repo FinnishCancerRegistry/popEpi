@@ -33,7 +33,7 @@ $$
 $$
 Modelled SIR is a Poisson regression model with log-link and cohorts person-years as a offset.
 
-The homogenity of SIR's can be tested using a likelihood ratio test in Poisson modelled SIRs.
+The homogeneity of SIR's can be tested using a likelihood ratio test in Poisson modelled SIRs.
 
 The same workflow applies for standardised mortality ratios.
 
@@ -41,15 +41,15 @@ The same workflow applies for standardised mortality ratios.
 
 A continuous spline function can be fitted for time variables, e.g. age-group. Idea of the splines is to smooth the SMR estimates and do inference from the curve figure. This requires pre-defined knots/nodes that are used to fit the spline curve. Selecting the number of knots and knot places is a very subjective matter and there are three options to pass spline knots to function.
 
-It's good practice to try between different knot settings for realistic spline estimates. Overfitting might cause unintentioal artefacts in the estimate and underfitting might smooth away interesting patterns.
+It's good practice to try between different knot settings for realistic spline estimates. Overfitting might cause unintentional artefacts in the estimate and underfitting might smooth away interesting patterns.
 
-The spline variable should be as continuous as possible, say from 18 to 100 time points. But when splitting time in too narrow intervals, random variation might occur in the expected or population rate values. Therefore it's also possible to do two variables for age or period: first with wider intervals for standardation and second with narrow intervals for the spline.
+The spline variable should be as continuous as possible, say from 18 to 100 time points. But when splitting time in too narrow intervals, random variation might occur in the expected or population rate values. Therefore it's also possible to do two variables for age or period: first with wider intervals for standardisation and second with narrow intervals for the spline.
 
 ## Knots
 
 There are three options to for assigning knots to the spline:
 
-1. A vector of numbers of knots for each spline variable. Number of knots includes the boundary knots, so that the minumum number of knots is 2, which is a log linear assosiation. The knots are placed automatically using the quantiles of observed cases.
+1. A vector of numbers of knots for each spline variable. Number of knots includes the boundary knots, so that the minimum number of knots is 2, which is a log linear association. The knots are placed automatically using the quantiles of observed cases.
 
 2. A list of vectors of predefined knot places. Number of vectors needs to match the length of spline variables. And each vector has to have at least the minimum and maximum for boundary knots.
 
@@ -79,7 +79,7 @@ se <- sir( coh.data = c, coh.obs = 'from0to2', coh.pyrs = 'pyrs',
 se
 ```
 
-SMR's for other causes is 1 for both follow-up intervals. Also the p-value suggest that there is no heterogenity between SMR estimates (p=0.735).
+SMR's for other causes is 1 for both follow-up intervals. Also the p-value suggest that there is no heterogeneity between SMR estimates (p=0.735).
 
 
 The total mortality can be estimated by modifying the `status` argument. Now we want to account all deaths, i.e. status is 1 or 2.
@@ -106,7 +106,7 @@ title('SMR for follow-up categories')
 ## splines
 
 
-Lets fit splines for the follow-up time and agegroup using two different options: the splines are fitted in different model and in same model, `dependent.splines`.
+Lets fit splines for the follow-up time and age group using two different options: the splines are fitted in different model and in same model, `dependent.splines`.
 
 ```{r, fig.height=5, fig.width=6}
 c <- lexpand( sire, status = status %in% 1:2, birth = bi_date, exit = ex_date, entry = dg_date,
@@ -130,10 +130,10 @@ plot(st, col=4, log=TRUE)
 title('Splines are dependent')
 ```
 
-In dependent spline the `fot` is the ratio with zero time as reference point. Reference points can be alterned. Here agegroup profile is assumed to be same for every follow-up time. SMR is 0.2 times from 0 to 10 years of follow-up. 
+In dependent spline the `fot` is the ratio with zero time as reference point. Reference points can be altered. Here age group profile is assumed to be same for every follow-up time. SMR is 0.2 times from 0 to 10 years of follow-up. 
 
 
-Splines can also be stratified using the `print` argument. For example we split the death time in two time periods and test if the agegroup splines are equal.
+Splines can also be stratified using the `print` argument. For example we split the death time in two time periods and test if the age group splines are equal.
 
 ```{r, results='hide', fig.height=5, fig.width=6}
 c$year.cat <- ifelse(c$year < 2002, 1, 2)

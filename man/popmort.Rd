@@ -10,8 +10,8 @@ by gender. This is an example of a population hazard table as used in
  \item \code{sex} gender coded as male, female (0, 1)
  \item \code{year} calendar year
  \item \code{agegroup} - coded 0 to 100; one-year age groups
- \item \code{haz} the average population mortality rate per person year 
- (deaths/(personyears))
+ \item \code{haz} the average population mortality rate per person-year 
+ (d/(pyrs), where d is the number of deaths and pyrs is the person-years)
 }}
 \source{
 Statistics Finland

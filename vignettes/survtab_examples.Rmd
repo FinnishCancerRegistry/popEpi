@@ -84,7 +84,7 @@ would cause `survtab` to compute period estimates for 2000-2004 (breaks given he
 
 ## Relative/net survival
 
-Relative/net survival estimation requires knowledge of the expected hazard levels for the individuals in the data. In `survtab` this is accomplished by passing a long-formt `data.frame` of population hazards via the `pophaz` argument. E.g. the `popmort` dataset included in `popEpi` (Finnish overall mortality rates for men and women).
+Relative/net survival estimation requires knowledge of the expected hazard levels for the individuals in the data. In `survtab` this is accomplished by passing a long-format `data.frame` of population hazards via the `pophaz` argument. E.g. the `popmort` dataset included in `popEpi` (Finnish overall mortality rates for men and women).
 
 ```{r popmort}
 data(popmort)
@@ -151,7 +151,7 @@ st.as <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex + adjust(agegr),
 plot(st.as, y = "r.e2.as", col = c("blue", "red"))
 ```
 
-We now have age-adjusted EdererII relative/net survival estimates. The `weights` argument allows for either a list of weigths (with one or multiple variables to adjust by) or a `data.frame` of weights. Examples:
+We now have age-adjusted EdererII relative/net survival estimates. The `weights` argument allows for either a list of weights (with one or multiple variables to adjust by) or a `data.frame` of weights. Examples:
 
 ```{r weights_examples, eval = TRUE}
 list(sex = c(0.4, 0.6), agegr = c(0.2, 0.2, 0.4, 0.2))

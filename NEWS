@@ -22,7 +22,7 @@ therefore popEpi now requires the newest version of data.table!
 
 popEpi 0.4.2
 =====
-* survtab()`bug fix: standard errors were misspecificied for adjusted curves, e.g. age-adjusted Ederer II estimates. This resulted in too wide confidence intervals! (#135) (SEE https://github.com/WetRobot/popEpi/issues/135 FOR EXAMPLE). The standard errors and confidence intervals of non-adjusted curves have always been correct.
+* survtab()`bug fix: standard errors were mis-specified for adjusted curves, e.g. age-adjusted Ederer II estimates. This resulted in too wide confidence intervals! (#135) (SEE https://github.com/WetRobot/popEpi/issues/135 FOR EXAMPLE). The standard errors and confidence intervals of non-adjusted curves have always been correct.
 * survtab() bug fix: confidence level was always 95 % regardless of `conf.level` (#134)
 
 
