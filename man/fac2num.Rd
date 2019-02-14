@@ -28,7 +28,10 @@ fac2num(factor(c(5,7))) ## result: c(5,7)
 ## however
 as.numeric(factor(c("5","7","a"))) ## 1:3
 
-fac2num(factor(c("5","7","a"))) ## result: c(5,7,NA) with warning
+suppressWarnings(
+  fac2num(factor(c("5","7","a"))) ## c(5,7,NA)
+)
+
 
 
 }

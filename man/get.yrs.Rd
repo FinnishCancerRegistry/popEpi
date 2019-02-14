@@ -53,7 +53,7 @@ summary(sire$dg_yrs)
 
 ## see: ?as.Date.yrs
 dg_date2 <- as.Date(sire$dg_yrs)
-summary(as.numeric(dg_date2 - sire$dg_date))
+summary(as.numeric(dg_date2 - as.Date(sire$dg_date)))
 
 ## Epi's cal.yr versus get.yrs
 d <- as.Date("2000-01-01")

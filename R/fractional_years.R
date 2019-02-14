@@ -50,7 +50,7 @@
 #' 
 #' ## see: ?as.Date.yrs
 #' dg_date2 <- as.Date(sire$dg_yrs)
-#' summary(as.numeric(dg_date2 - sire$dg_date))
+#' summary(as.numeric(dg_date2 - as.Date(sire$dg_date)))
 #' 
 #' ## Epi's cal.yr versus get.yrs
 #' d <- as.Date("2000-01-01")
@@ -117,13 +117,13 @@ as.yrs.default <- function(x, year.length = "approx", ...) {
 #' sire$dg_yrs <- get.yrs(sire$dg_date)
 #' summary(sire$dg_yrs)
 #' dg_date2 <- as.Date(sire$dg_yrs)
-#' summary(as.numeric(dg_date2 - sire$dg_date))
+#' summary(as.numeric(dg_date2 - as.Date(sire$dg_date)))
 #' 
 #' ## using actual year lengths
 #' sire$dg_yrs <- get.yrs(sire$dg_date, year.length = "actual")
 #' summary(sire$dg_yrs)
 #' dg_date2 <- as.Date(sire$dg_yrs)
-#' summary(as.numeric(dg_date2 - sire$dg_date))
+#' summary(as.numeric(dg_date2 - as.Date(sire$dg_date)))
 #' @seealso \code{\link{get.yrs}}
 #' @export
 as.Date.yrs <- function(x, ...) {

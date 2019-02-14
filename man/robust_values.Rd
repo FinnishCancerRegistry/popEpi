@@ -31,13 +31,19 @@ values <- robust_values(values)
 values <- c("1", "3", "5", NA)
 values <- robust_values(values)
 
-## this returns originals
+## this returns originals and throws warnings
 values <- c("1", "3", "5", "a")
-values <- robust_values(values)
+suppressWarnings(
+  values <- robust_values(values)
+)
 
-## this forces "a" to NA and works otherwise
+
+## this forces "a" to NA and works otherwise; throws warning about NAs
 values <- c("1", "3", "5", "a")
-values <- robust_values(values, force=TRUE)
+suppressWarnings(
+  values <- robust_values(values, force=TRUE)
+)
+
 
 }
 \author{

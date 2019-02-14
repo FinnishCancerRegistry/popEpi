@@ -66,16 +66,19 @@
 #' #### in case there are problems with dates, we first 
 #' #### convert to fractional years.
 #' \dontrun{
-#' library(Epi)
+#' library("Epi")
+#' library("data.table")
 #' data("sire", package = "popEpi")
-#' x <- Lexis(data=sire, entry = list(fot=0, per=get.yrs(dg_date), age=dg_age), 
+#' x <- Lexis(data=sire[dg_date < ex_date, ], 
+#'            entry = list(fot=0, per=get.yrs(dg_date), age=dg_age), 
 #'            exit=list(per=get.yrs(ex_date)), exit.status=status)
 #' x2 <- splitMulti(x, breaks = list(fot=seq(0, 5, by = 3/12), per=c(2008, 2013)))
 #' # equivalently:
 #' x2 <- splitMulti(x, fot=seq(0, 5, by = 3/12), per=c(2008, 2013))
 #' 
 #' ## using dates; note: breaks must be expressed as dates or days!
-#' x <- Lexis(data=sire, entry = list(fot=0, per=dg_date, age=dg_date-bi_date), 
+#' x <- Lexis(data=sire[dg_date < ex_date, ], 
+#'            entry = list(fot=0, per=dg_date, age=dg_date-bi_date), 
 #'            exit=list(per=ex_date), exit.status=status)
 #' BL <- list(fot = seq(0, 5, by = 3/12)*365.242199,
 #'            per = as.Date(paste0(c(1980:2014),"-01-01")),
@@ -85,18 +88,20 @@
 #' 
 #' ## multistate example (healty - sick - dead)
 #' sire2 <- data.frame(sire)
+#' sire2 <- sire2[sire2$dg_date < sire2$ex_date, ]
 #' 
 #' set.seed(1L) 
 #' not_sick <- sample.int(nrow(sire2), 6000L, replace = FALSE)
-#' sire2[not_sick, ]$dg_date <- NA
-#' sire2[!is.na(sire2$dg_date) & sire2$status == 0, ]$status <- -1
+#' sire2$dg_date[not_sick] <- NA
+#' sire2$status[!is.na(sire2$dg_date) & sire2$status == 0] <- -1
 #' 
 #' sire2$status[sire2$status==2] <- 1
 #' sire2$status <- factor(sire2$status, levels = c(0, -1, 1), 
 #'                        labels = c("healthy", "sick", "dead"))
-#' 
-#' xm <- Lexis(data=sire2, entry = list(fot=0, per=get.yrs(bi_date), age=0), 
-#'             exit=list(per=get.yrs(ex_date)), exit.status=status)
+#'  
+#' xm <- Lexis(data = sire2, 
+#'             entry = list(fot=0, per=get.yrs(bi_date), age=0), 
+#'             exit = list(per=get.yrs(ex_date)), exit.status=status)
 #' xm2 <- cutLexis(xm, cut = get.yrs(xm$dg_date), 
 #'                 timescale = "per", 
 #'                 new.state = "sick")

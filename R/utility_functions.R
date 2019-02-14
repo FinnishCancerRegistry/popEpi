@@ -142,7 +142,10 @@ na2zero = function(DT, vars = NULL) {
 #' ## however
 #' as.numeric(factor(c("5","7","a"))) ## 1:3
 #' 
-#' fac2num(factor(c("5","7","a"))) ## result: c(5,7,NA) with warning
+#' suppressWarnings(
+#'   fac2num(factor(c("5","7","a"))) ## c(5,7,NA)
+#' )
+#' 
 #' 
 #' 
 fac2num <- function(x) {
@@ -246,13 +249,19 @@ is.Date <- function(obj) {
 #' values <- c("1", "3", "5", NA)
 #' values <- robust_values(values)
 #' 
-#' ## this returns originals
+#' ## this returns originals and throws warnings
 #' values <- c("1", "3", "5", "a")
-#' values <- robust_values(values)
+#' suppressWarnings(
+#'   values <- robust_values(values)
+#' )
 #' 
-#' ## this forces "a" to NA and works otherwise
+#' 
+#' ## this forces "a" to NA and works otherwise; throws warning about NAs
 #' values <- c("1", "3", "5", "a")
-#' values <- robust_values(values, force=TRUE)
+#' suppressWarnings(
+#'   values <- robust_values(values, force=TRUE)
+#' )
+#' 
 #' 
 
 robust_values <- function(num.values, force = FALSE, messages = TRUE) {
