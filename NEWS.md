@@ -1,3 +1,8 @@
+Changes in 0.4.7
+================
+
+* implemented small internal changes due to upcoming R 3.6.0
+
 Changes in 0.4.6
 ================
 
