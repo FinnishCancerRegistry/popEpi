@@ -90,6 +90,15 @@ check_on_rhub <- function(platforms = NULL, show_status = FALSE, ...) {
 
 
 
+check_on_winbuilder <- function(...) {
+  requireNamespace("devtools")
+  devtools::check_win_release(...)
+  devtools::check_win_devel(...)
+  devtools::check_win_oldrelease(...)
+}
+
+
+
 
 
 

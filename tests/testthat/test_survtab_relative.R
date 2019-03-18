@@ -134,11 +134,11 @@ test_that("Ederer I expected survival curve agrees with survival::survexp", {
   pm <- data.table(popEpi::popmort)
   # pm[, surv := 1L]
   pm[, surv := exp(-haz)]
-  pm.m <- cast_simple(pm[sex==0], columns = 'year', rows = 'agegroup',  values='surv')
+  pm.m <- cast_simple(pm[sex == 0], columns = 'year', rows = 'agegroup', values = 'surv')
   pm.m[,agegroup := NULL]
   pm.m <- as.matrix(pm.m)
   # female
-  pm.f <- cast_simple(pm[sex==1], columns = 'year', rows = 'agegroup',  values='surv')
+  pm.f <- cast_simple(pm[sex == 1], columns = 'year', rows = 'agegroup', values = 'surv')
   pm.f[,agegroup := NULL]
   pm.f <- as.matrix(pm.f)
   
@@ -146,11 +146,10 @@ test_that("Ederer I expected survival curve agrees with survival::survexp", {
   
   pm[, surv := NULL]
   
-  sire2 <- sire[dg_date<ex_date, ]
-  set.seed(13)
-  sire2 <- sire2[sample(x = 1:.N, size = 500, replace = FALSE)]
-  sire2[, Tstop  := as.integer(ex_date - dg_date)]
-  sire2[, dg_age := as.integer(dg_date - bi_date)]
+  sire2 <- popEpi::sire[dg_date < ex_date, ]
+  sire2 <- sire2[1:500, ]
+  sire2[, "Tstop"  := as.integer(ex_date - dg_date)]
+  sire2[, "dg_age" := as.integer(dg_date - bi_date)]
   
   x <- Lexis(entry = list(age = dg_age, per = dg_date, fot = 0L),
              exit = list(fot = Tstop), 
@@ -158,27 +157,24 @@ test_that("Ederer I expected survival curve agrees with survival::survexp", {
              entry.status = 0L, data = sire2)
   setDT(x)
   setattr(x, "class", c("Lexis","data.table", "data.frame"))
-  x[, per := as.Date(per)]
+  x[, "per" := as.Date(per)]
   
   ## rs.surv
   ## sex must be coded c(1,2) (male, female)
-  x[, sex := 2L]
+  x[, "sex" := 2L]
   
   fb <- seq(0, 19, 1/24)
   su <- survexp(~1, data = x, ratetab = popm, method = "ederer", 
                 rmap = list(sex = "female", year = per, age = age),
                 times = fb*365.242199)
   
-  x[, sex := 1L]
-  x[, lex.dur := max(fb)] ## not really needed but illustrative
-  x[, age := age/365.242199]
-  x[, per := get.yrs(per, year.length = "approx")]
+  x[, "sex" := 1L]
+  x[, "lex.dur" := max(fb)] ## not really needed but illustrative
+  x[, "age" := age/365.242199]
+  x[, "per" := get.yrs(per, year.length = "approx")]
   
   setnames(pm, c("year", "agegroup"), c("per", "age"))
   e1 <- comp_e1(x, breaks = list(fot = fb), pophaz = pm, survScale = "fot")
-  
-#   plot(su, ylim = c(0.35, 1), col = 1, xscale = 365.242199)
-#   lines(surv.exp ~ fot, col = "red", type = "s", data = e1)
   
   ## rs.surv
   fb <- fb[-1]
@@ -190,7 +186,7 @@ test_that("Ederer I expected survival curve agrees with survival::survexp", {
   setnames(su, "time", "fot")
   
   expect_equal(e1, su, tolerance = 0.000004575, scale = 1L)
-  expect_equal(max(abs(e1$surv.exp-su$surv.exp)), 0L, 
+  expect_equal(max(abs(e1$surv.exp - su$surv.exp)), 0L, 
                tolerance = 0.0000103, scale = 1L)
   
   
