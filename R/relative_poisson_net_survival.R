@@ -74,10 +74,10 @@ rpcurve <- function(object = NULL) {
     fot <- lex.multi <- pyrs <- NULL ## appease R CMD CHECK
   
   ## collate surv.ints, breaks, deltas -----------------------------------------
-  fotlevs <- as.factor(sort(as.character(unique(object$model$FOT))))
+  fot_levels <- as.factor(sort(as.character(unique(object$model$FOT))))
   fb <- sort(object$fot.breaks)
   fb <- data.table(Tstart = fb[-length(fb)], Tstop = fb[-1])
-  fb[, FOT := fotlevs]
+  fb[, FOT := fot_levels]
   fb[, delta := Tstop-Tstart]
   n_ints <- nrow(fb)
   
@@ -107,7 +107,9 @@ rpcurve <- function(object = NULL) {
   setkeyv(umodmat, setdiff(names(modmat), c("lex.dur","lex.Xst","order","uni_id")))
   setkeyv(modmat, setdiff(names(modmat), c("lex.dur","lex.Xst","order","uni_id")))
   
-  umodmat[, uni_n  := umodmat[modmat, list(uni_n = .N/n_ints), by=uni_id]$uni_n]
+  uni_n <- umodmat[modmat, list(uni_n = .N / n_ints), by = "uni_id"][["uni_n"]]
+  uni_n <- rep(uni_n, times = nrow(umodmat) / length(uni_n))
+  data.table::set(umodmat, j = "uni_n", value = uni_n)
   
   setkeyv(umodmat, c("uni_id", "order"))
   mean_weights <- umodmat$uni_n
@@ -139,23 +141,31 @@ rpcurve <- function(object = NULL) {
   tab <- lapply(tab, as.data.table)
   tab <- rbindlist(tab)
   setnames(tab, names(tab), c("est", "lo", "hi", "SE"))
-  tab[, FOT    := fotlevs]
-  tab[, uni_id := IDs]
-  tab[, uni_w  := mean_weights]
+  fot_values <- rep(fot_levels, times = nrow(tab) / length(fot_levels))
+  data.table::set(tab, j = "FOT", value = fot_values)
+  tab[, "uni_id" := IDs]
+  tab[, "uni_w"  := mean_weights]
   Haz2RS <- function(x) {
     sum(exp(-x)*tab$uni_w)/n_matrows
   }
   tab <- tab[, lapply(list(est=est,lo=lo,hi=hi), `-`)]
   tab <- tab[, lapply(list(est=est,lo=lo,hi=hi), exp)]
   tab[, `:=`(est=est*mean_weights,lo=lo*mean_weights,hi=hi*mean_weights)]
-  tab[, FOT := fotlevs]
-  tab <- tab[, lapply(list(est=est, lo=lo, hi=hi), sum), by = FOT]
-  tab <- tab[, lapply(list(est=est, lo=lo, hi=hi), function(x){x/(n_matrows/n_ints)}), by = FOT]
+  data.table::set(tab, j = "FOT", value = fot_values)
+  tab <- tab[, lapply(list(est=est, lo=lo, hi=hi), sum), by = "FOT"]
+  tab <- tab[
+    j = lapply(list(est=est, lo=lo, hi=hi), function(x) {
+      x / (n_matrows / n_ints)
+    }), 
+    by = "FOT"
+    ]
 
-  setkey(tab, FOT); setkey(fb, FOT)
-  tab <- fb[tab]
+  setkeyv(tab, "FOT")
+  setkeyv(fb, "FOT")
+  tab <- fb[tab, on = "FOT"]
   
-  ## disabled CI computation in 0.2.2 due to lack of testing & certainty of correctness
+  ## disabled CI computation in 0.2.2 due to lack of testing & certainty of 
+  ## correctness
   setcolsnull(tab, c("lo", "hi"))
   
   setattr(tab, "class", c("data.table", "data.frame"))
