@@ -15,7 +15,11 @@ splitMulti(data, breaks = NULL, ..., drop = TRUE, merge = TRUE,
 \item{...}{alternate way of supplying breaks as named vectors;
 e.g. \code{fot = 0:5} instead of \code{breaks = list(fot = 0:5)};
 if \code{breaks} is not \code{NULL}, \code{breaks} is used and any breaks
-passed through \code{...} are NOT used}
+passed through \code{...} are NOT used; note also that due to R's partial 
+matching of argument names, if you supply e.g. \code{dat = my_breaks} and you 
+do not pass argument \code{data} explicitly (\code{data = my_data}), then R
+interprets this as \code{data = my_breaks} --- so choose the names of your
+time scales wisely}
 
 \item{drop}{logical; if \code{TRUE}, drops all resulting rows 
 after expansion that reside outside the time window
