@@ -507,15 +507,29 @@ checkLexisData <- function(lex, check.breaks = FALSE) {
   ## INTENTION: checks Lexis attributes
   ## OUTPUT: nothing
   
-  if (is.null(lex) || nrow(lex) == 0) stop("Data is NULL or has zero rows")
-  if (!inherits(lex, "Lexis")) stop("Data not a Lexis object")
+  if (missing(lex)) {
+    stop("Data object not supplied")
+  }
+  if (!inherits(lex, "Lexis")) {
+    stop("Data not a Lexis object; it has class(es) ", deparse(class(lex)))
+  }
+  if (!is.data.frame(lex)) {
+    stop("Data is not a data.frame / data.table; it has class(es) ",
+         deparse(class(lex)))
+  }
+  if (nrow(lex) == 0) {
+    stop("Data has zero rows")
+  }
   allScales <- attr(lex, "time.scales")
-  if (length(allScales) == 0) stop("no time scales appear to be defined; is data a Lexis object?")
+  if (length(allScales) == 0) {
+    stop("no time scales appear to be defined; is data a Lexis object?")
+  }
   
   badScales <- setdiff(allScales, names(lex))
   if (length(badScales) > 0) {
     badScales <- paste0("'", badScales, "'", collapse = ", ")
-    stop("Following time scales found in data's attributes but not present in data: ", badScales)
+    stop("Following time scales found in data's attributes but not present ",
+         "in data: ", badScales)
   }
   
   lexVars <- c("lex.dur", "lex.id", "lex.Cst", "lex.Xst")
@@ -542,7 +556,9 @@ splitMultiPreCheck <- function(data = NULL, breaks = NULL, ...) {
   checkLexisData(data)
   allScales <- attr(data, "time.scales")
   
-  if (!is.null(breaks) && !is.list(breaks)) stop("breaks must be a list; see examples in ?splitMulti")
+  if (!is.null(breaks) && !is.list(breaks)) {
+    stop("breaks must be a list; see examples in ?splitMulti")
+  }
   if (is.null(breaks)) {
     breaks <- list(...)
     breaks <- breaks[intersect(names(breaks), allScales)]
