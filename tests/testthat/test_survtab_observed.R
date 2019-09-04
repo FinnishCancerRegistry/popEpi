@@ -1,7 +1,7 @@
 context("CIF's & surv.obs's congruence & comparison w/ survival::survfit")
 
 test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johansen", {
-  library(survival)
+  
   BL <- list(fot= seq(0,19,1/12), per=c(2008,2013))
   sire2 <- sire[dg_date<ex_date, ]
   sire2$statusf <- factor(sire2$status, levels = 0:2, 
@@ -26,11 +26,11 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
                breaks = BL["per"])
   
   fb <- setdiff(BL$fot, 0)
-  su.km  <- survfit(Surv(time=fot, time2=fot+lex.dur, lex.Xst!="alive") ~ 1, data = x)
+  su.km  <- survival::survfit(Surv(time=fot, time2=fot+lex.dur, lex.Xst!="alive") ~ 1, data = x)
   su.km  <- summary(su.km, times = fb)
   su.km  <- cbind(data.table(time = su.km$time), data.table(su.km$surv))
   
-  su.cif <- survfit(Surv(time=fot, time2=fot+lex.dur, lex.Xst)~1, data=x)
+  su.cif <- survival::survfit(Surv(time=fot, time2=fot+lex.dur, lex.Xst)~1, data=x)
   su.cif <- summary(su.cif, times = fb)
   ## see issue #125
   prev_var <- intersect(names(su.cif), c("prev", "pstate"))
@@ -48,7 +48,7 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
 
 test_that("survtab status argument works as expected", {
   skip_on_cran()
-  library(survival)
+  
   BL <- list(fot= seq(0,19,1/12), per=c(2008,2013))
   sr <- sire[dg_date < ex_date, ]
   
@@ -91,7 +91,7 @@ test_that("survtab status argument works as expected", {
 
 test_that("survtab works with more complicated estimation", {
   library(Epi)
-  library(survival)
+  
   library(data.table)
   
   x <- data.table(popEpi::sire[sire$dg_date < sire$ex_date, ])

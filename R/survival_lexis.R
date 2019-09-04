@@ -39,7 +39,6 @@
 #' \dontrun{
 #' data("sire", package = "popEpi")
 #' library(Epi)
-#' library(survival)
 #'
 #' ## NOTE: recommended to use factor status variable
 #' x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
@@ -113,7 +112,6 @@
 #'               breaks = list(FUT = seq(0, 5, 1/12)*365.25))  
 #' }
 #' @export
-#' @importFrom survival Surv
 survtab <- function(formula, data, adjust = NULL, breaks = NULL, 
                     pophaz = NULL, weights = NULL, surv.type = "surv.rel", 
                     surv.method = "hazard", relsurv.method = "e2", 
@@ -126,10 +124,6 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   PF <- parent.frame()
   this_call <- match.call()
   startTime <- proc.time()
-  
-  if (!requireNamespace("survival")) {
-    stop("Need package 'survival' to proceed")
-  }
   
   ## appease R CMD CHECK -------------------------------------------------------
   lex.Cst <- lex.Xst <- lex.dur <- NULL

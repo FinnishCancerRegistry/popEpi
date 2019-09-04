@@ -199,7 +199,6 @@ limit the data when/before supplying to this function.See
 \dontrun{
 data("sire", package = "popEpi")
 library(Epi)
-library(survival)
 
 ## NOTE: recommended to use factor status variable
 x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
@@ -297,13 +296,15 @@ doi: 10.1016/B978-0-12-801238-3.02745-8.
 \code{\link{ICSS}}, \code{\link{sire}}
 \href{../doc/survtab_examples.html}{The survtab_examples vignette}
 
-Other main functions: \code{\link{rate}},
-  \code{\link{relpois_ag}}, \code{\link{relpois}},
-  \code{\link{sirspline}}, \code{\link{sir}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}}
+Other main functions: \code{\link{Surv}},
+  \code{\link{rate}}, \code{\link{relpois_ag}},
+  \code{\link{relpois}}, \code{\link{sirspline}},
+  \code{\link{sir}}, \code{\link{survmean}},
+  \code{\link{survtab_ag}}
 
-Other survtab functions: \code{\link{lines.survtab}},
-  \code{\link{plot.survtab}}, \code{\link{print.survtab}},
+Other survtab functions: \code{\link{Surv}},
+  \code{\link{lines.survtab}}, \code{\link{plot.survtab}},
+  \code{\link{print.survtab}},
   \code{\link{summary.survtab}}, \code{\link{survtab_ag}}
 }
 \concept{main functions}

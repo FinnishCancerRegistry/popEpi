@@ -781,7 +781,6 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' @examples 
 #' 
 #' library(Epi)
-#' library(survival)
 #' 
 #' ## NOTE: recommended to use factor status variable
 #' x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 

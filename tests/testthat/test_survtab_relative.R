@@ -3,7 +3,7 @@ context("popEpi::survtab vs. relsurv::rs.surv")
 # survtab vs. relsurv::rs.surv --------------------------------------------
 test_that("relative survivals about the same as relsurv's", {
   
-  library(survival)
+  
   library(relsurv)
   library(Epi)
   
@@ -79,7 +79,7 @@ test_that("relative survivals about the same as relsurv's", {
 test_that("relpois congruent with relsurv::rsadd", {
   skip_on_cran()
   
-  library(survival)
+  
   library(relsurv)
   
   # male
@@ -126,7 +126,7 @@ test_that("relpois congruent with relsurv::rsadd", {
 
 test_that("Ederer I expected survival curve agrees with survival::survexp", {
   
-  library(survival)
+  
   library(relsurv)
   library(Epi)
   

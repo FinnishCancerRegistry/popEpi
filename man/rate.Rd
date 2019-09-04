@@ -96,10 +96,11 @@ r3
 \seealso{
 \code{\link{lexpand}}, \code{\link{ltable}}
 
-Other main functions: \code{\link{relpois_ag}},
-  \code{\link{relpois}}, \code{\link{sirspline}},
-  \code{\link{sir}}, \code{\link{survmean}},
-  \code{\link{survtab_ag}}, \code{\link{survtab}}
+Other main functions: \code{\link{Surv}},
+  \code{\link{relpois_ag}}, \code{\link{relpois}},
+  \code{\link{sirspline}}, \code{\link{sir}},
+  \code{\link{survmean}}, \code{\link{survtab_ag}},
+  \code{\link{survtab}}
 
 Other rate functions: \code{\link{rate_ratio}}
 }

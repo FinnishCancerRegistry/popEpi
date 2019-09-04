@@ -1,7 +1,6 @@
 context("mean survival testing")
 library("data.table")
 library("Epi")
-library("survival")
 
 test_that("survmean() agrees with old results", {
   skip_usually()

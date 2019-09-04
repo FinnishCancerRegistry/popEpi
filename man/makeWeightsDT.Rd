@@ -62,7 +62,6 @@ An internal function that aggregates a table
 and merges in weights.
 }
 \examples{
-library(survival)
 library(data.table)
 
 makeWeightsDT <- popEpi:::makeWeightsDT ## this avoids errors during tests

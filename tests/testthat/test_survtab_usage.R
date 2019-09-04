@@ -5,7 +5,6 @@ context("survtab usage")
 test_that("Dates and frac. yrs produce congruent results", {
   skip_on_cran()
   library(Epi)
-  library(survival)
   
   x <- data.table(popEpi::sire)
   x <- x[dg_date<ex_date]
@@ -121,7 +120,6 @@ test_that("Dates and frac. yrs produce congruent results", {
 test_that("hazard and lifetable produce congruent results", {
   skip_on_cran()
   library(Epi)
-  library(survival)
   
   x <- data.table(popEpi::sire)
   x <- x[dg_date<ex_date]
@@ -166,7 +164,6 @@ test_that("hazard and lifetable produce congruent results", {
 ## will not necessarily equal the counts of events.
 # test_that("lifetable counts work with period analysis", {
 #   library(Epi)
-#   library(survival)
 #   x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
 #              exit = list(CAL = get.yrs(ex_date)),
 #              data = sire[sire$dg_date < sire$ex_date, ],
@@ -200,7 +197,7 @@ test_that("hazard and lifetable produce congruent results", {
 test_that("its possible to pass dynamically created arguments", {
   skip_on_cran()
   library(Epi)
-  library(survival)
+  
   x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
              exit = list(CAL = get.yrs(ex_date)),
              data = sire[sire$dg_date < sire$ex_date, ],
@@ -337,7 +334,7 @@ test_that("update() works with survtab objects", {
   
   
   library(Epi)
-  library(survival)
+  
   x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
              exit = list(CAL = get.yrs(ex_date)), 
              data = sire[sire$dg_date < sire$ex_date, ],
@@ -428,7 +425,7 @@ test_that("confidence intervals are as intended", {
   skip_on_cran()
   
   library(Epi)
-  library(survival)
+  
 
   ## NOTE: recommended to use factor status variable
   x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),

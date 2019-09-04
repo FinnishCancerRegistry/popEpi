@@ -149,7 +149,6 @@
 #' 
 #' @examples
 #' 
-#' library(survival)
 #' library(Epi)
 #' ## take 500 subjects randomly for demonstration
 #' data(sire)
@@ -264,10 +263,6 @@ survmean <- function(formula, data, adjust = NULL, weights = NULL,
   attr_form <- copy(formula)
   
   surv.method <- match.arg(surv.method, c("hazard", "lifetable"))
-  
-  if(!requireNamespace("survival")) {
-    stop("Need package 'survival' to proceed")
-  }
   
   ## appease R CMD CHECK (due to using vars in DT[] only)
   r.e2 <- last.p.e2 <- surv <- survmean_type <- est <- Tstart <- Tstop <- 

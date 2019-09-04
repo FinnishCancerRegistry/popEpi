@@ -168,7 +168,6 @@ Set the extrapolation breaks manually in such cases.
 }
 \examples{
 
-library(survival)
 library(Epi)
 ## take 500 subjects randomly for demonstration
 data(sire)
@@ -267,13 +266,14 @@ plot(smd)
 
 }
 \seealso{
-Other survmean functions: \code{\link{lines.survmean}},
-  \code{\link{plot.survmean}}
+Other survmean functions: \code{\link{Surv}},
+  \code{\link{lines.survmean}}, \code{\link{plot.survmean}}
 
-Other main functions: \code{\link{rate}},
-  \code{\link{relpois_ag}}, \code{\link{relpois}},
-  \code{\link{sirspline}}, \code{\link{sir}},
-  \code{\link{survtab_ag}}, \code{\link{survtab}}
+Other main functions: \code{\link{Surv}},
+  \code{\link{rate}}, \code{\link{relpois_ag}},
+  \code{\link{relpois}}, \code{\link{sirspline}},
+  \code{\link{sir}}, \code{\link{survtab_ag}},
+  \code{\link{survtab}}
 }
 \author{
 Joonas Miettinen

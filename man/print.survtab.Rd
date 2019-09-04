@@ -23,8 +23,8 @@ Print method function for \code{survtab} objects; see
 \code{\link{survtab_ag}}.
 }
 \seealso{
-Other survtab functions: \code{\link{lines.survtab}},
-  \code{\link{plot.survtab}},
+Other survtab functions: \code{\link{Surv}},
+  \code{\link{lines.survtab}}, \code{\link{plot.survtab}},
   \code{\link{summary.survtab}}, \code{\link{survtab_ag}},
   \code{\link{survtab}}
 }

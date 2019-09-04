@@ -247,7 +247,6 @@ test_that("evalPopFormula & usePopFormula output is stable", {
   
   
   ## evalPopFormula
-  library(survival)
   r1a <- evalPopFormula(f1a, data = x, enclos = TF, Surv.response = TRUE)
   r1b <- evalPopFormula(f1b, data = x, enclos = TF, Surv.response = TRUE)
   setattr(r1a, "formula", attr(r1b, "formula"))

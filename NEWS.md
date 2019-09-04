@@ -102,7 +102,6 @@ st <- survtab(FUT ~ cancer, data = x,
               surv.type = "surv.rel", pophaz = pm)
 
 ## more explicit usage
-library(survival)
 st <- survtab(Surv(FUT, event = lex.Xst) ~ cancer, data = x,
               breaks = list(FUT = seq(0, 5, 1/12)),
               surv.type = "surv.rel", pophaz = pm)

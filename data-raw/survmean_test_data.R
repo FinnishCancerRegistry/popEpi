@@ -6,7 +6,6 @@
 ## last computed this on changeset 7842fb3eebee37cff7aca2b3261749da5d1cadd7
 
 library("data.table")
-library("survival")
 library("Epi")
 library("relsurv")
 library("git2r")

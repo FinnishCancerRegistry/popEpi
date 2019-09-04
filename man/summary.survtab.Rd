@@ -48,7 +48,6 @@ are not usually considered at all. See e.g. Seppa, Dyba, and Hakulinen
 \examples{
 
 library(Epi)
-library(survival)
 
 ## NOTE: recommended to use factor status variable
 x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
@@ -86,9 +85,10 @@ Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015
 doi: 10.1016/B978-0-12-801238-3.02745-8.
 }
 \seealso{
-Other survtab functions: \code{\link{lines.survtab}},
-  \code{\link{plot.survtab}}, \code{\link{print.survtab}},
-  \code{\link{survtab_ag}}, \code{\link{survtab}}
+Other survtab functions: \code{\link{Surv}},
+  \code{\link{lines.survtab}}, \code{\link{plot.survtab}},
+  \code{\link{print.survtab}}, \code{\link{survtab_ag}},
+  \code{\link{survtab}}
 }
 \author{
 Joonas Miettinen

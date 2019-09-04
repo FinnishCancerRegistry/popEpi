@@ -31,7 +31,6 @@ It is straightforward to estimate various survival time functions with `survtab`
 ```{r pkgs, eval = TRUE, echo = TRUE, message = FALSE}
 library(popEpi)
 library(Epi)
-library(survival)
 ```
 
 ```{r}
