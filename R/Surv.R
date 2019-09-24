@@ -6,19 +6,14 @@
 #' @md
 #' @title Survival Objects
 #' @description
-#' Create survival objects as in  \pkg{survival}::\code{\link[survival]{Surv}}.
-#' @param time see  \pkg{survival}::\code{\link[survival]{Surv}}
-#' @param time2 see  \pkg{survival}::\code{\link[survival]{Surv}}
-#' @param event see  \pkg{survival}::\code{\link[survival]{Surv}}
-#' @param type see  \pkg{survival}::\code{\link[survival]{Surv}}
-#' @param origin see  \pkg{survival}::\code{\link[survival]{Surv}}
-#' @param id argument to be added to \code{\link[survival]{Surv}} in 
-#' \pkg{survival} 3.0, included here to ensure a smooth transition;
-#' if you have \pkg{survival} `< 3.0` installed, this argument is ignored
-#' and a warning is thrown if it is used;
-#' else the values are passed to \pkg{survival}::\code{\link[survival]{Surv}}
+#' Wrapper for [survival::Surv].
+#' @param time see  [survival::Surv]
+#' @param time2 see  [survival::Surv]
+#' @param event see  [survival::Surv]
+#' @param type see  [survival::Surv]
+#' @param origin see [survival::Surv]
 #' @section Surv in survival vs. in popEpi:
-#' This function is a wrapper for  \pkg{survival}::\code{\link[survival]{Surv}}.
+#' `popEpi::Surv` is a wrapper for [survival::Surv].
 #' Therefore you don't need to to do `library("survival")` when using `Surv` 
 #' with e.g.
 #' \code{\link{survtab}}. Remember that if you do `library("survival")` after
@@ -39,8 +34,7 @@ Surv <- function(
   time2, 
   event, 
   type = c("right", "left", "interval", "counting", "interval2", "mstate"), 
-  origin = 0, 
-  id
+  origin = 0
 ) {
   
   pf <- parent.frame(1)
@@ -53,22 +47,18 @@ Surv <- function(
     ), envir = test_env)
   }, logical(1))
   pass_arg_nms <- arg_nms[!is_missing]
-  
-  # "id" to be / was added in survival 3.0
-  if (!"id" %in% names(formals(survival::Surv))) {
-    if (!missing(id)) {
-      warning("argument \"id\" was ignored; it is only passed ",
-              "to survival::Surv if it has that argument (it didn't), so see ",
-              "?survival::Surv (and ?popEpi::Surv)")
-    }
-    pass_arg_nms <- setdiff(pass_arg_nms, "id")
-  }
+  pass_arg_nms <- intersect(pass_arg_nms, names(formals(survival::Surv)))
   
   pass_arg_list <- mget(pass_arg_nms)
-  eval_env <- new.env(parent = pf)
+  eval_env <- as.environment(pass_arg_list)
+  parent.env(eval_env) <- pf
+  expr_args <- lapply(pass_arg_nms, function(stri) {
+    parse(text = stri)[[1]]
+  })
+  names(expr_args) <- pass_arg_nms
   surv_expr <- as.call(c(
     quote(survival::Surv),
-    pass_arg_list
+    expr_args
   ))
   eval(surv_expr, envir = eval_env)
 }
