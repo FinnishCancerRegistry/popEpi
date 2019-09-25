@@ -26,21 +26,23 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
                breaks = BL["per"])
   
   fb <- setdiff(BL$fot, 0)
-  su.km  <- survival::survfit(Surv(time=fot, time2=fot+lex.dur, lex.Xst!="alive") ~ 1, data = x)
+  su.km  <- survival::survfit(Surv(time=fot, time2=fot+lex.dur, event = lex.Xst!="alive") ~ 1, data = x, id = lex.id)
   su.km  <- summary(su.km, times = fb)
   su.km  <- cbind(data.table(time = su.km$time), data.table(su.km$surv))
   
-  su.cif <- survival::survfit(Surv(time=fot, time2=fot+lex.dur, lex.Xst)~1, data=x)
+  su.cif <- survival::survfit(Surv(time=fot, time2=fot+lex.dur, event = lex.Xst)~1, data=x, id = lex.id)
   su.cif <- summary(su.cif, times = fb)
   ## see issue #125
   prev_var <- intersect(names(su.cif), c("prev", "pstate"))
   stopifnot(length(prev_var) == 1L)
-  su.cif <- cbind(data.table(time = su.cif$time), data.table(su.cif[[prev_var]]))
+  curve_nms <- dimnames(su.cif[["table"]])[[1]]
+  keep_curve <- curve_nms %in% c("canD", "othD")
+  cif <- cbind(data.table(time = su.cif$time), data.table(su.cif[[prev_var]][, keep_curve]))
   
   expect_equal(st[, surv.obs] ,  su.km[, V1], tolerance = 0.0032, scale=1)
   
-  expect_equal(su.cif$V1, st$CIF_canD, tolerance = 0.0022, scale=1)
-  expect_equal(su.cif$V2, st$CIF_othD, tolerance = 0.0011, scale=1)
+  expect_equal(cif$V1, st$CIF_canD, tolerance = 0.0022, scale=1)
+  expect_equal(cif$V2, st$CIF_othD, tolerance = 0.0011, scale=1)
 })
 
 
