@@ -1,7 +1,7 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
 Authors@R: c(
-    person("Joonas", "Miettinen", email = "joonas.miettinen@cancer.fi", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-8624-6754")), 
+    person("Joonas", "Miettinen", email = "joonas.miettinen@cancer.fi", role = c("cre", "aut"), comment = c(ORCID = "0000-0001-8624-6754")), 
     person("Matti", "Rantanen", email = "matti.rantanen@statfinn.com", role = "aut"), 
     person("Karri", "Seppa", email = "karri.seppa@cancer.fi", role = "ctb") 
     )

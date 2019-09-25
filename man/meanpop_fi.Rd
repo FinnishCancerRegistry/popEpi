@@ -20,8 +20,6 @@ Statistics Finland
 Mean population counts in Finland year, sex, and age group.
 }
 \seealso{
-\href{http://pxnet2.stat.fi/PXWeb/pxweb/fi/StatFin/StatFin__vrm__vaerak/071_vaerak_tau_109.px/?rxid=81efcb98-00c6-46ba-9f8f-8bc6f110895f}{Table on the web}
-
 Other popEpi data: \code{\link{ICSS}},
   \code{\link{popmort}}, \code{\link{sibr}},
   \code{\link{sire}}, \code{\link{stdpop101}},

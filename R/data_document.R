@@ -170,7 +170,6 @@ NULL
 #'  (counted at 1990-01-01 and 1991-01-01, respectively)
 #' }
 #' @name meanpop_fi
-#' @family popEpi data 
-#' @seealso \href{http://pxnet2.stat.fi/PXWeb/pxweb/fi/StatFin/StatFin__vrm__vaerak/071_vaerak_tau_109.px/?rxid=81efcb98-00c6-46ba-9f8f-8bc6f110895f}{Table on the web}
+#' @family popEpi data
 NULL
 
