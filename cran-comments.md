@@ -11,6 +11,7 @@
 
 * R-oldrel --- OK
 * R-release --- OK
+* R-devel --- OK
 
 ## R-hub checks
 
