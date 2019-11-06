@@ -17,14 +17,6 @@ can be conveniently coerced to a long-format \code{data.frame}.
 However, the names and levels of variables in the result
 may not match names and levels of variables in your data.
 }
-\examples{
-if (requireNamespace("relsurv", quietly = TRUE)) {
-  library("data.table")
-  data(slopop, package = "relsurv")
-  dt <- as.data.table(slopop)
-  dt
-}
-}
 \seealso{
 \code{\link[survival]{ratetable}}, 
 \code{\link{as.data.frame.ratetable}}

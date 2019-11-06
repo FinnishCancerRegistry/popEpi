@@ -552,12 +552,6 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
 #' @author Joonas Miettinen
 #' @param x a \code{ratetable}
 #' @param ... unused but added for compatibility with \code{as.data.frame}
-#' @examples
-#' if (requireNamespace("relsurv", quietly = TRUE)) {
-#'   data(slopop, package = "relsurv")
-#'   df <- as.data.frame(slopop)
-#'   head(df)
-#' }
 
 #' @seealso 
 #' \code{\link[survival]{ratetable}}, 
@@ -565,10 +559,7 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
 #'
 #' @export
 as.data.frame.ratetable <- function(x, ...) {
-  dimids <- attr(x, "dimid")
-  x <- as.data.frame.table(as.table(as.array(x)))
-  names(x) <- c(dimids, "haz")
-  x[]
+  stop("This function is deprecated; see ?ratetable_to_array")
 }
 
 
@@ -587,21 +578,10 @@ as.data.frame.ratetable <- function(x, ...) {
 #' \code{\link[survival]{ratetable}}, 
 #' \code{\link{as.data.frame.ratetable}}
 #'
-#' @examples
-#' if (requireNamespace("relsurv", quietly = TRUE)) {
-#'   library("data.table")
-#'   data(slopop, package = "relsurv")
-#'   dt <- as.data.table(slopop)
-#'   dt
-#' }
 
 #' @export
 as.data.table.ratetable <- function(x, ...) {
-  dimids <- attr(x, "dimid")
-  x <- as.data.table(as.table(as.array(x)), ...)
-  x[, names(x) := lapply(.SD, robust_values, messages = FALSE, force = FALSE)]
-  setnames(x, c(dimids, "haz"))
-  x[]
+  stop("This function is deprecated; see ?ratetable_to_array")
 }
 
 
@@ -620,15 +600,7 @@ as.data.table.ratetable <- function(x, ...) {
 #' \code{\link{as.data.frame.ratetable}}
 #'
 longDF2ratetable <- function(DF, value.var = "haz", by.vars = setdiff(names(DF), value.var)) {
-  univals <- lapply(DF[, by.vars], unique)
-  names(univals) <- NULL
-  dimvec <- sapply(DF[,by.vars], function(x) {length(unique(x))},
-                   simplify=TRUE)
-  ar <- array(DF[, value.var], dim = dimvec)
-  dimnames(ar) <- univals
-  attr(ar, "class") <- "ratetable"
-  attr(ar, "dimid") <- colnames(DF)
-  ar
+  stop("This function is deprecated; see ?array_to_ratetable")
 }
 
 temp_var_names <- function(n = 1L, avoid = NULL, length = 10L) {
