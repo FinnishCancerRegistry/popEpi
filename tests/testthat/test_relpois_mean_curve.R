@@ -3,15 +3,15 @@ context("test rpcurve vs. survtab congruence")
 test_that("rpcurve and survtab e2 are approximately congruent", {
   skip_on_cran()
   
-  sire2 <- copy(sire)[dg_date < ex_date, ]
-  sire2[, agegr := cut(dg_age, breaks = c(0,45,70,Inf))]
+  sire2 <- popEpi::sire[dg_date < ex_date, ]
+  sire2[, "agegr" := cut(dg_age, breaks = c(0,45,70,Inf))]
   
   fb <- c(0,3/12,6/12,1:8,10)
   x <- lexpand(sire2, birth  = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2,
                fot=fb,  pophaz=data.table(popEpi::popmort))
-  setDT(x)
-  setattr(x, "class", c("Lexis", "data.table", "data.frame"))
+  data.table::setDT(x)
+  data.table::setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   rp <- relpois(x, formula = lex.Xst %in% 1:2 ~ -1 + FOT+agegr)
   mc <- rpcurve(rp)
   

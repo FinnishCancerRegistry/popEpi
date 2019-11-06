@@ -3,17 +3,14 @@
 #' @description Fit a marginal relative survival curve based on a \code{relpois} fit
 #' @param object a \code{relpois} object
 #' @details
-#' \pkg{popEpi} version 0.2.1 supported confidence intervals but due to lack
-#' of testing this is disabled until the intervals are subjected to more rigorous testing.
-#' 
-#' Currently only estimates a marginal curve, i.e. the average of all
+#' Estimates a marginal curve, i.e. the average of all
 #' possible individual curves. 
 #' 
 #' Only supported when the reserved \code{FOT} variable was used in \code{relpois}.
 #' Computes a curve for each unique combination of covariates (e.g. 4 sets) 
 #' and returns a weighted average curve based on the counts
 #' of subjects for each combination (e.g. 1000, 125, 50, 25 respectively). 
-#' Fairly fast when only factor variables have been used, otherwise
+#' Fairly fast when only categorical variables have been used, otherwise
 #' go get a cup of coffee.
 #' 
 #' If delayed entry is present in data due to period analysis limiting,
@@ -59,19 +56,22 @@
 #' 
 #' 
 
-rpcurve <- function(object = NULL) {
+rpcurve <- function(object) {
   
+  ## appease R CMD CHECK
   Tstart <- FOT <- uni_id <- uni_n <- uni_w <- 
-    lo <- hi <- lex.Xst <- NULL  ## APPEASE R CMD CHECK
+    lo <- hi <- lex.Xst <- est <- fot <- pop.haz <- delta <- 
+    Tstop <- Tstar <- lex.id <- fot <- lex.multi <- pyrs <- NULL
+  
   ## sanity checks -------------------------------------------------------------
-  if (is.null(object)) stop("no relative Poisson excess hazard model given")
+  if (!inherits(object, "relpois")) {
+    stop("object does not have class 'relpois'; see ?relpois")
+  }
   
-  if (!inherits(object, "relpois")) stop("not a relpois object")
+  if (!"FOT" %in% all.vars(object$formula)) {
+    stop("No FOT variable in model formula; see Details in ?rpcurve")
+  }
   
-  if (!"FOT" %in% all.vars(object$formula)) stop("No FOT variable in model formula")
-  
-  est <- fot <- pop.haz <- delta <- Tstop <- Tstar <- lex.id <- 
-    fot <- lex.multi <- pyrs <- NULL ## appease R CMD CHECK
   
   ## collate surv.ints, breaks, deltas -----------------------------------------
   fot_levels <- as.factor(sort(as.character(unique(object$model$FOT))))
@@ -97,8 +97,10 @@ rpcurve <- function(object = NULL) {
   setcolsnull(modmat, keep = c(all.vars(object$formula)))
   setcolsnull(modmat, "FOT")
   modmat <- cbind(fb[, list(FOT=FOT, lex.dur = delta)], modmat)
-  modmat[, lex.Xst := factor(levels(as.factor(lex.Xst))[1])]
-  modmat[, order := 1:.N]
+  modmat[, "lex.Xst_factor" := factor(levels(as.factor(lex.Xst))[1])]
+  modmat[, "lex.Xst" := NULL]
+  data.table::setnames(modmat, "lex.Xst_factor", "lex.Xst")
+  modmat[, "order" := 1:.N]
   
   ## unique sets of covariates only
   umodmat <- unique(modmat, by = setdiff(names(modmat), c("lex.dur","lex.Xst","order")))
