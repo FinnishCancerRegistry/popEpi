@@ -5,8 +5,8 @@
 \title{World standard population by 1 year age groups from 1 to 101. Sums to 100 000.}
 \format{data.table with columns
 \itemize{
- \item \code{world_std} weight that sums to 100000 (numeric)
- \item \code{agegroup} age group from 1 to 101 (numeric)
+\item \code{world_std} weight that sums to 100000 (numeric)
+\item \code{agegroup} age group from 1 to 101 (numeric)
 }}
 \source{
 Standard population is from:

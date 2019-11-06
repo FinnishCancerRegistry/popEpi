@@ -21,8 +21,8 @@ which can be used in e.g. \pkg{survival}'s expected survival computations
 and \pkg{relsurv}'s relative survival computations.
 }
 \seealso{
-\code{\link[survival]{ratetable}}, 
-\code{\link{as.data.table.ratetable}}, 
+\code{\link[survival]{ratetable}},
+\code{\link{as.data.table.ratetable}},
 \code{\link{as.data.frame.ratetable}}
 }
 \author{

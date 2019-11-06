@@ -11,7 +11,7 @@ setaggre(x, values = NULL, by = NULL, breaks = NULL)
 
 \item{values}{a character string vector; the names of value variables}
 
-\item{by}{a character string vector; the names of variables by which 
+\item{by}{a character string vector; the names of variables by which
 \code{values} have been tabulated}
 
 \item{breaks}{a list of breaks, where each element is a breaks vector
@@ -27,8 +27,8 @@ information. \code{setaggre} modifies in place without taking any copies.
 Retains all other attributes.
 }
 \details{
-\code{setaggre} sets \code{x} to the \code{aggre} class in place 
-without taking a copy as e.g. \code{as.data.frame.XXX} functions do; see e.g. 
+\code{setaggre} sets \code{x} to the \code{aggre} class in place
+without taking a copy as e.g. \code{as.data.frame.XXX} functions do; see e.g.
 \code{\link[data.table]{setDT}}.
 }
 \examples{

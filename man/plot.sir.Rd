@@ -34,25 +34,25 @@
 Plot SIR estimates with error bars
 }
 \details{
-Plot SIR estimates and confidence intervals 
+Plot SIR estimates and confidence intervals
 \itemize{
- \item univariate - plots SIR with univariate confidence intervals
- \item model - plots SIR with Poisson modelled confidence intervals
+\item univariate - plots SIR with univariate confidence intervals
+\item model - plots SIR with Poisson modelled confidence intervals
 }
 
 \strong{Customize}
 Normal plot parameters can be passed to \code{plot}. These can be a vector when plotting error bars:
 \itemize{
- \item \code{pch} - point type
- \item \code{lty} - line type
- \item \code{col} - line/point colour 
- \item \code{lwd} - point/line size
+\item \code{pch} - point type
+\item \code{lty} - line type
+\item \code{col} - line/point colour
+\item \code{lwd} - point/line size
 }
 
 \strong{Tips for plotting splines}
-It's possible to use \code{plot} to first draw the 
-confidence intervals using specific line type or colour and then plotting 
-again the estimate using \code{lines(... , conf.int = FALSE)} with different 
+It's possible to use \code{plot} to first draw the
+confidence intervals using specific line type or colour and then plotting
+again the estimate using \code{lines(... , conf.int = FALSE)} with different
 settings. This works only when \code{plot.type} is 'splines'.
 }
 \examples{

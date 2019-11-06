@@ -40,9 +40,9 @@ Note that this function returns the intervals and NOT the time points
 corresponding to quantiles / estimates corresponding to time points.
 If you want precise estimates at time points that are not interval breaks,
 add the time points as breaks and re-estimate the survival time function.
-In interval-based estimation, the estimates denote e.g. probability of 
+In interval-based estimation, the estimates denote e.g. probability of
 dying \emph{during} the interval, so time points within the intervals
-are not usually considered at all. See e.g. Seppa, Dyba, and Hakulinen 
+are not usually considered at all. See e.g. Seppa, Dyba, and Hakulinen
 (2015).
 }
 \examples{
@@ -80,8 +80,8 @@ x <- as.data.frame(st)
 
 }
 \references{
-Seppa K., Dyba T. and Hakulinen T.: Cancer Survival, 
-Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015 
+Seppa K., Dyba T. and Hakulinen T.: Cancer Survival,
+Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015
 doi: 10.1016/B978-0-12-801238-3.02745-8.
 }
 \seealso{

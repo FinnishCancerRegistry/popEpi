@@ -20,7 +20,7 @@ curves for all strata in an object created by \code{\link{survmean}}
 \details{
 This function is intended to be a workhorse for \code{\link{plot.survmean}}.
 If you want finer control over the plotted curves, extract the curves from
-the \code{survmean} output using 
+the \code{survmean} output using
 
 \code{attr(x, "curves")}
 

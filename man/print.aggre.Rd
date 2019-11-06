@@ -14,8 +14,8 @@ before printing; use this to limit to a certain stratum. E.g.
 \code{subset = sex == "male"}}
 
 \item{...}{arguments passed to \code{print.data.table}; try e.g.
-\code{top = 2} for numbers of rows in head and tail printed 
-if the table is large, 
+\code{top = 2} for numbers of rows in head and tail printed
+if the table is large,
 \code{nrow = 100} for number of rows to print, etc.}
 }
 \description{

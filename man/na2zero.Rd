@@ -14,7 +14,7 @@ if \code{NULL}, uses all variable names in \code{DT}}
 }
 \description{
 Given a \code{data.table DT}, replaces any \code{NA} values
-in the variables given in \code{vars} in \code{DT}. Takes a copy of the 
+in the variables given in \code{vars} in \code{DT}. Takes a copy of the
 original data and returns the modified copy.
 }
 \details{

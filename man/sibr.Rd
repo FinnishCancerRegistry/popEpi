@@ -5,12 +5,12 @@
 \title{sibr - a simulated cohort of Finnish female breast cancer patients}
 \format{data.table with columns
 \itemize{
- \item sex - gender of the patient (1 = female)
- \item bi_date - date of birth
- \item dg_date - date of cancer diagnosis
- \item ex_date - date of exit from follow-up (death or censoring)
- \item status  - status of the person at exit; 0 alive; 1 dead due to pertinent cancer; 2 dead due to other causes
- \item dg_age  - age at diagnosis expressed as fractional years
+\item sex - gender of the patient (1 = female)
+\item bi_date - date of birth
+\item dg_date - date of cancer diagnosis
+\item ex_date - date of exit from follow-up (death or censoring)
+\item status  - status of the person at exit; 0 alive; 1 dead due to pertinent cancer; 2 dead due to other causes
+\item dg_age  - age at diagnosis expressed as fractional years
 }}
 \source{
 The Finnish Cancer Registry

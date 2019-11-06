@@ -3,17 +3,22 @@
 
 
 
-#' @md
 #' @title `array`s, `data.frame`s and `ratetable`s
 #' @description
 #' Utilities to transform objects between `array`, `data.frame`, and
 #' [survival::ratetable].
-#' @param x (mandatory, no default)
+#' @param x `[data.frame, data.table, array, ratetable]` (mandatory, no default)
 #' 
-#' - `array_to_long_df`: an `array`
 #' - `long_df_to_array`: a `data.frame`
+#' - `long_df_to_ratetable`: a `data.frame`
+#' - `long_dt_to_array`: a `data.table`
+#' - `long_dt_to_ratetable`: a `data.table`
+#' - `array_to_long_df`: an `array`
+#' - `array_to_long_dt`: an `array`
 #' - `array_to_ratetable`: an `array`
 #' - `ratetable_to_array`: a [survival::ratetable]
+#' - `ratetable_to_long_df`: a [survival::ratetable]
+#' - `ratetable_to_long_dt`: a [survival::ratetable]
 #' @name array_df_ratetable_utils
 #' @examples
 #' 
@@ -27,6 +32,100 @@
 #' identical(sort(long_dt[["haz"]]), sort(long_df2[["value"]]))
 #' 
 
+
+
+#' @rdname array_df_ratetable_utils
+#' @export
+#' @param stratum.col.nms `[character]` (mandatory, no default)
+#' 
+#' a vector of column names in `x` by which values are stratified
+#' 
+#' @param value.col.nm `[character]` (mandatory, no default)
+#' 
+#' name of column in `x` containing values (these will be contents of the
+#' array)
+#' @details
+#' - `long_df_to_array`: converts a long-format `data.frame` to an `array`
+#'   with one or more dimensions
+long_df_to_array <- function(x, stratum.col.nms, value.col.nm) {
+  stopifnot(
+    is.data.frame(x),
+    
+    is.character(stratum.col.nms),
+    length(stratum.col.nms) >= 1,
+    stratum.col.nms %in% names(x),
+    !duplicated(stratum.col.nms),
+    
+    length(value.col.nm) == 1,
+    value.col.nm %in% names(x)
+  )
+  
+  dn <- lapply(stratum.col.nms, function(col_nm) {
+    sort(unique(x[[col_nm]]))
+  })
+  names(dn) <- stratum.col.nms
+  
+  d <- vapply(dn, length, integer(1L))
+  n_dims <- length(d)
+  
+  arr <- array(x[[value.col.nm]][0L], d)
+  
+  wh <- do.call(cbind, lapply(stratum.col.nms, function(col_nm) {
+    match(x[[col_nm]], dn[[col_nm]])
+  }))
+  arr[wh] <- x[[value.col.nm]]
+  
+  dimnames(arr) <- dn
+  arr
+}
+
+#' @rdname array_df_ratetable_utils
+#' @export
+#' @details
+#' - `long_df_to_ratetable`: calls `long_df_to_array` and then 
+#'   `array_to_ratetable`
+long_df_to_ratetable <- function(
+  x, 
+  stratum.col.nms, 
+  value.col.nm, 
+  dim.types, 
+  cut.points = NULL
+) {
+  arr <- long_df_to_array(x = x, stratum.col.nms = stratum.col.nms, 
+                          value.col.nm = value.col.nm)
+  array_to_ratetable(x = arr, dim.types = dim.types, cut.points = cut.points)
+}
+
+
+#' @rdname array_df_ratetable_utils
+#' @export
+#' @details
+#' - `long_dt_to_array`: simply asserts that `x` is a `data.table` and 
+#' calls `long_df_to_array`
+#' @importFrom data.table is.data.table
+long_dt_to_array <- function(x, stratum.col.nms, value.col.nm) {
+  stopifnot(data.table::is.data.table(x))
+  long_df_to_array(x, stratum.col.nms, value.col.nm)
+}
+
+
+
+#' @rdname array_df_ratetable_utils
+#' @export
+#' @details
+#' - `long_dt_to_ratetable`: calls `long_dt_to_array` and then 
+#'   `array_to_ratetable`
+long_dt_to_ratetable <- function(
+  x, 
+  stratum.col.nms, 
+  value.col.nm, 
+  dim.types, 
+  cut.points = NULL
+) {
+  arr <- long_dt_to_array(x = x, stratum.col.nms = stratum.col.nms, 
+                          value.col.nm = value.col.nm)
+  array_to_ratetable(x = arr, dim.types = dim.types, cut.points = cut.points)
+}
 
 #' @rdname array_df_ratetable_utils
 #' @export
@@ -93,63 +192,6 @@ array_to_long_dt <- function(x) {
 
 
 
-#' @rdname array_df_ratetable_utils
-#' @export
-#' @param stratum.col.nms `[character]` (mandatory, no default)
-#' 
-#' a vector of column names in `x` by which values are stratified
-#' 
-#' @param value.col.nm `[character]` (mandatory, no default)
-#' 
-#' name of column in `x` containing values (these will be contents of the
-#' array)
-#' @details
-#' - `long_df_to_array`: converts a long-format `data.frame` to an `array`
-#'   with one or more dimensions
-long_df_to_array <- function(x, stratum.col.nms, value.col.nm) {
-  stopifnot(
-    is.data.frame(x),
-    
-    is.character(stratum.col.nms),
-    length(stratum.col.nms) >= 1,
-    stratum.col.nms %in% names(x),
-    !duplicated(stratum.col.nms),
-    
-    length(value.col.nm) == 1,
-    value.col.nm %in% names(x)
-  )
-  
-  dn <- lapply(stratum.col.nms, function(col_nm) {
-    sort(unique(x[[col_nm]]))
-  })
-  names(dn) <- stratum.col.nms
-  
-  d <- vapply(dn, length, integer(1L))
-  n_dims <- length(d)
-  
-  arr <- array(x[[value.col.nm]][0L], d)
-  
-  wh <- do.call(cbind, lapply(stratum.col.nms, function(col_nm) {
-    match(x[[col_nm]], dn[[col_nm]])
-  }))
-  arr[wh] <- x[[value.col.nm]]
-  
-  dimnames(arr) <- dn
-  arr
-}
-
-
-#' @rdname array_df_ratetable_utils
-#' @export
-#' @details
-#' - `long_dt_to_array`: simply asserts that `x` is a `data.table` and 
-#' calls `long_df_to_array`
-#' @importFrom data.table is.data.table
-long_dt_to_array <- function(x, stratum.col.nms, value.col.nm) {
-  stopifnot(data.table::is.data.table(x))
-  long_df_to_array(x, stratum.col.nms, value.col.nm)
-}
-
 
 
 #' @rdname array_df_ratetable_utils
@@ -179,7 +221,11 @@ array_to_ratetable <- function(x, dim.types, cut.points = NULL) {
       if (dim.types[k] == 1L) {
         return(NULL)
       }
-      as.integer(dimnames(x)[[k]])
+      cp <- as.numeric(dimnames(x)[[k]])
+      if (all(cp %% 1L == 0L)) {
+        cp <- as.integer(cp)
+      }
+      cp
     })
   }
   
@@ -206,6 +252,25 @@ ratetable_to_array <- function(x) {
   array(x, dim = dim(x), dimnames = dimnames(x))
 }
 
+#' @rdname array_df_ratetable_utils
+#' @export
+#' @details
+#' - `ratetable_to_long_df`: calls `ratetable_to_array` and then
+#'   `array_to_long_df`
+#' @importFrom data.table copy setattr
+ratetable_to_long_df <- function(x) {
+  array_to_long_df(ratetable_to_array(x))
+}
+
+#' @rdname array_df_ratetable_utils
+#' @export
+#' @details
+#' - `ratetable_to_long_dt`: calls `ratetable_to_array` and then
+#'   `array_to_long_dt`
+#' @importFrom data.table copy setattr
+ratetable_to_long_dt <- function(x) {
+  array_to_long_dt(ratetable_to_array(x))
+}
 
 
 

@@ -11,14 +11,14 @@ This document explains using such data sets in this package.
 \details{
 Population hazard data sets (pophaz for short) in \pkg{popEpi} should
 be \code{data.frame}s in the "long" format where one of the columns must be
-named \code{haz} (for hazard), and other columns define the values or 
+named \code{haz} (for hazard), and other columns define the values or
 levels in variables relating to subjects in your data. For example,
 \code{\link{popmort}} contains Finnish population mortality hazards
 by sex, calendar year, and 1-year age group.
 
 \tabular{rrrr}{
 \code{sex} \tab \code{year} \tab \code{agegroup} \tab \code{haz} \cr
-0 \tab 1951 \tab 0 \tab 0.036363176\cr  
+0 \tab 1951 \tab 0 \tab 0.036363176\cr
 0 \tab 1951 \tab 1 \tab 0.003616547\cr
 0 \tab 1951 \tab 2 \tab 0.002172384\cr
 0 \tab 1951 \tab 3 \tab 0.001581249\cr
@@ -28,14 +28,14 @@ by sex, calendar year, and 1-year age group.
 
 The names of the columns should match to the names of the variables
 that you have in your subject-level data. Time variables in your pophaz
-may also correspond to \code{Lexis} time scales; see 
+may also correspond to \code{Lexis} time scales; see
 \code{\link{survtab}}.
 
 Any time variables (as they usually have) should be coded consistently:
 When using fractional years in your data, the time variables in your pophaz
 must also be coded in fractional years. When using e.g. \code{Date}s in your
 data, ensure that the pophaz time variables are coded at the level of days
-(or \code{Date}s for calendar time). 
+(or \code{Date}s for calendar time).
 
 The \code{haz} variable in your pophaz should also be coded consistently
 with the used time variables. E.g. \code{haz} values in life-tables

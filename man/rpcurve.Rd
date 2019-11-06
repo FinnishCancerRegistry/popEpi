@@ -17,12 +17,12 @@ Fit a marginal relative survival curve based on a \code{relpois} fit
 of testing this is disabled until the intervals are subjected to more rigorous testing.
 
 Currently only estimates a marginal curve, i.e. the average of all
-possible individual curves. 
+possible individual curves.
 
 Only supported when the reserved \code{FOT} variable was used in \code{relpois}.
-Computes a curve for each unique combination of covariates (e.g. 4 sets) 
+Computes a curve for each unique combination of covariates (e.g. 4 sets)
 and returns a weighted average curve based on the counts
-of subjects for each combination (e.g. 1000, 125, 50, 25 respectively). 
+of subjects for each combination (e.g. 1000, 125, 50, 25 respectively).
 Fairly fast when only factor variables have been used, otherwise
 go get a cup of coffee.
 

@@ -22,10 +22,10 @@
 Plot SIR spline lines with R base graphics
 }
 \details{
-In \code{lines.sirspline} most of graphical parameters is user 
+In \code{lines.sirspline} most of graphical parameters is user
 adjustable.
 Desired spline variable can be selected with \code{select.spline} and only one
-can be plotted at a time. The spline variable can include 
+can be plotted at a time. The spline variable can include
 several levels, e.g. gender (these are the levels of \code{print}
 from \code{sirspline}). All levels are printed by default, but a
 specific level can be selected using argument

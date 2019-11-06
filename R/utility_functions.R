@@ -559,7 +559,7 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
 #'
 #' @export
 as.data.frame.ratetable <- function(x, ...) {
-  stop("This function is deprecated; see ?ratetable_to_array")
+  stop("This function is deprecated; see ?ratetable_to_long_df")
 }
 
 
@@ -581,7 +581,7 @@ as.data.frame.ratetable <- function(x, ...) {
 
 #' @export
 as.data.table.ratetable <- function(x, ...) {
-  stop("This function is deprecated; see ?ratetable_to_array")
+  stop("This function is deprecated; see ?ratetable_to_long_dt")
 }
 
 
@@ -600,7 +600,7 @@ as.data.table.ratetable <- function(x, ...) {
 #' \code{\link{as.data.frame.ratetable}}
 #'
 longDF2ratetable <- function(DF, value.var = "haz", by.vars = setdiff(names(DF), value.var)) {
-  stop("This function is deprecated; see ?array_to_ratetable")
+  stop("This function is deprecated; see ?long_df_to_ratetable")
 }
 
 temp_var_names <- function(n = 1L, avoid = NULL, length = 10L) {

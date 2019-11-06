@@ -10,7 +10,7 @@ get.yrs(x, year.length = "approx", ...)
 \item{x}{a \code{Date} object, or anything that \code{link{as.Date}}
 accepts}
 
-\item{year.length}{character string, either \code{'actual'} or 
+\item{year.length}{character string, either \code{'actual'} or
 \code{'approx'}; can be abbreviated; see Details}
 
 \item{...}{additional arguments passed on to \code{\link{as.Date}};
@@ -18,29 +18,28 @@ typically \code{format} when \code{x} is a character string variable,
 and \code{origin} when \code{x} is numeric}
 }
 \description{
-Using Date objects, calculates given 
+Using Date objects, calculates given
 dates as fractional years.
 }
 \details{
-\code{x} should preferably be a \code{date}, \code{Date} or \code{IDate} 
-object, although it can also be a character string variable 
-which is coerced internally to \code{Date} format 
+\code{x} should preferably be a \code{date}, \code{Date} or \code{IDate}
+object, although it can also be a character string variable
+which is coerced internally to \code{Date} format
 using \code{\link{as.Date.character}}.
 
-When \code{ year.length = 'actual' }, fractional years are calculated as 
+When \code{ year.length = 'actual' }, fractional years are calculated as
 \code{ year + (day_in_year-1)/365 } for non-leap-years
-and as \code{ year + (day_in_year-1)/366 } for leap years. 
+and as \code{ year + (day_in_year-1)/366 } for leap years.
 If \code{ year.length = 'approx' }, fractional years are always
-calculated as in \code{ year + (day_in_year-1)/365.242199 }. 
+calculated as in \code{ year + (day_in_year-1)/365.242199 }.
 
 There is a slight difference, then, between the two methods
 when calculating durations between fractional years. For
 meticulous accuracy one might instead want to calculate durations using
 dates (days) and convert the results to fractional years.
- 
-Note that dates are effectively converted to fractional years at 
-\code{ 00:00:01 } o'clock:
 
+Note that dates are effectively converted to fractional years at
+\code{ 00:00:01 } o'clock:
 
 \code{ get.yrs("2000-01-01") = 2000 }, and
 \code{ get.yrs("2000-01-02") = 2000 + 1/365.242199 }.

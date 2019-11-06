@@ -8,7 +8,7 @@ rate(data, obs = NULL, pyrs = NULL, print = NULL, adjust = NULL,
   weights = NULL, subset = NULL)
 }
 \arguments{
-\item{data}{aggregated data (see e.g. \code{\link{lexpand}}, 
+\item{data}{aggregated data (see e.g. \code{\link{lexpand}},
 \code{\link{aggre}} if you have subject-level data)}
 
 \item{obs}{observations variable name in data.
@@ -29,7 +29,7 @@ rate(data, obs = NULL, pyrs = NULL, print = NULL, adjust = NULL,
 
 \item{weights}{typically a list of weights or a \code{character} string
 specifying an age group standardization scheme; see
-the \link[=direct_standardization]{dedicated help page} 
+the \link[=direct_standardization]{dedicated help page}
 and examples.}
 
 \item{subset}{a logical expression to subset data.}
@@ -37,8 +37,8 @@ and examples.}
 \value{
 Returns a \code{data.table} with observations, person-years, rates and
 adjusted rates, if available. Results are stratified by \code{print}.
-Adjusted rates are identified with suffix \code{.adj} and  
-\code{.lo} and \code{.hi} are for confidence intervals lower and upper 
+Adjusted rates are identified with suffix \code{.adj} and
+\code{.lo} and \code{.hi} are for confidence intervals lower and upper
 95\% bounds, respectively.
 The prefix \code{SE.} stands for standard error.
 }
@@ -47,12 +47,12 @@ The prefix \code{SE.} stands for standard error.
 preloaded weights data or user specified weights.
 }
 \details{
-Input data needs to be in aggregated format with observations 
+Input data needs to be in aggregated format with observations
 and person-years. For individual data use \code{\link{lexpand}}, or
 \code{\link{ltable}} and merge person-years manually.
 
 The confidence intervals are based on the normal approximation of the logarithm of the rate.
-The variance of the log rate that is used to derive the confidence intervals 
+The variance of the log rate that is used to derive the confidence intervals
 is derived using the delta method.
 }
 \examples{

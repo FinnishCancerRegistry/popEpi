@@ -16,7 +16,7 @@ sir_ag(x, obs = "from0to1", print = attr(x, "aggre.meta")$by,
   exp = "d.exp", pyrs = "pyrs", ...)
 }
 \arguments{
-\item{x}{Data set e.g. \code{aggre} or \code{Lexis} object 
+\item{x}{Data set e.g. \code{aggre} or \code{Lexis} object
 (see: \code{\link{lexpand}})}
 
 \item{obs}{Variable name of the observed cases in the data set}
@@ -27,7 +27,7 @@ sir_ag(x, obs = "from0to1", print = attr(x, "aggre.meta")$by,
 
 \item{print}{Variables or expression to stratify the results}
 
-\item{conf.type}{select confidence interval type: (default=) `profile`, `wald`, `univariate`}
+\item{conf.type}{select confidence interval type: (default=) \code{profile}, \code{wald}, \code{univariate}}
 
 \item{test.type}{Test for equal SIRs. Test available are 'homogeneity' and 'trend'}
 
@@ -43,18 +43,18 @@ sir_ag(x, obs = "from0to1", print = attr(x, "aggre.meta")$by,
 A sir object
 }
 \description{
-Calculate Standardized Mortality Ratios (SMRs) using 
+Calculate Standardized Mortality Ratios (SMRs) using
 a single data set that includes
 observed and expected cases and additionally person-years.
 
-\code{sir_lex} solves SMR from a \code{\link{Lexis}} object 
+\code{sir_lex} solves SMR from a \code{\link{Lexis}} object
 calculated with \code{lexpand}.
 
-\code{sir_ag} solves SMR from a \code{\link{aggre}} object 
+\code{sir_ag} solves SMR from a \code{\link{aggre}} object
 calculated using \code{\link{lexpand}}.
 }
 \details{
-These functions are intended to calculate SMRs from a single data set 
+These functions are intended to calculate SMRs from a single data set
 that includes both observed and expected number of cases. For example utilizing the
 argument \code{pop.haz} of the \code{\link{lexpand}}.
 

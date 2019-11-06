@@ -35,14 +35,14 @@ in both populations.
 
 \strong{Formula}
 
-The observed number of first sir \code{O1} is considered as a Binomial variable with sample 
-size of \code{O1+O2}. The confidence intervals for Binomial proportion \code{A} 
-is solved using \code{exact} or \code{asymptotic} 
-method. Now the CI for ratio \code{O1/O2} is \code{B = A/(1 - A)}. And further the CI for SIR/SMR 
+The observed number of first sir \code{O1} is considered as a Binomial variable with sample
+size of \code{O1+O2}. The confidence intervals for Binomial proportion \code{A}
+is solved using \code{exact} or \code{asymptotic}
+method. Now the CI for ratio \code{O1/O2} is \code{B = A/(1 - A)}. And further the CI for SIR/SMR
 is B*E2/E1. (Ederer and Mantel)
 }
 \note{
-Parameter \code{alternative} is always \code{two.sided} when parameter 
+Parameter \code{alternative} is always \code{two.sided} when parameter
 \code{type} is set to \code{asymptotic}.
 }
 \examples{

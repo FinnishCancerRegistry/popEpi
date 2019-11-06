@@ -14,8 +14,8 @@
 in \code{x}; e.g. \code{y = "surv.obs"};
 if \code{NULL}, picks last survival variable column in order in \code{x}}
 
-\item{subset}{a logical condition; \code{obj} is subset accordingly 
-before plotting; use this for limiting to specific strata, 
+\item{subset}{a logical condition; \code{obj} is subset accordingly
+before plotting; use this for limiting to specific strata,
 e.g. \code{subset = sex == "male"}}
 
 \item{conf.int}{logical; if \code{TRUE}, also plots any confidence intervals

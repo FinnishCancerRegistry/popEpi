@@ -22,7 +22,7 @@ as.aggre(x, values = NULL, by = NULL, breaks = NULL, ...)
 
 \item{values}{a character string vector; the names of value variables}
 
-\item{by}{a character string vector; the names of variables by which 
+\item{by}{a character string vector; the names of variables by which
 \code{values} have been tabulated}
 
 \item{breaks}{a list of breaks, where each element is a breaks vector

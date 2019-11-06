@@ -13,17 +13,17 @@ splitLexisDT(lex, breaks, timeScale, merge = TRUE, drop = TRUE)
 
 \item{timeScale}{a character string; name of the time scale to split by}
 
-\item{merge}{logical; if \code{TRUE}, retains all variables 
+\item{merge}{logical; if \code{TRUE}, retains all variables
 from the original data - i.e. original variables are
 repeated for all the rows by original subject}
 
-\item{drop}{logical; if \code{TRUE}, drops all resulting rows 
+\item{drop}{logical; if \code{TRUE}, drops all resulting rows
 after expansion that reside outside the time window
 defined by the given breaks}
 }
 \value{
-A \code{data.table} or \code{data.frame} 
-(depending on \code{options("popEpi.datatable")}; see \code{?popEpi}) 
+A \code{data.table} or \code{data.frame}
+(depending on \code{options("popEpi.datatable")}; see \code{?popEpi})
 object expanded to accommodate split observations.
 }
 \description{
@@ -40,7 +40,7 @@ Unlike \code{splitLexis}, \code{splitLexisDT} drops observed time outside
 the roof and floor of \code{breaks} by default - with \code{drop = FALSE}
 the functions have identical behaviour.
 
-The \code{Lexis} time scale variables can be of any arbitrary 
+The \code{Lexis} time scale variables can be of any arbitrary
 format, e.g. \code{Date},
 fractional years (see \code{\link[Epi]{cal.yr}}) and \code{\link{get.yrs}},
 or other. However, using \code{date} variables (from package \pkg{date})

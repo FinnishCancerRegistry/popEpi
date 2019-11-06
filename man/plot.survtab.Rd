@@ -13,8 +13,8 @@
 \item{y}{survival a character vector of a variable names to plot;
 e.g. \code{y = "r.e2"}}
 
-\item{subset}{a logical condition; \code{obj} is subset accordingly 
-before plotting; use this for limiting to specific strata, 
+\item{subset}{a logical condition; \code{obj} is subset accordingly
+before plotting; use this for limiting to specific strata,
 e.g. \code{subset = sex == "male"}}
 
 \item{conf.int}{logical; if \code{TRUE}, also plots any confidence intervals
@@ -28,7 +28,7 @@ present in \code{obj} for variables in \code{y}}
 
 \item{xlab}{label for X-axis}
 
-\item{...}{additional arguments passed on to \code{plot} and 
+\item{...}{additional arguments passed on to \code{plot} and
 \code{lines.survtab}; e.g. \code{ylim} can be defined this way}
 }
 \description{
