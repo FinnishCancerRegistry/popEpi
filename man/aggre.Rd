@@ -4,11 +4,17 @@
 \alias{aggre}
 \title{Aggregation of split \code{Lexis} data}
 \usage{
-aggre(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
-  subset = NULL, verbose = FALSE)
+aggre(
+  lex,
+  by = NULL,
+  type = c("unique", "full"),
+  sum.values = NULL,
+  subset = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
-\item{lex}{a \code{Lexis} object split with e.g.
+\item{lex}{a \code{Lexis} object split with e.g. 
 \code{\link[Epi]{splitLexis}} or \code{\link{splitMulti}}}
 
 \item{by}{variables to tabulate (aggregate) by.
@@ -18,11 +24,11 @@ aggre(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
 \item{type}{determines output levels to which data is aggregated varying
 from returning only rows with \code{pyrs > 0} (\code{"unique"}) to
 returning all possible combinations of variables given in \code{aggre} even
-if those combinations are not represented in data (\code{"full"});
+if those combinations are not represented in data (\code{"full"}); 
 see Details}
 
 \item{sum.values}{optional: additional variables to sum by argument
-\code{by}. \link[=flexible_argument]{Flexible input}, typically e.g.
+ \code{by}. \link[=flexible_argument]{Flexible input}, typically e.g.
 \code{sum.values = c("V1", "V2")}}
 
 \item{subset}{a logical condition to subset by before computations;
@@ -32,23 +38,23 @@ e.g. \code{subset = area \%in\% c("A", "B")}}
 and some information useful for debugging along the aggregation process}
 }
 \value{
-A long \code{data.frame} or \code{data.table} of aggregated person-years
+A long \code{data.frame} or \code{data.table} of aggregated person-years 
 (\code{pyrs}), numbers of subjects at risk (\code{at.risk}), and events
-formatted \code{fromXtoY}, where \code{X} and \code{X} are states
-transitioning from and to or states at the end of each \code{lex.id}'s
-follow-up (implying \code{X} = \code{Y}). Subjects at risk are computed
-in the beginning of an interval defined by any Lexis time scales and
+formatted \code{fromXtoY}, where \code{X} and \code{X} are states 
+transitioning from and to or states at the end of each \code{lex.id}'s 
+follow-up (implying \code{X} = \code{Y}). Subjects at risk are computed 
+in the beginning of an interval defined by any Lexis time scales and 
 mentioned in \code{by}, but events occur at any point within an interval.
 
 When the data has been split along multiple time scales, the last
-time scale mentioned in \code{by} is considered to be the survival time
+time scale mentioned in \code{by} is considered to be the survival time 
 scale with regard to computing events. Time lines cut short by the
 extrema of non-survival-time-scales are considered to be censored
 ("transitions" from the current state to the current state).
 }
 \description{
-Aggregates a split \code{Lexis} object by given variables
-and / or expressions into a long-format table of person-years and
+Aggregates a split \code{Lexis} object by given variables 
+and / or expressions into a long-format table of person-years and 
 transitions / end-points. Automatic aggregation over time scales
 by which data has been split if the respective time scales are mentioned
 in the aggregation argument to e.g. intervals of calendar time, follow-up time
@@ -66,7 +72,7 @@ in the same function call.
 
 Here aggregation refers to computing person-years and the appropriate events
 (state transitions and end points in status) for the subjects in the data.
-Hence, it computes e.g. deaths (end-point and state transition) and
+Hence, it computes e.g. deaths (end-point and state transition) and 
 censorings (end-point) as well as events in a multi-state setting
 (state transitions).
 
@@ -76,29 +82,30 @@ with the columns \code{pyrs} and the appropriate transitions named as
 \code{fromXtoY}, e.g. \code{from0to0} and \code{from0to1} depending
 on the values of \code{lex.Cst} and \code{lex.Xst}.
 
+
 \strong{The by argument}
 
 The \code{by} argument determines the length of the table, i.e.
-the combinations of variables to which data is aggregated.
+the combinations of variables to which data is aggregated.  
 \code{by} is relatively flexible, as it can be supplied as
 
 \itemize{
-\item{a character string vector, e.g. \code{c("sex", "area")},
-naming variables existing in \code{lex}}
-\item{an expression, e.g. \code{factor(sex, 0:1, c("m", "f"))}
-using any variable found in \code{lex}}
-\item{a list (fully or partially named) of expressions, e.g.
-\code{list(gender = factor(sex, 0:1, c("m", "f"), area)}}
+ \item{a character string vector, e.g. \code{c("sex", "area")}, 
+ naming variables existing in \code{lex}}
+ \item{an expression, e.g. \code{factor(sex, 0:1, c("m", "f"))} 
+ using any variable found in \code{lex}}
+ \item{a list (fully or partially named) of expressions, e.g. 
+ \code{list(gender = factor(sex, 0:1, c("m", "f"), area)}}
 }
 
 Note that expressions effectively allow a variable to be supplied simply as
 e.g. \code{by = sex} (as a symbol/name in R lingo).
 
-The data is then aggregated to the levels of the given variables
-or expression(s). Variables defined to be time scales in the supplied
+The data is then aggregated to the levels of the given variables 
+or expression(s). Variables defined to be time scales in the supplied 
 \code{Lexis} are processed in a special way: If any are mentioned in the
 \code{by} argument, intervals of them are formed based on the breaks
-used to split the data: e.g. if \code{age} was split using the breaks
+used to split the data: e.g. if \code{age} was split using the breaks 
 \code{c(0, 50, Inf)}, mentioning \code{age} in \code{by} leads to
 creating the \code{age} intervals \code{[0, 50)} and \code{[50, Inf)}
 and aggregating to them. The intervals are identified in the output
@@ -114,13 +121,13 @@ for when computing event counts. E.g. when the data is split by the breaks
 \strong{Aggregation types (styles)}
 
 It is almost always enough to aggregate the data to variable levels
-that are actually represented in the data
-(default \code{aggre = "unique"}; alias \code{"non-empty"}).
+that are actually represented in the data 
+(default \code{aggre = "unique"}; alias \code{"non-empty"}). 
 For certain uses it may be useful
 to have also "empty" levels represented (resulting in some rows in output
 with zero person-years and events); in these cases supplying
 \code{aggre = "full"} (alias \code{"cartesian"}) causes \code{aggre}
-to determine the Cartesian product of all the levels of the supplied
+to determine the Cartesian product of all the levels of the supplied 
 \code{by} variables or expressions and aggregate to them. As an example
 of a Cartesian product, try
 
@@ -175,9 +182,11 @@ a6 <- aggre(x, by = c("sex", "age", "fot"),
 and \code{\link{ltable}} for a \code{data.table} based aggregator. Neither
 are directly applicable to split \code{Lexis} data.
 
-Other aggregation functions: \code{\link{as.aggre}},
-  \code{\link{lexpand}}, \code{\link{setaggre}},
-  \code{\link{summary.aggre}}
+Other aggregation functions: 
+\code{\link{as.aggre}()},
+\code{\link{lexpand}()},
+\code{\link{setaggre}()},
+\code{\link{summary.aggre}()}
 }
 \author{
 Joonas Miettinen

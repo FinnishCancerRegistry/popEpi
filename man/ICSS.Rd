@@ -3,13 +3,15 @@
 \name{ICSS}
 \alias{ICSS}
 \title{Age standardisation weights from the ICSS scheme.}
-\format{data.table with columns
+\format{
+data.table with columns
 \itemize{
-\item age - lower bound of the age group
-\item ICSS1 - first set of weights, sums to 100 000
-\item ICSS2 - second set of weights, sums to 100 000
-\item ICSS3 - third set of weights, sums to 100 000
-}}
+ \item age - lower bound of the age group
+ \item ICSS1 - first set of weights, sums to 100 000
+ \item ICSS2 - second set of weights, sums to 100 000
+ \item ICSS3 - third set of weights, sums to 100 000
+}
+}
 \source{
 \href{http://seer.cancer.gov/stdpopulations/survival.html}{ICSS weights (US National Cancer Institute website)}
 
@@ -26,13 +28,18 @@ agegr <- cut(ICSS$age, cut, right = FALSE)
 aggregate(ICSS1~agegr, data = ICSS, FUN = sum)
 }
 \seealso{
-Other popEpi data: \code{\link{meanpop_fi}},
-  \code{\link{popmort}}, \code{\link{sibr}},
-  \code{\link{sire}}, \code{\link{stdpop101}},
-  \code{\link{stdpop18}}
+Other popEpi data: 
+\code{\link{meanpop_fi}},
+\code{\link{popmort}},
+\code{\link{sibr}},
+\code{\link{sire}},
+\code{\link{stdpop101}},
+\code{\link{stdpop18}}
 
-Other weights: \code{\link{direct_standardization}},
-  \code{\link{stdpop101}}, \code{\link{stdpop18}}
+Other weights: 
+\code{\link{direct_standardization}},
+\code{\link{stdpop101}},
+\code{\link{stdpop18}}
 }
 \concept{popEpi data}
 \concept{weights}

@@ -4,8 +4,13 @@
 \alias{Surv}
 \title{Survival Objects}
 \usage{
-Surv(time, time2, event, type = c("right", "left", "interval",
-  "counting", "interval2", "mstate"), origin = 0)
+Surv(
+  time,
+  time2,
+  event,
+  type = c("right", "left", "interval", "counting", "interval2", "mstate"),
+  origin = 0
+)
 }
 \arguments{
 \item{time}{see  \link[survival:Surv]{survival::Surv}}
@@ -36,19 +41,28 @@ become a problem and you should be able to use the two interchangeably.
 }
 
 \seealso{
-Other main functions: \code{\link{rate}},
-  \code{\link{relpois_ag}}, \code{\link{relpois}},
-  \code{\link{sirspline}}, \code{\link{sir}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other main functions: 
+\code{\link{rate}()},
+\code{\link{relpois_ag}()},
+\code{\link{relpois}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()},
+\code{\link{survmean}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 
-Other survtab functions: \code{\link{lines.survtab}},
-  \code{\link{plot.survtab}}, \code{\link{print.survtab}},
-  \code{\link{summary.survtab}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other survtab functions: 
+\code{\link{lines.survtab}()},
+\code{\link{plot.survtab}()},
+\code{\link{print.survtab}()},
+\code{\link{summary.survtab}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 
-Other survmean functions: \code{\link{lines.survmean}},
-  \code{\link{plot.survmean}}, \code{\link{survmean}}
+Other survmean functions: 
+\code{\link{lines.survmean}()},
+\code{\link{plot.survmean}()},
+\code{\link{survmean}()}
 }
 \concept{main functions}
 \concept{survmean functions}

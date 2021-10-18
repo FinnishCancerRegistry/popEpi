@@ -9,11 +9,9 @@
 \usage{
 as.aggre(x, values = NULL, by = NULL, breaks = NULL, ...)
 
-\method{as.aggre}{data.frame}(x, values = NULL, by = NULL,
-  breaks = NULL, ...)
+\method{as.aggre}{data.frame}(x, values = NULL, by = NULL, breaks = NULL, ...)
 
-\method{as.aggre}{data.table}(x, values = NULL, by = NULL,
-  breaks = NULL, ...)
+\method{as.aggre}{data.table}(x, values = NULL, by = NULL, breaks = NULL, ...)
 
 \method{as.aggre}{default}(x, ...)
 }
@@ -22,7 +20,7 @@ as.aggre(x, values = NULL, by = NULL, breaks = NULL, ...)
 
 \item{values}{a character string vector; the names of value variables}
 
-\item{by}{a character string vector; the names of variables by which
+\item{by}{a character string vector; the names of variables by which 
 \code{values} have been tabulated}
 
 \item{breaks}{a list of breaks, where each element is a breaks vector
@@ -67,9 +65,11 @@ df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex", breaks = BL)
 
 }
 \seealso{
-Other aggregation functions: \code{\link{aggre}},
-  \code{\link{lexpand}}, \code{\link{setaggre}},
-  \code{\link{summary.aggre}}
+Other aggregation functions: 
+\code{\link{aggre}()},
+\code{\link{lexpand}()},
+\code{\link{setaggre}()},
+\code{\link{summary.aggre}()}
 }
 \author{
 Joonas Miettinen

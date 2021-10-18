@@ -4,22 +4,27 @@
 \alias{setcolsnull}
 \title{Delete \code{data.table} columns if there}
 \usage{
-setcolsnull(DT = NULL, delete = NULL, keep = NULL,
-  colorder = FALSE, soft = TRUE)
+setcolsnull(
+  DT = NULL,
+  delete = NULL,
+  keep = NULL,
+  colorder = FALSE,
+  soft = TRUE
+)
 }
 \arguments{
 \item{DT}{a \code{data.table}}
 
 \item{delete}{a character vector of column names to be deleted}
 
-\item{keep}{a character vector of column names to keep;
+\item{keep}{a character vector of column names to keep; 
 the rest will be removed; \code{keep} overrides \code{delete}}
 
 \item{colorder}{logical; if \code{TRUE}, also does \code{setcolorder} using
 \code{keep}}
 
 \item{soft}{logical; if \code{TRUE}, does not cause an error if any variable
-name in \code{keep} or \code{delete} is missing; \code{soft = FALSE} useful
+name in \code{keep} or \code{delete} is missing; \code{soft = FALSE} useful 
 for programming sometimes}
 }
 \description{

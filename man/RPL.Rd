@@ -4,7 +4,9 @@
 \name{RPL}
 \alias{RPL}
 \title{Relative Poisson family object}
-\format{A list very similar to that created by \code{poisson()}.}
+\format{
+A list very similar to that created by \code{poisson()}.
+}
 \usage{
 RPL
 }
@@ -12,8 +14,10 @@ RPL
 A family object for GLM fitting of relative Poisson models
 }
 \seealso{
-Other relpois functions: \code{\link{relpois_ag}},
-  \code{\link{relpois}}, \code{\link{rpcurve}}
+Other relpois functions: 
+\code{\link{relpois_ag}()},
+\code{\link{relpois}()},
+\code{\link{rpcurve}()}
 }
 \author{
 Karri Seppa

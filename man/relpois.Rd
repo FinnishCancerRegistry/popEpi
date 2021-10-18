@@ -4,8 +4,7 @@
 \alias{relpois}
 \title{Excess hazard Poisson model}
 \usage{
-relpois(data, formula, fot.breaks = NULL, subset = NULL,
-  check = TRUE, ...)
+relpois(data, formula, fot.breaks = NULL, subset = NULL, check = TRUE, ...)
 }
 \arguments{
 \item{data}{a dataset split with e.g. \code{\link{lexpand}};
@@ -14,7 +13,7 @@ must have expected hazard merged within}
 \item{formula}{a formula which is passed on to \code{glm}; see Details}
 
 \item{fot.breaks}{optional; a numeric vector of [a,b) breaks to specify
-survival intervals over the follow-up time; if \code{NULL}, the
+survival intervals over the follow-up time; if \code{NULL}, the 
 existing breaks along the mandatory \code{fot} time scale in \code{data}
 are used (e.g. the breaks for \code{fot} supplied to \code{lexpand})}
 
@@ -22,7 +21,7 @@ are used (e.g. the breaks for \code{fot} supplied to \code{lexpand})}
 limits the data before estimation}
 
 \item{check}{logical; if \code{TRUE}, tabulates excess cases by all
-factor variables in the formula to check for negative / \code{NA}
+factor variables in the formula to check for negative / \code{NA} 
 excess cases before fitting the GLM}
 
 \item{...}{any argument passed on to \code{glm}}
@@ -47,21 +46,21 @@ is passed automatically to the \code{glm} call.
 
 The formula can be used like any ordinary \code{glm} formula. The user must
 define the outcome in some manner, which is usually \code{lex.Xst} after splitting
-with e.g. \code{lexpand}. The exception is the possibility of including
-the baseline excess hazard terms by including the
+with e.g. \code{lexpand}. The exception is the possibility of including 
+the baseline excess hazard terms by including the 
 reserved term \code{FOT} in the formula.
 
 For example, \code{lex.Xst != 0 ~ FOT + agegr} estimates a model with constant
-excess hazards at the follow-up intervals as specified by
+excess hazards at the follow-up intervals as specified by 
 the pertinent breaks used in splitting \code{data},
 as well as for the different age groups.
 \code{FOT} is created ad hoc if it is used in the formula.
 If you leave out \code{FOT}, the hazard is effectively
-assumed to be constant across the whole follow-up time.
+assumed to be constant across the whole follow-up time. 
 
 You can also simply use your own follow-up time interval variable that
-you have created before calling \code{relpois}. However, when using
-\code{FOT}, \code{relpois} automatically checks for e.g.
+you have created before calling \code{relpois}. However, when using 
+\code{FOT}, \code{relpois} automatically checks for e.g. 
 negative excess cases in follow-up intervals,
 allowing for quickly finding splitting breaks
 where model estimation is possible. It also drops any data outside the
@@ -69,9 +68,10 @@ follow-up time window.
 
 \strong{Splitting and merging population hazard}
 
-The easiest way to both split and to include population hazard information is
+The easiest way to both split and to include population hazard information is 
 by using \code{\link{lexpand}}. You may also fairly easily do it by hand
 by splitting first and then merging in your population hazard information.
+
 
 \strong{Data requirements}
 
@@ -103,14 +103,20 @@ AIC(rpm, rpm2)
 \seealso{
 \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
 
-Other main functions: \code{\link{Surv}},
-  \code{\link{rate}}, \code{\link{relpois_ag}},
-  \code{\link{sirspline}}, \code{\link{sir}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other main functions: 
+\code{\link{Surv}()},
+\code{\link{rate}()},
+\code{\link{relpois_ag}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()},
+\code{\link{survmean}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 
-Other relpois functions: \code{\link{RPL}},
-  \code{\link{relpois_ag}}, \code{\link{rpcurve}}
+Other relpois functions: 
+\code{\link{RPL}},
+\code{\link{relpois_ag}()},
+\code{\link{rpcurve}()}
 }
 \author{
 Joonas Miettinen, Karri Seppa

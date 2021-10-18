@@ -4,8 +4,14 @@
 \alias{sir_ratio}
 \title{Confidence intervals for the ratio of two SIRs/SMRs}
 \usage{
-sir_ratio(x, y, digits = 3, alternative = "two.sided",
-  conf.level = 0.95, type = "exact")
+sir_ratio(
+  x,
+  y,
+  digits = 3,
+  alternative = "two.sided",
+  conf.level = 0.95,
+  type = "exact"
+)
 }
 \arguments{
 \item{x}{a sir-object or a vector of two; observed and expected cases.}
@@ -35,14 +41,14 @@ in both populations.
 
 \strong{Formula}
 
-The observed number of first sir \code{O1} is considered as a Binomial variable with sample
-size of \code{O1+O2}. The confidence intervals for Binomial proportion \code{A}
-is solved using \code{exact} or \code{asymptotic}
-method. Now the CI for ratio \code{O1/O2} is \code{B = A/(1 - A)}. And further the CI for SIR/SMR
+The observed number of first sir \code{O1} is considered as a Binomial variable with sample 
+size of \code{O1+O2}. The confidence intervals for Binomial proportion \code{A} 
+is solved using \code{exact} or \code{asymptotic} 
+method. Now the CI for ratio \code{O1/O2} is \code{B = A/(1 - A)}. And further the CI for SIR/SMR 
 is B*E2/E1. (Ederer and Mantel)
 }
 \note{
-Parameter \code{alternative} is always \code{two.sided} when parameter
+Parameter \code{alternative} is always \code{two.sided} when parameter 
 \code{type} is set to \code{asymptotic}.
 }
 \examples{
@@ -72,9 +78,12 @@ Statistics with Confidence: Confidence Intervals and Statistical Guidelines, Dou
 \code{\link{sir}}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir functions: \code{\link{lines.sirspline}},
-  \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
-  \code{\link{sirspline}}, \code{\link{sir}}
+Other sir functions: 
+\code{\link{lines.sirspline}()},
+\code{\link{plot.sirspline}()},
+\code{\link{sir_exp}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()}
 }
 \author{
 Matti Rantanen

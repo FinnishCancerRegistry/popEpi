@@ -4,8 +4,17 @@
 \alias{plot.survtab}
 \title{\code{plot} method for survtab objects}
 \usage{
-\method{plot}{survtab}(x, y = NULL, subset = NULL, conf.int = TRUE,
-  col = NULL, lty = NULL, ylab = NULL, xlab = NULL, ...)
+\method{plot}{survtab}(
+  x,
+  y = NULL,
+  subset = NULL,
+  conf.int = TRUE,
+  col = NULL,
+  lty = NULL,
+  ylab = NULL,
+  xlab = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{a \code{survtab} output object}
@@ -13,8 +22,8 @@
 \item{y}{survival a character vector of a variable names to plot;
 e.g. \code{y = "r.e2"}}
 
-\item{subset}{a logical condition; \code{obj} is subset accordingly
-before plotting; use this for limiting to specific strata,
+\item{subset}{a logical condition; \code{obj} is subset accordingly 
+before plotting; use this for limiting to specific strata, 
 e.g. \code{subset = sex == "male"}}
 
 \item{conf.int}{logical; if \code{TRUE}, also plots any confidence intervals
@@ -28,7 +37,7 @@ present in \code{obj} for variables in \code{y}}
 
 \item{xlab}{label for X-axis}
 
-\item{...}{additional arguments passed on to \code{plot} and
+\item{...}{additional arguments passed on to \code{plot} and 
 \code{lines.survtab}; e.g. \code{ylim} can be defined this way}
 }
 \description{
@@ -53,10 +62,13 @@ lines(st, "surv.obs", subset = cancer == "rectal", col = "red")
 plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 }
 \seealso{
-Other survtab functions: \code{\link{Surv}},
-  \code{\link{lines.survtab}}, \code{\link{print.survtab}},
-  \code{\link{summary.survtab}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other survtab functions: 
+\code{\link{Surv}()},
+\code{\link{lines.survtab}()},
+\code{\link{print.survtab}()},
+\code{\link{summary.survtab}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 }
 \author{
 Joonas Miettinen

@@ -4,8 +4,7 @@
 \alias{lines.sirspline}
 \title{lines method for sirspline-object}
 \usage{
-\method{lines}{sirspline}(x, conf.int = TRUE, print.levels = NA,
-  select.spline, ...)
+\method{lines}{sirspline}(x, conf.int = TRUE, print.levels = NA, select.spline, ...)
 }
 \arguments{
 \item{x}{an object returned by function sirspline}
@@ -22,10 +21,10 @@
 Plot SIR spline lines with R base graphics
 }
 \details{
-In \code{lines.sirspline} most of graphical parameters is user
+In \code{lines.sirspline} most of graphical parameters is user 
 adjustable.
 Desired spline variable can be selected with \code{select.spline} and only one
-can be plotted at a time. The spline variable can include
+can be plotted at a time. The spline variable can include 
 several levels, e.g. gender (these are the levels of \code{print}
 from \code{sirspline}). All levels are printed by default, but a
 specific level can be selected using argument
@@ -33,9 +32,12 @@ specific level can be selected using argument
 give different colours for each level.
 }
 \seealso{
-Other sir functions: \code{\link{plot.sirspline}},
-  \code{\link{sir_exp}}, \code{\link{sir_ratio}},
-  \code{\link{sirspline}}, \code{\link{sir}}
+Other sir functions: 
+\code{\link{plot.sirspline}()},
+\code{\link{sir_exp}()},
+\code{\link{sir_ratio}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()}
 }
 \author{
 Matti Rantanen

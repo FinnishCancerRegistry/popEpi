@@ -4,8 +4,7 @@
 \alias{plot.sirspline}
 \title{\code{plot} method for sirspline-object}
 \usage{
-\method{plot}{sirspline}(x, conf.int = TRUE, abline = TRUE,
-  log = FALSE, type, ylab, xlab, ...)
+\method{plot}{sirspline}(x, conf.int = TRUE, abline = TRUE, log = FALSE, type, ylab, xlab, ...)
 }
 \arguments{
 \item{x}{an object returned by function sirspline}
@@ -32,14 +31,17 @@ In \code{plot.sirspline} almost every graphical parameter are user
 adjustable, such as \code{ylim}, \code{xlim}.
 \code{plot.sirsplines} calls \code{lines.splines} to add lines.
 
-The plot axis without lines can be plotted using option \code{type = 'n'}.
-On top of the frame it's then possible to add a \code{grid},
+The plot axis without lines can be plotted using option \code{type = 'n'}. 
+On top of the frame it's then possible to add a \code{grid}, 
 \code{abline} or text before plotting the lines (see: \code{sirspline}).
 }
 \seealso{
-Other sir functions: \code{\link{lines.sirspline}},
-  \code{\link{sir_exp}}, \code{\link{sir_ratio}},
-  \code{\link{sirspline}}, \code{\link{sir}}
+Other sir functions: 
+\code{\link{lines.sirspline}()},
+\code{\link{sir_exp}()},
+\code{\link{sir_ratio}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()}
 }
 \author{
 Matti Rantanen

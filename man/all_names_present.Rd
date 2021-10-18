@@ -15,8 +15,8 @@ all_names_present(data, var.names, stops = TRUE, msg = NULL)
 \item{stops}{logical, stop returns exception}
 
 \item{msg}{Custom message to return instead of default message.
-Special: include \code{\%\%VARS\%\%} in message string and the missing
-variable names will be inserted there (quoted, separated by comma, e.g.
+Special: include \code{\%\%VARS\%\%} in message string and the missing 
+variable names will be inserted there (quoted, separated by comma, e.g. 
 \code{'var1'}, \code{'var2'} --- no leading or tracing white space).}
 }
 \description{

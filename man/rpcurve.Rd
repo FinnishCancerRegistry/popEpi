@@ -14,12 +14,12 @@ Fit a marginal relative survival curve based on a \code{relpois} fit
 }
 \details{
 Estimates a marginal curve, i.e. the average of all
-possible individual curves.
+possible individual curves. 
 
 Only supported when the reserved \code{FOT} variable was used in \code{relpois}.
-Computes a curve for each unique combination of covariates (e.g. 4 sets)
+Computes a curve for each unique combination of covariates (e.g. 4 sets) 
 and returns a weighted average curve based on the counts
-of subjects for each combination (e.g. 1000, 125, 50, 25 respectively).
+of subjects for each combination (e.g. 1000, 125, 50, 25 respectively). 
 Fairly fast when only categorical variables have been used, otherwise
 go get a cup of coffee.
 
@@ -60,8 +60,10 @@ lines(y = pmc$est, x = pmc$Tstop, col="red")
 
 }
 \seealso{
-Other relpois functions: \code{\link{RPL}},
-  \code{\link{relpois_ag}}, \code{\link{relpois}}
+Other relpois functions: 
+\code{\link{RPL}},
+\code{\link{relpois_ag}()},
+\code{\link{relpois}()}
 }
 \author{
 Joonas Miettinen

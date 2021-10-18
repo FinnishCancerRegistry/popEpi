@@ -3,16 +3,18 @@
 \name{meanpop_fi}
 \alias{meanpop_fi}
 \title{Mean population counts in Finland year, sex, and age group.}
-\format{\code{data.table} with columns
+\format{
+\code{data.table} with columns
 \itemize{
-\item \code{sex} gender coded as male, female (0, 1)
-\item \code{year} calendar year 1981-2016
-\item \code{agegroup} - coded 0 to 100; one-year age groups
-\item \code{meanpop} the mean population count; that is, the mean of the
-annual population counts of two consecutive years; e.g. for 1990
-\code{meanpop} is the mean of population counts for 1990 and 1991
-(counted at 1990-01-01 and 1991-01-01, respectively)
-}}
+ \item \code{sex} gender coded as male, female (0, 1)
+ \item \code{year} calendar year 1981-2016
+ \item \code{agegroup} - coded 0 to 100; one-year age groups
+ \item \code{meanpop} the mean population count; that is, the mean of the
+ annual population counts of two consecutive years; e.g. for 1990 
+ \code{meanpop} is the mean of population counts for 1990 and 1991 
+ (counted at 1990-01-01 and 1991-01-01, respectively)
+}
+}
 \source{
 Statistics Finland
 }
@@ -20,9 +22,12 @@ Statistics Finland
 Mean population counts in Finland year, sex, and age group.
 }
 \seealso{
-Other popEpi data: \code{\link{ICSS}},
-  \code{\link{popmort}}, \code{\link{sibr}},
-  \code{\link{sire}}, \code{\link{stdpop101}},
-  \code{\link{stdpop18}}
+Other popEpi data: 
+\code{\link{ICSS}},
+\code{\link{popmort}},
+\code{\link{sibr}},
+\code{\link{sire}},
+\code{\link{stdpop101}},
+\code{\link{stdpop18}}
 }
 \concept{popEpi data}

@@ -13,7 +13,7 @@ rate_ratio(x, y, crude = FALSE, SE.method = TRUE)
 
 \item{crude}{set TRUE to use crude rates; default is FALSE.}
 
-\item{SE.method}{default TRUE; if \code{x} and \code{y} are vectors of observed and
+\item{SE.method}{default TRUE; if \code{x} and \code{y} are vectors of observed and 
 person-years, this must be changed to FALSE.}
 }
 \value{
@@ -23,12 +23,12 @@ A vector length of three: rate_ratio, and lower and upper confidence intervals.
 Calculate rate ratio with confidence intervals for rate objects or observations and person-years.
 }
 \details{
-Calculate rate ratio of two age standardized rate objects (see \code{\link{rate}}).
-Multiple rates for each objects is supported if there are an equal number of rates.
+Calculate rate ratio of two age standardized rate objects (see \code{\link{rate}}). 
+Multiple rates for each objects is supported if there are an equal number of rates. 
 Another option is to set \code{x} and \code{y} as a vector of two.
 \enumerate{
-\item rate and its standard error, and  set \code{SE.method = TRUE}.
-\item observations and person-year, and  set \code{SE.method = FALSE}.
+  \item rate and its standard error, and  set \code{SE.method = TRUE}.
+  \item observations and person-year, and  set \code{SE.method = FALSE}.
 }
 See examples.
 }
@@ -63,7 +63,8 @@ rate_ratio(x = c(10, 30000), y = c(20, 40000), SE.method = FALSE)
 \seealso{
 \code{\link{rate}}
 
-Other rate functions: \code{\link{rate}}
+Other rate functions: 
+\code{\link{rate}()}
 }
 \author{
 Matti Rantanen

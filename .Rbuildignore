@@ -17,3 +17,5 @@
 ^appveyor.yml$
 ^R/nse\.R$
 ^revdep$
+^Rplots.pdf$
+

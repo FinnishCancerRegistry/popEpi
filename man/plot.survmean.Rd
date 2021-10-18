@@ -23,15 +23,17 @@ for graphically inspecting that the observed survival curves with extrapolation
 and the expected survival curves have been sensibly computed in \code{survmean}.
 
 If you want finer control over the plotted curves, extract the curves from
-the \code{survmean} output using
+the \code{survmean} output using 
 
 \code{attr(x, "curves")}
 
 where \code{x} is a \code{survmean} object.
 }
 \seealso{
-Other survmean functions: \code{\link{Surv}},
-  \code{\link{lines.survmean}}, \code{\link{survmean}}
+Other survmean functions: 
+\code{\link{Surv}()},
+\code{\link{lines.survmean}()},
+\code{\link{survmean}()}
 }
 \author{
 Joonas Miettinen

@@ -3,11 +3,13 @@
 \name{stdpop101}
 \alias{stdpop101}
 \title{World standard population by 1 year age groups from 1 to 101. Sums to 100 000.}
-\format{data.table with columns
+\format{
+data.table with columns
 \itemize{
-\item \code{world_std} weight that sums to 100000 (numeric)
-\item \code{agegroup} age group from 1 to 101 (numeric)
-}}
+ \item \code{world_std} weight that sums to 100000 (numeric)
+ \item \code{agegroup} age group from 1 to 101 (numeric)
+}
+}
 \source{
 Standard population is from:
 \href{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}{world standard population "101of1"}
@@ -16,14 +18,18 @@ Standard population is from:
 World standard population by 1 year age groups from 1 to 101. Sums to 100 000.
 }
 \seealso{
-Other popEpi data: \code{\link{ICSS}},
-  \code{\link{meanpop_fi}}, \code{\link{popmort}},
-  \code{\link{sibr}}, \code{\link{sire}},
-  \code{\link{stdpop18}}
+Other popEpi data: 
+\code{\link{ICSS}},
+\code{\link{meanpop_fi}},
+\code{\link{popmort}},
+\code{\link{sibr}},
+\code{\link{sire}},
+\code{\link{stdpop18}}
 
-Other weights: \code{\link{ICSS}},
-  \code{\link{direct_standardization}},
-  \code{\link{stdpop18}}
+Other weights: 
+\code{\link{ICSS}},
+\code{\link{direct_standardization}},
+\code{\link{stdpop18}}
 }
 \concept{popEpi data}
 \concept{weights}

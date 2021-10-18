@@ -3,15 +3,17 @@
 \name{sibr}
 \alias{sibr}
 \title{sibr - a simulated cohort of Finnish female breast cancer patients}
-\format{data.table with columns
+\format{
+data.table with columns
 \itemize{
-\item sex - gender of the patient (1 = female)
-\item bi_date - date of birth
-\item dg_date - date of cancer diagnosis
-\item ex_date - date of exit from follow-up (death or censoring)
-\item status  - status of the person at exit; 0 alive; 1 dead due to pertinent cancer; 2 dead due to other causes
-\item dg_age  - age at diagnosis expressed as fractional years
-}}
+ \item sex - gender of the patient (1 = female)
+ \item bi_date - date of birth
+ \item dg_date - date of cancer diagnosis
+ \item ex_date - date of exit from follow-up (death or censoring)
+ \item status  - status of the person at exit; 0 alive; 1 dead due to pertinent cancer; 2 dead due to other causes
+ \item dg_age  - age at diagnosis expressed as fractional years
+}
+}
 \source{
 The Finnish Cancer Registry
 }
@@ -26,12 +28,16 @@ The closing date for the pertinent data was 2012-12-31, meaning status informati
 available only up to that point --- hence the maximum possible \code{ex_date} is \code{2012-12-31}.
 }
 \seealso{
-Other popEpi data: \code{\link{ICSS}},
-  \code{\link{meanpop_fi}}, \code{\link{popmort}},
-  \code{\link{sire}}, \code{\link{stdpop101}},
-  \code{\link{stdpop18}}
+Other popEpi data: 
+\code{\link{ICSS}},
+\code{\link{meanpop_fi}},
+\code{\link{popmort}},
+\code{\link{sire}},
+\code{\link{stdpop101}},
+\code{\link{stdpop18}}
 
-Other survival data: \code{\link{sire}}
+Other survival data: 
+\code{\link{sire}}
 }
 \author{
 Karri Seppa

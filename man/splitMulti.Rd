@@ -4,8 +4,14 @@
 \alias{splitMulti}
 \title{Split case-level observations}
 \usage{
-splitMulti(data, breaks = NULL, ..., drop = TRUE, merge = TRUE,
-  verbose = FALSE)
+splitMulti(
+  data,
+  breaks = NULL,
+  ...,
+  drop = TRUE,
+  merge = TRUE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{data}{a Lexis object with event cases as rows}
@@ -15,27 +21,27 @@ splitMulti(data, breaks = NULL, ..., drop = TRUE, merge = TRUE,
 \item{...}{alternate way of supplying breaks as named vectors;
 e.g. \code{fot = 0:5} instead of \code{breaks = list(fot = 0:5)};
 if \code{breaks} is not \code{NULL}, \code{breaks} is used and any breaks
-passed through \code{...} are NOT used; note also that due to partial
-matching of argument names in R,
-if you supply e.g. \code{dat = my_breaks} and you
+passed through \code{...} are NOT used; note also that due to partial 
+matching of argument names in R, 
+if you supply e.g. \code{dat = my_breaks} and you 
 do not pass argument \code{data} explicitly (\code{data = my_data}), then R
 interprets this as \code{data = my_breaks} --- so choose the names of your
 time scales wisely}
 
-\item{drop}{logical; if \code{TRUE}, drops all resulting rows
+\item{drop}{logical; if \code{TRUE}, drops all resulting rows 
 after expansion that reside outside the time window
 defined by the given breaks}
 
-\item{merge}{logical; if \code{TRUE}, retains all variables
+\item{merge}{logical; if \code{TRUE}, retains all variables 
 from the original data - i.e. original variables are
 repeated for all the rows by original subject}
 
-\item{verbose}{logical; if \code{TRUE}, the function is chatty
+\item{verbose}{logical; if \code{TRUE}, the function is chatty 
 and returns some messages along the way}
 }
 \value{
-A \code{data.table} or \code{data.frame}
-(depending on \code{options("popEpi.datatable")}; see \code{?popEpi})
+A \code{data.table} or \code{data.frame} 
+(depending on \code{options("popEpi.datatable")}; see \code{?popEpi}) 
 object expanded to accommodate split observations.
 }
 \description{
@@ -44,23 +50,23 @@ with speed and ease
 }
 \details{
 \code{splitMulti} is in essence a \pkg{data.table} version of
-\code{splitLexis} or \code{survSplit} for splitting along multiple
-time scales.
+ \code{splitLexis} or \code{survSplit} for splitting along multiple
+ time scales.
 It requires a Lexis object as input.
 
-The \code{breaks} must be a list of named vectors of the appropriate type.
+The \code{breaks} must be a list of named vectors of the appropriate type. 
 The breaks are fully explicit and
-left-inclusive and right exclusive, e.g. \code{fot=c(0,5)}
+left-inclusive and right exclusive, e.g. \code{fot=c(0,5)} 
 forces the data to only include time between
-\code{[0,5)} for each original row (unless \code{drop = FALSE}).
+\code{[0,5)} for each original row (unless \code{drop = FALSE}). 
 Use \code{Inf} or \code{-Inf} for open-ended intervals,
-e.g. \code{per=c(1990,1995,Inf)} creates the intervals
-\code{[1990,1995), [1995, Inf)}.
-
+ e.g. \code{per=c(1990,1995,Inf)} creates the intervals 
+ \code{[1990,1995), [1995, Inf)}.
+ 
 Instead of specifying \code{breaks}, one may make use of the \code{...}
-argument to pass breaks: e.g.
+argument to pass breaks: e.g. 
 
-\code{splitMulti(x, breaks = list(fot = 0:5))}
+\code{splitMulti(x, breaks = list(fot = 0:5))} 
 
 is equivalent to
 
@@ -68,9 +74,9 @@ is equivalent to
 
 Multiple breaks can be supplied in the same manner. However, if both
 \code{breaks} and \code{...} are used, only the breaks in \code{breaks}
-are utilized within the function.
+are utilized within the function. 
 
-The \code{Lexis} time scale variables can be of any arbitrary
+The \code{Lexis} time scale variables can be of any arbitrary 
 format, e.g. \code{Date},
 fractional years (see \code{\link[Epi]{cal.yr}}) and \code{\link{get.yrs}},
 or other. However, using \code{date} variables (from package \pkg{date})
@@ -131,11 +137,12 @@ xm2[xm2$lex.id == 6L, ]
 
 }
 \seealso{
-\code{\link[Epi]{splitLexis}}, \code{\link[Epi]{Lexis}},
+\code{\link[Epi]{splitLexis}}, \code{\link[Epi]{Lexis}},  
 \code{\link[survival]{survSplit}}
 
-Other splitting functions: \code{\link{lexpand}},
-  \code{\link{splitLexisDT}}
+Other splitting functions: 
+\code{\link{lexpand}()},
+\code{\link{splitLexisDT}()}
 }
 \author{
 Joonas Miettinen

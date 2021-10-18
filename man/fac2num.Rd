@@ -16,7 +16,7 @@ fac2num(x)
 Convert factor variable with numbers as levels into a numeric variable
 }
 \details{
-For example, a factor with levels \code{c("5","7")} is converted into
+For example, a factor with levels \code{c("5","7")} is converted into 
 a numeric variable with values \code{c(5,7)}.
 }
 \examples{

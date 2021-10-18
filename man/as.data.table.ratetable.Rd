@@ -18,7 +18,7 @@ However, the names and levels of variables in the result
 may not match names and levels of variables in your data.
 }
 \seealso{
-\code{\link[survival]{ratetable}},
+\code{\link[survival]{ratetable}}, 
 \code{\link{as.data.frame.ratetable}}
 }
 \author{

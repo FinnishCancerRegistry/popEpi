@@ -5,20 +5,28 @@
 \title{Create a Lexis Object with Follow-up Time, Period, and Age
 Time Scales}
 \usage{
-Lexis_fpa(data, birth = NULL, entry = NULL, exit = NULL,
-  entry.status = NULL, exit.status = NULL, subset = NULL, ...)
+Lexis_fpa(
+  data,
+  birth = NULL,
+  entry = NULL,
+  exit = NULL,
+  entry.status = NULL,
+  exit.status = NULL,
+  subset = NULL,
+  ...
+)
 }
 \arguments{
 \item{data}{a \code{data.frame}; mandatory}
 
-\item{birth}{the time of birth; A character string naming the variable in
-data or an expression to evaluate - see
+\item{birth}{the time of birth; A character string naming the variable in 
+data or an expression to evaluate - see 
 \link[=flexible_argument]{Flexible input}}
 
-\item{entry}{the time at entry to follow-up; supplied the
+\item{entry}{the time at entry to follow-up; supplied the 
 same way as \code{birth}}
 
-\item{exit}{the time at exit from follow-up; supplied the
+\item{exit}{the time at exit from follow-up; supplied the 
 same way as \code{birth}}
 
 \item{entry.status}{passed on to \code{\link[Epi]{Lexis}} if not \code{NULL};
@@ -30,7 +38,7 @@ supplied the same way as \code{birth}}
 \item{subset}{a logical condition to subset by before passing data
 and arguments to \code{\link[Epi]{Lexis}}}
 
-\item{...}{additional optional arguments passed on to
+\item{...}{additional optional arguments passed on to 
 \code{\link[Epi]{Lexis}}}
 }
 \value{
@@ -42,7 +50,7 @@ They are calculated as
 
 \code{per = entry}
 
-and
+and 
 
 \code{age = entry - birth}
 }

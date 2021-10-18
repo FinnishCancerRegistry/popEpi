@@ -14,7 +14,7 @@ methods}
 }
 \description{
 Coerces an \code{yrs} object to a \code{Date} object.
-Some loss of information comes if \code{year.length = "approx"}
+Some loss of information comes if \code{year.length = "approx"} 
 was set when using \code{\link{get.yrs}}, so the transformation back
 to \code{Date} will not be perfect there. With \code{year.length = "actual"}
 the original values are perfectly retrieved.

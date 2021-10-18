@@ -4,10 +4,21 @@
 \alias{makeWeightsDT}
 \title{Make a \code{data.table} of Tabulated, Aggregated Values and Weights}
 \usage{
-makeWeightsDT(data, values = NULL, print = NULL, adjust = NULL,
-  formula = NULL, Surv.response = TRUE, by.other = NULL,
-  custom.levels = NULL, custom.levels.cut.low = NULL, weights = NULL,
-  internal.weights.values = NULL, enclos = NULL, NA.text = NULL)
+makeWeightsDT(
+  data,
+  values = NULL,
+  print = NULL,
+  adjust = NULL,
+  formula = NULL,
+  Surv.response = TRUE,
+  by.other = NULL,
+  custom.levels = NULL,
+  custom.levels.cut.low = NULL,
+  weights = NULL,
+  internal.weights.values = NULL,
+  enclos = NULL,
+  NA.text = NULL
+)
 }
 \arguments{
 \item{data}{DF/DT; passed to \code{envir} in \code{eval}}
@@ -23,22 +34,22 @@ makeWeightsDT(data, values = NULL, print = NULL, adjust = NULL,
 \item{Surv.response}{logical, if \code{TRUE} throws error if response in
 \code{formula} is not a \code{Surv} object and vice versa}
 
-\item{by.other}{other variables to tabulate by and include
+\item{by.other}{other variables to tabulate by and include 
 in \code{boVars} in attributes}
 
 \item{custom.levels}{a named list of values. When "inflating" the data
 in the cross-join / cartesian join sense (try e.g. \code{merge(1:5, 1:2)}),
 one can supply the levels to inflate by using this to ensure inflation is full.
 E.g. data might only have levels present to do inflation analogous to
-\code{merge(2:5, 1:2)} although \code{merge(1:5, 1:2)} is intended and
+\code{merge(2:5, 1:2)} although \code{merge(1:5, 1:2)} is intended and 
 needed.}
 
 \item{custom.levels.cut.low}{a character string vector of variable names.
 These variables mentioned in \code{custom.levels} and existing in data
-or first modified (in data) using \code{cutLow()} (essentially
+or first modified (in data) using \code{cutLow()} (essentially 
 \code{cut()} with \code{right = FALSE} and returning the lower bounds
 as values). Handy for aggregating data e.g. to survival intervals.
-\strong{NOTE}: the appropriate elements in \code{custom.levels} for these
+\strong{NOTE}: the appropriate elements in \code{custom.levels} for these 
 variables must exceptionally contain an extra value as the roof used in
 cutting, which will not be used in "inflating" the table using a merge.
 See Examples.}

@@ -4,8 +4,7 @@
 \alias{lines.survtab}
 \title{\code{lines} method for survtab objects}
 \usage{
-\method{lines}{survtab}(x, y = NULL, subset = NULL, conf.int = TRUE,
-  col = NULL, lty = NULL, ...)
+\method{lines}{survtab}(x, y = NULL, subset = NULL, conf.int = TRUE, col = NULL, lty = NULL, ...)
 }
 \arguments{
 \item{x}{a \code{survtab} output object}
@@ -14,8 +13,8 @@
 in \code{x}; e.g. \code{y = "surv.obs"};
 if \code{NULL}, picks last survival variable column in order in \code{x}}
 
-\item{subset}{a logical condition; \code{obj} is subset accordingly
-before plotting; use this for limiting to specific strata,
+\item{subset}{a logical condition; \code{obj} is subset accordingly 
+before plotting; use this for limiting to specific strata, 
 e.g. \code{subset = sex == "male"}}
 
 \item{conf.int}{logical; if \code{TRUE}, also plots any confidence intervals
@@ -50,10 +49,13 @@ lines(st, "surv.obs", subset = cancer == "rectal", col = "red")
 plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 }
 \seealso{
-Other survtab functions: \code{\link{Surv}},
-  \code{\link{plot.survtab}}, \code{\link{print.survtab}},
-  \code{\link{summary.survtab}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other survtab functions: 
+\code{\link{Surv}()},
+\code{\link{plot.survtab}()},
+\code{\link{print.survtab}()},
+\code{\link{summary.survtab}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 }
 \author{
 Joonas Miettinen

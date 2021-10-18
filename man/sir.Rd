@@ -4,27 +4,40 @@
 \alias{sir}
 \title{Calculate SIR or SMR}
 \usage{
-sir(coh.data, coh.obs, coh.pyrs, ref.data = NULL, ref.obs = NULL,
-  ref.pyrs = NULL, ref.rate = NULL, subset = NULL, print = NULL,
-  adjust = NULL, mstate = NULL, test.type = "homogeneity",
-  conf.type = "profile", conf.level = 0.95, EAR = FALSE)
+sir(
+  coh.data,
+  coh.obs,
+  coh.pyrs,
+  ref.data = NULL,
+  ref.obs = NULL,
+  ref.pyrs = NULL,
+  ref.rate = NULL,
+  subset = NULL,
+  print = NULL,
+  adjust = NULL,
+  mstate = NULL,
+  test.type = "homogeneity",
+  conf.type = "profile",
+  conf.level = 0.95,
+  EAR = FALSE
+)
 }
 \arguments{
 \item{coh.data}{aggregated cohort data, see e.g. \code{\link{lexpand}}}
 
 \item{coh.obs}{variable name for observed cases; quoted or unquoted. A vector when using \code{mstata}.}
 
-\item{coh.pyrs}{variable name for person years in cohort data;
+\item{coh.pyrs}{variable name for person years in cohort data; 
 quoted (as a string \code{'myvar'}) or unquoted (AKA as a name; \code{myvar})}
 
-\item{ref.data}{population data. Can be left NULL if \code{coh.data}
+\item{ref.data}{population data. Can be left NULL if \code{coh.data} 
 is stratified in \code{print}. See \code{\link{pophaz}} for details.}
 
 \item{ref.obs}{variable name for observed cases; quoted or unquoted}
 
 \item{ref.pyrs}{variable name for person-years in population data; quoted or unquoted}
 
-\item{ref.rate}{population rate variable (cases/person-years). Overwrites
+\item{ref.rate}{population rate variable (cases/person-years). Overwrites 
 arguments \code{ref.pyrs} and \code{ref.obs}. Quoted or unquoted}
 
 \item{subset}{logical condition to select data from \code{coh.data} before any computations}
@@ -49,33 +62,34 @@ when \code{coh.obs} length is two or more. See details.}
 A sir-object that is a \code{data.table} with meta information in the attributes.
 }
 \description{
-Poisson modelled standardised incidence or mortality ratios (SIRs / SMRs) i.e.
+Poisson modelled standardised incidence or mortality ratios (SIRs / SMRs) i.e. 
 indirect method for calculating standardised rates. SIR is a ratio of observed and expected cases.
 Expected cases are derived by multiplying the strata-specific population rate with the
 corresponding person-years of the cohort.
 }
 \details{
-\code{sir} is a comprehensive tool for modelling SIRs/SMRs with flexible
-options to adjust and print SIRs, test homogeneity and utilize
-multi-state data. The cohort data and the variable names for observation
+\code{sir} is a comprehensive tool for modelling SIRs/SMRs with flexible 
+options to adjust and print SIRs, test homogeneity and utilize 
+multi-state data. The cohort data and the variable names for observation 
 counts and person-years are required.
-The reference data is optional, since the cohort data
+The reference data is optional, since the cohort data 
 can be stratified (\code{print}) and compared to total.
+
 
 \strong{Adjust and print}
 
 A SIR can be adjusted or standardised using the covariates found in both \code{coh.data} and \code{ref.data}.
 Variable to adjust are given in \code{adjust}.
-Variable names needs to match in both \code{coh.data} and \code{ref.data}.
+Variable names needs to match in both \code{coh.data} and \code{ref.data}. 
 Typical variables to adjust by are gender, age group and calendar period.
 
-\code{print} is used to stratify the SIR output. In other words, the variables
+\code{print} is used to stratify the SIR output. In other words, the variables 
 assigned to \code{print} are the covariates of the Poisson model.
 Variable levels are treated as categorical.
-Variables can be assigned in both \code{print} and \code{adjust}.
+Variables can be assigned in both \code{print} and \code{adjust}. 
 This means the output it adjusted and printed by these variables.
 
-\code{print} can also be a list of expressions. This enables changing variable
+\code{print} can also be a list of expressions. This enables changing variable 
 names or transforming variables with functions such as \code{cut} and \code{round}.
 For example, the existing variables \code{agegroup} and \code{year} could be
 transformed to new levels using \code{cut} by
@@ -83,55 +97,62 @@ transformed to new levels using \code{cut} by
 \code{print = list( age.category = cut(agegroup, breaks = c(0,50,75,100)), 
 year.cat = cut(year, seq(1950,2010,20)))}
 
+
 \strong{ref.rate or ref.obs & ref.pyrs}
 
-The population rate variable can be given to the \code{ref.rate} parameter.
+The population rate variable can be given to the \code{ref.rate} parameter. 
 That is, when using e.g. the \code{popmort} or a comparable data file, one may
 supply \code{ref.rate} instead of \code{ref.obs} and \code{ref.pyrs}, which
-will be ignored if \code{ref.rate} is supplied.
+will be ignored if \code{ref.rate} is supplied. 
 
-Note that if all the stratifying variables in
-\code{ref.data} are not listed in \code{adjust},
+
+Note that if all the stratifying variables in 
+\code{ref.data} are not listed in \code{adjust}, 
 or when the categories are otherwise combined,
 the (unweighted) mean of rates is used for computing expected cases.
 This might incur a small bias in comparison to when exact numbers of observations
-and person-years are available.
+and person-years are available. 
+
+
 
 \strong{mstate}
 
 E.g. using \code{lexpand} it's possible to compute counts for several outcomes
-so that the population at risk is same for each
-outcome such as a certain kind of cancer.
-The transition counts are in wide data format,
+so that the population at risk is same for each 
+outcome such as a certain kind of cancer. 
+The transition counts are in wide data format, 
 and the relevant columns can be supplied to \code{sir}
-in a vector via the \code{coh.obs} argument.
+in a vector via the \code{coh.obs} argument. 
 The name of the corresponding new column in \code{ref.data} is given in
 \code{mstate}. It's recommended to include the \code{mstate} variable in \code{adjust},
 so the corresponding information should also be available in \code{ref.data}.
 More examples in sir-vignette.
 
-This approach is analogous to where SIRs are calculated separately their
+This approach is analogous to where SIRs are calculated separately their 
 own function calls.
+
 
 \strong{Other parameters}
 
-\code{univariate} confidence intervals are calculated using exact
+\code{univariate} confidence intervals are calculated using exact 
 Poisson intervals (\code{poisson.ci}). The options \code{profile} and \code{wald} are
-is based on a Poisson regression model: profile-likelihood confidence intervals
+is based on a Poisson regression model: profile-likelihood confidence intervals 
 or Wald's normal-approximation. P-value is Poisson model based \code{conf.type}
 or calculated using the method described by Breslow and Day. Function automatically
 switches to another \code{conf.type} if calculation is not possible with a message.
 Usually model fit fails if there is print stratum with zero expected values.
 
-The LRT p-value tests the levels of \code{print}. The test can be either
+
+The LRT p-value tests the levels of \code{print}. The test can be either 
 \code{"homogeneity"}, a likelihood ratio test where the model variables defined in
 \code{print} (factor) is compared to the constant model.
 Option \code{"trend"} tests if the linear trend of the continuous variable in
 \code{print} is significant (using model comparison).
 
+
 \strong{EAR: Excess Absolute Risk}
 
-Excess Absolute Risk is a simple way to quantify the absolute difference between cohort risk and
+Excess Absolute Risk is a simple way to quantify the absolute difference between cohort risk and 
 population risk.
 Make sure that the person-years are calculated accordingly before using EAR. (when using mstate)
 
@@ -140,19 +161,19 @@ Formula for EAR:
 
 \strong{Data format}
 
-The data should be given in tabulated format. That is the number of observations
+The data should be given in tabulated format. That is the number of observations 
 and person-years are represented for each stratum.
-Note that also individual data is allowed as long as each observations,
+Note that also individual data is allowed as long as each observations, 
 person-years, and print and adjust variables are presented in columns.
-The extra variables and levels are reduced automatically before estimating SIRs.
+The extra variables and levels are reduced automatically before estimating SIRs. 
 Example of data format:
 
 \tabular{rrrrr}{
-sex \tab age \tab period \tab obs \tab pyrs \cr
-0 \tab 1 \tab 2010 \tab 0 \tab 390 \cr
-0 \tab 2 \tab 2010 \tab 5 \tab 385 \cr
-1 \tab 1 \tab 2010 \tab 3 \tab 308 \cr
-1 \tab 2 \tab 2010 \tab 12 \tab 315
+  sex \tab age \tab period \tab obs \tab pyrs \cr
+  0 \tab 1 \tab 2010 \tab 0 \tab 390 \cr
+  0 \tab 2 \tab 2010 \tab 5 \tab 385 \cr
+  1 \tab 1 \tab 2010 \tab 3 \tab 308 \cr
+  1 \tab 2 \tab 2010 \tab 12 \tab 315
 }
 }
 \examples{
@@ -174,15 +195,22 @@ se
 \code{\link{lexpand}}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir functions: \code{\link{lines.sirspline}},
-  \code{\link{plot.sirspline}}, \code{\link{sir_exp}},
-  \code{\link{sir_ratio}}, \code{\link{sirspline}}
+Other sir functions: 
+\code{\link{lines.sirspline}()},
+\code{\link{plot.sirspline}()},
+\code{\link{sir_exp}()},
+\code{\link{sir_ratio}()},
+\code{\link{sirspline}()}
 
-Other main functions: \code{\link{Surv}},
-  \code{\link{rate}}, \code{\link{relpois_ag}},
-  \code{\link{relpois}}, \code{\link{sirspline}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other main functions: 
+\code{\link{Surv}()},
+\code{\link{rate}()},
+\code{\link{relpois_ag}()},
+\code{\link{relpois}()},
+\code{\link{sirspline}()},
+\code{\link{survmean}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 }
 \author{
 Matti Rantanen, Joonas Miettinen

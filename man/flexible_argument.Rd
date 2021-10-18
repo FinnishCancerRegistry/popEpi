@@ -4,16 +4,16 @@
 \alias{flexible_argument}
 \title{Flexible Variable Usage in \pkg{popEpi} Functions}
 \description{
-Certain arguments in \pkg{popEpi} can be passed in multiple
+Certain arguments in \pkg{popEpi} can be passed in multiple 
 ways. This document shows the usage and a pitfall in the
 usage of such flexible arguments.
 }
 \details{
 Flexible arguments in \pkg{popEpi} are used to pass variables existing
-in your data or in the environment where the function is used
+in your data or in the environment where the function is used 
 (for everyday users this is the global environment - in simple terms,
 where your data is / your work space). The flexible arguments
-are modelled after the \code{by} argument in \code{data.tables} -
+are modelled after the \code{by} argument in \code{data.tables} - 
 see \code{?data.table}. There are many ways to supply the same information
 to certain functions in \pkg{popEpi}, but the possible ways listed below
 may be limited in some of them to only allow for using only a part of them.
@@ -93,13 +93,13 @@ passing the variable containing the character strings:
 
 \code{FUN(arg = TF$vars, data = x)}
 
-Even if \code{x} has columns named \code{vars} and \code{TF},
+Even if \code{x} has columns named \code{vars} and \code{TF}, 
 using \code{TF$vars} does not use those columns but only evaluates
 \code{TF$vars}
 in the calling environment. This is made possible by the fact
 that data is always passed as a \code{data.frame}, within which evaluation
 of expressions using the dollar operator is not possible. Therefore
-it is safe to assume the data should not be used. However, lists of
+it is safe to assume the data should not be used. However, lists of 
 expressions will not be checked for dollar use and will fail in conflict
 situations:
 
@@ -160,7 +160,8 @@ st <- survtab_ag(fot ~ 1, data = x, surv.type = "surv.obs",
                  surv.method = "hazard")
 }
 \seealso{
-Other popEpi argument evaluation docs: \code{\link{direct_standardization}}
+Other popEpi argument evaluation docs: 
+\code{\link{direct_standardization}}
 }
 \author{
 Joonas Miettinen

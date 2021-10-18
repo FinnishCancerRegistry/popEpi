@@ -11,7 +11,7 @@ is.Date(obj)
 }
 \description{
 Tests if an object is a \code{Date} object and returns
-a logical vector of length 1. \code{IDate} objects are also
+a logical vector of length 1. \code{IDate} objects are also 
 \code{Date} objects, but \code{date} objects from package \pkg{date}
 are not.
 }

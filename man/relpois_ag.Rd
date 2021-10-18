@@ -4,8 +4,17 @@
 \alias{relpois_ag}
 \title{Excess hazard Poisson model}
 \usage{
-relpois_ag(formula, data, d.exp, offset = NULL, breaks = NULL,
-  subset = NULL, piecewise = TRUE, check = TRUE, ...)
+relpois_ag(
+  formula,
+  data,
+  d.exp,
+  offset = NULL,
+  breaks = NULL,
+  subset = NULL,
+  piecewise = TRUE,
+  check = TRUE,
+  ...
+)
 }
 \arguments{
 \item{formula}{a formula with the counts of events as the response.
@@ -13,7 +22,7 @@ Passed on to \code{glm}. May contain usage of the \code{offset()} function
 instead of supplying the offset for the Poisson model via the argument
 \code{offset}.}
 
-\item{data}{an \code{aggre} object (an aggregated data set;
+\item{data}{an \code{aggre} object (an aggregated data set; 
 see \code{\link{as.aggre}} and \code{\link{aggre}})}
 
 \item{d.exp}{the counts of expected cases. Mandatory.
@@ -24,7 +33,7 @@ E.g. \code{d.exp = EXC_CASES}, where \code{EXC_CASES} is a column in data.}
 variable in data. Not mandatory, but almost always should be supplied.}
 
 \item{breaks}{optional; a numeric vector of [a,b) breaks to specify
-survival intervals over the follow-up time; if \code{NULL}, the
+survival intervals over the follow-up time; if \code{NULL}, the 
 existing breaks along the mandatory time scale mentioned in \code{formula}
 are used}
 
@@ -32,17 +41,17 @@ are used}
 limits the data before estimation}
 
 \item{piecewise}{\code{logical}; if \code{TRUE}, and if any time scale
-from data is used (mentioned) in the formula, the time scale is
+from data is used (mentioned) in the formula, the time scale is 
 transformed into a factor variable indicating intervals on the time scale.
 Otherwise the time scale left as it is, usually a numeric variable.
 E.g. if \code{formula = counts ~ TS1*VAR1}, \code{TS1} is transformed
 into a factor before fitting model.}
 
-\item{check}{\code{logical}; if \code{TRUE}, performs check on the
-negativity excess cases by factor-like covariates in formula -
+\item{check}{\code{logical}; if \code{TRUE}, performs check on the 
+negativity excess cases by factor-like covariates in formula - 
 negative excess cases will very likely lead to non-converging model}
 
-\item{...}{any other argument passed on to \code{\link[stats]{glm}} such as
+\item{...}{any other argument passed on to \code{\link[stats]{glm}} such as 
 \code{control} or \code{weights}}
 }
 \value{
@@ -81,14 +90,20 @@ AIC(rpm, rpm2)
 \seealso{
 \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}
 
-Other main functions: \code{\link{Surv}},
-  \code{\link{rate}}, \code{\link{relpois}},
-  \code{\link{sirspline}}, \code{\link{sir}},
-  \code{\link{survmean}}, \code{\link{survtab_ag}},
-  \code{\link{survtab}}
+Other main functions: 
+\code{\link{Surv}()},
+\code{\link{rate}()},
+\code{\link{relpois}()},
+\code{\link{sirspline}()},
+\code{\link{sir}()},
+\code{\link{survmean}()},
+\code{\link{survtab_ag}()},
+\code{\link{survtab}()}
 
-Other relpois functions: \code{\link{RPL}},
-  \code{\link{relpois}}, \code{\link{rpcurve}}
+Other relpois functions: 
+\code{\link{RPL}},
+\code{\link{relpois}()},
+\code{\link{rpcurve}()}
 }
 \author{
 Joonas Miettinen, Karri Seppa

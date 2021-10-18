@@ -16,7 +16,7 @@ numeric.}
 \item{messages}{logical; if \code{TRUE}, returns a message of what was done with the \code{num.values}}
 }
 \description{
-Brute force solution for ensuring a variable is numeric by
+Brute force solution for ensuring a variable is numeric by 
 coercing a variable of any type first to factor and then to numeric
 }
 \note{

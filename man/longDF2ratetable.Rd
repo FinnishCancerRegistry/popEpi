@@ -4,8 +4,11 @@
 \alias{longDF2ratetable}
 \title{\strong{Experimental}: Coerce a long-format \code{data.frame} to a \code{ratetable} object}
 \usage{
-longDF2ratetable(DF, value.var = "haz", by.vars = setdiff(names(DF),
-  value.var))
+longDF2ratetable(
+  DF,
+  value.var = "haz",
+  by.vars = setdiff(names(DF), value.var)
+)
 }
 \arguments{
 \item{DF}{a \code{data.frame}}
@@ -21,8 +24,8 @@ which can be used in e.g. \pkg{survival}'s expected survival computations
 and \pkg{relsurv}'s relative survival computations.
 }
 \seealso{
-\code{\link[survival]{ratetable}},
-\code{\link{as.data.table.ratetable}},
+\code{\link[survival]{ratetable}}, 
+\code{\link{as.data.table.ratetable}}, 
 \code{\link{as.data.frame.ratetable}}
 }
 \author{
