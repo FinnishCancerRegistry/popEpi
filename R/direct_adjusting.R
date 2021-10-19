@@ -131,7 +131,7 @@
 #' @references
 #' Source of the Nordic standard population in 5-year age groups 
 #' (also contains European & 1966 world standards):
-#' \url{http://www-dep.iarc.fr/NORDCAN/english/glossary.htm}
+#' \url{https://www-dep.iarc.fr/NORDCAN/english/glossary.htm}
 #' 
 #' Source of the 1976 European standard population: 
 #' 

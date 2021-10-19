@@ -67,7 +67,7 @@ NULL
 #' 
 #'
 #' @source 
-#' \href{http://seer.cancer.gov/stdpopulations/survival.html}{ICSS weights (US National Cancer Institute website)}
+#' \href{https://seer.cancer.gov/stdpopulations/survival.html}{ICSS weights (US National Cancer Institute website)}
 #' 
 #' Corazziari, Isabella, Mike Quinn, and Riccardo Capocaccia. "Standard cancer patient population for age standardising survival ratios." European Journal of Cancer 40.15 (2004): 2307-2316.
 #' @format data.table with columns
@@ -139,7 +139,7 @@ NULL
 #'
 #'
 #' @source Standard population is from:
-#' \href{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}{world standard population "101of1"}
+#' \href{https://seer.cancer.gov/stdpopulations/stdpop.singleages.html}{world standard population "101of1"}
 #' 
 #' @format data.table with columns
 #' \itemize{
