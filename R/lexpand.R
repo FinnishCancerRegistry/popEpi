@@ -176,7 +176,7 @@
 #' 
 #' E.g. with 5 rows of duration \code{1/5} within a survival interval 
 #' \code{[0,1)]}, \code{pp} is determined for all records by a cumulative 
-#' population survival from \code{0} to \code{0.5}. Th existing accuracy is used,
+#' population survival from \code{0} to \code{0.5}. The existing accuracy is used,
 #' so that the weight is cumulated first up to the end of the second row
 #' and then over the remaining distance to the mid-point (first to 0.4, then to
 #' 0.5). This ensures that more accurately merged population hazards are fully

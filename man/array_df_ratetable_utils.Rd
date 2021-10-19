@@ -100,7 +100,7 @@ calls `long_df_to_array`
 - `array_to_long_df`: converts an array with one or more dimensions into
   a long-format `data.frame`; any [dimnames] are used to name and fill the 
   stratifying columns; for dimensions without a name, `".dX"` is used
-  for the `X`th stratifying column; for each `k`, if there are no contents
+  for stratifying column number `X`; for each `k`, if there are no contents
   in `dimnames(x)[[k]]`, the elements of `seq(dim(x)[k])` are used to fill 
   the corresponding stratifying column; the value column always has the name
   `"value"`
