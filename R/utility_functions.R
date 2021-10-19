@@ -132,7 +132,7 @@ na2zero = function(DT, vars = NULL) {
 #' @seealso
 #' \code{\link{robust_values}}
 #' @source 
-#' \href{http://stackoverflow.com/questions/3418128/how-to-convert-a-factor-to-an-integer-numeric-without-a-loss-of-information}{Stackoverflow thread}
+#' \href{https://stackoverflow.com/questions/3418128/how-to-convert-a-factor-to-an-integer-numeric-without-a-loss-of-information}{Stackoverflow thread}
 #' @examples
 #' ## this is often not intended
 #' as.numeric(factor(c(5,7))) ## result: c(1,2)
@@ -437,7 +437,7 @@ setclass <- function(obj, cl, add=FALSE, add.place="first") {
 #' to be integers; e.g. by default \code{1 + .Machine$double.eps} is considered
 #' to be an integer but \code{1 + .Machine$double.eps^0.49} is not.
 #' @export try2int
-#' @source \href{http://stackoverflow.com/questions/3476782/how-to-check-if-the-number-is-integer}{Stackoverflow thread}
+#' @source \href{https://stackoverflow.com/questions/3476782/how-to-check-if-the-number-is-integer}{Stackoverflow thread}
 try2int <- function(obj, tol = .Machine$double.eps^0.5) {
   if (!is.numeric(obj)) stop("obj needs to be integer or double (numeric)")
   if (is.integer(obj)) return(obj)

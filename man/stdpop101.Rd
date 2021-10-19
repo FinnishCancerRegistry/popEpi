@@ -12,7 +12,7 @@ data.table with columns
 }
 \source{
 Standard population is from:
-\href{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}{world standard population "101of1"}
+\href{https://seer.cancer.gov/stdpopulations/stdpop.singleages.html}{world standard population "101of1"}
 }
 \description{
 World standard population by 1 year age groups from 1 to 101. Sums to 100 000.

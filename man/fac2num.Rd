@@ -4,7 +4,7 @@
 \alias{fac2num}
 \title{Convert factor variable to numeric}
 \source{
-\href{http://stackoverflow.com/questions/3418128/how-to-convert-a-factor-to-an-integer-numeric-without-a-loss-of-information}{Stackoverflow thread}
+\href{https://stackoverflow.com/questions/3418128/how-to-convert-a-factor-to-an-integer-numeric-without-a-loss-of-information}{Stackoverflow thread}
 }
 \usage{
 fac2num(x)

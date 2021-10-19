@@ -140,7 +140,7 @@
 #' IARC Scientific Publications, No. 15, Lyon, IARC
 #' 
 #' Source of 2000 world standard population in 1-year age groups:
-#' \url{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}
+#' \url{https://seer.cancer.gov/stdpopulations/stdpop.singleages.html}
 
 NULL
 

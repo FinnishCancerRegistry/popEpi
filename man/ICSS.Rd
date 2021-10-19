@@ -13,7 +13,7 @@ data.table with columns
 }
 }
 \source{
-\href{http://seer.cancer.gov/stdpopulations/survival.html}{ICSS weights (US National Cancer Institute website)}
+\href{https://seer.cancer.gov/stdpopulations/survival.html}{ICSS weights (US National Cancer Institute website)}
 
 Corazziari, Isabella, Mike Quinn, and Riccardo Capocaccia. "Standard cancer patient population for age standardising survival ratios." European Journal of Cancer 40.15 (2004): 2307-2316.
 }
