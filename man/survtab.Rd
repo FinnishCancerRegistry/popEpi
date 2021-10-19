@@ -284,7 +284,7 @@ st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x,
 }
 }
 \references{
-Perme, Maja Pohar, Janez Stare, and Jacques Estève. 
+Perme, Maja Pohar, Janez Stare, and Jacques Esteve. 
 "On estimation in relative survival." Biometrics 68.1 (2012): 113-120.
 
 Hakulinen, Timo, Karri Seppa, and Paul C. Lambert. 
