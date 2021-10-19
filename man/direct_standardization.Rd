@@ -137,9 +137,6 @@ Waterhouse, J.,Muir, C.S.,Correa, P.,Powell, J., eds (1976).
 Cancer Incidence in Five Continents, Vol. III. 
 IARC Scientific Publications, No. 15, Lyon, IARC
 
-A comparison of the 1966 vs. 2000 world standard populations in 5-year age groups:
-\url{http://www3.ha.org.hk/cancereg/e_asr.asp}
-
 Source of 2000 world standard population in 1-year age groups:
 \url{http://seer.cancer.gov/stdpopulations/stdpop.singleages.html}
 }
