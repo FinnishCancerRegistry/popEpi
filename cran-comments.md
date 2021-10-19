@@ -1,11 +1,14 @@
 
-# popEpi CRAN upload, v.0.4.7
+# popEpi CRAN upload, v.0.4.8
 
-* R-oldrel = R version 3.5.3 (2019-03-11)
-* R-release = R version 3.6.1 (2019-07-05)
-* R-patched = R version 3.6.1 Patched 2019-09-14 r77195) 
-* R-devel = R Under development (unstable) (2018-06-20 r74924)
+popEpi was archived because I missed your warning concerning R-devel changes
+which caused an error in popEpi. Here's a new release which fixes that issue.
+Below are a bunch of checks I ran using winbuilder and rhub.
 
+* R-oldrel = R version 4.0.5 (2021-03-31)
+* R-release = R version 4.1.1 (2021-08-10)
+* R-patched = R version 4.0.5 (2021-03-31)
+* R-devel = R Under development (unstable) (2021-10-14 r81057)
 
 ## win builder checks
 
@@ -15,62 +18,56 @@
 
 ## R-hub checks
 
-Some checks could not be completed due to installation errors on R-hub.
+### Windows Server 2008 R2 SP1
 
-### Windows Server 2008
+* R-oldrel, 32/64 bit --- OK
+* R-release, 32/64 bit --- OK
+* R-devel, 32/64 bit --- OK
 
-* Windows Server 2008 R2 SP1, R-oldrel, 32/64 bit --- install error
-* Windows Server 2008 R2 SP1, R-release, 32/64 bit --- OK
-* Windows Server 2008 R2 SP1, R-patched, 32/64 bit --- OK
-* Windows Server 2008 R2 SP1, R-devel, 32/64 bit --- OK
+### Apple Silicon (M1), macOS 11.6 Big Sur
 
-### Windows Server 2012
+* R-release --- OK
 
-* Windows Server 2012, R-devel, Rtools4.0, 32/64 bit (experimental) --- OK
+### macOS 10.13.6 High Sierra
 
-### macOS 10.11
-
-*	macOS 10.11 El Capitan, R-release (experimental) --- OK
+* R-release, brew --- OK
+* R-release, CRAN's setup --- OK
 
 ### Debian Linux
 
 * Debian Linux, R-release, GCC --- OK
-* Debian Linux, R-patched, GCC
+* Debian Linux, R-patched, GCC --- OK
 * Debian Linux, R-devel, GCC --- OK
-* Debian Linux, R-devel, GCC ASAN/UBSAN --- OK
+* Debian Linux, R-devel, GCC ASAN/UBSAN --- Rhub installation error
 * Debian Linux, R-devel, GCC, no long double --- OK
-* Debian Linux, R-devel, clang, ISO-8859-15 locale
+* Debian Linux, R-devel, clang, ISO-8859-15 locale --- OK
 
 ### Fedora Linux
 
-* Fedora Linux, R-devel, clang, gfortran
+* Fedora Linux, R-devel, clang, gfortran --- OK
 * Fedora Linux, R-devel, GCC --- OK
 
-### CentOS
+### CentOS 8
 
-* CentOS 6, stock R from EPEL (R version 3.5.2 (2018-12-20)) --- install error
-* CentOS 6 with Redhat Developer Toolset, R from EPEL 
-  (R version 3.5.2 (2018-12-20)) --- install error
+* stock R from EPEL (R version 4.0.4 (2021-02-15)) --- OK
 
-### Ubuntu Linux
+### Ubuntu Linux 20.04 LTS
 
-* Ubuntu Linux 16.04 LTS, R-release, GCC --- OK
-* Ubuntu Linux 16.04 LTS, R-devel, GCC
-* Ubuntu Linux 16.04 LTS, R-devel with rchk --- OK
+* R-release, GCC --- OK
+* R-devel, GCC --- OK
+* R-devel with rchk --- Rhub installation error
 
+### Oracle Solaris 10, x86, 32 bit
 
-### Oracle Solaris
-
-* Oracle Solaris 10, x86, 32 bit, R-patched (experimental) --- install error
-
+* R release, Oracle Developer Studio 12.6 --- OK
+* R release --- OK
 
 ## Other checks:
 
 * Travis CI: Ubuntu 16.04.6 LTS, R version 3.6.1 (2017-01-27) --- OK
 
 * Appveyor CI: Windows Server 2012 R2 x64 (build 9600), 
-R version 3.6.1 Patched (2019-09-23 r77211) --- OK
+R version 4.1.1 Patched (2021-10-16 r81070) --- OK
 
-* Ubuntu Linux 19.04, R-release --- OK
 
 
