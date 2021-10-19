@@ -14,8 +14,8 @@ Language: en-GB
 Description: Enables computation of epidemiological statistics, including those 
     where counts or mortality rates of the reference population are used. 
     Currently supported: excess hazard models, rates, mean survival times, 
-    relative survival, and standardized incidence and mortality ratios 
-    (SIRs/SMRs), all of which can be easily adjusted for by covariates such as 
+    relative survival, and standardized incidence and mortality ratios, 
+    all of which can be easily adjusted for by covariates such as 
     age. Fast splitting and aggregation of 'Lexis' objects (from package 'Epi') 
     and other computations achieved using 'data.table'. 
 Depends: R (>= 3.2.0)
