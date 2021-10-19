@@ -15,6 +15,12 @@ knitr::opts_chunk$set(
 devtools::load_all()
 ```
 
+# Changes in 0.4.9
+
+* `popEpi::aggre` bugfix: `aggre` now correctly infers which stratifying 
+  variables use Lexis time scales when output is cartesian and argument `by`
+  is of type character.
+
 # Changes in 0.4.8
 
 * small internal fixes due to upcoming new package survival release

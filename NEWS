@@ -1,9 +1,14 @@
 popEpi 0.4.8
 =====
+* popEpi::aggre bugfix: aggre now correctly infers which stratifying 
+  variables use Lexis time scales when output is cartesian and argument "by"
+  is of type character.
+
+popEpi 0.4.8
+=====
 * small internal fixes due to upcoming new package survival release
 * popEpi now includes a wrapper for survival::Surv, so you don't need to
   do library("survival") when using Surv() in formulae (e.g. in survtab)
-
 
 popEpi 0.4.7
 =====
@@ -12,7 +17,6 @@ popEpi 0.4.7
 popEpi 0.4.6
 =====
 * implemented small internal changes due to upcoming data.table version
-
 
 popEpi 0.4.5
 =====
