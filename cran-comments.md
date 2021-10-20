@@ -20,47 +20,47 @@ Below are a bunch of checks I ran using winbuilder and rhub.
 
 ### Windows Server 2008 R2 SP1
 
-* R-oldrel, 32/64 bit --- OK
-* R-release, 32/64 bit --- OK
 * R-devel, 32/64 bit --- OK
+* R-release, 32/64 bit --- OK
+* R-patched, 32/64 bit --- OK
+* R-oldrel, 32/64 bit --- OK
 
-### Apple Silicon (M1), macOS 11.6 Big Sur
+### Oracle Solaris 10, x86, 32 bit
 
 * R-release --- OK
 
-### macOS 10.13.6 High Sierra
+### Fedora Linux
 
-* R-release, brew --- OK
-* R-release, CRAN's setup --- OK
+* R-devel, GCC --- OK
+* R-devel, clang, gfortran --- OK
 
 ### Debian Linux
 
-* Debian Linux, R-release, GCC --- OK
-* Debian Linux, R-patched, GCC --- OK
-* Debian Linux, R-devel, GCC --- OK
-* Debian Linux, R-devel, GCC ASAN/UBSAN --- Rhub installation error
-* Debian Linux, R-devel, GCC, no long double --- OK
-* Debian Linux, R-devel, clang, ISO-8859-15 locale --- OK
+* R-devel, GCC --- OK
+* R-devel, clang, ISO-8859-15 locale --- OK
+* R-release, GCC --- OK
+* R-devel, GCC, no long double --- OK
+* R-patched, GCC --- OK
+* R-devel, GCC ASAN/UBSAN --- rhub preparation error
 
-### Fedora Linux
+### Ubuntu Linux 20.04.1 LTS
 
-* Fedora Linux, R-devel, clang, gfortran --- OK
-* Fedora Linux, R-devel, GCC --- OK
+* R-devel with rchk --- rhub preparation error
+* R-devel, GCC --- OK
+* R-release, GCC --- OK
 
 ### CentOS 8
 
 * stock R from EPEL (R version 4.0.4 (2021-02-15)) --- OK
 
-### Ubuntu Linux 20.04 LTS
+### macOS 10.13.6 High Sierra
 
-* R-release, GCC --- OK
-* R-devel, GCC --- OK
-* R-devel with rchk --- Rhub installation error
+* R-release, brew --- OK
 
-### Oracle Solaris 10, x86, 32 bit
+### Apple Silicon (M1), macOS 11.6 Big Sur
 
-* R release, Oracle Developer Studio 12.6 --- OK
-* R release --- OK
+* R-release --- OK
+* R-release, CRAN's setup --- OK
 
 ## Other checks:
 
