@@ -146,7 +146,7 @@ print.sirspline <- function(x, ...) {
 #' 
 #' 
 #' @examples 
-#' \dontrun{
+#' \donttest{
 #' # Plot SIR estimates
 #'# plot(sir.by.gender, col = c(4,2), log=FALSE, eps=0.2, lty=1, lwd=2, pch=19,  
 #'#      main = 'SIR by gender', abline=TRUE)

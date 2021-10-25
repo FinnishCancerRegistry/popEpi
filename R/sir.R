@@ -391,7 +391,7 @@ sir <- function( coh.data,
 #' @import splines
 #' @import stats
 #' 
-#' @examples \dontrun{
+#' @examples \donttest{
 #' ## for examples see: vignette('sir')
 #' }
 
@@ -1261,7 +1261,7 @@ confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile',
 #' 
 #' @examples 
 #' 
-#' \dontrun{
+#' \donttest{
 #' BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
 #' 
 #' ## Aggregated data

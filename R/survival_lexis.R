@@ -36,7 +36,7 @@
 #' 
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data("sire", package = "popEpi")
 #' library(Epi)
 #'

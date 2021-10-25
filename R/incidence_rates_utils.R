@@ -21,7 +21,7 @@
 #' person-years, this must be changed to FALSE.
 #' 
 #' @examples 
-#' \dontrun{
+#' \donttest{
 #' # two rate ratios; silly example with female rectal / breast cancer 
 #' ## mortality rates
 #' data("sire", package = "popEpi")

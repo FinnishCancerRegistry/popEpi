@@ -278,7 +278,7 @@
 #' 
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' ## prepare data for e.g. 5-year cohort survival calculation
 #' x <- lexpand(sire, breaks=list(fot=seq(0, 5, by = 1/12)), 
 #'              birth = bi_date, entry = dg_date, exit = ex_date,

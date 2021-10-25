@@ -70,7 +70,7 @@
 #' #### let's prepare data for computing period method survivals
 #' #### in case there are problems with dates, we first 
 #' #### convert to fractional years.
-#' \dontrun{
+#' \donttest{
 #' library("Epi")
 #' library("data.table")
 #' data("sire", package = "popEpi")

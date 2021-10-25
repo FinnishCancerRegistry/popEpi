@@ -26,7 +26,7 @@
 #' @import stats
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' ## use the simulated rectal cancer cohort
 #' data("sire", package = "popEpi")
 #' ab <- c(0,45,55,65,70,Inf)
