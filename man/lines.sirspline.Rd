@@ -17,6 +17,9 @@
 
 \item{...}{arguments passed on to lines()}
 }
+\value{
+Always returns `NULL` invisibly.
+}
 \description{
 Plot SIR spline lines with R base graphics
 }

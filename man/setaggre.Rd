@@ -20,6 +20,9 @@ fully named, with the names corresponding to time scales at the aggregate
 level in your data. Every unique value in a time scale variable in data must
 also exist in the corresponding vector in the breaks list.}
 }
+\value{
+Returns `x` invisibly after setting attributes to it without taking a copy.
+}
 \description{
 Coerces an R object to an \code{aggre} object, identifying
 the object as one containing aggregated counts, person-years and other

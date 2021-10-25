@@ -9,6 +9,9 @@ lower_bound(cut)
 \arguments{
 \item{cut}{is a character vector of elements "(20,60]"}
 }
+\value{
+A numeric vector.
+}
 \description{
 selects lowest values of each factor after cut() based
 on that the value starts from index 2 and end in comma ",".

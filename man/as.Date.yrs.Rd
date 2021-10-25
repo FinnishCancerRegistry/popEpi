@@ -12,6 +12,9 @@
 \item{...}{unused, included for compatibility with other \code{as.Date}
 methods}
 }
+\value{
+A vector of `Date` values based on the input fractional years.
+}
 \description{
 Coerces an \code{yrs} object to a \code{Date} object.
 Some loss of information comes if \code{year.length = "approx"} 

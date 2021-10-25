@@ -9,6 +9,9 @@ is.Date(obj)
 \arguments{
 \item{obj}{object to test on}
 }
+\value{
+`TRUE` if `obj` is of class `"Date"` or `"IDate"`.
+}
 \description{
 Tests if an object is a \code{Date} object and returns
 a logical vector of length 1. \code{IDate} objects are also 
@@ -31,7 +34,6 @@ date::is.date(da) ## FALSE
 da <- date::as.date("1jan2000")
 is.Date(da) ## FALSE
 date::is.date(da) ## TRUE
- 
 }
 \seealso{
 \code{\link{get.yrs}}, \code{\link{is_leap_year}}, \code{\link{as.Date}}

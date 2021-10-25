@@ -151,6 +151,8 @@ print.sirspline <- function(x, ...) {
 #'# plot(sir.by.gender, col = c(4,2), log=FALSE, eps=0.2, lty=1, lwd=2, pch=19,  
 #'#      main = 'SIR by gender', abline=TRUE)
 #' }
+#' @return
+#' Always returns `NULL` invisibly.
 #' @export
 
 plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main, 
@@ -223,6 +225,7 @@ plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main,
   
   # reset margins
   par(mar = old.margin)
+  return(invisible(NULL))
 }
 
 #' @title \code{plot} method for sirspline-object
@@ -252,6 +255,8 @@ plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main,
 #' On top of the frame it's then possible to add a \code{grid}, 
 #' \code{abline} or text before plotting the lines (see: \code{sirspline}).
 #' @export
+#' @return
+#' Always returns `NULL` invisibly.
 #' @family sir functions
 plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, ylab, xlab,  ...) {
 
@@ -319,7 +324,7 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
   if(sum(plotdim) > 1) {
     par(save_par)
   }
-  return(invisible())
+  return(invisible(NULL))
 }
 
 
@@ -350,6 +355,9 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 #' 
 #' @import graphics
 #' @export
+#' @return
+#' Always returns `NULL` invisibly.
+
 lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline, ... ){
   ## input: sirspline object, with only one spline var (spline.est.A)
   ## input: print levels can be > 1.
@@ -404,6 +412,7 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
       lines(x = x[[spl]], y = x[[est]][index, m], ...)
     }
   }
+  return(invisible(NULL))
 }
 
 #' @title Print an rate object
@@ -416,6 +425,8 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
 #' \code{subset = sex == "female"}
 #' @param ... arguments for data.tables print method, e.g. row.names = FALSE suppresses row numbers.
 #' @export
+#' @return
+#' Always returns `NULL` invisibly.
 print.rate <- function(x, subset = NULL, ...) {
   
   ra <- attributes(x)$rate.meta
@@ -450,6 +461,7 @@ print.rate <- function(x, subset = NULL, ...) {
   
   setDT(x)
   print(x, ...)
+  return(invisible(NULL))
 }
 
 
@@ -471,6 +483,8 @@ print.rate <- function(x, subset = NULL, ...) {
 #' 
 #' @import graphics
 #' @export
+#' @return
+#' Always returns `NULL` invisibly.
 plot.rate <- function(x, conf.int = TRUE, eps = 0.2, left.margin, xlim, ...) {
   
   ra <- attributes(x)$rate.meta
@@ -527,6 +541,7 @@ plot.rate <- function(x, conf.int = TRUE, eps = 0.2, left.margin, xlim, ...) {
     segments(hi, lvls - eps, hi, lvls + eps, ...)
   }
   par(mar = old.margin) # revert margins
+  return(invisible(NULL))
 }
 
 
@@ -618,6 +633,8 @@ preface_survtab.print <- function(x) {
 #' if the table is large, 
 #' \code{nrow = 100} for number of rows to print, etc.
 #' @export
+#' @return
+#' Always returns `NULL` invisibly.
 print.aggre <- function(x, subset = NULL, ...) {
   
   PF <- parent.frame(1L)
@@ -629,7 +646,7 @@ print.aggre <- function(x, subset = NULL, ...) {
   setDT(x)
   
   print(x, ...)
-  
+  return(invisible(NULL))
 }
 
 #' @title Summarize an \code{aggre} Object
@@ -645,6 +662,8 @@ print.aggre <- function(x, subset = NULL, ...) {
 #' @param ... unused
 #' @export
 #' @family aggregation functions
+#' @return
+#' Returns a `data.table` --- a further aggregated version of `object`.
 summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
   
   PF <- parent.frame(1L)
@@ -682,6 +701,8 @@ summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
 #' \code{nrow = 100} for number of rows to print, etc.
 #' @export
 #' @family survtab functions
+#' @return
+#' Always returns `NULL` invisibly.
 print.survtab <- function(x, subset = NULL, ...) {
   
   Tstart <- Tstop <- NULL ## APPEASE R CMD CHECK
@@ -737,7 +758,7 @@ print.survtab <- function(x, subset = NULL, ...) {
   setcolsnull(x, keep = c(pv, "Tstop", sa$surv.vars), colorder = TRUE)
   if (length(pv)) setnames(x, pv, pv_orig)
   print(data.table(x), ...)
-  invisible()
+  return(invisible(NULL))
 }
 
 #' @title Summarize a survtab Object
@@ -810,7 +831,8 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' ## if you want all estimates in a new data.frame, you can also simply do
 #' 
 #' x <- as.data.frame(st)
-#' 
+#' @return
+#' A `data.table`: a slice from `object` based on `t`, `subset`, and `q`.
 #' @export
 #' @family survtab functions
 summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
@@ -1109,6 +1131,8 @@ prep_plot_survtab <- function(x,
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
 #' @family survtab functions
+#' @return
+#' Always returns `NULL` invisibly.
 plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
   Tstop <- delta <- NULL ## APPEASE R CMD CHECK
@@ -1160,7 +1184,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
   lines.survtab(x, subset = NULL, y = y, conf.int=conf.int,
                 col=col, lty=lty, ...)
   
- 
+  return(invisible(NULL))
 }
 
 
@@ -1204,6 +1228,8 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 #' plot(st, "surv.obs", col = c(2,2,4,4), lty = c(1, 2, 1, 2))
 #' @export
 #' @family survtab functions
+#' @return
+#' Always returns `NULL` invisibly.
 lines.survtab <- function(x, y = NULL, subset = NULL, 
                           conf.int = TRUE, col=NULL, lty=NULL, ...) {
   Tstop <- NULL ## APPEASE R CMD CHECK
@@ -1249,7 +1275,7 @@ lines.survtab <- function(x, y = NULL, subset = NULL,
            strata.vars = strata, 
            data = x, col = col, lty = lty, ...)
   
-  
+  return(invisible(NULL))
 }
 
 
@@ -1364,6 +1390,8 @@ lines_by <- function(x, y, strata.vars = NULL, data, col, lty, ...) {
 #' where \code{x} is a \code{survmean} object.
 #' @export
 #' @family survmean functions
+#' @return
+#' Always returns `NULL` invisibly.
 plot.survmean <- function(x, ...) {
   at <- attr(x, "survmean.meta")
   curves <- at$curves
@@ -1389,7 +1417,7 @@ plot.survmean <- function(x, ...) {
     Stratum <- curves[, unique(interaction(.SD)), .SDcols = eval(by.vars)]
     legend(x = "topright", legend = Stratum, col = seq_along(Stratum), lty = 1)
   }
-  
+  return(invisible(NULL))
 }
 
 #' @title Graphically Inspect Curves Used in Mean Survival Computation
@@ -1411,6 +1439,8 @@ plot.survmean <- function(x, ...) {
 #' where \code{x} is a \code{survmean} object.
 #' @export
 #' @family survmean functions
+#' @return
+#' Always returns `NULL` invisibly.
 lines.survmean <- function(x, ...) {
   at <- copy(attr(x, "survmean.meta"))
   curves <- at$curves
@@ -1434,6 +1464,7 @@ lines.survmean <- function(x, ...) {
   curves <- cast_simple(curves, columns = by.vars, rows = "Tstop", values = "surv")
   matlines(x=curves$Tstop, y=curves[, setdiff(names(curves), "Tstop"), with=FALSE],  
            lty = rep(1:2, each=type_levs), col = 1:other_levs, ...)
+  return(invisible(NULL))
 }
 
 

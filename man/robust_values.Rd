@@ -15,6 +15,9 @@ numeric.}
 
 \item{messages}{logical; if \code{TRUE}, returns a message of what was done with the \code{num.values}}
 }
+\value{
+A numeric vector.
+}
 \description{
 Brute force solution for ensuring a variable is numeric by 
 coercing a variable of any type first to factor and then to numeric
@@ -43,7 +46,6 @@ values <- c("1", "3", "5", "a")
 suppressWarnings(
   values <- robust_values(values, force=TRUE)
 )
-
 
 }
 \author{

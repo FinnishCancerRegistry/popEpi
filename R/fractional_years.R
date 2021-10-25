@@ -42,6 +42,9 @@
 #' @seealso
 #' \code{\link[Epi]{cal.yr}}, \code{\link{as.Date.yrs}}, \code{\link{as.Date}}
 #' 
+#' @return
+#' A numeric vector of fractional years.
+#' 
 #' @examples
 #' 
 #' data("sire")
@@ -125,6 +128,8 @@ as.yrs.default <- function(x, year.length = "approx", ...) {
 #' dg_date2 <- as.Date(sire$dg_yrs)
 #' summary(as.numeric(dg_date2 - as.Date(sire$dg_date)))
 #' @seealso \code{\link{get.yrs}}
+#' @return
+#' A vector of `Date` values based on the input fractional years.
 #' @export
 as.Date.yrs <- function(x, ...) {
   

@@ -23,6 +23,9 @@ Surv(
 
 \item{origin}{see \link[survival:Surv]{survival::Surv}}
 }
+\value{
+See \verb{[survival::Surv]}.
+}
 \description{
 Wrapper for \link[survival:Surv]{survival::Surv}.
 }

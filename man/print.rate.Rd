@@ -15,6 +15,9 @@ before printing; use this to limit to a certain stratum. E.g.
 
 \item{...}{arguments for data.tables print method, e.g. row.names = FALSE suppresses row numbers.}
 }
+\value{
+Always returns `NULL` invisibly.
+}
 \description{
 Print method function for \code{rate} objects; see
 \code{\link{rate}}.

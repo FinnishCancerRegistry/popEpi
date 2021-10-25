@@ -21,6 +21,9 @@ tries to do it by default.}
 \item{...}{arguments passed on to graphical functions points and segment 
 (e.g. \code{col}, \code{lwd}, \code{pch} and \code{cex})}
 }
+\value{
+Always returns `NULL` invisibly.
+}
 \description{
 Plot rate estimates with confidence intervals lines using R base graphics
 }

@@ -16,7 +16,8 @@
 #' If delayed entry is present in data due to period analysis limiting,
 #' the marginal curve is constructed only for those whose follow-up started
 #' in the respective period.
-#' 
+#' @return
+#' A `data.table` of relative survival curves.
 #' @export 
 #' @family relpois functions
 #' 
@@ -182,7 +183,7 @@ rpcurve <- function(object) {
 #' A list very similar to that created by \code{poisson()}.
 #' @export
 #' @family relpois functions
-RPL <- copy(poisson())
+RPL <- data.table::copy(stats::poisson())
 RPL$link <- "glm relative survival model with Poisson error"
 RPL$linkfun <- function(mu, d.exp) log(mu - d.exp)
 RPL$linkinv <- function(eta, d.exp) d.exp + exp(eta)

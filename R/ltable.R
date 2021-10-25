@@ -80,6 +80,10 @@
 #' @seealso
 #' \code{\link{table}}, \code{\link{cast_simple}}, \code{\link{melt}}
 #' 
+#' @return
+#' A `data.table` of statistics (e.g. counts) stratified by the columns defined
+#' in `by.vars`.
+#' 
 #' @export ltable
 #' 
 #' @examples

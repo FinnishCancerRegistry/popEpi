@@ -13,6 +13,9 @@
 may, therefore, supply e.g. \code{lwd} through this, though arguments
 such as \code{lty} and \code{col} will not work}
 }
+\value{
+Always returns `NULL` invisibly.
+}
 \description{
 Plots the observed (with extrapolation) and expected survival
 curves for all strata in an object created by \code{\link{survmean}}

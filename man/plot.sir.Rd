@@ -41,6 +41,9 @@
 
 \item{...}{arguments passed on to plot(), segment and lines()}
 }
+\value{
+Always returns `NULL` invisibly.
+}
 \description{
 Plot SIR estimates with error bars
 }

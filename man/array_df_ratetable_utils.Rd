@@ -80,6 +80,18 @@ see `cutpoints` under **Details** in [survival::ratetable]
 - `NULL`: automatically set using `dimnames(x)` and `dim.types`
 - `list`: one element for each dimensions of `x`}
 }
+\value{
+- `long_df_to_array`: an `array`
+- `long_df_to_ratetable`: a [survival::ratetable]
+- `long_dt_to_array`: an `array`
+- `long_dt_to_ratetable`: a [survival::ratetable]
+- `array_to_long_df`: an `data.frame`
+- `array_to_long_dt`: an `data.table`
+- `array_to_ratetable`: a [survival::ratetable]
+- `ratetable_to_array`: an `array`
+- `ratetable_to_long_df`: a `data.frame`
+- `ratetable_to_long_dt`: a `data.table`
+}
 \description{
 Utilities to transform objects between `array`, `data.frame`, and
 [survival::ratetable].
@@ -128,5 +140,4 @@ arr2 <- ratetable_to_array(rt)
 long_df2 <- array_to_long_df(arr2)
 
 identical(sort(long_dt[["haz"]]), sort(long_df2[["value"]]))
-
 }

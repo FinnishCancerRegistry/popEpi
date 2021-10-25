@@ -11,6 +11,10 @@ cut_bound(t, factor = TRUE)
 
 \item{factor}{logical; TRUE returns informative character string, FALSE numeric (left value)}
 }
+\value{
+If `factor = TRUE`, returns a character vector; else returns a numeric 
+vector.
+}
 \description{
 Selects lowest values of each factor after cut() based
 on the assumption that the value starts from index 2 and end in comma ",".

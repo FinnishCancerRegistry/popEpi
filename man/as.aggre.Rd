@@ -31,6 +31,10 @@ also exist in the corresponding vector in the breaks list.}
 
 \item{...}{arguments passed to or from methods}
 }
+\value{
+Returns a copy of `x` with attributes set to those of an object of class
+`"aggre"`.
+}
 \description{
 Coerces an R object to an \code{aggre} object, identifying
 the object as one containing aggregated counts, person-years and other

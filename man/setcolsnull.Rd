@@ -27,6 +27,9 @@ the rest will be removed; \code{keep} overrides \code{delete}}
 name in \code{keep} or \code{delete} is missing; \code{soft = FALSE} useful 
 for programming sometimes}
 }
+\value{
+Always returns `NULL` invisibly.
+}
 \description{
 Deletes columns in a \code{data.table} conveniently.
 May only delete columns that are found silently. Sometimes useful in e.g.

@@ -27,6 +27,9 @@ present in \code{obj} for variables in \code{y}}
 \item{...}{additional arguments passed on to to a \code{matlines} call;
 e.g. \code{lwd} can be defined this way}
 }
+\value{
+Always returns `NULL` invisibly.
+}
 \description{
 Plot \code{lines} from a \code{survtab} object
 }

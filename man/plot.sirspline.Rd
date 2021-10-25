@@ -23,6 +23,9 @@
 
 \item{...}{arguments passed on to plot()}
 }
+\value{
+Always returns `NULL` invisibly.
+}
 \description{
 Plot SIR splines using R base graphics.
 }

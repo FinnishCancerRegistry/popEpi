@@ -28,6 +28,8 @@
 #' @family survtab functions
 #' @family survmean functions
 #' @importFrom survival Surv
+#' @return
+#' See `[survival::Surv]`.
 #' 
 Surv <- function(
   time, 

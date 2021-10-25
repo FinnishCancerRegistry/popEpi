@@ -9,6 +9,9 @@ rpcurve(object)
 \arguments{
 \item{object}{a \code{relpois} object}
 }
+\value{
+A `data.table` of relative survival curves.
+}
 \description{
 Fit a marginal relative survival curve based on a \code{relpois} fit
 }

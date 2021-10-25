@@ -9,6 +9,9 @@ is_leap_year(years)
 \arguments{
 \item{years}{a vector or column of year values (numeric or integer)}
 }
+\value{
+A `logical` vector where `TRUE` indicates a leap year.
+}
 \description{
 Given a vector or column of year values (numeric or integer), \code{\link{is_leap_year}} returns a vector of equal length
 of logical indicators, i.e. a vector where corresponding leap years have value TRUE, and FALSE otherwise.

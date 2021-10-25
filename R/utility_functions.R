@@ -27,16 +27,17 @@
 #' If any values in \code{value.vars} need to be 
 #' aggregated, they are aggregated using \code{sum}.
 #' See \code{?dcast}.
+#' @return 
+#' A `data.table` just like `[data.table::dcast]`.
 #' 
 #' @examples 
-#' \dontrun{
 #' ## e.g. silly counts from a long-format table to a wide format
-#' test <- copy(sire)
+#' test <- data.table::copy(popEpi::sire)
 #' test$dg_y <- year(test$dg_date)
 #' test$ex_y <- year(test$ex_date)
 #' tab <- ltable(test, c("dg_y","ex_y"))
 #' cast_simple(tab, columns='dg_y', rows="ex_y", values="obs")
-#' }
+#' 
 
 
 cast_simple <- function(data=NULL, columns=NULL, rows=NULL, values=NULL) {
@@ -107,9 +108,11 @@ cast_simple <- function(data=NULL, columns=NULL, rows=NULL, values=NULL) {
 #' @details Given a \code{data.table} object, converts \code{NA} values
 #' to numeric (double) zeros for all variables named in \code{vars} or
 #' all variables if \code{vars = NULL}.
+#' @return 
+#' A copy of `DT` where `NA` values have been replaced with zero.
 na2zero = function(DT, vars = NULL) { 
-  if (!is.data.table(DT)) stop("DT must be a data.table")
-  DT <- copy(DT)
+  if (!data.table::is.data.table(DT)) stop("DT must be a data.table")
+  DT <- data.table::copy(DT)
   
   navars <- vars
   if (is.null(navars)) navars <- names(DT)
@@ -147,7 +150,8 @@ na2zero = function(DT, vars = NULL) {
 #' )
 #' 
 #' 
-#' 
+#' @return
+#' A numeric vector based on the levels of `x`.
 fac2num <- function(x) {
   as.numeric(levels(x))[x]
 }
@@ -171,7 +175,8 @@ fac2num <- function(x) {
 #' df[is_leap_year(df$yrs),] # 2nd row
 #' 
 #' @export is_leap_year
-#' 
+#' @return
+#' A `logical` vector where `TRUE` indicates a leap year.
 is_leap_year <- function(years) {
   if (!is.numeric(years)) {
     stop("years must be a numeric vector, preferably integer for speed. Use e.g. as.integer().")
@@ -215,7 +220,8 @@ is_leap_year <- function(years) {
 #' da <- date::as.date("1jan2000")
 #' is.Date(da) ## FALSE
 #' date::is.date(da) ## TRUE
-#'  
+#' @return
+#' `TRUE` if `obj` is of class `"Date"` or `"IDate"`.
 is.Date <- function(obj) {
   
   if (any(c("IDate","Date") %in% class(obj))) {
@@ -262,7 +268,8 @@ is.Date <- function(obj) {
 #'   values <- robust_values(values, force=TRUE)
 #' )
 #' 
-#' 
+#' @return
+#' A numeric vector.
 
 robust_values <- function(num.values, force = FALSE, messages = TRUE) {
   a <- NULL
@@ -310,6 +317,8 @@ robust_values <- function(num.values, force = FALSE, messages = TRUE) {
 #' @seealso
 #' \code{\link{robust_values}}
 #' @export all_names_present
+#' @return 
+#' `TRUE` if all `var.names` are in `data`, else `FALSE`,
 
 all_names_present <- function(data, var.names, stops = TRUE, msg = NULL) {
   
@@ -345,6 +354,8 @@ all_names_present <- function(data, var.names, stops = TRUE, msg = NULL) {
 #' on that the value starts from index 2 and end in comma ",".
 #' @param cut is a character vector of elements "(20,60]"
 #' @export lower_bound
+#' @return
+#' A numeric vector.
 
 lower_bound <- function(cut) {
   cut <- as.character(cut)
@@ -366,6 +377,9 @@ lower_bound <- function(cut) {
 #' type = 'numeric': lowest bound in numeric.
 #' 
 #' @export cut_bound
+#' @return
+#' If `factor = TRUE`, returns a character vector; else returns a numeric 
+#' vector.
 #' @examples
 #' cut_bound("[1900, 1910)") ## "1900-1909"
 
@@ -437,6 +451,9 @@ setclass <- function(obj, cl, add=FALSE, add.place="first") {
 #' to be integers; e.g. by default \code{1 + .Machine$double.eps} is considered
 #' to be an integer but \code{1 + .Machine$double.eps^0.49} is not.
 #' @export try2int
+#' @return
+#' An `integer` vector if no information is lost in coercion; else `numeric` 
+#' vector.
 #' @source \href{https://stackoverflow.com/questions/3476782/how-to-check-if-the-number-is-integer}{Stackoverflow thread}
 try2int <- function(obj, tol = .Machine$double.eps^0.5) {
   if (!is.numeric(obj)) stop("obj needs to be integer or double (numeric)")
@@ -461,6 +478,7 @@ try2int <- function(obj, tol = .Machine$double.eps^0.5) {
 }
 
 
+#' @md
 #' @title Get rate and exact Poisson confidence intervals
 #' @author epitools
 #' @description Computes confidence intervals for Poisson rates
@@ -474,7 +492,16 @@ try2int <- function(obj, tol = .Machine$double.eps^0.5) {
 #' @examples
 #' 
 #' poisson.ci(x = 4, pt = 5, conf.level = 0.95)
-#'
+#' @return
+#' A `data.frame` with columns
+#' 
+#' - `x`: arg `x`
+#' - `pt`: arg `pt`
+#' - `rate`: result of `x / pt`
+#' - `lower`: lower bound of CI
+#' - `upper`: upper bound of CI
+#' - `conf.level`: arg `conf.level`
+#' 
 poisson.ci <- function(x, pt = 1, conf.level = 0.95) {
   xc <- cbind(x, conf.level, pt)
   pt2 <- xc[, 3]
@@ -518,6 +545,8 @@ poisson.ci <- function(x, pt = 1, conf.level = 0.95) {
 #' 
 #' 
 #' @export setcolsnull
+#' @return
+#' Always returns `NULL` invisibly.
 setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TRUE) {
   if (!is.data.table(DT)) stop("not a data.table")
   if (!soft) {
@@ -535,73 +564,10 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
   if (colorder) {
     setcolorder(DT, intersect(keep, names(DT)))
   }
-  return(invisible())
+  return(invisible(NULL))
 }
 
 
-
-
-
-
-#' @title Coerce a \code{ratetable} Object to Class \code{data.frame}
-#' @description
-#' \code{ratatable} objects used in e.g. \pkg{survival} and \pkg{relsurv}
-#' can be conveniently coerced to a long-format \code{data.frame}.
-#' However, the names and levels of variables in the result
-#' may not match names and levels of variables in your data.
-#' @author Joonas Miettinen
-#' @param x a \code{ratetable}
-#' @param ... unused but added for compatibility with \code{as.data.frame}
-
-#' @seealso 
-#' \code{\link[survival]{ratetable}}, 
-#' \code{\link{as.data.table.ratetable}}
-#'
-#' @export
-as.data.frame.ratetable <- function(x, ...) {
-  stop("This function is deprecated; see ?ratetable_to_long_df")
-}
-
-
-#' @title Coerce a \code{ratetable} Object to Class \code{data.table}
-#' @author Joonas Miettinen
-#' 
-#' @description
-#' \code{ratatable} objects used in e.g. \pkg{survival} and \pkg{relsurv}
-#' can be conveniently coerced to a long-format \code{data.frame}.
-#' However, the names and levels of variables in the result
-#' may not match names and levels of variables in your data.
-#' @param x a \code{ratetable}
-#' @param ... other arguments passed on to \code{as.data.table}
-
-#' @seealso 
-#' \code{\link[survival]{ratetable}}, 
-#' \code{\link{as.data.frame.ratetable}}
-#'
-
-#' @export
-as.data.table.ratetable <- function(x, ...) {
-  stop("This function is deprecated; see ?ratetable_to_long_dt")
-}
-
-
-#' @title \strong{Experimental}: Coerce a long-format \code{data.frame} to a \code{ratetable} object
-#' @author Joonas Miettinen
-#' @description Coerces a long-format \code{data.frame} of population hazards
-#' to an array, and in turn to a \code{\link[survival]{ratetable}},
-#' which can be used in e.g. \pkg{survival}'s expected survival computations
-#' and \pkg{relsurv}'s relative survival computations.
-#' @param DF a \code{data.frame}
-#' @param value.var name of values variable in quotes
-#' @param by.vars names vector of variables by which to create (array) dimensions
-#' @seealso 
-#' \code{\link[survival]{ratetable}}, 
-#' \code{\link{as.data.table.ratetable}}, 
-#' \code{\link{as.data.frame.ratetable}}
-#'
-longDF2ratetable <- function(DF, value.var = "haz", by.vars = setdiff(names(DF), value.var)) {
-  stop("This function is deprecated; see ?long_df_to_ratetable")
-}
 
 temp_var_names <- function(n = 1L, avoid = NULL, length = 10L) {
   ## INTENTION: make temporary variable names that don't exist in

@@ -29,6 +29,9 @@ see Examples.}
 
 \item{...}{unused; required for congruence with other \code{summary} methods}
 }
+\value{
+A `data.table`: a slice from `object` based on `t`, `subset`, and `q`.
+}
 \description{
 Summary method function for \code{survtab} objects; see
 \code{\link{survtab_ag}}. Returns estimates at given time points
@@ -76,7 +79,6 @@ summary(st, q = list(surv.obs = c(0.75, 0.90), CIF_canD = 0.20))
 ## if you want all estimates in a new data.frame, you can also simply do
 
 x <- as.data.frame(st)
-
 }
 \references{
 Seppa K., Dyba T. and Hakulinen T.: Cancer Survival, 

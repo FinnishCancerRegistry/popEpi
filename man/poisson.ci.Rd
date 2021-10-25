@@ -13,13 +13,23 @@ poisson.ci(x, pt = 1, conf.level = 0.95)
 
 \item{conf.level}{alpha level}
 }
+\value{
+A \code{data.frame} with columns
+\itemize{
+\item \code{x}: arg \code{x}
+\item \code{pt}: arg \code{pt}
+\item \code{rate}: result of \code{x / pt}
+\item \code{lower}: lower bound of CI
+\item \code{upper}: upper bound of CI
+\item \code{conf.level}: arg \code{conf.level}
+}
+}
 \description{
 Computes confidence intervals for Poisson rates
 }
 \examples{
 
 poisson.ci(x = 4, pt = 5, conf.level = 0.95)
-
 }
 \author{
 epitools

@@ -19,6 +19,9 @@ Special: include \code{\%\%VARS\%\%} in message string and the missing
 variable names will be inserted there (quoted, separated by comma, e.g. 
 \code{'var1'}, \code{'var2'} --- no leading or tracing white space).}
 }
+\value{
+`TRUE` if all `var.names` are in `data`, else `FALSE`,
+}
 \description{
 Given a character vector, checks if all names are present in \code{names(data)}.
 Throws error if \code{stops=TRUE}, else returns \code{FALSE} if some variable name is not present.

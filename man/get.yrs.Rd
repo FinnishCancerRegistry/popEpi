@@ -17,6 +17,9 @@ accepts}
 typically \code{format} when \code{x} is a character string variable,
 and \code{origin} when \code{x} is numeric}
 }
+\value{
+A numeric vector of fractional years.
+}
 \description{
 Using Date objects, calculates given 
 dates as fractional years.

@@ -40,6 +40,9 @@ present in \code{obj} for variables in \code{y}}
 \item{...}{additional arguments passed on to \code{plot} and 
 \code{lines.survtab}; e.g. \code{ylim} can be defined this way}
 }
+\value{
+Always returns `NULL` invisibly.
+}
 \description{
 Plotting for \code{survtab} objects
 }

@@ -64,6 +64,10 @@ environment of the data.}
 \item{...}{advanced; other arguments passed to inside the 
 data.table's brackets \code{DT[, , ...]}; see \code{\link{data.table}}}
 }
+\value{
+A `data.table` of statistics (e.g. counts) stratified by the columns defined
+in `by.vars`.
+}
 \description{
 \code{ltable} makes use of \code{data.table} 
 capabilities to tabulate frequencies or 
