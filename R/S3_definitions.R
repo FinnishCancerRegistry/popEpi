@@ -191,8 +191,9 @@ plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main,
   }
   
   # par options
-  old.margin <- par("mar")
-  new.margin <- old.margin
+  old_mar <- par("mar")
+  on.exit(par(mar = old_mar))
+  new.margin <- old_mar
   if(missing(left.margin)) {
     new.margin[2] <- 4.1 + sqrt( max(nchar(as.character(level_names))) )*2
   } 
@@ -223,8 +224,6 @@ plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main,
     segments(a$sir.hi, y.axis.levels - eps, a$sir.hi, y.axis.levels +eps, ... )
   }
   
-  # reset margins
-  par(mar = old.margin)
   return(invisible(NULL))
 }
 
@@ -269,9 +268,12 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
   plotdim <- as.numeric(c( !is.null( x$spline.seq.A ),
                            !is.null( x$spline.seq.B ),
                            !is.null( x$spline.seq.C ) ))
+  
   if(sum(plotdim) > 1) {
-    save_par <- par(no.readonly = TRUE)
-    par(mfrow=c(1,sum(plotdim)))
+    old_mfrow <- par("mfrow")
+    on.exit(par(mfrow = old_mfrow))
+    new_mfrow <- c(1,sum(plotdim))
+    par(mfrow = new_mfrow)
     type <- 'l'
   }
   
@@ -320,9 +322,6 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
     if (missing(type) || type != 'n') {
       lines.sirspline(x, conf.int = conf.int, select.spline = i, ...)
     }
-  }
-  if(sum(plotdim) > 1) {
-    par(save_par)
   }
   return(invisible(NULL))
 }
@@ -522,8 +521,10 @@ plot.rate <- function(x, conf.int = TRUE, eps = 0.2, left.margin, xlim, ...) {
   }
   
   # MARGINS  
+  old_mar <- par("mar")
+  on.exit(par(mar = old_mar))
   if(missing(left.margin)) {
-   old.margin <- new.margin <- par("mar")
+   new.margin <- par("mar")
    new.margin[2] <- 4.1 + sqrt( max(nchar(as.character(lvl.name))) )*2
   }
   else {
@@ -540,7 +541,6 @@ plot.rate <- function(x, conf.int = TRUE, eps = 0.2, left.margin, xlim, ...) {
     segments(lo, lvls - eps, lo, lvls + eps, ...)
     segments(hi, lvls - eps, hi, lvls + eps, ...)
   }
-  par(mar = old.margin) # revert margins
   return(invisible(NULL))
 }
 
