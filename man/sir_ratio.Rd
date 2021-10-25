@@ -72,7 +72,8 @@ sir_ratio(s1, c(120, 150))
 
 }
 \references{
-Statistics with Confidence: Confidence Intervals and Statistical Guidelines, Douglas Altman
+Statistics with Confidence: Confidence Intervals and Statistical Guidelines, 
+Douglas Altman, 2000. ISBN: 978-0-727-91375-3
 }
 \seealso{
 \code{\link{sir}}

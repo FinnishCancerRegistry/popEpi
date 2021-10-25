@@ -60,11 +60,11 @@ run_all_unit_tests <- function(filter = NULL, examples = FALSE)  {
   on.exit(Sys.setenv("NOT_CRAN" = old))
   Sys.setenv("NOT_CRAN" = "true")
   devtools::test(".", filter = filter)
-  if (examples) devtools::run_examples(".", run = TRUE)
+  if (examples) run_examples()
 }
 
 run_examples <- function() {
-  devtools::run_examples(run = FALSE, test = FALSE, fresh = TRUE)
+  devtools::run_examples(run_donttest = TRUE, run_dontrun = TRUE)
 }
 
 run_r_cmd_check_no_unit_tests_no_examples_no_vignettes <- function() {
@@ -81,6 +81,14 @@ run_r_cmd_check_no_unit_tests_no_examples <- function() {
   devtools::check(
     ".", 
     args = c("--no-tests", "--no-examples")
+  )
+}
+
+run_r_cmd_check_no_unit_tests <- function() {
+  ## runs R CMD CHECK without running any tests
+  devtools::check(
+    ".", 
+    args = c("--no-tests")
   )
 }
 

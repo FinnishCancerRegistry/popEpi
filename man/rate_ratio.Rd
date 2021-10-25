@@ -33,7 +33,7 @@ Another option is to set \code{x} and \code{y} as a vector of two.
 See examples.
 }
 \examples{
-\dontrun{
+\donttest{
 # two rate ratios; silly example with female rectal / breast cancer 
 ## mortality rates
 data("sire", package = "popEpi")

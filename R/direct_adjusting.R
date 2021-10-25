@@ -137,7 +137,8 @@
 #' 
 #' Waterhouse, J.,Muir, C.S.,Correa, P.,Powell, J., eds (1976). 
 #' Cancer Incidence in Five Continents, Vol. III. 
-#' IARC Scientific Publications, No. 15, Lyon, IARC
+#' IARC Scientific Publications, No. 15, Lyon, IARC.
+#' ISBN: 9789283211150
 #' 
 #' Source of 2000 world standard population in 1-year age groups:
 #' \url{https://seer.cancer.gov/stdpopulations/stdpop.singleages.html}

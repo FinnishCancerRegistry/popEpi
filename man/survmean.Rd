@@ -215,7 +215,7 @@ sm1 <- survmean(Surv(FUT, lex.Xst != "alive") ~ 1,
 sm1 <- survmean(FUT ~ 1,
                 pophaz = pm, data = x, weights = NULL,
                 breaks = BL)             
-\dontrun{
+\donttest{
 ## mean survival by group                 
 sm2 <- survmean(FUT ~ group,
                 pophaz = pm, data = x, weights = NULL,
@@ -233,7 +233,7 @@ sm3 <- survmean(FUT ~ group + adjust(agegr),
 ## solid lines are observed + extrapolated survivals;
 ## dashed lines are expected survivals
 plot(sm1)
-\dontrun{
+\donttest{
 ## plotting object with both stratification and standardization
 ## plots curves for each strata-std.group combination
 plot(sm3)

@@ -796,8 +796,8 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' 
 #' @references
 #' Seppa K., Dyba T. and Hakulinen T.: Cancer Survival, 
-#' Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015 
-#' doi: 10.1016/B978-0-12-801238-3.02745-8.
+#' Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015.
+#' \doi{10.1016/B978-0-12-801238-3.02745-8}
 #' 
 #' @examples 
 #' 

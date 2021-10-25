@@ -154,21 +154,24 @@
 #' 
 #' Perme, Maja Pohar, Janez Stare, and Jacques Esteve. 
 #' "On estimation in relative survival." Biometrics 68.1 (2012): 113-120.
+#' \doi{10.1111/j.1541-0420.2011.01640.x}
 #' 
 #' Hakulinen, Timo, Karri Seppa, and Paul C. Lambert. 
 #' "Choosing the relative survival method for cancer survival estimation." 
 #' European Journal of Cancer 47.14 (2011): 2202-2210.
+#' \doi{10.1016/j.ejca.2011.03.011}
 #'  
 #' Seppa, Karri, Timo Hakulinen, and Arun Pokhrel. 
 #' "Choosing the net survival method for cancer survival estimation." 
 #' European Journal of Cancer (2013).
+#' \doi{10.1016/j.ejca.2013.09.019}
 #' 
 #' CHIANG, Chin Long. Introduction to stochastic processes in biostatistics. 
-#' 1968.
+#' 1968. ISBN-14: 978-0471155003
 #' 
 #' Seppa K., Dyba T. and Hakulinen T.: Cancer Survival, 
-#' Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015 
-#' doi: 10.1016/B978-0-12-801238-3.02745-8.
+#' Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015.
+#' \doi{10.1016/B978-0-12-801238-3.02745-8}
 #' 
 #' @family main functions
 #' @family survtab functions

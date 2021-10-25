@@ -31,7 +31,7 @@ the marginal curve is constructed only for those whose follow-up started
 in the respective period.
 }
 \examples{
-\dontrun{
+\donttest{
 ## use the simulated rectal cancer cohort
 data("sire", package = "popEpi")
 ab <- c(0,45,55,65,70,Inf)

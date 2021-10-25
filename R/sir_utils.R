@@ -49,7 +49,9 @@
 #' @seealso \code{\link{sir}}
 #' \href{../doc/sir.html}{A SIR calculation vignette}
 #' 
-#' @references Statistics with Confidence: Confidence Intervals and Statistical Guidelines, Douglas Altman
+#' @references 
+#' Statistics with Confidence: Confidence Intervals and Statistical Guidelines, 
+#' Douglas Altman, 2000. ISBN: 978-0-727-91375-3
 #' 
 #' @family sir functions
 #' 

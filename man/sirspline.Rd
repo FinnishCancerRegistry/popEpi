@@ -132,7 +132,7 @@ When \code{(dependent.splines = TRUE)} the p-value returned is a global p-value.
 Otherwise the p-value is spline-specific.
 }
 \examples{
-\dontrun{
+\donttest{
 ## for examples see: vignette('sir')
 }
 }

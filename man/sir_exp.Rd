@@ -85,7 +85,7 @@ is allowed in observed, pop.haz or person-years.
 
 \examples{
 
-\dontrun{
+\donttest{
 BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
 
 ## Aggregated data

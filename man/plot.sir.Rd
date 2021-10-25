@@ -70,7 +70,7 @@ again the estimate using \code{lines(... , conf.int = FALSE)} with different
 settings. This works only when \code{plot.type} is 'splines'.
 }
 \examples{
-\dontrun{
+\donttest{
 # Plot SIR estimates
 # plot(sir.by.gender, col = c(4,2), log=FALSE, eps=0.2, lty=1, lwd=2, pch=19,  
 #      main = 'SIR by gender', abline=TRUE)

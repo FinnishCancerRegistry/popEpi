@@ -50,7 +50,7 @@
 #' If you have your population hazards in a \code{ratetable} object
 #' usable by functions in \pkg{survival} and \pkg{relsurv}, you may
 #' transform them to long-format \code{data.frame}s using
-#' \code{\link{as.data.frame.ratetable}}. Ensure, however, that the
+#' \code{\link{ratetable_to_long_dt}}. Ensure, however, that the
 #' created \code{haz} column is coded at the right level (events per
 #' days or years typically).
 #' 

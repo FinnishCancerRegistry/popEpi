@@ -31,6 +31,7 @@
 #' A `data.table` just like `[data.table::dcast]`.
 #' 
 #' @examples 
+#' library("data.table")
 #' ## e.g. silly counts from a long-format table to a wide format
 #' test <- data.table::copy(popEpi::sire)
 #' test$dg_y <- year(test$dg_date)

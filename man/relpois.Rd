@@ -93,12 +93,18 @@ x <- lexpand(sire, birth = bi_date, entry = dg_date,
 rpm <- relpois(x, formula = lex.Xst \%in\% 1:2 ~ FOT + agegr)
  
 ## some methods for glm work. e.g. test for interaction
-\dontrun{
+\donttest{
 rpm2 <- relpois(x, formula = lex.Xst \%in\% 1:2 ~ FOT*agegr)
 anova(rpm, rpm2, test="LRT")
 AIC(rpm, rpm2)
-## update won't work currently
+## update() won't work currently
 }
+}
+\references{
+Paul W Dickman, Andy Sloggett, Michael Hills, and Timo Hakulinen.
+Regression models for relative survival. 
+Stat Med. 2004 Jan 15;23(1):51-64.
+\doi{10.1002/sim.1597}
 }
 \seealso{
 \code{\link{lexpand}}, \code{\link{poisson}}, \code{\link{glm}}

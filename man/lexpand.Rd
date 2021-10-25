@@ -321,7 +321,7 @@ with \code{\link{survtab_ag}}. This can be slow, so consider what is really
 needed. The Pohar-Perme weighted figures have the suffix \code{.pp}.
 }
 \examples{
-\dontrun{
+\donttest{
 ## prepare data for e.g. 5-year cohort survival calculation
 x <- lexpand(sire, breaks=list(fot=seq(0, 5, by = 1/12)), 
              birth = bi_date, entry = dg_date, exit = ex_date,
