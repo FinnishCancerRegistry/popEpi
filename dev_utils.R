@@ -51,6 +51,9 @@ run_cran_unit_tests <- function(filter = NULL)  {
   old <- Sys.getenv("NOT_CRAN")
   on.exit(Sys.setenv("NOT_CRAN" = old))
   Sys.setenv("NOT_CRAN" = "false")
+  stopifnot(
+    testthat:::on_cran() == TRUE
+  )
   devtools::test(".", filter = filter)
 }
 
@@ -59,6 +62,9 @@ run_all_unit_tests <- function(filter = NULL)  {
   old <- Sys.getenv("NOT_CRAN")
   on.exit(Sys.setenv("NOT_CRAN" = old))
   Sys.setenv("NOT_CRAN" = "true")
+  stopifnot(
+    testthat:::on_cran() == FALSE
+  )
   devtools::test(".", filter = filter)
 }
 
