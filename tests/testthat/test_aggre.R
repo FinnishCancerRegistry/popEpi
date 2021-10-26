@@ -159,7 +159,7 @@ test_that("subset argument works properly", {
 
 test_that("at.risk column works as intended", {
   ## normal case - no late entry. Just lots of breaks.
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   x <- sire[dg_date < ex_date, ][1:1000,]
   BL <- list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014))
   
@@ -196,7 +196,7 @@ test_that("at.risk column works as intended", {
 
 
 test_that("at.risk column works as intended, Vol. 2", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   ## period analysis case - some observations are late entry.
   data(sire)
   

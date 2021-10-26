@@ -1,7 +1,7 @@
 context("utility functions")
 
 test_that("subsetting in ltable works and ltable has no side effects", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   
   sr <- popEpi::sire[1:100, ]
   set.seed(1L)
@@ -24,7 +24,7 @@ test_that("subsetting in ltable works and ltable has no side effects", {
 
 test_that("ltable works with NA values", {
   
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   
   sr <- setDT(popEpi::sire[1:100, ])
   set.seed(1L)
@@ -135,7 +135,7 @@ test_that("evalPopArg produces intended results",{
 
 
 test_that("cutLowMerge merges succesfully what is intended", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   all_names_present(popEpi::popmort, c("sex", "year", "agegroup", "haz"))
   all_names_present(popEpi::sire, c("sex", "bi_date", "dg_date", "ex_date", "status"))
   
@@ -176,7 +176,7 @@ test_that("cutLowMerge merges succesfully what is intended", {
 })
 
 test_that("detectEvents works as intended", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   x <- sire[dg_date<ex_date,]
   x <- lexpand(x, birth = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2, pophaz = data.table(popEpi::popmort),

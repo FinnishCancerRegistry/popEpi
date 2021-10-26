@@ -2,7 +2,7 @@ context("lexpand sanity checks")
 
 
 test_that("lexpand arguments can be passed as symbol, expression, character name of variable, and symbol of a character variable", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   sr <- copy(sire)[dg_date < ex_date, ][1:100,]
   sr[, id := as.character(1:.N)]
   
@@ -26,7 +26,7 @@ test_that("lexpand arguments can be passed as symbol, expression, character name
 
 
 test_that("original total pyrs equals pyrs after splitting w/ large number of breaks", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   x <- copy(sire)[dg_date < ex_date, ]
   x[, fot := get.yrs(ex_date, year.length = "actual") - get.yrs(dg_date, year.length = "actual")]
   totpyrs <- x[, sum(fot)]
@@ -56,7 +56,7 @@ test_that("pp not added to data if pp = FALSE but pop.haz is", {
 
 
 test_that("lexpand produces the same results with internal/external dropping", {
-  skip_usually()
+  popEpi:::skip_on_cran_and_ci()
   x <- lexpand(sire[dg_date < ex_date, ], 
                birth  = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2,
@@ -75,7 +75,7 @@ test_that("lexpand produces the same results with internal/external dropping", {
 
 
 test_that("lexpanding with aggre.type = 'unique' works", {
-  skip_usually()
+  popEpi:::skip_on_cran_and_ci()
   
   BL <- list(fot = 0:5, age = seq(0,100, 5))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
@@ -96,7 +96,7 @@ test_that("lexpanding with aggre.type = 'unique' works", {
 })
 
 test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used", {
-  skip_usually()
+  popEpi:::skip_on_cran_and_ci()
   
   BL <- list(fot = c(0,Inf))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
@@ -134,7 +134,7 @@ test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used",
 })
 
 test_that("lexpanding with aggre.type = 'cartesian' works; only time scales used", {
-  skip_usually()
+  popEpi:::skip_on_cran_and_ci()
   
   BL <- list(fot = 0:5, age = seq(0,100, 5))
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
@@ -210,7 +210,7 @@ test_that("lexpanding and aggregating to years works", {
 # Aggre check (to totpyrs) -----------------------------------------------------
 
 test_that("lexpand aggre produces correct results", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   x <- copy(sire)[dg_date < ex_date, ]
   x[, fot := get.yrs(ex_date, year.length = "actual") - get.yrs(dg_date, year.length = "actual")]
   totpyrs <- x[, sum(fot)]
@@ -246,7 +246,7 @@ test_that('lexpand aggre: multistate column names correct', {
 # overlapping time lines --------------------------------------------------
 
 test_that('lexpansion w/ overlapping = TRUE/FALSE produces double/undoubled pyrs', {
-  skip_usually()
+  popEpi:::skip_on_cran_and_ci()
   
   sire2 <- copy(sire)[dg_date < ex_date, ][1:100]
   sire2[, dg_yrs := get.yrs(dg_date, "actual")]
@@ -339,7 +339,7 @@ test_that("different specifications of time vars work with event defined and ove
 
 
 test_that("lexpand drops persons outside breaks window correctly", {
-  skip_usually()
+  popEpi:::skip_on_cran_and_ci()
   
   dt <- data.table(bi_date = as.Date('1949-01-01'), 
                    dg_date = as.Date(paste0(2000, "-01-01")), 

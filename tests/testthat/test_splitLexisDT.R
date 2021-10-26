@@ -2,7 +2,7 @@ context("Compare splitLexisDT results with splitLexis results")
 
 test_that("splitLexisDT and splitLexis are congruent", {
   expect_identical(1L, 1L) ## to trigger testing...
-  skip_usually()
+  popEpi:::skip_on_cran_and_ci()
   library(Epi)
   
   sire2 <- copy(sire)

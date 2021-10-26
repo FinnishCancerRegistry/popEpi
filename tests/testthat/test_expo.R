@@ -1,7 +1,7 @@
 context("Testing aggregation by categories of exposure")
 
 test_that("prepExpo works in the simple case", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   library(Epi)
   
   df <- data.frame(id = "A", birth  = c(1952.4534), 

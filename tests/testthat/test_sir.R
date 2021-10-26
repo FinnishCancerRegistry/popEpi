@@ -219,7 +219,7 @@ test_that("data.table subsettin works", {
 #library(reshape2)
 
 test_that("SIR spline throws errors correctly", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   library(splines)
   
   
@@ -257,7 +257,7 @@ test_that("SIR spline throws errors correctly", {
 
 
 test_that("print accepts a function and subset works", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   expect_warning(
     pl1 <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
                 subset = year %in% 1990:2008,

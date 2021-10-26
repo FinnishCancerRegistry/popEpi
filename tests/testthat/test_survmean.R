@@ -3,7 +3,7 @@ library("data.table")
 library("Epi")
 
 test_that("survmean() agrees with old results", {
-  skip_usually()
+  popEpi:::skip_on_cran_and_ci()
   
   sr <- data.table(popEpi::sire)[dg_date < ex_date, ]
   sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
@@ -36,7 +36,7 @@ test_that("survmean() agrees with old results", {
 
 
 # test_that("survmean() agrees with results computed using pkg survival", {
-#   skip_on_cran()
+#   popEpi:::skip_on_cran_and_ci()
 #   
 #   
 #   BL <- list(fot= seq(0,15,1/24))
@@ -73,7 +73,7 @@ test_that("survmean() agrees with old results", {
 
 
 test_that("survmean expected survival curve corresponds to full Ederer I", {
-  skip_usually()
+  popEpi:::skip_on_cran_and_ci()
   
   sr <- data.table(sire)[dg_date < ex_date, ]
   sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
@@ -114,7 +114,7 @@ test_that("survmean expected survival curve corresponds to full Ederer I", {
 })
 
 test_that("survmean period method is useful", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   
   sr <- data.table(popEpi::sire)[dg_date < ex_date, ]
   sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
@@ -163,7 +163,7 @@ test_that("survmean period method is useful", {
 
 
 test_that("Dates and frac. yrs produce congruent results", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   
   x <- data.table(popEpi::sire)
   x <- x[dg_date<ex_date]
@@ -262,7 +262,7 @@ test_that("Dates and frac. yrs produce congruent results", {
 
 test_that("updating works for survmean objects", {
   
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   
   set.seed(1)
   sr <- setDT(popEpi::sire[sample(1:.N, 100), ])

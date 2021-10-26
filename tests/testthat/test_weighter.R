@@ -2,7 +2,7 @@ context("makeWeightsDT")
 
 
 test_that("makeWeightsDT works with various weights & adjust spesifications", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   sibr <- popEpi::sibr[1:100]
   sibr[1:50, sex := 0L]
   
@@ -44,7 +44,7 @@ test_that("makeWeightsDT works with various weights & adjust spesifications", {
 
 
 test_that("internal weights are computed correctly", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   sibr <- popEpi::sibr[1:100]
   sibr[1:50, sex := 0L]
   
@@ -96,7 +96,7 @@ test_that("internal weights are computed correctly", {
 
 test_that("weighter works with a list of values arguments", {
   
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   sibr <- popEpi::sibr[1:100]
   sibr[1:50, sex := 0L]
   
@@ -119,7 +119,7 @@ test_that("weighter works with a list of values arguments", {
 
 
 test_that("weighted NA checks work", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   sibr <- popEpi::sibr[1:100]
   sibr[1:50, sex := 0L]
   

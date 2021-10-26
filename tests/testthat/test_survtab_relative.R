@@ -77,7 +77,7 @@ test_that("relative survivals about the same as relsurv's", {
 # relpois vs. relsurv::rsadd ---------------------------------------------
 
 test_that("relpois congruent with relsurv::rsadd", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   
   
   library(relsurv)

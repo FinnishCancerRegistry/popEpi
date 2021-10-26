@@ -3,7 +3,7 @@ context("survtab usage")
 
 
 test_that("Dates and frac. yrs produce congruent results", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   library(Epi)
   
   x <- data.table(popEpi::sire)
@@ -118,7 +118,7 @@ test_that("Dates and frac. yrs produce congruent results", {
 
 
 test_that("hazard and lifetable produce congruent results", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   library(Epi)
   
   x <- data.table(popEpi::sire)
@@ -195,7 +195,7 @@ test_that("hazard and lifetable produce congruent results", {
 
 
 test_that("its possible to pass dynamically created arguments", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   library(Epi)
   
   x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
@@ -422,7 +422,7 @@ test_that("survtab_ag works with bare data.frames", {
 
 
 test_that("confidence intervals are as intended", {
-  skip_on_cran()
+  popEpi:::skip_on_cran_and_ci()
   
   library(Epi)
   

@@ -6,7 +6,7 @@ context("Splitting tests on random data and random breaks")
 
 test_that("splitting funs congruent with random splitting and random data", {
 
-  skip_usually()
+  popEpi:::skip_on_cran_and_ci()
 
   library("Epi")
   library("data.table")
