@@ -54,13 +54,12 @@ run_cran_unit_tests <- function(filter = NULL)  {
   devtools::test(".", filter = filter)
 }
 
-run_all_unit_tests <- function(filter = NULL, examples = FALSE)  {
+run_all_unit_tests <- function(filter = NULL)  {
   ## runs all possible tests
   old <- Sys.getenv("NOT_CRAN")
   on.exit(Sys.setenv("NOT_CRAN" = old))
   Sys.setenv("NOT_CRAN" = "true")
   devtools::test(".", filter = filter)
-  if (examples) run_examples()
 }
 
 run_examples <- function() {
