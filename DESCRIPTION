@@ -15,8 +15,9 @@ Description: Enables computation of epidemiological statistics, including those
     where counts or mortality rates of the reference population are used. 
     Currently supported: excess hazard models (Dickman, Slogget, Hills, and 
     Hakulinen (2012) <doi:10.1002/sim.1597>), rates, mean survival times, 
-    relative/net survival (in particular Pohar Perme, Stare, and Esteve 
-    (2012) <doi:10.1111/j.1541-0420.2011.01640.x>, Ederer and Heise (1959)), 
+    relative/net survival (in particular the Ederer II (Ederer and Heise (1959))
+    and Pohar Perme (Pohar Perme, Stare, and Esteve 
+    (2012) <doi:10.1111/j.1541-0420.2011.01640.x>) estimators), 
     and standardized incidence and mortality ratios, 
     all of which can be easily adjusted for by covariates such as 
     age. Fast splitting and aggregation of 'Lexis' objects (from package 'Epi') 
