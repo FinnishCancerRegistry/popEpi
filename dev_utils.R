@@ -1,6 +1,9 @@
 
 
 
+default_check_args <- function() {
+  c("--as-cran", "--timings")
+}
 
 
 run_as_rstudio_job <- function(expr) {
@@ -35,7 +38,7 @@ run_r_cmd_check_all_unit_tests <- function() {
   old <- Sys.getenv("NOT_CRAN")
   on.exit(Sys.setenv("NOT_CRAN" = old))
   Sys.setenv("NOT_CRAN" = "true")
-  devtools::check(".")
+  rcmdcheck::rcmdcheck(".", args = default_check_args())
 }
 
 run_r_cmd_check_cran_unit_tests <- function() {
@@ -43,7 +46,7 @@ run_r_cmd_check_cran_unit_tests <- function() {
   old <- Sys.getenv("NOT_CRAN")
   on.exit(Sys.setenv("NOT_CRAN" = old))
   Sys.setenv("NOT_CRAN" = "false")
-  devtools::check(".")
+  rcmdcheck::rcmdcheck(".", args = default_check_args())
 }
 
 run_cran_unit_tests <- run_ci_unit_tests <- function(...)  {
@@ -69,27 +72,29 @@ run_examples <- function() {
 
 run_r_cmd_check_no_unit_tests_no_examples_no_vignettes <- function() {
   ## runs R CMD CHECK without running any tests
-  devtools::check(
-    ".", 
-    args = c("--no-tests", "--no-examples", 
-             "--no-vignettes", "--no-build-vignettes"),
-    vignettes = FALSE
+  rcmdcheck::rcmdcheck(
+    path = ".", 
+    args = union(
+      c("--no-tests", "--no-examples", 
+        "--no-vignettes", "--no-build-vignettes"),
+      default_check_args()
+    )
   )
 }
 
 run_r_cmd_check_no_unit_tests_no_examples <- function() {
   ## runs R CMD CHECK without running any tests
-  devtools::check(
+  rcmdcheck::rcmdcheck(
     ".", 
-    args = c("--no-tests", "--no-examples")
+    args = union(default_check_args(), c("--no-tests", "--no-examples"))
   )
 }
 
 run_r_cmd_check_no_unit_tests <- function() {
   ## runs R CMD CHECK without running any tests
-  devtools::check(
+  rcmdcheck::rcmdcheck(
     ".", 
-    args = c("--no-tests")
+    args = union(default_check_args(), "--no-tests")
   )
 }
 
