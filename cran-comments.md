@@ -1,16 +1,27 @@
 
-# popEpi CRAN upload, v.0.4.8
+# popEpi CRAN upload, v.0.4.9
 
 popEpi was archived because I missed your warning concerning R-devel changes
 which caused an error in popEpi. Here's a new release which fixes that issue.
+
+I also made the following changes requested by `julia.haider@wu.ac.at`: 
+
+* added references to methods implemented in this package in 
+  DESCRIPTION::Description
+* added`\value` statements to all function docs
+* removed examples for unexported functions
+* replaced `\dontrun` in examples with `\donttest`
+* when user settings are changed using `par()`, there is an immediate call to
+  `on.exit` to return the settings to the pre-modified ones
+
 Below are a bunch of checks I ran using winbuilder and rhub.
 
 * R-oldrel = R version 4.0.5 (2021-03-31)
 * R-release = R version 4.1.1 (2021-08-10)
-* R-patched = R version 4.0.5 (2021-03-31)
-* R-devel = R Under development (unstable) (2021-10-14 r81057)
+* R-patched = R version 4.1.1 Patched (2021-08-16 r80775)
+* R-devel = R Under development (unstable) (2021-10-18 r81073)
 
-## win builder checks
+## winbuilder checks
 
 * R-oldrel --- OK
 * R-release --- OK
