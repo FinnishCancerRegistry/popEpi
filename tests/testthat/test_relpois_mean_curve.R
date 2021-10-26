@@ -45,7 +45,7 @@ test_that("rpcurve and survtab e2 are approximately congruent", {
 # sire2[, agegroup := as.integer(as.integer(ex_date-bi_date)/365.25)]
 # sire2[agegroup > 100, agegroup := 100L]
 # 
-# sire2 <- data.table:::merge.data.table(sire2, popmort, all.x=F, all.y=F, by=c("sex","year","agegroup"))
+# sire2 <- data.table:::merge.data.table(sire2, popmort, all.x=FALSE, all.y=FALSE, by=c("sex","year","agegroup"))
 # sire2[lex.Xst == 0, haz := 0] ## not really needed, nothing changes even when it works
 # 
 # ## spline model does not work with bhazard (nothing changes)

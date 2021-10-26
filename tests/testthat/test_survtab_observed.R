@@ -103,7 +103,7 @@ test_that("survtab works with more complicated estimation", {
   x$sex <- rbinom(nrow(x), 1, 0.5)
   
   ## period
-  x$period <- cut(year(x$dg_date), c(1993,1998,2003,2008,2013), right = F)
+  x$period <- cut(year(x$dg_date), c(1993,1998,2003,2008,2013), right = FALSE)
   
   # age group
   x$agegr <- cut(x$dg_age, 4)

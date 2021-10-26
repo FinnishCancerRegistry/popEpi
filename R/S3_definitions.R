@@ -910,9 +910,9 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
     
     tcutv <- makeTempVarName(x, pre = "cut_time_")
     
-    set(x, j = tcutv, value = cut(x$Tstop, breaks = subr, right = T, 
-                                  include.lowest = F))
-    cutt <- cut(t, breaks = subr, right = T, include.lowest = F)
+    set(x, j = tcutv, value = cut(x$Tstop, breaks = subr, right = TRUE, 
+                                  include.lowest = FALSE))
+    cutt <- cut(t, breaks = subr, right = TRUE, include.lowest = FALSE)
     
     l <- list(cutt)
     names(l) <- tcutv

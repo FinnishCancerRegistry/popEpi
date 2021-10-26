@@ -143,7 +143,7 @@
 #' ## calculate age-standardised 5-year relative survival ratio using 
 #' ## Ederer II method and period approach 
 #' 
-#' sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=F)
+#' sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=FALSE)
 #' BL <- list(fot=seq(0, 5, by = 1/12),
 #'            per = c("2008-01-01", "2013-01-01"))
 #' x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
@@ -671,13 +671,13 @@ survtab_ag <- function(formula = NULL,
         rs.table[, "p.exp" := 1 - d.exp/n]
         rs.table[, "surv.exp" := cumprod(p.exp), by = eval(rs.by.vars)]
         
-        if (rs.table[, min(surv.obs, na.rm=T) == 0]) {
+        if (rs.table[, min(surv.obs, na.rm=TRUE) == 0]) {
           rs.table[surv.obs == 0, "surv.exp" := 1]
         }
         
         comp.st.r.e2.lif(surv.table = rs.table, surv.by.vars = rs.by.vars)
         
-        if (rs.table[, min(surv.obs, na.rm=T) == 0]) {
+        if (rs.table[, min(surv.obs, na.rm=TRUE) == 0]) {
           rs.table[surv.obs == 0, intersect(c("surv.exp","r.e2","SE.r.e2","r.e2.lo","r.e2.hi"), names(rs.table)) := 0]
         }
       }
@@ -715,7 +715,7 @@ survtab_ag <- function(formula = NULL,
                                        "to package maintainer if you see this."))
         comp.st.r.pp.lif(surv.table = pp.table, surv.by.vars = by.vars)
         
-        if (pp.table[, min(surv.obs, na.rm=T) == 0]) {
+        if (pp.table[, min(surv.obs, na.rm=TRUE) == 0]) {
           pp.table[surv.obs == 0, intersect(c("r.pp","SE.r.pp","r.pp.lo","r.pp.hi"), names(pp.table)) := 0]
         }
       }

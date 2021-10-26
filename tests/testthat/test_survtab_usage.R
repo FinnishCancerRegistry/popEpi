@@ -364,7 +364,7 @@ test_that("update() works with survtab objects", {
 test_that("internal weights work as intended", {
   library("data.table")
   data("sire")
-  sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=F)
+  sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=FALSE)
   BL <- list(fot=seq(0, 5, by = 1/12),
              per = c("2008-01-01", "2013-01-01"))
   x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,

@@ -641,7 +641,7 @@ doCutLexisDT <- function(lex, cut = dg_date, timeScale = "per", by = "lex.id", n
 # lex <- lexpand(data = data, birth = birth, entry = entry, 
 #                exit = exit, event = event, 
 #                id = 1L, entry.status = 99L,
-#                status = status, overlapping = T)
+#                status = status, overlapping = TRUE)
 
 lexpile <- function(lex, by = "lex.id", subset = NULL) {
   ## PURPOSE: given several rows per id in a Lexis object,
