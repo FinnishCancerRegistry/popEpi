@@ -46,26 +46,21 @@ run_r_cmd_check_cran_unit_tests <- function() {
   devtools::check(".")
 }
 
-run_cran_unit_tests <- function(filter = NULL)  {
-  ## runs only the tests that CRAN will run
-  old <- Sys.getenv("NOT_CRAN")
-  on.exit(Sys.setenv("NOT_CRAN" = old))
-  Sys.setenv("NOT_CRAN" = "false")
+run_cran_unit_tests <- run_ci_unit_tests <- function(...)  {
+  old <- Sys.getenv("CI")
+  on.exit({
+    Sys.setenv("CI" = old)
+  })
+  Sys.setenv("CI" = "TRUE")
   stopifnot(
-    testthat:::on_cran() == TRUE
+    testthat:::on_ci()
   )
-  devtools::test(".", filter = filter)
+  devtools::test(pkg = ".", ...)
 }
 
-run_all_unit_tests <- function(filter = NULL)  {
+run_all_unit_tests <- function(...)  {
   ## runs all possible tests
-  old <- Sys.getenv("NOT_CRAN")
-  on.exit(Sys.setenv("NOT_CRAN" = old))
-  Sys.setenv("NOT_CRAN" = "true")
-  stopifnot(
-    testthat:::on_cran() == FALSE
-  )
-  devtools::test(".", filter = filter)
+  devtools::test(".", ...)
 }
 
 run_examples <- function() {
@@ -76,7 +71,8 @@ run_r_cmd_check_no_unit_tests_no_examples_no_vignettes <- function() {
   ## runs R CMD CHECK without running any tests
   devtools::check(
     ".", 
-    args = c("--no-tests", "--no-examples", "--no-vignettes", "--no-build-vignettes"),
+    args = c("--no-tests", "--no-examples", 
+             "--no-vignettes", "--no-build-vignettes"),
     vignettes = FALSE
   )
 }

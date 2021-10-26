@@ -1,11 +1,11 @@
-context("Compare splitLexisDT results with splitLexis results")
+testthat::context("Compare splitLexisDT results with splitLexis results")
 
-test_that("splitLexisDT and splitLexis are congruent", {
-  expect_identical(1L, 1L) ## to trigger testing...
+testthat::test_that("splitLexisDT and splitLexis are congruent", {
   popEpi:::skip_on_cran_and_ci()
+  
   library(Epi)
   
-  sire2 <- copy(sire)
+  sire2 <- data.table::copy(popEpi::sire)
   sire2[, dg_yrs := get.yrs(dg_date, "actual")]
   sire2[, ex_yrs := get.yrs(ex_date, "actual")]
   sire2[, bi_yrs := get.yrs(bi_date, "actual")]
