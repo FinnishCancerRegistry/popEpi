@@ -70,6 +70,13 @@ run_examples <- function() {
   devtools::run_examples(run_donttest = TRUE, run_dontrun = TRUE)
 }
 
+check_triple <- function() {
+  run_fun_as_rstudio_job("run_examples")
+  run_fun_as_rstudio_job("run_r_cmd_check_no_unit_tests_no_examples_no_vignettes")
+  run_fun_as_rstudio_job("run_cran_unit_tests")
+  invisible(NULL)
+}
+
 run_r_cmd_check_no_unit_tests_no_examples_no_vignettes <- function() {
   ## runs R CMD CHECK without running any tests
   rcmdcheck::rcmdcheck(
