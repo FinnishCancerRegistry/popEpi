@@ -515,8 +515,10 @@ survtab_ag <- function(formula = NULL,
   
   data <- comp.st.conf.ints(data, al=1-conf.level, surv="surv.obs", transform = conf.type)
   
-  if (verbose) cat("Time taken by computing observed survivals:", timetaken(ostime), "\n")
-  
+  if (verbose) {
+    message("* popEpi::survtab_ag: computed observed survival estimates; ",
+            data.table::timetaken(ostime))
+  }
   
   ## empty surv.int checking ---------------------------------------------------
   testVar <- if (surv.method == "lifetable") "n" else "pyrs"
@@ -552,11 +554,13 @@ survtab_ag <- function(formula = NULL,
                          surv.obs=min(surv.obs)), keyby = eval(byVars)]
     
     
-    message("Some cumulative surv.obs were zero or NA:")
+    message("* popEpi::survtab_ag: Some cumulative surv.obs were zero or NA:")
     if (length(byVars)) setnames(zerotab, c(prVars, adVars), c(prVars_orig, adVars_orig))
     print(zerotab)
     if (surv.method == "lifetable" && data[surv.obs == 0, .N] > 0) {
-      message("NOTE: Zero surv.obs leads to zero relative survivals as well. Adjusting with weights WILL use the zero surv.obs / relative survival values.")
+      message("* popEpi::survtab_ag: NOTE: Zero surv.obs leads to zero ",
+              "relative survivals as well. Adjusting with weights WILL use ",
+              "the zero surv.obs / relative survival values.")
     }
     
   }
@@ -836,7 +840,10 @@ survtab_ag <- function(formula = NULL,
                   
   setattr(data, "survtab.meta", arglist)
   
-  if (verbose) cat("Time taken by whole process: ", timetaken(starttime), "\n")
+  if (verbose) {
+    message("* popEpi::survtab_ag: finished whole process; ",
+            data.table::timetaken(starttime))
+  }
   data[]
 }
 

@@ -297,7 +297,10 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   x <- splitMulti(x, breaks = breaks, drop = FALSE, merge = TRUE)
   setDT(x)
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
-  if (verbose) cat("Time taken by splitting Lexis data: ", timetaken(splitTime), "\n")
+  if (verbose) {
+    message("* popEpi::survtab: Time taken by splitting Lexis data: ", 
+            timetaken(splitTime), "\n")
+  }
   
   ## pophaz merge --------------------------------------------------------------
   if (!is.null(pophaz)) {
@@ -307,7 +310,10 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
                      mid.scales = intersect(pophazVars, allScales))
     setDT(x)
     forceLexisDT(x, breaks = breaks, allScales =allScales, key = TRUE)
-    if (verbose) cat("Time taken by merging population hazards with split Lexis data: ", timetaken(hazTime), "\n")
+    if (verbose) {
+      message("* popEpi::survtab: Time taken by merging population hazards ",
+              "with split Lexis data: ", timetaken(hazTime))
+    }
   }
   
   ## pp computation ------------------------------------------------------------
@@ -322,7 +328,11 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
                     style = "delta", verbose = FALSE)
     setDT(x)
     forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
-    if (verbose) cat("Time taken by computing Pohar-Perme weights: ", timetaken(ppTime), "\n")
+    
+    if (verbose) {
+      message("* popEpi::survtab: computed Pohar Perme weights; ", 
+              data.table::timetaken(ppTime))
+    }
     
     intelliCrop(x = x, breaks = breaks, allScales = allScales, cropStatuses = TRUE)
     x <- intelliDrop(x, breaks = breaks, dropNegDur = TRUE, check = TRUE)
@@ -344,8 +354,10 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
     at.risk.pp <-  ppNames[substr(ppNames, 1, 10) == "at.risk.pp"]
     d.exp.pp <-  ppNames[substr(ppNames, 1, 8) == "d.exp.pp"]
     
-    if (verbose) cat("Time taken by computing Pohar-Perme weighted ",
-                     "counts and person-times: ", timetaken(ppTime), "\n")
+    if (verbose) {
+      message("* popEpi::survtab: computed Pohar Perme weighted counts and ",
+              "person-times; ", data.table::timetaken(ppTime))
+    }
   }
   
   d.exp <- NULL
@@ -362,14 +374,22 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   
   setDT(x)
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
-  if (verbose) cat("** verbose messages from aggre(): \n")
+  
+  if (verbose) {
+    message("* popEpi::survtab: calling popEpi::aggre")
+  }
   x <- aggre(x, by = aggreVars, verbose = verbose,
              sum.values = c(d.exp, ppNames))
-  if (verbose) cat("** end of  verbose messages from aggre() \n")
+  if (verbose) {
+    message("* popEpi::survtab: finished aggre call successfully")
+  }
   setDT(x)
   setattr(x, "class", c("aggre", "data.table", "data.frame"))
-  if (verbose) cat("Time taken by aggregating split Lexis data: ", 
-                   timetaken(aggreTime), "\n")
+  
+  if (verbose) {
+    message("* popEpi::survtab: done aggregating split Lexis data; ",
+            data.table::timetaken(aggreTime))
+  }
   
   ## neater column names -------------------------------------------------------
   ## in case there are zero obs that are censored
@@ -401,9 +421,9 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   } 
   
   form <- as.formula(paste0(survScale, " ~ ", paste0(prVars, collapse = " + ")))
-  
-  if (verbose) cat("** verbose messages from survtab_ag(): \n")
-  
+  if (verbose) {
+    message("* popEpi::survtab: calling popEpi::survtab_ag")
+  }
   st <- survtab_ag(data = x, 
                    formula = TF$form,
                    adjust = TF$adVars,
@@ -425,9 +445,11 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
                    conf.level = conf.level,
                    
                    verbose = verbose)
-  if (verbose) cat("** end of verbose messages from survtab_ag() \n")
-  ## attributes ----------------------------------------------------------------
+  if (verbose) {
+    message("* popEpi::survtab: successfully called popEpi::survtab_ag")
+  }
   
+  ## attributes ----------------------------------------------------------------
   attributes(st)$survtab.meta$call <- this_call
   attributes(st)$survtab.meta$arguments$adjust <- adjust
   attributes(st)$survtab.meta$arguments$conf.type <- conf.type
@@ -437,8 +459,10 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   attributes(st)$survtab.meta$arguments$surv.method <- surv.method
   attributes(st)$survtab.meta$arguments$relsurv.method <- relsurv.method
   
-  if (verbose) cat("Total time taken by survtab: ", timetaken(startTime), "\n")
-  st
+  if (verbose) {
+    message("* popEpi::survtab: finished; ", data.table::timetaken(startTime))
+  }
+  return(st[])
 }
 # library(Epi)
 # library(popEpi)
