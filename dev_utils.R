@@ -132,11 +132,21 @@ run_r_cmd_check_on_rhub <- function(
   rhub::check(platform = platforms, show_status = show_status, ...)
 }
 
-run_r_cmd_check_on_winbuilder <- function(...) {
+run_r_cmd_check_on_winbuilder <- function(
+  r.versions = c("release", "devel", "oldrelease"), 
+  ...
+) {
   requireNamespace("devtools")
-  devtools::check_win_release(...)
-  devtools::check_win_devel(...)
-  devtools::check_win_oldrelease(...)
+  if ("release" %in% r.versions) {
+    devtools::check_win_release(...)
+  }
+  if ("devel" %in% r.versions) {
+    devtools::check_win_devel(...)
+  }
+  if ("oldrelease" %in% r.versions) {
+    devtools::check_win_oldrelease(...)
+  }
+  return(invisible(NULL))
 }
 
 
