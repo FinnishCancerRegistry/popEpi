@@ -20,6 +20,7 @@ if the table is large,
 }
 \value{
 Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Print method function for \code{aggre} objects; see

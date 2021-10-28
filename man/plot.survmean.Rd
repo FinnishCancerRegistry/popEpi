@@ -15,6 +15,7 @@ such as \code{lty} and \code{col} will not work}
 }
 \value{
 Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Plots the observed (with extrapolation) and expected survival

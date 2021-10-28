@@ -25,6 +25,7 @@
 }
 \value{
 Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Plot SIR splines using R base graphics.

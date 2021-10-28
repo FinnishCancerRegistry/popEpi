@@ -23,6 +23,7 @@
 #' @family aggregation functions
 #' @return
 #' Returns `x` invisibly after setting attributes to it without taking a copy.
+#' This function is called for its side effects.
 #' @export setaggre
 #' @examples 
 #' df <- data.frame(sex = rep(c("male", "female"), each = 5), 

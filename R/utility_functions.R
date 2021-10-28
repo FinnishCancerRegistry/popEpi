@@ -548,6 +548,7 @@ poisson.ci <- function(x, pt = 1, conf.level = 0.95) {
 #' @export setcolsnull
 #' @return
 #' Always returns `NULL` invisibly.
+#' This function is called for its side effects.
 setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TRUE) {
   if (!is.data.table(DT)) stop("not a data.table")
   if (!soft) {

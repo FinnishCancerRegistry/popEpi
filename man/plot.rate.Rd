@@ -23,6 +23,7 @@ tries to do it by default.}
 }
 \value{
 Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Plot rate estimates with confidence intervals lines using R base graphics

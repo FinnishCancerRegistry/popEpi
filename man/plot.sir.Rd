@@ -43,6 +43,7 @@
 }
 \value{
 Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Plot SIR estimates with error bars

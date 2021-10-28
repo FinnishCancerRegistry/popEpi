@@ -153,6 +153,7 @@ print.sirspline <- function(x, ...) {
 #' }
 #' @return
 #' Always returns `NULL` invisibly.
+#' This function is called for its side effects.
 #' @export
 
 plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main, 
@@ -256,6 +257,7 @@ plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main,
 #' @export
 #' @return
 #' Always returns `NULL` invisibly.
+#' This function is called for its side effects.
 #' @family sir functions
 plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, ylab, xlab,  ...) {
 
@@ -356,6 +358,7 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 #' @export
 #' @return
 #' Always returns `NULL` invisibly.
+#' This function is called for its side effects.
 
 lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline, ... ){
   ## input: sirspline object, with only one spline var (spline.est.A)
@@ -426,6 +429,7 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
 #' @export
 #' @return
 #' Always returns `NULL` invisibly.
+#' This function is called for its side effects.
 print.rate <- function(x, subset = NULL, ...) {
   
   ra <- attributes(x)$rate.meta
@@ -484,6 +488,7 @@ print.rate <- function(x, subset = NULL, ...) {
 #' @export
 #' @return
 #' Always returns `NULL` invisibly.
+#' This function is called for its side effects.
 plot.rate <- function(x, conf.int = TRUE, eps = 0.2, left.margin, xlim, ...) {
   
   ra <- attributes(x)$rate.meta
@@ -635,6 +640,7 @@ preface_survtab.print <- function(x) {
 #' @export
 #' @return
 #' Always returns `NULL` invisibly.
+#' This function is called for its side effects.
 print.aggre <- function(x, subset = NULL, ...) {
   
   PF <- parent.frame(1L)
@@ -703,6 +709,7 @@ summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
 #' @family survtab functions
 #' @return
 #' Always returns `NULL` invisibly.
+#' This function is called for its side effects.
 print.survtab <- function(x, subset = NULL, ...) {
   
   Tstart <- Tstop <- NULL ## APPEASE R CMD CHECK
@@ -1133,6 +1140,7 @@ prep_plot_survtab <- function(x,
 #' @family survtab functions
 #' @return
 #' Always returns `NULL` invisibly.
+#' This function is called for its side effects.
 plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
   
   Tstop <- delta <- NULL ## APPEASE R CMD CHECK
@@ -1230,6 +1238,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 #' @family survtab functions
 #' @return
 #' Always returns `NULL` invisibly.
+#' This function is called for its side effects.
 lines.survtab <- function(x, y = NULL, subset = NULL, 
                           conf.int = TRUE, col=NULL, lty=NULL, ...) {
   Tstop <- NULL ## APPEASE R CMD CHECK
@@ -1392,6 +1401,7 @@ lines_by <- function(x, y, strata.vars = NULL, data, col, lty, ...) {
 #' @family survmean functions
 #' @return
 #' Always returns `NULL` invisibly.
+#' This function is called for its side effects.
 plot.survmean <- function(x, ...) {
   at <- attr(x, "survmean.meta")
   curves <- at$curves
@@ -1441,6 +1451,7 @@ plot.survmean <- function(x, ...) {
 #' @family survmean functions
 #' @return
 #' Always returns `NULL` invisibly.
+#' This function is called for its side effects.
 lines.survmean <- function(x, ...) {
   at <- copy(attr(x, "survmean.meta"))
   curves <- at$curves

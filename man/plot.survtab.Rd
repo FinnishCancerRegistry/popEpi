@@ -42,6 +42,7 @@ present in \code{obj} for variables in \code{y}}
 }
 \value{
 Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Plotting for \code{survtab} objects

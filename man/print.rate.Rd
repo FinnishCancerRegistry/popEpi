@@ -17,6 +17,7 @@ before printing; use this to limit to a certain stratum. E.g.
 }
 \value{
 Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Print method function for \code{rate} objects; see

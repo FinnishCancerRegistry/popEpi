@@ -29,6 +29,7 @@ for programming sometimes}
 }
 \value{
 Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Deletes columns in a \code{data.table} conveniently.

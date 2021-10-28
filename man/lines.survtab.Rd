@@ -29,6 +29,7 @@ e.g. \code{lwd} can be defined this way}
 }
 \value{
 Always returns `NULL` invisibly.
+This function is called for its side effects.
 }
 \description{
 Plot \code{lines} from a \code{survtab} object

@@ -22,6 +22,7 @@ also exist in the corresponding vector in the breaks list.}
 }
 \value{
 Returns `x` invisibly after setting attributes to it without taking a copy.
+This function is called for its side effects.
 }
 \description{
 Coerces an R object to an \code{aggre} object, identifying
