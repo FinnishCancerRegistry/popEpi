@@ -13,7 +13,7 @@ Version: 0.4.9
 Language: en-GB
 Description: Enables computation of epidemiological statistics, including those 
     where counts or mortality rates of the reference population are used. 
-    Currently supported: excess hazard models (Dickman, Slogget, Hills, and 
+    Currently supported: excess hazard models (Dickman, Sloggett, Hills, and 
     Hakulinen (2012) <doi:10.1002/sim.1597>), rates, mean survival times, 
     relative/net survival (in particular the Ederer II (Ederer and Heise (1959))
     and Pohar Perme (Pohar Perme, Stare, and Esteve 
