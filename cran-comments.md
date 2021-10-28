@@ -14,6 +14,10 @@ I also made the following changes requested by `julia.haider@wu.ac.at`:
 * when user settings are changed using `par()`, there is an immediate call to
   `on.exit` to return the settings to the pre-modified ones
 
+I get one NOTE due to adding references to DESCRIPTION::Description: R CMD check
+seems to think that peoples' names are potentially mis-spelled. There does not
+seem to be a way to avoid this.
+
 Below are a bunch of checks I ran using winbuilder and rhub.
 
 * R-oldrel = R version 4.0.5 (2021-03-31)
