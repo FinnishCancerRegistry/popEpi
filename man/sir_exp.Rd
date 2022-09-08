@@ -78,11 +78,11 @@ is allowed in observed, pop.haz or person-years.
 }
 \section{Functions}{
 \itemize{
-\item \code{sir_lex}: 
+\item \code{sir_lex()}: 
 
-\item \code{sir_ag}: 
+\item \code{sir_ag()}: 
+
 }}
-
 \examples{
 
 \donttest{

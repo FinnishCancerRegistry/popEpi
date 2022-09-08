@@ -120,11 +120,11 @@ any of the  \code{by.vars} values was \code{NA}.
 }
 \section{Functions}{
 \itemize{
-\item \code{expr.by.cj}: Somewhat more streamlined \code{ltable} with 
+\item \code{expr.by.cj()}: Somewhat more streamlined \code{ltable} with 
 defaults for speed. Explicit determination of enclosing environment
 of data.
-}}
 
+}}
 \examples{
 data("sire", package = "popEpi")
 sr <- sire

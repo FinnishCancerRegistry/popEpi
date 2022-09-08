@@ -42,14 +42,14 @@ information.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{data.frame}: Coerces a \code{data.frame} to an \code{aggre} object
+\item \code{as.aggre(data.frame)}: Coerces a \code{data.frame} to an \code{aggre} object
 
-\item \code{data.table}: Coerces a \code{data.table} to an \code{aggre} object
+\item \code{as.aggre(data.table)}: Coerces a \code{data.table} to an \code{aggre} object
 
-\item \code{default}: Default method for \code{as.aggre} (stops computations
+\item \code{as.aggre(default)}: Default method for \code{as.aggre} (stops computations
 if no class-specific method found)
-}}
 
+}}
 \examples{
 library("data.table")
 df <- data.frame(sex = rep(c("male", "female"), each = 5), 

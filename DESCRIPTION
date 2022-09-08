@@ -32,4 +32,4 @@ ByteCompile: true
 VignetteBuilder: knitr
 URL: https://github.com/WetRobot/popEpi
 BugReports: https://github.com/WetRobot/popEpi/issues
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
