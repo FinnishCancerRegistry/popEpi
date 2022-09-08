@@ -30,6 +30,6 @@ License: GPL-3
 LazyData: true
 ByteCompile: true
 VignetteBuilder: knitr
-URL: https://github.com/WetRobot/popEpi
-BugReports: https://github.com/WetRobot/popEpi/issues
+URL: https://github.com/FinnishCancerRegistry/popEpi
+BugReports: https://github.com/FinnishCancerRegistry/popEpi/issues
 RoxygenNote: 7.2.1

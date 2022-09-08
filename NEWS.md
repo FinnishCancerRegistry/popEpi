@@ -29,7 +29,7 @@
 -   splitLexisDT/splitMulti bug fix: splitting along multiple time
     scales *sometimes* produced duplicate transitions (e.g. alive ->
     dead in the last two rows). see
-    <https://github.com/WetRobot/popEpi/issues/138> for details.
+    <https://github.com/FinnishCancerRegistry/popEpi/issues/138> for details.
 -   splitLexisDT/splitMulti now retain time.since attribute; this
     attribute plays a role in cutLexis
 -   known issue: splitLexisDT/splitMulti not guaranteed to work
@@ -47,11 +47,11 @@
 -   **`survtab()` bug fix: standard errors were mis-specified for
     adjusted curves, e.g. age-adjusted Ederer II estimates. This
     resulted in too wide confidence intervals! SEE HERE FOR EXAMPLE:
-    [#135](https://github.com/WetRobot/popEpi/issues/135)**. The
+    [#135](https://github.com/FinnishCancerRegistry/popEpi/issues/135)**. The
     standard errors and confidence intervals of non-adjusted curves have
     always been correct.
 -   `survtab()` bug fix: confidence level was always 95 % regardless of
-    `conf.level` [#134](https://github.com/WetRobot/popEpi/issues/134)
+    `conf.level` [#134](https://github.com/FinnishCancerRegistry/popEpi/issues/134)
 
 # Changes in 0.4.1
 

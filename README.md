@@ -1,9 +1,9 @@
 [![Build
-Status](https://travis-ci.org/WetRobot/popEpi.png?branch=master)](https://travis-ci.org/WetRobot/popEpi)
+Status](https://travis-ci.org/FinnishCancerRegistry/popEpi.png?branch=master)](https://travis-ci.org/FinnishCancerRegistry/popEpi)
 [![AppVeyor Build
-Status](https://ci.appveyor.com/api/projects/status/github/WetRobot/popEpi?branch=master&svg=true)](https://ci.appveyor.com/project/WetRobot/popepi)
+Status](https://ci.appveyor.com/api/projects/status/github/FinnishCancerRegistry/popEpi?branch=master&svg=true)](https://ci.appveyor.com/project/FinnishCancerRegistry/popepi)
 [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/popEpi)](https://cran.r-project.org/package=popEpi)
-[![codecov.io](https://codecov.io/github/WetRobot/popEpi/coverage.svg?branch=master)](https://codecov.io/github/WetRobot/popEpi?branch=master)
+[![codecov.io](https://codecov.io/github/FinnishCancerRegistry/popEpi/coverage.svg?branch=master)](https://codecov.io/github/FinnishCancerRegistry/popEpi?branch=master)
 [![CRAN_DLs_via_RStudio](https://cranlogs.r-pkg.org/badges/popEpi)](https://cran.r-project.org/package=popEpi)
 
 # popEpi: Epidemiology with population data
