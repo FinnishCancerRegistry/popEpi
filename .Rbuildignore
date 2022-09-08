@@ -18,4 +18,4 @@
 ^R/nse\.R$
 ^revdep$
 ^Rplots.pdf$
-
+^popEpi\.code-workspace$
