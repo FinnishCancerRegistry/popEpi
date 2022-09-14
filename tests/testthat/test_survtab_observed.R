@@ -49,7 +49,7 @@ testthat::test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aal
 # custom status var -------------------------------------------------------
 
 testthat::test_that("survtab status argument works as expected", {
-  popEpi:::skip_on_cran_and_ci()
+  popEpi:::skip_normally()
   
   BL <- list(fot= seq(0,19,1/12), per=c(2008,2013))
   sr <- sire[dg_date < ex_date, ]

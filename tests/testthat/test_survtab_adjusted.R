@@ -1,7 +1,7 @@
 testthat::context("adjusted curves from survtab")
 
 testthat::test_that("adjusted SEs and curves are what expected", {
-  popEpi:::skip_on_cran_and_ci()
+  popEpi:::skip_normally()
   
   sire <- data.table::data.table(popEpi::sire)
   

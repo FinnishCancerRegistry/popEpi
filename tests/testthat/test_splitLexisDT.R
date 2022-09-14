@@ -1,7 +1,7 @@
 testthat::context("Compare splitLexisDT results with splitLexis results")
 
 testthat::test_that("splitLexisDT and splitLexis are congruent", {
-  popEpi:::skip_on_cran_and_ci()
+  popEpi:::skip_normally()
   
   library(Epi)
   

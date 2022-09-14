@@ -33,37 +33,62 @@ run_fun_as_rstudio_job <- function(fun_nm) {
   rstudioapi::jobRunScript(path = tf, workingDir = getwd(), name = fun_nm)
 }
 
+without_all_unit_tests <- function(expr) {
+  message("running with popEpi_run_all_unit_tests = false")
+  old_all <- Sys.getenv("popEpi_run_all_unit_tests")
+  on.exit({
+    Sys.setenv("popEpi_run_all_unit_tests" = old_all)
+  })
+  Sys.setenv("popEpi_run_all_unit_tests" = "false")
+  return(expr)
+}
+
+with_all_unit_tests <- function(expr) {
+  message("running with popEpi_run_all_unit_tests = true")
+  old_all <- Sys.getenv("popEpi_run_all_unit_tests")
+  on.exit({
+    Sys.setenv("popEpi_run_all_unit_tests" = old_all)
+  })
+  Sys.setenv("popEpi_run_all_unit_tests" = "true")
+  return(expr)
+}
+
+with_cran_unit_tests <- function(expr) {
+  without_all_unit_tests(expr)
+}
+
+with_ci_unit_tests <- function(expr) {
+  without_all_unit_tests(expr)
+}
+
 run_r_cmd_check_all_unit_tests <- function() {
-  ## runs R CMD CHECK with all possible tests
-  old <- Sys.getenv("NOT_CRAN")
-  on.exit(Sys.setenv("NOT_CRAN" = old))
-  Sys.setenv("NOT_CRAN" = "true")
-  rcmdcheck::rcmdcheck(".", args = default_check_args())
+  with_all_unit_tests(
+    rcmdcheck::rcmdcheck(".", args = default_check_args())
+  )  
 }
 
 run_r_cmd_check_cran_unit_tests <- function() {
-  ## runs R CMD CHECK with only the tests that CRAN will run
-  old <- Sys.getenv("NOT_CRAN")
-  on.exit(Sys.setenv("NOT_CRAN" = old))
-  Sys.setenv("NOT_CRAN" = "false")
-  rcmdcheck::rcmdcheck(".", args = default_check_args())
+  with_cran_unit_tests(
+    rcmdcheck::rcmdcheck(".", args = default_check_args())
+  )
 }
 
-run_cran_unit_tests <- run_ci_unit_tests <- function(...)  {
-  old <- Sys.getenv("CI")
-  on.exit({
-    Sys.setenv("CI" = old)
-  })
-  Sys.setenv("CI" = "TRUE")
-  stopifnot(
-    testthat:::on_ci()
+run_r_cmd_check_ci_unit_tests <- function() {
+  with_ci_unit_tests(
+    rcmdcheck::rcmdcheck(".", args = default_check_args())
   )
-  devtools::test(pkg = ".", ...)
+}
+
+run_cran_unit_tests <- function(...)  {
+  with_cran_unit_tests(devtools::test(pkg = ".", ...))
+}
+run_ci_unit_tests <- function(...)  {
+  with_ci_unit_tests(devtools::test(pkg = ".", ...))
 }
 
 run_all_unit_tests <- function(...)  {
   ## runs all possible tests
-  devtools::test(".", ...)
+  with_all_unit_tests(devtools::test(pkg = ".", ...))
 }
 
 run_examples <- function() {

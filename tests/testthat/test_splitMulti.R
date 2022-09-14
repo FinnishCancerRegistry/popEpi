@@ -6,7 +6,7 @@ testthat::context("Compare splitMulti results with splitLexis results")
 
 testthat::test_that("splitMulti and splitLexis are congruent", {
   testthat::expect_identical(1L, 1L) ## to trigger testing...
-  popEpi:::skip_on_cran_and_ci()
+  popEpi:::skip_normally()
   library(Epi)
   
   sire2 <- copy(sire)

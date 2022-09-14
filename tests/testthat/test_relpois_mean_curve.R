@@ -1,7 +1,7 @@
 testthat::context("test rpcurve vs. survtab congruence")
 
 testthat::test_that("rpcurve and survtab e2 are approximately congruent", {
-  popEpi:::skip_on_cran_and_ci()
+  popEpi:::skip_normally()
   
   sire2 <- popEpi::sire[dg_date < ex_date, ]
   sire2[, "agegr" := cut(dg_age, breaks = c(0,45,70,Inf))]

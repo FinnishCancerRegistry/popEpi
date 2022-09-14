@@ -6,7 +6,7 @@ testthat::context("Splitting tests on random data and random breaks")
 
 testthat::test_that("splitting funs congruent with random splitting and random data", {
 
-  popEpi:::skip_on_cran_and_ci()
+  popEpi:::skip_normally()
 
   library("Epi")
   library("data.table")

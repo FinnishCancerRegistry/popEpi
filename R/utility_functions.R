@@ -1314,23 +1314,9 @@ get_random_seed <- function() {
 }
 
 
-
-
-
-skip_on_cran_and_ci <- function() {
+skip_normally <- function() {
   requireNamespace("testthat")
-  testthat::skip_on_cran()
-  testthat::skip_on_ci()
+  if (!identical(Sys.getenv("popEpi_all_unit_tests"), "true")) {
+    testthat::skip("Unit tests skipped normally")
+  }
 }
-
-
-
-
-
-
-
-
-
-
-
-

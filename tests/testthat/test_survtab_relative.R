@@ -77,7 +77,7 @@ testthat::context("popEpi::survtab vs. relsurv::rs.surv")
   # relpois vs. relsurv::rsadd ---------------------------------------------
 
   testthat::test_that("relpois congruent with relsurv::rsadd", {
-    popEpi:::skip_on_cran_and_ci()
+    popEpi:::skip_normally()
     
     
     library(relsurv)
