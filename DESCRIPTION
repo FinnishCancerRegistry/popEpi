@@ -26,7 +26,8 @@ Depends: R (>= 3.2.0)
 Imports: 
     Epi (>= 2.0), 
     survival, 
-    data.table (>= 1.10.4)
+    data.table (>= 1.10.4),
+    splines
 Suggests: 
     testthat,
     knitr,
@@ -34,7 +35,6 @@ Suggests:
     relsurv,
     mstate,
     date,
-    splines,
     roxygen2,
     covr
 Encoding: UTF-8
