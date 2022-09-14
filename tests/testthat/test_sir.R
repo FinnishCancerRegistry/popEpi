@@ -219,8 +219,6 @@ testthat::test_that("data.table subsettin works", {
 if (requireNamespace("splines")) {
   testthat::test_that("SIR spline throws errors correctly", {
     popEpi:::skip_normally()
-    library(splines)
-    
     
     sp0 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = 'from0to2', coh.pyrs = 'pyrs',
                                           subset = year %in% 1990:2008,
