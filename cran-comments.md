@@ -34,6 +34,10 @@ Below are a bunch of checks I ran using rhub / winbuilder.
 * R-release, brew --- OK
 * R-release, CRAN's setup --- OK
 
+### Fedora Linux
+
+* R-devel, clang, gfortran --- OK
+
 ## Other checks:
 
 * Travis CI: Ubuntu 16.04.6 LTS, R version 3.6.1 (2017-01-27) --- OK
