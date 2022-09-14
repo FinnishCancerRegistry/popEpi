@@ -12,7 +12,4 @@ if (requireNamespace("testthat")) {
   }
 
   testthat::test_check("popEpi")
-} else {
-  stop("Need package testthat to run unit tests.")
 }
-

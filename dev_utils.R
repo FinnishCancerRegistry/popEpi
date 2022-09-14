@@ -1,10 +1,10 @@
 
-
-
 default_check_args <- function() {
   c("--as-cran", "--timings")
 }
-
+no_suggests_check_env_vars <- function() {
+  c("_R_CHECK_DEPENDS_ONLY_" = "true")
+}
 
 run_as_rstudio_job <- function(expr) {
   tf <- tempfile(fileext = ".R")
@@ -61,21 +61,29 @@ with_ci_unit_tests <- function(expr) {
   without_all_unit_tests(expr)
 }
 
-run_r_cmd_check_all_unit_tests <- function() {
+run_r_cmd_check <- function(no_suggests = FALSE) {
+  env <- character(0)
+  if (no_suggests) {
+    env <- no_suggests_check_env_vars()
+  }
+  rcmdcheck::rcmdcheck(".", args = default_check_args(), env = env)
+}
+
+run_r_cmd_check_all_unit_tests <- function(no_suggests = FALSE) {
   with_all_unit_tests(
-    rcmdcheck::rcmdcheck(".", args = default_check_args())
+    run_r_cmd_check(no_suggests)
   )  
 }
 
-run_r_cmd_check_cran_unit_tests <- function() {
+run_r_cmd_check_cran_unit_tests <- function(no_suggests = FALSE) {
   with_cran_unit_tests(
-    rcmdcheck::rcmdcheck(".", args = default_check_args())
+    run_r_cmd_check(no_suggests)
   )
 }
 
-run_r_cmd_check_ci_unit_tests <- function() {
+run_r_cmd_check_ci_unit_tests <- function(no_suggests = FALSE) {
   with_ci_unit_tests(
-    rcmdcheck::rcmdcheck(".", args = default_check_args())
+    run_r_cmd_check(no_suggests)
   )
 }
 
@@ -102,31 +110,52 @@ check_triple <- function() {
   invisible(NULL)
 }
 
-run_r_cmd_check_no_unit_tests_no_examples_no_vignettes <- function() {
+run_r_cmd_check_no_unit_tests_no_examples_no_vignettes <- function(
+  no_suggests = FALSE
+) {
   ## runs R CMD CHECK without running any tests
+  env <- character(0L)
+  if (no_suggests) {
+    no_suggests <- no_suggests_check_env_vars()
+  }
   rcmdcheck::rcmdcheck(
     path = ".", 
     args = union(
       c("--no-tests", "--no-examples", 
         "--no-vignettes", "--no-build-vignettes"),
       default_check_args()
-    )
+    ),
+    env = env
   )
 }
 
-run_r_cmd_check_no_unit_tests_no_examples <- function() {
+run_r_cmd_check_no_unit_tests_no_examples <- function(
+  no_suggests = FALSE
+) {
   ## runs R CMD CHECK without running any tests
+  env <- character(0L)
+  if (no_suggests) {
+    no_suggests <- no_suggests_check_env_vars()
+  }
   rcmdcheck::rcmdcheck(
     ".", 
-    args = union(default_check_args(), c("--no-tests", "--no-examples"))
+    args = union(default_check_args(), c("--no-tests", "--no-examples")),
+    env = env
   )
 }
 
-run_r_cmd_check_no_unit_tests <- function() {
+run_r_cmd_check_no_unit_tests <- function(
+  no_suggests = FALSE
+) {
   ## runs R CMD CHECK without running any tests
+  env <- character(0L)
+  if (no_suggests) {
+    no_suggests <- no_suggests_check_env_vars()
+  }
   rcmdcheck::rcmdcheck(
     ".", 
-    args = union(default_check_args(), "--no-tests")
+    args = union(default_check_args(), "--no-tests"),
+    env = env
   )
 }
 
