@@ -1,47 +1,50 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
-Authors@R: c(
-    person("Joonas", "Miettinen", email = "joonas.miettinen@cancer.fi", role = c("cre", "aut"), comment = c(ORCID = "0000-0001-8624-6754")), 
-    person("Matti", "Rantanen", email = "matti.rantanen@statfinn.com", role = "aut"), 
-    person("Karri", "Seppa", email = "karri.seppa@cancer.fi", role = "ctb") 
-    )
-Author: Joonas Miettinen [cre, aut] (<https://orcid.org/0000-0001-8624-6754>),
-    Matti Rantanen [aut],
-    Karri Seppa [ctb]
-Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
 Version: 0.4.9.1
-Language: en-GB
-Description: Enables computation of epidemiological statistics, including those 
-    where counts or mortality rates of the reference population are used. 
-    Currently supported: excess hazard models (Dickman, Sloggett, Hills, and 
-    Hakulinen (2012) <doi:10.1002/sim.1597>), rates, mean survival times, 
-    relative/net survival (in particular the Ederer II (Ederer and Heise (1959))
-    and Pohar Perme (Pohar Perme, Stare, and Esteve 
-    (2012) <doi:10.1111/j.1541-0420.2011.01640.x>) estimators), 
-    and standardized incidence and mortality ratios, 
-    all of which can be easily adjusted for by covariates such as 
-    age. Fast splitting and aggregation of 'Lexis' objects (from package 'Epi') 
-    and other computations achieved using 'data.table'. 
-Depends: R (>= 3.2.0)
-Imports: 
-    Epi (>= 2.0), 
-    survival, 
-    data.table (>= 1.10.4),
-    splines
-Suggests: 
-    testthat,
-    knitr,
-    rmarkdown,
-    relsurv,
-    mstate,
-    date,
-    roxygen2,
-    covr
-Encoding: UTF-8
+Authors@R: c(
+    person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", role = c("cre", "aut"),
+           comment = c(ORCID = "0000-0001-8624-6754")),
+    person("Matti", "Rantanen", , "matti.rantanen@statfinn.com", role = "aut"),
+    person("Karri", "Seppa", , "karri.seppa@cancer.fi", role = "ctb")
+  )
+Author: Joonas Miettinen [cre, aut]
+    (<https://orcid.org/0000-0001-8624-6754>), Matti Rantanen [aut], Karri
+    Seppa [ctb]
+Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
+Description: Enables computation of epidemiological statistics, including
+    those where counts or mortality rates of the reference population are
+    used.  Currently supported: excess hazard models (Dickman, Sloggett,
+    Hills, and Hakulinen (2012) <doi:10.1002/sim.1597>), rates, mean
+    survival times, relative/net survival (in particular the Ederer II
+    (Ederer and Heise (1959)) and Pohar Perme (Pohar Perme, Stare, and
+    Esteve (2012) <doi:10.1111/j.1541-0420.2011.01640.x>) estimators), and
+    standardized incidence and mortality ratios, all of which can be
+    easily adjusted for by covariates such as age. Fast splitting and
+    aggregation of 'Lexis' objects (from package 'Epi') and other
+    computations achieved using 'data.table'.
 License: GPL-3
-LazyData: true
-ByteCompile: true
-VignetteBuilder: knitr
 URL: https://github.com/FinnishCancerRegistry/popEpi
 BugReports: https://github.com/FinnishCancerRegistry/popEpi/issues
+Depends: 
+    R (>= 3.2.0)
+Imports: 
+    data.table (>= 1.10.4),
+    Epi (>= 2.0),
+    splines,
+    survival
+Suggests: 
+    covr,
+    date,
+    knitr,
+    mstate,
+    relsurv,
+    rmarkdown,
+    roxygen2,
+    testthat
+VignetteBuilder: 
+    knitr
+ByteCompile: true
+Encoding: UTF-8
+Language: en-GB
+LazyData: true
 RoxygenNote: 7.2.1
