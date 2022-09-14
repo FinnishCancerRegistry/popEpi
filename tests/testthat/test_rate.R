@@ -11,17 +11,6 @@ p18b <- data.table(p18)
 setnames(p18b, c('OBS','PYRS','AGEGROUP'), c('obs','pyrs','agegroup'))
 wv <- c(.1,.1,.1,.2,.2,.2,.2,.3,.3,.4,.5,.5,.5,.4,.4,.3,.2,.1)
 
-# test_that("ratesplines", {
-#   library(data.table)
-#   library(splines)
-#   data <- ratesplines(data = p18, obs = 'OBS', pyrs = 'PYRS', print = 'COV', spline = 'AGEGROUP')
-#   
-# 
-#   
-#   
-#   
-# 
-# })
 
 testthat::test_that("rate works with different weights", {
   w1 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = c(1:18))
