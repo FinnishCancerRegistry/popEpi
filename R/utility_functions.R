@@ -205,30 +205,12 @@ is_leap_year <- function(years) {
 #' @export is.Date
 #' @seealso
 #' \code{\link{get.yrs}}, \code{\link{is_leap_year}}, \code{\link{as.Date}}
-#' @examples
-#' ## the base "capital Date" format
-#' da <- as.Date("2000-01-01")
-#' is.Date(da) ## TRUE
-#' date::is.date(da) ## FALSE
-#' 
-#' ## IDate format from data.table
-#' library("data.table")
-#' da <- as.IDate("2000-01-01")
-#' is.Date(da) ## TRUE
-#' date::is.date(da) ## FALSE
-#' 
-#' ## from package "date"
-#' da <- date::as.date("1jan2000")
-#' is.Date(da) ## FALSE
-#' date::is.date(da) ## TRUE
 #' @return
 #' `TRUE` if `obj` is of class `"Date"` or `"IDate"`.
 is.Date <- function(obj) {
-  
-  if (any(c("IDate","Date") %in% class(obj))) {
+  if (any(c("IDate", "Date") %in% class(obj))) {
     return(TRUE)
   }
-  
   return(FALSE)
 }
 

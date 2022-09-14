@@ -18,23 +18,6 @@ a logical vector of length 1. \code{IDate} objects are also
 \code{Date} objects, but \code{date} objects from package \pkg{date}
 are not.
 }
-\examples{
-## the base "capital Date" format
-da <- as.Date("2000-01-01")
-is.Date(da) ## TRUE
-date::is.date(da) ## FALSE
-
-## IDate format from data.table
-library("data.table")
-da <- as.IDate("2000-01-01")
-is.Date(da) ## TRUE
-date::is.date(da) ## FALSE
-
-## from package "date"
-da <- date::as.date("1jan2000")
-is.Date(da) ## FALSE
-date::is.date(da) ## TRUE
-}
 \seealso{
 \code{\link{get.yrs}}, \code{\link{is_leap_year}}, \code{\link{as.Date}}
 }

@@ -216,8 +216,6 @@ test_that("data.table subsettin works", {
 
 # sir splines -------------------------------------------------------------
 
-#library(reshape2)
-
 test_that("SIR spline throws errors correctly", {
   popEpi:::skip_on_cran_and_ci()
   library(splines)
