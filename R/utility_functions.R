@@ -1316,7 +1316,7 @@ get_random_seed <- function() {
 
 skip_normally <- function() {
   requireNamespace("testthat")
-  if (!identical(Sys.getenv("popEpi_all_unit_tests"), "true")) {
+  if (!identical(Sys.getenv("popEpi_run_all_unit_tests"), "true")) {
     testthat::skip("Unit tests skipped normally")
   }
 }
