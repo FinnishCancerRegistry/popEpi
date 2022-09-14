@@ -23,8 +23,20 @@ Description: Enables computation of epidemiological statistics, including those
     age. Fast splitting and aggregation of 'Lexis' objects (from package 'Epi') 
     and other computations achieved using 'data.table'. 
 Depends: R (>= 3.2.0)
-Imports: Epi (>= 2.0), survival, data.table (>= 1.10.4)
-Suggests: reshape2, methods, testthat, knitr, rmarkdown, relsurv, ggplot2, mstate, date, splines, roxygen2, covr
+Imports: 
+    Epi (>= 2.0), 
+    survival, 
+    data.table (>= 1.10.4)
+Suggests: 
+    testthat,
+    knitr,
+    rmarkdown,
+    relsurv,
+    mstate,
+    date,
+    splines,
+    roxygen2,
+    covr
 Encoding: UTF-8
 License: GPL-3
 LazyData: true
