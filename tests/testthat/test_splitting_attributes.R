@@ -56,7 +56,6 @@ testthat::test_that("popEpi splitters retain time.since attribute", {
   ## based on simLexis example from Epi 2.19
   library("Epi")
   library("data.table")
-  library("splines")
   
   data("DMlate", package = "Epi")
   dml <- Lexis( entry = list(Per=dodm, Age=dodm-dobth, DMdur=0 ),
