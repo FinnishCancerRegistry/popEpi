@@ -636,3 +636,4 @@ detectSurvivalTimeScale <- function(lex, values) {
   survScale
   
 }
+

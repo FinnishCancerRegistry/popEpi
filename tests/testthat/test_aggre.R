@@ -225,3 +225,4 @@ test_that("at.risk column works as intended, Vol. 2", {
   
   expect_equal(a$at.risk, n.start$V1)
 })
+

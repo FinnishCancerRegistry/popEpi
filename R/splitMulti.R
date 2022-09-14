@@ -277,3 +277,4 @@ splitMulti <- function(data,
 }
 
 globalVariables(".")
+

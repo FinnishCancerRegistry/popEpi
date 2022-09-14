@@ -137,3 +137,4 @@ test_that("weighted NA checks work", {
   }, regexp = "A warning message with counts: 15")
 
 })
+

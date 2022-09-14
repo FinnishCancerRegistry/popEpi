@@ -895,3 +895,4 @@ survtab_ag <- function(formula = NULL,
 # st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, surv.type = "surv.cause", weights = wli)
 # ag[, othd := pmax(from0to1 - 1L, 0L)]
 # st <- survtab_ag(fot ~ adjust(sex, agegr), data = ag, d = list(cand = from0to1, othd = pmax(from0to1-1L, 0L)), surv.type = "surv.cause", weights = wli)
+

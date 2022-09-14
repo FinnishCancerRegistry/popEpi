@@ -15,3 +15,4 @@ if (requireNamespace("testthat")) {
 } else {
   stop("Need package testthat to run unit tests.")
 }
+

@@ -344,3 +344,4 @@ rate_est <- function(data = data,
 }
 
 globalVariables(c('var.temp','lam.temp','rate.adj','SE.rate.adj','SE.rate','SE.log.rate','SE.log.rate.adj'))
+

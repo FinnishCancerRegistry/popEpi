@@ -187,3 +187,4 @@ RPL <- data.table::copy(stats::poisson())
 RPL$link <- "glm relative survival model with Poisson error"
 RPL$linkfun <- function(mu, d.exp) log(mu - d.exp)
 RPL$linkinv <- function(eta, d.exp) d.exp + exp(eta)
+

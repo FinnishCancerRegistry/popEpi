@@ -74,3 +74,4 @@ test_that("adjusted SEs and curves are what expected", {
   
   
 })
+

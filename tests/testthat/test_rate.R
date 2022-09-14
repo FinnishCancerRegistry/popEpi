@@ -310,3 +310,4 @@ test_that("stdr.weights returns correct datasets", {
   expect_equal( stdr.weights(al[5])[,.N], le[5])
   expect_equal( stdr.weights(al[6])[,.N], le[6])
 })
+
