@@ -1,10 +1,10 @@
-context("Epi subsetting methods OK")
+testthat::context("Epi subsetting methods OK")
 
 
 
 
 
-test_that("[.Epi exists and works", {
+testthat::test_that("[.Epi exists and works", {
   
   xcoh <- structure( list( id = c("A", "B", "C"),
                            birth = c("14/07/1952", "01/04/1954", "10/06/1987"),
@@ -27,7 +27,7 @@ test_that("[.Epi exists and works", {
   e1 <- subset(Lcoh, fail == 1)
   e2 <- Lcoh[Lcoh$fail == 1, ]
 
-  expect_identical(e1, e2)
+  testthat::expect_identical(e1, e2)
 })
 
 

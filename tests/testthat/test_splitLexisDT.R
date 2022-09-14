@@ -31,11 +31,11 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
   
   # one row per id ---------------------------------------------------------------
   
-  test_that("splitLexisDT and splitLexis congruent with one row per id", {
-    expect_identical(1L, 1L) ## to trigger testing...
+  testthat::test_that("splitLexisDT and splitLexis congruent with one row per id", {
+    testthat::expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
-      test_that(paste0("results congruent using breaks ", sc), {
-        expect_identical(1L, 1L) ## to trigger testing...
+      testthat::test_that(paste0("results congruent using breaks ", sc), {
+        testthat::expect_identical(1L, 1L) ## to trigger testing...
         popEpi:::compareSLDTWithEpi(data = x, breaks = BL[[sc]], timeScale = names(BL)[sc])
       })
     }
@@ -52,11 +52,11 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
              exit=list(per=ex_yrs), merge=TRUE, exit.status=1L, entry.status = 0L, id = id)
   
   
-  test_that("splitLexisDT and splitLexis congruent with multiple rows per id", {
-    expect_identical(1L, 1L) ## to trigger testing...
+  testthat::test_that("splitLexisDT and splitLexis congruent with multiple rows per id", {
+    testthat::expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
-      test_that(paste0("results congruent using breaks ", sc), {
-        expect_identical(1L, 1L) ## to trigger testing...
+      testthat::test_that(paste0("results congruent using breaks ", sc), {
+        testthat::expect_identical(1L, 1L) ## to trigger testing...
         popEpi:::compareSLDTWithEpi(data = x, breaks = BL[[sc]], timeScale = names(BL)[sc])
       })
     }
@@ -81,11 +81,11 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   
-  test_that("splitLexisDT and splitLexis congruent with multiple Lexis states per id", {
-    expect_identical(1L, 1L) ## to trigger testing...
+  testthat::test_that("splitLexisDT and splitLexis congruent with multiple Lexis states per id", {
+    testthat::expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
-      test_that(paste0("results congruent using breaks ", sc), {
-        expect_identical(1L, 1L) ## to trigger testing...
+      testthat::test_that(paste0("results congruent using breaks ", sc), {
+        testthat::expect_identical(1L, 1L) ## to trigger testing...
         popEpi:::compareSLDTWithEpi(data = x, breaks = BL[[sc]], timeScale = names(BL)[sc])
       })
     }
@@ -93,8 +93,8 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
   
   # using mstate package -------------------------------------------------------
   if (requireNamespace("mstate")) {
-    test_that("splitLexisDT and splitLexis congruent using mstate data", {
-      expect_identical(1L, 1L) ## to trigger testing...
+    testthat::test_that("splitLexisDT and splitLexis congruent using mstate data", {
+      testthat::expect_identical(1L, 1L) ## to trigger testing...
       ## taken directly from ?msprep examples
       library(mstate)
       tmat <- trans.illdeath()
@@ -119,8 +119,8 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
       BL2 <- list(TT = 0:4, TT = 1:2, TT = 0:1, TT = c(1,Inf))
       
       for (sc in seq_along(BL2)) {
-        test_that(paste0("results congruent using breaks ", sc), {
-          expect_identical(1L, 1L) ## to trigger testing...
+        testthat::test_that(paste0("results congruent using breaks ", sc), {
+          testthat::expect_identical(1L, 1L) ## to trigger testing...
           popEpi:::compareSLDTWithEpi(data = x, breaks = BL2[[sc]], timeScale = "TT")
         })
       }

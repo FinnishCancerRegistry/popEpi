@@ -1,11 +1,11 @@
-context("Compare splitMulti results with splitLexis results")
+testthat::context("Compare splitMulti results with splitLexis results")
 
 
 
 
 
-test_that("splitMulti and splitLexis are congruent", {
-  expect_identical(1L, 1L) ## to trigger testing...
+testthat::test_that("splitMulti and splitLexis are congruent", {
+  testthat::expect_identical(1L, 1L) ## to trigger testing...
   popEpi:::skip_on_cran_and_ci()
   library(Epi)
   
@@ -38,8 +38,8 @@ test_that("splitMulti and splitLexis are congruent", {
   
   # one row per id ---------------------------------------------------------------
   
-  test_that("splitMulti and splitLexis congruent with one row per id", {
-    expect_identical(1L, 1L) ## to trigger testing...
+  testthat::test_that("splitMulti and splitLexis congruent with one row per id", {
+    testthat::expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
       compareSMWithEpi(x, BL[[sc]])
     }
@@ -57,8 +57,8 @@ test_that("splitMulti and splitLexis are congruent", {
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   
   for (sc in seq_along(BL)) {
-    test_that(paste0("splitLexisDT and splitLexis congruent with multiple rows per id with breaks no. ", sc), {
-      expect_identical(1L, 1L) ## to trigger testing...
+    testthat::test_that(paste0("splitLexisDT and splitLexis congruent with multiple rows per id with breaks no. ", sc), {
+      testthat::expect_identical(1L, 1L) ## to trigger testing...
       compareSMWithEpi(x, BL[[sc]])
     })
   }
@@ -80,8 +80,8 @@ test_that("splitMulti and splitLexis are congruent", {
   BL[[1L]] <- NULL ## this would drop all rows in split data
   
   for (sc in seq_along(BL)) {
-    test_that(paste0("splitLexisDT and splitLexis congruent with multiple Lexis states per id using breaks list no. ", sc), {
-      expect_identical(1L, 1L) ## to trigger testing...
+    testthat::test_that(paste0("splitLexisDT and splitLexis congruent with multiple Lexis states per id using breaks list no. ", sc), {
+      testthat::expect_identical(1L, 1L) ## to trigger testing...
       compareSMWithEpi(x, BL[[sc]])
     })
   }
@@ -92,7 +92,7 @@ test_that("splitMulti and splitLexis are congruent", {
 
 
 
-test_that("splitMulti agrees with splitLexis, vol. II", {
+testthat::test_that("splitMulti agrees with splitLexis, vol. II", {
   
   library("Epi")
   
@@ -123,13 +123,13 @@ test_that("splitMulti agrees with splitLexis, vol. II", {
   
   pop_sm <- splitMulti(lex, breaks = BL, drop = FALSE)
   
-  expect_equal(
+  testthat::expect_equal(
     setDT(epi_s2), setDT(pop_sm), check.attributes = FALSE
   )
-  expect_equal(
+  testthat::expect_equal(
     setDT(epi_s2), setDT(pop_s2), check.attributes = FALSE
   )
-  expect_identical(
+  testthat::expect_identical(
     lex, lex_copy
   )
   

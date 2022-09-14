@@ -11,7 +11,7 @@ if (requireNamespace("testthat")) {
     data.table::setDTthreads(threads = 1L)
   }
 
-  test_check("popEpi")
+  testthat::test_check("popEpi")
 } else {
   stop("Need package testthat to run unit tests.")
 }

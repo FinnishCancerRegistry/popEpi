@@ -1,7 +1,7 @@
-context("SIR")
+testthat::context("SIR")
 
 
-test_that("SIR w/ coh=ref=popEpi::sire", {
+testthat::test_that("SIR w/ coh=ref=popEpi::sire", {
   ## don't skip on CRAN
   sire2 <- copy(popEpi::sire)
   sire2[, agegroup := cut(dg_age, breaks = c(0:17*5, Inf))]
@@ -31,10 +31,10 @@ test_that("SIR w/ coh=ref=popEpi::sire", {
   plot(sl)
   ## SIR w/ coh=ref=popEpi::sire
   ## don't skip on CRAN
-  expect_equal(sl$sir, 1)
-  expect_equal(sl$pyrs, 13783.81, tolerance=0.01)
-  expect_equal(sl$expected, 4595)
-  expect_equal(sl$observed, 4595)
+  testthat::expect_equal(sl$sir, 1)
+  testthat::expect_equal(sl$pyrs, 13783.81, tolerance=0.01)
+  testthat::expect_equal(sl$expected, 4595)
+  testthat::expect_equal(sl$observed, 4595)
   
   
   sl <- sir(coh.data=ltre, coh.obs="obs", coh.pyrs="pyrs",
@@ -42,10 +42,10 @@ test_that("SIR w/ coh=ref=popEpi::sire", {
             adjust= c("agegroup","ex_y"))
   
   ## SIR w/ coh=ref=popEpi::sire"
-  expect_equal(sl$sir, 1.39, tolerance=0.01)
-  expect_equal(sl$pyrs, 13783.81, tolerance=0.01)
-  expect_equal(sl$expected, 3305.04, tolerance=0.01)
-  expect_equal(sl$observed, 4595)
+  testthat::expect_equal(sl$sir, 1.39, tolerance=0.01)
+  testthat::expect_equal(sl$pyrs, 13783.81, tolerance=0.01)
+  testthat::expect_equal(sl$expected, 3305.04, tolerance=0.01)
+  testthat::expect_equal(sl$observed, 4595)
 })
 
 
@@ -62,7 +62,7 @@ c2 <- lexpand( popEpi::sire[dg_date<ex_date,], status = status, birth = bi_date,
                aggre = list(fot, agegroup = age, year = per, sex) )
 
 
-test_that("misc things work", {
+testthat::test_that("misc things work", {
   ms1 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', 
               ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
               adjust = c('agegroup','year','sex'), 
@@ -70,26 +70,26 @@ test_that("misc things work", {
   plot(ms1)
   
   # only one print level with no variation
-  expect_message( ms2 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type= 'profile',
+  testthat::expect_message( ms2 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type= 'profile',
                               ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                               adjust = c('agegroup','year','sex'), 
                               print = list(sex)) )
-  expect_equal(attributes(ms2)$sir.meta$conf.type, 'profile')
+  testthat::expect_equal(attributes(ms2)$sir.meta$conf.type, 'profile')
   
   # coef and confint ---
-  expect_equal(as.numeric(coef(ms1)), ms1$sir)
-  expect_equal(data.table(confint(ms1)), data.table('2.5 %' = ms1$sir.lo, '97.5 %' = ms1$sir.hi), tolerance = 0.001)
+  testthat::expect_equal(as.numeric(coef(ms1)), ms1$sir)
+  testthat::expect_equal(data.table(confint(ms1)), data.table('2.5 %' = ms1$sir.lo, '97.5 %' = ms1$sir.hi), tolerance = 0.001)
 })
 
 
-test_that("confidence intervals an other options works", {
+testthat::test_that("confidence intervals an other options works", {
   
   # CI's
   ci1 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type = 'profile',
               ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
               adjust = c('agegroup','year','sex'), 
               print = list(FOT = fot, age.cat = cut(agegroup, c(0,75,120)), per = cut(year, c(1990,2010,2014), dig.lab = 8) ))
-  expect_message( ci2 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type = 'wald',
+  testthat::expect_message( ci2 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type = 'wald',
               ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
               adjust = c('agegroup','year','sex'), 
               print = list(FOT = fot, sex, age.cat = cut(agegroup, c(0,75,120)), per = cut(year, c(1990,2010,2014), dig.lab = 8) )))
@@ -98,23 +98,23 @@ test_that("confidence intervals an other options works", {
               adjust = c('agegroup','year','sex'), 
               print = list(FOT = fot, age.cat = cut(agegroup, c(0,75,120)), per = cut(year, c(1990,2010,2014), dig.lab = 8) ))
   
-  expect_equal(attributes(ci1)$sir.meta$conf.type,'profile')
-  expect_equal(attributes(ci2)$sir.meta$conf.type,'wald')
-  expect_equal(attributes(ci3)$sir.meta$conf.type,'univariate')
+  testthat::expect_equal(attributes(ci1)$sir.meta$conf.type,'profile')
+  testthat::expect_equal(attributes(ci2)$sir.meta$conf.type,'wald')
+  testthat::expect_equal(attributes(ci3)$sir.meta$conf.type,'univariate')
   
-  expect_message( sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type = 'wald',
+  testthat::expect_message( sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type = 'wald',
                        ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                        adjust = c('agegroup','year','sex'), 
                        print = list(sex )))
                   
-  expect_message( ci4 <-  sir( coh.data = c, coh.obs = c('from0to2'), coh.pyrs = 'pyrs', conf.type = 'profile',
+  testthat::expect_message( ci4 <-  sir( coh.data = c, coh.obs = c('from0to2'), coh.pyrs = 'pyrs', conf.type = 'profile',
                                ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                                adjust = c('agegroup','year','sex'), 
                                print = list(dg = cut(agegroup, c(0,5,10,20,40,75,120)) )) )
-  expect_equal(attributes(ci4)$sir.meta$conf.type,'wald')
+  testthat::expect_equal(attributes(ci4)$sir.meta$conf.type,'wald')
     
   
-  expect_message( ci5 <- sir( coh.data = c, coh.obs = c('from0to2'), coh.pyrs = 'pyrs', conf.type = 'profile',
+  testthat::expect_message( ci5 <- sir( coh.data = c, coh.obs = c('from0to2'), coh.pyrs = 'pyrs', conf.type = 'profile',
                               ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                               adjust = c('agegroup','year','sex'), 
                               print = list(sex=sex,FOT = fot, 
@@ -124,7 +124,7 @@ test_that("confidence intervals an other options works", {
   ea <- sir( coh.data = c, coh.obs = c('from0to2'), coh.pyrs = 'pyrs', conf.type = 'wald', EAR = TRUE,
              ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
              adjust = c('agegroup','year','sex'), conf.level = 0.95) 
-  expect_equal(ea[,EAR], round((1490-1482.13)/39905.92*1000,3))  
+  testthat::expect_equal(ea[,EAR], round((1490-1482.13)/39905.92*1000,3))  
   
   # Update
   ud1 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', conf.type = 'profile',
@@ -137,14 +137,14 @@ test_that("confidence intervals an other options works", {
               ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
               adjust = c('agegroup','year','sex'), 
               print = list(fot,  age.cat = cut(agegroup, c(0,75,120))))
-  expect_equal(ud2, ud3)
+  testthat::expect_equal(ud2, ud3)
 })
 
 
-test_that("SIR works with multistate aggregated lexpand data", {
+testthat::test_that("SIR works with multistate aggregated lexpand data", {
   ## don't skip on CRAN
 
-  expect_warning(
+  testthat::expect_warning(
     se <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs', 
                subset = year %in% 1990:2009,
                ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
@@ -166,8 +166,8 @@ test_that("SIR works with multistate aggregated lexpand data", {
                            
   sg <- sir( coh.data = dummy.coh2, coh.obs = c('obs'), coh.pyrs = 'pyrs', 
              adjust = c('agegroup'), print =c('level'))
-  expect_equal(attributes(sg)$sir.meta$pooled[,sir], 1)
-  expect_equal(sg[,.N], 6)
+  testthat::expect_equal(attributes(sg)$sir.meta$pooled[,sir], 1)
+  testthat::expect_equal(sg[,.N], 6)
     
 
   s1 <- sir( coh.data = c, coh.obs = c('from0to1'), coh.pyrs = 'pyrs', subset = year %in% 1990:2009,
@@ -188,35 +188,35 @@ test_that("SIR works with multistate aggregated lexpand data", {
   est <- r[, list(observed=sum(from0to1, na.rm=TRUE),expected=sum(exp, na.rm=TRUE)), by=.(fot)]
   est <- round(est,4)
   
-  expect_is(object = se, class = 'sir')
-  expect_equivalent(se, s12)
+  testthat::expect_is(object = se, class = 'sir')
+  testthat::expect_equivalent(se, s12)
   setDT(s1)
-  expect_equivalent(s1[,1:3, with=FALSE], est)
+  testthat::expect_equivalent(s1[,1:3, with=FALSE], est)
 })
 
 
 
 # SIR utils ---------------------------------------------------------------
 
-test_that('Util functions work', {
-  expect_equal( poisson.ci(5,5)$rate, 1)
-  expect_equal(p.round(0.0000001), "< 0.001")
+testthat::test_that('Util functions work', {
+  testthat::expect_equal( poisson.ci(5,5)$rate, 1)
+  testthat::expect_equal(p.round(0.0000001), "< 0.001")
 })
 
-test_that("data.table subsettin works", {
+testthat::test_that("data.table subsettin works", {
   
   ss <- sir( coh.data = c2, coh.obs = c('from0to2'), coh.pyrs = 'pyrs',
              ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
              adjust = c('agegroup','year','sex'), print =c('fot'))
-  expect_equal(ss[1,.N], 1)
-  expect_equal(c(ss[,.(fot)]), list(fot = c(0,10)))
+  testthat::expect_equal(ss[1,.N], 1)
+  testthat::expect_equal(c(ss[,.(fot)]), list(fot = c(0,10)))
 })
 
 
 
 # sir splines -------------------------------------------------------------
 
-test_that("SIR spline throws errors correctly", {
+testthat::test_that("SIR spline throws errors correctly", {
   popEpi:::skip_on_cran_and_ci()
   library(splines)
   
@@ -247,23 +247,23 @@ test_that("SIR spline throws errors correctly", {
                                          ref.data = data.table(popEpi::popmort), ref.rate = 'haz', reference.points = c(2000,4),
                                          adjust = c('agegroup','year','sex'), print =c('cause'), 
                                          mstate = 'cause', spline=c('agegroup','year','fot') )))
-  expect_is( object = sp1, class = 'sirspline')
-  expect_is( object = sp2, class = 'sirspline')
-  expect_is( object = sp3, class = 'sirspline')
-  expect_is( object = sp4, class = 'sirspline')
+  testthat::expect_is( object = sp1, class = 'sirspline')
+  testthat::expect_is( object = sp2, class = 'sirspline')
+  testthat::expect_is( object = sp3, class = 'sirspline')
+  testthat::expect_is( object = sp4, class = 'sirspline')
 })
 
 
-test_that("print accepts a function and subset works", {
+testthat::test_that("print accepts a function and subset works", {
   popEpi:::skip_on_cran_and_ci()
-  expect_warning(
+  testthat::expect_warning(
     pl1 <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
                 subset = year %in% 1990:2008,
                 ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
                 adjust = c('agegroup','year','sex'), print = list(year.int = findInterval(year,c(1989,2000,2010))),
                 mstate = 'cause')
   )
-  expect_warning(
+  testthat::expect_warning(
     pl2 <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
                 subset = year %in% 1990:2008,
                 ref.data = data.table(popEpi::popmort), ref.rate = 'haz', 
@@ -271,13 +271,13 @@ test_that("print accepts a function and subset works", {
                 mstate = 'cause')
   )
   setDT(pl1)
-  expect_equal( pl1[,year.int], 1:2)
-  expect_is(object=pl2, 'sir')
+  testthat::expect_equal( pl1[,year.int], 1:2)
+  testthat::expect_is(object=pl2, 'sir')
 })
 
 
 
-test_that("sir_ratio", {
+testthat::test_that("sir_ratio", {
   ## don't skip on CRAN
   dt1 <- data.table(obs = rep(c(5,7), 10),
                     pyrs = rep(c(250,300,350,400), 5),
@@ -305,16 +305,16 @@ test_that("sir_ratio", {
   ## SIR w/ coh=ref=popEpi::sire
   ## don't skip on CRAN
   # Test the example from the book (statistics with confidence):
-  expect_equal( sir_ratio(x = c(64, 45.6), y = c(25,23.7), digits=2)[2:3], c(lower=0.83, upper=2.21))
+  testthat::expect_equal( sir_ratio(x = c(64, 45.6), y = c(25,23.7), digits=2)[2:3], c(lower=0.83, upper=2.21))
   # other tests
-  expect_message(sir_ratio(s1, s2, digits = 2, alternative = 'less', conf.level = 0.95, type = 'asymptotic'))
-  expect_equal(sir_ratio(s1, s2), sir_ratio(c(120,150), c(230,150)), tolerance=0.001)
-  expect_equal(sir_ratio(s1, c(230,150)), sir_ratio(c(120,150), s2), tolerance=0.001)
-  expect_equal(sir_ratio(s1, s2)[1], c(sir_ratio =round((120/150)/(230/150),3)), tolerance=0.001)
+  testthat::expect_message(sir_ratio(s1, s2, digits = 2, alternative = 'less', conf.level = 0.95, type = 'asymptotic'))
+  testthat::expect_equal(sir_ratio(s1, s2), sir_ratio(c(120,150), c(230,150)), tolerance=0.001)
+  testthat::expect_equal(sir_ratio(s1, c(230,150)), sir_ratio(c(120,150), s2), tolerance=0.001)
+  testthat::expect_equal(sir_ratio(s1, s2)[1], c(sir_ratio =round((120/150)/(230/150),3)), tolerance=0.001)
 })
 
 
-test_that("sir_exp and sir_ag and sir_lexis are working", {
+testthat::test_that("sir_exp and sir_ag and sir_lexis are working", {
   ## don't skip on CRAN
   # from0to1 ei oo vakio
   
@@ -357,16 +357,16 @@ test_that("sir_exp and sir_ag and sir_lexis are working", {
    
    
   # AGGRE
-  expect_message( a1 <- sir_ag(x1, obs = 'from0to1', conf.type = 'profile') )
-  expect_message( a0 <- sir_ag(x1, obs = from0to1, conf.type = 'profile') )
+  testthat::expect_message( a1 <- sir_ag(x1, obs = 'from0to1', conf.type = 'profile') )
+  testthat::expect_message( a0 <- sir_ag(x1, obs = from0to1, conf.type = 'profile') )
   a0 <- sir_ag(x1, obs = 'from0to1', print = list(period))
   a0 <- sir_ag(x1, obs = 'from0to1', print = list(per=period))
-  expect_message( a0 <- sir_ag(x1, obs = from0to1, exp = d.exp, pyrs = pyrs) )
+  testthat::expect_message( a0 <- sir_ag(x1, obs = from0to1, exp = d.exp, pyrs = pyrs) )
   a0 <- sir_ag(x1, obs = from0to1, exp = d.exp, pyrs = pyrs, print = period)
   
-  expect_message(a2 <- sir_ag(x1, print = attr(x, "aggre.meta")$by))
-  expect_message(a3 <- sir_ag(x1))
-  expect_equal(data.table(a2),data.table(a3))
+  testthat::expect_message(a2 <- sir_ag(x1, print = attr(x, "aggre.meta")$by))
+  testthat::expect_message(a3 <- sir_ag(x1))
+  testthat::expect_equal(data.table(a2),data.table(a3))
 
   
   a4 <- sir_ag(x1, obs = 'from0to1', print = surv.int)
@@ -376,21 +376,21 @@ test_that("sir_exp and sir_ag and sir_lexis are working", {
   setcolorder(a5, c(2,1,3:9))
   setkey(a5, period)
   setkey(a6, period)
-  expect_equal(data.table(a5)[order(period, surv.int)], data.table(a6)[order(period, surv.int)])
-  expect_error(sir_ag(x2, print = NULL))
+  testthat::expect_equal(data.table(a5)[order(period, surv.int)], data.table(a6)[order(period, surv.int)])
+  testthat::expect_error(sir_ag(x2, print = NULL))
   
   # UPDATE
   a4c <- update(a4, print = c('surv.int','period')) # update to l2
-  expect_equal(a4c,a4b)
+  testthat::expect_equal(a4c,a4b)
   
   
   # LEXIS
-  expect_error(sir_lex(x1))
+  testthat::expect_error(sir_lex(x1))
   l1 <- sir_lex(x2, print = attr(x, "aggre.meta")$by)
   l2 <- sir_lex(x2, print = 'per')
   l2 <- sir_lex(x2, print = per)
   l3 <- sir_lex(x2, print = NULL)
-  expect_equal(l3[,.N], 1)
+  testthat::expect_equal(l3[,.N], 1)
   
   l1 <- sir_lex(x2, print = NULL)
   l2 <- sir_lex(x2, print = 'per')
@@ -403,18 +403,18 @@ test_that("sir_exp and sir_ag and sir_lexis are working", {
   b1 <- sir_lex(x3, breaks = BL1, print = c('fot','per')) 
   BL <- list(fot = 0:5, per = c('2003-01-01','2008-01-01','2013-01-01'), age = c(0,75,100))
   b3 <- sir_lex(x3, breaks = BL, print = c('fot','per','age'))
-  expect_equal(b3[,.N], 24)
+  testthat::expect_equal(b3[,.N], 24)
   
   BL2 <- list(fot = 0:5, age = c(0,50,70,100))
   b3 <- sir_lex(x2, breaks = BL2, print = c('fot','age')) # already split data
-  expect_equal(b3[,.N], 15)
+  testthat::expect_equal(b3[,.N], 15)
   
   # Character date
   BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
   b5 <- sir_lex(x3, breaks = BL, print = c('fot','per'))
   BL <- list(fot = 0:5, per = c(2002.999, 2007.999, 2013.001))
   b6 <- sir_lex(x3, breaks = BL, print = c('fot','per'))
-  expect_equal(data.table(b5), data.table(b6), tolerance = 0.001)
+  testthat::expect_equal(data.table(b5), data.table(b6), tolerance = 0.001)
   
   # EXPECTED
   # without pyrs;
@@ -425,14 +425,14 @@ test_that("sir_exp and sir_ag and sir_lexis are working", {
                 print = list(period = cut(per, c(2003,2008, 2013), right = FALSE)))
   e1 <- data.table(e1)
   e2 <- data.table(e2) 
-  expect_equal(e1[,.(pyrs, sir, sir.lo, sir.hi, p_value)], e2[,.(pyrs, sir, sir.lo, sir.hi, p_value)])
+  testthat::expect_equal(e1[,.(pyrs, sir, sir.lo, sir.hi, p_value)], e2[,.(pyrs, sir, sir.lo, sir.hi, p_value)])
   
   # WARNINGS (when missing pop.haz)
-  expect_error( f1 <- sir_lex(x4) )
-  expect_error( f1 <- sir_exp(x4, obs ='lex.Xst', exp = list(exp = lex.dur*pop.haz), pyrs ='lex.dur') )
+  testthat::expect_error( f1 <- sir_lex(x4) )
+  testthat::expect_error( f1 <- sir_exp(x4, obs ='lex.Xst', exp = list(exp = lex.dur*pop.haz), pyrs ='lex.dur') )
   
   # SIR_RATIO
-  expect_equal(sir_ratio(a2, a3)[1], c(sir_ratio = 1)) 
+  testthat::expect_equal(sir_ratio(a2, a3)[1], c(sir_ratio = 1)) 
   plot(a2)
   plot(a4)
 })

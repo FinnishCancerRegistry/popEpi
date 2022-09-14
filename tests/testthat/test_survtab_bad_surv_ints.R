@@ -1,6 +1,6 @@
-context("Testing empty survival intervals in survtab")
+testthat::context("Testing empty survival intervals in survtab")
 
-test_that("removing consecutively bad surv.ints is logical w/ & w/out adjusting", {
+testthat::test_that("removing consecutively bad surv.ints is logical w/ & w/out adjusting", {
   
   sire2 <- sire[dg_date < ex_date, ]
   sire2[, agegr := cut(dg_age, c(0,45,60,Inf), right=FALSE, labels=FALSE)]
@@ -13,7 +13,7 @@ test_that("removing consecutively bad surv.ints is logical w/ & w/out adjusting"
   
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   ## NOTE: neither should give any messages!
-  expect_message({
+  testthat::expect_message({
     st1 <-  survtab(Surv(fot, lex.Xst) ~ agegr,
                         subset = !(agegr == 1L & fot > 8.49),
                         data = x, surv.type="surv.obs")
@@ -21,7 +21,7 @@ test_that("removing consecutively bad surv.ints is logical w/ & w/out adjusting"
   
   ## INTENTION: 7.5+ intervals empty for one age group.
   ## this should make adjusted estimates missing altogether for 7.5+.
-  expect_message({
+  testthat::expect_message({
     st2 <- survtab(Surv(fot, lex.Xst) ~ adjust(agegr), 
                       data = x, surv.type="surv.obs",
                       subset = !(agegr == 1L & fot > 8.49),
@@ -31,14 +31,14 @@ test_that("removing consecutively bad surv.ints is logical w/ & w/out adjusting"
   setDT(st2)
   
   
-  expect_equal(st1[agegr==3 & Tstop>8.5, .N] ,  18L)
-  expect_equal(st1[agegr==1 & Tstop>8.5, .N] ,  0L)
-  expect_equal(st2[Tstop > 8.5, .N] , 0L)
+  testthat::expect_equal(st1[agegr==3 & Tstop>8.5, .N] ,  18L)
+  testthat::expect_equal(st1[agegr==1 & Tstop>8.5, .N] ,  0L)
+  testthat::expect_equal(st2[Tstop > 8.5, .N] , 0L)
 })
 
 ## non-consecutively bad surv.ints ---------------------------------------------
 
-test_that("survtab_ag messages & results due to non-consecutively bad surv.ints are OK", {
+testthat::test_that("survtab_ag messages & results due to non-consecutively bad surv.ints are OK", {
   ## non-consecutively bad surv.ints (missing years 5-6)
   sire2 <- sire[dg_date < ex_date, ]
   sire2[, agegr := cut(dg_age, c(0,45,60,Inf), right=FALSE, labels=FALSE)]
@@ -66,12 +66,12 @@ test_that("survtab_ag messages & results due to non-consecutively bad surv.ints 
                    "them. Keeping all survival intervals with some estimates ",
                    "as NA for inspection."),
             "Some cumulative surv.obs were zero or NA:")
-  expect_message(eval(tf1), msgs[1],ignore.case=TRUE)
-  expect_message(eval(tf1), msgs[2],ignore.case=TRUE)
+  testthat::expect_message(eval(tf1), msgs[1],ignore.case=TRUE)
+  testthat::expect_message(eval(tf1), msgs[2],ignore.case=TRUE)
   
   setDT(st1)
   
-  expect_equal(st1[is.na(surv.obs), .N], 60L)
+  testthat::expect_equal(st1[is.na(surv.obs), .N], 60L)
   
   msgs <- c(paste0("The total person-time was zero in some survival ",
                    "intervals, when summed to the variable\\(s\\) ",
@@ -82,11 +82,11 @@ test_that("survtab_ag messages & results due to non-consecutively bad surv.ints 
                    "estimates as NA for inspection."),
             "Some cumulative surv.obs were zero or NA:")
   
-  expect_message(eval(tf2), msgs[1])
-  expect_message(eval(tf2), msgs[2])
+  testthat::expect_message(eval(tf2), msgs[1])
+  testthat::expect_message(eval(tf2), msgs[2])
   
   setDT(st2)
-  expect_equal(st2[is.na(surv.obs.as), .N], 60L)
+  testthat::expect_equal(st2[is.na(surv.obs.as), .N], 60L)
 })
 
 

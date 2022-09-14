@@ -1,7 +1,7 @@
-context("breaks attributes resulting from splitting")
+testthat::context("breaks attributes resulting from splitting")
 
 
-test_that("splitMulti produces intended breaks list", {
+testthat::test_that("splitMulti produces intended breaks list", {
   popEpi:::skip_on_cran_and_ci()
   x <- data.table(popEpi::sibr)
   x <- x[dg_date < ex_date & bi_date < dg_date]
@@ -24,18 +24,18 @@ test_that("splitMulti produces intended breaks list", {
   BL2 <- list(fot = 4:7, per = 1991:1999, age = seq(50,70, 10))
   xxx <- splitMulti(xx, breaks = BL, drop = TRUE)
   
-  expect_equal(breaks(xx, "fot"), BL$fot)
-  expect_equal(breaks(xx, "per"), BL$per)
-  expect_equal(breaks(xx, "age"), BL$age)
+  testthat::expect_equal(breaks(xx, "fot"), BL$fot)
+  testthat::expect_equal(breaks(xx, "per"), BL$per)
+  testthat::expect_equal(breaks(xx, "age"), BL$age)
   
-  expect_equal(breaks(xxx, "fot"), BL$fot)
-  expect_equal(breaks(xxx, "per"), BL$per)
-  expect_equal(breaks(xxx, "age"), BL$age)
+  testthat::expect_equal(breaks(xxx, "fot"), BL$fot)
+  testthat::expect_equal(breaks(xxx, "per"), BL$per)
+  testthat::expect_equal(breaks(xxx, "age"), BL$age)
 })
 
 
 
-test_that("splitLexisDT produces intended breaks list", {
+testthat::test_that("splitLexisDT produces intended breaks list", {
   popEpi:::skip_on_cran_and_ci()
   x <- data.table(popEpi::sibr)[dg_date < ex_date, ]
   
@@ -57,8 +57,8 @@ test_that("splitLexisDT produces intended breaks list", {
   br2 <- 2:12
   xxx <- splitLexisDT(xx, breaks = br, timeScale = "fot", drop = TRUE)
   
-  expect_equal(breaks(xx, "fot"), br)
-  expect_equal(breaks(xxx, "fot"), unique(br, br2))
+  testthat::expect_equal(breaks(xx, "fot"), br)
+  testthat::expect_equal(breaks(xxx, "fot"), unique(br, br2))
   
   
   br <- 0:8
@@ -70,9 +70,9 @@ test_that("splitLexisDT produces intended breaks list", {
   br3 <- seq(9, 12, 0.5)
   xxxx <- splitLexisDT(xxx, breaks = br3, timeScale = "fot", drop = FALSE)
   
-  expect_equal(breaks(xx, "fot"), br)
-  expect_equal(breaks(xxx, "fot"), unique(c(br, br2)))
-  expect_equal(breaks(xxxx, "fot"), sort(unique(c(br, br3))))
+  testthat::expect_equal(breaks(xx, "fot"), br)
+  testthat::expect_equal(breaks(xxx, "fot"), unique(c(br, br2)))
+  testthat::expect_equal(breaks(xxxx, "fot"), sort(unique(c(br, br3))))
 })
 
 

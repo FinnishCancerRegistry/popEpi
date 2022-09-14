@@ -1,8 +1,8 @@
-context("survtab usage")
+testthat::context("survtab usage")
 
 
 
-test_that("Dates and frac. yrs produce congruent results", {
+testthat::test_that("Dates and frac. yrs produce congruent results", {
   popEpi:::skip_on_cran_and_ci()
   library(Epi)
   
@@ -54,12 +54,12 @@ test_that("Dates and frac. yrs produce congruent results", {
                      surv.method = "hazard",
                      breaks = BLd, pophaz = pmd)    
   
-  expect_equal(sty$surv.obs.lo, std$surv.obs.lo, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$surv.obs, std$surv.obs, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$surv.obs.hi, std$surv.obs.hi, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$r.e2.lo, std$r.e2.lo, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$r.e2, std$r.e2, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$r.e2.hi, std$r.e2.hi, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$surv.obs.lo, std$surv.obs.lo, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$surv.obs, std$surv.obs, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$surv.obs.hi, std$surv.obs.hi, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$r.e2.lo, std$r.e2.lo, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$r.e2, std$r.e2, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$r.e2.hi, std$r.e2.hi, scale = 1L, tolerance = 0.0005)
   
   ## pohar perme
   
@@ -73,9 +73,9 @@ test_that("Dates and frac. yrs produce congruent results", {
                      surv.method = "hazard",
                      breaks = BLd, pophaz = pmd)    
   
-  expect_equal(sty$r.pp.lo, std$r.pp.lo, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$r.pp, std$r.pp, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$r.pp.hi, std$r.pp.hi, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$r.pp.lo, std$r.pp.lo, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$r.pp, std$r.pp, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$r.pp.hi, std$r.pp.hi, scale = 1L, tolerance = 0.0005)
   
   #### lifetable method
   ## observed survival & Ederer II
@@ -90,12 +90,12 @@ test_that("Dates and frac. yrs produce congruent results", {
                      surv.method = "lifetable",
                      breaks = BLd, pophaz = pmd)    
   
-  expect_equal(sty$surv.obs.lo, std$surv.obs.lo, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$surv.obs, std$surv.obs, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$surv.obs.hi, std$surv.obs.hi, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$r.e2.lo, std$r.e2.lo, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$r.e2, std$r.e2, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$r.e2.hi, std$r.e2.hi, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$surv.obs.lo, std$surv.obs.lo, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$surv.obs, std$surv.obs, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$surv.obs.hi, std$surv.obs.hi, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$r.e2.lo, std$r.e2.lo, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$r.e2, std$r.e2, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$r.e2.hi, std$r.e2.hi, scale = 1L, tolerance = 0.0005)
   
   ## pohar perme
   
@@ -109,15 +109,15 @@ test_that("Dates and frac. yrs produce congruent results", {
                      surv.method = "lifetable",
                      breaks = BLd, pophaz = pmd)    
   
-  expect_equal(sty$r.pp.lo, std$r.pp.lo, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$r.pp, std$r.pp, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$r.pp.hi, std$r.pp.hi, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$r.pp.lo, std$r.pp.lo, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$r.pp, std$r.pp, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$r.pp.hi, std$r.pp.hi, scale = 1L, tolerance = 0.0005)
   
 })
 
 
 
-test_that("hazard and lifetable produce congruent results", {
+testthat::test_that("hazard and lifetable produce congruent results", {
   popEpi:::skip_on_cran_and_ci()
   library(Epi)
   
@@ -149,13 +149,13 @@ test_that("hazard and lifetable produce congruent results", {
                  pophaz = pmy, breaks = BL,
                  surv.type = "surv.rel", surv.method = "lifetable")
   
-  expect_equal(sth$r.e2, stl$r.e2, scale = 1, tol = 0.0003415)
-  expect_equal(sth$r.e2.lo, stl$r.e2.lo, scale = 1, tol = 0.000354)
-  expect_equal(sth$r.e2.hi, stl$r.e2.hi, scale = 1, tol = 0.00033)
+  testthat::expect_equal(sth$r.e2, stl$r.e2, scale = 1, tol = 0.0003415)
+  testthat::expect_equal(sth$r.e2.lo, stl$r.e2.lo, scale = 1, tol = 0.000354)
+  testthat::expect_equal(sth$r.e2.hi, stl$r.e2.hi, scale = 1, tol = 0.00033)
   
-  expect_equal(sth$surv.obs, stl$surv.obs, scale = 1, tol = 0.00002575)
-  expect_equal(sth$surv.obs.lo, stl$surv.obs.lo, scale = 1, tol = 0.000027)
-  expect_equal(sth$surv.obs.hi, stl$surv.obs.hi, scale = 1, tol = 0.000025)
+  testthat::expect_equal(sth$surv.obs, stl$surv.obs, scale = 1, tol = 0.00002575)
+  testthat::expect_equal(sth$surv.obs.lo, stl$surv.obs.lo, scale = 1, tol = 0.000027)
+  testthat::expect_equal(sth$surv.obs.hi, stl$surv.obs.hi, scale = 1, tol = 0.000025)
   
 })
 
@@ -194,7 +194,7 @@ test_that("hazard and lifetable produce congruent results", {
 # })
 
 
-test_that("its possible to pass dynamically created arguments", {
+testthat::test_that("its possible to pass dynamically created arguments", {
   popEpi:::skip_on_cran_and_ci()
   library(Epi)
   
@@ -243,12 +243,12 @@ test_that("its possible to pass dynamically created arguments", {
                     weights = "internal",
                     pyrs = pyrs)
   
-  expect_equal(st1$surv.obs, st2$surv.obs)
+  testthat::expect_equal(st1$surv.obs, st2$surv.obs)
   
 })
 
 
-test_that("getCall & formula methods for survtab work", {
+testthat::test_that("getCall & formula methods for survtab work", {
   data("sire")
   BL <- list(fot=seq(0, 5, by = 1/12),
              per = c("2008-01-01", "2013-01-01"))
@@ -263,8 +263,8 @@ test_that("getCall & formula methods for survtab work", {
   e <- quote(survtab_ag(formula = form, data = x))
   st <- eval(e)
   
-  expect_equal(formula(st), form)
-  expect_equal(getCall(st), e)
+  testthat::expect_equal(formula(st), form)
+  testthat::expect_equal(getCall(st), e)
   
 })
 
@@ -272,7 +272,7 @@ test_that("getCall & formula methods for survtab work", {
 
 
 
-test_that("survtab_ag allows for certain arguments to be length > 1", {
+testthat::test_that("survtab_ag allows for certain arguments to be length > 1", {
   data(sire)
   set.seed(1)
   sire <- sire[sample(1:.N, 100)]
@@ -319,7 +319,7 @@ test_that("survtab_ag allows for certain arguments to be length > 1", {
 
 
 
-test_that("update() works with survtab objects", {
+testthat::test_that("update() works with survtab objects", {
   data(sire)
   set.seed(1)
   sire <- sire[sample(1:.N, 100)]
@@ -337,7 +337,7 @@ test_that("update() works with survtab objects", {
   st <- survtab_ag(fot ~ 1, data = x)
   sts <- survtab_ag(fot ~ sex, data = x)
   
-  expect_equal(sts, update(st, formula. = fot ~ sex))
+  testthat::expect_equal(sts, update(st, formula. = fot ~ sex))
   
   
   library(Epi)
@@ -360,7 +360,7 @@ test_that("update() works with survtab objects", {
                  surv.type = "surv.obs",
                  breaks = list(FUT = seq(0, 5, 1/12)))
   
-  expect_equal(sts, update(st, . ~ -group))
+  testthat::expect_equal(sts, update(st, . ~ -group))
   
 })
 
@@ -368,7 +368,7 @@ test_that("update() works with survtab objects", {
 
 
 
-test_that("internal weights work as intended", {
+testthat::test_that("internal weights work as intended", {
   library("data.table")
   data("sire")
   sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=FALSE)
@@ -388,7 +388,7 @@ test_that("internal weights work as intended", {
   
   st2 <- survtab_ag(fot ~ adjust(agegr), data = x, weights = "internal")
   
-  expect_equal(st$surv.obs.as.lo, st2$surv.obs.as.lo)
+  testthat::expect_equal(st$surv.obs.as.lo, st2$surv.obs.as.lo)
   
 })
 
@@ -396,7 +396,7 @@ test_that("internal weights work as intended", {
 
 
 
-test_that("survtab_ag works with bare data.frames", {
+testthat::test_that("survtab_ag works with bare data.frames", {
   
   data(sire)
   
@@ -412,14 +412,14 @@ test_that("survtab_ag works with bare data.frames", {
                          surv.breaks = 0:5))
   
   la <- list(eval(e), eval(eb))
-  expect_equal(la[[1]]$surv.obs.hi, la[[2]]$surv.obs.hi)
+  testthat::expect_equal(la[[1]]$surv.obs.hi, la[[2]]$surv.obs.hi)
   
   
   x <- data.frame(x)
   er <- paste0("Data did not contain breaks and no breaks ",
                "were supplied by hand.")
-  expect_error(eval(e), regexp = er)
-  expect_equal(eval(eb)$surv.obs.hi, la[[2]]$surv.obs.hi)
+  testthat::expect_error(eval(e), regexp = er)
+  testthat::expect_equal(eval(eb)$surv.obs.hi, la[[2]]$surv.obs.hi)
   
 })
 
@@ -428,7 +428,7 @@ test_that("survtab_ag works with bare data.frames", {
 
 
 
-test_that("confidence intervals are as intended", {
+testthat::test_that("confidence intervals are as intended", {
   popEpi:::skip_on_cran_and_ci()
   
   library(Epi)
@@ -457,7 +457,7 @@ test_that("confidence intervals are as intended", {
   dt[, "s.lo" := surv.obs^exp(qnorm(0.995)*SE.A)]
   dt[, "s.hi" := surv.obs^exp(qnorm(0.005)*SE.A)]
   
-  expect_equal(dt[, .(lo = surv.obs.lo, hi = surv.obs.hi)], 
+  testthat::expect_equal(dt[, .(lo = surv.obs.lo, hi = surv.obs.hi)], 
                dt[, .(lo = s.lo, hi = s.hi)])
   
   ## log transformation
@@ -471,7 +471,7 @@ test_that("confidence intervals are as intended", {
   dt[, "s.lo" := surv.obs*exp(qnorm(0.10)*SE.A)]
   dt[, "s.hi" := surv.obs*exp(qnorm(0.90)*SE.A)]
   
-  expect_equal(dt[, .(lo = surv.obs.lo, hi = surv.obs.hi)], 
+  testthat::expect_equal(dt[, .(lo = surv.obs.lo, hi = surv.obs.hi)], 
                dt[, .(lo = s.lo, hi = s.hi)])
   
   

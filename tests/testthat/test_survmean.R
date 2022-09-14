@@ -1,8 +1,8 @@
-context("mean survival testing")
+testthat::context("mean survival testing")
 library("data.table")
 library("Epi")
 
-test_that("survmean() agrees with old results", {
+testthat::test_that("survmean() agrees with old results", {
   popEpi:::skip_on_cran_and_ci()
   
   sr <- data.table(popEpi::sire)[dg_date < ex_date, ]
@@ -27,8 +27,8 @@ test_that("survmean() agrees with old results", {
   
   ## values to test against computed on 2016-03-04;
   ## git ref: 5077677
-  expect_equal(sm$est, c(33.951439, 21.611419,  7.604318), tol = 0.005, scale = 1)
-  expect_equal(sm$exp, c(45.25686, 31.22712, 13.06725), tol = 0.005, scale = 1)
+  testthat::expect_equal(sm$est, c(33.951439, 21.611419,  7.604318), tol = 0.005, scale = 1)
+  testthat::expect_equal(sm$exp, c(45.25686, 31.22712, 13.06725), tol = 0.005, scale = 1)
   
   
 })
@@ -72,7 +72,7 @@ test_that("survmean() agrees with old results", {
 # })
 
 
-test_that("survmean expected survival curve corresponds to full Ederer I", {
+testthat::test_that("survmean expected survival curve corresponds to full Ederer I", {
   popEpi:::skip_on_cran_and_ci()
   
   sr <- data.table(sire)[dg_date < ex_date, ]
@@ -109,11 +109,11 @@ test_that("survmean expected survival curve corresponds to full Ederer I", {
   sm.e1 <- e1[, sum((l1+surv.exp)/2L*delta)]
   
   
-  expect_equal(sm$exp, sm.e1, tol = 0.0005, scale = 1)
+  testthat::expect_equal(sm$exp, sm.e1, tol = 0.0005, scale = 1)
   
 })
 
-test_that("survmean period method is useful", {
+testthat::test_that("survmean period method is useful", {
   popEpi:::skip_on_cran_and_ci()
   
   sr <- data.table(popEpi::sire)[dg_date < ex_date, ]
@@ -153,16 +153,16 @@ test_that("survmean period method is useful", {
   
   
   
-  expect_equal(sm$obs, smp$obs)
-  expect_equal(sm$exp, smp$exp)
-  expect_equal(smp$est, 10.01542, tol = 0.0005, scale = 1)
-  expect_equal(sm$est, 10.0216, tol = 0.0005, scale = 1)
+  testthat::expect_equal(sm$obs, smp$obs)
+  testthat::expect_equal(sm$exp, smp$exp)
+  testthat::expect_equal(smp$est, 10.01542, tol = 0.0005, scale = 1)
+  testthat::expect_equal(sm$est, 10.0216, tol = 0.0005, scale = 1)
   
 })
 
 
 
-test_that("Dates and frac. yrs produce congruent results", {
+testthat::test_that("Dates and frac. yrs produce congruent results", {
   popEpi:::skip_on_cran_and_ci()
   
   x <- data.table(popEpi::sire)
@@ -224,11 +224,11 @@ test_that("Dates and frac. yrs produce congruent results", {
   std[, c("est", "exp", "YPLL") := lapply(.SD, function(col) col/yd),
       .SDcols = c("est", "exp", "YPLL")]
   
-  expect_equal(sty$est, std$est, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$exp, std$exp, scale = 1L, tolerance = 0.001)
-  expect_equal(sty$obs, std$obs)
+  testthat::expect_equal(sty$est, std$est, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$exp, std$exp, scale = 1L, tolerance = 0.001)
+  testthat::expect_equal(sty$obs, std$obs)
   
-  expect_equal(cuy$surv, cud$surv, scale = 1L, tolerance = 0.00005)
+  testthat::expect_equal(cuy$surv, cud$surv, scale = 1L, tolerance = 0.00005)
   
   #### lifetable method
   ## observed survival & Ederer II
@@ -248,11 +248,11 @@ test_that("Dates and frac. yrs produce congruent results", {
   std[, c("est", "exp", "YPLL") := lapply(.SD, function(col) col/yd),
       .SDcols = c("est", "exp", "YPLL")]
   
-  expect_equal(sty$est, std$est, scale = 1L, tolerance = 0.0005)
-  expect_equal(sty$exp, std$exp, scale = 1L, tolerance = 0.001)
-  expect_equal(sty$obs, std$obs)
+  testthat::expect_equal(sty$est, std$est, scale = 1L, tolerance = 0.0005)
+  testthat::expect_equal(sty$exp, std$exp, scale = 1L, tolerance = 0.001)
+  testthat::expect_equal(sty$obs, std$obs)
   
-  expect_equal(cuy$surv, cud$surv, scale = 1L, tolerance = 0.00005)
+  testthat::expect_equal(cuy$surv, cud$surv, scale = 1L, tolerance = 0.00005)
   
   
 })
@@ -260,7 +260,7 @@ test_that("Dates and frac. yrs produce congruent results", {
 
 
 
-test_that("updating works for survmean objects", {
+testthat::test_that("updating works for survmean objects", {
   
   popEpi:::skip_on_cran_and_ci()
   
@@ -291,10 +291,10 @@ test_that("updating works for survmean objects", {
   
   sm3 <- update(sm, .~ + sex)
   
-  expect_equal(data.frame(sm2), data.frame(sm3))
-  expect_equal(formula(sm2), fo)
-  expect_equal(formula(sm3), fo)
-  expect_equal(getCall(sm2), e)
+  testthat::expect_equal(data.frame(sm2), data.frame(sm3))
+  testthat::expect_equal(formula(sm2), fo)
+  testthat::expect_equal(formula(sm3), fo)
+  testthat::expect_equal(getCall(sm2), e)
   
 })
 

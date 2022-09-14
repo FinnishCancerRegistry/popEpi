@@ -1,6 +1,6 @@
-context("adjusted curves from survtab")
+testthat::context("adjusted curves from survtab")
 
-test_that("adjusted SEs and curves are what expected", {
+testthat::test_that("adjusted SEs and curves are what expected", {
   popEpi:::skip_on_cran_and_ci()
   
   sire <- data.table::data.table(popEpi::sire)
@@ -67,7 +67,7 @@ test_that("adjusted SEs and curves are what expected", {
                            "pyrs" = sum(pyrs)), 
                        keyby = "surv.int"]
   
-  expect_equal(
+  testthat::expect_equal(
     dt_raw_adj, dt_adj[, .SD, .SDcols = names(dt_raw_adj)]
   )
   

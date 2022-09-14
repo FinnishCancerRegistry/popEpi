@@ -1,7 +1,7 @@
 if (requireNamespace("relsurv")) {
-context("popEpi::survtab vs. relsurv::rs.surv")
+testthat::context("popEpi::survtab vs. relsurv::rs.surv")
   # survtab vs. relsurv::rs.surv --------------------------------------------
-  test_that("relative survivals about the same as relsurv's", {
+  testthat::test_that("relative survivals about the same as relsurv's", {
     
     
     library(relsurv)
@@ -70,13 +70,13 @@ context("popEpi::survtab vs. relsurv::rs.surv")
     su.pp <- summary(rs.pp, times = fbd)
     su.pp <- cbind(data.table(time = fb), data.table(su.pp$surv))
     
-    expect_equal(st.e2[, r.e2] ,  su.e2[, V1], tolerance = 0.000226, scale = 1L)
-    expect_equal(st.pp[, r.pp] ,  su.pp[, V1], tolerance = 0.00292, scale = 1L)
+    testthat::expect_equal(st.e2[, r.e2] ,  su.e2[, V1], tolerance = 0.000226, scale = 1L)
+    testthat::expect_equal(st.pp[, r.pp] ,  su.pp[, V1], tolerance = 0.00292, scale = 1L)
   })
 
   # relpois vs. relsurv::rsadd ---------------------------------------------
 
-  test_that("relpois congruent with relsurv::rsadd", {
+  testthat::test_that("relpois congruent with relsurv::rsadd", {
     popEpi:::skip_on_cran_and_ci()
     
     
@@ -119,12 +119,12 @@ context("popEpi::survtab vs. relsurv::rs.surv")
                         ratetable = popm, data = sire2, method = "glm.poi")
     
     
-    expect_equal(coef(rp)[1:5] ,  coef(rs)[3:7], tolerance = 0.055, scale=1, check.attributes=FALSE)
+    testthat::expect_equal(coef(rp)[1:5] ,  coef(rs)[3:7], tolerance = 0.055, scale=1, check.attributes=FALSE)
   })
 
 
 
-  test_that("Ederer I expected survival curve agrees with survival::survexp", {
+  testthat::test_that("Ederer I expected survival curve agrees with survival::survexp", {
     
     
     library(relsurv)
@@ -185,8 +185,8 @@ context("popEpi::survtab vs. relsurv::rs.surv")
     su[, time := time / 365.242199]
     setnames(su, "time", "fot")
     
-    expect_equal(e1, su, tolerance = 0.000004575, scale = 1L)
-    expect_equal(max(abs(e1$surv.exp - su$surv.exp)), 0L, 
+    testthat::expect_equal(e1, su, tolerance = 0.000004575, scale = 1L)
+    testthat::expect_equal(max(abs(e1$surv.exp - su$surv.exp)), 0L, 
                 tolerance = 0.0000103, scale = 1L)
     
     

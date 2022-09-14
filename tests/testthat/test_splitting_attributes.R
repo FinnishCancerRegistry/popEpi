@@ -1,10 +1,10 @@
-context("Attributes of data split by popEpi funs")
+testthat::context("Attributes of data split by popEpi funs")
 
 
 
 
 
-test_that("popEpi splitters produce correct attributes", {
+testthat::test_that("popEpi splitters produce correct attributes", {
   
   library("Epi")
   library("data.table")
@@ -36,11 +36,11 @@ test_that("popEpi splitters produce correct attributes", {
                 breaks = BL)
   
   lapply(list(sm_1, sm_2, sl, lp), function(lex) {
-    expect_identical(
+    testthat::expect_identical(
       attr(lex, "breaks"),
       list(fot = c(0, 5), per = NULL, age = c(0, 50))
     )
-    expect_identical(
+    testthat::expect_identical(
       attr(lex, "time.scales"),
       c("fot", "per", "age")
     ) 
@@ -52,7 +52,7 @@ test_that("popEpi splitters produce correct attributes", {
 
 
 
-test_that("popEpi splitters retain time.since attribute", {
+testthat::test_that("popEpi splitters retain time.since attribute", {
   ## based on simLexis example from Epi 2.19
   library("Epi")
   library("data.table")
@@ -79,10 +79,10 @@ test_that("popEpi splitters retain time.since attribute", {
   sm <- splitMulti(dmi, breaks = list(DMdur = 0:30/2))
   
   lex_attr_nms <- c("time.since", "breaks", "time.scales")
-  expect_identical(
+  testthat::expect_identical(
     attributes(Si)[lex_attr_nms], attributes(sm)[lex_attr_nms]
   )
-  expect_identical(
+  testthat::expect_identical(
     attributes(Si)[lex_attr_nms], attributes(sldt)[lex_attr_nms]
   )
   

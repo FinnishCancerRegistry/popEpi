@@ -1,6 +1,6 @@
-context("CIF's & surv.obs's congruence & comparison w/ survival::survfit")
+testthat::context("CIF's & surv.obs's congruence & comparison w/ survival::survfit")
 
-test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johansen", {
+testthat::test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johansen", {
   
   BL <- list(fot= seq(0,19,1/12), per=c(2008,2013))
   sire2 <- sire[dg_date<ex_date, ]
@@ -16,8 +16,8 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
   setDT(st)
   
-  test_that("CIFs and surv.obs sum to 1", {
-    expect_equal(st[, CIF_canD + CIF_othD + surv.obs] ,  rep(1, times = st[,.N]), tolerance = 0.0001, scale=1)
+  testthat::test_that("CIFs and surv.obs sum to 1", {
+    testthat::expect_equal(st[, CIF_canD + CIF_othD + surv.obs] ,  rep(1, times = st[,.N]), tolerance = 0.0001, scale=1)
   })
   
   x <- lexpand(sire2, 
@@ -39,16 +39,16 @@ test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aalen-Johanse
   keep_curve <- curve_nms %in% c("canD", "othD")
   cif <- cbind(data.table(time = su.cif$time), data.table(su.cif[[prev_var]][, keep_curve]))
   
-  expect_equal(st[, surv.obs] ,  su.km[, V1], tolerance = 0.0032, scale=1)
+  testthat::expect_equal(st[, surv.obs] ,  su.km[, V1], tolerance = 0.0032, scale=1)
   
-  expect_equal(cif$V1, st$CIF_canD, tolerance = 0.0022, scale=1)
-  expect_equal(cif$V2, st$CIF_othD, tolerance = 0.0011, scale=1)
+  testthat::expect_equal(cif$V1, st$CIF_canD, tolerance = 0.0022, scale=1)
+  testthat::expect_equal(cif$V2, st$CIF_othD, tolerance = 0.0011, scale=1)
 })
 
 
 # custom status var -------------------------------------------------------
 
-test_that("survtab status argument works as expected", {
+testthat::test_that("survtab status argument works as expected", {
   popEpi:::skip_on_cran_and_ci()
   
   BL <- list(fot= seq(0,19,1/12), per=c(2008,2013))
@@ -60,7 +60,7 @@ test_that("survtab status argument works as expected", {
   st <- NULL
   x <- lexpand(sr, birth  = bi_date, entry = dg_date, 
                exit = ex_date, status = status)
-  expect_error(
+  testthat::expect_error(
     suppressWarnings(
       st <- survtab(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
                     breaks = list(fot = 0:5))
@@ -79,19 +79,19 @@ test_that("survtab status argument works as expected", {
                exit = ex_date, status = statusf)
   st <- survtab(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
                     breaks = list(fot = 0:5))
-  expect_equal(class(st)[1L], "survtab")
+  testthat::expect_equal(class(st)[1L], "survtab")
   
   st <- NULL
   x <- lexpand(sr, birth  = bi_date, entry = dg_date, 
                exit = ex_date, status = statusb)
   st <- survtab(Surv(fot, lex.Xst) ~ 1, data = x, surv.type = "surv.obs", 
                     breaks = list(fot = 0:5))
-  expect_equal(class(st)[1L], "survtab")
+  testthat::expect_equal(class(st)[1L], "survtab")
   
 })
 
 
-test_that("survtab works with more complicated estimation", {
+testthat::test_that("survtab works with more complicated estimation", {
   library(Epi)
   
   library(data.table)
@@ -136,8 +136,8 @@ test_that("survtab works with more complicated estimation", {
                     weights = list(agegr = as.numeric(table(x$agegr))),
                     data = ag, surv.type = "surv.obs", d = "from0to1")
 
-  expect_equal(st1$surv.obs.as.lo, st2$surv.obs.as.lo)
-  expect_equivalent(st1, st2)
+  testthat::expect_equal(st1$surv.obs.as.lo, st2$surv.obs.as.lo)
+  testthat::expect_equivalent(st1, st2)
 })
 
 

@@ -1,10 +1,10 @@
-context("Splitting tests on random data and random breaks")
+testthat::context("Splitting tests on random data and random breaks")
 
 
 
 
 
-test_that("splitting funs congruent with random splitting and random data", {
+testthat::test_that("splitting funs congruent with random splitting and random data", {
 
   popEpi:::skip_on_cran_and_ci()
 
@@ -37,18 +37,18 @@ test_that("splitting funs congruent with random splitting and random data", {
           "' using data seed ", data_seed, " and splitting seed ", split_seed
         )
 
-        test_that(tt_msg, {
-          expect_equal(l[[1]], l[[list_pos]], check.attributes = FALSE)
+        testthat::test_that(tt_msg, {
+          testthat::expect_equal(l[[1]], l[[list_pos]], check.attributes = FALSE)
         })
 
       })
 
-      test_that(
+      testthat::test_that(
         paste0(
           "splitLexisDT and splitMulti are in agreement in data '", lex_nm,
           "' using data seed ", data_seed, " and splitting seed ", split_seed
         ),
-        expect_equal(l[[2]], l[[3]], check.attributes = TRUE)
+        testthat::expect_equal(l[[2]], l[[3]], check.attributes = TRUE)
       )
 
     })

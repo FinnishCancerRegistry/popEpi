@@ -1,6 +1,6 @@
-context("aggre")
+testthat::context("aggre")
 
-test_that("aggre leaves original data untouched", {
+testthat::test_that("aggre leaves original data untouched", {
   
   x <- sire[1:100,]
   BL <- list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014))
@@ -19,10 +19,10 @@ test_that("aggre leaves original data untouched", {
   
   ag1 <- aggre(x, by = list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
   
-  expect_identical(x, xor)
+  testthat::expect_identical(x, xor)
 })
 
-test_that("aggre works with by = NULL", {
+testthat::test_that("aggre works with by = NULL", {
   
   sr <- popEpi::sire[dg_date < ex_date,][1:1000,]
   
@@ -31,11 +31,11 @@ test_that("aggre works with by = NULL", {
                status = status %in% 1:2, breaks=BL)
   
   ag1 <- aggre(x, by = NULL)
-  expect_equal(as.numeric(ag1), c(9539.1903286174274, 1000, 373, 627))
+  testthat::expect_equal(as.numeric(ag1), c(9539.1903286174274, 1000, 373, 627))
   
 })
 
-test_that("aggre and lexpand produce the same results", {
+testthat::test_that("aggre and lexpand produce the same results", {
   sr <- popEpi::sire[dg_date < ex_date,][1:1000,]
   
   BL <- list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014))
@@ -74,26 +74,26 @@ test_that("aggre and lexpand produce the same results", {
   setkeyv(x4, v)
   setkeyv(x5, v)
   
-  expect_equal(x2$pyrs, x$pyrs, tolerance = 1e-05)
-  expect_equal(x2$from0to1, x$obs, tolerance = 1e-05)
+  testthat::expect_equal(x2$pyrs, x$pyrs, tolerance = 1e-05)
+  testthat::expect_equal(x2$from0to1, x$obs, tolerance = 1e-05)
   
-  expect_equal(sum(x2$pyrs), sum(x3$pyrs), tolerance = 1e-05)
-  expect_equal(sum(x2$from0to1), sum(x3$from0to1), tolerance = 1e-05)
+  testthat::expect_equal(sum(x2$pyrs), sum(x3$pyrs), tolerance = 1e-05)
+  testthat::expect_equal(sum(x2$from0to1), sum(x3$from0to1), tolerance = 1e-05)
   
-  expect_equal(sum(x2$pyrs), sum(x4$pyrs), tolerance = 1e-05)
-  expect_equal(sum(x2$from0to1), sum(x4$from0to1), tolerance = 1e-05)
+  testthat::expect_equal(sum(x2$pyrs), sum(x4$pyrs), tolerance = 1e-05)
+  testthat::expect_equal(sum(x2$from0to1), sum(x4$from0to1), tolerance = 1e-05)
   
-  expect_equal(x3$pyrs, x5$pyrs, tolerance = 1e-05)
-  expect_equal(x3$from0to0, x5$from0to0, tolerance = 1e-05)
-  expect_equal(sum(x3$from0to1), sum(x5$from0to1), tolerance = 1e-05)
+  testthat::expect_equal(x3$pyrs, x5$pyrs, tolerance = 1e-05)
+  testthat::expect_equal(x3$from0to0, x5$from0to0, tolerance = 1e-05)
+  testthat::expect_equal(sum(x3$from0to1), sum(x5$from0to1), tolerance = 1e-05)
   
-  expect_equal(x2$pyrs, x4$pyrs, tolerance = 1e-05)
-  expect_equal(x2$from0to0, x4$from0to0, tolerance = 1e-05)
-  expect_equal(sum(x2$from0to1), sum(x4$from0to1), tolerance = 1e-05)
+  testthat::expect_equal(x2$pyrs, x4$pyrs, tolerance = 1e-05)
+  testthat::expect_equal(x2$from0to0, x4$from0to0, tolerance = 1e-05)
+  testthat::expect_equal(sum(x2$from0to1), sum(x4$from0to1), tolerance = 1e-05)
 })
 
 
-test_that("aggre()'s by argument works flexibly", {
+testthat::test_that("aggre()'s by argument works flexibly", {
   library(Epi)
   BL <- list(fot = 0:5, per = c(1995,2015))
   for (cond in c(FALSE, TRUE)) {
@@ -112,7 +112,7 @@ test_that("aggre()'s by argument works flexibly", {
     a <- aggre(x, by = list(agegr = cut(dg_age, 2), sex, fot, per = per), type = "unique")
     b <- aggre(x, by = c("agegr", "sex", "fot", "per"), type = "unique")
     
-    expect_equal(a, b)
+    testthat::expect_equal(a, b)
     
     a <- aggre(x, by = cut(dg_age, 2), type = "unique")
     setnames(a, "cut", "agegr")
@@ -121,15 +121,15 @@ test_that("aggre()'s by argument works flexibly", {
     c <- aggre(x, by = list(agegr = cut(dg_age, 2)), type = "unique")
     d<- aggre(x, by = agegr, type = "unique")
     
-    expect_equal(a, b)
-    expect_equal(b, c)
-    expect_equal(c, d)
+    testthat::expect_equal(a, b)
+    testthat::expect_equal(b, c)
+    testthat::expect_equal(c, d)
   }
   
   
 })
 
-test_that("subset argument works properly", {
+testthat::test_that("subset argument works properly", {
   
   
   x <- sire[dg_date < ex_date, ][1:1000,]
@@ -151,13 +151,13 @@ test_that("subset argument works properly", {
   ag3 <- aggre(x, by = ag, type = "full", subset = dg_age <= 55L)
   ag4 <- aggre(x2, by = ag, type = "full") 
   
-  expect_identical(ag1, ag2)
-  expect_identical(ag3, ag4)
+  testthat::expect_identical(ag1, ag2)
+  testthat::expect_identical(ag3, ag4)
   
 })
 
 
-test_that("at.risk column works as intended", {
+testthat::test_that("at.risk column works as intended", {
   ## normal case - no late entry. Just lots of breaks.
   popEpi:::skip_on_cran_and_ci()
   x <- sire[dg_date < ex_date, ][1:1000,]
@@ -177,7 +177,7 @@ test_that("at.risk column works as intended", {
   ag[, ndiff := at.risk - c(at.risk[-1], NA), by = list(sex)]
   ag[!is.na(ndiff), events := from0to0 + from0to1 + from0to2]
   
-  expect_equal(ag$ndiff, ag$events)
+  testthat::expect_equal(ag$ndiff, ag$events)
   
   ## compare at.risk with manually computed at.risk and events
   x[, evented := detectEvents(x, breaks = attr(x, "breaks"), by = "lex.id") != 0L]
@@ -189,13 +189,13 @@ test_that("at.risk column works as intended", {
                        sum(evented)), by = .EACHI,
                on = names(byDT)]
   n.start[is.na(ag$ndiff), V2 := NA]
-  expect_equal(ag$at.risk, n.start$V1)
-  expect_equal(ag$ndiff, n.start$V2)
+  testthat::expect_equal(ag$at.risk, n.start$V1)
+  testthat::expect_equal(ag$ndiff, n.start$V2)
 })
 
 
 
-test_that("at.risk column works as intended, Vol. 2", {
+testthat::test_that("at.risk column works as intended, Vol. 2", {
   popEpi:::skip_on_cran_and_ci()
   ## period analysis case - some observations are late entry.
   data(sire)
@@ -223,6 +223,6 @@ test_that("at.risk column works as intended, Vol. 2", {
   n.start <- x[byDT, sum(normalEntry & !duplicated(lex.id)), by = .EACHI,
                on = names(byDT)]
   
-  expect_equal(a$at.risk, n.start$V1)
+  testthat::expect_equal(a$at.risk, n.start$V1)
 })
 

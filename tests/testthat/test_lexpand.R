@@ -1,7 +1,7 @@
-context("lexpand sanity checks")
+testthat::context("lexpand sanity checks")
 
 
-test_that("lexpand arguments can be passed as symbol, expression, character name of variable, and symbol of a character variable", {
+testthat::test_that("lexpand arguments can be passed as symbol, expression, character name of variable, and symbol of a character variable", {
   popEpi:::skip_on_cran_and_ci()
   sr <- copy(sire)[dg_date < ex_date, ][1:100,]
   sr[, id := as.character(1:.N)]
@@ -19,13 +19,13 @@ test_that("lexpand arguments can be passed as symbol, expression, character name
                 birth = bi_date, entry = dg_date, exit = ex_date, 
                 status = status %in% 1:2, id = id)
   
-  expect_identical(x, x2)
-  expect_identical(x, x3)
+  testthat::expect_identical(x, x2)
+  testthat::expect_identical(x, x3)
 })
 
 
 
-test_that("original total pyrs equals pyrs after splitting w/ large number of breaks", {
+testthat::test_that("original total pyrs equals pyrs after splitting w/ large number of breaks", {
   popEpi:::skip_on_cran_and_ci()
   x <- copy(sire)[dg_date < ex_date, ]
   x[, fot := get.yrs(ex_date, year.length = "actual") - get.yrs(dg_date, year.length = "actual")]
@@ -37,25 +37,25 @@ test_that("original total pyrs equals pyrs after splitting w/ large number of br
   setDT(x)
   totpyrs_split <- x[, sum(lex.dur)]
   
-  expect_equal(totpyrs, totpyrs_split, tolerance = 1e-05)
+  testthat::expect_equal(totpyrs, totpyrs_split, tolerance = 1e-05)
 })
 
 
 
-test_that("pp not added to data if pp = FALSE but pop.haz is", {
+testthat::test_that("pp not added to data if pp = FALSE but pop.haz is", {
   x <- lexpand(sire[dg_date < ex_date, ][0:100], 
                birth  = bi_date, entry = dg_date, exit = ex_date,
                status = status %in% 1:2,
                breaks=list(fot=0:5), 
                pophaz=data.table(popEpi::popmort), 
                pp = FALSE)
-  expect_equal(intersect(names(x), c("pp", "pop.haz")),  "pop.haz")
-  expect_true(!any(is.na(x$pop.haz)))
+  testthat::expect_equal(intersect(names(x), c("pp", "pop.haz")),  "pop.haz")
+  testthat::expect_true(!any(is.na(x$pop.haz)))
 })
 
 
 
-test_that("lexpand produces the same results with internal/external dropping", {
+testthat::test_that("lexpand produces the same results with internal/external dropping", {
   popEpi:::skip_on_cran_and_ci()
   x <- lexpand(sire[dg_date < ex_date, ], 
                birth  = bi_date, entry = dg_date, exit = ex_date,
@@ -74,7 +74,7 @@ test_that("lexpand produces the same results with internal/external dropping", {
 })
 
 
-test_that("lexpanding with aggre.type = 'unique' works", {
+testthat::test_that("lexpanding with aggre.type = 'unique' works", {
   popEpi:::skip_on_cran_and_ci()
   
   BL <- list(fot = 0:5, age = seq(0,100, 5))
@@ -90,12 +90,12 @@ test_that("lexpanding with aggre.type = 'unique' works", {
                  birth = bi_date, entry = dg_date, exit = ex_date,
                  aggre = list(fot, age), aggre.type = "unique")
   setDT(ag2)
-  expect_equal(ag1$pyrs, ag2$pyrs)
-  expect_equal(ag1$from0to1, ag2$from0to1)
+  testthat::expect_equal(ag1$pyrs, ag2$pyrs)
+  testthat::expect_equal(ag1$from0to1, ag2$from0to1)
   
 })
 
-test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used", {
+testthat::test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used", {
   popEpi:::skip_on_cran_and_ci()
   
   BL <- list(fot = c(0,Inf))
@@ -126,14 +126,14 @@ test_that("lexpanding with aggre.type = 'cartesian' works; no time scales used",
   setDT(ag2)
   setkeyv(ag1, c("sex", "period"))
   setkeyv(ag2, c("sex", "period"))
-  expect_equal(sum(ag1$pyrs), sum(ag2$pyrs))
-  expect_equal(sum(ag1$from0to1), sum(ag2$from0to1))
-  expect_equal(ag1$pyrs, ag2$pyrs)
-  expect_equal(ag1$from0to1, ag2$from0to1)
+  testthat::expect_equal(sum(ag1$pyrs), sum(ag2$pyrs))
+  testthat::expect_equal(sum(ag1$from0to1), sum(ag2$from0to1))
+  testthat::expect_equal(ag1$pyrs, ag2$pyrs)
+  testthat::expect_equal(ag1$from0to1, ag2$from0to1)
   
 })
 
-test_that("lexpanding with aggre.type = 'cartesian' works; only time scales used", {
+testthat::test_that("lexpanding with aggre.type = 'cartesian' works; only time scales used", {
   popEpi:::skip_on_cran_and_ci()
   
   BL <- list(fot = 0:5, age = seq(0,100, 5))
@@ -168,20 +168,20 @@ test_that("lexpanding with aggre.type = 'cartesian' works; only time scales used
   setkeyv(ag1, c("fot", "age"))
   setkeyv(ag2, c("fot", "age"))
   setkeyv(ag3, c("fot", "age"))
-  expect_equal(sum(ag1$pyrs), sum(ag3$pyrs))
-  expect_equal(sum(ag1$from0to1), sum(ag3$from0to1))
-  expect_equal(ag1$pyrs, ag3$pyrs)
-  expect_equal(ag1$from0to1, ag3$from0to1)
+  testthat::expect_equal(sum(ag1$pyrs), sum(ag3$pyrs))
+  testthat::expect_equal(sum(ag1$from0to1), sum(ag3$from0to1))
+  testthat::expect_equal(ag1$pyrs, ag3$pyrs)
+  testthat::expect_equal(ag1$from0to1, ag3$from0to1)
   
-  expect_equal(sum(ag1$pyrs), sum(ag2$pyrs))
-  expect_equal(sum(ag1$from0to1), sum(ag2$from0to1))
-  expect_equal(ag1$pyrs, ag2$pyrs)
-  expect_equal(ag1$from0to1, ag2$from0to1)
+  testthat::expect_equal(sum(ag1$pyrs), sum(ag2$pyrs))
+  testthat::expect_equal(sum(ag1$from0to1), sum(ag2$from0to1))
+  testthat::expect_equal(ag1$pyrs, ag2$pyrs)
+  testthat::expect_equal(ag1$from0to1, ag2$from0to1)
   
 })
 
 
-test_that("lexpanding and aggregating to years works", {
+testthat::test_that("lexpanding and aggregating to years works", {
   ag1 <- lexpand(sire[dg_date < ex_date, ], 
                  breaks = list(per=2000:2014), status = status,
                  birth = bi_date, entry = dg_date, exit = ex_date)
@@ -200,16 +200,16 @@ test_that("lexpanding and aggregating to years works", {
                  birth = bi_date, entry = dg_date, exit = ex_date,
                  aggre = list(y = per), aggre.type = "unique")
   setDT(ag3)
-  expect_equal(ag1$pyrs, ag2$pyrs)
-  expect_equal(ag1$from0to1, ag2$from0to1)
-  expect_equal(ag1$pyrs, ag3$pyrs)
-  expect_equal(ag1$from0to1, ag3$from0to1)
+  testthat::expect_equal(ag1$pyrs, ag2$pyrs)
+  testthat::expect_equal(ag1$from0to1, ag2$from0to1)
+  testthat::expect_equal(ag1$pyrs, ag3$pyrs)
+  testthat::expect_equal(ag1$from0to1, ag3$from0to1)
   
 })
 
 # Aggre check (to totpyrs) -----------------------------------------------------
 
-test_that("lexpand aggre produces correct results", {
+testthat::test_that("lexpand aggre produces correct results", {
   popEpi:::skip_on_cran_and_ci()
   x <- copy(sire)[dg_date < ex_date, ]
   x[, fot := get.yrs(ex_date, year.length = "actual") - get.yrs(dg_date, year.length = "actual")]
@@ -223,14 +223,14 @@ test_that("lexpand aggre produces correct results", {
   setDT(x)
   row_length <- x[,list( length(unique(age)), length(unique(per)), length(unique(fot)))]
   
-  expect_equal( x[,sum(pyrs)], totpyrs, tolerance = 0.001)
-  expect_equal( x[,sum(from0to0)], counts[1,N])
-  expect_equal( x[,sum(from0to1)], counts[2,N])
-  expect_equal( x[,sum(from0to2)], counts[3,N]) 
+  testthat::expect_equal( x[,sum(pyrs)], totpyrs, tolerance = 0.001)
+  testthat::expect_equal( x[,sum(from0to0)], counts[1,N])
+  testthat::expect_equal( x[,sum(from0to1)], counts[2,N])
+  testthat::expect_equal( x[,sum(from0to2)], counts[3,N]) 
   #expect_equal( prod(row_length), x[,.N]) 
 })
 
-test_that('lexpand aggre: multistate column names correct', {
+testthat::test_that('lexpand aggre: multistate column names correct', {
   
   x <- lexpand(sire[dg_date < ex_date, ][0:100], 
                birth = bi_date, entry = dg_date, exit = ex_date,
@@ -238,14 +238,14 @@ test_that('lexpand aggre: multistate column names correct', {
                            per = 1993:2013), 
                status=status, aggre = list(fot, age, per))
   
-  expect_equal(intersect(names(x), c('from0to0','from0to1','from0to2')), 
+  testthat::expect_equal(intersect(names(x), c('from0to0','from0to1','from0to2')), 
                c('from0to0','from0to1','from0to2'))  
 })
 
 
 # overlapping time lines --------------------------------------------------
 
-test_that('lexpansion w/ overlapping = TRUE/FALSE produces double/undoubled pyrs', {
+testthat::test_that('lexpansion w/ overlapping = TRUE/FALSE produces double/undoubled pyrs', {
   popEpi:::skip_on_cran_and_ci()
   
   sire2 <- copy(sire)[dg_date < ex_date, ][1:100]
@@ -262,19 +262,19 @@ test_that('lexpansion w/ overlapping = TRUE/FALSE produces double/undoubled pyrs
                exit = "ex_yrs", status="status", entry.status = 0L, id = "id", 
                overlapping = TRUE)
   setDT(x)
-  expect_equal(x[, sum(lex.dur), keyby=lex.id]$V1, sire2[, sum(ex_yrs-bi_yrs), keyby=id]$V1)  
+  testthat::expect_equal(x[, sum(lex.dur), keyby=lex.id]$V1, sire2[, sum(ex_yrs-bi_yrs), keyby=id]$V1)  
   
   x <- lexpand(sire2, birth = "bi_yrs", entry = "bi_yrs", event="dg_yrs", 
                exit = "ex_yrs", status="status", entry.status = 0L, id = "id", 
                overlapping = FALSE)
   setDT(x)
-  expect_equal(x[, sum(lex.dur), keyby=lex.id]$V1, 
+  testthat::expect_equal(x[, sum(lex.dur), keyby=lex.id]$V1, 
                sire2[!duplicated(id), sum(ex_yrs-bi_yrs), keyby=id]$V1)  
 })
 
 
 
-test_that("different specifications of time vars work with event defined and overlapping=FALSE", {
+testthat::test_that("different specifications of time vars work with event defined and overlapping=FALSE", {
   
   dt <- data.table(bi_date = as.Date('1949-01-01'), 
                    dg_date = as.Date(paste0(1999:2000, "-01-01")), 
@@ -287,13 +287,13 @@ test_that("different specifications of time vars work with event defined and ove
                 birth = bi_date, entry = start, exit = end, event = dg_date, 
                 id = id, overlapping = FALSE,  entry.status = 0, status = status,
                 merge = FALSE)
-  expect_equal(x1$lex.dur, c(2,1,2))
-  expect_equal(x1$age, c(48,50,51))
-  expect_equal(x1$lex.Cst, 0:2)
-  expect_equal(x1$lex.Xst, c(1,2,2))
+  testthat::expect_equal(x1$lex.dur, c(2,1,2))
+  testthat::expect_equal(x1$age, c(48,50,51))
+  testthat::expect_equal(x1$lex.Cst, 0:2)
+  testthat::expect_equal(x1$lex.Xst, c(1,2,2))
   
   ## birth -> entry = event -> exit
-  expect_error(
+  testthat::expect_error(
     lexpand(data = dt, subset = NULL, 
             birth = bi_date, entry = dg_date, exit = end, event = dg_date,
             id = id, overlapping = FALSE,  entry.status = 0, status = status,
@@ -308,13 +308,13 @@ test_that("different specifications of time vars work with event defined and ove
                 birth = bi_date, entry = bi_date, exit = end, event = dg_date,
                 id = id, overlapping = FALSE, entry.status = 0, status = status,
                 merge = FALSE)
-  expect_equal(x3$lex.dur, c(50,1,2))
-  expect_equal(x3$age, c(0,50,51))
-  expect_equal(x3$lex.Cst, 0:2)
-  expect_equal(x3$lex.Xst, c(1,2,2))
+  testthat::expect_equal(x3$lex.dur, c(50,1,2))
+  testthat::expect_equal(x3$age, c(0,50,51))
+  testthat::expect_equal(x3$lex.Cst, 0:2)
+  testthat::expect_equal(x3$lex.Xst, c(1,2,2))
   
   ## birth -> entry -> event = exit
-  expect_error(
+  testthat::expect_error(
     lexpand(data = dt, subset = NULL, 
             birth = bi_date, entry = dg_date, exit = end, event = end,
             id = id, overlapping = FALSE,  entry.status = 0, status = status,
@@ -330,15 +330,15 @@ test_that("different specifications of time vars work with event defined and ove
                 birth = bi_date, entry = bi_date, exit = end, event = dg_date,
                 id = id, overlapping = FALSE,  entry.status = 0, status = status,
                 merge = FALSE)
-  expect_equal(x6$lex.dur, c(50,1,2))
-  expect_equal(x6$age, c(0,50,51))
-  expect_equal(x6$lex.Cst, 0:2)
-  expect_equal(x6$lex.Xst, c(1,2,2))
+  testthat::expect_equal(x6$lex.dur, c(50,1,2))
+  testthat::expect_equal(x6$age, c(0,50,51))
+  testthat::expect_equal(x6$lex.Cst, 0:2)
+  testthat::expect_equal(x6$lex.Xst, c(1,2,2))
   
 })
 
 
-test_that("lexpand drops persons outside breaks window correctly", {
+testthat::test_that("lexpand drops persons outside breaks window correctly", {
   popEpi:::skip_on_cran_and_ci()
   
   dt <- data.table(bi_date = as.Date('1949-01-01'), 
@@ -352,14 +352,14 @@ test_that("lexpand drops persons outside breaks window correctly", {
                 birth = bi_date, entry = start, exit = end, event = dg_date, 
                 id = id, overlapping = FALSE,  entry.status = 0, status = status,
                 merge = FALSE, breaks = list(age = 50:55))
-  expect_equal(x1$age, c(50, 51, 52))
+  testthat::expect_equal(x1$age, c(50, 51, 52))
   
   ## by period
   x1 <- lexpand(data = dt, subset = NULL, 
                 birth = bi_date, entry = start, exit = end, event = dg_date, 
                 id = id, overlapping = FALSE,  entry.status = 0, status = status,
                 merge = FALSE, breaks = list(per = 2000:2005))
-  expect_equal(x1$per, c(2000, 2001))
+  testthat::expect_equal(x1$per, c(2000, 2001))
   
   
   ## by fot
@@ -367,6 +367,6 @@ test_that("lexpand drops persons outside breaks window correctly", {
                 birth = bi_date, entry = start, exit = end, event = dg_date, 
                 id = id, overlapping = FALSE,  entry.status = 0, status = status,
                 merge = FALSE, breaks = list(fot = 2:5))
-  expect_equal(x1$fot, c(2, 3, 4))
+  testthat::expect_equal(x1$fot, c(2, 3, 4))
 })
 
