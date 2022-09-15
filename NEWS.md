@@ -1,3 +1,8 @@
+# Changes in 0.4.10
+
+-   No changes for user — “Suggests” packages now used conditionally in
+    vignettes/tests/examples as per Writing R Extensions.
+
 # Changes in 0.4.9
 
 -   `popEpi::aggre` bugfix: `aggre` now correctly infers which
@@ -27,9 +32,10 @@
 # Changes in 0.4.4
 
 -   splitLexisDT/splitMulti bug fix: splitting along multiple time
-    scales *sometimes* produced duplicate transitions (e.g. alive ->
+    scales *sometimes* produced duplicate transitions (e.g. alive -\>
     dead in the last two rows). see
-    <https://github.com/FinnishCancerRegistry/popEpi/issues/138> for details.
+    <https://github.com/FinnishCancerRegistry/popEpi/issues/138> for
+    details.
 -   splitLexisDT/splitMulti now retain time.since attribute; this
     attribute plays a role in cutLexis
 -   known issue: splitLexisDT/splitMulti not guaranteed to work
@@ -47,11 +53,12 @@
 -   **`survtab()` bug fix: standard errors were mis-specified for
     adjusted curves, e.g. age-adjusted Ederer II estimates. This
     resulted in too wide confidence intervals! SEE HERE FOR EXAMPLE:
-    [#135](https://github.com/FinnishCancerRegistry/popEpi/issues/135)**. The
-    standard errors and confidence intervals of non-adjusted curves have
-    always been correct.
+    [#135](https://github.com/FinnishCancerRegistry/popEpi/issues/135)**.
+    The standard errors and confidence intervals of non-adjusted curves
+    have always been correct.
 -   `survtab()` bug fix: confidence level was always 95 % regardless of
-    `conf.level` [#134](https://github.com/FinnishCancerRegistry/popEpi/issues/134)
+    `conf.level`
+    [#134](https://github.com/FinnishCancerRegistry/popEpi/issues/134)
 
 # Changes in 0.4.1
 
@@ -182,6 +189,6 @@ r <- rate(data = a, obs = obs, pyrs = pyrs, print = sex,
 ```
 
 | sex | obs |   pyrs |  rate.adj | SE.rate.adj | rate.adj.lo | rate.adj.hi |      rate | SE.rate |   rate.lo |   rate.hi |
-|----:|----:|-------:|----------:|------------:|------------:|------------:|----------:|--------:|----------:|----------:|
+|---:|---:|-----:|-------:|--------:|--------:|--------:|-------:|-----:|-------:|-------:|
 |   0 | 933 | 134986 | 0.0069947 |   0.0002541 |   0.0065140 |   0.0075108 | 0.0069118 |      NA | 0.0064822 | 0.0073699 |
 |   1 | 875 | 134849 | 0.0064453 |   0.0002429 |   0.0059865 |   0.0069394 | 0.0064887 |      NA | 0.0060727 | 0.0069332 |

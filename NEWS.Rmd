@@ -15,6 +15,11 @@ knitr::opts_chunk$set(
 devtools::load_all()
 ```
 
+# Changes in 0.4.10
+
+* No changes for user --- "Suggests" packages now used conditionally in 
+  vignettes/tests/examples as per Writing R Extensions.
+  
 # Changes in 0.4.9
 
 * `popEpi::aggre` bugfix: `aggre` now correctly infers which stratifying 
