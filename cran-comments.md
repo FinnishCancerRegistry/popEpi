@@ -4,7 +4,7 @@
 popEpi was archived because I missed your warning (thanks outlook) concerning 
 unconditional use of Suggests packages. This release uses Suggests packages
 conditionally in tests/vignettes/examples as per the Writing R Extensions
-document. R CMD CHECK passes with _R_CHECK_DEPENDS_ONLY_=true.
+document. R CMD CHECK passes with `_R_CHECK_DEPENDS_ONLY_=true`.
 
 I get one NOTE due to adding references to DESCRIPTION::Description: R CMD check
 seems to think that peoples' names are potentially mis-spelled. There does not
@@ -18,6 +18,10 @@ Below are a bunch of checks I ran using rhub / winbuilder.
 * R-devel = Under development (unstable) (2022-08-15 r82721 ucrt)
 
 ## winbuilder checks
+
+* R-oldrel --- OK
+* R-release --- OK
+* R-devel --- OK
 
 ## R-hub checks
 
@@ -40,10 +44,8 @@ Below are a bunch of checks I ran using rhub / winbuilder.
 
 ## Other checks:
 
-* Travis CI: Ubuntu 16.04.6 LTS, R version 3.6.1 (2017-01-27) --- OK
+### Ubuntu 22.04.1 LTS, 64bit
 
-* Appveyor CI: Windows Server 2012 R2 x64 (build 9600), 
-R version 4.1.1 Patched (2021-10-16 r81070) --- OK
-
-
+* R-release --- OK
+* R-release `_R_CHECK_DEPENDS_ONLY_=true` --- OK
 
