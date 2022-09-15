@@ -210,6 +210,16 @@ run_r_cmd_check_on_winbuilder <- function(
   return(invisible(NULL))
 }
 
+run_revdep_check <- function(
+  timeout = as.difftime(12, units = "hours")
+  num_workers = 4L, 
+  bioc = FALSE, 
+  ...
+) {
+  requireNamespace("revdepcheck")
+  # devtools::install_github("r-lib/devdepcheck")
+  revdepcheck::revdep_check(bioc = bioc, num_workers = num_workers, ...)
+}
 
 
 
