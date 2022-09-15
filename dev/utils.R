@@ -1,4 +1,9 @@
 
+stopifnot(
+  c("devtools", "rcmdcheck", "revdepcheck") %in% 
+    rownames(utils::installed.packages())
+)
+
 default_check_args <- function() {
   c("--as-cran", "--timings")
 }
@@ -211,7 +216,7 @@ run_r_cmd_check_on_winbuilder <- function(
 }
 
 run_revdep_check <- function(
-  timeout = as.difftime(12, units = "hours")
+  timeout = as.difftime(12, units = "hours"),
   num_workers = 4L, 
   bioc = FALSE, 
   ...
@@ -221,9 +226,16 @@ run_revdep_check <- function(
   revdepcheck::revdep_check(bioc = bioc, num_workers = num_workers, ...)
 }
 
-
-
-
-
-
+read_remote_check_results <- function(url) {
+  #' @param url `[character]` (no default)
+  #' 
+  #' URL to raw text file of remote service R CMD check results.
+  #' NOT to html page.
+  lines <- readLines(url, encoding = "UTF-8")
+  start <- which(grepl(">>>>>==================== Running R CMD check", lines))
+  start <- start + 1L
+  stop <- which(grepl(">>>>>==================== Done with R CMD check", lines))
+  stop <- stop - 1L
+  lines[start:stop]
+}
 
