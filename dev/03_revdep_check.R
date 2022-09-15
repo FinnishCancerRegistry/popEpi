@@ -5,7 +5,7 @@ du <- new.env()
 source("dev/utils.R", local = du)
 
 ## revdep ----------------------------------------------------------------------
-revchk <- du$revdep_check()
+revchk <- du$run_revdep_check()
 
 # once everything checks out OK:
 revdepcheck::revdep_reset()

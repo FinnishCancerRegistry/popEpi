@@ -27,7 +27,7 @@ run_fun_as_rstudio_job <- function(fun_nm) {
   stopifnot(
     is.character(fun_nm)
   )
-  fun <- match.fun(fun_nm)
+  match.fun(fun_nm)
   
   tf <- tempfile(fileext = ".R")
   lines <- c(
