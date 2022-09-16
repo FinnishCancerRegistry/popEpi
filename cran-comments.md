@@ -6,7 +6,7 @@ unconditional use of Suggests packages. This release uses Suggests packages
 conditionally in tests/vignettes/examples as per the Writing R Extensions
 document. R CMD CHECK passes with `_R_CHECK_DEPENDS_ONLY_=true`.
 
-I get one NOTE due to adding references to DESCRIPTION::Description: R CMD check
+I get one NOTE: R CMD check
 seems to think that peoples' names are potentially mis-spelled. There does not
 seem to be a way to avoid this.
 
@@ -32,6 +32,12 @@ Below are a bunch of checks I ran using rhub / winbuilder.
 * R-devel, 64 bit --- OK
 * R-oldrel, 32/64 bit --- OK
 * R-patched, 32/64 bit --- OK
+
+### Debian
+
+* R-release --- OK
+* R-patched --- OK
+* R-devel --- OK
 
 ### macOS 10.13.6 High Sierra
 

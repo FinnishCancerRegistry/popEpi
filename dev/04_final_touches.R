@@ -11,4 +11,4 @@ devtools::spell_check()
 
 # is the author list up-to-date?
 
-# is cran-commends.md up-to-date?
+# is cran-comments.md up-to-date?

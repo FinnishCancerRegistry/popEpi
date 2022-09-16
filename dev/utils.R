@@ -1,4 +1,3 @@
-
 stopifnot(
   c("devtools", "rcmdcheck", "revdepcheck") %in% 
     rownames(utils::installed.packages())
@@ -226,7 +225,7 @@ run_revdep_check <- function(
   revdepcheck::revdep_check(bioc = bioc, num_workers = num_workers, ...)
 }
 
-read_remote_check_results <- function(url) {
+read_rhub_results <- function(url) {
   #' @param url `[character]` (no default)
   #' 
   #' URL to raw text file of remote service R CMD check results.
@@ -237,5 +236,13 @@ read_remote_check_results <- function(url) {
   stop <- which(grepl(">>>>>==================== Done with R CMD check", lines))
   stop <- stop - 1L
   lines[start:stop]
+}
+
+read_winbuilder_results <- function(url) {
+  #' @param url `[character]` (no default)
+  #' 
+  #' URL to raw text file of remote service R CMD check results.
+  #' NOT to html page.
+  readLines(url, encoding = "UTF-8")
 }
 
