@@ -1,13 +1,22 @@
 stopifnot(
-  c("devtools", "rcmdcheck", "revdepcheck") %in% 
+  c("devtools", "rcmdcheck", "revdepcheck") %in%
     rownames(utils::installed.packages())
 )
 
 default_check_args <- function() {
   c("--as-cran", "--timings")
 }
-no_suggests_check_env_vars <- function() {
+depends_only_check_env_vars <- function() {
   c("_R_CHECK_DEPENDS_ONLY_" = "true")
+}
+handle_arg_depends_only <- function(depends_only) {
+  stopifnot(identical(depends_only, TRUE) || identical(depends_only, FALSE))
+  env <- character(0)
+  if (depends_only) {
+    env <- depends_only_check_env_vars()
+    message("running with env var ", names(env), " = ", env)
+  }
+  return(env)
 }
 
 run_as_rstudio_job <- function(expr) {
@@ -65,29 +74,26 @@ with_ci_unit_tests <- function(expr) {
   without_all_unit_tests(expr)
 }
 
-run_r_cmd_check <- function(no_suggests = FALSE) {
-  env <- character(0)
-  if (no_suggests) {
-    env <- no_suggests_check_env_vars()
-  }
+run_r_cmd_check <- function(depends_only = FALSE) {
+  env <- handle_arg_depends_only(depends_only)
   rcmdcheck::rcmdcheck(".", args = default_check_args(), env = env)
 }
 
-run_r_cmd_check_all_unit_tests <- function(no_suggests = FALSE) {
+run_r_cmd_check_all_unit_tests <- function(depends_only = FALSE) {
   with_all_unit_tests(
-    run_r_cmd_check(no_suggests)
+    run_r_cmd_check(depends_only)
   )  
 }
 
-run_r_cmd_check_cran_unit_tests <- function(no_suggests = FALSE) {
+run_r_cmd_check_cran_unit_tests <- function(depends_only = FALSE) {
   with_cran_unit_tests(
-    run_r_cmd_check(no_suggests)
+    run_r_cmd_check(depends_only)
   )
 }
 
-run_r_cmd_check_ci_unit_tests <- function(no_suggests = FALSE) {
+run_r_cmd_check_ci_unit_tests <- function(depends_only = FALSE) {
   with_ci_unit_tests(
-    run_r_cmd_check(no_suggests)
+    run_r_cmd_check(depends_only)
   )
 }
 
@@ -115,13 +121,10 @@ check_triple <- function() {
 }
 
 run_r_cmd_check_no_unit_tests_no_examples_no_vignettes <- function(
-  no_suggests = FALSE
+  depends_only = FALSE
 ) {
   ## runs R CMD CHECK without running any tests
-  env <- character(0L)
-  if (no_suggests) {
-    no_suggests <- no_suggests_check_env_vars()
-  }
+  env <- handle_arg_depends_only(depends_only)
   rcmdcheck::rcmdcheck(
     path = ".", 
     args = union(
@@ -134,13 +137,10 @@ run_r_cmd_check_no_unit_tests_no_examples_no_vignettes <- function(
 }
 
 run_r_cmd_check_no_unit_tests_no_examples <- function(
-  no_suggests = FALSE
+  depends_only = FALSE
 ) {
   ## runs R CMD CHECK without running any tests
-  env <- character(0L)
-  if (no_suggests) {
-    no_suggests <- no_suggests_check_env_vars()
-  }
+  env <- handle_arg_depends_only(depends_only)
   rcmdcheck::rcmdcheck(
     ".", 
     args = union(default_check_args(), c("--no-tests", "--no-examples")),
@@ -149,13 +149,10 @@ run_r_cmd_check_no_unit_tests_no_examples <- function(
 }
 
 run_r_cmd_check_no_unit_tests <- function(
-  no_suggests = FALSE
+  depends_only = FALSE
 ) {
   ## runs R CMD CHECK without running any tests
-  env <- character(0L)
-  if (no_suggests) {
-    no_suggests <- no_suggests_check_env_vars()
-  }
+  env <- handle_arg_depends_only(depends_only)
   rcmdcheck::rcmdcheck(
     ".", 
     args = union(default_check_args(), "--no-tests"),
