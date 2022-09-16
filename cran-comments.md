@@ -7,8 +7,8 @@ conditionally in tests/vignettes/examples as per the Writing R Extensions
 document. R CMD CHECK passes with `_R_CHECK_DEPENDS_ONLY_=true`.
 
 I get one NOTE: R CMD check
-seems to think that peoples' names are potentially mis-spelled. There does not
-seem to be a way to avoid this.
+seems to think that peoples' names in DESCRIPTION::Description are potentially 
+mis-spelled. There does not seem to be a way to avoid this.
 
 Below are a bunch of checks I ran using rhub / winbuilder.
 
