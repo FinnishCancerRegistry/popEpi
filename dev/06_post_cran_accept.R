@@ -5,10 +5,5 @@ lines <- readLines("CRAN-SUBMISSION")
 cran_version <- sub("Version: ", "", lines[1])
 git_ref <- sub("SHA: ", "", lines[3])
 
-cmd1 <- paste0("git tag ", cran_version, " ", git_ref)
-message("run this cmd in system command line:")
-message(cmd1)
-
-cmd2 <- paste0("git push --tags")
-message("run this cmd in system command line:")
-message(cmd2)
+system2("git", c("tag", cran_version, git_ref))
+system2("git", c("push", "--tags"))
