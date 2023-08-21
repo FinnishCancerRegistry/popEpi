@@ -22,7 +22,7 @@ Description: Enables computation of epidemiological statistics, including
     easily adjusted for by covariates such as age. Fast splitting and
     aggregation of 'Lexis' objects (from package 'Epi') and other
     computations achieved using 'data.table'.
-License: GPL-3
+License: MIT + file LICENSE
 URL: https://github.com/FinnishCancerRegistry/popEpi
 BugReports: https://github.com/FinnishCancerRegistry/popEpi/issues
 Depends: 

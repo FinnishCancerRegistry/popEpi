@@ -21,3 +21,6 @@
 ^popEpi\.code-workspace$
 ^CRAN-SUBMISSION$
 ^dev$
+^codecov\.yml$
+^\.github$
+^LICENSE\.md$
