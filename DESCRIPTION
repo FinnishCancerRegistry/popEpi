@@ -1,6 +1,6 @@
 Package: popEpi
 Title: Functions for Epidemiological Analysis using Population Data
-Version: 0.4.10
+Version: 0.4.10.1
 Authors@R: c(
     person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0001-8624-6754")),
