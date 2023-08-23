@@ -1,3 +1,8 @@
+# Changes in 0.4.11
+
+* No changes in any functionality --- added help page for ?"popEpi-package"
+  as requested by CRAN.
+
 # Changes in 0.4.10
 
 -   No changes for user — “Suggests” packages now used conditionally in
