@@ -5,18 +5,22 @@ du <- new.env()
 source("dev/utils.R", local = du)
 
 ## build -----------------------------------------------------------------------
-devtools::build(
-  path = sprintf(
+targz_path <- sprintf(
     "./dev/popEpi_%s.tar.gz",
     read.dcf(file = "DESCRIPTION", fields = "Version")
-  ),
+  )
+devtools::build(
+  path = targz_path,
   binary = FALSE
 )
 
 ## winbuilder ------------------------------------------------------------------
 # if this fails, you can always upload manually:
 # https://win-builder.r-project.org/
-du$run_r_cmd_check_on_winbuilder(c("release", "devel", "oldrelease"))
+du$run_r_cmd_check_on_winbuilder(
+  c("release", "devel", "oldrelease"),
+  targz_path = targz_path
+)
 # insert each URL to raw (NOT html) result. they take some time ---
 # but less than 2 hours usually.
 wb_release <- du$read_winbuilder_results(readline("R-release url: "))
@@ -31,7 +35,8 @@ cat(wb_oldrel, sep = "\n")
 # if this fails, you can always upload manually:
 # https://builder.r-hub.io/
 du$run_r_cmd_check_on_rhub(
-  c("debian-gcc-devel", "debian-gcc-patched", "debian-gcc-release")
+  c("debian-gcc-devel", "debian-gcc-patched", "debian-gcc-release"),
+  targz_path = targz_path
 )
 # insert each URL to raw (NOT html) result. each check takes time ---
 # check your email in 2-3 hours.
