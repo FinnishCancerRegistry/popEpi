@@ -130,23 +130,19 @@
 #' expressed as fractional years, meaning this will work extremely poorly
 #' when using e.g. day-level time scales (such as \code{Date} variables). 
 #' Set the extrapolation breaks manually in such cases.
-#' 
+#' @md
 #' @return 
-#' Returns a \code{data.frame} or \code{data.table} (depending on 
+#' Returns a \code{data.frame} or \code{data.table} (depending on
 #' \code{getOptions("popEpi.datatable")}; see \code{?popEpi}) containing the
 #' following columns:
-#' \itemize{
-#'   \item{est}{: The estimated mean survival time}
-#'   \item{exp}{: The computed expected survival time}
-#'   \item{obs}{: Counts of subjects in data}
-#'   \item{YPLL}{: Years of Potential Life Lost, computed as 
-#'   (\code{(exp-est)*obs}) - though your time data may be in e.g. days,
-#'   this column will have the same name regardless.}
-#' }
+#' - `est`: The estimated mean survival time
+#' - `exp`: The computed expected survival time
+#' - `obs`: Counts of subjects in data
+#' - `YPLL`: Years of Potential Life Lost, computed as
+#'   (`(exp - est) * obs`) --- though your time data may be in e.g. days,
+#'   this column will have the same name regardless.
 #' The returned data also has columns named according to the variables
 #' supplied to the right-hand-side of the formula.
-#' 
-#' 
 #' @examples
 #' 
 #' library(Epi)

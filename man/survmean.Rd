@@ -20,7 +20,7 @@ survmean(
 )
 }
 \arguments{
-\item{formula}{a \code{formula}, e.g. \code{FUT ~ V1} or 
+\item{formula}{a \code{formula}, e.g. \code{FUT ~ V1} or
 \code{Surv(FUT, lex.Xst) ~ V1}.
 Supplied in the same way as to \code{\link{survtab}}, see that help
 for more info.}
@@ -31,25 +31,25 @@ for more info.}
 \link[=flexible_argument]{Flexible input}.}
 
 \item{weights}{weights to use to adjust mean survival times. See the
-\link[=direct_standardization]{dedicated help page} for more details on 
+\link[=direct_standardization]{dedicated help page} for more details on
 weighting. \code{survmean}
 computes curves separately by all variables to adjust by, computes mean
 survival times, and computes weighted means of the mean survival times.
 See Examples.}
 
-\item{breaks}{a list of breaks defining the time window to compute 
+\item{breaks}{a list of breaks defining the time window to compute
 observed survival in, and the intervals used in estimation. E.g.
 \code{list(FUT = 0:10)} when \code{FUT} is the follow-up time scale in your
 data.}
 
-\item{pophaz}{a data set of population hazards passed to 
-\code{\link{survtab}} (see the 
+\item{pophaz}{a data set of population hazards passed to
+\code{\link{survtab}} (see the
 \link[=pophaz]{dedicated help page} and the help page of
-\code{survtab} for more information). Defines the 
+\code{survtab} for more information). Defines the
 population hazard in the time window where observed survival is estimated.}
 
-\item{e1.breaks}{\code{NULL} or a list of breaks defining the time 
-window to compute 
+\item{e1.breaks}{\code{NULL} or a list of breaks defining the time
+window to compute
 \strong{expected} survival in, and the intervals used in estimation. E.g.
 \code{list(FUT = 0:100)} when \code{FUT} is the follow-up time scale in your
 data to extrapolate up to 100 years from where the observed survival
@@ -57,42 +57,42 @@ curve ends. \strong{NOTE:} the breaks on the survival time scale
 MUST include the breaks supplied to argument \code{breaks}; see Examples.
 If \code{NULL}, uses decent defaults (maximum follow-up time of 50 years).}
 
-\item{e1.pophaz}{Same as \code{pophaz}, except this defines the 
-population hazard in the time window where \strong{expected} 
-survival is estimated. By default uses the same data as 
+\item{e1.pophaz}{Same as \code{pophaz}, except this defines the
+population hazard in the time window where \strong{expected}
+survival is estimated. By default uses the same data as
 argument \code{pophaz}.}
 
 \item{r}{either a numeric multiplier such as \code{0.995}, \code{"auto"}, or
 \code{"autoX"} where \code{X} is an integer;
-used to determine the relative survival ratio (RSR) persisting after where 
+used to determine the relative survival ratio (RSR) persisting after where
 the estimated observed survival curve ends. See Details.}
 
 \item{surv.method}{passed to \code{survtab}; see that help for more info.}
 
-\item{subset}{a logical condition; e.g. \code{subset = sex == 1}; 
+\item{subset}{a logical condition; e.g. \code{subset = sex == 1};
 subsets the data before computations}
 
 \item{verbose}{\code{logical}; if \code{TRUE}, the function is returns
 some messages and results along the run, which may be useful in debugging}
 }
 \value{
-Returns a \code{data.frame} or \code{data.table} (depending on 
+Returns a \code{data.frame} or \code{data.table} (depending on
 \code{getOptions("popEpi.datatable")}; see \code{?popEpi}) containing the
 following columns:
 \itemize{
-  \item{est}{: The estimated mean survival time}
-  \item{exp}{: The computed expected survival time}
-  \item{obs}{: Counts of subjects in data}
-  \item{YPLL}{: Years of Potential Life Lost, computed as 
-  (\code{(exp-est)*obs}) - though your time data may be in e.g. days,
-  this column will have the same name regardless.}
-}
+\item \code{est}: The estimated mean survival time
+\item \code{exp}: The computed expected survival time
+\item \code{obs}: Counts of subjects in data
+\item \code{YPLL}: Years of Potential Life Lost, computed as
+(\code{(exp - est) * obs}) --- though your time data may be in e.g. days,
+this column will have the same name regardless.
 The returned data also has columns named according to the variables
 supplied to the right-hand-side of the formula.
 }
+}
 \description{
 Computes mean survival times based on survival estimation up to
-a point in follow-up time (e.g. 10 years), 
+a point in follow-up time (e.g. 10 years),
 after which survival is extrapolated
 using an appropriate hazard data file (\code{pophaz}) to yield the "full"
 survival curve. The area under the full survival curve is the mean survival.
@@ -101,22 +101,22 @@ survival curve. The area under the full survival curve is the mean survival.
 \strong{Basics}
 
 \code{survmean} computes mean survival times. For median survival times
-(i.e. where 50 % of subjects have died or met some other event)
+(i.e. where 50 \% of subjects have died or met some other event)
 use \code{\link{survtab}}.
 
 The mean survival time is simply the area under the survival curve.
 However, since full follow-up rarely happens, the observed survival curves
 are extrapolated using expected survival: E.g. one might compute observed
-survival till up to 10 years and extrapolate beyond that 
+survival till up to 10 years and extrapolate beyond that
 (till e.g. 50 years) to yield an educated guess on the full observed survival
-curve. 
+curve.
 
 The area is computed by trapezoidal integration of the area under the curve.
 This function also computes the "full" expected survival curve from
 T = 0 till e.g. T = 50 depending on supplied arguments. The
-expected mean survival time is the area under the 
+expected mean survival time is the area under the
 mean expected survival curve.
-This function returns the mean expected survival time to be compared with 
+This function returns the mean expected survival time to be compared with
 the mean survival time and for computing years of potential life lost (YPLL).
 
 Results can be formed by strata and adjusted for e.g. age by using
@@ -127,20 +127,19 @@ the \code{formula} argument as in \code{survtab}. See also Examples.
 Argument \code{r} controls the relative survival ratio (RSR) assumed to
 persist beyond the time window where observed survival is computed
 (defined by argument \code{breaks}; e.g. up to \code{FUT = 10}).
-The RSR is simply \code{RSR_i = p_oi / p_ei} for a time interval \code{i}, 
-i.e. the observed divided by the expected 
+The RSR is simply \code{RSR_i = p_oi / p_ei} for a time interval \code{i},
+i.e. the observed divided by the expected
 (conditional, not cumulative) probability of surviving from the beginning of
 a time interval till its end. The cumulative product of \code{RSR_i}
-over time is the (cumulative) relative survival curve. 
-
+over time is the (cumulative) relative survival curve.
 
 If \code{r} is numeric, e.g. \code{r = 0.995}, that RSR level is assumed
-to persist beyond the observed survival curve. 
+to persist beyond the observed survival curve.
 Numeric \code{r} should be \code{> 0} and expressed at the annual level
 when using fractional years as the scale of the time variables.
 E.g. if RSR is known to be \code{0.95} at the month level, then the
 annualized RSR is \code{0.95^12}. This enables correct usage of the RSR
-with survival intervals of varying lengths. When using day-level time 
+with survival intervals of varying lengths. When using day-level time
 variables (such as \code{Dates}; see \code{as.Date}), numeric \code{r}
 should be expressed at the day level, etc.
 
@@ -151,30 +150,30 @@ and assumes that to persist beyond the observed survival curve.
 Automatic determination of \code{r} is a good starting point,
 but in situations where the RSR estimate is uncertain it may produce poor
 results. Using \code{"autoX"} such as \code{"auto6"} causes \code{survmean}
-to use the mean of the estimated RSRs in the last X survival intervals, 
+to use the mean of the estimated RSRs in the last X survival intervals,
 which may be more stable.
-Automatic determination will not use values \code{>1} but set them to 1. 
+Automatic determination will not use values \code{>1} but set them to 1.
 Visual inspection of the produced curves is always recommended: see
 Examples.
 
-One may also tweak the accuracy and length of extrapolation and 
-expected survival curve computation by using 
+One may also tweak the accuracy and length of extrapolation and
+expected survival curve computation by using
 \code{e1.breaks}. By default this is whatever was supplied to \code{breaks}
 for the survival time scale, to which
 
 \code{c(seq(1/12, 1, 1/12), seq(1.2, 1.8, 0.2), 2:19, seq(20, 50, 5))}
 
 is added after the maximum value, e.g. with \code{breaks = list(FUT = 0:10)}
-we have 
+we have
 
 \code{..., 10+1/12, ..., 11, 11.2, ..., 2, 3, ..., 19, 20, 25, ... 50}
 
 as the \code{e1.breaks}. Supplying \code{e1.breaks} manually requires
 the breaks over time survival time scale supplied to argument \code{breaks}
 to be reiterated in \code{e1.breaks}; see Examples. \strong{NOTE}: the
-default extrapolation breaks assume the time scales in the data to be 
+default extrapolation breaks assume the time scales in the data to be
 expressed as fractional years, meaning this will work extremely poorly
-when using e.g. day-level time scales (such as \code{Date} variables). 
+when using e.g. day-level time scales (such as \code{Date} variables).
 Set the extrapolation breaks manually in such cases.
 }
 \examples{
