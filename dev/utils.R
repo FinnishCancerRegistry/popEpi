@@ -184,20 +184,16 @@ run_all_unit_tests_popEpi_datatable <- function(...) {
 
 run_r_cmd_check_on_rhub <- function(
   platforms = NULL,
-  show_status = FALSE,
-  targz_path = NULL,
   ...
 ) {
-  requireNamespace("rhub") ## 1.0.1 on github only
-  if (is.null(targz_path)) {
-    v <- read.dcf(file = "DESCRIPTION", fields = "Version")
-    targz_path <- sprintf("./dev/popEpi_%s.tar.gz", v)
-    devtools::build(path = targz_path, binary = FALSE)
-  }
+  requireNamespace("rhub")
   if (is.null(platforms)) {
-    platforms <- rhub::platforms()$name
+    platforms <- "ubuntu-release"
   }
-  rhub::check(platform = platforms, show_status = show_status, ...)
+  rhub::rhub_check(
+    platforms = platforms,
+    ...
+  )
 }
 
 run_r_cmd_check_on_winbuilder <- function(
