@@ -111,9 +111,9 @@ sir_lex(x2, breaks = BL, print = 'per')
 Other sir functions: 
 \code{\link{lines.sirspline}()},
 \code{\link{plot.sirspline}()},
+\code{\link{sir}()},
 \code{\link{sir_ratio}()},
-\code{\link{sirspline}()},
-\code{\link{sir}()}
+\code{\link{sirspline}()}
 }
 \author{
 Matti Rantanen

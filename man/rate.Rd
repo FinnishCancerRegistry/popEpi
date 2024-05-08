@@ -105,13 +105,13 @@ r3
 
 Other main functions: 
 \code{\link{Surv}()},
-\code{\link{relpois_ag}()},
 \code{\link{relpois}()},
-\code{\link{sirspline}()},
+\code{\link{relpois_ag}()},
 \code{\link{sir}()},
+\code{\link{sirspline}()},
 \code{\link{survmean}()},
-\code{\link{survtab_ag}()},
-\code{\link{survtab}()}
+\code{\link{survtab}()},
+\code{\link{survtab_ag}()}
 
 Other rate functions: 
 \code{\link{rate_ratio}()}

@@ -71,8 +71,8 @@ Other survtab functions:
 \code{\link{lines.survtab}()},
 \code{\link{print.survtab}()},
 \code{\link{summary.survtab}()},
-\code{\link{survtab_ag}()},
-\code{\link{survtab}()}
+\code{\link{survtab}()},
+\code{\link{survtab_ag}()}
 }
 \author{
 Joonas Miettinen

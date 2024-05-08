@@ -46,21 +46,21 @@ become a problem and you should be able to use the two interchangeably.
 \seealso{
 Other main functions: 
 \code{\link{rate}()},
-\code{\link{relpois_ag}()},
 \code{\link{relpois}()},
-\code{\link{sirspline}()},
+\code{\link{relpois_ag}()},
 \code{\link{sir}()},
+\code{\link{sirspline}()},
 \code{\link{survmean}()},
-\code{\link{survtab_ag}()},
-\code{\link{survtab}()}
+\code{\link{survtab}()},
+\code{\link{survtab_ag}()}
 
 Other survtab functions: 
 \code{\link{lines.survtab}()},
 \code{\link{plot.survtab}()},
 \code{\link{print.survtab}()},
 \code{\link{summary.survtab}()},
-\code{\link{survtab_ag}()},
-\code{\link{survtab}()}
+\code{\link{survtab}()},
+\code{\link{survtab_ag}()}
 
 Other survmean functions: 
 \code{\link{lines.survmean}()},

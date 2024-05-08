@@ -404,10 +404,10 @@ Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015.
 Other main functions: 
 \code{\link{Surv}()},
 \code{\link{rate}()},
-\code{\link{relpois_ag}()},
 \code{\link{relpois}()},
-\code{\link{sirspline}()},
+\code{\link{relpois_ag}()},
 \code{\link{sir}()},
+\code{\link{sirspline}()},
 \code{\link{survmean}()},
 \code{\link{survtab}()}
 

@@ -205,12 +205,12 @@ Other sir functions:
 Other main functions: 
 \code{\link{Surv}()},
 \code{\link{rate}()},
-\code{\link{relpois_ag}()},
 \code{\link{relpois}()},
+\code{\link{relpois_ag}()},
 \code{\link{sirspline}()},
 \code{\link{survmean}()},
-\code{\link{survtab_ag}()},
-\code{\link{survtab}()}
+\code{\link{survtab}()},
+\code{\link{survtab_ag}()}
 }
 \author{
 Matti Rantanen, Joonas Miettinen

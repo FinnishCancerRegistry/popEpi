@@ -65,8 +65,8 @@ lines(y = pmc$est, x = pmc$Tstop, col="red")
 \seealso{
 Other relpois functions: 
 \code{\link{RPL}},
-\code{\link{relpois_ag}()},
-\code{\link{relpois}()}
+\code{\link{relpois}()},
+\code{\link{relpois_ag}()}
 }
 \author{
 Joonas Miettinen

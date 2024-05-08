@@ -94,11 +94,11 @@ Other main functions:
 \code{\link{Surv}()},
 \code{\link{rate}()},
 \code{\link{relpois}()},
-\code{\link{sirspline}()},
 \code{\link{sir}()},
+\code{\link{sirspline}()},
 \code{\link{survmean}()},
-\code{\link{survtab_ag}()},
-\code{\link{survtab}()}
+\code{\link{survtab}()},
+\code{\link{survtab_ag}()}
 
 Other relpois functions: 
 \code{\link{RPL}},

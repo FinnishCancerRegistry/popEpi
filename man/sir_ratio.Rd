@@ -82,9 +82,9 @@ Douglas Altman, 2000. ISBN: 978-0-727-91375-3
 Other sir functions: 
 \code{\link{lines.sirspline}()},
 \code{\link{plot.sirspline}()},
+\code{\link{sir}()},
 \code{\link{sir_exp}()},
-\code{\link{sirspline}()},
-\code{\link{sir}()}
+\code{\link{sirspline}()}
 }
 \author{
 Matti Rantanen

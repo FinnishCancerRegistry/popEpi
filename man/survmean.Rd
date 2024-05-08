@@ -285,12 +285,12 @@ Other survmean functions:
 Other main functions: 
 \code{\link{Surv}()},
 \code{\link{rate}()},
-\code{\link{relpois_ag}()},
 \code{\link{relpois}()},
-\code{\link{sirspline}()},
+\code{\link{relpois_ag}()},
 \code{\link{sir}()},
-\code{\link{survtab_ag}()},
-\code{\link{survtab}()}
+\code{\link{sirspline}()},
+\code{\link{survtab}()},
+\code{\link{survtab_ag}()}
 }
 \author{
 Joonas Miettinen

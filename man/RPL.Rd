@@ -15,8 +15,8 @@ A family object for GLM fitting of relative Poisson models
 }
 \seealso{
 Other relpois functions: 
-\code{\link{relpois_ag}()},
 \code{\link{relpois}()},
+\code{\link{relpois_ag}()},
 \code{\link{rpcurve}()}
 }
 \author{

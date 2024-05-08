@@ -42,10 +42,10 @@ On top of the frame it's then possible to add a \code{grid},
 \seealso{
 Other sir functions: 
 \code{\link{lines.sirspline}()},
+\code{\link{sir}()},
 \code{\link{sir_exp}()},
 \code{\link{sir_ratio}()},
-\code{\link{sirspline}()},
-\code{\link{sir}()}
+\code{\link{sirspline}()}
 }
 \author{
 Matti Rantanen

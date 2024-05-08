@@ -143,19 +143,19 @@ Otherwise the p-value is spline-specific.
 Other sir functions: 
 \code{\link{lines.sirspline}()},
 \code{\link{plot.sirspline}()},
+\code{\link{sir}()},
 \code{\link{sir_exp}()},
-\code{\link{sir_ratio}()},
-\code{\link{sir}()}
+\code{\link{sir_ratio}()}
 
 Other main functions: 
 \code{\link{Surv}()},
 \code{\link{rate}()},
-\code{\link{relpois_ag}()},
 \code{\link{relpois}()},
+\code{\link{relpois_ag}()},
 \code{\link{sir}()},
 \code{\link{survmean}()},
-\code{\link{survtab_ag}()},
-\code{\link{survtab}()}
+\code{\link{survtab}()},
+\code{\link{survtab_ag}()}
 }
 \author{
 Matti Rantanen, Joonas Miettinen
