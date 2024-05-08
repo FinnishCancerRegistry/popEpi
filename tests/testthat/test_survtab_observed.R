@@ -47,11 +47,11 @@ testthat::test_that("surv.obs about the same as Kaplan-Meier & CIFs close to Aal
     su.km[["surv"]],
     tolerance = 0.0032, scale = 1
   )
-  # @codedoc_comment_block news("popEpi", "2024-05-08", "0.4.12")
+  # @codedoc_comment_block news("Unit tests", "2024-05-08", "0.4.12")
   # No changes in the package itself --- fixed a unit test that used
   # the output of `survival::summmary.survfit` which had improved slightly
   # in 3.6-4.
-  # @codedoc_comment_block news("popEpi", "2024-05-08", "0.4.12")
+  # @codedoc_comment_block news("Unit tests", "2024-05-08", "0.4.12")
   testthat::expect_equal(
     cif[["canD"]], st$CIF_canD,
     tolerance = 0.0022,

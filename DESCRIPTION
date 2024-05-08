@@ -32,7 +32,8 @@ Imports:
     Epi (>= 2.0),
     splines,
     survival
-Suggests: 
+Suggests:
+    codedoc,
     covr,
     date,
     knitr,
@@ -47,4 +48,6 @@ ByteCompile: true
 Encoding: UTF-8
 Language: en-GB
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
+Remotes:
+    github::FinnishCancerRegistry/codedoc@release

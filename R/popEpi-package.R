@@ -28,4 +28,16 @@
 #' by most functions internally in both cases.
 #'
 #' @keywords internal
+#' @md
+#' @eval popEpi_news()
 "_PACKAGE"
+
+popEpi_news <- function() {
+  news_lines <- c(
+    codedoc::codedoc_news_for_R_package(),
+    readLines("old_news.md")
+  )
+
+  writeLines(news_lines[!grepl("@section", news_lines)], "NEWS.md")
+  return(news_lines)
+}

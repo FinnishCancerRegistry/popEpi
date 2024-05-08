@@ -1,14 +1,3 @@
-
-
-## News for version 0.4.12
-
-### Unit tests
-
-No changes in the package itself --- fixed a unit test that used
-the output of `survival::summmary.survfit` which had improved slightly
-in 3.6-4.
-
-
 ## News for version 0.4.11
 
 * No News for version any functionality --- added help page for ?"popEpi-package"
