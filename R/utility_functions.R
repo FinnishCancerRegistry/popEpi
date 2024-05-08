@@ -1096,6 +1096,7 @@ get_breaks <- function(x) {
   UseMethod("get_breaks")
 }
 
+#' @export
 get_breaks.survtab <- function(x) {
   
   ss <- attributes(x)$survtab.meta$surv.scale
@@ -1107,17 +1108,19 @@ get_breaks.survtab <- function(x) {
   
 }
 
-
+#' @export
 get_breaks.aggre <- function(x) {
   
   as.list(attributes(x)$aggre.meta$breaks)
   
 }
 
+#' @export
 get_breaks.Lexis <- function(x) {
   as.list(attributes(x)$breaks)
 }
 
+#' @export
 get_breaks.default <- function(x) {
   NULL
 }
@@ -1127,6 +1130,7 @@ select_breaks <- function(data, ...) {
   UseMethod("select_breaks")
 }
 
+#' @export
 select_breaks.default <- function(data, ts, br = NULL, ...) {
   br <- do_select_breaks(data = data, ts = ts, br = br)
   if (is.null(br)) {
@@ -1136,6 +1140,7 @@ select_breaks.default <- function(data, ts, br = NULL, ...) {
   br
 }
 
+#' @export
 select_breaks.aggre <- function(data, ts, br = NULL, ...) {
   
   
@@ -1155,6 +1160,7 @@ select_breaks.aggre <- function(data, ts, br = NULL, ...) {
   br
 }
 
+#' @export
 select_breaks.Lexis <- function(data, ts, br = NULL, ...) {
   
   checkLexisData(data)

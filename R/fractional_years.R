@@ -78,6 +78,7 @@ as.yrs <- function(x, year.length, ...) {
   UseMethod("as.yrs")
 }
 
+#' @export
 as.yrs.Date <- function(x, year.length = "approx", ...) {
   year.length <- match.arg(year.length, c("actual", "approx"))
   
@@ -94,6 +95,7 @@ as.yrs.Date <- function(x, year.length = "approx", ...) {
   yrs
 }
 
+#' @export
 as.yrs.default <- function(x, year.length = "approx", ...) {
   
   x <- as.Date(x, ...)
