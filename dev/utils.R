@@ -231,7 +231,12 @@ run_revdep_check <- function(
 ) {
   requireNamespace("revdepcheck")
   # devtools::install_github("r-lib/devdepcheck")
-  revdepcheck::revdep_check(bioc = bioc, num_workers = num_workers, ...)
+  revdepcheck::revdep_check(
+    bioc = bioc,
+    num_workers = num_workers,
+    timeout = timeout,
+    ...
+  )
 }
 
 read_rhub_results <- function(url) {
