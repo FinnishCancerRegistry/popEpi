@@ -1,17 +1,14 @@
-
-
 ## News for version 0.4.12
 
 ### Unit tests
 
-No changes in the package itself --- fixed a unit test that used
-the output of `survival::summmary.survfit` which had improved slightly
-in 3.6-4.
-
+- No changes in the package itself --- fixed a unit test that used
+  the output of `survival::summmary.survfit` which had improved slightly
+  in 3.6-4.
 
 ## News for version 0.4.11
 
-* No News for version any functionality --- added help page for ?"popEpi-package"
+- No changes in any functionality --- added help page for ?"popEpi-package"
   as requested by CRAN.
 
 ## News for version 0.4.10
@@ -87,7 +84,7 @@ in 3.6-4.
 -   new functions in sir family: `sir_ag()`, `sir_lex()` and `sir_exp()`
     for extracting SMRs from `aggre` and `Lexis` objects.
 -   fixed issue in internal test brought by pkg survival version 2.39.5;
-    no News for version functions were needed (#125)
+    No changes in functions were needed (#125)
 -   robustified `aggre()`; there were issues with Epi pkg dev version
     which are definitely avoided (#119)
 

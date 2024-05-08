@@ -33,7 +33,6 @@ Imports:
     splines,
     survival
 Suggests:
-    codedoc,
     covr,
     date,
     knitr,
@@ -49,5 +48,3 @@ Encoding: UTF-8
 Language: en-GB
 LazyData: true
 RoxygenNote: 7.3.1
-Remotes:
-    github::FinnishCancerRegistry/codedoc@release
