@@ -1,26 +1,21 @@
 
-# popEpi CRAN upload, v.0.4.11
+# popEpi CRAN upload, v.0.4.12
 
-This release adds help page `popEpi-package`.
+No changes in the package itself --- fixed a unit test that used
+the output of `survival::summmary.survfit` which had improved slightly
+in 3.6-4.
 
-Below are a bunch of checks I ran using rhub / winbuilder. I also ran
-revdepcheck and found no issues.
+Below are a bunch of checks I ran using winbuilder / rhub.
 
-* R-oldrel = 4.2.3
-* R-release = 4.3.1
-* R-patched = 4.2.2 Patched (2022-11-10 r83330)
-* R-devel = 2023-08-21 r84998 ucrt
+I also ran revdepcheck and found no issues.
+
+* R-oldrel = 4.3.3 (2024-02-29 ucrt)
+* R-release = 4.4.0 (2024-04-24 ucrt)
+* R-patched = 
+* R-devel = 2024-05-07 r86527 ucrt
 
 ## winbuilder checks
 
 * R-oldrel --- OK
 * R-release --- OK
-* R-devel --- OK
-
-## R-hub checks
-
-### Debian
-
-* R-release --- OK
-* R-patched --- OK
 * R-devel --- OK
