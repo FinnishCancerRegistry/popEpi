@@ -25,3 +25,4 @@
 ^\.github$
 ^LICENSE\.md$
 ^old_news\.md$
+^lastMiKTeXException$
