@@ -4,6 +4,15 @@
 du <- new.env()
 source("dev/utils.R", local = du)
 
+## build -----------------------------------------------------------------------
+devtools::build(
+  path = sprintf(
+    "./dev/popEpi_%s.tar.gz",
+    read.dcf(file = "DESCRIPTION", fields = "Version")
+  ),
+  binary = FALSE
+)
+
 ## winbuilder ------------------------------------------------------------------
 # if this fails, you can always upload manually:
 # https://win-builder.r-project.org/

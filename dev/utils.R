@@ -183,11 +183,17 @@ run_all_unit_tests_popEpi_datatable <- function(...) {
 }
 
 run_r_cmd_check_on_rhub <- function(
-  platforms = NULL, 
-  show_status = FALSE, 
+  platforms = NULL,
+  show_status = FALSE,
+  targz_path = NULL,
   ...
 ) {
   requireNamespace("rhub") ## 1.0.1 on github only
+  if (is.null(targz_path)) {
+    v <- read.dcf(file = "DESCRIPTION", fields = "Version")
+    targz_path <- sprintf("./dev/popEpi_%s.tar.gz", v)
+    devtools::build(path = targz_path, binary = FALSE)
+  }
   if (is.null(platforms)) {
     platforms <- rhub::platforms()$name
   }
@@ -195,26 +201,32 @@ run_r_cmd_check_on_rhub <- function(
 }
 
 run_r_cmd_check_on_winbuilder <- function(
-  r.versions = c("release", "devel", "oldrelease"), 
+  r.versions = c("release", "devel", "oldrelease"),
+  targz_path = NULL,
   ...
 ) {
   requireNamespace("devtools")
+  if (is.null(targz_path)) {
+    v <- read.dcf(file = "DESCRIPTION", fields = "Version")
+    targz_path <- sprintf("./dev/popEpi_%s.tar.gz", v)
+    devtools::build(path = targz_path, binary = FALSE)
+  }
   if ("release" %in% r.versions) {
-    devtools::check_win_release(...)
+    devtools::check_win_release(pkg = targz_path, ...)
   }
   if ("devel" %in% r.versions) {
-    devtools::check_win_devel(...)
+    devtools::check_win_devel(pkg = targz_path, ...)
   }
   if ("oldrelease" %in% r.versions) {
-    devtools::check_win_oldrelease(...)
+    devtools::check_win_oldrelease(pkg = targz_path, ...)
   }
   return(invisible(NULL))
 }
 
 run_revdep_check <- function(
   timeout = as.difftime(12, units = "hours"),
-  num_workers = 4L, 
-  bioc = FALSE, 
+  num_workers = 4L,
+  bioc = FALSE,
   ...
 ) {
   requireNamespace("revdepcheck")
