@@ -188,12 +188,17 @@ run_r_cmd_check_on_rhub <- function(
 ) {
   requireNamespace("rhub")
   if (is.null(platforms)) {
-    platforms <- "ubuntu-release"
+    platforms <- "ubuntu-latest"
   }
   rhub::rhub_check(
     platforms = platforms,
     ...
   )
+  message("running rhub checks on github. check the 'actions' tab on the ",
+          "repo's github page. note that github actions may have outdated ",
+          "versions of other R packages and that may cause issues in edge ",
+          "cases.")
+  return(invisible(NULL))
 }
 
 run_r_cmd_check_on_winbuilder <- function(
@@ -217,43 +222,6 @@ run_r_cmd_check_on_winbuilder <- function(
     devtools::check_win_oldrelease(pkg = targz_path, ...)
   }
   return(invisible(NULL))
-}
-
-run_revdep_check <- function(
-  timeout = as.difftime(12, units = "hours"),
-  num_workers = 4L,
-  bioc = FALSE,
-  ...
-) {
-  requireNamespace("revdepcheck")
-  # devtools::install_github("r-lib/devdepcheck")
-  revdepcheck::revdep_check(
-    bioc = bioc,
-    num_workers = num_workers,
-    timeout = timeout,
-    ...
-  )
-}
-
-read_rhub_results <- function(url) {
-  #' @param url `[character]` (no default)
-  #' 
-  #' URL to raw text file of remote service R CMD check results.
-  #' NOT to html page.
-  lines <- readLines(url, encoding = "UTF-8")
-  start <- which(grepl(">>>>>==================== Running R CMD check", lines))
-  start <- start + 1L
-  stop <- which(grepl(">>>>>==================== Done with R CMD check", lines))
-  stop <- stop - 1L
-  lines[start:stop]
-}
-
-read_winbuilder_results <- function(url) {
-  #' @param url `[character]` (no default)
-  #' 
-  #' URL to raw text file of remote service R CMD check results.
-  #' NOT to html page.
-  readLines(url, encoding = "UTF-8")
 }
 
 ask_yn <- function(
