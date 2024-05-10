@@ -11,7 +11,6 @@ I also ran revdepcheck and found no issues.
 
 * R-oldrel = 4.3.3 (2024-02-29 ucrt)
 * R-release = 4.4.0 (2024-04-24 ucrt)
-* R-patched = 
 * R-devel = 2024-05-07 r86527 ucrt
 
 ## winbuilder checks
