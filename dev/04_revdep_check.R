@@ -8,4 +8,8 @@ source("dev/utils.R", local = du)
 revchk <- du$run_revdep_check()
 
 # once everything checks out OK:
-revdepcheck::revdep_reset()
+if (du$ask_yn("did revdep check pass?")) {
+  revdepcheck::revdep_reset()
+} else {
+  stop("fix problems, re-run this script.")
+}
