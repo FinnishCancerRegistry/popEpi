@@ -7,6 +7,3 @@ git_ref <- sub("SHA: ", "", lines[3])
 system2("git", c("checkout", git_ref))
 source("https://gist.githubusercontent.com/WetRobot/a741c9d2a22fbfb52784369be8354f15/raw/r_pkg_release.R")
 system2("git", c("checkout", "master"))
-
-system2("git", c("tag", cran_version, git_ref))
-system2("git", c("push", "--tags"))
