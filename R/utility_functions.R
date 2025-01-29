@@ -196,10 +196,7 @@ is_leap_year <- function(years) {
   
 }
 #' @title Test if object is a \code{Date} object
-#' @description Tests if an object is a \code{Date} object and returns
-#' a logical vector of length 1. \code{IDate} objects are also 
-#' \code{Date} objects, but \code{date} objects from package \pkg{date}
-#' are not. 
+#' @description Test whether `obj` inherits one of `Date` or `IDate`.
 #' @author Joonas Miettinen
 #' @param obj object to test on
 #' @export is.Date
@@ -208,10 +205,7 @@ is_leap_year <- function(years) {
 #' @return
 #' `TRUE` if `obj` is of class `"Date"` or `"IDate"`.
 is.Date <- function(obj) {
-  if (any(c("IDate", "Date") %in% class(obj))) {
-    return(TRUE)
-  }
-  return(FALSE)
+  inherits(obj, c("Date", "IDate"))
 }
 
 
@@ -851,19 +845,14 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
 
 
 getOrigin <- function(x) {
-  ## input: Date, IDate, or date variable
+  ## input: Date, IDate
   ## output: the origin date in Date format,
   ## the origin date being the date where the underlying index is zero.
-  if (inherits(x, "Date") || inherits(x, "IDate")) {
+  if (inherits(x, c("Date", "IDate"))) {
     as.Date("1970-01-01")
-  } else if (inherits(x, "date")) {
-    as.Date("1960-01-01")
-  } else if (inherits(x, "dates")) {
-    as.Date(paste0(attr(x, "origin"), collapse = "-"), format = "%d-%m-%Y")
   } else {
     stop("class '", class(x), "' not supported; usage of Date recommended - see ?as.Date")
   }
-  
 }
 
 promptYN <- function(q) {

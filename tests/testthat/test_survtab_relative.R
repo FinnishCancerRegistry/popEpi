@@ -6,9 +6,10 @@ testthat::context("popEpi::survtab vs. relsurv::rs.surv")
     
     library(relsurv)
     library(Epi)
+    library(data.table)
     
     # male
-    pm <- data.table(popEpi::popmort)
+    pm <- data.table::data.table(popEpi::popmort)
     # pm[, surv := 1L]
     pm[, surv := exp(-haz)]
     pm.m <- cast_simple(pm[sex==0], columns = 'year', rows = 'agegroup',  values='surv')

@@ -11,10 +11,6 @@ library("relsurv")
 library("git2r")
 
 
-as.date.Date <- function(x, ...) {
-  x <- as.integer(x) + 3653L
-  as.date(x)
-}
 #### compute observed survivals
 BL <- list(fot= seq(0,15,1/24))
 eBL <- list(fot = unique(c(BL$fot, seq(15, 115,0.5))))
@@ -57,7 +53,7 @@ setattr(xe$age, "class", c("yrs", "numeric"))
 setattr(xe$per, "class", c("yrs", "numeric"))
 setattr(xe$per, "year.length", "approx")
 setattr(xe$age, "year.length", "approx")
-xe[, "perdate" := as.date.Date(as.Date.yrs(per))]
+xe[, "perdate" := as.Date.yrs(per)]
 xe[, "agedate" := as.integer(as.Date.yrs(per)-as.Date(bi_date))]
 
 

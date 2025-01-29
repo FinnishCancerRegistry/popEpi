@@ -65,7 +65,7 @@
 #' using \code{\link{splitMulti}}.
 #' 
 #' The dataset must contain appropriate 
-#' \code{Date} / \code{IDate} / \code{date} format or
+#' \code{Date} / \code{IDate} format or
 #' other numeric variables that can be used
 #' as the time variables.
 #' 
@@ -91,7 +91,7 @@
 #' If one wants to have unspecified upper / lower limits on one time scale,
 #' use \code{Inf}: e.g. \code{breaks = list(fot = 0:5, age = c(0,45,Inf))}.
 #' Breaks for \code{per} can also be given in 
-#' \code{Date}/\code{IDate}/\code{date} format, whereupon
+#' \code{Date} / \code{IDate}format, whereupon
 #' they are converted to fractional years before used in splitting.
 #' 
 #' The \code{age} time scale can additionally 
@@ -512,15 +512,15 @@ lexpand <- function(data,
   # convert to fractional years ------------------------------------------------
   
   char2date <- function(obj) {
-    if (is.character(obj) || inherits(obj, "date")) {
+    if (is.character(obj)) {
       return(as.IDate(obj))
     } else {
       return(obj)
     }
   }
   
-  date2yrs <- function(obj) {    
-    if (is.Date(obj) || inherits(obj, "date")) {
+  date2yrs <- function(obj) {
+    if (is.Date(obj)) {
       get.yrs(obj, year.length = "actual")
     } else {
       obj

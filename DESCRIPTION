@@ -34,7 +34,6 @@ Imports:
     survival
 Suggests:
     covr,
-    date,
     knitr,
     mstate,
     relsurv,

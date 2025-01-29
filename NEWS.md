@@ -1,3 +1,8 @@
+## News for version 0.4.13
+
+Removed support for `date` objects. Use base R `Date` objects or
+`data.table`'s `IDate` objects instead.
+
 ## News for version 0.4.12
 
 ### Unit tests

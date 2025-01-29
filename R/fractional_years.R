@@ -1,8 +1,8 @@
 
 
-#' @title Convert date objects to fractional years
+#' @title Fractional Years
 #' @author Joonas Miettinen
-#' @description Using Date objects, calculates given 
+#' @description Using Date objects, calculates given
 #' dates as fractional years.
 #' @param x a \code{Date} object, or anything that \code{link{as.Date}}
 #' accepts
@@ -15,9 +15,9 @@
 #' @export
 #' @details
 #' 
-#' \code{x} should preferably be a \code{date}, \code{Date} or \code{IDate} 
-#' object, although it can also be a character string variable 
-#' which is coerced internally to \code{Date} format 
+#' \code{x} should preferably be a \code{Date} or \code{IDate}
+#' object, although it can also be a character string variable
+#' which is coerced internally to \code{Date} format
 #' using \code{\link{as.Date.character}}.
 #' 
 #' When \code{ year.length = 'actual' }, fractional years are calculated as 
