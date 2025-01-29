@@ -2,7 +2,7 @@
 % Please edit documentation in R/fractional_years.R
 \name{get.yrs}
 \alias{get.yrs}
-\title{Convert date objects to fractional years}
+\title{Fractional Years}
 \usage{
 get.yrs(x, year.length = "approx", ...)
 }
@@ -21,13 +21,13 @@ and \code{origin} when \code{x} is numeric}
 A numeric vector of fractional years.
 }
 \description{
-Using Date objects, calculates given 
+Using Date objects, calculates given
 dates as fractional years.
 }
 \details{
-\code{x} should preferably be a \code{date}, \code{Date} or \code{IDate} 
-object, although it can also be a character string variable 
-which is coerced internally to \code{Date} format 
+\code{x} should preferably be a \code{Date} or \code{IDate}
+object, although it can also be a character string variable
+which is coerced internally to \code{Date} format
 using \code{\link{as.Date.character}}.
 
 When \code{ year.length = 'actual' }, fractional years are calculated as 

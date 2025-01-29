@@ -127,7 +127,7 @@ calendar time, age, and follow-up time with given time breaks
 using \code{\link{splitMulti}}.
 
 The dataset must contain appropriate 
-\code{Date} / \code{IDate} / \code{date} format or
+\code{Date} / \code{IDate} format or
 other numeric variables that can be used
 as the time variables.
 
@@ -153,7 +153,7 @@ any data beyond the outermost breaks points are dropped.
 If one wants to have unspecified upper / lower limits on one time scale,
 use \code{Inf}: e.g. \code{breaks = list(fot = 0:5, age = c(0,45,Inf))}.
 Breaks for \code{per} can also be given in 
-\code{Date}/\code{IDate}/\code{date} format, whereupon
+\code{Date} / \code{IDate}format, whereupon
 they are converted to fractional years before used in splitting.
 
 The \code{age} time scale can additionally 
