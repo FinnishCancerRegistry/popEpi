@@ -188,7 +188,7 @@ run_r_cmd_check_on_rhub <- function(
 ) {
   requireNamespace("rhub")
   if (is.null(platforms)) {
-    platforms <- "ubuntu-latest"
+    platforms <- c("linux", "windows", "macos")
   }
   rhub::rhub_check(
     platforms = platforms,
@@ -201,26 +201,38 @@ run_r_cmd_check_on_rhub <- function(
   return(invisible(NULL))
 }
 
+run_revdepcheck <- function() {
+  requireNamespace("revdepcheck")
+  revdepcheck::revdep_check(
+    num_workers = 4L,
+    timeout = 1e6L
+  )
+  md_file_paths <- dir("revdep", pattern = "[.]md$", full.names = TRUE)
+  invisible(lapply(md_file_paths, function(md_file_path) {
+    message("contents of ", md_file_path, " ----------------------------------")
+    message(suppressWarnings(readLines(md_file_path)))
+  }))
+  return(invisible(NULL))
+}
+
 run_r_cmd_check_on_winbuilder <- function(
   r.versions = c("release", "devel", "oldrelease"),
-  targz_path = NULL,
   ...
 ) {
   requireNamespace("devtools")
-  if (is.null(targz_path)) {
-    v <- read.dcf(file = "DESCRIPTION", fields = "Version")
-    targz_path <- sprintf("./dev/popEpi_%s.tar.gz", v)
-    devtools::build(path = targz_path, binary = FALSE)
-  }
-  if ("release" %in% r.versions) {
-    devtools::check_win_release(pkg = targz_path, ...)
-  }
-  if ("devel" %in% r.versions) {
-    devtools::check_win_devel(pkg = targz_path, ...)
-  }
-  if ("oldrelease" %in% r.versions) {
-    devtools::check_win_oldrelease(pkg = targz_path, ...)
-  }
+  targz_path <- sprintf(
+    "./dev/popEpi_%s.tar.gz",
+    read.dcf(file = "DESCRIPTION", fields = "Version")
+  )
+  devtools::build(
+    path = targz_path,
+    binary = FALSE
+  )
+  message("There is a new .tar.gz file at ", targz_path, ".")
+  message("Press enter after uploading it manually to ",
+          "https://win-builder.r-project.org/ ",
+          "(all three of R-oldrelease, R-release, R-devel)")
+  readline(": ")
   return(invisible(NULL))
 }
 
