@@ -20,8 +20,11 @@ print(chk_1)
 chk_2 <- du$run_r_cmd_check_cran_unit_tests(depends_only = TRUE)
 print(chk_2)
 
+## revdepcheck -----------------------------------------------------------------
+chk_3 <- revdepcheck::revdep_check()
+
 ## extra -----------------------------------------------------------------------
 # you should run this once but it takes a very long time.
 # many additional tests are run. run in a separate session in the background
 # and proceed with other things.
-chk_3 <- du$run_r_cmd_check_all_unit_tests()
+chk_4 <- du$run_r_cmd_check_all_unit_tests()
