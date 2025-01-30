@@ -21,7 +21,10 @@ chk_2 <- du$run_r_cmd_check_cran_unit_tests(depends_only = TRUE)
 print(chk_2)
 
 ## revdepcheck -----------------------------------------------------------------
-chk_3 <- revdepcheck::revdep_check()
+chk_3 <- revdepcheck::revdep_check(
+  num_workers = 4L,
+  timeout = 1e6L
+)
 
 ## extra -----------------------------------------------------------------------
 # you should run this once but it takes a very long time.
