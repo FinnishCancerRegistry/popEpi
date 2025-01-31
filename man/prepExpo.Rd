@@ -42,7 +42,8 @@ combination of \code{by}}
 \item{by}{a character vector indicating variable names in \code{lex},
 the unique combinations of which identify separate subjects for which
 to fill gaps in the records from \code{entry} to \code{exit};
-for novices of \verb{\{\link{data.table`}\}, this is passed to a }data.table\verb{'s }by` argument.}
+for novices of \verb{[data.table::data.table]}, this is passed to a
+\code{data.table}'s \code{by} argument.}
 
 \item{breaks}{a named list of breaks;
 e.g. \code{list(work = 0:20,per = 1995:2015)}; passed on to

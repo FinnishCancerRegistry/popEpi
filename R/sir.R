@@ -28,12 +28,9 @@
 #'
 #' `print` can also be a list of expressions. This enables changing variable
 #' names or transforming variables with functions such as `cut` and `round`.
-#' For example, the existing variables `agegroup` and `year` could be
-#' transformed to new levels using `cut` by
+#' For example, `agegroup` can be transformed on-the-go with
 #'
-#' \code{print = list( age.category = cut(agegroup, breaks = c(0,50,75,100)),
-#' year.cat = cut(year, seq(1950,2010,20)))}
-#'
+#' `print = list(my_ag = cut(agegroup, my_ag_breaks))`
 #'
 #' **ref.rate or ref.obs & ref.pyrs**
 #'

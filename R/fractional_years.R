@@ -4,10 +4,10 @@
 #' @author Joonas Miettinen
 #' @description Using Date objects, calculates given
 #' dates as fractional years.
-#' @param x a `Date` object, or anything that `link{as.Date`}
+#' @param x a `Date` object, or anything that `[as.Date]`
 #' accepts
-#' @param year.length character string, either `'actual'` or
-#' `'approx'`; can be abbreviated; see Details
+#' @param year.length character string, either `"actual"` or
+#' `"approx"`; can be abbreviated; see **Details**
 #' @param ... additional arguments passed on to `[as.Date]`;
 #' typically `format` when `x` is a character string variable,
 #' and `origin` when `x` is numeric

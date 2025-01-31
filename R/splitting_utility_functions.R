@@ -767,7 +767,7 @@ contractLexis <- function(x, breaks, drop = TRUE) {
 #' @param by a character vector indicating variable names in `lex`,
 #' the unique combinations of which identify separate subjects for which
 #' to fill gaps in the records from `entry` to `exit`;
-#' for novices of `{\link{data.table`}}, this is passed to a
+#' for novices of `[data.table::data.table]`, this is passed to a
 #' `data.table`'s `by` argument.
 #' @param breaks a named list of breaks;
 #' e.g. `list(work = 0:20,per = 1995:2015)`; passed on to

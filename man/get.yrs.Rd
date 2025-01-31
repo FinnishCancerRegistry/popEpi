@@ -7,11 +7,11 @@
 get.yrs(x, year.length = "approx", ...)
 }
 \arguments{
-\item{x}{a \code{Date} object, or anything that \verb{link\{as.Date}}
+\item{x}{a \code{Date} object, or anything that \verb{[as.Date]}
 accepts}
 
-\item{year.length}{character string, either \code{'actual'} or
-\code{'approx'}; can be abbreviated; see Details}
+\item{year.length}{character string, either \code{"actual"} or
+\code{"approx"}; can be abbreviated; see \strong{Details}}
 
 \item{...}{additional arguments passed on to \verb{[as.Date]};
 typically \code{format} when \code{x} is a character string variable,
