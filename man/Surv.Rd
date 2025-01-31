@@ -34,7 +34,7 @@ Wrapper for \link[survival:Surv]{survival::Surv}.
 \code{popEpi::Surv} is a wrapper for \link[survival:Surv]{survival::Surv}.
 Therefore you don't need to to do \code{library("survival")} when using \code{Surv}
 with e.g.
-\code{\link{survtab}}. Remember that if you do \code{library("survival")} after
+\verb{[survtab]}. Remember that if you do \code{library("survival")} after
 \code{library("popEpi")}, the \code{Surv} from \pkg{survival} is used instead of
 from \pkg{popEpi} (\code{R} throws a warning about this) when an expression
 such as \code{Surv(my_times, my_events)} is evaluated. You can avoid such

@@ -7,7 +7,7 @@
 \method{plot}{rate}(x, conf.int = TRUE, eps = 0.2, left.margin, xlim, ...)
 }
 \arguments{
-\item{x}{a rate object (see \code{\link{rate}})}
+\item{x}{a rate object (see \verb{[rate]})}
 
 \item{conf.int}{logical; default TRUE draws the confidence intervals}
 
@@ -18,18 +18,18 @@ tries to do it by default.}
 
 \item{xlim}{change the x-axis location}
 
-\item{...}{arguments passed on to graphical functions points and segment 
+\item{...}{arguments passed on to graphical functions points and segment
 (e.g. \code{col}, \code{lwd}, \code{pch} and \code{cex})}
 }
 \value{
-Always returns `NULL` invisibly.
+Always returns \code{NULL} invisibly.
 This function is called for its side effects.
 }
 \description{
 Plot rate estimates with confidence intervals lines using R base graphics
 }
 \details{
-This is limited explanatory tool but most graphical 
+This is limited explanatory tool but most graphical
 parameters are user adjustable.
 }
 \author{

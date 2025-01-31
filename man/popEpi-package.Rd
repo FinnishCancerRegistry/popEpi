@@ -10,11 +10,11 @@
 epidemiological analysis. This is in most part enabled by the
 efficient \pkg{data.table} package for handling and aggregating large data sets.
 
-\pkg{popEpi} currently supplies some utility functions such as \code{\link{splitMulti}}
-and \code{\link{get.yrs}} for preparing large data sets for epidemiological analysis.
+\pkg{popEpi} currently supplies some utility functions such as \verb{[splitMulti]}
+and \verb{[get.yrs]} for preparing large data sets for epidemiological analysis.
 Included are also a a few functions that can be used in
-epidemiological analysis such as \code{\link{sir}} for estimating
-standardized incidence/mortality ratios (SIRs/SMRs) and \code{\link{survtab}} for
+epidemiological analysis such as \verb{[sir]} for estimating
+standardized incidence/mortality ratios (SIRs/SMRs) and \verb{[survtab]} for
 estimating observed and relative/net survival as well as cumulative incidence
 functions (CIFs). In particular, \code{survtab} implements the Ederer II
 (Ederer and Heise (1959)) and

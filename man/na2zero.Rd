@@ -13,11 +13,11 @@ na2zero(DT, vars = NULL)
 if \code{NULL}, uses all variable names in \code{DT}}
 }
 \value{
-A copy of `DT` where `NA` values have been replaced with zero.
+A copy of \code{DT} where \code{NA} values have been replaced with zero.
 }
 \description{
-Given a \code{data.table DT}, replaces any \code{NA} values
-in the variables given in \code{vars} in \code{DT}. Takes a copy of the 
+Given a \verb{data.table DT}, replaces any \code{NA} values
+in the variables given in \code{vars} in \code{DT}. Takes a copy of the
 original data and returns the modified copy.
 }
 \details{

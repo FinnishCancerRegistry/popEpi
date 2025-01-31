@@ -11,17 +11,17 @@ setaggre(x, values = NULL, by = NULL, breaks = NULL)
 
 \item{values}{a character string vector; the names of value variables}
 
-\item{by}{a character string vector; the names of variables by which 
+\item{by}{a character string vector; the names of variables by which
 \code{values} have been tabulated}
 
 \item{breaks}{a list of breaks, where each element is a breaks vector
-as usually passed to e.g. \code{\link{splitLexisDT}}. The list must be
+as usually passed to e.g. \verb{[splitLexisDT]}. The list must be
 fully named, with the names corresponding to time scales at the aggregate
 level in your data. Every unique value in a time scale variable in data must
 also exist in the corresponding vector in the breaks list.}
 }
 \value{
-Returns `x` invisibly after setting attributes to it without taking a copy.
+Returns \code{x} invisibly after setting attributes to it without taking a copy.
 This function is called for its side effects.
 }
 \description{
@@ -31,13 +31,13 @@ information. \code{setaggre} modifies in place without taking any copies.
 Retains all other attributes.
 }
 \details{
-\code{setaggre} sets \code{x} to the \code{aggre} class in place 
-without taking a copy as e.g. \code{as.data.frame.XXX} functions do; see e.g. 
-\code{\link[data.table]{setDT}}.
+\code{setaggre} sets \code{x} to the \code{aggre} class in place
+without taking a copy as e.g. \code{as.data.frame.XXX} functions do; see e.g.
+\verb{[data.table::setDT]}.
 }
 \examples{
-df <- data.frame(sex = rep(c("male", "female"), each = 5), 
-                 obs = rpois(10, rep(7,5, each=5)), 
+df <- data.frame(sex = rep(c("male", "female"), each = 5),
+                 obs = rpois(10, rep(7,5, each=5)),
                  pyrs = rpois(10, lambda = 10000))
 ## without any breaks
 setaggre(df, values = c("obs", "pyrs"), by = "sex")

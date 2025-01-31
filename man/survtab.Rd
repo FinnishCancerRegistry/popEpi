@@ -25,26 +25,26 @@ survtab(
 where \code{fot} is the time scale over which you wish to estimate a
 survival time function; this
 assumes that \code{lex.Xst} in your data is the status variable in the
-intended format (almost always right). 
-To be explicit, use \code{\link[survival]{Surv}}: e.g. 
-\code{Surv(fot, lex.Xst) ~ sex}. 
+intended format (almost always right).
+To be explicit, use \verb{[survival::Surv]}: e.g.
+\code{Surv(fot, lex.Xst) ~ sex}.
 Variables on the right-hand side of the formula
-separated by \code{+} are considered stratifying variables, for which 
-estimates are computed separately. May contain usage of \code{adjust()} 
+separated by \code{+} are considered stratifying variables, for which
+estimates are computed separately. May contain usage of \code{adjust()}
 --- see Details and Examples.}
 
 \item{data}{a \code{Lexis} object with at least the survival time scale}
 
-\item{adjust}{can be used as an alternative to passing variables to 
+\item{adjust}{can be used as an alternative to passing variables to
 argument \code{formula} within a call to \code{adjust()}; e.g.
 \code{adjust = "agegr"}. \link[=flexible_argument]{Flexible input}.}
 
 \item{breaks}{a named list of breaks, e.g.
 \code{list(FUT = 0:5)}. If data is not split in advance, \code{breaks}
-must at the very least contain a vector of breaks to split the survival time 
+must at the very least contain a vector of breaks to split the survival time
 scale (mentioned in argument \code{formula}). If data has already been split
-(using e.g. \code{\link{splitMulti}}) along at least the used survival time
-scale, this may be \code{NULL}. It is generally recommended (and sufficient; 
+(using e.g. \verb{[splitMulti]}) along at least the used survival time
+scale, this may be \code{NULL}. It is generally recommended (and sufficient;
 see Seppa, Dyban and Hakulinen (2015)) to use monthly
 intervals where applicable.}
 
@@ -59,63 +59,63 @@ allow for the expected hazard to vary by e.g. calendar time and age.}
 
 \item{weights}{typically a list of weights or a \code{character} string
 specifying an age group standardization scheme; see
-the \link[=direct_standardization]{dedicated help page} 
+the \link[=direct_standardization]{dedicated help page}
 and examples. NOTE: \code{weights = "internal"} is based on the counts
 of persons in follow-up at the start of follow-up (typically T = 0)}
 
 \item{surv.type}{one of \code{'surv.obs'},
-\code{'surv.cause'}, \code{'surv.rel'}, 
-\code{'cif.obs'} or \code{'cif.rel'}; 
+\code{'surv.cause'}, \code{'surv.rel'},
+\code{'cif.obs'} or \code{'cif.rel'};
 defines what kind of survival time function(s) is/are estimated; see Details}
 
 \item{surv.method}{either \code{'lifetable'} or \code{'hazard'}; determines
 the method of calculating survival time functions, where the former computes
-ratios such as \code{p = d/(n - n.cens)} 
-and the latter utilizes subject-times 
-(typically person-years) for hazard estimates such as \code{d/pyrs} 
+ratios such as \code{p = d/(n - n.cens)}
+and the latter utilizes subject-times
+(typically person-years) for hazard estimates such as \code{d/pyrs}
 which are used to compute survival time function estimates.
-The former method requires argument \code{n.cens} and the latter 
+The former method requires argument \code{n.cens} and the latter
 argument \code{pyrs} to be supplied.}
 
-\item{relsurv.method}{either \code{'e2'} or \code{'pp'}; 
+\item{relsurv.method}{either \code{'e2'} or \code{'pp'};
 defines whether to compute relative survival using the
 EdererII method or using Pohar-Perme weighting;
 ignored if \code{surv.type != "surv.rel"}}
 
-\item{subset}{a logical condition; e.g. \code{subset = sex == 1}; 
+\item{subset}{a logical condition; e.g. \code{subset = sex == 1};
 subsets the data before computations}
 
-\item{conf.level}{confidence level used in confidence intervals; 
+\item{conf.level}{confidence level used in confidence intervals;
 e.g. \code{0.95} for 95 percent confidence intervals}
 
-\item{conf.type}{character string; must be one of \code{"plain"}, 
-\code{"log-log"} and \code{"log"}; 
+\item{conf.type}{character string; must be one of \code{"plain"},
+\code{"log-log"} and \code{"log"};
 defines the transformation used on the survival time
-function to yield confidence 
+function to yield confidence
 intervals via the delta method}
 
 \item{verbose}{logical; if \code{TRUE}, the function is chatty and
 returns some messages and timings along the process}
 }
 \value{
-Returns a table of life time function values and other 
+Returns a table of life time function values and other
 information with survival intervals as rows.
 Returns some of the following estimates of survival time functions:
 
 \itemize{
- \item \code{surv.obs} - observed (raw, overall) survival
- \item \code{surv.obs.K} - observed cause-specific survival for cause K
- \item \code{CIF_k} - cumulative incidence function for cause \code{k}
- \item \code{CIF.rel} - cumulative incidence function using excess cases
- \item \code{r.e2} -  relative survival, EdererII
- \item \code{r.pp} -  relative survival, Pohar-Perme weighted
+\item \code{surv.obs} - observed (raw, overall) survival
+\item \code{surv.obs.K} - observed cause-specific survival for cause K
+\item \code{CIF_k} - cumulative incidence function for cause \code{k}
+\item \code{CIF.rel} - cumulative incidence function using excess cases
+\item \code{r.e2} -  relative survival, EdererII
+\item \code{r.pp} -  relative survival, Pohar-Perme weighted
 }
 The suffix \code{.as} implies adjusted estimates, and \code{.lo} and
-\code{.hi} imply lower and upper confidence limits, respectively. 
+\code{.hi} imply lower and upper confidence limits, respectively.
 The prefix \code{SE.} stands for standard error.
 }
 \description{
-This function estimates survival time functions: survival, 
+This function estimates survival time functions: survival,
 relative/net survival, and crude/absolute risk functions (CIF).
 }
 \section{Basics}{
@@ -125,38 +125,37 @@ This function computes interval-based estimates of survival time functions,
 where the intervals are set by the user. For product-limit-based
 estimation see packages \pkg{survival} and \pkg{relsurv}.
 
-if \code{surv.type = 'surv.obs'}, only 'raw' observed survival 
+if \code{surv.type = 'surv.obs'}, only 'raw' observed survival
 is estimated over the chosen time intervals. With
-\code{surv.type = 'surv.rel'}, also relative survival estimates 
-are supplied in addition to observed survival figures. 
+\code{surv.type = 'surv.rel'}, also relative survival estimates
+are supplied in addition to observed survival figures.
 
-\code{surv.type = 'cif.obs'} requests cumulative incidence functions (CIF) 
-to be estimated. 
-CIFs are estimated for each competing risk based 
+\code{surv.type = 'cif.obs'} requests cumulative incidence functions (CIF)
+to be estimated.
+CIFs are estimated for each competing risk based
 on a survival-interval-specific proportional hazards
-assumption as described by Chiang (1968).  
-With \code{surv.type = 'cif.rel'}, a CIF is estimated with using 
-excess cases as the ''cause-specific'' cases. Finally, with 
-\code{surv.type = 'surv.cause'}, cause-specific survivals are 
-estimated separately for each separate type of event. 
+assumption as described by Chiang (1968).
+With \code{surv.type = 'cif.rel'}, a CIF is estimated with using
+excess cases as the ''cause-specific'' cases. Finally, with
+\code{surv.type = 'surv.cause'}, cause-specific survivals are
+estimated separately for each separate type of event.
 
 In hazard-based estimation (\code{surv.method = "hazard"}) survival
 time functions are transformations of the estimated corresponding hazard
 in the intervals. The hazard itself is estimated using counts of events
 (or excess events) and total subject-time in the interval. Life table
-\code{surv.method = "lifetable"} estimates are constructed as transformations 
-of probabilities computed using counts of events and counts of subjects 
+\code{surv.method = "lifetable"} estimates are constructed as transformations
+of probabilities computed using counts of events and counts of subjects
 at risk.
 
-
-The vignette \href{../doc/survtab_examples.html}{survtab_examples} 
+The vignette \href{../doc/survtab_examples.html}{survtab_examples}
 has some practical examples.
 }
 
 \section{Relative survival}{
 
- 
-When \code{surv.type = 'surv.rel'}, the user can choose 
+
+When \code{surv.type = 'surv.rel'}, the user can choose
 \code{relsurv.method = 'pp'}, whereupon Pohar-Perme weighting is used.
 By default \code{relsurv.method = 'e2'}, i.e. the Ederer II method
 is used to estimate relative survival.
@@ -180,29 +179,29 @@ following are all equivalent:
 
 \code{formula = fot ~ sex + adjust(agegr, area)}
 
-\code{formula  = fot ~ sex, adjust = c("agegr", "area")}
+\verb{formula  = fot ~ sex, adjust = c("agegr", "area")}
 
-\code{formula  = fot ~ sex, adjust = list(agegr, area)}
+\verb{formula  = fot ~ sex, adjust = list(agegr, area)}
 
 The adjusting variables must match with the variable names in the
 argument \code{weights};
-see the \link[=direct_standardization]{dedicated help page}. 
+see the \link[=direct_standardization]{dedicated help page}.
 Typically weights are supplied as a \code{list} or
 a \code{data.frame}. The former can be done by e.g.
 
 \code{weights = list(agegr = VEC1, area = VEC2)},
 
 where \code{VEC1} and \code{VEC2} are vectors of weights (which do not
-have to add up to one). See 
-\href{../doc/survtab_examples.html}{survtab_examples} 
+have to add up to one). See
+\href{../doc/survtab_examples.html}{survtab_examples}
 for an example of using a \code{data.frame} to pass weights.
 }
 
 \section{Period analysis and other data selection schemes}{
 
 
-To calculate e.g. period analysis (delayed entry) estimates, 
-limit the data when/before supplying to this function.See 
+To calculate e.g. period analysis (delayed entry) estimates,
+limit the data when/before supplying to this function.See
 \href{../doc/survtab_examples.html}{survtab_examples}.
 }
 
@@ -212,11 +211,11 @@ data("sire", package = "popEpi")
 library(Epi)
 
 ## NOTE: recommended to use factor status variable
-x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
-           exit = list(CAL = get.yrs(ex_date)), 
+x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+           exit = list(CAL = get.yrs(ex_date)),
            data = sire[sire$dg_date < sire$ex_date, ],
-           exit.status = factor(status, levels = 0:2, 
-                                labels = c("alive", "canD", "othD")), 
+           exit.status = factor(status, levels = 0:2,
+                                labels = c("alive", "canD", "othD")),
            merge = TRUE)
 
 ## phony group variable
@@ -224,19 +223,19 @@ set.seed(1L)
 x$group <- rbinom(nrow(x), 1, 0.5)
 
 ## observed survival. explicit supplying of status:
-st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
+st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x,
               surv.type = "surv.obs",
               breaks = list(FUT = seq(0, 5, 1/12)))
 ## this assumes the status is lex.Xst (right 99.9 \% of the time)
-st <- survtab(FUT ~ group, data = x, 
+st <- survtab(FUT ~ group, data = x,
               surv.type = "surv.obs",
               breaks = list(FUT = seq(0, 5, 1/12)))
-              
+
 ## relative survival (ederer II)
 data("popmort", package = "popEpi")
 pm <- data.frame(popmort)
 names(pm) <- c("sex", "CAL", "AGE", "haz")
-st <- survtab(FUT ~ group, data = x, 
+st <- survtab(FUT ~ group, data = x,
               surv.type = "surv.rel",
               pophaz = pm,
               breaks = list(FUT = seq(0, 5, 1/12)))
@@ -247,7 +246,7 @@ cut <- c(0, 30, 50, 70, Inf)
 agegr <- cut(ICSS$age, cut, right = FALSE)
 w <- aggregate(ICSS1~agegr, data = ICSS, FUN = sum)
 x$agegr <- cut(x$dg_age, cut, right = FALSE)
-st <- survtab(FUT ~ group + adjust(agegr), data = x, 
+st <- survtab(FUT ~ group + adjust(agegr), data = x,
               surv.type = "surv.rel",
               pophaz = pm, weights = w$ICSS1,
               breaks = list(FUT = seq(0, 5, 1/12)))
@@ -256,58 +255,58 @@ st <- survtab(FUT ~ group + adjust(agegr), data = x,
 x <- Lexis(entry = list(FUT = 0L, AGE = dg_date-bi_date, CAL = dg_date),
            exit = list(CAL = ex_date),
            data = sire[sire$dg_date < sire$ex_date, ],
-           exit.status = factor(status, levels = 0:2, 
-                                labels = c("alive", "canD", "othD")), 
+           exit.status = factor(status, levels = 0:2,
+                                labels = c("alive", "canD", "othD")),
            merge = TRUE)
 ## phony group variable
 set.seed(1L)
 x$group <- rbinom(nrow(x), 1, 0.5)
 
-st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
+st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x,
               surv.type = "surv.obs",
-              breaks = list(FUT = seq(0, 5, 1/12)*365.25))    
-                  
+              breaks = list(FUT = seq(0, 5, 1/12)*365.25))
+
 ## NOTE: population hazard should be reported at the same scale
 ## as time variables in your Lexis data.
 data(popmort, package = "popEpi")
 pm <- data.frame(popmort)
 names(pm) <- c("sex", "CAL", "AGE", "haz")
 ## from year to day level
-pm$haz <- pm$haz/365.25 
-pm$CAL <- as.Date(paste0(pm$CAL, "-01-01")) 
-pm$AGE <- pm$AGE*365.25 
+pm$haz <- pm$haz/365.25
+pm$CAL <- as.Date(paste0(pm$CAL, "-01-01"))
+pm$AGE <- pm$AGE*365.25
 
-st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x, 
+st <- survtab(Surv(time = FUT, event = lex.Xst) ~ group, data = x,
               surv.type = "surv.rel", relsurv.method = "e2",
               pophaz = pm,
-              breaks = list(FUT = seq(0, 5, 1/12)*365.25))  
+              breaks = list(FUT = seq(0, 5, 1/12)*365.25))
 }
 }
 \references{
-Perme, Maja Pohar, Janez Stare, and Jacques Esteve. 
+Perme, Maja Pohar, Janez Stare, and Jacques Esteve.
 "On estimation in relative survival." Biometrics 68.1 (2012): 113-120.
 \doi{10.1111/j.1541-0420.2011.01640.x}
 
-Hakulinen, Timo, Karri Seppa, and Paul C. Lambert. 
-"Choosing the relative survival method for cancer survival estimation." 
+Hakulinen, Timo, Karri Seppa, and Paul C. Lambert.
+"Choosing the relative survival method for cancer survival estimation."
 European Journal of Cancer 47.14 (2011): 2202-2210.
 \doi{10.1016/j.ejca.2011.03.011}
- 
-Seppa, Karri, Timo Hakulinen, and Arun Pokhrel. 
-"Choosing the net survival method for cancer survival estimation." 
+
+Seppa, Karri, Timo Hakulinen, and Arun Pokhrel.
+"Choosing the net survival method for cancer survival estimation."
 European Journal of Cancer (2013).
 \doi{10.1016/j.ejca.2013.09.019}
 
-CHIANG, Chin Long. Introduction to stochastic processes in biostatistics. 
+CHIANG, Chin Long. Introduction to stochastic processes in biostatistics.
 1968. ISBN-14: 978-0471155003
 
-Seppa K., Dyba T. and Hakulinen T.: Cancer Survival, 
+Seppa K., Dyba T. and Hakulinen T.: Cancer Survival,
 Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015.
 \doi{10.1016/B978-0-12-801238-3.02745-8}
 }
 \seealso{
-\code{\link{splitMulti}}, \code{\link{lexpand}}, 
-\code{\link{ICSS}}, \code{\link{sire}}
+\verb{[splitMulti]}, \verb{[lexpand]},
+\verb{[ICSS]}, \verb{[sire]}
 \href{../doc/survtab_examples.html}{The survtab_examples vignette}
 
 Other main functions: 

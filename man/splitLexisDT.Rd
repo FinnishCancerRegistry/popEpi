@@ -9,26 +9,26 @@ splitLexisDT(lex, breaks, timeScale, merge = TRUE, drop = TRUE)
 \arguments{
 \item{lex}{a Lexis object, split or not}
 
-\item{breaks}{a vector of \code{[a,b)} breaks to split \code{data} by}
+\item{breaks}{a vector of \verb{[a,b)} breaks to split \code{data} by}
 
 \item{timeScale}{a character string; name of the time scale to split by}
 
-\item{merge}{logical; if \code{TRUE}, retains all variables 
+\item{merge}{logical; if \code{TRUE}, retains all variables
 from the original data - i.e. original variables are
 repeated for all the rows by original subject}
 
-\item{drop}{logical; if \code{TRUE}, drops all resulting rows 
+\item{drop}{logical; if \code{TRUE}, drops all resulting rows
 after expansion that reside outside the time window
 defined by the given breaks}
 }
 \value{
-A \code{data.table} or \code{data.frame} 
-(depending on \code{options("popEpi.datatable")}; see \code{?popEpi}) 
+A \code{data.table} or \code{data.frame}
+(depending on \code{options("popEpi.datatable")}; see \code{?popEpi})
 object expanded to accommodate split observations.
 }
 \description{
 Split a \code{Lexis} object along one time scale
-(as \code{\link[Epi]{splitLexis}}) with speed
+(as \verb{[Epi::splitLexis]}) with speed
 }
 \details{
 \code{splitLexisDT} is in essence a \pkg{data.table} version of
@@ -42,13 +42,13 @@ the functions have identical behaviour.
 
 The \code{Lexis} time scale variables can be of any arbitrary
 format, e.g. \code{Date},
-fractional years (see \code{\link[Epi]{cal.yr}}) and \code{\link{get.yrs}}.
+fractional years (see \verb{[Epi::cal.yr]}) and \verb{[get.yrs]}.
 }
 \examples{
 library(Epi)
 data("sire", package = "popEpi")
-x <- Lexis(data=sire[1000:1100, ], 
-           entry = list(fot=0, per=get.yrs(dg_date), age=dg_age), 
+x <- Lexis(data=sire[1000:1100, ],
+           entry = list(fot=0, per=get.yrs(dg_date), age=dg_age),
            exit=list(per=get.yrs(ex_date)), exit.status=status)
 BL <- list(fot=seq(0, 5, by = 3/12), per=c(2008, 2013))
 
@@ -62,8 +62,8 @@ x4 <- splitLexis(x4, breaks = BL$per, time.scale = "per")
 ## all produce identical results
 
 ## using Date variables
-x <- Lexis(data=sire[1000:1100, ], 
-           entry = list(fot=0, per=dg_date, age=dg_date-bi_date), 
+x <- Lexis(data=sire[1000:1100, ],
+           entry = list(fot=0, per=dg_date, age=dg_date-bi_date),
            exit=list(per=ex_date), exit.status=status)
 BL <- list(fot = 0:5*365.25, per = as.Date(c("2008-01-01", "2013-01-01")))
 

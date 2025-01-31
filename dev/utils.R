@@ -26,7 +26,7 @@ run_as_rstudio_job <- function(expr) {
     "source(\"dev_utils.R\")",
     lines
   )
-  
+
   writeLines(lines, con = tf)
   rstudioapi::jobRunScript(path = tf, workingDir = getwd())
 }
@@ -36,7 +36,7 @@ run_fun_as_rstudio_job <- function(fun_nm) {
     is.character(fun_nm)
   )
   match.fun(fun_nm)
-  
+
   tf <- tempfile(fileext = ".R")
   lines <- c(
     "source(\"dev_utils.R\")",
@@ -82,7 +82,7 @@ run_r_cmd_check <- function(depends_only = FALSE) {
 run_r_cmd_check_all_unit_tests <- function(depends_only = FALSE) {
   with_all_unit_tests(
     run_r_cmd_check(depends_only)
-  )  
+  )
 }
 
 run_r_cmd_check_cran_unit_tests <- function(depends_only = FALSE) {
@@ -126,9 +126,9 @@ run_r_cmd_check_no_unit_tests_no_examples_no_vignettes <- function(
   ## runs R CMD CHECK without running any tests
   env <- handle_arg_depends_only(depends_only)
   rcmdcheck::rcmdcheck(
-    path = ".", 
+    path = ".",
     args = union(
-      c("--no-tests", "--no-examples", 
+      c("--no-tests", "--no-examples",
         "--no-vignettes", "--no-build-vignettes"),
       default_check_args()
     ),
@@ -142,7 +142,7 @@ run_r_cmd_check_no_unit_tests_no_examples <- function(
   ## runs R CMD CHECK without running any tests
   env <- handle_arg_depends_only(depends_only)
   rcmdcheck::rcmdcheck(
-    ".", 
+    ".",
     args = union(default_check_args(), c("--no-tests", "--no-examples")),
     env = env
   )
@@ -154,30 +154,30 @@ run_r_cmd_check_no_unit_tests <- function(
   ## runs R CMD CHECK without running any tests
   env <- handle_arg_depends_only(depends_only)
   rcmdcheck::rcmdcheck(
-    ".", 
+    ".",
     args = union(default_check_args(), "--no-tests"),
     env = env
   )
 }
 
 run_all_unit_tests_popEpi_datatable <- function(...) {
-  ## runs all possible tests with both TRUE/FALSE for 
+  ## runs all possible tests with both TRUE/FALSE for
   ## options("popEpi.datatable")
   old <- Sys.getenv("NOT_CRAN")
   on.exit(Sys.setenv("NOT_CRAN" = old))
-  
+
   Sys.setenv("NOT_CRAN" = "true")
   options("popEpi.datatable" = TRUE)
   message("* run_all_unit_tests_popEpi_datatable: ",
           "Starting checking with popEpi.datatable = TRUE")
   devtools::test(...)
-  
+
   message("* run_all_unit_tests_popEpi_datatable: ",
           "Finished checking with popEpi.datatable = TRUE;",
           "starting with popEpi.datatable = FALSE")
   options("popEpi.datatable" = FALSE)
   devtools::test(...)
-  
+
   message("* run_all_unit_tests_popEpi_datatable: ",
           "Finished checking with popEpi.datatable = FALSE")
 }

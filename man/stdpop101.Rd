@@ -6,8 +6,8 @@
 \format{
 data.table with columns
 \itemize{
- \item \code{world_std} weight that sums to 100000 (numeric)
- \item \code{agegroup} age group from 1 to 101 (numeric)
+\item \code{world_std} weight that sums to 100000 (numeric)
+\item \code{agegroup} age group from 1 to 101 (numeric)
 }
 }
 \source{

@@ -20,10 +20,10 @@ testthat::test_that("splitting funs congruent with random splitting and fixed da
     exit.status = as.integer(Xst == "D"),
     data = occup
   )
-  
-  
+
+
   data("DMlate", package = "Epi")
-  
+
   DMlate <- Epi::Lexis(
     entry = list(fot = 0, per = dodm, age = dodm-dobth),
     exit = list(per = dox),
@@ -31,9 +31,9 @@ testthat::test_that("splitting funs congruent with random splitting and fixed da
     exit.status = as.integer(!is.na(dodth)),
     data = DMlate[DMlate$dox>DMlate$dodm, ]
   )
-  
+
   data("DMrand", package = "Epi")
-  
+
   DMrand <- Epi::Lexis(
     entry = list(fot = 0, per = dodm, age = dodm-dobth),
     exit = list(per = dox),
@@ -41,9 +41,9 @@ testthat::test_that("splitting funs congruent with random splitting and fixed da
     exit.status = as.integer(!is.na(dodth)),
     data = DMrand[DMrand$dox>DMrand$dodm, ]
   )
-  
+
   data("thoro", package = "Epi")
-  
+
   thoro <- Epi::Lexis(
     entry = list(fot = 0L, per = injecdat, age = injecdat-birthdat),
     exit = list(per = exitdat),
@@ -51,7 +51,7 @@ testthat::test_that("splitting funs congruent with random splitting and fixed da
     exit.status = as.integer(exitstat == 1),
     data = thoro[thoro$injecdat < thoro$exitdat, ]
   )
-  
+
   sire <- setDT(copy(popEpi::sire))
   sire[, "dg_yrs" := get.yrs(dg_date, "actual")]
   sire[, "ex_yrs" := get.yrs(ex_date, "actual")]

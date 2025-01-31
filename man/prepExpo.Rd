@@ -19,7 +19,7 @@ prepExpo(
 )
 }
 \arguments{
-\item{lex}{a \code{\link[Epi]{Lexis}} object with ONLY periods of exposure
+\item{lex}{a \verb{[Epi::Lexis]} object with ONLY periods of exposure
 as rows; one or multiple rows per subject allowed}
 
 \item{freezeScales}{a character vector naming \code{Lexis} time scales of exposure
@@ -31,8 +31,8 @@ ultimate entry and exit times are specified}
 
 \item{entry}{an expression; the time of entry to follow-up which may be earlier, at, or after
 the first time of exposure in \code{freezeScales}; evaluated separately
-for each unique combination of \code{by}, so e.g. with 
-\code{entry = min(Var1)} and \code{by = "lex.id"} it 
+for each unique combination of \code{by}, so e.g. with
+\code{entry = min(Var1)} and \code{by = "lex.id"} it
 sets the \code{lex.id}-specific minima of \code{Var1} to be the original times
 of entry for each \code{lex.id}}
 
@@ -42,15 +42,14 @@ combination of \code{by}}
 \item{by}{a character vector indicating variable names in \code{lex},
 the unique combinations of which identify separate subjects for which
 to fill gaps in the records from \code{entry} to \code{exit};
-for novices of \code{{\link{data.table}}}, this is passed to a 
-\code{data.table}'s \code{by} argument.}
+for novices of \verb{\{\link{data.table`}\}, this is passed to a }data.table\verb{'s }by` argument.}
 
-\item{breaks}{a named list of breaks; 
-e.g. \code{list(work = 0:20,per = 1995:2015)}; passed on to 
-\code{\link{splitMulti}} so see that function's help for more details}
+\item{breaks}{a named list of breaks;
+e.g. \code{list(work = 0:20,per = 1995:2015)}; passed on to
+\verb{[splitMulti]} so see that function's help for more details}
 
 \item{freezeDummy}{a character string; specifies the name for a dummy variable
-that this function will create and add to output which 
+that this function will create and add to output which
 identifies rows where the \code{freezeScales} are frozen and where not
 (\code{0} implies not frozen, \code{1} implies frozen);
 if \code{NULL}, no dummy is created}
@@ -61,11 +60,11 @@ e.g. \code{subset = sex == "male"}}
 \item{verbose}{logical; if \code{TRUE}, the function is chatty and returns
 some messages and timings during its run.}
 
-\item{...}{additional arguments passed on to \code{\link{splitMulti}}}
+\item{...}{additional arguments passed on to \verb{[splitMulti]}}
 }
 \value{
 Returns a \code{Lexis} object that has been split if \code{breaks} is specified.
-The resulting time is also a \code{data.table} if 
+The resulting time is also a \code{data.table} if
 \code{options("popEpi.datatable") == TRUE} (see: \code{?popEpi})
 }
 \description{
@@ -75,11 +74,11 @@ accumulating exposure time in periods of no exposure, and splits the
 result if requested.
 }
 \details{
-\code{prepExpo} is a convenience function for the purpose of eventually aggregating 
-person-time and events in categories of not only normally progressing 
+\code{prepExpo} is a convenience function for the purpose of eventually aggregating
+person-time and events in categories of not only normally progressing
 \code{Lexis} time scales but also some time scales which should not
 progress sometimes. For example a person may work at a production facility
-only intermittently, meaning exposure time (to work-related substances 
+only intermittently, meaning exposure time (to work-related substances
 for example) should not progress outside of periods of work. This allows for
 e.g. a correct aggregation of person-time and events by categories of cumulative
 time of exposure.
@@ -89,7 +88,7 @@ where a subject is exposed to something (and NO periods without exposure),
 fills any gaps between exposure periods for each unique combination of \code{by}
 and the subject-specific "ultimate" \code{entry} and \code{exit} times,
 "freezes" the cumulative exposure times in periods of no exposure,
-and splits data using \code{breaks} passed to \code{\link{splitMulti}}
+and splits data using \code{breaks} passed to \verb{[splitMulti]}
 if requested. Results in a (split) \code{Lexis} object where \code{freezeScales}
 do not progress in time periods where no exposure was recorded in \code{lex}.
 
@@ -101,7 +100,7 @@ for \code{entry} and \code{exit} at most.
 The supplied \code{breaks} split the data using \code{splitMulti}, with
 the exception that breaks supplied concerning any frozen time scales
 ONLY split the rows where the time scales are not frozen. E.g.
-with \code{freezeScales = "work"}, 
+with \code{freezeScales = "work"},
 \code{breaks = list(work = 0:10, cal = 1995:2010)} splits all rows over
 \code{"cal"} but only non-frozen rows over \code{"work"}.
 

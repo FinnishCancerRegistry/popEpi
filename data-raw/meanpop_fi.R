@@ -26,7 +26,7 @@ mp[, "Sex" := as.integer(factor(Sex, c("Males", "Females")))-1L]
 mp[, "Age" := as.integer(gsub(Age, pattern = "\\D", replacement = ""))]
 mp[, "Year" := as.integer(levels(Year)[Year])]
 
-setnames(mp, c("Year", "Sex", "Age", "values"), 
+setnames(mp, c("Year", "Sex", "Age", "values"),
          c("year", "sex", "agegroup", "meanpop"))
 setcolorder(mp, c("sex", "year", "agegroup", "meanpop"))
 

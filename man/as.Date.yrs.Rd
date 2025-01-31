@@ -13,12 +13,12 @@
 methods}
 }
 \value{
-A vector of `Date` values based on the input fractional years.
+A vector of \code{Date} values based on the input fractional years.
 }
 \description{
 Coerces an \code{yrs} object to a \code{Date} object.
-Some loss of information comes if \code{year.length = "approx"} 
-was set when using \code{\link{get.yrs}}, so the transformation back
+Some loss of information comes if \code{year.length = "approx"}
+was set when using \verb{[get.yrs]}, so the transformation back
 to \code{Date} will not be perfect there. With \code{year.length = "actual"}
 the original values are perfectly retrieved.
 }
@@ -38,7 +38,7 @@ dg_date2 <- as.Date(sire$dg_yrs)
 summary(as.numeric(dg_date2 - as.Date(sire$dg_date)))
 }
 \seealso{
-\code{\link{get.yrs}}
+\verb{[get.yrs]}
 }
 \author{
 Joonas Miettinen

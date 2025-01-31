@@ -15,19 +15,19 @@ all_names_present(data, var.names, stops = TRUE, msg = NULL)
 \item{stops}{logical, stop returns exception}
 
 \item{msg}{Custom message to return instead of default message.
-Special: include \code{\%\%VARS\%\%} in message string and the missing 
-variable names will be inserted there (quoted, separated by comma, e.g. 
+Special: include \verb{\\\%\\\%VARS\\\%\\\%} in message string and the missing
+variable names will be inserted there (quoted, separated by comma, e.g.
 \code{'var1'}, \code{'var2'} --- no leading or tracing white space).}
 }
 \value{
-`TRUE` if all `var.names` are in `data`, else `FALSE`,
+\code{TRUE} if all \code{var.names} are in \code{data}, else \code{FALSE},
 }
 \description{
 Given a character vector, checks if all names are present in \code{names(data)}.
 Throws error if \code{stops=TRUE}, else returns \code{FALSE} if some variable name is not present.
 }
 \seealso{
-\code{\link{robust_values}}
+\verb{[robust_values]}
 }
 \author{
 Joonas Miettinen

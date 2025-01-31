@@ -22,10 +22,10 @@ survmean(
 \arguments{
 \item{formula}{a \code{formula}, e.g. \code{FUT ~ V1} or
 \code{Surv(FUT, lex.Xst) ~ V1}.
-Supplied in the same way as to \code{\link{survtab}}, see that help
+Supplied in the same way as to \verb{[survtab]}, see that help
 for more info.}
 
-\item{data}{a \code{Lexis} data set; see \code{\link[Epi]{Lexis}}.}
+\item{data}{a \code{Lexis} data set; see \verb{[Epi::Lexis]}.}
 
 \item{adjust}{variables to adjust estimates by, e.g. \code{adjust = "agegr"}.
 \link[=flexible_argument]{Flexible input}.}
@@ -43,7 +43,7 @@ observed survival in, and the intervals used in estimation. E.g.
 data.}
 
 \item{pophaz}{a data set of population hazards passed to
-\code{\link{survtab}} (see the
+\verb{[survtab]} (see the
 \link[=pophaz]{dedicated help page} and the help page of
 \code{survtab} for more information). Defines the
 population hazard in the time window where observed survival is estimated.}
@@ -102,7 +102,7 @@ survival curve. The area under the full survival curve is the mean survival.
 
 \code{survmean} computes mean survival times. For median survival times
 (i.e. where 50 \% of subjects have died or met some other event)
-use \code{\link{survtab}}.
+use \verb{[survtab]}.
 
 The mean survival time is simply the area under the survival curve.
 However, since full follow-up rarely happens, the observed survival curves
@@ -133,9 +133,9 @@ i.e. the observed divided by the expected
 a time interval till its end. The cumulative product of \code{RSR_i}
 over time is the (cumulative) relative survival curve.
 
-If \code{r} is numeric, e.g. \code{r = 0.995}, that RSR level is assumed
+If \code{r} is numeric, e.g. \code{0.995}, that RSR level is assumed
 to persist beyond the observed survival curve.
-Numeric \code{r} should be \code{> 0} and expressed at the annual level
+Numeric \code{r} should be \verb{> 0} and expressed at the annual level
 when using fractional years as the scale of the time variables.
 E.g. if RSR is known to be \code{0.95} at the month level, then the
 annualized RSR is \code{0.95^12}. This enables correct usage of the RSR
@@ -143,7 +143,7 @@ with survival intervals of varying lengths. When using day-level time
 variables (such as \code{Dates}; see \code{as.Date}), numeric \code{r}
 should be expressed at the day level, etc.
 
-If \code{r = "auto"} or \code{r = "auto1"}, this function computes
+If \code{r}is \code{"auto"} or \code{"auto1"}, this function computes
 RSR estimates internally and automatically uses the \code{RSR_i}
 in the last survival interval in each stratum (and adjusting group)
 and assumes that to persist beyond the observed survival curve.
@@ -152,7 +152,7 @@ but in situations where the RSR estimate is uncertain it may produce poor
 results. Using \code{"autoX"} such as \code{"auto6"} causes \code{survmean}
 to use the mean of the estimated RSRs in the last X survival intervals,
 which may be more stable.
-Automatic determination will not use values \code{>1} but set them to 1.
+Automatic determination will not use values \verb{>1} but set them to 1.
 Visual inspection of the produced curves is always recommended: see
 Examples.
 
@@ -166,7 +166,7 @@ for the survival time scale, to which
 is added after the maximum value, e.g. with \code{breaks = list(FUT = 0:10)}
 we have
 
-\code{..., 10+1/12, ..., 11, 11.2, ..., 2, 3, ..., 19, 20, 25, ... 50}
+\verb{..., 10+1/12, ..., 11, 11.2, ..., 2, 3, ..., 19, 20, 25, ... 50}
 
 as the \code{e1.breaks}. Supplying \code{e1.breaks} manually requires
 the breaks over time survival time scale supplied to argument \code{breaks}
@@ -210,17 +210,17 @@ BL <- list(FUT = seq(0, 10, 1/12))
 sm1 <- survmean(Surv(FUT, lex.Xst != "alive") ~ 1,
                 pophaz = pm, data = x, weights = NULL,
                 breaks = BL)
-                
+
 sm1 <- survmean(FUT ~ 1,
                 pophaz = pm, data = x, weights = NULL,
-                breaks = BL)             
+                breaks = BL)
 \donttest{
-## mean survival by group                 
+## mean survival by group
 sm2 <- survmean(FUT ~ group,
                 pophaz = pm, data = x, weights = NULL,
                 breaks = BL)
-                
-## ... and adjusted for age using internal weights (counts of subjects)      
+
+## ... and adjusted for age using internal weights (counts of subjects)
 ## note: need also longer extrapolation here so that all curves
 ## converge to zero in the end.
 eBL <- list(FUT = c(BL$FUT, 11:75))
@@ -247,29 +247,29 @@ attributes(sm3)$survmean.meta$curves
 x <- Lexis(entry = list(FUT = 0L, AGE = dg_date-bi_date, CAL = dg_date),
            exit = list(CAL = ex_date),
            data = sire[sire$dg_date < sire$ex_date, ],
-           exit.status = factor(status, levels = 0:2, 
-                                labels = c("alive", "canD", "othD")), 
+           exit.status = factor(status, levels = 0:2,
+                                labels = c("alive", "canD", "othD")),
            merge = TRUE)
 ## phony group variable
 set.seed(1L)
 x$group <- rbinom(nrow(x), 1, 0.5)
 
-                  
+
 ## NOTE: population hazard should be reported at the same scale
 ## as time variables in your Lexis data.
 data(popmort, package = "popEpi")
 pm <- data.frame(popmort)
 names(pm) <- c("sex", "CAL", "AGE", "haz")
 ## from year to day level
-pm$haz <- pm$haz/365.25 
-pm$CAL <- as.Date(paste0(pm$CAL, "-01-01")) 
-pm$AGE <- pm$AGE*365.25 
+pm$haz <- pm$haz/365.25
+pm$CAL <- as.Date(paste0(pm$CAL, "-01-01"))
+pm$AGE <- pm$AGE*365.25
 
 BL <- list(FUT = seq(0, 8, 1/12)*365.25)
 eBL <- list(FUT = c(BL$FUT, c(8.25,8.5,9:60)*365.25))
-smd <- survmean(FUT ~ group, data = x, 
+smd <- survmean(FUT ~ group, data = x,
                 pophaz = pm, verbose = TRUE, r = "auto5",
-                breaks = BL, e1.breaks = eBL)     
+                breaks = BL, e1.breaks = eBL)
 plot(smd)
 }
 

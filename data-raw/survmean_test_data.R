@@ -1,4 +1,4 @@
-## Copied from test_mean_survival: 
+## Copied from test_mean_survival:
 ## source: git changeset 64d8e79cacb01b2cd104760206b7c9af469133a3
 ## note: contains logic for computing also popEpi-based extrapolated
 ## survival curve and mean survival, but those results are not saved.
@@ -15,19 +15,19 @@ library("git2r")
 BL <- list(fot= seq(0,15,1/24))
 eBL <- list(fot = unique(c(BL$fot, seq(15, 115,0.5))))
 sire2 <- sire[dg_date<ex_date, ]
-sire2$statusf <- factor(sire2$status, levels = 0:2, 
+sire2$statusf <- factor(sire2$status, levels = 0:2,
                         labels = c("alive", "canD", "othD"))
 
-x <- lexpand(sire2, 
+x <- lexpand(sire2,
              birth  = bi_date, entry = dg_date, exit = ex_date,
              status = statusf,
              breaks = NULL)
 popmort_sm <- setDT(copy(popEpi::popmort))
 setnames(popmort_sm, c("agegroup", "year"), c("age", "per"))
-sm <- survmean(Surv(fot, event = lex.Xst) ~ 1, 
+sm <- survmean(Surv(fot, event = lex.Xst) ~ 1,
                breaks = BL, e1.breaks = eBL,
                pophaz = popmort_sm, data = x)
-st <- survtab(Surv(fot, event = lex.Xst) ~ 1, 
+st <- survtab(Surv(fot, event = lex.Xst) ~ 1,
               breaks = BL,
               data = x, surv.type="surv.obs")
 setDT(x)
@@ -35,7 +35,7 @@ setattr(x, "class", c("Lexis", "data.table", "data.frame"))
 setDT(st)
 
 fb <- setdiff(BL$fot, 0)
-su.km  <- survfit(Surv(time=fot, time2=fot+lex.dur, lex.Xst!="alive") ~ 1, 
+su.km  <- survfit(Surv(time=fot, time2=fot+lex.dur, lex.Xst!="alive") ~ 1,
                   data = x)
 su.km  <- summary(su.km, times = fb)
 su.km  <- data.table("time" = su.km$time, "est" = su.km$surv)
@@ -75,8 +75,8 @@ popm <- transrate(pm.m, pm.f, yearlim = c(1951, 2013), int.length = 1)
 pm[, surv := NULL]
 
 ## survival::survexp()
-su.exp <- survexp(~1, data = xe, ratetab = popm, method = "ederer", 
-                  rmap = list(sex = "female", year = perdate, 
+su.exp <- survexp(~1, data = xe, ratetab = popm, method = "ederer",
+                  rmap = list(sex = "female", year = perdate,
                               age = agedate),
                   times = BL$fot*365.242199)
 

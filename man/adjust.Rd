@@ -15,7 +15,7 @@ evaluated.
 }
 \description{
 This function is only intended to be used within a formula
-when supplied to e.g. \code{\link{survtab_ag}} and should not be
+when supplied to e.g. \verb{[survtab_ag]} and should not be
 used elsewhere.
 }
 \examples{

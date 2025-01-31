@@ -9,31 +9,31 @@ cast_simple(data = NULL, columns = NULL, rows = NULL, values = NULL)
 \arguments{
 \item{data}{a \code{data.table} or \code{data.frame}}
 
-\item{columns}{a character string vector; the (unique combinations of the) 
+\item{columns}{a character string vector; the (unique combinations of the)
 levels of these variable will be different rows}
 
-\item{rows}{a character string vector; the (unique combinations of the) 
+\item{rows}{a character string vector; the (unique combinations of the)
 levels of these variable will be different columns}
 
 \item{values}{a character string; the variable which will be represented
 on rows and columns as specified by \code{columns} and \code{rows}}
 }
 \value{
-A `data.table` just like `[data.table::dcast]`.
+A \code{data.table} just like \verb{[data.table::dcast]}.
 }
 \description{
-Convenience function for using \code{\link[data.table]{dcast.data.table}};
+Convenience function for using \verb{[data.table::dcast.data.table]};
 inputs are character strings (names of variables) instead of a formula.
 }
 \details{
-This function is just a small interface for \code{dcast} / 
+This function is just a small interface for \code{dcast} /
 \code{dcast.data.table} and less flexible than the originals.
 
-Note that all \code{data.table} objects are also \code{data.frame} 
+Note that all \code{data.table} objects are also \code{data.frame}
 objects, but that each have their own \code{dcast} method.
-\code{\link[data.table]{dcast.data.table}} is faster.
+\verb{[data.table::dcast.data.table]} is faster.
 
-If any values in \code{value.vars} need to be 
+If any values in \code{value.vars} need to be
 aggregated, they are aggregated using \code{sum}.
 See \code{?dcast}.
 }

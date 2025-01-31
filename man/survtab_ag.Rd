@@ -31,71 +31,71 @@ survtab_ag(
 )
 }
 \arguments{
-\item{formula}{a \code{formula}; the response 
+\item{formula}{a \code{formula}; the response
 must be the time scale to compute survival time function estimates
 over, e.g. \code{fot ~ sex}. Variables on the right-hand side of the formula
-separated by \code{+} are considered stratifying variables, for which 
-estimates are computed separately. May contain usage of \code{adjust()} 
+separated by \code{+} are considered stratifying variables, for which
+estimates are computed separately. May contain usage of \code{adjust()}
 --- see Details and Examples.}
 
 \item{data}{since popEpi 0.4.0, a \code{data.frame}
 containing variables used in \code{formula} and other arguments.
 \code{aggre} objects are recommended as they contain information on any
 time scales and are therefore safer; for creating \code{aggre} objects see
-\code{\link{as.aggre}} when your data is already aggregated and \code{aggre}
+\verb{[as.aggre]} when your data is already aggregated and \code{aggre}
 for aggregating split \code{Lexis} objects.}
 
-\item{adjust}{can be used as an alternative to passing variables to 
+\item{adjust}{can be used as an alternative to passing variables to
 argument \code{formula} within a call to \code{adjust()}; e.g.
 \code{adjust = "agegr"}. \link[=flexible_argument]{Flexible input}.}
 
 \item{weights}{typically a list of weights or a \code{character} string
 specifying an age group standardization scheme; see
-the \link[=direct_standardization]{dedicated help page} 
+the \link[=direct_standardization]{dedicated help page}
 and examples. NOTE: \code{weights = "internal"} is based on the counts
 of persons in follow-up at the start of follow-up (typically T = 0)}
 
-\item{surv.breaks}{a vector of breaks on the 
+\item{surv.breaks}{a vector of breaks on the
 survival time scale. Optional if \code{data} is an \code{aggre} object
 and mandatory otherwise. Must define each intended interval;
-e.g. \code{surv.breaks = 0:5} when data has intervals defined by 
+e.g. \code{surv.breaks = 0:5} when data has intervals defined by
 breaks \code{seq(0, 5, 1/12)} will aggregate to wider intervals first.
-It is generally recommended (and sufficient; 
+It is generally recommended (and sufficient;
 see Seppa, Dyban and Hakulinen (2015)) to use monthly
 intervals where applicable.}
 
-\item{n}{variable containing counts of subjects at-risk at the start of a 
-time interval; e.g. \code{n = "at.risk"}. 
+\item{n}{variable containing counts of subjects at-risk at the start of a
+time interval; e.g. \code{n = "at.risk"}.
 Required when \code{surv.method = "lifetable"}.
 \link[=flexible_argument]{Flexible input}.}
 
-\item{d}{variable(s) containing counts of subjects experiencing an event. 
-With only one type of event, e.g. \code{d = "deaths"}. With multiple types of 
+\item{d}{variable(s) containing counts of subjects experiencing an event.
+With only one type of event, e.g. \code{d = "deaths"}. With multiple types of
 events (for CIF or cause-specific survival estimation), supply e.g.
 \code{d = c("canD", "othD")}. If the survival time function to be estimated
 does not use multiple types of events, supplying more than one variable
-to \code{d} simply causes the variables to be added together. 
+to \code{d} simply causes the variables to be added together.
 Always required. \link[=flexible_argument]{Flexible input}.}
 
-\item{n.cens}{variable containing counts of subjects censored during a 
+\item{n.cens}{variable containing counts of subjects censored during a
 survival time interval; E.g. \code{n.cens = "alive"}.
-Required when \code{surv.method = "lifetable"}. 
+Required when \code{surv.method = "lifetable"}.
 \link[=flexible_argument]{Flexible input}.}
 
-\item{pyrs}{variable containing total subject-time accumulated within a 
-survival time interval; E.g. \code{pyrs = "pyrs"}. 
+\item{pyrs}{variable containing total subject-time accumulated within a
+survival time interval; E.g. \code{pyrs = "pyrs"}.
 Required when \code{surv.method = "hazard"}. Flexible input.}
 
-\item{d.exp}{variable denoting total "expected numbers of events" 
-(typically computed \code{pyrs * pop.haz}, where 
-\code{pop.haz} is the expected hazard level) 
+\item{d.exp}{variable denoting total "expected numbers of events"
+(typically computed \code{pyrs * pop.haz}, where
+\code{pop.haz} is the expected hazard level)
 accumulated within a survival time interval; E.g. \code{pyrs = "pyrs"}.
-Required when computing EdererII relative survivals or 
+Required when computing EdererII relative survivals or
 CIFs based on excess counts of events. Flexible input.}
 
 \item{n.pp}{variable containing total Pohar-Perme weighted counts of
 subjects at risk in an interval,
-supplied as argument \code{n} is supplied. 
+supplied as argument \code{n} is supplied.
 Computed originally on the subject
 level as analogous to \code{pp * as.integer(status == "at-risk")}.
 Required when \code{relsurv.method = "pp"}. Flexible input.}
@@ -105,85 +105,85 @@ supplied as argument \code{d} is supplied. Computed originally on the subject
 level as analogous to \code{pp * as.integer(status == some_event)}.
 Required when \code{relsurv.method = "pp"}. Flexible input.}
 
-\item{d.pp.2}{variable(s) containing total Pohar-Perme 
+\item{d.pp.2}{variable(s) containing total Pohar-Perme
 "double-weighted" counts of events,
 supplied as argument \code{d} is supplied. Computed originally on the subject
 level as analogous to \code{pp * pp * as.integer(status == some_event)}.
 Required when \code{relsurv.method = "pp"}. Flexible input.}
 
-\item{n.cens.pp}{variable containing total Pohar-Perme weighted counts 
+\item{n.cens.pp}{variable containing total Pohar-Perme weighted counts
 censorings,
-supplied as argument \code{n.cens} is supplied. 
+supplied as argument \code{n.cens} is supplied.
 Computed originally on the subject
 level as analogous to \code{pp * as.integer(status == "censored")}.
 Required when \code{relsurv.method = "pp"}. Flexible input.}
 
 \item{pyrs.pp}{variable containing total Pohar-Perme weighted subject-times,
-supplied as argument \code{pyrs} is supplied. 
+supplied as argument \code{pyrs} is supplied.
 Computed originally on the subject
 level as analogous to \code{pp * pyrs}.
 Required when \code{relsurv.method = "pp"}. Flexible input.}
 
-\item{d.exp.pp}{variable containing total Pohar-Perme weighted counts 
+\item{d.exp.pp}{variable containing total Pohar-Perme weighted counts
 of excess events,
-supplied as argument \code{pyrs} is supplied. 
+supplied as argument \code{pyrs} is supplied.
 Computed originally on the subject
 level as analogous to \code{pp * d.exp}.
 Required when \code{relsurv.method = "pp"}. Flexible input.}
 
 \item{surv.type}{one of \code{'surv.obs'},
-\code{'surv.cause'}, \code{'surv.rel'}, 
-\code{'cif.obs'} or \code{'cif.rel'}; 
+\code{'surv.cause'}, \code{'surv.rel'},
+\code{'cif.obs'} or \code{'cif.rel'};
 defines what kind of survival time function(s) is/are estimated; see Details}
 
 \item{surv.method}{either \code{'lifetable'} or \code{'hazard'}; determines
 the method of calculating survival time functions, where the former computes
-ratios such as \code{p = d/(n - n.cens)} 
-and the latter utilizes subject-times 
-(typically person-years) for hazard estimates such as \code{d/pyrs} 
+ratios such as \code{p = d/(n - n.cens)}
+and the latter utilizes subject-times
+(typically person-years) for hazard estimates such as \code{d/pyrs}
 which are used to compute survival time function estimates.
-The former method requires argument \code{n.cens} and the latter 
+The former method requires argument \code{n.cens} and the latter
 argument \code{pyrs} to be supplied.}
 
-\item{relsurv.method}{either \code{'e2'} or \code{'pp'}; 
+\item{relsurv.method}{either \code{'e2'} or \code{'pp'};
 defines whether to compute relative survival using the
 EdererII method or using Pohar-Perme weighting;
 ignored if \code{surv.type != "surv.rel"}}
 
-\item{subset}{a logical condition; e.g. \code{subset = sex == 1}; 
+\item{subset}{a logical condition; e.g. \code{subset = sex == 1};
 subsets the data before computations}
 
-\item{conf.level}{confidence level used in confidence intervals; 
+\item{conf.level}{confidence level used in confidence intervals;
 e.g. \code{0.95} for 95 percent confidence intervals}
 
-\item{conf.type}{character string; must be one of \code{"plain"}, 
-\code{"log-log"} and \code{"log"}; 
+\item{conf.type}{character string; must be one of \code{"plain"},
+\code{"log-log"} and \code{"log"};
 defines the transformation used on the survival time
-function to yield confidence 
+function to yield confidence
 intervals via the delta method}
 
 \item{verbose}{logical; if \code{TRUE}, the function is chatty and
 returns some messages and timings along the process}
 }
 \value{
-Returns a table of life time function values and other 
+Returns a table of life time function values and other
 information with survival intervals as rows.
 Returns some of the following estimates of survival time functions:
 
 \itemize{
- \item \code{surv.obs} - observed (raw, overall) survival
- \item \code{surv.obs.K} - observed cause-specific survival for cause K
- \item \code{CIF_k} - cumulative incidence function for cause \code{k}
- \item \code{CIF.rel} - cumulative incidence function using excess cases
- \item \code{r.e2} -  relative survival, EdererII
- \item \code{r.pp} -  relative survival, Pohar-Perme weighted
+\item \code{surv.obs} - observed (raw, overall) survival
+\item \code{surv.obs.K} - observed cause-specific survival for cause K
+\item \code{CIF_k} - cumulative incidence function for cause \code{k}
+\item \code{CIF.rel} - cumulative incidence function using excess cases
+\item \code{r.e2} -  relative survival, EdererII
+\item \code{r.pp} -  relative survival, Pohar-Perme weighted
 }
 The suffix \code{.as} implies adjusted estimates, and \code{.lo} and
-\code{.hi} imply lower and upper confidence limits, respectively. 
+\code{.hi} imply lower and upper confidence limits, respectively.
 The prefix \code{SE.} stands for standard error.
 }
 \description{
-This function estimates survival time functions: survival, 
+This function estimates survival time functions: survival,
 relative/net survival, and crude/absolute risk functions (CIF).
 }
 \section{Basics}{
@@ -193,38 +193,37 @@ This function computes interval-based estimates of survival time functions,
 where the intervals are set by the user. For product-limit-based
 estimation see packages \pkg{survival} and \pkg{relsurv}.
 
-if \code{surv.type = 'surv.obs'}, only 'raw' observed survival 
+if \code{surv.type = 'surv.obs'}, only 'raw' observed survival
 is estimated over the chosen time intervals. With
-\code{surv.type = 'surv.rel'}, also relative survival estimates 
-are supplied in addition to observed survival figures. 
+\code{surv.type = 'surv.rel'}, also relative survival estimates
+are supplied in addition to observed survival figures.
 
-\code{surv.type = 'cif.obs'} requests cumulative incidence functions (CIF) 
-to be estimated. 
-CIFs are estimated for each competing risk based 
+\code{surv.type = 'cif.obs'} requests cumulative incidence functions (CIF)
+to be estimated.
+CIFs are estimated for each competing risk based
 on a survival-interval-specific proportional hazards
-assumption as described by Chiang (1968).  
-With \code{surv.type = 'cif.rel'}, a CIF is estimated with using 
-excess cases as the ''cause-specific'' cases. Finally, with 
-\code{surv.type = 'surv.cause'}, cause-specific survivals are 
-estimated separately for each separate type of event. 
+assumption as described by Chiang (1968).
+With \code{surv.type = 'cif.rel'}, a CIF is estimated with using
+excess cases as the ''cause-specific'' cases. Finally, with
+\code{surv.type = 'surv.cause'}, cause-specific survivals are
+estimated separately for each separate type of event.
 
 In hazard-based estimation (\code{surv.method = "hazard"}) survival
 time functions are transformations of the estimated corresponding hazard
 in the intervals. The hazard itself is estimated using counts of events
 (or excess events) and total subject-time in the interval. Life table
-\code{surv.method = "lifetable"} estimates are constructed as transformations 
-of probabilities computed using counts of events and counts of subjects 
+\code{surv.method = "lifetable"} estimates are constructed as transformations
+of probabilities computed using counts of events and counts of subjects
 at risk.
 
-
-The vignette \href{../doc/survtab_examples.html}{survtab_examples} 
+The vignette \href{../doc/survtab_examples.html}{survtab_examples}
 has some practical examples.
 }
 
 \section{Relative survival}{
 
- 
-When \code{surv.type = 'surv.rel'}, the user can choose 
+
+When \code{surv.type = 'surv.rel'}, the user can choose
 \code{relsurv.method = 'pp'}, whereupon Pohar-Perme weighting is used.
 By default \code{relsurv.method = 'e2'}, i.e. the Ederer II method
 is used to estimate relative survival.
@@ -248,48 +247,48 @@ following are all equivalent:
 
 \code{formula = fot ~ sex + adjust(agegr, area)}
 
-\code{formula  = fot ~ sex, adjust = c("agegr", "area")}
+\verb{formula  = fot ~ sex, adjust = c("agegr", "area")}
 
-\code{formula  = fot ~ sex, adjust = list(agegr, area)}
+\verb{formula  = fot ~ sex, adjust = list(agegr, area)}
 
 The adjusting variables must match with the variable names in the
 argument \code{weights};
-see the \link[=direct_standardization]{dedicated help page}. 
+see the \link[=direct_standardization]{dedicated help page}.
 Typically weights are supplied as a \code{list} or
 a \code{data.frame}. The former can be done by e.g.
 
 \code{weights = list(agegr = VEC1, area = VEC2)},
 
 where \code{VEC1} and \code{VEC2} are vectors of weights (which do not
-have to add up to one). See 
-\href{../doc/survtab_examples.html}{survtab_examples} 
+have to add up to one). See
+\href{../doc/survtab_examples.html}{survtab_examples}
 for an example of using a \code{data.frame} to pass weights.
 }
 
 \section{Period analysis and other data selection schemes}{
 
 
-To calculate e.g. period analysis (delayed entry) estimates, 
-limit the data when/before supplying to this function.See 
+To calculate e.g. period analysis (delayed entry) estimates,
+limit the data when/before supplying to this function.See
 \href{../doc/survtab_examples.html}{survtab_examples}.
 }
 
 \section{Data requirements}{
 
 
-\code{survtab_ag} computes estimates of survival time functions using 
-pre-aggregated data. For using subject-level data directly, use 
-\code{\link{survtab}}. For aggregating data, see \code{\link{lexpand}}
-and \code{\link{aggre}}. 
+\code{survtab_ag} computes estimates of survival time functions using
+pre-aggregated data. For using subject-level data directly, use
+\verb{[survtab]}. For aggregating data, see \verb{[lexpand]}
+and \verb{[aggre]}.
 
-By default, and if data is an \code{aggre} object (not mandatory), 
-\code{survtab_ag} makes use of the exact same breaks that were used in 
-splitting the original data (with e.g. \code{lexpand}), so it is not 
-necessary to specify any \code{surv.breaks}. If specified, the 
-\code{surv.breaks} must be a subset of the pertinent 
+By default, and if data is an \code{aggre} object (not mandatory),
+\code{survtab_ag} makes use of the exact same breaks that were used in
+splitting the original data (with e.g. \code{lexpand}), so it is not
+necessary to specify any \code{surv.breaks}. If specified, the
+\code{surv.breaks} must be a subset of the pertinent
 pre-existing breaks. When data is not an \code{aggre} object, breaks
-must always be specified. Interval lengths (\code{delta} in output) are 
-also calculated based on whichever breaks are used, 
+must always be specified. Interval lengths (\code{delta} in output) are
+also calculated based on whichever breaks are used,
 so the upper limit of the breaks should
 therefore be meaningful and never e.g. \code{Inf}.
 }
@@ -309,7 +308,7 @@ x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
              breaks = BL,
              pophaz = popmort,
              aggre = list(fot))
-             
+
 ## calculate relative EdererII period method
 ## NOTE: x is an aggre object here, so surv.breaks are deduced
 ## automatically
@@ -326,8 +325,8 @@ df <- data.frame(x)
 # st <- survtab_ag(fot ~ 1, data = x)
 st <- survtab_ag(fot ~ 1, data = x, surv.breaks = BL$fot)
 
-## calculate age-standardised 5-year relative survival ratio using 
-## Ederer II method and period approach 
+## calculate age-standardised 5-year relative survival ratio using
+## Ederer II method and period approach
 
 sire$agegr <- cut(sire$dg_age,c(0,45,55,65,75,Inf),right=FALSE)
 BL <- list(fot=seq(0, 5, by = 1/12),
@@ -338,7 +337,7 @@ x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
              pophaz = popmort,
              aggre = list(agegr, fot))
 
-## age standardisation using internal weights (age distribution of 
+## age standardisation using internal weights (age distribution of
 ## patients diagnosed within the period window)
 ## (NOTE: what is done here is equivalent to using weights = "internal")
 w <- aggregate(at.risk ~ agegr, data = x[x$fot == 0], FUN = sum)
@@ -375,30 +374,30 @@ lines(st, y = "surv.obs.fromalivetoothD.as", col = "red")
 }
 }
 \references{
-Perme, Maja Pohar, Janez Stare, and Jacques Esteve. 
+Perme, Maja Pohar, Janez Stare, and Jacques Esteve.
 "On estimation in relative survival." Biometrics 68.1 (2012): 113-120.
 \doi{10.1111/j.1541-0420.2011.01640.x}
 
-Hakulinen, Timo, Karri Seppa, and Paul C. Lambert. 
-"Choosing the relative survival method for cancer survival estimation." 
+Hakulinen, Timo, Karri Seppa, and Paul C. Lambert.
+"Choosing the relative survival method for cancer survival estimation."
 European Journal of Cancer 47.14 (2011): 2202-2210.
 \doi{10.1016/j.ejca.2011.03.011}
- 
-Seppa, Karri, Timo Hakulinen, and Arun Pokhrel. 
-"Choosing the net survival method for cancer survival estimation." 
+
+Seppa, Karri, Timo Hakulinen, and Arun Pokhrel.
+"Choosing the net survival method for cancer survival estimation."
 European Journal of Cancer (2013).
 \doi{10.1016/j.ejca.2013.09.019}
 
-CHIANG, Chin Long. Introduction to stochastic processes in biostatistics. 
+CHIANG, Chin Long. Introduction to stochastic processes in biostatistics.
 1968. ISBN-14: 978-0471155003
 
-Seppa K., Dyba T. and Hakulinen T.: Cancer Survival, 
+Seppa K., Dyba T. and Hakulinen T.: Cancer Survival,
 Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015.
 \doi{10.1016/B978-0-12-801238-3.02745-8}
 }
 \seealso{
-\code{\link{splitMulti}}, \code{\link{lexpand}}, 
-\code{\link{ICSS}}, \code{\link{sire}}
+\verb{[splitMulti]}, \verb{[lexpand]},
+\verb{[ICSS]}, \verb{[sire]}
 \href{../doc/survtab_examples.html}{The survtab_examples vignette}
 
 Other main functions: 

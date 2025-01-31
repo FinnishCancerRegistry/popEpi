@@ -22,7 +22,7 @@ sir_ratio(
 
 \item{alternative}{The null-hypothesis test: (default:) \code{two.sided}, \code{less}, \code{greater}}
 
-\item{conf.level}{the type-I error in confidence intervals, default 0.95 for 95\% CI.}
+\item{conf.level}{the type-I error in confidence intervals, default 0.95 for 95\\% CI.}
 
 \item{type}{How the binomial confidence intervals are calculated (default:) \code{exact} or \code{asymptotic}.}
 }
@@ -41,14 +41,14 @@ in both populations.
 
 \strong{Formula}
 
-The observed number of first sir \code{O1} is considered as a Binomial variable with sample 
-size of \code{O1+O2}. The confidence intervals for Binomial proportion \code{A} 
-is solved using \code{exact} or \code{asymptotic} 
-method. Now the CI for ratio \code{O1/O2} is \code{B = A/(1 - A)}. And further the CI for SIR/SMR 
+The observed number of first sir \code{O1} is considered as a Binomial variable with sample
+size of \code{O1+O2}. The confidence intervals for Binomial proportion \code{A}
+is solved using \code{exact} or \code{asymptotic}
+method. Now the CI for ratio \code{O1/O2} is \code{B = A/(1 - A)}. And further the CI for SIR/SMR
 is B*E2/E1. (Ederer and Mantel)
 }
 \note{
-Parameter \code{alternative} is always \code{two.sided} when parameter 
+Parameter \code{alternative} is always \code{two.sided} when parameter
 \code{type} is set to \code{asymptotic}.
 }
 \examples{
@@ -63,7 +63,7 @@ Ref <- data.frame(obs = rep(c(50,70,80,100), 5),
                  pyrs = rep(c(2500,3000,3500,4000), 5),
                  var = 1:20)
 ## sir using the function
-s1 <- sir(coh.data = dt1, coh.obs = obs, coh.pyrs = pyrs, 
+s1 <- sir(coh.data = dt1, coh.obs = obs, coh.pyrs = pyrs,
           ref.data = Ref, ref.obs = obs, ref.pyrs = pyrs,
           adjust = var)
 
@@ -72,11 +72,11 @@ sir_ratio(s1, c(120, 150))
 
 }
 \references{
-Statistics with Confidence: Confidence Intervals and Statistical Guidelines, 
+Statistics with Confidence: Confidence Intervals and Statistical Guidelines,
 Douglas Altman, 2000. ISBN: 978-0-727-91375-3
 }
 \seealso{
-\code{\link{sir}}
+\verb{[sir]}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
 Other sir functions: 

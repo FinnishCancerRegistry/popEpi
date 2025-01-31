@@ -29,38 +29,38 @@ lexpand(
 \arguments{
 \item{data}{dataset of e.g. cancer cases as rows}
 
-\item{birth}{birth time in date format 
+\item{birth}{birth time in date format
 or fractional years; string, symbol or expression}
 
-\item{entry}{entry time in date format 
+\item{entry}{entry time in date format
 or fractional years; string, symbol or expression}
 
-\item{exit}{exit from follow-up time in date 
+\item{exit}{exit from follow-up time in date
 format or fractional years; string, symbol or expression}
 
 \item{event}{advanced: time of possible event differing from \code{exit};
-typically only used in certain SIR/SMR calculations - see Details; 
+typically only used in certain SIR/SMR calculations - see Details;
 string, symbol or expression}
 
-\item{status}{variable indicating type of event at \code{exit} or \code{event}; 
+\item{status}{variable indicating type of event at \code{exit} or \code{event};
 e.g. \code{status = status != 0}; expression or quoted variable name}
 
-\item{entry.status}{input in the same way as \code{status}; 
+\item{entry.status}{input in the same way as \code{status};
 status at \code{entry}; see Details}
 
-\item{breaks}{a named list of vectors of time breaks; 
+\item{breaks}{a named list of vectors of time breaks;
 e.g. \code{breaks = list(fot=0:5, age=c(0,45,65,Inf))}; see Details}
 
 \item{id}{optional; an id variable; e.g. \code{id = my_id};
 string, symbol or expression}
 
 \item{overlapping}{advanced, logical; if \code{FALSE} AND if \code{data} contains
-multiple rows per subject, 
+multiple rows per subject,
 ensures that the timelines of \code{id}-specific rows do not overlap;
-this ensures e.g. that person-years are only computed once per subject 
+this ensures e.g. that person-years are only computed once per subject
 in a multi-state paradigm}
 
-\item{aggre}{e.g. \code{aggre = list(sex, fot)}; 
+\item{aggre}{e.g. \code{aggre = list(sex, fot)};
 a list of unquoted variables and/or expressions thereof,
 which are interpreted as factors; data events and person-years will
 be aggregated by the unique combinations of these; see Details}
@@ -68,7 +68,7 @@ be aggregated by the unique combinations of these; see Details}
 \item{aggre.type}{one of \code{c("unique","cartesian")};
 can be abbreviated; see Details}
 
-\item{drop}{logical; if \code{TRUE}, drops all resulting rows 
+\item{drop}{logical; if \code{TRUE}, drops all resulting rows
 after splitting that reside outside
 the time window as defined by the given breaks (all time scales)}
 
@@ -76,63 +76,63 @@ the time window as defined by the given breaks (all time scales)}
 with split data; see Details}
 
 \item{pp}{logical; if \code{TRUE}, computes Pohar-Perme weights using
-\code{pophaz}; adds variable with reserved name \code{pp}; 
+\code{pophaz}; adds variable with reserved name \code{pp};
 see Details for computing method}
 
 \item{subset}{a logical vector or any logical condition; data is subsetted
 before splitting accordingly}
 
-\item{merge}{logical; if \code{TRUE}, retains all 
+\item{merge}{logical; if \code{TRUE}, retains all
 original variables from the data}
 
-\item{verbose}{logical; if \code{TRUE}, the function is chatty and 
+\item{verbose}{logical; if \code{TRUE}, the function is chatty and
 returns some messages along the way}
 
-\item{...}{e.g. \code{fot = 0:5}; instead of specifying a \code{breaks} list, 
-correctly named breaks vectors can be given 
+\item{...}{e.g. \code{fot = 0:5}; instead of specifying a \code{breaks} list,
+correctly named breaks vectors can be given
 for \code{fot}, \code{age}, and \code{per}; these override any breaks in the
 \code{breaks} list; see Examples}
 }
 \value{
-If \code{aggre = NULL}, returns 
-a \code{data.table} or \code{data.frame} 
-(depending on \code{options("popEpi.datatable")}; see \code{?popEpi}) 
+If \code{aggre = NULL}, returns
+a \code{data.table} or \code{data.frame}
+(depending on \code{options("popEpi.datatable")}; see \code{?popEpi})
 object expanded to accommodate split observations with time scales as
 fractional years and \code{pophaz} merged in if given. Population
 hazard levels in new variable \code{pop.haz}, and Pohar-Perme
 weights as new variable \code{pp} if requested.
 
-If \code{aggre} is defined, returns a long-format 
+If \code{aggre} is defined, returns a long-format
 \code{data.table}/\code{data.frame} with the variable \code{pyrs} (person-years),
-and variables for the counts of transitions in state or state at end of 
-follow-up formatted \code{fromXtoY}, where \code{X} and \code{Y} are 
+and variables for the counts of transitions in state or state at end of
+follow-up formatted \code{fromXtoY}, where \code{X} and \code{Y} are
 the states transitioned from and to, respectively. The data may also have
 the columns \code{d.exp} for expected numbers of cases and various
-Pohar-Perme weighted figures as identified by the suffix \code{.pp}; see 
+Pohar-Perme weighted figures as identified by the suffix \code{.pp}; see
 Details.
 }
 \description{
-Given subject-level data, data is split 
+Given subject-level data, data is split
 by calendar time (\code{per}), \code{age}, and follow-up
-time (\code{fot}, from 0 to the end of follow-up) 
-into subject-time-interval rows according to 
+time (\code{fot}, from 0 to the end of follow-up)
+into subject-time-interval rows according to
 given \code{breaks} and additionally processed if requested.
 }
 \details{
 \strong{Basics}
 
-\code{\link{lexpand}} splits a given data set (with e.g. cancer diagnoses 
-as rows) to subintervals of time over 
-calendar time, age, and follow-up time with given time breaks 
-using \code{\link{splitMulti}}.
+\verb{[lexpand]} splits a given data set (with e.g. cancer diagnoses
+as rows) to subintervals of time over
+calendar time, age, and follow-up time with given time breaks
+using \verb{[splitMulti]}.
 
-The dataset must contain appropriate 
+The dataset must contain appropriate
 \code{Date} / \code{IDate} format or
 other numeric variables that can be used
 as the time variables.
 
-You may take a look at a simulated cohort 
-\code{\link{sire}} as an example of the
+You may take a look at a simulated cohort
+\verb{[sire]} as an example of the
 minimum required information for processing data with \code{lexpand}.
 
 Many arguments can be supplied as a character string naming the appropriate
@@ -141,45 +141,45 @@ variable (e.g. \code{"sex"}), as a symbol (e.g. \code{sex}) or as an expression
 
 \strong{Breaks}
 
-You should define all breaks as left inclusive and right exclusive 
-time points (e.g.\code{[a,b)} )
+You should define all breaks as left inclusive and right exclusive
+time points (e.g.\verb{[a,b)} )
 for 1-3 time dimensions so that the last member of a breaks vector
 is a meaningful "final upper limit",
- e.g. \code{per = c(2002,2007,2012)} 
-to create a last subinterval of the form \code{[2007,2012)}. 
+e.g. \code{per = c(2002,2007,2012)}
+to create a last subinterval of the form \verb{[2007,2012)}.
 
 All breaks are explicit, i.e. if \code{drop = TRUE},
-any data beyond the outermost breaks points are dropped. 
+any data beyond the outermost breaks points are dropped.
 If one wants to have unspecified upper / lower limits on one time scale,
 use \code{Inf}: e.g. \code{breaks = list(fot = 0:5, age = c(0,45,Inf))}.
-Breaks for \code{per} can also be given in 
+Breaks for \code{per} can also be given in
 \code{Date} / \code{IDate}format, whereupon
 they are converted to fractional years before used in splitting.
 
-The \code{age} time scale can additionally 
+The \code{age} time scale can additionally
 be automatically split into common age grouping schemes
 by naming the scheme with an appropriate character string:
 
 \itemize{
-  \item \code{"18of5"}: age groups 0-4, 5-9, 10-14, ..., 75-79, 80-84, 85+
-  \item \code{"20of5"}: age groups 0-4, 5-9, 10-14, ..., 85-89, 90-94, 95+
-  \item \code{"101of1"}: age groups 0, 1, 2, ..., 98, 99, 100+
+\item \code{"18of5"}: age groups 0-4, 5-9, 10-14, ..., 75-79, 80-84, 85+
+\item \code{"20of5"}: age groups 0-4, 5-9, 10-14, ..., 85-89, 90-94, 95+
+\item \code{"101of1"}: age groups 0, 1, 2, ..., 98, 99, 100+
 }
 
 \strong{Time variables}
 
 If any of the given time variables
 (\code{birth}, \code{entry}, \code{exit}, \code{event})
-is in any kind of date format, they are first coerced to 
+is in any kind of date format, they are first coerced to
 fractional years before splitting
-using \code{\link{get.yrs}} (with \code{year.length = "actual"}).
+using \verb{[get.yrs]} (with \code{year.length = "actual"}).
 
 Sometimes in e.g. SIR/SMR calculation one may want the event time to differ
 from the time of exit from follow-up, if the subject is still considered
 to be at risk of the event. If \code{event} is specified, the transition to
- \code{status} is moved to \code{event} from \code{exit} 
- using \code{\link[Epi]{cutLexis}}. See Examples.
- 
+\code{status} is moved to \code{event} from \code{exit}
+using \verb{[Epi::cutLexis]}. See Examples.
+
 \strong{The status variable}
 
 The statuses in the expanded output (\code{lex.Cst} and \code{lex.Xst})
@@ -188,7 +188,7 @@ and \code{entry.status}. If \code{entry.status = NULL}, the status at entry
 is guessed according to the type of variable supplied via \code{status}:
 For numeric variables it will be zero, for factors the first level
 (\code{levels(status)[1]}) and otherwise the first unique value in alphabetical
-order (\code{sort(unique(status))[1]}). 
+order (\code{sort(unique(status))[1]}).
 
 Using numeric or factor status
 variables is strongly recommended. Logical expressions are also allowed
@@ -196,11 +196,11 @@ variables is strongly recommended. Logical expressions are also allowed
 
 \strong{Merging population hazard information}
 
-To enable computing relative/net survivals with \code{\link{survtab}}
-and \code{\link{relpois}}, \code{lexpand} merges an appropriate
-population hazard data (\code{pophaz}) to the expanded data 
+To enable computing relative/net survivals with \verb{[survtab]}
+and \verb{[relpois]}, \code{lexpand} merges an appropriate
+population hazard data (\code{pophaz}) to the expanded data
 before dropping rows outside the specified
-time window (if \code{drop = TRUE}). \code{pophaz} must, for this reason, 
+time window (if \code{drop = TRUE}). \code{pophaz} must, for this reason,
 contain at a minimum the variables named
 \code{agegroup}, \code{year}, and \code{haz}. \code{pophaz} may contain additional variables to specify
 different population hazard levels in different strata; e.g. \code{popmort} includes \code{sex}.
@@ -214,16 +214,16 @@ of length 1 year. In both
 (and passed on to a \code{cut} call). The mandatory variable \code{haz}
 must specify the appropriate average rate at the person-year level;
 e.g. \code{haz = -log(survProb)} where \code{survProb} is a one-year conditional
-survival probability will be the correct hazard specification. 
+survival probability will be the correct hazard specification.
 
 The corresponding \code{pophaz} population hazard value is merged by using the mid points
 of the records after splitting as reference values. E.g. if \code{age=89.9} at the start
-of a 1-year interval, then the reference age value is \code{90.4} for merging. 
+of a 1-year interval, then the reference age value is \code{90.4} for merging.
 This way we get a "typical" population hazard level for each record.
 
 \strong{Computing Pohar-Perme weights}
 
-If \code{pp = TRUE}, Pohar-Perme weights 
+If \code{pp = TRUE}, Pohar-Perme weights
 (the inverse of cumulative population survival) are computed. This will
 create the new \code{pp} variable in the expanded data. \code{pp} is a
 reserved name and \code{lexpand} throws exception if a variable with that name
@@ -233,11 +233,11 @@ When a survival interval contains one or several rows per subject
 (e.g. due to splitting by the \code{per} scale),
 \code{pp} is cumulated from the beginning of the first record in a survival
 interval for each subject to the mid-point of the remaining time within that
-survival interval, and  that value is given for every other record 
-that a given person has within the same survival interval. 
+survival interval, and  that value is given for every other record
+that a given person has within the same survival interval.
 
-E.g. with 5 rows of duration \code{1/5} within a survival interval 
-\code{[0,1)]}, \code{pp} is determined for all records by a cumulative 
+E.g. with 5 rows of duration \code{1/5} within a survival interval
+\verb{[0,1)]}, \code{pp} is determined for all records by a cumulative
 population survival from \code{0} to \code{0.5}. The existing accuracy is used,
 so that the weight is cumulated first up to the end of the second row
 and then over the remaining distance to the mid-point (first to 0.4, then to
@@ -258,15 +258,14 @@ of using \code{event}) the each subject defined by \code{id} only has one
 continuous time line instead of possibly overlapping time lines if
 there are multiple rows in \code{data} by \code{id}.
 
-
 \strong{Aggregating}
 
 Certain analyses such as SIR/SMR calculations require tables of events and
-person-years by the unique combinations (interactions) of several variables. 
-For this, \code{aggre} can be specified as a list of such variables 
+person-years by the unique combinations (interactions) of several variables.
+For this, \code{aggre} can be specified as a list of such variables
 (preferably \code{factor} variables but not mandatory)
- and any arbitrary functions of the 
-variables at one's disposal. E.g. 
+and any arbitrary functions of the
+variables at one's disposal. E.g.
 
 \code{aggre = list(sex, agegr = cut(dg_age, 0:100))}
 
@@ -275,16 +274,16 @@ variable. Every ad-hoc-created variable should be named.
 
 \code{fot}, \code{per}, and \code{age} are special reserved variables which,
 when present in the \code{aggre} list, are output as categories of the
-corresponding time scale variables by using 
-e.g. 
+corresponding time scale variables by using
+e.g.
 
-\code{cut(fot, breaks$fot, right=FALSE)}. 
+\code{cut(fot, breaks$fot, right=FALSE)}.
 
 This only works if
 the corresponding breaks are defined in \code{breaks} or via "\code{...}".
-E.g. 
+E.g.
 
-\code{aggre = list(sex, fot.int = fot)} with 
+\code{aggre = list(sex, fot.int = fot)} with
 
 \code{breaks = list(fot=0:5)}.
 
@@ -292,22 +291,22 @@ The output variable \code{fot.int} in the above example will have
 the lower limits of the appropriate intervals as values.
 
 \code{aggre} as a named list will output numbers of events and person-years
-with the given new names as categorizing variable names, e.g. 
+with the given new names as categorizing variable names, e.g.
 \code{aggre = list(follow_up = fot, gender = sex, agegroup = age)}.
 
 The output table has person-years (\code{pyrs}) and event counts
 (e.g. \code{from0to1}) as columns. Event counts are the numbers of transitions
-(\code{lex.Cst != lex.Xst}) or the \code{lex.Xst} value at a subject's 
+(\code{lex.Cst != lex.Xst}) or the \code{lex.Xst} value at a subject's
 last record (subject possibly defined by \code{id}).
 
-If \code{aggre.type = "unique"} (alias \code{"non-empty"}), 
+If \code{aggre.type = "unique"} (alias \code{"non-empty"}),
 the above results are computed for existing
 combinations of expressions given in \code{aggre}, but also for non-existing
 combinations if \code{aggre.type = "cartesian"} (alias \code{"full"}). E.g. if a
-factor variable has levels \code{"a", "b", "c"} but the data is limited
-to only have levels \code{"a", "b"} present 
+factor variable has levels \verb{"a", "b", "c"} but the data is limited
+to only have levels \verb{"a", "b"} present
 (more than zero rows have these level values), the former setting only
-computes results for \code{"a", "b"}, and the latter also for \code{"c"}
+computes results for \verb{"a", "b"}, and the latter also for \code{"c"}
 and any combination with other variables or expression given in \code{aggre}.
 In essence, \code{"cartesian"} forces also combinations of variables used
 in \code{aggre} that have no match in data to be shown in the result.
@@ -317,30 +316,33 @@ If \code{aggre} is not \code{NULL} and \code{pophaz} has been supplied,
 appears in the output data by the reserved name \code{d.exp}. Additionally,
 having \code{pp = TRUE} causes \code{lexpand} to also compute various
 Pohar-Perme weighted figures necessary for computing Pohar-Perme net survivals
-with \code{\link{survtab_ag}}. This can be slow, so consider what is really
+with \verb{[survtab_ag]}. This can be slow, so consider what is really
 needed. The Pohar-Perme weighted figures have the suffix \code{.pp}.
+
+[0,1)]: R:0,1)
+[survtab_ag]: R:survtab_ag
 }
 \examples{
 \donttest{
 ## prepare data for e.g. 5-year cohort survival calculation
-x <- lexpand(sire, breaks=list(fot=seq(0, 5, by = 1/12)), 
+x <- lexpand(sire, breaks=list(fot=seq(0, 5, by = 1/12)),
              birth = bi_date, entry = dg_date, exit = ex_date,
              status =  status != 0, pophaz=popmort)
 
 ## prepare data for e.g. 5-year "period analysis" for 2008-2012
 BL <- list(fot = seq(0, 5, by = 1/12), per = c("2008-01-01", "2013-01-01"))
-x <- lexpand(sire, breaks = BL, 
+x <- lexpand(sire, breaks = BL,
              birth = bi_date, entry = dg_date, exit = ex_date,
              pophaz=popmort, status =  status != 0)
 
 ## aggregating
 BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
-ag <- lexpand(sire, breaks = BL, status = status != 0, 
+ag <- lexpand(sire, breaks = BL, status = status != 0,
              birth = bi_date, entry = dg_date, exit = ex_date,
               aggre=list(sex, period = per, surv.int = fot))
 
 ## aggregating even more
-ag <- lexpand(sire, breaks = BL, status = status != 0, 
+ag <- lexpand(sire, breaks = BL, status = status != 0,
               birth = bi_date, entry = dg_date, exit = ex_date,
               aggre=list(sex, period = per, surv.int = fot),
               pophaz = popmort, pp = TRUE)
@@ -348,29 +350,29 @@ ag <- lexpand(sire, breaks = BL, status = status != 0,
 ## using "..."
 x <- lexpand(sire, fot=0:5, status =  status != 0,
              birth = bi_date, entry = dg_date, exit = ex_date,
-             pophaz=popmort) 
+             pophaz=popmort)
 
-x <- lexpand(sire, fot=0:5, status =  status != 0, 
+x <- lexpand(sire, fot=0:5, status =  status != 0,
              birth = bi_date, entry = dg_date, exit = ex_date,
              aggre=list(sex, surv.int = fot))
-             
+
 ## using the "event" argument: it just places the transition to given "status"
 ## at the "event" time instead of at the end, if possible using cutLexis
 x <- lexpand(sire, status = status, event = dg_date,
-             birth = bi_date, entry = dg_date, exit = ex_date,) 
+             birth = bi_date, entry = dg_date, exit = ex_date,)
 
 ## aggregating with custom "event" time
 ## (the transition to status is moved to the "event" time)
-x <- lexpand(sire, status = status, event = dg_date, 
+x <- lexpand(sire, status = status, event = dg_date,
              birth = bi_date, entry = dg_date, exit = ex_date,
              per = 1970:2014, age = c(0:100,Inf),
-             aggre = list(sex, year = per, agegroup = age)) 
+             aggre = list(sex, year = per, agegroup = age))
 
 }
 
 }
 \seealso{
-\code{\link[Epi]{Lexis}}, \code{\link{popmort}}
+\verb{[Epi::Lexis]}, \verb{[popmort]}
 
 Other splitting functions: 
 \code{\link{splitLexisDT}()},

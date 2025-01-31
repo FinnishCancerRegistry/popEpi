@@ -15,8 +15,8 @@ rate(
 )
 }
 \arguments{
-\item{data}{aggregated data (see e.g. \code{\link{lexpand}}, 
-\code{\link{aggre}} if you have subject-level data)}
+\item{data}{aggregated data (see e.g. \verb{[lexpand]},
+\verb{[aggre]} if you have subject-level data)}
 
 \item{obs}{observations variable name in data.
 \link[=flexible_argument]{Flexible input}, typically e.g.
@@ -36,7 +36,7 @@ rate(
 
 \item{weights}{typically a list of weights or a \code{character} string
 specifying an age group standardization scheme; see
-the \link[=direct_standardization]{dedicated help page} 
+the \link[=direct_standardization]{dedicated help page}
 and examples.}
 
 \item{subset}{a logical expression to subset data.}
@@ -44,9 +44,9 @@ and examples.}
 \value{
 Returns a \code{data.table} with observations, person-years, rates and
 adjusted rates, if available. Results are stratified by \code{print}.
-Adjusted rates are identified with suffix \code{.adj} and  
-\code{.lo} and \code{.hi} are for confidence intervals lower and upper 
-95\% bounds, respectively.
+Adjusted rates are identified with suffix \code{.adj} and
+\code{.lo} and \code{.hi} are for confidence intervals lower and upper
+95\\% bounds, respectively.
 The prefix \code{SE.} stands for standard error.
 }
 \description{
@@ -54,18 +54,18 @@ The prefix \code{SE.} stands for standard error.
 preloaded weights data or user specified weights.
 }
 \details{
-Input data needs to be in aggregated format with observations 
-and person-years. For individual data use \code{\link{lexpand}}, or
-\code{\link{ltable}} and merge person-years manually.
+Input data needs to be in aggregated format with observations
+and person-years. For individual data use \verb{[lexpand]}, or
+\verb{[ltable]} and merge person-years manually.
 
 The confidence intervals are based on the normal approximation of the logarithm of the rate.
-The variance of the log rate that is used to derive the confidence intervals 
+The variance of the log rate that is used to derive the confidence intervals
 is derived using the delta method.
 }
 \examples{
 ## Prepare data with lexpand and then reformat agegroup.
 data(sibr)
-x <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,  
+x <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,
              breaks = list(per = c(1990,2000,2010,2020), age = c(0:17*5,Inf)),
              aggre = list(agegroup = age, year.cat = per),
              status =  status != 0)
@@ -73,7 +73,7 @@ x <- lexpand(sibr, birth = bi_date, entry = dg_date, exit = ex_date,
 x$agegroup <- cut(x$agegroup,  c(0:17*5,Inf), right = FALSE)
 
 ## calculate rates for selected periods with Nordic 2000 weights:
-r1 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat, 
+r1 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat,
             adjust = agegroup, weights = 'nordic')
 r1
 
@@ -81,27 +81,27 @@ r1
 w <- ltable(x, by.vars = "agegroup", expr = sum(pyrs))
 w[is.na(w$V1),]$V1 <- 0
 
-r2 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat, 
+r2 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat,
             adjust = agegroup,
             weights = w$V1)
 r2
 
 ## use data.frame of weights:
 names(w) <- c("agegroup", "weights")
-r2 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat, 
+r2 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat,
             adjust = agegroup,
             weights = w)
 r2
 
 ## internal weights (same result as above)
-r3 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat, 
+r3 <- rate( data = x, obs = from0to1, pyrs = pyrs, print = year.cat,
             adjust = agegroup,
             weights = "internal")
 r3
 
 }
 \seealso{
-\code{\link{lexpand}}, \code{\link{ltable}}
+\verb{[lexpand]}, \verb{[ltable]}
 
 Other main functions: 
 \code{\link{Surv}()},

@@ -24,7 +24,7 @@
 \item{...}{arguments passed on to plot()}
 }
 \value{
-Always returns `NULL` invisibly.
+Always returns \code{NULL} invisibly.
 This function is called for its side effects.
 }
 \description{
@@ -35,8 +35,8 @@ In \code{plot.sirspline} almost every graphical parameter are user
 adjustable, such as \code{ylim}, \code{xlim}.
 \code{plot.sirsplines} calls \code{lines.splines} to add lines.
 
-The plot axis without lines can be plotted using option \code{type = 'n'}. 
-On top of the frame it's then possible to add a \code{grid}, 
+The plot axis without lines can be plotted using option \code{type = 'n'}.
+On top of the frame it's then possible to add a \code{grid},
 \code{abline} or text before plotting the lines (see: \code{sirspline}).
 }
 \seealso{

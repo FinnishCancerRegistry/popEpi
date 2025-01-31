@@ -22,8 +22,8 @@
 \item{y}{survival a character vector of a variable names to plot;
 e.g. \code{y = "r.e2"}}
 
-\item{subset}{a logical condition; \code{obj} is subset accordingly 
-before plotting; use this for limiting to specific strata, 
+\item{subset}{a logical condition; \code{obj} is subset accordingly
+before plotting; use this for limiting to specific strata,
 e.g. \code{subset = sex == "male"}}
 
 \item{conf.int}{logical; if \code{TRUE}, also plots any confidence intervals
@@ -37,11 +37,11 @@ present in \code{obj} for variables in \code{y}}
 
 \item{xlab}{label for X-axis}
 
-\item{...}{additional arguments passed on to \code{plot} and 
+\item{...}{additional arguments passed on to \code{plot} and
 \code{lines.survtab}; e.g. \code{ylim} can be defined this way}
 }
 \value{
-Always returns `NULL` invisibly.
+Always returns \code{NULL} invisibly.
 This function is called for its side effects.
 }
 \description{
@@ -53,10 +53,10 @@ data(sibr)
 si <- rbind(sire, sibr)
 si$period <- cut(si$dg_date, as.Date(c("1993-01-01", "2004-01-01", "2013-01-01")), right = FALSE)
 si$cancer <- c(rep("rectal", nrow(sire)), rep("breast", nrow(sibr)))
-x <- lexpand(si, birth = bi_date, entry = dg_date, exit = ex_date, 
-             status = status \%in\% 1:2, 
+x <- lexpand(si, birth = bi_date, entry = dg_date, exit = ex_date,
+             status = status \%in\% 1:2,
              fot = 0:5, aggre = list(cancer, period, fot))
-st <- survtab_ag(fot ~ cancer + period, data = x, 
+st <- survtab_ag(fot ~ cancer + period, data = x,
                  surv.method = "lifetable", surv.type = "surv.obs")
 
 plot(st, "surv.obs", subset = cancer == "breast", ylim = c(0.5, 1), col = "blue")

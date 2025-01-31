@@ -13,13 +13,13 @@ fac2num(x)
 \item{x}{a factor variable with numbers as levels}
 }
 \value{
-A numeric vector based on the levels of `x`.
+A numeric vector based on the levels of \code{x}.
 }
 \description{
 Convert factor variable with numbers as levels into a numeric variable
 }
 \details{
-For example, a factor with levels \code{c("5","7")} is converted into 
+For example, a factor with levels \code{c("5","7")} is converted into
 a numeric variable with values \code{c(5,7)}.
 }
 \examples{
@@ -38,5 +38,5 @@ suppressWarnings(
 
 }
 \seealso{
-\code{\link{robust_values}}
+\verb{[robust_values]}
 }

@@ -12,7 +12,7 @@ cut_bound(t, factor = TRUE)
 \item{factor}{logical; TRUE returns informative character string, FALSE numeric (left value)}
 }
 \value{
-If `factor = TRUE`, returns a character vector; else returns a numeric 
+If \code{factor = TRUE}, returns a character vector; else returns a numeric
 vector.
 }
 \description{

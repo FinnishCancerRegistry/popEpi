@@ -4,16 +4,16 @@
 \alias{flexible_argument}
 \title{Flexible Variable Usage in \pkg{popEpi} Functions}
 \description{
-Certain arguments in \pkg{popEpi} can be passed in multiple 
+Certain arguments in \pkg{popEpi} can be passed in multiple
 ways. This document shows the usage and a pitfall in the
 usage of such flexible arguments.
 }
 \details{
 Flexible arguments in \pkg{popEpi} are used to pass variables existing
-in your data or in the environment where the function is used 
+in your data or in the environment where the function is used
 (for everyday users this is the global environment - in simple terms,
 where your data is / your work space). The flexible arguments
-are modelled after the \code{by} argument in \code{data.tables} - 
+are modelled after the \code{by} argument in \code{data.tables} -
 see \code{?data.table}. There are many ways to supply the same information
 to certain functions in \pkg{popEpi}, but the possible ways listed below
 may be limited in some of them to only allow for using only a part of them.
@@ -37,7 +37,7 @@ names as symbols:
 
 \code{FUN(arg = V1, data = x)}
 
-Or as a list of symbols (similarly to as in \code{\link{aggregate}}):
+Or as a list of symbols (similarly to as in \verb{[aggregate]}):
 
 \code{FUN(arg = list(V1, V2), data = x)}
 
@@ -93,13 +93,13 @@ passing the variable containing the character strings:
 
 \code{FUN(arg = TF$vars, data = x)}
 
-Even if \code{x} has columns named \code{vars} and \code{TF}, 
+Even if \code{x} has columns named \code{vars} and \code{TF},
 using \code{TF$vars} does not use those columns but only evaluates
 \code{TF$vars}
 in the calling environment. This is made possible by the fact
 that data is always passed as a \code{data.frame}, within which evaluation
 of expressions using the dollar operator is not possible. Therefore
-it is safe to assume the data should not be used. However, lists of 
+it is safe to assume the data should not be used. However, lists of
 expressions will not be checked for dollar use and will fail in conflict
 situations:
 
@@ -111,8 +111,8 @@ situations:
 
 \code{FUN(arg = list(TF$vars, V1), data = x)}
 
-On the other hand you may typically also pass quoted (\code{\link{quote}})
-or substituted \code{\link{substitute}} expressions etc., where
+On the other hand you may typically also pass quoted (\verb{[quote]})
+or substituted \verb{[substitute]} expressions etc., where
 the \code{env$object} trick will work as well:
 
 \code{q <- quote(list(vars, V1))}
@@ -139,19 +139,19 @@ BL <- list(fot=seq(0, 5, by = 1/12))
 x <- lexpand(sire, birth = bi_date, entry = dg_date, exit = ex_date,
              status = status \%in\% 1:2,
              breaks = BL)
-              
+
 x <- aggre(x, by = fot)
 
 ## silly example of referring to pyrs data by fixed character string;
 ## its possible that the real name wont be fixed in a real-life application.
-pyrs <- "actual_pyrs"  
+pyrs <- "actual_pyrs"
 TF <- environment()
 x$actual_pyrs <- as.numeric(x$pyrs)
 x$pyrs <- 1
-             
+
 ## this works (uses actual_pyrs eventually)
 st <- survtab_ag(fot ~ 1, data = x, surv.type = "surv.obs",
-                 pyrs = TF$pyrs, d = from0to1, 
+                 pyrs = TF$pyrs, d = from0to1,
                  surv.method = "hazard")
 ## this would be wrong (sees expression 'pyrs' and uses that column,
 ## which is not what is intended here)

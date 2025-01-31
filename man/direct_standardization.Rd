@@ -12,9 +12,9 @@ functions.
 \details{
 Direct standardization is performed by computing estimates of
 \code{E}
-by the set of adjusting variables \code{A}, to which a set of weights 
+by the set of adjusting variables \code{A}, to which a set of weights
 \code{W} is applicable. The weighted average over \code{A} is then the
-direct-adjusted estimate of \code{E} (\code{E*}).
+direct-adjusted estimate of \code{E} (\verb{E*}).
 
 To enable both quick and easy as well as more rigorous usage of direct
 standardization with weights, the weights arguments in \pkg{popEpi}
@@ -28,7 +28,7 @@ counts of subjects in strata may be passed.
 \section{Basic usage - one adjusting variable}{
 
 
-In the simple case where we are adjusting by only one variable 
+In the simple case where we are adjusting by only one variable
 (e.g. by age group), one can simply supply a vector of weights:
 
 \code{FUN(weights = c(0.1, 0.25, 0.25, 0.2, 0.2))}
@@ -56,11 +56,11 @@ to one of the age group standardization schemes integrated into \pkg{popEpi}:
 \item \code{'nordic_2000_18of5'} - Nordic std. population (2000), 18 age groups
 \item \code{'world_1966_18of5'} - world standard (1966), 18 age groups
 \item \code{'world_2000_18of5'} - world standard (2000), 18 age groups
-\item \code{'world_2000_20of5'} - world standard (2000), 20 age groups 
+\item \code{'world_2000_20of5'} - world standard (2000), 20 age groups
 \item \code{'world_2000_101of1'} - world standard (2000), 101 age groups
 }
 
-Additionally, \code{\link{ICSS}} contains international weights used in 
+Additionally, \verb{[ICSS]} contains international weights used in
 cancer survival analysis, but they are not currently usable by passing
 a string to \code{weights} and must be supplied by hand.
 
@@ -70,9 +70,9 @@ experienced in each stratum. E.g.
 
 \code{FUN(weights = "world_2000_18of5")}
 
-will use the world standard population from 2000 as 
-weights for 18 age groups, that your adjusting variable is 
-assumed to contain. The adjusting variable must be coded in this case as 
+will use the world standard population from 2000 as
+weights for 18 age groups, that your adjusting variable is
+assumed to contain. The adjusting variable must be coded in this case as
 a numeric variable containing \code{1:18} or as a \code{factor} with
 18 levels (coded from the youngest to the oldest age group).
 }
@@ -84,20 +84,20 @@ In the case that you employ more than one adjusting variable, separate
 weights should be passed to match to the levels of the different adjusting
 variables. When supplied correctly, "grand" weights are formed based on
 the variable-specific weights by multiplying over the variable-specific
-weights (e.g. if men have \code{w = 0.5} and the age group 0-4 has 
+weights (e.g. if men have \code{w = 0.5} and the age group 0-4 has
 \code{w = 0.1}, the "grand" weight for men aged 0-4 is \code{0.5*0.1}).
 The "grand" weights are then used for adjusting after ensuring they
 sum to one.
 
 When using multiple adjusting variables, you
-are allowed to pass either a named \code{list} of 
+are allowed to pass either a named \code{list} of
 weights or a \code{data.frame} of weights. E.g.
 
 \code{WL <- list(agegroup = age_w, sex = sex_w)}
 
 \code{FUN(weights = WL)}
 
-where \code{age_w} and \code{sex_w} are numeric vectors. Given the 
+where \code{age_w} and \code{sex_w} are numeric vectors. Given the
 conditions explained in the previous section are satisfied, you may also do
 e.g.
 
@@ -127,14 +127,14 @@ one way to do this is by e.g.
 }
 
 \references{
-Source of the Nordic standard population in 5-year age groups 
+Source of the Nordic standard population in 5-year age groups
 (also contains European & 1966 world standards):
 \url{https://www-dep.iarc.fr/NORDCAN/english/glossary.htm}
 
-Source of the 1976 European standard population: 
+Source of the 1976 European standard population:
 
-Waterhouse, J.,Muir, C.S.,Correa, P.,Powell, J., eds (1976). 
-Cancer Incidence in Five Continents, Vol. III. 
+Waterhouse, J.,Muir, C.S.,Correa, P.,Powell, J., eds (1976).
+Cancer Incidence in Five Continents, Vol. III.
 IARC Scientific Publications, No. 15, Lyon, IARC.
 ISBN: 9789283211150
 

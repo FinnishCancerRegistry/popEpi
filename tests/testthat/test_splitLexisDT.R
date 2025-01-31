@@ -2,35 +2,35 @@ testthat::context("Compare splitLexisDT results with splitLexis results")
 
 testthat::test_that("splitLexisDT and splitLexis are congruent", {
   popEpi:::skip_normally()
-  
+
   library(Epi)
-  
+
   sire2 <- data.table::copy(popEpi::sire)
   sire2[, dg_yrs := get.yrs(dg_date, "actual")]
   sire2[, ex_yrs := get.yrs(ex_date, "actual")]
   sire2[, bi_yrs := get.yrs(bi_date, "actual")]
   sire2[, id := 1:.N]
-  
+
   BL <- list(fot = 0:5, fot = 2:6, fot = c(10,Inf), fot = c(0, Inf),
-             per = 1990:1995, per = seq(1950,2010,10), per = c(1900, 2100), 
+             per = 1990:1995, per = seq(1950,2010,10), per = c(1900, 2100),
              age = seq(0,150,5), age = c(25,100), age = c(0, 60))
-  
+
   x <- Lexis(data=sire2[dg_date < ex_date], entry=list(fot=0, per=dg_yrs, age=dg_age),
              exit=list(per=ex_yrs), merge=TRUE, exit.status=1L, entry.status = 0L)
   setDT(x)
   forceLexisDT(x, breaks = list(fot=NULL,per=NULL,age=NULL),
                allScales = c("fot", "per", "age"))
-  
-  
+
+
   # x2 <- splitLexis(x, breaks = BL[[3]], time.scale = "fot")
   # x3 <- splitLexisDT(x, breaks = BL[[3]], timeScale = "fot", drop = FALSE)
   # x2 <- intelliDrop(setDT(x2),  breaks = list(fot = BL[[3]]))
   # x3 <- intelliDrop(x3,  breaks = list(fot = BL[[3]]))
   # x4 <- splitLexisDT(x, breaks = BL[[3]], timeScale = "fot", drop = TRUE)
-  
-  
+
+
   # one row per id ---------------------------------------------------------------
-  
+
   testthat::test_that("splitLexisDT and splitLexis congruent with one row per id", {
     testthat::expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
@@ -40,18 +40,18 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
       })
     }
   })
-  
-  
-  
+
+
+
   # multiple rows per id ---------------------------------------------------------
-  
+
   sire2 <- sire2[rep(1:.N, each = 2)]
-  
-  
+
+
   x <- Lexis(data=sire2[dg_date < ex_date], entry=list(fot=0, per=dg_yrs, age=dg_age),
              exit=list(per=ex_yrs), merge=TRUE, exit.status=1L, entry.status = 0L, id = id)
-  
-  
+
+
   testthat::test_that("splitLexisDT and splitLexis congruent with multiple rows per id", {
     testthat::expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
@@ -61,26 +61,26 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
       })
     }
   })
-  
-  
+
+
   # multistate using Lexis -----------------------------------------------------
-  
-  sire2[, "EX" := factor(status, levels = 0:2, ordered = TRUE)]    
+
+  sire2[, "EX" := factor(status, levels = 0:2, ordered = TRUE)]
   sire2[, "EN" := factor(0L, levels = 0:2, ordered = TRUE)]
   levels(sire2$EX) <- levels(sire2$EN) <- c("ok", "dead", "dead")
-  
-  x <- Lexis(data = sire2[dg_date < ex_date & !duplicated(id)], 
+
+  x <- Lexis(data = sire2[dg_date < ex_date & !duplicated(id)],
              entry = list(fot=0, per=bi_yrs, age=0),
-             exit = list(per=ex_yrs), 
-             merge=TRUE, 
-             exit.status=EX, 
-             entry.status = EN, 
+             exit = list(per=ex_yrs),
+             merge=TRUE,
+             exit.status=EX,
+             entry.status = EN,
              id = id)
-  
+
   x <- cutLexis(x, cut = x$dg_yrs, timescale = "per", new.state = "sick", precursor.state = "ok")
   setDT(x)
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
-  
+
   testthat::test_that("splitLexisDT and splitLexis congruent with multiple Lexis states per id", {
     testthat::expect_identical(1L, 1L) ## to trigger testing...
     for (sc in seq_along(BL)) {
@@ -90,7 +90,7 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
       })
     }
   })
-  
+
   # using mstate package -------------------------------------------------------
   if (requireNamespace("mstate")) {
     testthat::test_that("splitLexisDT and splitLexis congruent using mstate data", {
@@ -111,13 +111,13 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
       keepmat <- data.frame(gender=tg$x1,age=tg$x2)
       # data in long format using msprep
       df <- msprep(time=tt,status=st,trans=tmat,keep=as.matrix(keepmat))
-      
-      x <- Lexis(data=df, entry=list(TT = Tstart), exit=list(TT = Tstop), 
+
+      x <- Lexis(data=df, entry=list(TT = Tstart), exit=list(TT = Tstop),
                 merge=TRUE, exit.status=to, entry.status = from, id = id)
       setDT(x)
       setattr(x, "class", c("Lexis", "data.table", "data.frame"))
       BL2 <- list(TT = 0:4, TT = 1:2, TT = 0:1, TT = c(1,Inf))
-      
+
       for (sc in seq_along(BL2)) {
         testthat::test_that(paste0("results congruent using breaks ", sc), {
           testthat::expect_identical(1L, 1L) ## to trigger testing...
@@ -126,7 +126,7 @@ testthat::test_that("splitLexisDT and splitLexis are congruent", {
       }
     })
   }
-  
+
 })
 
 

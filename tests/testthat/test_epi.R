@@ -5,7 +5,7 @@ testthat::context("Epi subsetting methods OK")
 
 
 testthat::test_that("[.Epi exists and works", {
-  
+
   xcoh <- structure( list( id = c("A", "B", "C"),
                            birth = c("14/07/1952", "01/04/1954", "10/06/1987"),
                            entry = c("04/08/1965", "08/09/1972", "23/12/1991"),
@@ -14,16 +14,16 @@ testthat::test_that("[.Epi exists and works", {
                      .Names = c("id", "birth", "entry", "exit", "fail"),
                      row.names = c("1", "2", "3"),
                      class = "data.frame" )
-  
-  
+
+
   xcoh <- cal.yr( xcoh, format="%d/%m/%Y", wh=2:4 )
-  
+
   Lcoh <- Lexis( entry = list( per=entry ),
                  exit = list( per=exit, age=exit-birth ),
                  exit.status = fail,
                  entry.status = 0,
                  data = xcoh )
-  
+
   e1 <- subset(Lcoh, fail == 1)
   e2 <- Lcoh[Lcoh$fail == 1, ]
 

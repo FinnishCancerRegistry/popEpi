@@ -21,27 +21,27 @@ splitMulti(
 \item{...}{alternate way of supplying breaks as named vectors;
 e.g. \code{fot = 0:5} instead of \code{breaks = list(fot = 0:5)};
 if \code{breaks} is not \code{NULL}, \code{breaks} is used and any breaks
-passed through \code{...} are NOT used; note also that due to partial 
-matching of argument names in R, 
-if you supply e.g. \code{dat = my_breaks} and you 
+passed through \code{...} are NOT used; note also that due to partial
+matching of argument names in R,
+if you supply e.g. \code{dat = my_breaks} and you
 do not pass argument \code{data} explicitly (\code{data = my_data}), then R
 interprets this as \code{data = my_breaks} --- so choose the names of your
 time scales wisely}
 
-\item{drop}{logical; if \code{TRUE}, drops all resulting rows 
+\item{drop}{logical; if \code{TRUE}, drops all resulting rows
 after expansion that reside outside the time window
 defined by the given breaks}
 
-\item{merge}{logical; if \code{TRUE}, retains all variables 
+\item{merge}{logical; if \code{TRUE}, retains all variables
 from the original data - i.e. original variables are
 repeated for all the rows by original subject}
 
-\item{verbose}{logical; if \code{TRUE}, the function is chatty 
+\item{verbose}{logical; if \code{TRUE}, the function is chatty
 and returns some messages along the way}
 }
 \value{
-A \code{data.table} or \code{data.frame} 
-(depending on \code{options("popEpi.datatable")}; see \code{?popEpi}) 
+A \code{data.table} or \code{data.frame}
+(depending on \code{options("popEpi.datatable")}; see \code{?popEpi})
 object expanded to accommodate split observations.
 }
 \description{
@@ -50,23 +50,23 @@ with speed and ease
 }
 \details{
 \code{splitMulti} is in essence a \pkg{data.table} version of
- \code{splitLexis} or \code{survSplit} for splitting along multiple
- time scales.
+\code{splitLexis} or \code{survSplit} for splitting along multiple
+time scales.
 It requires a Lexis object as input.
 
-The \code{breaks} must be a list of named vectors of the appropriate type. 
+The \code{breaks} must be a list of named vectors of the appropriate type.
 The breaks are fully explicit and
-left-inclusive and right exclusive, e.g. \code{fot=c(0,5)} 
+left-inclusive and right exclusive, e.g. \code{fot=c(0,5)}
 forces the data to only include time between
-\code{[0,5)} for each original row (unless \code{drop = FALSE}). 
+\verb{[0,5)} for each original row (unless \code{drop = FALSE}).
 Use \code{Inf} or \code{-Inf} for open-ended intervals,
- e.g. \code{per=c(1990,1995,Inf)} creates the intervals 
- \code{[1990,1995), [1995, Inf)}.
- 
-Instead of specifying \code{breaks}, one may make use of the \code{...}
-argument to pass breaks: e.g. 
+e.g. \code{per=c(1990,1995,Inf)} creates the intervals
+\verb{[1990,1995), [1995, Inf)}.
 
-\code{splitMulti(x, breaks = list(fot = 0:5))} 
+Instead of specifying \code{breaks}, one may make use of the \code{...}
+argument to pass breaks: e.g.
+
+\code{splitMulti(x, breaks = list(fot = 0:5))}
 
 is equivalent to
 
@@ -74,31 +74,31 @@ is equivalent to
 
 Multiple breaks can be supplied in the same manner. However, if both
 \code{breaks} and \code{...} are used, only the breaks in \code{breaks}
-are utilized within the function. 
+are utilized within the function.
 
-The \code{Lexis} time scale variables can be of any arbitrary 
+The \code{Lexis} time scale variables can be of any arbitrary
 format, e.g. \code{Date},
-fractional years (see \code{\link[Epi]{cal.yr}}) and \code{\link{get.yrs}},
+fractional years (see \verb{[Epi::cal.yr]}) and \verb{[get.yrs]},
 or other.
 }
 \examples{
 #### let's prepare data for computing period method survivals
-#### in case there are problems with dates, we first 
+#### in case there are problems with dates, we first
 #### convert to fractional years.
 \donttest{
 library("Epi")
 library("data.table")
 data("sire", package = "popEpi")
-x <- Lexis(data=sire[dg_date < ex_date, ], 
-           entry = list(fot=0, per=get.yrs(dg_date), age=dg_age), 
+x <- Lexis(data=sire[dg_date < ex_date, ],
+           entry = list(fot=0, per=get.yrs(dg_date), age=dg_age),
            exit=list(per=get.yrs(ex_date)), exit.status=status)
 x2 <- splitMulti(x, breaks = list(fot=seq(0, 5, by = 3/12), per=c(2008, 2013)))
 # equivalently:
 x2 <- splitMulti(x, fot=seq(0, 5, by = 3/12), per=c(2008, 2013))
 
 ## using dates; note: breaks must be expressed as dates or days!
-x <- Lexis(data=sire[dg_date < ex_date, ], 
-           entry = list(fot=0, per=dg_date, age=dg_date-bi_date), 
+x <- Lexis(data=sire[dg_date < ex_date, ],
+           entry = list(fot=0, per=dg_date, age=dg_date-bi_date),
            exit=list(per=ex_date), exit.status=status)
 BL <- list(fot = seq(0, 5, by = 3/12)*365.242199,
            per = as.Date(paste0(c(1980:2014),"-01-01")),
@@ -110,20 +110,20 @@ x2 <- splitMulti(x, breaks = BL, verbose=TRUE)
 sire2 <- data.frame(sire)
 sire2 <- sire2[sire2$dg_date < sire2$ex_date, ]
 
-set.seed(1L) 
+set.seed(1L)
 not_sick <- sample.int(nrow(sire2), 6000L, replace = FALSE)
 sire2$dg_date[not_sick] <- NA
 sire2$status[!is.na(sire2$dg_date) & sire2$status == 0] <- -1
 
 sire2$status[sire2$status==2] <- 1
-sire2$status <- factor(sire2$status, levels = c(0, -1, 1), 
+sire2$status <- factor(sire2$status, levels = c(0, -1, 1),
                        labels = c("healthy", "sick", "dead"))
- 
-xm <- Lexis(data = sire2, 
-            entry = list(fot=0, per=get.yrs(bi_date), age=0), 
+
+xm <- Lexis(data = sire2,
+            entry = list(fot=0, per=get.yrs(bi_date), age=0),
             exit = list(per=get.yrs(ex_date)), exit.status=status)
-xm2 <- cutLexis(xm, cut = get.yrs(xm$dg_date), 
-                timescale = "per", 
+xm2 <- cutLexis(xm, cut = get.yrs(xm$dg_date),
+                timescale = "per",
                 new.state = "sick")
 xm2[xm2$lex.id == 6L, ]
 
@@ -133,8 +133,8 @@ xm2[xm2$lex.id == 6L, ]
 
 }
 \seealso{
-\code{\link[Epi]{splitLexis}}, \code{\link[Epi]{Lexis}},  
-\code{\link[survival]{survSplit}}
+\verb{[Epi::splitLexis]}, \verb{[Epi::Lexis]},
+\verb{[survival::survSplit]}
 
 Other splitting functions: 
 \code{\link{lexpand}()},

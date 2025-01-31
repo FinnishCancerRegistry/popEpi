@@ -30,11 +30,11 @@ see Examples.}
 \item{...}{unused; required for congruence with other \code{summary} methods}
 }
 \value{
-A `data.table`: a slice from `object` based on `t`, `subset`, and `q`.
+A \code{data.table}: a slice from \code{object} based on \code{t}, \code{subset}, and \code{q}.
 }
 \description{
 Summary method function for \code{survtab} objects; see
-\code{\link{survtab_ag}}. Returns estimates at given time points
+\verb{[survtab_ag]}. Returns estimates at given time points
 or all time points if \code{t} and \code{q} are both \code{NULL}.
 }
 \details{
@@ -42,9 +42,9 @@ Note that this function returns the intervals and NOT the time points
 corresponding to quantiles / estimates corresponding to time points.
 If you want precise estimates at time points that are not interval breaks,
 add the time points as breaks and re-estimate the survival time function.
-In interval-based estimation, the estimates denote e.g. probability of 
+In interval-based estimation, the estimates denote e.g. probability of
 dying \emph{during} the interval, so time points within the intervals
-are not usually considered at all. See e.g. Seppa, Dyba, and Hakulinen 
+are not usually considered at all. See e.g. Seppa, Dyba, and Hakulinen
 (2015).
 }
 \examples{
@@ -52,17 +52,17 @@ are not usually considered at all. See e.g. Seppa, Dyba, and Hakulinen
 library(Epi)
 
 ## NOTE: recommended to use factor status variable
-x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)), 
-           exit = list(CAL = get.yrs(ex_date)), 
+x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+           exit = list(CAL = get.yrs(ex_date)),
            data = sire[sire$dg_date < sire$ex_date, ],
-           exit.status = factor(status, levels = 0:2, 
-           labels = c("alive", "canD", "othD")), 
+           exit.status = factor(status, levels = 0:2,
+           labels = c("alive", "canD", "othD")),
            merge = TRUE)
 ## pretend some are male
 set.seed(1L)
 x$sex <- rbinom(nrow(x), 1, 0.5)
 ## observed survival
-st <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x, 
+st <- survtab(Surv(time = FUT, event = lex.Xst) ~ sex, data = x,
                   surv.type = "cif.obs",
                   breaks = list(FUT = seq(0, 5, 1/12)))
 
@@ -81,7 +81,7 @@ summary(st, q = list(surv.obs = c(0.75, 0.90), CIF_canD = 0.20))
 x <- as.data.frame(st)
 }
 \references{
-Seppa K., Dyba T. and Hakulinen T.: Cancer Survival, 
+Seppa K., Dyba T. and Hakulinen T.: Cancer Survival,
 Reference Module in Biomedical Sciences. Elsevier. 08-Jan-2015.
 \doi{10.1016/B978-0-12-801238-3.02745-8}
 }

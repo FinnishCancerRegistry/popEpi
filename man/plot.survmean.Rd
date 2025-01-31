@@ -14,20 +14,20 @@ may, therefore, supply e.g. \code{xlab} through this, though arguments
 such as \code{lty} and \code{col} will not work}
 }
 \value{
-Always returns `NULL` invisibly.
+Always returns \code{NULL} invisibly.
 This function is called for its side effects.
 }
 \description{
 Plots the observed (with extrapolation) and expected survival
-curves for all strata in an object created by \code{\link{survmean}}
+curves for all strata in an object created by \verb{[survmean]}
 }
 \details{
-For examples see \code{\link{survmean}}. This function is intended only
+For examples see \verb{[survmean]}. This function is intended only
 for graphically inspecting that the observed survival curves with extrapolation
 and the expected survival curves have been sensibly computed in \code{survmean}.
 
 If you want finer control over the plotted curves, extract the curves from
-the \code{survmean} output using 
+the \code{survmean} output using
 
 \code{attr(x, "curves")}
 

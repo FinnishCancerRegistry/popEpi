@@ -30,8 +30,8 @@ sir_ag(
 )
 }
 \arguments{
-\item{x}{Data set e.g. \code{aggre} or \code{Lexis} object 
-(see: \code{\link{lexpand}})}
+\item{x}{Data set e.g. \code{aggre} or \code{Lexis} object
+(see: \verb{[lexpand]})}
 
 \item{obs}{Variable name of the observed cases in the data set}
 
@@ -41,11 +41,11 @@ sir_ag(
 
 \item{print}{Variables or expression to stratify the results}
 
-\item{conf.type}{select confidence interval type: (default=) `profile`, `wald`, `univariate`}
+\item{conf.type}{select confidence interval type: (default=) \code{profile}, \code{wald}, \code{univariate}}
 
 \item{test.type}{Test for equal SIRs. Test available are 'homogeneity' and 'trend'}
 
-\item{conf.level}{Level of type-I error in confidence intervals, default 0.05 is 95\% CI}
+\item{conf.level}{Level of type-I error in confidence intervals, default 0.05 is 95\\% CI}
 
 \item{subset}{a logical vector for subsetting data}
 
@@ -57,20 +57,20 @@ sir_ag(
 A sir object
 }
 \description{
-Calculate Standardized Mortality Ratios (SMRs) using 
+Calculate Standardized Mortality Ratios (SMRs) using
 a single data set that includes
 observed and expected cases and additionally person-years.
 
-\code{sir_lex} solves SMR from a \code{\link{Lexis}} object 
+\code{sir_lex} solves SMR from a \verb{[Lexis]} object
 calculated with \code{lexpand}.
 
-\code{sir_ag} solves SMR from a \code{\link{aggre}} object 
-calculated using \code{\link{lexpand}}.
+\code{sir_ag} solves SMR from a \verb{[aggre]} object
+calculated using \verb{[lexpand]}.
 }
 \details{
-These functions are intended to calculate SMRs from a single data set 
+These functions are intended to calculate SMRs from a single data set
 that includes both observed and expected number of cases. For example utilizing the
-argument \code{pop.haz} of the \code{\link{lexpand}}.
+argument \code{pop.haz} of the \verb{[lexpand]}.
 
 \code{sir_lex} automatically exports the transition \code{fromXtoY} using the first
 state in \code{lex.Str} as \code{0} and all other as \code{1}. No missing values
@@ -89,7 +89,7 @@ is allowed in observed, pop.haz or person-years.
 BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))
 
 ## Aggregated data
-x1 <- lexpand(sire, breaks = BL, status = status != 0, 
+x1 <- lexpand(sire, breaks = BL, status = status != 0,
               birth = bi_date, entry = dg_date, exit = ex_date,
               pophaz=popmort,
               aggre=list(sex, period = per, surv.int = fot))
@@ -97,7 +97,7 @@ sir_ag(x1, print = 'period')
 
 
 # no aggreate or breaks
-x2 <- lexpand(sire, status = status != 0, 
+x2 <- lexpand(sire, status = status != 0,
               birth = bi_date, entry = dg_date, exit = ex_date,
               pophaz=popmort)
 sir_lex(x2, breaks = BL, print = 'per')
@@ -105,7 +105,7 @@ sir_lex(x2, breaks = BL, print = 'per')
 
 }
 \seealso{
-\code{\link{lexpand}}
+\verb{[lexpand]}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
 Other sir functions: 

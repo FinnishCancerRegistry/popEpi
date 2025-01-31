@@ -13,7 +13,7 @@ rate_ratio(x, y, crude = FALSE, SE.method = TRUE)
 
 \item{crude}{set TRUE to use crude rates; default is FALSE.}
 
-\item{SE.method}{default TRUE; if \code{x} and \code{y} are vectors of observed and 
+\item{SE.method}{default TRUE; if \code{x} and \code{y} are vectors of observed and
 person-years, this must be changed to FALSE.}
 }
 \value{
@@ -23,18 +23,18 @@ A vector length of three: rate_ratio, and lower and upper confidence intervals.
 Calculate rate ratio with confidence intervals for rate objects or observations and person-years.
 }
 \details{
-Calculate rate ratio of two age standardized rate objects (see \code{\link{rate}}). 
-Multiple rates for each objects is supported if there are an equal number of rates. 
+Calculate rate ratio of two age standardized rate objects (see \verb{[rate]}).
+Multiple rates for each objects is supported if there are an equal number of rates.
 Another option is to set \code{x} and \code{y} as a vector of two.
 \enumerate{
-  \item rate and its standard error, and  set \code{SE.method = TRUE}.
-  \item observations and person-year, and  set \code{SE.method = FALSE}.
+\item rate and its standard error, and  set \code{SE.method = TRUE}.
+\item observations and person-year, and  set \code{SE.method = FALSE}.
 }
 See examples.
 }
 \examples{
 \donttest{
-# two rate ratios; silly example with female rectal / breast cancer 
+# two rate ratios; silly example with female rectal / breast cancer
 ## mortality rates
 data("sire", package = "popEpi")
 data("sibr", package = "popEpi")
@@ -54,14 +54,14 @@ rate_ratio(r_re, r_br, SE.method = TRUE)
 
 # manually set rates (0.003 and 0.005) and SEs (0.001 and 0.002)
 # so that x = y = c('rate', 'SE')
-rate_ratio(x= c(0.003, 0.001), y= c(0.005, 0.002), SE.method = TRUE) 
+rate_ratio(x= c(0.003, 0.001), y= c(0.005, 0.002), SE.method = TRUE)
 
 # observed numbers (10 and 20) and person-years (30000 and 40000):
 rate_ratio(x = c(10, 30000), y = c(20, 40000), SE.method = FALSE)
 
 }
 \seealso{
-\code{\link{rate}}
+\verb{[rate]}
 
 Other rate functions: 
 \code{\link{rate}()}

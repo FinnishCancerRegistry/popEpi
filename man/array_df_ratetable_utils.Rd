@@ -12,7 +12,7 @@
 \alias{ratetable_to_array}
 \alias{ratetable_to_long_df}
 \alias{ratetable_to_long_dt}
-\title{`array`s, `data.frame`s and `ratetable`s}
+\title{\code{array}s, \code{data.frame}s and \code{ratetable}s}
 \usage{
 long_df_to_array(x, stratum.col.nms, value.col.nm)
 
@@ -47,93 +47,117 @@ ratetable_to_long_df(x)
 ratetable_to_long_dt(x)
 }
 \arguments{
-\item{x}{`[data.frame, data.table, array, ratetable]` (mandatory, no default)
+\item{x}{\verb{[data.frame, data.table, array, ratetable]} (mandatory, no default)
+\itemize{
+\item \code{long_df_to_array}: a \code{data.frame}
+\item \code{long_df_to_ratetable}: a \code{data.frame}
+\item \code{long_dt_to_array}: a \code{data.table}
+\item \code{long_dt_to_ratetable}: a \code{data.table}
+\item \code{array_to_long_df}: an \code{array}
+\item \code{array_to_long_dt}: an \code{array}
+\item \code{array_to_ratetable}: an \code{array}
+\item \code{ratetable_to_array}: a \link[survival:ratetable]{survival::ratetable}
+\item \code{ratetable_to_long_df}: a \link[survival:ratetable]{survival::ratetable}
+\item \code{ratetable_to_long_dt}: a \link[survival:ratetable]{survival::ratetable}
+}}
 
-- `long_df_to_array`: a `data.frame`
-- `long_df_to_ratetable`: a `data.frame`
-- `long_dt_to_array`: a `data.table`
-- `long_dt_to_ratetable`: a `data.table`
-- `array_to_long_df`: an `array`
-- `array_to_long_dt`: an `array`
-- `array_to_ratetable`: an `array`
-- `ratetable_to_array`: a [survival::ratetable]
-- `ratetable_to_long_df`: a [survival::ratetable]
-- `ratetable_to_long_dt`: a [survival::ratetable]}
+\item{stratum.col.nms}{\verb{[character]} (mandatory, no default)
 
-\item{stratum.col.nms}{`[character]` (mandatory, no default)
+a vector of column names in \code{x} by which values are stratified}
 
-a vector of column names in `x` by which values are stratified}
+\item{value.col.nm}{\verb{[character]} (mandatory, no default)
 
-\item{value.col.nm}{`[character]` (mandatory, no default)
-
-name of column in `x` containing values (these will be contents of the
+name of column in \code{x} containing values (these will be contents of the
 array)}
 
-\item{dim.types}{`[integer]` (mandatory, no default)
+\item{dim.types}{\verb{[integer]} (mandatory, no default)
 
-see `type` under **Details** in [survival::ratetable]}
+see \code{type} under \strong{Details} in \link[survival:ratetable]{survival::ratetable}}
 
-\item{cut.points}{`[NULL, list]` (optional, default `NULL`)
+\item{cut.points}{\verb{[NULL, list]} (optional, default \code{NULL})
 
-see `cutpoints` under **Details** in [survival::ratetable] 
-
-- `NULL`: automatically set using `dimnames(x)` and `dim.types`
-- `list`: one element for each dimensions of `x`}
+see \code{cutpoints} under \strong{Details} in \link[survival:ratetable]{survival::ratetable}
+\itemize{
+\item \code{NULL}: automatically set using \code{dimnames(x)} and \code{dim.types}
+\item \code{list}: one element for each dimensions of \code{x}
+}}
 }
 \value{
-- `long_df_to_array`: an `array`
-- `long_df_to_ratetable`: a [survival::ratetable]
-- `long_dt_to_array`: an `array`
-- `long_dt_to_ratetable`: a [survival::ratetable]
-- `array_to_long_df`: an `data.frame`
-- `array_to_long_dt`: an `data.table`
-- `array_to_ratetable`: a [survival::ratetable]
-- `ratetable_to_array`: an `array`
-- `ratetable_to_long_df`: a `data.frame`
-- `ratetable_to_long_dt`: a `data.table`
+\itemize{
+\item \code{long_df_to_array}: an \code{array}
+\item \code{long_df_to_ratetable}: a \link[survival:ratetable]{survival::ratetable}
+\item \code{long_dt_to_array}: an \code{array}
+\item \code{long_dt_to_ratetable}: a \link[survival:ratetable]{survival::ratetable}
+\item \code{array_to_long_df}: an \code{data.frame}
+\item \code{array_to_long_dt}: an \code{data.table}
+\item \code{array_to_ratetable}: a \link[survival:ratetable]{survival::ratetable}
+\item \code{ratetable_to_array}: an \code{array}
+\item \code{ratetable_to_long_df}: a \code{data.frame}
+\item \code{ratetable_to_long_dt}: a \code{data.table}
+}
 }
 \description{
-Utilities to transform objects between `array`, `data.frame`, and
-[survival::ratetable].
+Utilities to transform objects between \code{array}, \code{data.frame}, and
+\link[survival:ratetable]{survival::ratetable}.
 }
 \details{
-- `long_df_to_array`: converts a long-format `data.frame` to an `array`
-  with one or more dimensions
+\itemize{
+\item \code{long_df_to_array}: converts a long-format \code{data.frame} to an \code{array}
+with one or more dimensions
+}
 
-- `long_df_to_ratetable`: calls `long_df_to_array` and then 
-  `array_to_ratetable`
+\itemize{
+\item \code{long_df_to_ratetable}: calls \code{long_df_to_array} and then
+\code{array_to_ratetable}
+}
 
-- `long_dt_to_array`: simply asserts that `x` is a `data.table` and 
-calls `long_df_to_array`
+\itemize{
+\item \code{long_dt_to_array}: simply asserts that \code{x} is a \code{data.table} and
+calls \code{long_df_to_array}
+}
 
-- `long_dt_to_ratetable`: calls `long_dt_to_array` and then 
-  `array_to_ratetable`
+\itemize{
+\item \code{long_dt_to_ratetable}: calls \code{long_dt_to_array} and then
+\code{array_to_ratetable}
+}
 
-- `array_to_long_df`: converts an array with one or more dimensions into
-  a long-format `data.frame`; any [dimnames] are used to name and fill the 
-  stratifying columns; for dimensions without a name, `".dX"` is used
-  for stratifying column number `X`; for each `k`, if there are no contents
-  in `dimnames(x)[[k]]`, the elements of `seq(dim(x)[k])` are used to fill 
-  the corresponding stratifying column; the value column always has the name
-  `"value"`
+\itemize{
+\item \code{array_to_long_df}: converts an array with one or more dimensions into
+a long-format \code{data.frame}; any \link{dimnames} are used to name and fill the
+stratifying columns; for dimensions without a name, \code{".dX"} is used
+for stratifying column number \code{X}; for each \code{k}, if there are no contents
+in \code{dimnames(x)[[k]]}, the elements of \code{seq(dim(x)[k])} are used to fill
+the corresponding stratifying column; the value column always has the name
+\code{"value"}
+}
 
-- `array_to_long_dt`: calls `array_to_long_df` and converts result to a 
-  `data.table` for convenience
+\itemize{
+\item \code{array_to_long_dt}: calls \code{array_to_long_df} and converts result to a
+\code{data.table} for convenience
+}
 
-- `array_to_ratetable`: converts an array to a [survival::ratetable]
+\itemize{
+\item \code{array_to_ratetable}: converts an array to a \link[survival:ratetable]{survival::ratetable}
+}
 
-- `ratetable_to_array`: converts a [survival::ratetable] to an array
+\itemize{
+\item \code{ratetable_to_array}: converts a \link[survival:ratetable]{survival::ratetable} to an array
+}
 
-- `ratetable_to_long_df`: calls `ratetable_to_array` and then
-  `array_to_long_df`
+\itemize{
+\item \code{ratetable_to_long_df}: calls \code{ratetable_to_array} and then
+\code{array_to_long_df}
+}
 
-- `ratetable_to_long_dt`: calls `ratetable_to_array` and then
-  `array_to_long_dt`
+\itemize{
+\item \code{ratetable_to_long_dt}: calls \code{ratetable_to_array} and then
+\code{array_to_long_dt}
+}
 }
 \examples{
 
 long_dt <- popEpi::popmort
-arr <- long_df_to_array(long_dt, c("agegroup", "year", "sex"), "haz") 
+arr <- long_df_to_array(long_dt, c("agegroup", "year", "sex"), "haz")
 rt <- array_to_ratetable(arr, dim.types = c(2L, 4L, 1L))
 
 arr2 <- ratetable_to_array(rt)

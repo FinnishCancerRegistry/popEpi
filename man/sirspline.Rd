@@ -40,7 +40,7 @@ sirspline(
 
 \item{subset}{logical condition to subset \code{coh.data} before any computations}
 
-\item{print}{variable names for which to estimate SIRs/SMRs and 
+\item{print}{variable names for which to estimate SIRs/SMRs and
 associated splines separately}
 
 \item{adjust}{variable names for adjusting the expected cases}
@@ -53,7 +53,7 @@ when coh.obs length is two or more. See help for \code{sir}.}
 \item{knots}{number knots (vector),  pre-defined knots (list of vectors) or for optimal number of knots left NULL}
 
 \item{reference.points}{fixed reference values for rate ratios. If left \code{NULL}
-the smallest value is the reference point (where SIR = 1). 
+the smallest value is the reference point (where SIR = 1).
 Ignored if \code{dependent.splines = FALSE}}
 
 \item{dependent.splines}{logical; if TRUE, all splines are fitted in same model.}
@@ -64,69 +64,66 @@ Three spline estimates are named as \code{spline.est.A/B/C} and the correspondin
 in \code{spline.seq.A/B/C} for manual plotting
 }
 \description{
-Splines for standardised incidence or mortality ratio. A useful 
+Splines for standardised incidence or mortality ratio. A useful
 tool to e.g. check whether a constant SIR can be assumed for all calendar periods,
 age groups or follow-up intervals. Splines can be fitted for these time dimensions
 separately or in the same model.
 }
 \details{
-See \code{\link{sir}} for help on SIR/SMR estimation in general; usage of splines
+See \verb{[sir]} for help on SIR/SMR estimation in general; usage of splines
 is discussed below.
 
 \strong{The spline variables}
 
 The model can include one, two or three splines variables.
 Variables can be included in the same model selecting \code{dependent.splines = TRUE}
-and SIR ratios are calculated (first one is the SIR, others SIR ratios). 
+and SIR ratios are calculated (first one is the SIR, others SIR ratios).
 Reference points vector can be set via \code{reference.points}
 where first element of the vector is the reference point for first ratio.
 
 Variable(s) to fit splines are given as a vector in argument \code{spline}.
 Order will affect the results.
 
+\strong{dependent.splines}
 
-\strong{dependent.splines} 
-
-By default dependent.splines is FALSE and all splines are fitted in separate models. 
+By default dependent.splines is FALSE and all splines are fitted in separate models.
 If TRUE, the first variable in \code{spline} is a function of a SIR and other(s) are ratios.
 
 \strong{knots}
 
 There are three options to set knots to splines:
 
-Set the number of knots for each spline variable with a \strong{vector}. 
-The knots are automatically placed to the quantiles of observed cases in cohort data. 
+Set the number of knots for each spline variable with a \strong{vector}.
+The knots are automatically placed to the quantiles of observed cases in cohort data.
 The first and last knots are always the maximum and minimum values, so knot
 value needs to be at least two.
 
 Predefined knot places can be set with a \strong{list} of vectors.
-The vector for each spline in the list specifies the knot places. The lowest 
+The vector for each spline in the list specifies the knot places. The lowest
 and the largest values are the boundary knots and these should be checked beforehand.
 
-If \code{knots} is left \strong{NULL}, the model searches the optimal number 
-of knots by model AIC by fitting models iteratively from 2 to 15 knots and 
+If \code{knots} is left \strong{NULL}, the model searches the optimal number
+of knots by model AIC by fitting models iteratively from 2 to 15 knots and
 the one with smallest AIC is selected.
 If \code{dependent.splines = TRUE}, the number of knots is searched by fitting each spline
 variable separately.
 
-
 \strong{print}
 
-Splines can be stratified by the levels of variable given in \code{print}. If 
-\code{print} is a vector, only the first variable is accounted for. The knots 
-are placed globally for all levels of \code{print}. This also ensures that the likelihood 
+Splines can be stratified by the levels of variable given in \code{print}. If
+\code{print} is a vector, only the first variable is accounted for. The knots
+are placed globally for all levels of \code{print}. This also ensures that the likelihood
 ratio test is valid.
 Splines are also fitted independently for each level of \code{print}.
-This allows for searching interactions, e.g. by fitting spline for period 
+This allows for searching interactions, e.g. by fitting spline for period
 (\code{splines='period'}) for each age group (\code{print = 'agegroup'}).
-
 
 \strong{p-values}
 
 The output p-value is a test of whether the splines are equal (homogenous)
-at different levels of \code{print}. 
-The test is based on the likelihood ratio test, where the full model 
-includes \code{print} and is 
+at different levels of \code{print}.
+The test is based on the likelihood ratio test, where the full model
+includes \code{print} and is
 compared to a null model without it.
 When \code{(dependent.splines = TRUE)} the p-value returned is a global p-value.
 Otherwise the p-value is spline-specific.
@@ -137,7 +134,7 @@ Otherwise the p-value is spline-specific.
 }
 }
 \seealso{
-\code{\link{splitMulti}} 
+\verb{[splitMulti]}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
 Other sir functions: 

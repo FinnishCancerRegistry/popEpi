@@ -18,7 +18,7 @@ testthat::test_that("rate works with different weights", {
   w3 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = 'cohort')
   w4 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = NULL, weights = NULL)
   w5 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = NULL, adjust = NULL, weights = NULL)
-  
+
   testthat::expect_equal(sum(w1$PYRS), p18[,sum(PYRS)])
   testthat::expect_equal(sum(w2$OBS), p20[,sum(OBS)])
   testthat::expect_equal(sum(w3$OBS), p20[,sum(OBS)])
@@ -33,16 +33,16 @@ testthat::test_that("rate works with different weights", {
 })
 
 testthat::test_that("rate CIs and SEs are correct", {
-  
+
   ci <-data.table(agegroup = c(1,2,3,4),
                   obs=c(4,13,8,7),
                   pyrs=c(96,237,105,32),
                   rate=c(4.2,5.5,7.6,21.9),
                   std.pop=c(2773,2556,1113,184))
-  
+
   a1 <- ci[,sum(obs/pyrs*std.pop)/sum(std.pop)] # oikea estimaatti
-  a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)] # myös oikea tulos  
-  
+  a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)] # myös oikea tulos
+
   ci0 <- rate(data = ci, obs = 'obs', pyrs = 'pyrs', print = NULL, adjust = 'agegroup', weights = list(agegroup = c(2773,2556,1113,184)))
   testthat::expect_equal(ci0[,SE.rate.adj], a2, tolerance=0.0005) # test
   testthat::expect_equal(ci0[,rate.adj],a1)
@@ -53,10 +53,10 @@ testthat::test_that("rate CIs and SEs are correct", {
                   pyrs=c(960,2370,1050,320),
                   rate=c(4.2,5.5,7.6,21.9),
                   std.pop=c(2773,2556,1113,184))
-  
+
   a1 <- ci[,sum(obs/pyrs*std.pop)/sum(std.pop)] # oikea estimaatti
-  a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)] # myös oikea tulos  
-  
+  a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)] # myös oikea tulos
+
   ci0 <- rate(data = ci, obs = 'obs', pyrs = 'pyrs', print = NULL, adjust = 'agegroup', weights = list(agegroup = c(2773,2556,1113,184)))
   testthat::expect_equal(c(ci0$rate.adj.lo, ci0$rate.adj.hi),c(a1 - a2*1.96, a1 + a2*1.96), tolerance = 0.0006)
   testthat::expect_gt(ci0[,SE.rate.adj], a2) # WHYY?!
@@ -69,11 +69,11 @@ testthat::test_that("makeWeightsDT works in rate", {
   op <- c('OBS',  'PYRS')
   mw1 <- makeWeightsDT(p18, adjust = substitute(factor(AGEGROUP, 1:18, 1:18)), weights = wv, print = NULL, values = list(op))
   mw2 <- makeWeightsDT(p18, adjust = NULL, weights = NULL, print = substitute(COV), values = list(op))
-  
+
   attlist <- attr( mw1, 'makeWeightsDT')
-  
+
   testthat::expect_equal(c(attlist$adVars, attlist$vaVars, 'weights'), c('factor','OBS','PYRS','weights') )
-  
+
   testthat::expect_equal(mw1[,as.character(factor)], as.character(1:18))
   testthat::expect_equal(mw2[,OBS], p18[,sum(OBS), by=COV][,V1])
 })
@@ -87,9 +87,9 @@ testthat::test_that("names dont cause problems", {
   w6 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = 'world_2000_20of5')
   w7a <- rate(data = p20, obs = OBS, pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = 'world_2000_20of5')
   w7b <- rate(data = p20, obs = OBS, pyrs = PYRS, print = 'COV', adjust = 'AGEGROUP', weights = 'world_2000_20of5')
-  
+
   wr <- p18b[,list(obs=sum(obs),pyrs =sum(pyrs)), by ='COV']
-  
+
   testthat::expect_equal(w2$obs, w1$obs)
   testthat::expect_equal(w2$pyrs, w1$pyrs)
   testthat::expect_equal(wr$obs, w1$obs)
@@ -106,8 +106,8 @@ testthat::test_that("rate works with different weights an subset", {
   s3 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = 'cohort', subset = COV==1)
   s4 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = NULL, weights = NULL, subset = AGEGROUP != 1)
   s5 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = NULL, adjust = NULL, weights = NULL, subset = COV == 1)
-  
-  
+
+
   testthat::expect_equal(sum(s1$PYRS), p18[COV==1,sum(PYRS)])
   testthat::expect_equal(sum(s2$OBS), p20[COV==2,sum(OBS)])
   testthat::expect_equal(sum(s3$OBS), p20[COV==1,sum(OBS)])
@@ -117,23 +117,23 @@ testthat::test_that("rate works with different weights an subset", {
 })
 
 testthat::test_that("rate works with different weights and syntaxies", {
-  
-  
+
+
   wv <- c(.1,.1,.1,.2,.2,.2,.2,.3,.3,.4,.5,.5,.5,.4,.4,.3,.2,.1)
-  
+
   s0 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = NULL, adjust = NULL)
   s1 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = factor(AGEGROUP, 1:18, 1:18), weights = c(.1,.1,.1,.2,.2,.2,.2,.3,.3,.4,.5,.5,.5,.4,.4,.3,.2,.1))
   s2 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = factor(AGEGROUP, 1:18, 1:18), weights = wv)
   #s3 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = factor(AGEGROUP, 1:18, 1:18), weights = NULL) ???
   testthat::expect_is(s1, 'rate')
-  
+
   testthat::expect_equal(sum(s1$PYRS), p18[,sum(PYRS)])
   testthat::expect_equal(sum(s2$OBS), p18[,sum(OBS)])
   #expect_equal(sum(s3$OBS), p18[,sum(OBS)])
-  
-  
+
+
   # non working syntaxes
-  testthat::expect_error( 
+  testthat::expect_error(
     rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = NULL, adjust = 'AGEGROUP', weights = list(1:18))
   ) # non named list
   testthat::expect_error(
@@ -145,48 +145,48 @@ testthat::test_that("rate works with different weights and syntaxies", {
   testthat::expect_error(
     rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = c('AGEGROUP','COV'), weights = list(COV = c(.5,.5), AGEGROUP = 1:18))
   ) # duplicated names
-  
+
   # working
-  s10 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', 
-              adjust = list(agegr = factor(AGEGROUP, 1:18, 1:18)), 
+  s10 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS',
+              adjust = list(agegr = factor(AGEGROUP, 1:18, 1:18)),
               weights = list(agegr = c(.1,.1,.1,.2,.2,.2,.2,.3,.3,.4,.5,.5,.5,.4,.4,.3,.2,.1)))
-  
-  s11 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', 
-              adjust = list(agegr = factor(AGEGROUP, 1:18, 1:18), gender = factor(COV, 1:2, 1:2)), 
+
+  s11 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS',
+              adjust = list(agegr = factor(AGEGROUP, 1:18, 1:18), gender = factor(COV, 1:2, 1:2)),
               weights = list(agegr = c(.1,.1,.1,.2,.2,.2,.2,.3,.3,.4,.5,.5,.5,.4,.4,.3,.2,.1), gender = c(1,1)))
-  
-  s12 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', 
-              adjust = list(agegr = factor(AGEGROUP, 1:18, 1:18)), 
+
+  s12 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS',
+              adjust = list(agegr = factor(AGEGROUP, 1:18, 1:18)),
               weights = list(agegr = wv))
-  
-  
+
+
   s13 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = NULL, adjust = 'AGEGROUP', weights = list(AGEGROUP = 1:18))
   s14a <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = NULL, adjust = c('AGEGROUP','COV'), weights = list(AGEGROUP = 1:18, COV = c(.5,.5))) # SAMA1
   s14b <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = NULL, adjust = c('AGEGROUP','COV'), weights = list(COV = c(.5,.5), AGEGROUP = 1:18)) # SAMA1
-  
+
   s16a <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = 'world_2000_20of5') #
   s16b <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = list(AGEGROUP), weights = 'world_2000_20of5') #
   s16c <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = AGEGROUP, weights = 'world_2000_20of5') #
-  
-  
-  
+
+
+
   # Works
   s21 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = (1:18), subset = COV==1)
   s22 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = 'world_2000_20of5', subset = COV == 2)
   s23 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = NULL, weights = NULL, subset = AGEGROUP != 1)
   s24 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = NULL, adjust = NULL, weights = NULL, subset = COV == 1)
-  
+
   ## internal weights
   s23a <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = 'internal')
   s23b <- rate(data = p20, obs = 'OBS', pyrs = PYRS,   print = 'COV', adjust = 'AGEGROUP', weights = 'internal')
   s23c <- rate(data = p20, obs = OBS, pyrs = PYRS,   print = COV, adjust = AGEGROUP, weights = 'internal')
   s24a <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = list(AGEGROUP, COV), weights = "internal")
   s24b <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = c('AGEGROUP', 'COV'), weights = "internal")
-  
+
   ## update and getCall
   s2B <- update(s0, adjust = factor(AGEGROUP, 1:18, 1:18), weights = wv)
   testthat::expect_equal(data.table(s2B), data.table(s2))
-  
+
 })
 
 
@@ -214,7 +214,7 @@ testthat::test_that("rate works with missing values", {
 
 testthat::test_that("rate standard error and CIS works", {
   se <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', adjust = 'AGEGROUP', weights = 1:18)
-  
+
   testthat::expect_equal(se[, SE.rate.adj] , se[, SE.rate], tolerance = 0.00002)
   testthat::expect_lt(se[, rate.adj.lo], se[, rate.adj])
   testthat::expect_lt(se[, rate.adj], se[, rate.adj.hi])
@@ -233,17 +233,17 @@ testthat::test_that("rate_ratio works", {
   w2 <- rate(data = p20, obs = 'OBS', pyrs = 'PYRS', print = 'COV', adjust = 'AGEGROUP', weights = 'world_2000_20of5')
   w3 <- rate(data = p18, obs = 'OBS', pyrs = 'PYRS', print = 'COV')
   cru <- round((88/109818)/(78/110421),3)
-  
-  
+
+
   # rate obj, one line
   testthat::expect_equal( rate_ratio( w1[1], w1[2], crude = FALSE, SE.method = FALSE),
                 rate_ratio( w1[1], w1[2], crude = TRUE, SE.method = FALSE))  # oikein, crude ignoorattu
-  testthat::expect_equal( rate_ratio( w1[1], w1[2], crude = FALSE, SE.method = TRUE)$rate_ratio, 
+  testthat::expect_equal( rate_ratio( w1[1], w1[2], crude = FALSE, SE.method = TRUE)$rate_ratio,
                 round(w1[1, rate.adj]/ w1[2, rate.adj],3))
-  
+
   testthat::expect_equal( rate_ratio( w1[1], w1[2], crude = TRUE, SE.method = TRUE),
                 data.frame(rate_ratio = 1.134, lower=1.087, upper=1.182))
-  
+
   # rate obj crude
   suppressMessages(
     testthat::expect_equal( rate_ratio( w3[1], w3[2], crude = TRUE, SE.method = TRUE),  # oikein, hiljaa
@@ -252,28 +252,28 @@ testthat::test_that("rate_ratio works", {
   # rate + SE
   x <- c(w1[1, rate], w1[1, SE.rate])
   y <- c(w1[2, rate], w1[2, SE.rate])
-  
+
   testthat::expect_error( rate_ratio( x, y, crude = FALSE, SE.method = FALSE) ) # error, käyttäjän vastuu?
   testthat::expect_error( rate_ratio( x, y, crude = TRUE,  SE.method = FALSE) )  # error, käyttäjän vastuu?
-  testthat::expect_equal( rate_ratio( x, y, crude = FALSE, SE.method = TRUE), 
+  testthat::expect_equal( rate_ratio( x, y, crude = FALSE, SE.method = TRUE),
                 rate_ratio( x, y, crude = TRUE,  SE.method = TRUE))
-  
+
   # Obs + Pyrs
   testthat::expect_warning( rate_ratio( c(88,78), c(109818,110421), crude = FALSE, SE.method = TRUE) ) # oikein, message
   a <- rate_ratio( c(88,78), c(109818,110421), crude = TRUE, SE.method = FALSE)$rate_ratio
   testthat::expect_equal(a, (c(88,78)/c(109818,110421))[1]/(c(88,78)/c(109818,110421))[2], tolerance = 0.001 )
-  
+
   # multi row rate objects
-  a0 <- rate_ratio( w1, w2, crude = FALSE, SE.method = TRUE) 
-  b0 <- rate_ratio( w1[1], w2[1], crude = FALSE, SE.method = TRUE) 
-  c0 <- rate_ratio( w1[2], w2[2], crude = FALSE, SE.method = TRUE) 
-  
+  a0 <- rate_ratio( w1, w2, crude = FALSE, SE.method = TRUE)
+  b0 <- rate_ratio( w1[1], w2[1], crude = FALSE, SE.method = TRUE)
+  c0 <- rate_ratio( w1[2], w2[2], crude = FALSE, SE.method = TRUE)
+
   testthat::expect_equal(a0[1,], b0)
   testthat::expect_equal(c(a0[2,]), c(c0))
 
   #rate_ratio( w1, w2[1], crude = FALSE, SE.method = TRUE) # väärä, pitäisi tulla data.frame
   #rate_ratio( w1, c(0.0005,0.00002), crude = FALSE, SE.method = TRUE) # väärä, pitäisi tulla data.frame
- 
+
 })
 
 
@@ -289,7 +289,7 @@ testthat::test_that("warnings and stops works properly", {
 
 testthat::test_that("stdr.weights returns correct datasets", {
   al <- c('world_1966_18of5','europe','nordic',
-          "world_2000_18of5","world_2000_101of1", 
+          "world_2000_18of5","world_2000_101of1",
           "world_2000_20of5")
   le <- c(18,18,18,18,101,20)
   testthat::expect_equal( stdr.weights(al[1])[,.N], le[1])

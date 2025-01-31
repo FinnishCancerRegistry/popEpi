@@ -3,7 +3,7 @@
 \name{setclass}
 \alias{setclass}
 \title{Set the class of an object (convenience function for
- \code{setattr(obj, "class", CLASS)}); can add instead of replace}
+\code{setattr(obj, "class", CLASS)}); can add instead of replace}
 \usage{
 setclass(obj, cl, add = FALSE, add.place = "first")
 }
@@ -12,7 +12,7 @@ setclass(obj, cl, add = FALSE, add.place = "first")
 
 \item{cl}{class to set}
 
-\item{add}{if \code{TRUE}, adds \code{cl} to the 
+\item{add}{if \code{TRUE}, adds \code{cl} to the
 classes of the \code{obj}; otherwise replaces the class information}
 
 \item{add.place}{\code{"first"} or \code{"last"}; adds \code{cl}

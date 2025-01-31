@@ -6,10 +6,10 @@
 \format{
 data.table with columns
 \itemize{
- \item age - lower bound of the age group
- \item ICSS1 - first set of weights, sums to 100 000
- \item ICSS2 - second set of weights, sums to 100 000
- \item ICSS3 - third set of weights, sums to 100 000
+\item age - lower bound of the age group
+\item ICSS1 - first set of weights, sums to 100 000
+\item ICSS2 - second set of weights, sums to 100 000
+\item ICSS3 - third set of weights, sums to 100 000
 }
 }
 \source{

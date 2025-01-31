@@ -20,11 +20,11 @@ as.aggre(x, values = NULL, by = NULL, breaks = NULL, ...)
 
 \item{values}{a character string vector; the names of value variables}
 
-\item{by}{a character string vector; the names of variables by which 
+\item{by}{a character string vector; the names of variables by which
 \code{values} have been tabulated}
 
 \item{breaks}{a list of breaks, where each element is a breaks vector
-as usually passed to e.g. \code{\link{splitLexisDT}}. The list must be
+as usually passed to e.g. \verb{[splitLexisDT]}. The list must be
 fully named, with the names corresponding to time scales at the aggregate
 level in your data. Every unique value in a time scale variable in data must
 also exist in the corresponding vector in the breaks list.}
@@ -32,8 +32,8 @@ also exist in the corresponding vector in the breaks list.}
 \item{...}{arguments passed to or from methods}
 }
 \value{
-Returns a copy of `x` with attributes set to those of an object of class
-`"aggre"`.
+Returns a copy of \code{x} with attributes set to those of an object of class
+\code{"aggre"}.
 }
 \description{
 Coerces an R object to an \code{aggre} object, identifying
@@ -52,8 +52,8 @@ if no class-specific method found)
 }}
 \examples{
 library("data.table")
-df <- data.frame(sex = rep(c("male", "female"), each = 5), 
-                 obs = rpois(10, rep(7,5, each=5)), 
+df <- data.frame(sex = rep(c("male", "female"), each = 5),
+                 obs = rpois(10, rep(7,5, each=5)),
                  pyrs = rpois(10, lambda = 10000))
 dt <- as.data.table(df)
 

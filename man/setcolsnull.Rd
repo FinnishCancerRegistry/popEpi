@@ -17,18 +17,18 @@ setcolsnull(
 
 \item{delete}{a character vector of column names to be deleted}
 
-\item{keep}{a character vector of column names to keep; 
+\item{keep}{a character vector of column names to keep;
 the rest will be removed; \code{keep} overrides \code{delete}}
 
 \item{colorder}{logical; if \code{TRUE}, also does \code{setcolorder} using
 \code{keep}}
 
 \item{soft}{logical; if \code{TRUE}, does not cause an error if any variable
-name in \code{keep} or \code{delete} is missing; \code{soft = FALSE} useful 
+name in \code{keep} or \code{delete} is missing; \code{soft = FALSE} useful
 for programming sometimes}
 }
 \value{
-Always returns `NULL` invisibly.
+Always returns \code{NULL} invisibly.
 This function is called for its side effects.
 }
 \description{

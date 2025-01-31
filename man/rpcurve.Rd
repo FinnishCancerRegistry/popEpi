@@ -10,19 +10,19 @@ rpcurve(object)
 \item{object}{a \code{relpois} object}
 }
 \value{
-A `data.table` of relative survival curves.
+A \code{data.table} of relative survival curves.
 }
 \description{
 Fit a marginal relative survival curve based on a \code{relpois} fit
 }
 \details{
 Estimates a marginal curve, i.e. the average of all
-possible individual curves. 
+possible individual curves.
 
 Only supported when the reserved \code{FOT} variable was used in \code{relpois}.
-Computes a curve for each unique combination of covariates (e.g. 4 sets) 
+Computes a curve for each unique combination of covariates (e.g. 4 sets)
 and returns a weighted average curve based on the counts
-of subjects for each combination (e.g. 1000, 125, 50, 25 respectively). 
+of subjects for each combination (e.g. 1000, 125, 50, 25 respectively).
 Fairly fast when only categorical variables have been used, otherwise
 go get a cup of coffee.
 
@@ -39,12 +39,12 @@ sire$agegr <- cut(sire$dg_age, breaks = ab, right = FALSE)
 
 BL <- list(fot= seq(0,10,1/12))
 pm <- data.frame(popEpi::popmort)
-x <- lexpand(sire, breaks=BL, pophaz=pm, 
-             birth = bi_date, 
-             entry = dg_date, exit = ex_date, 
+x <- lexpand(sire, breaks=BL, pophaz=pm,
+             birth = bi_date,
+             entry = dg_date, exit = ex_date,
              status  = status \%in\% 1:2)
 
-rpm <- relpois(x, formula = lex.Xst \%in\% 1:2 ~ -1+ FOT + agegr, 
+rpm <- relpois(x, formula = lex.Xst \%in\% 1:2 ~ -1+ FOT + agegr,
                fot.breaks=c(0,0.25,0.5,1:8,10))
 pmc <- rpcurve(rpm)
 

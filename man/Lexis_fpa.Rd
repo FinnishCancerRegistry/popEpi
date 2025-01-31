@@ -19,27 +19,27 @@ Lexis_fpa(
 \arguments{
 \item{data}{a \code{data.frame}; mandatory}
 
-\item{birth}{the time of birth; A character string naming the variable in 
-data or an expression to evaluate - see 
+\item{birth}{the time of birth; A character string naming the variable in
+data or an expression to evaluate - see
 \link[=flexible_argument]{Flexible input}}
 
-\item{entry}{the time at entry to follow-up; supplied the 
+\item{entry}{the time at entry to follow-up; supplied the
 same way as \code{birth}}
 
-\item{exit}{the time at exit from follow-up; supplied the 
+\item{exit}{the time at exit from follow-up; supplied the
 same way as \code{birth}}
 
-\item{entry.status}{passed on to \code{\link[Epi]{Lexis}} if not \code{NULL};
+\item{entry.status}{passed on to \verb{[Epi::Lexis]} if not \code{NULL};
 supplied the same way as \code{birth}}
 
-\item{exit.status}{passed on to \code{\link[Epi]{Lexis}} if not \code{NULL};
+\item{exit.status}{passed on to \verb{[Epi::Lexis]} if not \code{NULL};
 supplied the same way as \code{birth}}
 
 \item{subset}{a logical condition to subset by before passing data
-and arguments to \code{\link[Epi]{Lexis}}}
+and arguments to \verb{[Epi::Lexis]}}
 
-\item{...}{additional optional arguments passed on to 
-\code{\link[Epi]{Lexis}}}
+\item{...}{additional optional arguments passed on to
+\verb{[Epi::Lexis]}}
 }
 \value{
 A \code{Lexis} object with the usual columns that \code{Lexis} objects
@@ -50,12 +50,12 @@ They are calculated as
 
 \code{per = entry}
 
-and 
+and
 
 \code{age = entry - birth}
 }
 \description{
-This is a simple wrapper around \code{\link[Epi]{Lexis}} for creating
+This is a simple wrapper around \verb{[Epi::Lexis]} for creating
 a \code{Lexis} object with the time scales \code{fot}, \code{per},
 and \code{age}.
 }
@@ -63,9 +63,9 @@ and \code{age}.
 
 data("sire", package = "popEpi")
 
-lex <- Lexis_fpa(sire, 
-                 birth = "bi_date", 
-                 entry = dg_date, 
+lex <- Lexis_fpa(sire,
+                 birth = "bi_date",
+                 entry = dg_date,
                  exit = ex_date + 1L,
                  exit.status = "status")
 
@@ -75,16 +75,16 @@ l <- list(myVar = "bi_date")
 sire$l <- sire$myVar <- 1
 
 ## conflict: myVar taken from data when "bi_date" was intended
-lex <- Lexis_fpa(sire, 
-                 birth = myVar, 
-                 entry = dg_date, 
+lex <- Lexis_fpa(sire,
+                 birth = myVar,
+                 entry = dg_date,
                  exit = ex_date + 1L,
                  exit.status = "status")
 
 ## no conflict with names in data
-lex <- Lexis_fpa(sire, 
-                 birth = l$myVar, 
-                 entry = dg_date, 
+lex <- Lexis_fpa(sire,
+                 birth = l$myVar,
+                 entry = dg_date,
                  exit = ex_date + 1L,
                  exit.status = "status")
 }

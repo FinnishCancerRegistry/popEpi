@@ -14,9 +14,9 @@
 #' @param origin see [survival::Surv]
 #' @section Surv in survival vs. in popEpi:
 #' `popEpi::Surv` is a wrapper for [survival::Surv].
-#' Therefore you don't need to to do `library("survival")` when using `Surv` 
+#' Therefore you don't need to to do `library("survival")` when using `Surv`
 #' with e.g.
-#' \code{\link{survtab}}. Remember that if you do `library("survival")` after
+#' `[survtab]`. Remember that if you do `library("survival")` after
 #' `library("popEpi")`, the `Surv` from \pkg{survival} is used instead of
 #' from \pkg{popEpi} (`R` throws a warning about this) when an expression
 #' such as `Surv(my_times, my_events)` is evaluated. You can avoid such
@@ -30,15 +30,15 @@
 #' @importFrom survival Surv
 #' @return
 #' See `[survival::Surv]`.
-#' 
+#'
 Surv <- function(
-  time, 
-  time2, 
-  event, 
-  type = c("right", "left", "interval", "counting", "interval2", "mstate"), 
+  time,
+  time2,
+  event,
+  type = c("right", "left", "interval", "counting", "interval2", "mstate"),
   origin = 0
 ) {
-  
+
   pf <- parent.frame(1)
   arg_nms <- names(formals(Surv))
   test_env <- environment()
@@ -50,7 +50,7 @@ Surv <- function(
   }, logical(1))
   pass_arg_nms <- arg_nms[!is_missing]
   pass_arg_nms <- intersect(pass_arg_nms, names(formals(survival::Surv)))
-  
+
   pass_arg_list <- mget(pass_arg_nms)
   eval_env <- as.environment(pass_arg_list)
   parent.env(eval_env) <- pf
