@@ -1,20 +1,18 @@
+# popEpi CRAN upload, v.0.4.13
 
-# popEpi CRAN upload, v.0.4.12
+Unit tests pass in new release. They broke due to package `relsurv`'s update.
+Removed support for package `date`.
 
-No changes in the package itself --- fixed a unit test that used
-the output of `survival::summmary.survfit` which had improved slightly
-in 3.6-4.
-
-Below are a bunch of checks I ran using winbuilder / rhub.
-
-I also ran revdepcheck and found no issues.
-
-* R-oldrel = 4.3.3 (2024-02-29 ucrt)
-* R-release = 4.4.0 (2024-04-24 ucrt)
-* R-devel = 2024-05-07 r86527 ucrt
+* R-oldrel = R version 4.3.3 (2024-02-29 ucrt)
+* R-release = R version 4.4.2 (2024-10-31 ucrt)
+* R-devel = R Under development (unstable) (2025-01-30 r87669 ucrt)
 
 ## winbuilder checks
 
 * R-oldrel --- OK
 * R-release --- OK
 * R-devel --- OK
+
+## revdepcheck
+
+* R-release --- OK
