@@ -786,14 +786,14 @@ contractLexis <- function(x, breaks, drop = TRUE) {
 #'
 #' `prepExpo` is a convenience function for the purpose of eventually aggregating
 #' person-time and events in categories of not only normally progressing
-#' `Lexis` time scales but also some time scales which should not
+#'  `[Epi::Lexis]` time scales but also some time scales which should not
 #' progress sometimes. For example a person may work at a production facility
 #' only intermittently, meaning exposure time (to work-related substances
 #' for example) should not progress outside of periods of work. This allows for
 #' e.g. a correct aggregation of person-time and events by categories of cumulative
 #' time of exposure.
 #'
-#' Given a `Lexis` object containing rows (time lines)
+#' Given an `[Epi::Lexis]` object containing rows (time lines)
 #' where a subject is exposed to something (and NO periods without exposure),
 #' fills any gaps between exposure periods for each unique combination of `by`
 #' and the subject-specific "ultimate" `entry` and `exit` times,

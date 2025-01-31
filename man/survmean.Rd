@@ -143,7 +143,7 @@ with survival intervals of varying lengths. When using day-level time
 variables (such as \code{Dates}; see \code{as.Date}), numeric \code{r}
 should be expressed at the day level, etc.
 
-If \code{r}is \code{"auto"} or \code{"auto1"}, this function computes
+If \code{r} is \code{"auto"} or \code{"auto1"}, this function computes
 RSR estimates internally and automatically uses the \code{RSR_i}
 in the last survival interval in each stratum (and adjusting group)
 and assumes that to persist beyond the observed survival curve.

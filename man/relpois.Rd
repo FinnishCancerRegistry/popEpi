@@ -106,7 +106,7 @@ Stat Med. 2004 Jan 15;23(1):51-64.
 \doi{10.1002/sim.1597}
 }
 \seealso{
-\verb{[lexpand]}, \verb{[poisson]}, \verb{[glm]}
+\verb{[lexpand]}, \verb{[stats::poisson]}, \verb{[stats::glm]}
 
 Other main functions: 
 \code{\link{Surv}()},

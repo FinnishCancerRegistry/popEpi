@@ -1328,7 +1328,6 @@ sir_exp <- function(x, obs, exp, pyrs=NULL, print = NULL,
                       conf.level = conf.level,
                       EAR = FALSE)
 
-  #setDT(data)
   if (!return_DT()) {
     for (i in 1:2) {
       if (!is.null(results[[i]])) {
@@ -1354,8 +1353,8 @@ sir_exp <- function(x, obs, exp, pyrs=NULL, print = NULL,
 
 #' Calculate SMRs from a split Lexis object
 #'
-#' @description `sir_lex` solves SMR from a `[Lexis]` object
-#' calculated with `lexpand`.
+#' @description `sir_lex` solves SMR from an `[Epi::Lexis]` object
+#' calculated with `[lexpand]`.
 #'
 #' @param breaks a named list to split age group (age), period (per) or follow-up (fot).
 #' @param ... pass arguments to `sir_exp`

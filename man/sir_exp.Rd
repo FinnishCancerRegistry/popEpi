@@ -61,8 +61,8 @@ Calculate Standardized Mortality Ratios (SMRs) using
 a single data set that includes
 observed and expected cases and additionally person-years.
 
-\code{sir_lex} solves SMR from a \verb{[Lexis]} object
-calculated with \code{lexpand}.
+\code{sir_lex} solves SMR from an \verb{[Epi::Lexis]} object
+calculated with \verb{[lexpand]}.
 
 \code{sir_ag} solves SMR from a \verb{[aggre]} object
 calculated using \verb{[lexpand]}.

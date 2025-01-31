@@ -24,12 +24,12 @@
 #' `by.vars` columns through `robust_values` before outputting
 #' @param .SDcols advanced; a character vector of column names
 #' passed to inside the data.table's brackets
-#' `DT[, , ...]`; see `[data.table]`; if `NULL`,
+#' `DT[, , ...]`; see `[data.table::data.table]`; if `NULL`,
 #' uses all appropriate columns. See Examples for usage.
 #' @param enclos advanced; an environment; the enclosing
 #' environment of the data.
 #' @param ... advanced; other arguments passed to inside the
-#' data.table's brackets `DT[, , ...]`; see `[data.table]`
+#' data.table's brackets `DT[, , ...]`; see `[data.table::data.table]`
 #'
 #' @import data.table
 #'
@@ -78,7 +78,7 @@
 #' any of the  `by.vars` values was `NA`.
 #'
 #' @seealso
-#' `[table]`, `[cast_simple]`, `[melt]`
+#' `[table]`, `[cast_simple]`, `[data.table::melt]`
 #'
 #' @return
 #' A `data.table` of statistics (e.g. counts) stratified by the columns defined

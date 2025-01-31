@@ -55,14 +55,14 @@ use this}
 
 \item{.SDcols}{advanced; a character vector of column names
 passed to inside the data.table's brackets
-\code{DT[, , ...]}; see \verb{[data.table]}; if \code{NULL},
+\code{DT[, , ...]}; see \verb{[data.table::data.table]}; if \code{NULL},
 uses all appropriate columns. See Examples for usage.}
 
 \item{enclos}{advanced; an environment; the enclosing
 environment of the data.}
 
 \item{...}{advanced; other arguments passed to inside the
-data.table's brackets \code{DT[, , ...]}; see \verb{[data.table]}}
+data.table's brackets \code{DT[, , ...]}; see \verb{[data.table::data.table]}}
 }
 \value{
 A \code{data.table} of statistics (e.g. counts) stratified by the columns defined
@@ -158,7 +158,7 @@ expr.by.cj(sr, "agegroup", lapply(.SD, mean),
            subset = dg_age < 70, .SDcols = c("dg_age", "status"))
 }
 \seealso{
-\verb{[table]}, \verb{[cast_simple]}, \verb{[melt]}
+\verb{[table]}, \verb{[cast_simple]}, \verb{[data.table::melt]}
 }
 \author{
 Joonas Miettinen, Matti Rantanen

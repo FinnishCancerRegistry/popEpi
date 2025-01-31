@@ -69,7 +69,7 @@
 #' `glm` methods are applicable.
 #'
 #' @seealso
-#' `[lexpand]`, `[poisson]`, `[glm]`
+#' `[lexpand]`, `[stats::poisson]`, `[stats::glm]`
 #' @family main functions
 #' @family relpois functions
 #' @export relpois
