@@ -190,6 +190,7 @@ run_r_cmd_check_on_rhub <- function(
   if (is.null(platforms)) {
     platforms <- c("linux", "windows", "macos")
   }
+  system2("git", "push")
   rhub::rhub_check(
     platforms = platforms,
     ...
