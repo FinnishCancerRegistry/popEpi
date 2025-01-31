@@ -137,7 +137,7 @@ as.aggre.default <- function(x, ...) {
 #' @param lex a `Lexis` object split with e.g.
 #' `[Epi::splitLexis]` or `[splitMulti]`
 #' @param by variables to tabulate (aggregate) by.
-#' \link[=flexible_argument]{Flexible input}, typically e.g.
+#' [Flexible input][flexible_argument], typically e.g.
 #' `by = c("V1", "V2")`. See Details and Examples.
 #' @param type determines output levels to which data is aggregated varying
 #' from returning only rows with `pyrs > 0` (`"unique"`) to
@@ -145,7 +145,7 @@ as.aggre.default <- function(x, ...) {
 #' if those combinations are not represented in data (`"full"`);
 #' see Details
 #' @param sum.values optional: additional variables to sum by argument
-#'  `by`. \link[=flexible_argument]{Flexible input}, typically e.g.
+#'  `by`. [Flexible input][flexible_argument], typically e.g.
 #' `sum.values = c("V1", "V2")`
 #' @param subset a logical condition to subset by before computations;
 #' e.g. `subset = area %in% c("A", "B")`

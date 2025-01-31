@@ -286,7 +286,7 @@ robust_values <- function(num.values, force = FALSE, messages = TRUE) {
 #' `c("var1", "var2")`
 #' @param stops logical, stop returns exception
 #' @param msg Custom message to return instead of default message.
-#' Special: include `\%\%VARS\%\%` in message string and the missing
+#' Special: include `%%VARS%%` in message string and the missing
 #' variable names will be inserted there (quoted, separated by comma, e.g.
 #' `'var1'`, `'var2'` --- no leading or tracing white space).
 #' @description Given a character vector, checks if all names are present in `names(data)`.
@@ -956,7 +956,7 @@ return_DT <- function() {
 #' @param data a `data.frame`; mandatory
 #' @param birth the time of birth; A character string naming the variable in
 #' data or an expression to evaluate - see
-#' \link[=flexible_argument]{Flexible input}
+#' [Flexible input][flexible_argument]
 #' @param entry the time at entry to follow-up; supplied the
 #' same way as `birth`
 #' @param exit the time at exit from follow-up; supplied the

@@ -53,7 +53,7 @@ when \code{coh.obs} length is two or more. See details.}
 
 \item{conf.type}{Confidence interval type: 'profile'(=default), 'wald' or 'univariate'.}
 
-\item{conf.level}{Level of type-I error in confidence intervals, default 0.05 is 95\\% CI.}
+\item{conf.level}{Level of type-I error in confidence intervals, default 0.05 is 95\% CI.}
 
 \item{EAR}{logical; TRUE calculates Excess Absolute Risks for univariate SIRs.
 (see details)}

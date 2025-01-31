@@ -128,7 +128,7 @@
 #' when `coh.obs` length is two or more. See details.
 #' @param test.type Test for equal SIRs. Test available are 'homogeneity' and 'trend'.
 #' @param conf.type Confidence interval type: 'profile'(=default), 'wald' or 'univariate'.
-#' @param conf.level Level of type-I error in confidence intervals, default 0.05 is 95\% CI.
+#' @param conf.level Level of type-I error in confidence intervals, default 0.05 is 95% CI.
 #' @param EAR logical; TRUE calculates Excess Absolute Risks for univariate SIRs.
 #' (see details)
 
@@ -1246,7 +1246,7 @@ confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile',
 #' @param pyrs Variable name for person-years (optional)
 #' @param print Variables or expression to stratify the results
 #' @param test.type Test for equal SIRs. Test available are 'homogeneity' and 'trend'
-#' @param conf.level Level of type-I error in confidence intervals, default 0.05 is 95\% CI
+#' @param conf.level Level of type-I error in confidence intervals, default 0.05 is 95% CI
 #' @param conf.type select confidence interval type: (default=) `profile`, `wald`, `univariate`
 #' @param subset a logical vector for subsetting data
 #'

@@ -24,7 +24,7 @@
 #' @param n variable containing counts of subjects at-risk at the start of a
 #' time interval; e.g. `n = "at.risk"`.
 #' Required when `surv.method = "lifetable"`.
-#' \link[=flexible_argument]{Flexible input}.
+#' [Flexible input][flexible_argument].
 #'
 #' @param d variable(s) containing counts of subjects experiencing an event.
 #' With only one type of event, e.g. `d = "deaths"`. With multiple types of
@@ -32,12 +32,12 @@
 #' `d = c("canD", "othD")`. If the survival time function to be estimated
 #' does not use multiple types of events, supplying more than one variable
 #' to `d` simply causes the variables to be added together.
-#' Always required. \link[=flexible_argument]{Flexible input}.
+#' Always required. [Flexible input][flexible_argument].
 #'
 #' @param n.cens variable containing counts of subjects censored during a
 #' survival time interval; E.g. `n.cens = "alive"`.
 #' Required when `surv.method = "lifetable"`.
-#' \link[=flexible_argument]{Flexible input}.
+#' [Flexible input][flexible_argument].
 
 #' @param pyrs variable containing total subject-time accumulated within a
 #' survival time interval; E.g. `pyrs = "pyrs"`.

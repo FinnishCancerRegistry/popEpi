@@ -14,9 +14,9 @@
 #' for more info.
 #' @param data a `Lexis` data set; see `[Epi::Lexis]`.
 #' @param adjust variables to adjust estimates by, e.g. `adjust = "agegr"`.
-#' \link[=flexible_argument]{Flexible input}.
+#' [Flexible input][flexible_argument].
 #' @param weights weights to use to adjust mean survival times. See the
-#' \link[=direct_standardization]{dedicated help page} for more details on
+#' [dedicated help page][direct_standardization] for more details on
 #' weighting. `survmean`
 #' computes curves separately by all variables to adjust by, computes mean
 #' survival times, and computes weighted means of the mean survival times.
@@ -27,7 +27,7 @@
 #' data.
 #' @param pophaz a data set of population hazards passed to
 #' `[survtab]` (see the
-#' \link[=pophaz]{dedicated help page} and the help page of
+#' [dedicated help page][pophaz] and the help page of
 #' `survtab` for more information). Defines the
 #' population hazard in the time window where observed survival is estimated.
 #' @param e1.breaks `NULL` or a list of breaks defining the time

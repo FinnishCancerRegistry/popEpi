@@ -22,7 +22,7 @@ sir_ratio(
 
 \item{alternative}{The null-hypothesis test: (default:) \code{two.sided}, \code{less}, \code{greater}}
 
-\item{conf.level}{the type-I error in confidence intervals, default 0.95 for 95\\% CI.}
+\item{conf.level}{the type-I error in confidence intervals, default 0.95 for 95\% CI.}
 
 \item{type}{How the binomial confidence intervals are calculated (default:) \code{exact} or \code{asymptotic}.}
 }

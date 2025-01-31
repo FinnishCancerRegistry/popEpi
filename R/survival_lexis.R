@@ -26,7 +26,7 @@
 #' intervals where applicable.
 #' @param pophaz a `data.frame` containing
 #' expected hazards for the event of interest to occur. See the
-#' \link[=pophaz]{dedicated help page}. Required when
+#' [dedicated help page][pophaz]. Required when
 #' `surv.type = "surv.rel"` or `"cif.rel"`. `pophaz` must
 #' contain one column named `"haz"`, and any number of other columns
 #' identifying levels of variables to do a merge with split data within

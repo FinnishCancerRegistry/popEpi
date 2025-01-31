@@ -18,7 +18,7 @@
 #'
 #' @param x a sir-object or a vector of two; observed and expected cases.
 #' @param y a sir-object or a vector of two; observed and expected cases.
-#' @param conf.level the type-I error in confidence intervals, default 0.95 for 95\% CI.
+#' @param conf.level the type-I error in confidence intervals, default 0.95 for 95% CI.
 #' @param type How the binomial confidence intervals are calculated (default:) `exact` or `asymptotic`.
 #' @param alternative The null-hypothesis test: (default:) `two.sided`, `less`, `greater`
 #' @param digits number of digits in the output

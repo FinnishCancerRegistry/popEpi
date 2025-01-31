@@ -32,9 +32,9 @@
 # not found in `data` or searched for here.
 # @param NA.text a character string to display in a `warning`
 # if there are any rows with missing `values` or `adjust` values.
-# **special:** key phrase `\%\%NA_COUNT\%\%` in text is replaced
+# **special:** key phrase `%%NA_COUNT%%` in text is replaced
 # with the count of missing observations.
-# E.g. `"Missing \%\%NA_COUNTS\%\% observations due to derpness."`
+# E.g. `"Missing %%NA_COUNTS%% observations due to derpness."`
 # @examples
 # library(data.table)
 #

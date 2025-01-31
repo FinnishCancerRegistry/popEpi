@@ -7,20 +7,20 @@
 #' @param data aggregated data (see e.g. `[lexpand]`,
 #' `[aggre]` if you have subject-level data)
 #' @param pyrs person-years variable name in data.
-#' \link[=flexible_argument]{Flexible input}, typically e.g.
+#' [Flexible input][flexible_argument], typically e.g.
 #' `pyrs = pyrs`.
 #' @param obs observations variable name in data.
-#' \link[=flexible_argument]{Flexible input}, typically e.g.
+#' [Flexible input][flexible_argument], typically e.g.
 #' `obs = obs`.
 #' @param adjust variable for adjusting the rates.
-#' \link[=flexible_argument]{Flexible input}, typically e.g.
+#' [Flexible input][flexible_argument], typically e.g.
 #' `adjust = agegroup`.
 #' @param print variable name to stratify the rates.
-#' \link[=flexible_argument]{Flexible input}, typically e.g.
+#' [Flexible input][flexible_argument], typically e.g.
 #' `print = sex` or `print = list(sex, area)`.
 #' @param weights typically a list of weights or a `character` string
 #' specifying an age group standardization scheme; see
-#' the \link[=direct_standardization]{dedicated help page}
+#' the [dedicated help page][direct_standardization]
 #' and examples.
 #'
 #' @param subset a logical expression to subset data.
@@ -37,7 +37,7 @@
 #' adjusted rates, if available. Results are stratified by `print`.
 #' Adjusted rates are identified with suffix `.adj` and
 #' `.lo` and `.hi` are for confidence intervals lower and upper
-#' 95\% bounds, respectively.
+#' 95% bounds, respectively.
 #' The prefix `SE.` stands for standard error.
 #'
 #' @seealso `[lexpand]`, `[ltable]`

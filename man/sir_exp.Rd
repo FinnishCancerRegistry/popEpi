@@ -45,7 +45,7 @@ sir_ag(
 
 \item{test.type}{Test for equal SIRs. Test available are 'homogeneity' and 'trend'}
 
-\item{conf.level}{Level of type-I error in confidence intervals, default 0.05 is 95\\% CI}
+\item{conf.level}{Level of type-I error in confidence intervals, default 0.05 is 95\% CI}
 
 \item{subset}{a logical vector for subsetting data}
 

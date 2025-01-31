@@ -4,11 +4,11 @@
 #'
 #' @param adjust can be used as an alternative to passing variables to
 #' argument `formula` within a call to `adjust()`; e.g.
-#' `adjust = "agegr"`. \link[=flexible_argument]{Flexible input}.
+#' `adjust = "agegr"`. [Flexible input][flexible_argument].
 #'
 #' @param weights typically a list of weights or a `character` string
 #' specifying an age group standardization scheme; see
-#' the \link[=direct_standardization]{dedicated help page}
+#' the [dedicated help page][direct_standardization]
 #' and examples. NOTE: `weights = "internal"` is based on the counts
 #' of persons in follow-up at the start of follow-up (typically T = 0)
 #'
@@ -109,7 +109,7 @@
 #'
 #' The adjusting variables must match with the variable names in the
 #' argument `weights`;
-#' see the \link[=direct_standardization]{dedicated help page}.
+#' see the [dedicated help page][direct_standardization].
 #' Typically weights are supplied as a `list` or
 #' a `data.frame`. The former can be done by e.g.
 #'
