@@ -53,41 +53,60 @@ checkBreaksList <- function(x, breaks = list(fot = 0:5)) {
 }
 
 checkPophaz <- function(lex, ph, haz.name = "haz") {
-  ## INTENTION: checks a Lexis data set against the pophaz data set for
+  ## INTENTION: checks a Lexis dataset against the pophaz dataset for
   ## consistency (e.g. existing variables to merge by)
 
   if (!is.data.frame(ph)) {
-    stop("Data set containing population/expected hazards must be a data.frame",
+    stop("Dataset containing population/expected hazards must be a data.frame",
          " (or a data.table, which is also a data.frame).")
   }
 
   if (!haz.name %in% names(ph)) {
-    stop("Data set containing population/expected hazards does not contain a ",
+    stop("Dataset containing population/expected hazards does not contain a ",
          "column named 'haz'. Make sure the name is exactly that (",
          "case sensitive).")
   }
 
   if (haz.name %in% names(lex)) {
-    stop("Lexis data set already contains a column named 'haz', which is a ",
+    stop("Lexis dataset already contains a column named 'haz', which is a ",
          "reserved name for the population hazard variable to be merged. ",
          "Please rename/delete 'haz' from/in your Lexis data first.")
   }
 
+  is_na_haz <- is.na(ph[[haz.name]])
+  if (any(is_na_haz)) {
+    print(data.table::as.data.table(ph[is_na_haz, ]))
+    stop(
+      "Dataset containing population/expected hazards has missing (NA) hazard ",
+      "values. See table printed above."
+    )
+  }
+
+  is_neg_haz <- ph[[haz.name]] < 0
+  if (any(is_neg_haz)) {
+    print(data.table::as.data.table(ph[is_neg_haz, ]))
+    stop(
+      "Dataset containing population/expected hazards has negative hazard ",
+      "values. See table printed above."
+    )
+  }
+
+
   if (!is.data.frame(ph)) {
-    stop("Data set of expected/population hazards must be a data.frame.")
+    stop("Dataset of expected/population hazards must be a data.frame.")
   }
 
   bn <- setdiff(names(ph), haz.name)
 
   if (length(bn) == 0L) {
-    stop("No variables in expected/population hazards data set to use in merge ",
-         "with Lexis data. Ensure that the pop. haz. data set containts some ",
+    stop("No variables in expected/population hazards dataset to use in merge ",
+         "with Lexis data. Ensure that the pop. haz. dataset containts some ",
          "variables to merge by (e.g. sex, calendar year, and age group)")
   }
   if (!all(bn %in% names(lex))) {
     badbn <- paste0("'", setdiff(bn, names(lex)), "'", collapse = ", ")
-    stop("Lexis data set did not have following variable(s) that were in ",
-         "the expected/population hazards data set: ", badbn,". ",
+    stop("Lexis dataset did not have following variable(s) that were in ",
+         "the expected/population hazards dataset: ", badbn,". ",
          "Ensure you have supplied the right data and that the names of the ",
          "intended variables match.")
   }
@@ -95,12 +114,12 @@ checkPophaz <- function(lex, ph, haz.name = "haz") {
   mergeVars <- setdiff(names(ph), haz.name)
   dup <- any(duplicated(as.data.table(ph), by = mergeVars))
   if (dup) {
-    stop("Supplied data set of population/expected hzards has duplicated rows ",
+    stop("Supplied dataset of population/expected hzards has duplicated rows ",
          "by the variables ", paste0("'",mergeVars, "'", collapse = ", "),
-         " which prevents correct usage of the data set. Please ensure no rows",
-         " area duplicated in the data set before proceeding. Tip: use e.g. ",
+         " which prevents correct usage of the dataset. Please ensure no rows",
+         " area duplicated in the dataset before proceeding. Tip: use e.g. ",
          "duplicated(PH, by = c('V1', 'V2')) to check for duplicatedness in ",
-         "your data set (here named PH) by the variables V1 and V2."
+         "your dataset (here named PH) by the variables V1 and V2."
     )
   }
 
@@ -194,7 +213,7 @@ harmonizeStatuses <- function(x, C = "lex.Cst", X = "lex.Xst") {
 }
 
 harmonizeNumericTimeScales <- function(x, times = NULL) {
-  ## INTENTION: given a Lexis data set with some time scales, ensure
+  ## INTENTION: given a Lexis dataset with some time scales, ensure
   ## that the classes of the time scales comply to the lowest denominator,
   ## e.g. "double" and "integer" -> both "double"
 

@@ -1,3 +1,9 @@
+## News for version 0.4.14
+
+`pophaz` when used by `survtab` etc is checked for `NA` and negative hazard
+values. An informative error is raised if any are found. Previously `NA` hazard
+values lead to an incomprehensible error message later on.
+
 ## News for version 0.4.13
 
 Removed support for `date` objects. Use base R `Date` objects or
