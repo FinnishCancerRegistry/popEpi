@@ -2,15 +2,12 @@ if (requireNamespace("relsurv")) {
 testthat::context("popEpi::survtab vs. relsurv::rs.surv")
   # survtab vs. relsurv::rs.surv --------------------------------------------
   testthat::test_that("relative survivals about the same as relsurv's", {
-
-
     library(relsurv)
     library(Epi)
     library(data.table)
 
     # male
     pm <- data.table::data.table(popEpi::popmort)
-    # pm[, surv := 1L]
     pm[, surv := exp(-haz)]
     pm.m <- cast_simple(pm[sex==0], columns = 'year', rows = 'agegroup',  values='surv')
     pm.m[,agegroup := NULL]
@@ -24,52 +21,68 @@ testthat::context("popEpi::survtab vs. relsurv::rs.surv")
 
     pm[, surv := NULL]
 
-    sire2 <- sire[dg_date<ex_date, ]
+    sire2 <- sire[dg_date < ex_date, ]
     sire2[, Tstop  := as.integer(ex_date - dg_date)]
     sire2[, dg_age := as.integer(dg_date - bi_date)]
+    data.table::set(
+      x = sire2,
+      j = "dg_date",
+      value = as.Date(sire2[["dg_date"]])
+    )
 
-    x <- Lexis(entry = list(age = dg_age, per = dg_date, fot = 0L),
-              exit = list(fot = Tstop),
-              exit.status = as.integer(status %in% 1:2),
-              entry.status = 0L, data = sire2)
+    x <- Lexis(entry = list(age = dg_age, per = as.integer(dg_date), fot = 0L),
+               exit = list(fot = Tstop),
+               exit.status = as.integer(status %in% 1:2),
+               entry.status = 0L, data = sire2)
+    yrs_to_days_multiplier <- 365.242199
+    bl <- list(fot = seq(0, 19, 1 / 24))
+    x <- popEpi::splitMulti(
+      data = x,
+      breaks = lapply(bl, function(break_vector) {
+        range(break_vector) * yrs_to_days_multiplier
+      })
+    )
     setDT(x)
-    setattr(x, "class", c("Lexis","data.table", "data.frame"))
+    setattr(x, "class", c("Lexis", "data.table", "data.frame"))
 
     ## rs.surv
     ## sex must be coded c(1,2) (male, female)
-    x[, paste0(c("bi", "dg", "ex"), "_date") := lapply(.SD, as.Date),
-      .SDcols = paste0(c("bi", "dg", "ex"), "_date")]
-    x[, per := as.Date(per)]
-    x[, sex := 2L]
+    data.table::set(x, j = "sex", value = 2L)
+    to_date_col_nms <- c("ex_date", "per")
+    data.table::set(
+      x = x,
+      j = to_date_col_nms,
+      value = lapply(to_date_col_nms, function(col_nm) {
+        as.Date(x[[col_nm]])
+      })
+    )
     rs.e2 <- rs.surv(Surv(lex.dur, lex.Xst!=0) ~ 1 + ratetable(age=age, sex=sex, year=per),
                     ratetable = popm, data = x, method = 'ederer2', type = "fleming-harrington", fin.date=ex_date)
     rs.pp <- rs.surv(Surv(lex.dur, lex.Xst!=0) ~ 1 + ratetable(age=age, sex=sex, year=per),
                     ratetable = popm, data = x, method = 'pohar-perme', type = "fleming-harrington", fin.date=ex_date)
-    x[, sex := 1L]
+    data.table::set(x = x, j = "sex", value = 1L)
 
-    ## survtab
-    fb <- seq(0, 19, 1/24)
-
-    x[, lex.dur := lex.dur/365.242199]
-    x[, age := age/365.242199]
-    x[, per := get.yrs(per, year.length = "approx")]
-
+    data.table::set(
+      x = x,
+      j = c("lex.dur", "age", "per"),
+      value = list(
+        x[["lex.dur"]] / yrs_to_days_multiplier,
+        x[["age"]] / yrs_to_days_multiplier,
+        get.yrs(x[["per"]], year.length = "approx")
+      )
+    )
     setnames(pm, c("year", "agegroup"), c("per", "age"))
     st.e2 <- survtab(Surv(fot, event = lex.Xst) ~ 1, data = x, surv.type="surv.rel",
-                        relsurv.method="e2", pophaz = pm, breaks = list(fot = fb))
+                     relsurv.method = "e2", pophaz = pm, breaks = bl)
     st.pp <- survtab(Surv(fot, event = lex.Xst) ~ 1, data = x, surv.type="surv.rel",
-                        relsurv.method="pp", pophaz = pm, breaks = list(fot = fb))
+                     relsurv.method = "pp", pophaz = pm, breaks = bl)
     setDT(st.e2)
     setDT(st.pp)
 
-    ## rs.surv
-    fb <- fb[-1]
-    fbd <- fb*365.242199
-
-    su.e2 <- summary(rs.e2, times = fbd)
-    su.e2 <- cbind(data.table(time = fb), data.table(su.e2$surv))
-    su.pp <- summary(rs.pp, times = fbd)
-    su.pp <- cbind(data.table(time = fb), data.table(su.pp$surv))
+    su.e2 <- summary(rs.e2, times = bl[["fot"]][-1] * yrs_to_days_multiplier)
+    su.e2 <- cbind(data.table(time = bl[["fot"]][-1]), data.table(su.e2$surv))
+    su.pp <- summary(rs.pp, times = bl[["fot"]][-1] * yrs_to_days_multiplier)
+    su.pp <- cbind(data.table(time = bl[["fot"]][-1]), data.table(su.pp$surv))
 
     testthat::expect_equal(st.e2[, r.e2] ,  su.e2[, V1], tolerance = 0.000226, scale = 1L)
     testthat::expect_equal(st.pp[, r.pp] ,  su.pp[, V1], tolerance = 0.00292, scale = 1L)
