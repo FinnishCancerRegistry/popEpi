@@ -488,8 +488,21 @@ surv_pohar_perme_weight__ <- function(
     "expected_hazard" = dt[[hazard_col_nm]]
   ))
   if (method == "subject subinterval") {
+    data.table::set(
+      x = work_dt,
+      j = "H*(t_{i,j,k})",
+      value = work_dt[["expected_hazard"]] * work_dt[["lex.dur"]]
+    )
     work_dt[
-      j = "pp_weight" := {
+      #' @importFrom data.table := .SD
+      j = "H*(t_{i,j,k})" := lapply(.SD, cumsum),
+      .SDcols = "H*(t_{i,j,k})",
+      by = "lex.id"
+    ]
+    data.table::set(
+      x = work_dt,
+      j = "pp_weight",
+      value = {
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         # The Pohar Perme weight is always the inverse of the expected survival
         # probability. The dataset these weights are computed in is allowd to
@@ -508,19 +521,16 @@ surv_pohar_perme_weight__ <- function(
         # note: interval `i` has breaks `[t_{i-1}, t_i[`.
         # hence e.g. `h*_{i,j,k}` is the expected hazard in interval `i` between
         # `[t_{i-1}, t_i[`.
-        #' @importFrom data.table := .SDs
-        `H*(t_{i,j,k})` <- cumsum(.SD[["expected_hazard"]] * .SD[["lex.dur"]])
-        `h*_{i,j,k}` <- .SD[["expected_hazard"]]
-        `u_{i,j,k}` <- .SD[["lex.dur"]] / 2
-        # m_{i,j,k} = t_{i,j,k} - u_{i,j,k}
+        `H*(t_{i,j,k})` <- work_dt[["H*(t_{i,j,k})"]]
+        `h*_{i,j,k}` <- work_dt[["expected_hazard"]]
+        `u_{i,j,k}` <- work_dt[["lex.dur"]] / 2
+        # note: m_{i,j,k} = t_{i,j,k} - u_{i,j,k}
         `H*(m_{i,j,k})` <- `H*(t_{i,j,k})` - `h*_{i,j,k}` * `u_{i,j,k}`
-        # `w_{i,j,k}` = 1 / exp(-`H*(m_{i,j,k})`) = exp(`H*(m_{i,j,k})`)
+        # note: `w_{i,j,k}` = 1 / exp(-`H*(m_{i,j,k})`) = exp(`H*(m_{i,j,k})`)
         `w_{i,j,k}` <- exp(`H*(m_{i,j,k})`)
         `w_{i,j,k}`
-      },
-      by = "lex.id",
-      .SDcols = c("expected_hazard", "lex.dur")
-    ]
+      }
+    )
   } else if (method == "survival interval") {
     # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
     # - `method = "survival interval"`: The Pohar Perme weight is based on
@@ -545,55 +555,71 @@ surv_pohar_perme_weight__ <- function(
         labels = FALSE
       )
     )
-    # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
-    #   + Take as the start point of integration for survival interval i
-    #     and subject j the entry point to follow-up in the survival interval.
-    #     This is usually the start of the survival interval but late entries
-    #     may start after that. E.g. for rows `t_start = c(0.10, 0.20)`
-    #     the integration starts for survival interval i and subject j
-    #     from `t = 0.10`.
-    # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
-    data.table::set(
-      x = work_dt,
-      j = "integration_start",
-      value = dt[[ts_col_nm]]
-    )
-    # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
-    #   + Take as the end point of integration for survival interval i
-    #     and subject j the end of the survival interval i.
-    #     E.g. `t = 1.0` for interval `[0.0, 1.0[`.
-    # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
-    data.table::set(
-      x = work_dt,
-      j = "integration_stop",
-      value = breaks[work_dt[["survival_interval_id"]] + 1L]
-    )
     join_dt <- data.table::setDT(list(
       lex.id = work_dt[["lex.id"]],
       survival_interval_id = work_dt[["survival_interval_id"]]
     ))
+    data.table::set(
+      x = work_dt,
+      j = "h*_{i,j}",
+      value = work_dt[["lex.dur"]] * work_dt[["expected_hazard"]]
+    )
     work_dt <- work_dt[
       #' @importFrom data.table .SD
-      j = list(
-        "l_{i,j}" = .SD[["integration_stop"]][1L]
-          - .SD[["integration_start"]][1L],
-      # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
-      #   + Take as the expected hazard for subject j in survival interval i
-      #     the weighted average of subinterval expected hazards, where
-      #     the observed width of the subinterval is the weight. E.g.
-      #     with `t_start = c(0.1, 0.2)` and `t_stop = c(0.2, 0.3)`
-      #     we get `h*_{i,j}` as the average of `h*_{i,j,1}` and `h*_{i,j,2}`
-      #     for subject j in survival interval `[0.00, 1.00[`.
-      # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
-        "h*_{i,j}" = sum(
-          .SD[["lex.dur"]] * .SD[["expected_hazard"]]
-        ) / sum(.SD[["lex.dur"]])
-      ),
-      keyby = c("lex.id", "survival_interval_id")
+      j = lapply(.SD, sum),
+      .SDcols = c("h*_{i,j}", "lex.dur"),
+      by = c("lex.id", "survival_interval_id")
     ]
+    data.table::set(
+      x = work_dt,
+      j = c("integration_start", "integration_stop", "h*_{i,j}"),
+      value = list(
+        # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
+        #   + Take as the start point of integration for survival interval i
+        #     and subject j the entry point to follow-up in the survival interval.
+        #     This is usually the start of the survival interval but late entries
+        #     may start after that. E.g. for rows `t_start = c(0.10, 0.20)`
+        #     the integration starts for survival interval i and subject j
+        #     from `t = 0.10`.
+        # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
+        dt[[ts_col_nm]][!duplicated(dt[["lex.id"]])],
+        # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
+        #   + Take as the end point of integration for survival interval i
+        #     and subject j the end of the survival interval i.
+        #     E.g. `t = 1.0` for interval `[0.0, 1.0[`.
+        # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
+        breaks[work_dt[["survival_interval_id"]] + 1L],
+        # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
+        #   + Take as the expected hazard for subject j in survival interval i
+        #     the weighted average of subinterval expected hazards, where
+        #     the observed width of the subinterval is the weight. E.g.
+        #     with `t_start = c(0.1, 0.2)` and `t_stop = c(0.2, 0.3)`
+        #     we get `h*_{i,j}` as the average of `h*_{i,j,1}` and `h*_{i,j,2}`
+        #     for subject j in survival interval `[0.00, 1.00[`.
+        # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
+        work_dt[["h*_{i,j}"]] / work_dt[["lex.dur"]]
+      )
+    )
+    data.table::set(
+      x = work_dt,
+      j = "l_{i,j}",
+      value = work_dt[["integration_stop"]] - work_dt[["integration_start"]]
+    )
+    data.table::set(
+      x = work_dt,
+      j = "H*(t_{i,j})",
+      value = work_dt[["h*_{i,j}"]] * work_dt[["l_{i,j}"]]
+    )
     work_dt[
       #' @importFrom data.table := .SD
-      j = "pp_weight" := {
+      j = "H*(t_{i,j})" := lapply(.SD, cumsum),
+      .SDcols = "H*(t_{i,j})",
+      by = "lex.id"
+    ]
+    data.table::set(
+      x = work_dt,
+      j = "pp_weight",
+      value = {
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         #   + Now for subject j compute the cumulative expected hazard
         #     over survival intervals using the previously collected integration
@@ -604,9 +630,8 @@ surv_pohar_perme_weight__ <- function(
         #     multiplied with half the width of that survival interval.
         #     This yields `H*(m_{i,j})`.
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
-        `H*(t_{i,j})` <- cumsum(.SD[["h*_{i,j}"]] * `l_{i,j}`)
-        `H*(m_{i,j})` <- `H*(t_{i,j})`
-          - .SD[["h*_{i,j}"]] * .SD[["l_{i,j}"]] / 2
+        `H*(m_{i,j})` <- work_dt[["H*(t_{i,j})"]]
+          - work_dt[["h*_{i,j}"]] * work_dt[["l_{i,j}"]] / 2
         # `w_{i,j}` = 1 / exp(-`H*(m_{i,j})`) = exp(`H*(m_{i,j})`)
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         #   + Then the Pohar Perme weight is simply
@@ -614,10 +639,8 @@ surv_pohar_perme_weight__ <- function(
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         `w_{i,j}` <-  exp(`H*(m_{i,j})`)
         `w_{i,j}`
-      },
-      by = "lex.id",
-      .SDcols = c("h*_{i,j}", "l_{i,j}")
-    ]
+      }
+    )
     # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
     #   + With the weight computed for each subject in each survival interval
     #     (in which they are in follow-up), these weights are joined back to
