@@ -1090,16 +1090,6 @@ surv_rule_based_interval_breaks <- function(
   out_pos <- 1L
   break_lo_pos <- 1L
   break_hi_pos <- 2L
-  work_dt <- data.table::setDT(list(
-    fut_start = dt[[ts_fut_nm]],
-    fut_stop = dt[[ts_fut_nm]] + dt[["lex.dur"]],
-    fut_start_cropped = dt[[ts_fut_nm]],
-    fut_stop_cropped = dt[[ts_fut_nm]],
-    in_interval = rep(NA, nrow(dt)),
-    end_in_interval = rep(NA, nrow(dt)),
-    lex.Cst = dt[["lex.Cst"]],
-    lex.Xst = dt[["lex.Xst"]]
-  ))
   while (TRUE) {
     if (break_hi_pos > length(breaks)) {
       break
