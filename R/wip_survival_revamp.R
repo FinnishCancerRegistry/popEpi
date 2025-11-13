@@ -1381,8 +1381,31 @@ surv_individual_weights <- function(
   standard_weight_dt,
   observed_weight_dt = NULL
 ) {
+  # @codedoc_comment_block surv_individual_weights
+  # Produce a vector of weights, one weight for each row in `dt`.
+  # These weights have been called individual weights, Brenner weights,
+  # (Brenner et al 2004, https://doi.org/10.1016/j.ejca.2004.07.007),
+  # pre-weights, and maybe even others. A beloved child has many names.
+  #
+  # The idea of these weights is to weigh the individual contribution of each
+  # person to the summary statistics from which the survival function estimates
+  # themselves are produced. They pronounce the influence of under-represented
+  # data and reduce the influence of over-represented data just as the more
+  # conventional computation of weighted averages survival function estimates
+  # does. However, in this individual weighting approach even a single event
+  # can be included in the summary statistics as e.g. 0.80 or 1.20 events
+  # for over and under-represented data respectively.
+  #
+  # This function makes producing these weights easier. It performs the
+  # following steps:
+  # @codedoc_comment_block surv_individual_weights
   stratum_col_nms <- setdiff(names(standard_weight_dt), "weight")
   if (is.null(observed_weight_dt)) {
+    # @codedoc_comment_block surv_individual_weights
+    # - If `is.null(observed_weight_dt)`, `observed_weight_dt` is computed
+    #   by `surv_individual_weights` by simply counting the number of cases
+    #   in each stratum in `standard_weight_dt`.
+    # @codedoc_comment_block surv_individual_weights
     observed_weight_dt <- dt[
       i = standard_weight_dt,
       on = stratum_col_nms,
@@ -1390,16 +1413,16 @@ surv_individual_weights <- function(
       #' @importFrom data.table .EACHI
       keyby = .EACHI
     ]
-    data.table::set(
-      x = observed_weight_dt,
-      j = "weight",
-      value = observed_weight_dt[["weight"]] /
-        sum(observed_weight_dt[["weight"]])
-    )
   } else {
     assert_is_weight_dt(observed_weight_dt)
   }
   assert_is_weight_dt(standard_weight_dt)
+  # @codedoc_comment_block surv_individual_weights
+  # - Merge `standard_weight_dt` and `observed_weight_dt` into one table.
+  #   Scale the standard weights and the observed weights to sum into one
+  #   (they are in separate columns). E.g. one stratum has
+  #   `weight_standard = 0.5` and `weight_observed = 0.4`.
+  # @codedoc_comment_block surv_individual_weights
   weight_dt <- merge(
     x = standard_weight_dt,
     y = observed_weight_dt,
@@ -1416,16 +1439,28 @@ surv_individual_weights <- function(
     j = "weight_observed",
     value = weight_dt[["weight_observed"]] / sum(weight_dt[["weight_observed"]])
   )
+  # @codedoc_comment_block surv_individual_weights
+  # - Compute the individual weights as the standard weights divided by the
+  #   observed weights. E.g. one stratum has
+  #   `weight_brenner = 0.5 / 0.4 = 1.2`.
+  # @codedoc_comment_block surv_individual_weights
   data.table::set(
     x = weight_dt,
     j = "weight_brenner",
     value = weight_dt[["weight_standard"]] / weight_dt[["weight_observed"]]
   )
+  # @codedoc_comment_block surv_individual_weights
+  # - Using left-join, produce a vector of length `nrow(dt)` where each row in
+  #   `dt` gets an individual weight based on its stratum.
+  # @codedoc_comment_block surv_individual_weights
   out <- weight_dt[
     i = dt,
     on = stratum_col_nms,
     j = .SD,
     .SDcols = "weight_brenner"
   ]
+  # @codedoc_comment_block surv_individual_weights
+  # - Return these weights as a vector.
+  # @codedoc_comment_block surv_individual_weights
   return(out[["weight_brenner"]])
 }
