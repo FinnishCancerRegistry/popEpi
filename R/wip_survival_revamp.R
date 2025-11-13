@@ -1318,3 +1318,79 @@ surv_interval <- function(
   )
   return(work_dt[])
 }
+
+assert_is_weight_dt <- function(
+  x,
+  x_nm = NULL,
+  assertion_type = NULL,
+  call = NULL
+) {
+  dbc::handle_args_inplace()
+  dbc::assert_is_data_table_with_required_names(
+    x = x,
+    x_nm = x_nm,
+    call = call,
+    assertion_type = assertion_type,
+    required_names = "weight"
+  )
+  dbc::assert_is_number_nonNA_gtezero_vector(
+    x[["weight"]],
+    x_nm = sprintf("%s[[\"weight\"]]", x_nm),
+    call = call,
+    assertion_type = assertion_type
+  )
+}
+
+surv_individual_weights <- function(
+  dt,
+  standard_weight_dt,
+  observed_weight_dt = NULL
+) {
+  stratum_col_nms <- setdiff(names(standard_weight_dt), "weight")
+  if (is.null(observed_weight_dt)) {
+    observed_weight_dt <- dt[
+      i = standard_weight_dt,
+      on = stratum_col_nms,
+      j = list(weight = .N),
+      #' @importFrom data.table .EACHI
+      keyby = .EACHI
+    ]
+    data.table::set(
+      x = observed_weight_dt,
+      j = "weight",
+      value = observed_weight_dt[["weight"]] /
+        sum(observed_weight_dt[["weight"]])
+    )
+  } else {
+    assert_is_weight_dt(observed_weight_dt)
+  }
+  assert_is_weight_dt(standard_weight_dt)
+  weight_dt <- merge(
+    x = standard_weight_dt,
+    y = observed_weight_dt,
+    by = stratum_col_nms,
+    suffixes = c("standard", "observed")
+  )
+  data.table::set(
+    x = weight_dt,
+    j = "weight_standard",
+    value = weight_dt[["weight_standard"]] / sum(weight_dt[["weight_standard"]])
+  )
+  data.table::set(
+    x = weight_dt,
+    j = "weight_observed",
+    value = weight_dt[["weight_observed"]] / sum(weight_dt[["weight_observed"]])
+  )
+  data.table::set(
+    x = weight_dt,
+    j = "weight_brenner",
+    value = weight_dt[["weight_standard"]] / weight_dt[["weight_observed"]]
+  )
+  out <- weight_dt[
+    i = dt,
+    on = stratum_col_nms,
+    j = .SD,
+    .SDcols = "weight_brenner"
+  ]
+  return(out[["weight_brenner"]])
+}
