@@ -1404,7 +1404,7 @@ surv_individual_weights <- function(
     x = standard_weight_dt,
     y = observed_weight_dt,
     by = stratum_col_nms,
-    suffixes = c("standard", "observed")
+    suffixes = c("_standard", "_observed")
   )
   data.table::set(
     x = weight_dt,
