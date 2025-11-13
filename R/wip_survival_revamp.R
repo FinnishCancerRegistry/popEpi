@@ -42,7 +42,6 @@ surv_split <- function(
     merge = TRUE,
     verbose = FALSE
   )
-  data.table::setDT(out)
   dbc::assert_prod_output_is_data_table_with_required_names(
     x = out,
     required_names = c(lexis_col_nms, merge)
@@ -56,9 +55,22 @@ surv_merge <- function(
   merge_dt,
   merge_dt_by,
   merge_dt_harmonisers = NULL,
-  ts_col_nms
+  debug = FALSE
 ) {
+  dbc::assert_is_identical(
+    x = class(dt),
+    y = c("Lexis", "data.table", "data.frame")
+  )
+  dbc::assert_vector_elems_are_in_set(
+    x = merge_dt_by,
+    set = names(dt)
+  )
+  dbc::assert_vector_elems_are_in_set(
+    x = merge_dt_by,
+    set = names(merge_dt)
+  )
   calling_env <- parent.frame(1L)
+  ts_col_nms <- attr(dt, "time.scales")
   merge_ts_col_nms <- intersect(ts_col_nms, merge_dt_by)
   if (is.null(merge_dt_harmonisers)) {
     merge_dt_harmonisers <- lapply(merge_ts_col_nms, function(col_nm) {
@@ -252,8 +264,9 @@ surv_split_merge_aggregate <- function(
   aggre_ts_col_nms = "ts_fot",
   aggre_values = quote(list(
     total_subject_time = sum(lex.dur),
-    n_events = sum(lex.Xst != 0)
-  ))
+    n_events = sum(lex.Xst != lex.Cst)
+  )),
+  debug = FALSE
 ) {
   aggre_values_expr <- substitute(aggre_values)
   if (identical(aggre_values_expr[[1]], quote(quote))) {
@@ -262,7 +275,8 @@ surv_split_merge_aggregate <- function(
   ts_col_nms <- attr(dt, "time.scales")
 
   interval_dt <- breaks_list_to_interval_dt(breaks, aggre_ts_col_nms)
-  surv_split_merge_aggregate_env <- environment()
+  # eval_env <- environment()
+  calling_env <- parent.frame(1L)
   out <- dt[
     i = aggre_stratum_dt,
     on = names(aggre_stratum_dt),
@@ -283,13 +297,13 @@ surv_split_merge_aggregate <- function(
         sub_dt,
         merge_dt = merge_dt,
         merge_dt_by = merge_dt_by,
-        ts_col_nms = ts_col_nms
+        debug = debug
       )
       out <- surv_aggregate_one_stratum__(
         sub_dt = sub_dt,
         interval_dt = interval_dt,
         aggre_values_expr = aggre_values_expr,
-        enclos_env = surv_split_merge_aggregate_env
+        enclos_env = calling_env
       )
       out
     },
@@ -426,8 +440,7 @@ surv_split_merge_aggregate_by_interval <- function(
         surv_merge(
           sub_dt,
           merge_dt = merge_dt,
-          merge_dt_by = merge_dt_by,
-          ts_col_nms = ts_col_nms
+          merge_dt_by = merge_dt_by
         )
         agg_expr <- quote(sub_dt[
           j = "placeholder",
@@ -1163,51 +1176,73 @@ surv_rule_based_interval_breaks <- function(
 surv_estimate_ederer_i <- function(
   dt,
   breaks,
-  interval_dt,
+  ts_col_nm,
   merge_dt,
   merge_dt_by
 ) {
-  # dt contains one row per lex.id.
-  dt <- data.table::setDT(as.list(dt))
-  surv_crop(dt = dt, breaks = breaks)
-  drop <- dt[["lex.dur"]] <= 0.0
-  if (any(drop)) {
-    dt <- subset(dt, subset = !drop)
-  }
-  surv_make_immortal(dt = dt, breaks = breaks)
-  aggre_ts_col_nm <- intersect(names(breaks), names(interval_dt))
-  dt <- surv_split_merge_aggregate(
-    dt = dt,
+  dbc::assert_is_identical(
+    x = class(dt),
+    y = c("Lexis", "data.table", "data.frame")
+  )
+  dbc::assert_is_identical(
+    x = data.table::key(dt)[1],
+    y = "lex.id"
+  )
+  dbc::assert_atom_is_in_set(
+    x = ts_col_nm,
+    set = data.table::key(dt)
+  )
+  keep_col_nms <- unique(c(
+    "lex.id",
+    attr(dt, "time.scales"),
+    "lex.dur", "lex.Cst", "lex.Xst",
+    setdiff(names(merge_dt), "haz")
+  ))
+  work_dt <- data.table::setDT(as.list(dt)[keep_col_nms])
+  surv_crop(dt = work_dt, breaks = breaks)
+  keep <- work_dt[["lex.dur"]] > 0.0 & !duplicated(work_dt, by = "lex.id")
+  work_dt <- subset(work_dt, subset = keep, select = keep_col_nms)
+  surv_make_immortal(dt = work_dt, breaks = breaks)
+  lex_id_dt <- data.table::setDT(list(lex.id = work_dt[["lex.id"]]))
+  data.table::setkeyv(lex_id_dt, "lex.id")
+  lexis_set__(
+    dt = work_dt,
+    ts_col_nms = attr(dt, "time.scales")
+  )
+  work_dt <- surv_split_merge_aggregate(
+    dt = work_dt,
     breaks = breaks,
     merge_dt = merge_dt,
     merge_dt_by = merge_dt_by,
-    # aggre_stratum_dt = data.table::data.table("__dummy__" = TRUE),
-    aggre_stratum_dt = data.table::data.table(
-      lex.id = sort(unique(dt[["lex.id"]])),
-      key = "lex.id"
-    ),
-    aggre_ts_col_nms = aggre_ts_col_nm,
+    aggre_stratum_dt = lex_id_dt,
+    aggre_ts_col_nms = ts_col_nm,
     aggre_values = quote(list(
-      haz = sum(lex.dur * haz)
-    ))
+      H = sum(lex.dur * haz)
+    )),
+    debug = TRUE
   )
-  stop("above produces mostly NA values in haz.")
-  # dt now contains survival-interval-specific hazard for each lex.id.
-  data.table::setkeyv(dt, c("lex.id", aggre_ts_col_nm))
-  dt[
+  # work_dt now contains survival-interval-specific hazard for each lex.id.
+  data.table::setkeyv(work_dt, c("lex.id", ts_col_nm))
+  work_dt[
     #' @importFrom data.table := .SD
-    j = "ederer_i" := exp(-cumsum(.SD[["haz"]])),
+    j = "H" := lapply(.SD, cumsum),
+    .SDcols = "H",
     by = "lex.id"
   ]
-  # dt now contains ederer_i expected survival curve per lex.id.
-  dt <- dt[
+  data.table::set(
+    x = work_dt,
+    j = "ederer_i",
+    value = exp(-work_dt[["H"]])
+  )
+  # work_dt now contains ederer_i expected survival curve per lex.id.
+  work_dt <- work_dt[
     #' @importFrom data.table .SD
-    j = list(ederer_i = mean(.SD[["ederer_i"]])),
+    j = lapply(.SD, mean),
     .SDcols = "ederer_i",
-    keyby = eval(aggre_ts_col_nm)
+    keyby = eval(ts_col_nm)
   ]
-  # dt now contains the overall average ederer_i expected survival curve.
-  return(dt[["ederer_i"]])
+  # work_dt now contains the overall average ederer_i expected survival curve.
+  return(work_dt[["ederer_i"]])
 }
 
 surv_interval <- function(
