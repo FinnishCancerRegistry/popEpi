@@ -54,8 +54,7 @@ surv_merge <- function(
   dt,
   merge_dt,
   merge_dt_by,
-  merge_dt_harmonisers = NULL,
-  debug = FALSE
+  merge_dt_harmonisers = NULL
 ) {
   dbc::assert_is_identical(
     x = class(dt),
@@ -265,8 +264,7 @@ surv_split_merge_aggregate <- function(
   aggre_values = quote(list(
     total_subject_time = sum(lex.dur),
     n_events = sum(lex.Xst != lex.Cst)
-  )),
-  debug = FALSE
+  ))
 ) {
   aggre_values_expr <- substitute(aggre_values)
   if (identical(aggre_values_expr[[1]], quote(quote))) {
@@ -296,8 +294,7 @@ surv_split_merge_aggregate <- function(
       surv_merge(
         sub_dt,
         merge_dt = merge_dt,
-        merge_dt_by = merge_dt_by,
-        debug = debug
+        merge_dt_by = merge_dt_by
       )
       out <- surv_aggregate_one_stratum__(
         sub_dt = sub_dt,
@@ -977,6 +974,10 @@ surv_lexis <- function(
   conf_lvls = 0.95,
   weight_dt = NULL
 ) {
+  stopifnot(
+    inherits(dt, "Lexis"),
+    inherits(dt, "data.frame")
+  )
   dt <- surv_split_merge_aggregate(
     dt = dt,
     breaks = breaks,
@@ -1217,29 +1218,34 @@ surv_estimate_ederer_i <- function(
     aggre_stratum_dt = lex_id_dt,
     aggre_ts_col_nms = ts_col_nm,
     aggre_values = quote(list(
-      H = sum(lex.dur * haz)
-    )),
-    debug = TRUE
+      ederer_i = sum(lex.dur * haz)
+    ))
+  )
+  browser()
+  data.table::set(
+    x = work_dt,
+    j = setdiff(names(work_dt), c("lex.id", "interval_id", "ederer_i")),
+    value = NULL
   )
   # work_dt now contains survival-interval-specific hazard for each lex.id.
-  data.table::setkeyv(work_dt, c("lex.id", ts_col_nm))
+  data.table::setkeyv(work_dt, c("lex.id", "interval_id"))
   work_dt[
     #' @importFrom data.table := .SD
-    j = "H" := lapply(.SD, cumsum),
-    .SDcols = "H",
+    j = "ederer_i" := lapply(.SD, cumsum),
+    .SDcols = "ederer_i",
     by = "lex.id"
   ]
   data.table::set(
     x = work_dt,
     j = "ederer_i",
-    value = exp(-work_dt[["H"]])
+    value = exp(-work_dt[["ederer_i"]])
   )
   # work_dt now contains ederer_i expected survival curve per lex.id.
   work_dt <- work_dt[
     #' @importFrom data.table .SD
     j = lapply(.SD, mean),
     .SDcols = "ederer_i",
-    keyby = eval(ts_col_nm)
+    keyby = "interval_id"
   ]
   # work_dt now contains the overall average ederer_i expected survival curve.
   return(work_dt[["ederer_i"]])
