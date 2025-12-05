@@ -1,12 +1,12 @@
-lexis_set__ <- function(dt, ts_col_nms) {
+lexis_set__ <- function(dt, lexis_ts_col_nms) {
   attr_nms <- c("time.scales", "time.since", "breaks")
   if (inherits(dt, "Lexis")) {
     attrs <- lapply(attr_nms, attr, x = dt)
   } else {
     attrs <- list(
-      ts_col_nms,
-      rep("", length(ts_col_nms)),
-      structure(lapply(ts_col_nms, function(x) NULL), names = ts_col_nms)
+      lexis_ts_col_nms,
+      rep("", length(lexis_ts_col_nms)),
+      structure(lapply(lexis_ts_col_nms, function(x) NULL), names = lexis_ts_col_nms)
     )
   }
   names(attrs) <- attr_nms
@@ -18,23 +18,36 @@ lexis_set__ <- function(dt, ts_col_nms) {
   return(invisible(dt[]))
 }
 
+#' @title Survival Time Statistics
+#' @description
+#' Functions used for estimation of various survival time statistics.
+#' E.g. relative survival.
+#' @name survival_revamp
+NULL
+
+
 surv_split <- function(
   dt,
   breaks,
-  ts_col_nms,
   merge = TRUE
 ) {
+  stopifnot(
+    inherits(dt, "Lexis")
+  )
   if (nrow(dt) == 0) {
     return(dt[])
   }
-  lexis_col_nms <- c("lex.id", ts_col_nms, "lex.dur", "lex.Cst", "lex.Xst")
+  lexis_ts_col_nms <- attr(dt, "time.scales")
+  lexis_col_nms <- c(
+    "lex.id", lexis_ts_col_nms, "lex.dur", "lex.Cst", "lex.Xst"
+  )
   if (isTRUE(merge)) {
     merge <- setdiff(names(dt), lexis_col_nms)
   } else if (isFALSE(merge)) {
     merge <- character(0L)
   }
   out <- data.table::setDT(as.list(dt)[union(lexis_col_nms, merge)])
-  lexis_set__(out, ts_col_nms = ts_col_nms)
+  lexis_set__(out, lexis_ts_col_nms = lexis_ts_col_nms)
   out <- popEpi::splitMulti(
     data = out,
     breaks = breaks,
@@ -42,14 +55,58 @@ surv_split <- function(
     merge = TRUE,
     verbose = FALSE
   )
-  dbc::assert_prod_output_is_data_table_with_required_names(
-    x = out,
-    required_names = c(lexis_col_nms, merge)
-  )
-  data.table::setkeyv(out, c("lex.id", ts_col_nms))
+  data.table::setkeyv(out, c("lex.id", lexis_ts_col_nms))
   return(out[])
 }
 
+#' @eval codedoc::pkg_doc_fun("popEpi::surv_merge", "survival_revamp")
+#' @examples
+#' # popEpi::surv_merge
+#' lexis <- Epi::Lexis(
+#'   entry = list(ts_fut = 0.0, ts_cal = 2010.3, ts_age = 56.8),
+#'   exit = list(ts_cal = 2024.9999),
+#'   entry.status = 0,
+#'   exit.status = 0
+#' )
+#' lexis$sex <- 0L
+#' lexis <- popEpi::splitMulti(
+#'   data = lexis,
+#'   breaks = list(ts_fut = seq(0, 3, 1 / 12))
+#' )
+#' my_merge_dt <- data.table::CJ(sex = 0:1, ts_age = 0:100, ts_cal = 2000:2025)
+#' data.table::set(
+#'   x = my_merge_dt,
+#'   j = "merge_value",
+#'   value = runif(nrow(my_merge_dt))
+#' )
+#' popEpi::surv_merge(
+#'   dt = lexis,
+#'   merge_dt = my_merge_dt,
+#'   merge_dt_by = c("sex", "ts_age", "ts_cal")
+#' )
+#' stopifnot(
+#'   "merge_value" %in% names(lexis),
+#'   !is.na(lexis[["merge_value"]])
+#' )
+#' data.table::set(
+#'   x = lexis,
+#'   j = "merge_value",
+#'   value = NULL
+#' )
+#' popEpi::surv_merge(
+#'   dt = lexis,
+#'   merge_dt = my_merge_dt,
+#'   merge_dt_by = c("sex", "ts_age", "ts_cal"),
+#'   merge_dt_harmonisers = list(
+#'     ts_cal = quote(as.integer(ts_cal)),
+#'     ts_age = quote(as.integer(ts_age))
+#'   )
+#' )
+#' stopifnot(
+#'   "merge_value" %in% names(lexis),
+#'   !is.na(lexis[["merge_value"]])
+#' )
+#'
 surv_merge <- function(
   dt,
   merge_dt,
@@ -68,31 +125,87 @@ surv_merge <- function(
     x = merge_dt_by,
     set = names(merge_dt)
   )
-  calling_env <- parent.frame(1L)
-  ts_col_nms <- attr(dt, "time.scales")
-  merge_ts_col_nms <- intersect(ts_col_nms, merge_dt_by)
+  # @codedoc_comment_block popEpi::surv_merge
+  # `popEpi::surv_merge` can be used to merge additional information into
+  # `Lexis` data, allowing the use of the `Lexis` time scales in the
+  # merge. The typical use-case is to split `Lexis` data and then merge
+  # population (expected) hazards to the subject-intervals.
+  # `popEpi::surv_merge` performs the following steps:
+  # 
+  # @codedoc_comment_block popEpi::surv_merge
+  call_env <- parent.frame(1L)
+  lexis_ts_col_nms <- attr(dt, "time.scales")
+  merge_ts_col_nms <- intersect(lexis_ts_col_nms, merge_dt_by)
   if (is.null(merge_dt_harmonisers)) {
+    # @codedoc_comment_block popEpi::surv_merge
+    # - If `is.null(merge_dt_harmonisers)`, `popEpi::surv_merge` attempts to
+    #   automatically determine the harmonisers making use of `cut` by looking
+    #   at the unique
+    #   values of the time scale to merge by in `merge_dt` (e.g. calendar year
+    #   in `ts_cal`):
+    # @codedoc_comment_block popEpi::surv_merge
     merge_dt_harmonisers <- lapply(merge_ts_col_nms, function(col_nm) {
       cut_breaks <- sort(unique(merge_dt[[col_nm]]))
       if (is.integer(cut_breaks) || is.double(cut_breaks)) {
         if (all(diff(cut_breaks) == 1)) {
+          # @codedoc_comment_block popEpi::surv_merge
+          #   + If `merge_dt[[col_nm]]` contains numbers in increments of one and
+          #     nothing else, we define the `cut` breaks as the unique values of
+          #    `merge_dt[[col_nm]]` and as the ceiling
+          #    `max(merge_dt[[col_nm]]) + 1L`. E.g.
+          #    `1950:2021` for `merge_dt[[col_nm]]` containing unique values
+          #    `1950:2020`.
+          # @codedoc_comment_block popEpi::surv_merge
           cut_breaks <- c(cut_breaks, cut_breaks[length(cut_breaks)] + 1L)
         } else {
-          cut_breaks <- c(cut_breaks, cut_breaks[length(cut_breaks)] + 1e6L)
+          # @codedoc_comment_block popEpi::surv_merge
+          #   + If `merge_dt[[col_nm]]` contains numbers but they are not all in
+          #     increments of one then
+          #     we define `cut` breaks as the unique values of
+          #     `merge_dt[[col_nm]]` and as the ceiling
+          #     `max(merge_dt[[col_nm]]) + last_diff`. Where `last_diff` is the
+          #     difference between the highest and second highest values. E.g.
+          #     `c(1950, 1960, 1970:2020, 2021)` for `merge_dt[[col_nm]]`
+          #     containing unique values `c(1950, 1960, 1970:2020)`.
+          # @codedoc_comment_block popEpi::surv_merge
+          last_diff <- diff(utils::tail(cut_breaks, 2L))
+          cut_breaks <- c(
+            cut_breaks,
+            cut_breaks[length(cut_breaks)] + last_diff
+          )
         }
       } else {
+        # @codedoc_comment_block popEpi::surv_merge
+        #   + If `merge_dt[[col_nm]]` does not contain numbers, an error is
+        #     raised because we don't know how to automatically form a
+        #     harmoniser.
+        # @codedoc_comment_block popEpi::surv_merge
         stop(
           "Cannot automatically determine `merge_dt_harmonisers$", col_nm, "`;",
           "Please supply argument `merge_dt_harmonisers` yourself."
         )
       }
+      # @codedoc_comment_block popEpi::surv_merge
+      #    + With the `cut` breaks defined, the automatically created harmoniser
+      #      becomes a `cut` call with arguments
+      #      * `x = COL + lex.dur / 2`, where `COL` is the current column,
+      #      * `breaks` as specified above,
+      #      * `right = FALSE`, and
+      #      * `labels = FALSE`.
+      #    + This results in indices to the breaks, and the harmoniser returns
+      #      break values at those indices. E.g. the cut results in
+      #      `3` in `breaks = c(1950, 1960, 1970:2020, 2021)` and output is
+      #      `1970` for every value of `COL + lex.dur / 2` in the interval
+      #      `]1970, 1971]`.
+      # @codedoc_comment_block popEpi::surv_merge
       substitute(
         {
           breaks <- CUT_BREAKS
           idx <- cut(
             x = COL + lex.dur / 2,
             breaks = breaks,
-            right = FALSE, labels = FALSE
+            right = FALSE,
+            labels = FALSE
           )
           breaks[idx]
         },
@@ -101,12 +214,22 @@ surv_merge <- function(
     })
     names(merge_dt_harmonisers) <- merge_ts_col_nms
   }
+  # @codedoc_comment_block popEpi::surv_merge
+  # - Armed with either user-defined or automatically created
+  #   `merge_dt_harmonisers`, they are each evaluated to create a temporary
+  #   `data.table` with harmonised data from `dt`. This is performed via
+  #   `eval` with `envir = dt` and `enclos = call_env` where `call_env` is the
+  #   environment where `popEpi::surv_merge` was called. Of course if a column
+  #   has no harmoniser at this point then it is used as-is. For instance there
+  #   is no need to harmonise stratifying columns because they are not changed
+  #   by splitting the `Lexis` data.
+  # @codedoc_comment_block popEpi::surv_merge
   join_dt <- data.table::setDT(lapply(merge_dt_by, function(col_nm) {
     if (col_nm %in% names(merge_dt_harmonisers)) {
       eval(
         merge_dt_harmonisers[[col_nm]],
         envir = dt,
-        enclos = calling_env
+        enclos = call_env
       )
     } else {
       dt[[col_nm]]
@@ -114,6 +237,12 @@ surv_merge <- function(
   }))
   data.table::setnames(join_dt, merge_dt_by)
   merge_value_col_nms <- setdiff(names(merge_dt), merge_dt_by)
+  # @codedoc_comment_block popEpi::surv_merge
+  # - Then we perform the actual merge between `merge_dt` and the harmonised
+  #   data. This merges in data from `merge_dt` into every row of `dt` in-place.
+  #   So `dt` is modified and no additional copy is taken for the sake of
+  #   efficiency.
+  # @codedoc_comment_block popEpi::surv_merge
   data.table::set(
     x = dt,
     j = merge_value_col_nms,
@@ -125,28 +254,140 @@ surv_merge <- function(
       .SDcols = merge_value_col_nms
     ]
   )
+  # @codedoc_comment_block popEpi::surv_merge
+  # - Each merged-in column from `merge_dt` (all columns not in `merge_dt_by`)
+  #   are inspected for missing values. If there are any, an error is raised.
+  #   This usually occurs if `merge_dt` does not contain data for all data in
+  #   `dt`. For instance it only covers years 1950-2020 but `dt` contains also
+  #   data for 2021. This error helps you to spot those problems early instead
+  #   of producing nonsense results downstream.
+  # @codedoc_comment_block popEpi::surv_merge
   for (merge_value_col_nm in merge_value_col_nms) {
     is_missing <- is.na(dt[[merge_value_col_nm]])
     if (any(is_missing)) {
       print(dt[is_missing, ])
-      browser()
       stop("Merging `merge_dt` into split (subset of) `dt` produced NA values ",
            "in column `dt$", merge_value_col_nm, "`. ",
            "See the table printed above.")
     }
   }
+  # @codedoc_comment_block popEpi::surv_merge
+  # - `popEpi::surv_merge` returns `dt` invisibly after adding columns from
+  #   `merge_dt` into `dt` in-place, without taking a copy.
+  # @codedoc_comment_block popEpi::surv_merge
   return(invisible(dt[]))
+}
+
+surv_box_dt__ <- function(
+  breaks
+) {
+  stopifnot(
+    inherits(breaks, "list"),
+    !is.null(names(breaks)),
+    !duplicated(names(breaks))
+  )
+  split_ts_col_nms <- names(breaks)
+  box_dt <- lapply(split_ts_col_nms, function(ts_col_nm) {
+    seq_len(length(breaks[[ts_col_nm]]) - 1L)
+  })
+  box_dt <- do.call(data.table::CJ, box_dt, quote = TRUE)
+  id_col_nms <- paste0(split_ts_col_nms, "_id")
+  data.table::setnames(box_dt, id_col_nms)
+  data.table::set(
+    x = box_dt,
+    j = "box_id",
+    value = seq_len(nrow(box_dt))
+  )
+  start_col_nms <- paste0(split_ts_col_nms, "_start")
+  data.table::set(
+    x = box_dt,
+    j = start_col_nms,
+    value = lapply(split_ts_col_nms, function(ts_col_nm) {
+      breaks[[ts_col_nm]][box_dt[[paste0(ts_col_nm, "_id")]]]
+    })
+  )
+  stop_col_nms <- paste0(split_ts_col_nms, "_stop")
+  data.table::set(
+    x = box_dt,
+    j = stop_col_nms,
+    value = lapply(split_ts_col_nms, function(ts_col_nm) {
+      breaks[[ts_col_nm]][box_dt[[paste0(ts_col_nm, "_id")]] + 1L]
+    })
+  )
+  data.table::setcolorder(
+    box_dt,
+    c(
+      "box_id", id_col_nms,
+      paste0(
+        rep(split_ts_col_nms, each = 2L),
+        rep(c("_start", "_stop"), times = length(split_ts_col_nms))
+      )
+    )
+  )
+  data.table::setkeyv(box_dt, names(box_dt))
+  if (length(split_ts_col_nms) == 1) {
+    data.table::set(
+      x = box_dt,
+      j = "interval_width",
+      value = box_dt[[stop_col_nms]] - box_dt[[start_col_nms]]
+    )
+  }
+  return(box_dt[])
+}
+
+surv_box_id__ <- function(
+  dt,
+  box_dt
+) {
+  start_col_nms <- sort(names(box_dt)[grepl("_start$", names(box_dt))])
+  stop_col_nms <- sort(names(box_dt)[grepl("_stop$", names(box_dt))])
+  split_ts_col_nms <- sub("_start$", "", start_col_nms)
+  id_col_nms <- paste0(split_ts_col_nms, "_id")
+  stopifnot(
+    inherits(box_dt, "data.frame"),
+    "box_id" %in% names(box_dt),
+    id_col_nms %in% names(box_dt),
+    identical(split_ts_col_nms, sub("_stop$", "", stop_col_nms)),
+    inherits(dt, "data.frame"),
+    split_ts_col_nms %in% names(dt),
+    "lex.dur" %in% names(dt)
+  )
+  names(start_col_nms) <- names(stop_col_nms) <- split_ts_col_nms
+  work_dt <- data.table::setDT(lapply(split_ts_col_nms, function(ts_col_nm) {
+    breaks <- sort(union(
+      box_dt[[start_col_nms[ts_col_nm]]],
+      box_dt[[stop_col_nms[ts_col_nm]]]
+    ))
+    x <- dt[[ts_col_nm]] + dt[["lex.dur"]] * 0.5
+    idx <- cut(
+      x = x,
+      breaks = breaks,
+      right = FALSE,
+      labels = FALSE
+    )
+    return(idx)
+  }))
+  data.table::setnames(work_dt, names(work_dt), id_col_nms)
+  out <- box_dt[
+    i = work_dt,
+    on = id_col_nms,
+    #' @importFrom data.table .SD
+    j = .SD[["box_id"]],
+    .SDcols = "box_id"
+  ]
+  return(out)
 }
 
 surv_aggregate_one_stratum__ <- function(
   sub_dt,
-  interval_dt,
+  box_dt,
   aggre_values_expr,
   enclos_env
 ) {
   expr_obj_nms <- all.vars(aggre_values_expr)
-  ts_col_nms <- attr(sub_dt, "time.scales")
-  lapply(ts_col_nms, function(ts_col_nm) {
+  lexis_ts_col_nms <- attr(sub_dt, "time.scales")
+  sub_dt <- data.table::setDT(as.list(sub_dt))
+  lapply(lexis_ts_col_nms, function(ts_col_nm) {
     add_col_nms <- unique(expr_obj_nms[
       grepl(sprintf("^%s_((lead)|(lag))[0-9]+$", ts_col_nm), expr_obj_nms)
     ])
@@ -169,25 +410,15 @@ surv_aggregate_one_stratum__ <- function(
       ]
     })
   })
-  fut_ts_col_nm <- intersect(ts_col_nms, names(interval_dt))
   data.table::set(
     x = sub_dt,
-    j = "interval_id",
-    value = cut(
-      x = sub_dt[[fut_ts_col_nm]],
-      breaks = c(
-        interval_dt[[fut_ts_col_nm]],
-        interval_dt[[fut_ts_col_nm]][[nrow(interval_dt)]] +
-          interval_dt[["interval_width"]][[nrow(interval_dt)]]
-      ),
-      right = FALSE,
-      labels = FALSE
-    )
+    j = "box_id",
+    value = surv_box_id__(dt = sub_dt, box_dt = box_dt)
   )
   agg_expr <- substitute(
     sub_dt[
       j = EXPR,
-      keyby = "interval_id"
+      keyby = "box_id"
     ],
     list(
       EXPR = aggre_values_expr
@@ -195,60 +426,31 @@ surv_aggregate_one_stratum__ <- function(
   )
   eval_env <- new.env(parent = enclos_env)
   eval_env[["sub_dt"]] <- sub_dt
-  eval_env[["interval_dt"]] <- interval_dt
   out <- eval(agg_expr, envir = eval_env)
   out <- out[
-    i = interval_dt,
-    on = "interval_id"
+    i = box_dt,
+    on = "box_id"
   ]
   data.table::setcolorder(
     out,
-    c(names(interval_dt), setdiff(names(out), names(interval_dt)))
+    c(names(box_dt), setdiff(names(out), names(box_dt)))
   )
-  data.table::setkeyv(out, setdiff(names(interval_dt), "interval_width"))
+  data.table::setkeyv(out, names(box_dt))
   if (nrow(sub_dt) == 0) {
     data.table::set(
       x = out,
-      j = setdiff(names(out), names(interval_dt)),
+      j = setdiff(names(out), names(box_dt)),
       value = NA
     )
   }
   return(out[])
 }
 
-breaks_list_to_interval_dt <- function(breaks, ts_nms = NULL) {
-  if (is.null(ts_nms)) {
-    ts_nms <- names(breaks)
-  }
-  breaks <- lapply(breaks, function(x) sort(unique(x)))
-  interval_dt <- do.call(
-    data.table::CJ,
-    lapply(breaks[ts_nms], function(x) {
-      x[-length(x)]
-    })
-  )
-  data.table::set(
-    interval_dt,
-    j = c("interval_id", "interval_width"),
-    value = list(
-      seq_len(nrow(interval_dt)),
-      do.call(pmin, do.call(
-        data.table::CJ,
-        lapply(breaks[ts_nms], function(x) {
-          x[-1]
-        })
-      ) - interval_dt)
-    )
-  )
-  data.table::setcolorder(
-    interval_dt, c("interval_id", "interval_width", ts_nms)
-  )
-  data.table::setkeyv(interval_dt, c("interval_id", ts_nms))
-
-  return(interval_dt[])
-}
-
-surv_split_merge_aggregate <- function(
+#' @eval codedoc::pkg_doc_fun(
+#'   "popEpi::surv_split_merge_aggregate_by_stratum",
+#'   "survival_revamp"
+#' )
+surv_split_merge_aggregate_by_stratum <- function(
   dt,
   breaks = list(ts_cal = 2000:2025, ts_age = 0:100, ts_fot = seq(0, 5, 1 / 12)),
   merge_dt = data.table::data.table(
@@ -264,63 +466,189 @@ surv_split_merge_aggregate <- function(
   aggre_values = quote(list(
     total_subject_time = sum(lex.dur),
     n_events = sum(lex.Xst != lex.Cst)
-  ))
+  )),
+  optional_steps = NULL
 ) {
+  eval_env <- environment()
+  call_env <- parent.frame(1L)
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # `popEpi::surv_split_merge_aggregate_by_stratum` can be used to split `Lexis`
+  # (`[Epi::Lexis]`) data, merge something to it after the merge, and
+  # then perform an aggregation step. The following steps are performed:
+  #
+  # - Call
+  #   `optional_steps[["on_entry"]](eval_env = eval_env, call_env = call_env)`
+  #   if that `optional_steps` element exists.
+  #   `eval_env` is the temporary evaluation environment of
+  #   `popEpi::surv_split_merge_aggregate_by_stratum` which contains all
+  #   contains all the arguments of
+  #   `popEpi::surv_split_merge_aggregate_by_stratum` and `call_env` is the environment
+  #   where it was called.
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  if ("on_entry" %in% names(optional_steps)) {
+    optional_steps[["on_entry"]](eval_env = eval_env, call_env = call_env)
+  }
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # - Call
+  #   `on.exit(optional_steps[["on_exit"]](eval_env = eval_env, call_env = call_env))`
+  #   if that `optional_steps` element exists.
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  if ("on_exit" %in% names(optional_steps)) {
+    on.exit(
+      optional_steps[["on_exit"]](eval_env = eval_env, call_env = call_env)
+    )
+  }
   aggre_values_expr <- substitute(aggre_values)
-  if (identical(aggre_values_expr[[1]], quote(quote))) {
+  if (
+    identical(aggre_values_expr[[1]], quote(quote)) ||
+      identical(aggre_values_expr[[1]], quote(substitute))
+  ) {
     aggre_values_expr <- eval(aggre_values_expr)
   }
-  ts_col_nms <- attr(dt, "time.scales")
 
-  interval_dt <- breaks_list_to_interval_dt(breaks, aggre_ts_col_nms)
-  # eval_env <- environment()
-  calling_env <- parent.frame(1L)
+  box_dt <- surv_box_dt__(breaks[aggre_ts_col_nms])
+  lexis_ts_col_nms <- union(aggre_ts_col_nms, names(breaks))
+  lexis_col_nms <- c(
+    "lex.id", lexis_ts_col_nms, "lex.dur", "lex.Cst", "lex.Xst"
+  )
+  dt <- data.table::setDT(as.list(dt))
+  lexis_set__(dt = dt, lexis_ts_col_nms = lexis_ts_col_nms)
   out <- dt[
     i = aggre_stratum_dt,
     on = names(aggre_stratum_dt),
     j = {
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # - For each stratum in `aggre_stratum_dt`:
+      #   + Run
+      #     `optional_steps[["stratum_on_entry"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
+      #     if that `optional_steps` element exists.
+      #     `stratum_eval_env` is the environment where the stratum-specific
+      #     steps are performed.
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      stratum_eval_env <- environment()
+      if ("stratum_on_entry" %in% names(optional_steps)) {
+        optional_steps[["stratum_on_entry"]](
+          stratum_eval_env = stratum_eval_env,
+          eval_env = eval_env,
+          call_env = call_env
+        )
+      }
       if (.N == 0) {
         # for some reason .SD is a one-row data.table with all NA values
         sub_dt <- dt[0L, ]
       } else {
         sub_dt <- .SD
       }
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      #   + Run
+      #     `surv_split` on the subset of `dt` which contains data from the
+      #     current stratum.
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      sub_dt <- data.table::setDT(as.list(sub_dt))
+      lexis_set__(dt = sub_dt, lexis_ts_col_nms = lexis_ts_col_nms)
       sub_dt <- surv_split(
         dt = sub_dt,
         breaks = breaks,
-        ts_col_nms = ts_col_nms,
         merge = TRUE
       )
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      #   + Run
+      #     `optional_steps[["stratum_post_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
+      #     if that `optional_steps` element exists.
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      if ("stratum_post_split" %in% names(optional_steps)) {
+        optional_steps[["stratum_post_split"]](
+          stratum_eval_env = stratum_eval_env,
+          eval_env = eval_env,
+          call_env = call_env
+        )
+      }
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      #   + Run
+      #     `surv_merge` with `merge_dt`, `merge_dt_by`, and
+      #     `merge_dt_harmonisers`.
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
       surv_merge(
         sub_dt,
         merge_dt = merge_dt,
-        merge_dt_by = merge_dt_by
+        merge_dt_by = merge_dt_by,
+        merge_dt_harmonisers = merge_dt_harmonisers
       )
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      #   + Run
+      #     `optional_steps[["stratum_post_merge"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
+      #     if that `optional_steps` element exists.
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      if ("stratum_post_merge" %in% names(optional_steps)) {
+        optional_steps[["stratum_post_merge"]](
+          stratum_eval_env = stratum_eval_env,
+          eval_env = eval_env,
+          call_env = call_env
+        )
+      }
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      #   + Evaluate `aggre_values_expr` in the context of the split data
+      #     with merged-in additional data. The enclosing environment is
+      #     `call_env`. See `?eval`. This results in a `data.table` that
+      #     contains one row per interval of `aggre_ts_col_nms`.
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
       out <- surv_aggregate_one_stratum__(
         sub_dt = sub_dt,
-        interval_dt = interval_dt,
+        box_dt = box_dt,
         aggre_values_expr = aggre_values_expr,
-        enclos_env = calling_env
+        enclos_env = call_env
       )
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      #   + Run
+      #     `optional_steps[["stratum_post_aggregation"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
+      #     if that `optional_steps` element exists.
+      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      if ("stratum_post_aggregation" %in% names(optional_steps)) {
+        optional_steps[["stratum_post_aggregation"]](
+          stratum_eval_env = stratum_eval_env,
+          eval_env = eval_env,
+          call_env = call_env
+        )
+      }
       out
     },
     .SDcols = intersect(
       names(dt),
       c(
-        names(breaks),
+        lexis_col_nms,
         merge_dt_by,
-        all.vars(expr = aggre_values_expr),
-        c("lex.id", "lex.dur", "lex.Cst", "lex.Xst")
+        all.vars(expr = aggre_values_expr, functions = FALSE)
       )
     ),
     #' @importFrom data.table .EACHI
     keyby = .EACHI
   ]
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # - After every stratum has been processed, set proper `data.table`
+  #   attributes on the resulting big table and call `data.table::setkeyv`
+  #   with `cols = c(names(aggre_stratum_dt), "box_id")`.
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   # to clear Epi attributes
   out <- as.list(out)
   attributes(out) <- attributes(out)["names"]
   data.table::setDT(out)
-  data.table::setkeyv(out, c(names(aggre_stratum_dt), "interval_id"))
+  data.table::setkeyv(out, c(names(aggre_stratum_dt), "box_id"))
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # - Run
+  #   `optional_steps[["post_aggregation"]](eval_env = eval_env, call_env = call_env)`
+  #   if that `optional_steps` element exists.
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  if ("post_aggregation" %in% names(optional_steps)) {
+    optional_steps[["post_aggregation"]](
+      stratum_eval_env = stratum_eval_env,
+      eval_env = eval_env,
+      call_env = call_env
+    )
+  }
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # - Return a big `data.table` with stratum columns as specified via
+  #   `aggre_stratum_dt` and value columns as specified via `aggre_values_expr`.
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   return(out[])
 }
 
@@ -349,10 +677,10 @@ surv_split_merge_aggregate_by_interval <- function(
   if (identical(aggre_values_expr[[1]], quote(quote))) {
     aggre_values_expr <- eval(aggre_values_expr)
   }
-  ts_col_nms <- attr(dt, "time.scales")
+  lexis_ts_col_nms <- attr(dt, "time.scales")
 
   breaks <- lapply(breaks, function(x) sort(unique(x)))
-  interval_dt <- local({
+  box_dt <- local({
     interval_breaks <- breaks[aggre_ts_col_nms]
     interval_dt_by_ts <- lapply(names(interval_breaks), function(ts_col_nm) {
       x <- interval_breaks[[ts_col_nm]]
@@ -388,7 +716,7 @@ surv_split_merge_aggregate_by_interval <- function(
   # out <- local({
   #   out <- data.table::CJ(
   #     aggre_stratum_dt_row_no = seq_len(nrow(aggre_stratum_dt)),
-  #     interval_dt_row_no = seq_len(nrow(interval_dt))
+  #     interval_dt_row_no = seq_len(nrow(box_dt))
   #   )
   #   data.table::set(
   #     out,
@@ -397,8 +725,8 @@ surv_split_merge_aggregate_by_interval <- function(
   #   )
   #   data.table::set(
   #     out,
-  #     j = names(interval_dt),
-  #     value = interval_dt[out[["interval_dt_row_no"]]]
+  #     j = names(box_dt),
+  #     value = box_dt[out[["interval_dt_row_no"]]]
   #   )
   #   data.table::set(
   #     out,
@@ -419,11 +747,11 @@ surv_split_merge_aggregate_by_interval <- function(
   })
   out <- dt[
     j = {
-      invisible(lapply(seq_len(nrow(interval_dt)), function(i) {
+      invisible(lapply(seq_len(nrow(box_dt)), function(i) {
         sub_breaks <- lapply(names(breaks), function(ts_col_nm) {
           c(
-            interval_dt[[paste0(ts_col_nm, "_lo")]][i],
-            interval_dt[[paste0(ts_col_nm, "_hi")]][i]
+            box_dt[[paste0(ts_col_nm, "_lo")]][i],
+            box_dt[[paste0(ts_col_nm, "_hi")]][i]
           )
         })
         names(sub_breaks) <- names(breaks)
@@ -447,10 +775,10 @@ surv_split_merge_aggregate_by_interval <- function(
         stratum_interval_value_dt <- eval(agg_expr)
         data.table::set(
           stratum_interval_value_dt,
-          j = names(interval_dt),
-          value = interval_dt[i, ]
+          j = names(box_dt),
+          value = box_dt[i, ]
         )
-        join_col_nms <- c(names(aggre_stratum_dt), names(interval_dt))
+        join_col_nms <- c(names(aggre_stratum_dt), names(box_dt))
         value_col_nms <- setdiff(names(stratum_interval_value_dt), join_col_nms)
         join_expr <- quote(out[
           i = stratum_interval_value_dt,
@@ -697,17 +1025,17 @@ surv_split_merge_aggregate_by_row <- function(
   }
 
   breaks <- lapply(breaks, function(x) sort(unique(x)))
-  interval_dt <- do.call(
+  box_dt <- do.call(
     data.table::CJ,
     lapply(breaks[aggre_ts_col_nms], function(x) {
       x[-length(x)]
     })
   )
   data.table::setkeyv(dt, c(names(aggre_stratum_dt), names(breaks)))
-  work_dt <- cbind(aggre_stratum_dt[1L, ], interval_dt[1L, ], interval_dt[1L, ])
-  ts_lo_col_nms <- paste0(names(interval_dt), "_lo")
-  ts_hi_col_nms <- paste0(names(interval_dt), "_hi")
-  names(ts_lo_col_nms) <- names(ts_hi_col_nms) <- names(interval_dt)
+  work_dt <- cbind(aggre_stratum_dt[1L, ], box_dt[1L, ], box_dt[1L, ])
+  ts_lo_col_nms <- paste0(names(box_dt), "_lo")
+  ts_hi_col_nms <- paste0(names(box_dt), "_hi")
+  names(ts_lo_col_nms) <- names(ts_hi_col_nms) <- names(box_dt)
   data.table::setnames(
     work_dt,
     c(
@@ -718,12 +1046,12 @@ surv_split_merge_aggregate_by_row <- function(
   )
   lapply(seq_len(nrow(dt)), function(i) {
     dt_i <- dt[i, ]
-    for (j in seq_len(nrow(interval_dt))) {
+    for (j in seq_len(nrow(box_dt))) {
       data.table::set(
         work_dt,
         j = ts_lo_col_nms,
-        value = lapply(names(interval_dt), function(ts_col_nm) {
-          pmax(dt_i[[ts_col_nm]], interval_dt[[ts_lo_col_nms[ts_col_nm]]][j])
+        value = lapply(names(box_dt), function(ts_col_nm) {
+          pmax(dt_i[[ts_col_nm]], box_dt[[ts_lo_col_nms[ts_col_nm]]][j])
         })
       )
     }
@@ -933,6 +1261,7 @@ surv_estimate_exprs <- function(type) {
   out <- surv_estimate_expr_list__[type]
   return(out)
 }
+# 
 surv_estimate <- function(
   dt,
   stratum_col_nms = NULL,
@@ -972,19 +1301,24 @@ surv_lexis <- function(
   type = "hazard_observed_survival",
   conf_methods = "log-log",
   conf_lvls = 0.95,
-  weight_dt = NULL
+  weights = NULL
 ) {
   stopifnot(
     inherits(dt, "Lexis"),
-    inherits(dt, "data.frame")
+    inherits(dt, "data.frame"),
+    inherits(weights, c("NULL", "character", "data.frame"))
   )
-  dt <- surv_split_merge_aggregate(
+  dt <- surv_split_merge_aggregate_by_stratum(
     dt = dt,
     breaks = breaks,
     merge_dt_by = merge_dt_by,
     merge_dt = merge_dt,
     aggre_stratum_dt = aggre_stratum_dt,
-    aggre_ts_col_nms = aggre_ts_col_nm
+    aggre_ts_col_nms = aggre_ts_col_nm,
+    aggre_values = surv_aggre_expression(
+      type = type,
+      weight_col_nm = weights
+    )
   )
   do_adjust <- !is.null(weight_dt)
   surv_estimate(
@@ -1013,7 +1347,7 @@ surv_lexis <- function(
     data.table::setnames(dt, standard_error_col_nms, variance_col_nms)
     stratum_col_nms <- setdiff(names(aggre_stratum_dt), names(weight_dt))
     adjust_stratum_col_nms <- c(
-      stratum_col_nms, "interval_id", "interval_width", aggre_ts_col_nm
+      stratum_col_nms, "box_id", aggre_ts_col_nm
     )
     dta <- directadjusting::directly_adjusted_estimates(
       stats_dt = dt,
@@ -1023,7 +1357,7 @@ surv_lexis <- function(
       adjust_col_nms = setdiff(names(weight_dt), "weight"),
       conf_methods = conf_methods,
       conf_lvls = conf_lvls,
-      weights = weight_dt
+      weights = weights
     )
     data.table::set(
       dta,
@@ -1111,7 +1445,7 @@ surv_rule_based_interval_breaks <- function(
   mandatory_breaks = 0:5,
   combination_test_expr = quote(sum(lex.Xst != lex.Cst) == 0)
 ) {
-  calling_env <- parent.frame(1L)
+  call_env <- parent.frame(1L)
   if (is.null(breaks)) {
     breaks <- dt[
       i = dt[["lex.Cst"]] != dt[["lex.Xst"]],
@@ -1146,7 +1480,7 @@ surv_rule_based_interval_breaks <- function(
         ts_col_nm = ts_fut_nm,
         merge = FALSE
       )
-      eval(combination_test_expr, envir = work_dt, enclos = calling_env)
+      eval(combination_test_expr, envir = work_dt, enclos = call_env)
     })
 
     if (do_combine) {
@@ -1208,9 +1542,9 @@ surv_estimate_ederer_i <- function(
   data.table::setkeyv(lex_id_dt, "lex.id")
   lexis_set__(
     dt = work_dt,
-    ts_col_nms = attr(dt, "time.scales")
+    lexis_ts_col_nms = attr(dt, "time.scales")
   )
-  work_dt <- surv_split_merge_aggregate(
+  work_dt <- surv_split_merge_aggregate_by_stratum(
     dt = work_dt,
     breaks = breaks,
     merge_dt = merge_dt,
@@ -1221,14 +1555,13 @@ surv_estimate_ederer_i <- function(
       ederer_i = sum(lex.dur * haz)
     ))
   )
-  browser()
   data.table::set(
     x = work_dt,
-    j = setdiff(names(work_dt), c("lex.id", "interval_id", "ederer_i")),
+    j = setdiff(names(work_dt), c("lex.id", "box_id", "ederer_i")),
     value = NULL
   )
   # work_dt now contains survival-interval-specific hazard for each lex.id.
-  data.table::setkeyv(work_dt, c("lex.id", "interval_id"))
+  data.table::setkeyv(work_dt, c("lex.id", "box_id"))
   work_dt[
     #' @importFrom data.table := .SD
     j = "ederer_i" := lapply(.SD, cumsum),
@@ -1245,7 +1578,7 @@ surv_estimate_ederer_i <- function(
     #' @importFrom data.table .SD
     j = lapply(.SD, mean),
     .SDcols = "ederer_i",
-    keyby = "interval_id"
+    keyby = "box_id"
   ]
   # work_dt now contains the overall average ederer_i expected survival curve.
   return(work_dt[["ederer_i"]])
