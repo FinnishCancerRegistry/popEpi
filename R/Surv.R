@@ -35,7 +35,7 @@ Surv <- function(
   time,
   time2,
   event,
-  type = c("right", "left", "interval", "counting", "interval2", "mstate"),
+  type = c("right", "left", "interval", "counting", "interval2"),
   origin = 0
 ) {
 
@@ -64,7 +64,3 @@ Surv <- function(
   ))
   eval(surv_expr, envir = eval_env)
 }
-
-
-
-

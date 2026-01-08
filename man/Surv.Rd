@@ -8,7 +8,7 @@ Surv(
   time,
   time2,
   event,
-  type = c("right", "left", "interval", "counting", "interval2", "mstate"),
+  type = c("right", "left", "interval", "counting", "interval2"),
   origin = 0
 )
 }
