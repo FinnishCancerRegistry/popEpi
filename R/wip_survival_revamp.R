@@ -25,9 +25,9 @@ lexis_set__ <- function(dt, lexis_ts_col_nms) {
 #' @name survival_revamp
 NULL
 
-
 surv_split <- function(
   dt,
+  subset = NULL,
   breaks,
   merge = TRUE
 ) {
@@ -47,6 +47,10 @@ surv_split <- function(
     merge <- character(0L)
   }
   out <- data.table::setDT(as.list(dt)[union(lexis_col_nms, merge)])
+  subset <- handle_arg_subset()
+  if (any(!subset)) {
+    out <- out[(subset), ]
+  }
   lexis_set__(out, lexis_ts_col_nms = lexis_ts_col_nms)
   out <- popEpi::splitMulti(
     data = out,
@@ -461,16 +465,19 @@ surv_split_merge_aggregate_by_stratum <- function(
   ),
   merge_dt_by = c("sex", "ts_cal", "ts_age"),
   merge_dt_harmonisers = NULL,
-  aggre_stratum_dt = data.table::CJ(sex = 0:1, study_arm = 0:1),
+  aggre_by = data.table::CJ(sex = 0:1, study_arm = 0:1),
   aggre_ts_col_nms = "ts_fot",
   aggre_values = quote(list(
     total_subject_time = sum(lex.dur),
     n_events = sum(lex.Xst != lex.Cst)
   )),
+  subset = NULL,
   optional_steps = NULL
 ) {
   eval_env <- environment()
   call_env <- parent.frame(1L)
+  aggre_by <- handle_arg_by(by = aggre_by, dataset = dt)
+  subset <- handle_arg_subset()
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   # `popEpi::surv_split_merge_aggregate_by_stratum` can be used to split `Lexis`
   # (`[Epi::Lexis]`) data, merge something to it after the merge, and
@@ -511,14 +518,25 @@ surv_split_merge_aggregate_by_stratum <- function(
   lexis_col_nms <- c(
     "lex.id", lexis_ts_col_nms, "lex.dur", "lex.Cst", "lex.Xst"
   )
-  dt <- data.table::setDT(as.list(dt))
+  dt <- data.table::setDT(as.list(dt)[intersect(
+    names(dt),
+    c(
+      lexis_col_nms,
+      names(aggre_by),
+      merge_dt_by,
+      all.vars(expr = aggre_values_expr, functions = FALSE)
+    )
+  )])
+  if (!all(subset)) {
+    dt <- dt[(subset), ]
+  }
   lexis_set__(dt = dt, lexis_ts_col_nms = lexis_ts_col_nms)
   out <- dt[
-    i = aggre_stratum_dt,
-    on = names(aggre_stratum_dt),
+    i = aggre_by,
+    on = names(aggre_by),
     j = {
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
-      # - For each stratum in `aggre_stratum_dt`:
+      # - For each stratum in `aggre_by`:
       #   + Run
       #     `optional_steps[["stratum_on_entry"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
       #     if that `optional_steps` element exists.
@@ -612,27 +630,19 @@ surv_split_merge_aggregate_by_stratum <- function(
       }
       out
     },
-    .SDcols = intersect(
-      names(dt),
-      c(
-        lexis_col_nms,
-        merge_dt_by,
-        all.vars(expr = aggre_values_expr, functions = FALSE)
-      )
-    ),
     #' @importFrom data.table .EACHI
     keyby = .EACHI
   ]
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   # - After every stratum has been processed, set proper `data.table`
   #   attributes on the resulting big table and call `data.table::setkeyv`
-  #   with `cols = c(names(aggre_stratum_dt), "box_id")`.
+  #   with `cols = c(names(aggre_by), "box_id")`.
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   # to clear Epi attributes
   out <- as.list(out)
   attributes(out) <- attributes(out)["names"]
   data.table::setDT(out)
-  data.table::setkeyv(out, c(names(aggre_stratum_dt), "box_id"))
+  data.table::setkeyv(out, c(names(aggre_by), "box_id"))
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   # - Run
   #   `optional_steps[["post_aggregation"]](eval_env = eval_env, call_env = call_env)`
@@ -647,7 +657,7 @@ surv_split_merge_aggregate_by_stratum <- function(
   }
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   # - Return a big `data.table` with stratum columns as specified via
-  #   `aggre_stratum_dt` and value columns as specified via `aggre_values_expr`.
+  #   `aggre_by` and value columns as specified via `aggre_values_expr`.
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   return(out[])
 }
@@ -1073,8 +1083,9 @@ surv_lexis <- function(
   breaks,
   merge_dt_by = NULL,
   merge_dt = NULL,
-  aggre_stratum_dt = NULL,
+  aggre_by = NULL,
   aggre_ts_col_nm = NULL,
+  subset = NULL,
   type = "hazard_observed_survival",
   conf_methods = "log-log",
   conf_lvls = 0.95,
@@ -1085,19 +1096,21 @@ surv_lexis <- function(
     inherits(dt, "data.frame"),
     inherits(weights, c("NULL", "character", "data.frame"))
   )
+  subset <- handle_arg_subset()
   dt <- surv_split_merge_aggregate_by_stratum(
     dt = dt,
     breaks = breaks,
     merge_dt_by = merge_dt_by,
     merge_dt = merge_dt,
-    aggre_stratum_dt = aggre_stratum_dt,
+    aggre_by = aggre_by,
     aggre_ts_col_nms = aggre_ts_col_nm,
     aggre_values = surv_aggre_expression(
       type = type,
       weight_col_nm = weights
-    )
+    ),
+    subset = subset
   )
-  do_adjust <- !is.null(weight_dt)
+  do_adjust <- !is.null(weights)
   surv_estimate(
     dt = dt,
     type = type,
@@ -1122,7 +1135,7 @@ surv_lexis <- function(
       "_estimate$", "_variance", estimate_col_nms
     )
     data.table::setnames(dt, standard_error_col_nms, variance_col_nms)
-    stratum_col_nms <- setdiff(names(aggre_stratum_dt), names(weight_dt))
+    stratum_col_nms <- setdiff(names(aggre_by), names(weight_dt))
     adjust_stratum_col_nms <- c(
       stratum_col_nms, "box_id", aggre_ts_col_nm
     )
@@ -1148,7 +1161,7 @@ surv_lexis <- function(
       names(dt),
       c(
         adjust_stratum_col_nms,
-        names(aggre_stratum_dt),
+        names(aggre_by),
         names(weight_dt),
         estimate_col_nms,
         variance_col_nms,
@@ -1326,7 +1339,7 @@ surv_estimate_ederer_i <- function(
     breaks = breaks,
     merge_dt = merge_dt,
     merge_dt_by = merge_dt_by,
-    aggre_stratum_dt = lex_id_dt,
+    aggre_by = lex_id_dt,
     aggre_ts_col_nms = ts_col_nm,
     aggre_values = quote(list(
       ederer_i = sum(lex.dur * haz)
