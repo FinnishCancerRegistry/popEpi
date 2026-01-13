@@ -378,10 +378,10 @@ surv_box_id__ <- function(
 surv_aggregate_one_stratum__ <- function(
   sub_dt,
   box_dt,
-  aggre_values_expr,
+  aggre_expr,
   enclos_env
 ) {
-  expr_obj_nms <- all.vars(aggre_values_expr)
+  expr_obj_nms <- all.vars(aggre_expr)
   lexis_ts_col_nms <- attr(sub_dt, "time.scales")
   sub_dt <- data.table::setDT(as.list(sub_dt))
   lapply(lexis_ts_col_nms, function(ts_col_nm) {
@@ -418,7 +418,7 @@ surv_aggregate_one_stratum__ <- function(
       keyby = "box_id"
     ],
     list(
-      EXPR = aggre_values_expr
+      EXPR = aggre_expr
     )
   )
   eval_env <- new.env(parent = enclos_env)
@@ -449,21 +449,13 @@ surv_aggregate_one_stratum__ <- function(
 #' )
 surv_split_merge_aggregate_by_stratum <- function(
   dt,
-  breaks = list(ts_cal = 2000:2025, ts_age = 0:100, ts_fot = seq(0, 5, 1 / 12)),
-  merge_dt = data.table::data.table(
-    sex = 0L,
-    ts_cal = 2000L,
-    ts_age = 0L,
-    haz = 0.010
-  ),
-  merge_dt_by = c("sex", "ts_cal", "ts_age"),
+  breaks,
+  merge_dt = NULL,
+  merge_dt_by = NULL,
   merge_dt_harmonisers = NULL,
-  aggre_by = data.table::CJ(sex = 0:1, study_arm = 0:1),
+  aggre_by = NULL,
   aggre_ts_col_nms = "ts_fot",
-  aggre_values = quote(list(
-    total_subject_time = sum(lex.dur),
-    n_events = sum(lex.Xst != lex.Cst)
-  )),
+  aggre_expr,
   subset = NULL,
   optional_steps = NULL
 ) {
@@ -512,16 +504,11 @@ surv_split_merge_aggregate_by_stratum <- function(
       optional_steps[["on_exit"]](eval_env = eval_env, call_env = call_env)
     )
   }
-  aggre_values_expr <- substitute(aggre_values)
-  if (
-    identical(aggre_values_expr[[1]], quote(quote)) ||
-      identical(aggre_values_expr[[1]], quote(substitute))
-  ) {
-    aggre_values_expr <- eval(aggre_values_expr)
-  }
 
-  box_dt <- surv_box_dt__(breaks[aggre_ts_col_nms])
-  lexis_ts_col_nms <- union(aggre_ts_col_nms, names(breaks))
+  lexis_ts_col_nms <- intersect(
+    attr(dt, "time.scales"),
+    c(aggre_ts_col_nms, names(breaks), merge_dt_by)
+  )
   lexis_col_nms <- c(
     "lex.id", lexis_ts_col_nms, "lex.dur", "lex.Cst", "lex.Xst"
   )
@@ -531,13 +518,16 @@ surv_split_merge_aggregate_by_stratum <- function(
       lexis_col_nms,
       names(aggre_by),
       merge_dt_by,
-      all.vars(expr = aggre_values_expr, functions = FALSE)
+      all.vars(expr = aggre_expr, functions = FALSE)
     )
   )])
   if (!all(subset)) {
     dt <- dt[(subset), ]
   }
   lexis_set__(dt = dt, lexis_ts_col_nms = lexis_ts_col_nms)
+
+  box_dt <- surv_box_dt__(breaks[aggre_ts_col_nms])
+
   out <- dt[
     i = aggre_by,
     on = names(aggre_by),
@@ -612,7 +602,7 @@ surv_split_merge_aggregate_by_stratum <- function(
         )
       }
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
-      #   + Evaluate `aggre_values_expr` in the context of the split data
+      #   + Evaluate `aggre_expr` in the context of the split data
       #     with merged-in additional data. The enclosing environment is
       #     `call_env`. See `?eval`. This results in a `data.table` that
       #     contains one row per interval of `aggre_ts_col_nms`.
@@ -620,7 +610,7 @@ surv_split_merge_aggregate_by_stratum <- function(
       out <- surv_aggregate_one_stratum__(
         sub_dt = sub_dt,
         box_dt = box_dt,
-        aggre_values_expr = aggre_values_expr,
+        aggre_expr = aggre_expr,
         enclos_env = call_env
       )
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
@@ -637,6 +627,7 @@ surv_split_merge_aggregate_by_stratum <- function(
       }
       out
     },
+    .SDcols = names(dt),
     #' @importFrom data.table .EACHI
     keyby = .EACHI
   ]
@@ -664,7 +655,7 @@ surv_split_merge_aggregate_by_stratum <- function(
   }
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   # - Return a big `data.table` with stratum columns as specified via
-  #   `aggre_by` and value columns as specified via `aggre_values_expr`.
+  #   `aggre_by` and value columns as specified via `aggre_expr`.
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   return(out[])
 }
@@ -1096,11 +1087,6 @@ surv_lexis <- function(
   conf_lvls = 0.95,
   weights = NULL
 ) {
-  stopifnot(
-    inherits(dt, "Lexis"),
-    inherits(dt, "data.frame"),
-    inherits(weights, c("NULL", "character", "data.frame"))
-  )
   subset <- handle_arg_subset()
   dt <- surv_split_merge_aggregate_by_stratum(
     dt = dt,
@@ -1109,7 +1095,7 @@ surv_lexis <- function(
     merge_dt = merge_dt,
     aggre_by = aggre_by,
     aggre_ts_col_nms = aggre_ts_col_nm,
-    aggre_values = surv_aggre_expression(
+    aggre_expr = surv_aggre_expression(
       type = type,
       weight_col_nm = weights
     ),
@@ -1339,7 +1325,7 @@ surv_estimate_ederer_i <- function(
     merge_dt_by = merge_dt_by,
     aggre_by = lex_id_dt,
     aggre_ts_col_nms = ts_col_nm,
-    aggre_values = quote(list(
+    aggre_expr = quote(list(
       ederer_i = sum(lex.dur * haz)
     ))
   )
@@ -1389,16 +1375,6 @@ surv_interval <- function(
   )
   work_dt <- data.table::setDT(as.list(dt)[lexis_col_nms])
   ts_dt <- data.table::setDT(as.list(dt)[attr(dt, "time.scales")])
-  if (isTRUE(merge)) {
-    merge <- setdiff(names(dt), c(names(work_dt), names(ts_dt)))
-  } else if (isFALSE(merge)) {
-    merge <- character(0L)
-  } else {
-    dbc::assert_vector_elems_are_in_set(
-      x = merge,
-      set = names(dt)
-    )
-  }
   data.table::set(
     x = ts_dt,
     j = ts_col_nm,
