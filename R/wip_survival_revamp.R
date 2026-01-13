@@ -581,14 +581,16 @@ surv_split_merge_aggregate_by_stratum <- function(
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
       #   + Run
       #     `surv_merge` with `merge_dt`, `merge_dt_by`, and
-      #     `merge_dt_harmonisers`.
+      #     `merge_dt_harmonisers`, if `merge_dt` has been supplied.
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
-      surv_merge(
-        sub_dt,
-        merge_dt = merge_dt,
-        merge_dt_by = merge_dt_by,
-        merge_dt_harmonisers = merge_dt_harmonisers
-      )
+      if (!is.null(merge_dt)) {
+        surv_merge(
+          dt = sub_dt,
+          merge_dt = merge_dt,
+          merge_dt_by = merge_dt_by,
+          merge_dt_harmonisers = merge_dt_harmonisers
+        )
+      }
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
       #   + Run
       #     `optional_steps[["stratum_post_merge"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
