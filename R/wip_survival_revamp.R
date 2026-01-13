@@ -115,19 +115,12 @@ surv_merge <- function(
   dt,
   merge_dt,
   merge_dt_by,
-  merge_dt_harmonisers = NULL
-) {
-  dbc::assert_is_identical(
-    x = class(dt),
-    y = c("Lexis", "data.table", "data.frame")
-  )
-  dbc::assert_vector_elems_are_in_set(
-    x = merge_dt_by,
-    set = names(dt)
-  )
-  dbc::assert_vector_elems_are_in_set(
-    x = merge_dt_by,
-    set = names(merge_dt)
+  assert_is_arg_dt(dt, lexis = TRUE)
+  assert_is_arg_merge_dt_and_merge_dt_by(
+    merge_dt,
+    merge_dt_by,
+    dt,
+    mandatory = TRUE
   )
   # @codedoc_comment_block popEpi::surv_merge
   # `popEpi::surv_merge` can be used to merge additional information into
@@ -135,7 +128,7 @@ surv_merge <- function(
   # merge. The typical use-case is to split `Lexis` data and then merge
   # population (expected) hazards to the subject-intervals.
   # `popEpi::surv_merge` performs the following steps:
-  # 
+  #
   # @codedoc_comment_block popEpi::surv_merge
   call_env <- parent.frame(1L)
   lexis_ts_col_nms <- attr(dt, "time.scales")
@@ -474,10 +467,24 @@ surv_split_merge_aggregate_by_stratum <- function(
   subset = NULL,
   optional_steps = NULL
 ) {
+  assert_is_arg_dt(dt, lexis = TRUE)
+  assert_is_arg_breaks(breaks, dt)
+  assert_is_arg_merge_dt_and_merge_dt_by(
+    merge_dt = merge_dt,
+    merge_dt_by = merge_dt_by,
+    dt = dt,
+    mandatory = FALSE
+  )
+  aggre_by <- handle_arg_by(by = aggre_by, dataset = dt)
+  stopifnot(
+    aggre_ts_col_nms %in% names(breaks),
+    is.language(aggre_expr),
+    inherits(optional_steps, c("NULL", "list"))
+  )
+  subset <- handle_arg_subset()
+
   eval_env <- environment()
   call_env <- parent.frame(1L)
-  aggre_by <- handle_arg_by(by = aggre_by, dataset = dt)
-  subset <- handle_arg_subset()
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   # `popEpi::surv_split_merge_aggregate_by_stratum` can be used to split `Lexis`
   # (`[Epi::Lexis]`) data, merge something to it after the merge, and
@@ -1039,16 +1046,14 @@ make_surv_estimate_expr_list__ <- function(surv_estimate_expr_list) {
 surv_estimate_expr_list__ <- make_surv_estimate_expr_list__(
   surv_estimate_expr_list__
 )
-
 surv_estimate_exprs <- function(type) {
-  dbc::assert_vector_elems_are_in_set(
-    type,
-    set = names(surv_estimate_expr_list__)
+  stopifnot(
+    type %in% names(surv_estimate_expr_list__)
   )
   out <- surv_estimate_expr_list__[type]
   return(out)
 }
-# 
+
 surv_estimate <- function(
   dt,
   stratum_col_nms = NULL,
@@ -1305,17 +1310,10 @@ surv_estimate_ederer_i <- function(
   merge_dt,
   merge_dt_by
 ) {
-  dbc::assert_is_identical(
-    x = class(dt),
-    y = c("Lexis", "data.table", "data.frame")
-  )
-  dbc::assert_is_identical(
-    x = data.table::key(dt)[1],
-    y = "lex.id"
-  )
-  dbc::assert_atom_is_in_set(
-    x = ts_col_nm,
-    set = data.table::key(dt)
+  assert_is_arg_dt(dt, lexis = TRUE)
+  stopifnot(
+    identical(data.table::key(dt)[1], "lex.id"),
+    ts_col_nm %in% data.table::key(dt)
   )
   keep_col_nms <- unique(c(
     "lex.id",
@@ -1381,7 +1379,8 @@ surv_interval <- function(
   ts_col_nm,
   merge = FALSE
 ) {
-  dbc::assert_has_class(dt, required_class = "Lexis")
+  assert_is_arg_dt(dt, lexis = TRUE)
+  merge <- handle_arg_merge(merge, dt)
   lexis_col_nms <- c(
     "lex.id",
     "lex.dur",
@@ -1483,27 +1482,6 @@ surv_interval <- function(
   return(work_dt[])
 }
 
-assert_is_weight_dt <- function(
-  x,
-  x_nm = NULL,
-  assertion_type = NULL,
-  call = NULL
-) {
-  dbc::handle_args_inplace()
-  dbc::assert_is_data_table_with_required_names(
-    x = x,
-    x_nm = x_nm,
-    call = call,
-    assertion_type = assertion_type,
-    required_names = "weight"
-  )
-  dbc::assert_is_number_nonNA_gtezero_vector(
-    x[["weight"]],
-    x_nm = sprintf("%s[[\"weight\"]]", x_nm),
-    call = call,
-    assertion_type = assertion_type
-  )
-}
 
 surv_individual_weights <- function(
   dt,
