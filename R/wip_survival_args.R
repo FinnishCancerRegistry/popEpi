@@ -93,3 +93,16 @@ assert_is_arg_breaks <- function(breaks, dt) {
     names(breaks) %in% attr(dt, "time.scales")
   )
 }
+
+assert_is_arg_aggre_expr <- function(aggre_expr) {
+  stopifnot(
+    inherits(aggre_expr, c("{", "call", "name"))
+  )
+}
+
+assert_is_arg_box_dt <- function(box_dt) {
+  stopifnot(
+    inherits(box_dt, "data.table"),
+    c("box_id", "interval_width") %in% names(box_dt)
+  )
+}

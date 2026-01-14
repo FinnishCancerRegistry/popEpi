@@ -379,11 +379,33 @@ surv_aggregate_one_stratum__ <- function(
   sub_dt,
   box_dt,
   aggre_expr,
-  enclos_env
+  call_env,
+  eval_env,
+  stratum_eval_env
 ) {
-  expr_obj_nms <- all.vars(aggre_expr)
+  assert_is_arg_dt(sub_dt, lexis = TRUE)
+  # `sub_dt` should be keyed by e.g. c("lex.id", "ts_cal", "ts_fut") or
+  # c("lex.id", "ts_fut") or c("lex.id", "ts_fut", "ts_cal") etc if
+  # `box_ts_col_nms == "ts_fut"`. in particular `sub_dt` must not be keyed
+  # by anything weird before the time scales. after the time scales it can be
+  # keyed by whatever.
+  box_ts_col_nms <- names(box_dt)[grepl("_stop$", names(box_dt))]
+  box_ts_col_nms <- sub("_stop$", "", box_ts_col_nms)
   lexis_ts_col_nms <- attr(sub_dt, "time.scales")
-  sub_dt <- data.table::setDT(as.list(sub_dt))
+  stopifnot(
+    data.table::key(sub_dt)[1] == "lex.id",
+    length(data.table::key(sub_dt)) >= length(box_ts_col_nms) + 1L,
+    data.table::key(sub_dt)[2:(length(box_ts_col_nms) + 1L)] %in% union(
+      box_ts_col_nms, lexis_ts_col_nms
+    )
+  )
+  assert_is_arg_box_dt(box_dt)
+  assert_is_arg_aggre_expr(aggre_expr)
+  stopifnot(
+    is.environment(call_env),
+    is.environment(eval_env),
+    is.environment(stratum_eval_env)
+  )
   lapply(lexis_ts_col_nms, function(ts_col_nm) {
     add_col_nms <- unique(expr_obj_nms[
       grepl(sprintf("^%s_((lead)|(lag))[0-9]+$", ts_col_nm), expr_obj_nms)
@@ -421,9 +443,12 @@ surv_aggregate_one_stratum__ <- function(
       EXPR = aggre_expr
     )
   )
-  eval_env <- new.env(parent = enclos_env)
-  eval_env[["sub_dt"]] <- sub_dt
-  out <- eval(agg_expr, envir = eval_env)
+  env <- new.env(parent = call_env)
+  env[["call_env"]] <- call_env
+  env[["eval_env"]] <- eval_env
+  env[["stratum_eval_env"]] <- stratum_eval_env
+  env[["sub_dt"]] <- work_dt
+  out <- eval(agg_expr, envir = work_dt, enclos = env)
   out <- out[
     i = box_dt,
     on = "box_id"
@@ -613,7 +638,9 @@ surv_split_merge_aggregate_by_stratum <- function(
         sub_dt = sub_dt,
         box_dt = box_dt,
         aggre_expr = aggre_expr,
-        enclos_env = call_env
+        eval_env = eval_env,
+        call_env = call_env,
+        stratum_eval_env = stratum_eval_env
       )
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
       #   + Run
@@ -667,8 +694,29 @@ surv_pohar_perme_weight__ <- function(
   breaks,
   ts_col_nm,
   hazard_col_nm,
-  method = c("survival interval", "subject subinterval")[1L]
 ) {
+  assert_is_arg_dt(dt = dt, lexis = TRUE)
+  lexis_ts_col_nms <- attr(dt, "time.scales")
+  dt_key_col_nms <- data.table::key(dt)
+  stopifnot(
+    c("lex.id", "lex.dur") %in% names(dt),
+    ts_fut_col_nm %in% names(dt),
+    ts_fut_col_nm %in% lexis_ts_col_nms,
+    hazard_col_nm %in% names(dt),
+    # we actually only care about ts_fut_col_nm, but it is not always
+    # the second key. note that the order of the data
+    # is always the same regardless of the order of lexis_ts_col_nms
+    # in the keys because the different time scales are simply the same
+    # information with different first values (e.g. ts_fut starts from zero,
+    # ts_age starts from age at diagnosis, etc). so we allow also ts_fut_col_nm
+    # being e.g. the third key and the second being some other time scale.
+    dt_key_col_nms[1] == "lex.id",
+    ts_fut_col_nm %in% dt_key_col_nms,
+    dt_key_col_nms[seq(2L, which(dt_key_col_nms == ts_fut_col_nm) - 1L)] %in%
+      lexis_ts_col_nms,
+
+    method %in% c("survival interval", "subject subinterval")
+  )
   work_dt <- data.table::setDT(list(
     lex.id = dt[["lex.id"]],
     lex.dur = dt[["lex.dur"]],
