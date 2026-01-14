@@ -713,9 +713,10 @@ surv_split_merge_aggregate_by_stratum <- function(
 
 surv_pohar_perme_weight__ <- function(
   dt,
-  breaks,
-  ts_col_nm,
+  ts_fut_breaks,
+  ts_fut_col_nm,
   hazard_col_nm,
+  method = c("subject subinterval", "survival interval")[1L]
 ) {
   assert_is_arg_dt(dt = dt, lexis = TRUE)
   lexis_ts_col_nms <- attr(dt, "time.scales")
@@ -741,9 +742,11 @@ surv_pohar_perme_weight__ <- function(
   )
   work_dt <- data.table::setDT(list(
     lex.id = dt[["lex.id"]],
+    ts_fut = dt[[ts_fut_col_nm]],
     lex.dur = dt[["lex.dur"]],
     "expected_hazard" = dt[[hazard_col_nm]]
   ))
+  data.table::setkeyv(work_dt, c("lex.id", "ts_fut"))
   if (method == "subject subinterval") {
     data.table::set(
       x = work_dt,
@@ -789,6 +792,7 @@ surv_pohar_perme_weight__ <- function(
       }
     )
   } else if (method == "survival interval") {
+    stop("This may not be working correctly")
     # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
     # - `method = "survival interval"`: The Pohar Perme weight is based on
     #   the expected survival probability at the middle of the survival
@@ -806,16 +810,16 @@ surv_pohar_perme_weight__ <- function(
       x = work_dt,
       j = "survival_interval_id",
       value = cut(
-        x = dt[[ts_col_nm]],
-        breaks = breaks,
+        x = dt[[ts_fut_col_nm]],
+        breaks = ts_fut_breaks,
         right = FALSE,
         labels = FALSE
       )
     )
-    join_dt <- data.table::setDT(list(
-      lex.id = work_dt[["lex.id"]],
-      survival_interval_id = work_dt[["survival_interval_id"]]
-    ))
+    data.table::setkeyv(
+      work_dt,
+      c("lex.id", "survival_interval_id")
+    )
     data.table::set(
       x = work_dt,
       j = "h*_{i,j}",
@@ -833,19 +837,26 @@ surv_pohar_perme_weight__ <- function(
       value = list(
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         #   + Take as the start point of integration for survival interval i
-        #     and subject j the entry point to follow-up in the survival interval.
-        #     This is usually the start of the survival interval but late entries
-        #     may start after that. E.g. for rows `t_start = c(0.10, 0.20)`
-        #     the integration starts for survival interval i and subject j
+        #     and subject j the entry point to follow-up of that subject.
+        #     This is typically the start of the first survival interval but
+        #     late entries start after that.
+        #     E.g. for one subject's rows with `t_start = c(0.10, 0.20)`
+        #     the integration starts in both rows from
         #     from `t = 0.10`.
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
-        dt[[ts_col_nm]][!duplicated(dt[["lex.id"]])],
+        {
+          rep(
+            dt[[ts_fut_col_nm]][!duplicated(dt, by = "lex.id")],
+            #' @importFrom data.table .N
+            times = work_dt[j = list(n = .N), by = "lex.id"][["n"]]
+          )
+        },
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         #   + Take as the end point of integration for survival interval i
         #     and subject j the end of the survival interval i.
         #     E.g. `t = 1.0` for interval `[0.0, 1.0[`.
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
-        breaks[work_dt[["survival_interval_id"]] + 1L],
+        ts_fut_breaks[work_dt[["survival_interval_id"]] + 1L],
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         #   + Take as the expected hazard for subject j in survival interval i
         #     the weighted average of subinterval expected hazards, where
@@ -904,6 +915,11 @@ surv_pohar_perme_weight__ <- function(
     #     the subinterval level via a simple left join on subject ID and
     #     survival interval ID. That is, `w_{i,j,k} = w_{i,j}` for every k.
     # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
+    join_dt <- data.table::setDT(list(
+      lex.id = work_dt[["lex.id"]],
+      survival_interval_id = work_dt[["survival_interval_id"]]
+    ))
+    data.table::setkeyv(join_dt, c("lex.id", "survival_interval_id"))
     work_dt <- work_dt[
       i = join_dt,
       on = c("lex.id", "survival_interval_id"),
@@ -911,8 +927,6 @@ surv_pohar_perme_weight__ <- function(
       j = .SD,
       .SDcols = "pp_weight"
     ]
-  } else {
-    stop("No such method for computing Pohar Perme weights: \"", method, "\"")
   }
   return(work_dt[["pp_weight"]])
 }
