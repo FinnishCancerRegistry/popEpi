@@ -63,6 +63,63 @@ surv_split <- function(
   return(out[])
 }
 
+surv_merge_guess_breaks__ <- function(x) {
+  # @codedoc_comment_block surv_merge_guess_breaks__
+  #   + If `merge_dt[[col_nm]]` contains numbers we define `cut` breaks as the
+  #     unique values of
+  #     `merge_dt[[col_nm]]` and as the ceiling
+  #     `max(merge_dt[[col_nm]]) + last_diff`. Here `last_diff` is the
+  #     difference between the highest and second highest values. E.g.
+  #     `c(1950, 1960, 1970:2020, 2021)` for `merge_dt[[col_nm]]`
+  #     containing unique values `c(1950, 1960, 1970:2020)`.
+  # @codedoc_comment_block surv_merge_guess_breaks__
+  last_diff <- diff(utils::tail(x, 2L))
+  cut_breaks <- c(
+    x,
+    x[length(x)] + last_diff
+  )
+  return(cut_breaks)
+}
+
+surv_merge_default_harmoniser__ <- function(
+  col_nm,
+  cut_breaks,
+  lex_dur_multiplier = 0.5
+) {
+  # @codedoc_comment_block surv_merge_default_harmoniser__
+  #    + With the `cut` breaks defined, the automatically created harmoniser
+  #      becomes a `cut` call with arguments
+  #      * `x = col + lex.dur * lex_dur_multiplier`, where `COL` is the current
+  #        column and `lex_dur_multiplier` is by default `0.5`,
+  #      * `breaks` as specified above,
+  #      * `right = FALSE`, and
+  #      * `labels = FALSE`.
+  #    + This results in indices to the breaks, and the harmoniser returns
+  #      break values at those indices. E.g. the cut results in
+  #      `3` in `breaks = c(1950, 1960, 1970:2020, 2021)` and output is
+  #      `1970` for every value of `COL + lex.dur / 2` in the interval
+  #      `]1970, 1971]`.
+  # @codedoc_comment_block surv_merge_default_harmoniser__
+  substitute(
+    {
+      breaks <- cut_breaks
+      idx <- cut(
+        x = col + lex.dur * lex_dur_multiplier,
+        breaks = breaks,
+        right = FALSE,
+        labels = FALSE
+      )
+      breaks[idx]
+    },
+    list(
+      col = parse(text = col_nm)[[1]],
+      cut_breaks = cut_breaks,
+      lex_dur_multiplier = lex_dur_multiplier
+    )
+  )
+}
+
+
 #' @eval codedoc::pkg_doc_fun("popEpi::surv_merge", "survival_revamp")
 #' @examples
 #' # popEpi::surv_merge
@@ -115,6 +172,24 @@ surv_merge <- function(
   dt,
   merge_dt,
   merge_dt_by,
+  merge_dt_harmonisers = NULL,
+  merge_dt_default_harmoniser_lex_dur_multiplier = 0.5,
+  optional_steps = NULL
+) {
+  call_env <- parent.frame(1L)
+  eval_env <- environment()
+  if ("on_entry" %in% names(optional_steps)) {
+    optional_steps[["on_entry"]](
+      call_env = call_env,
+      eval_env = eval_env
+    )
+  }
+  if ("on_exit" %in% names(optional_steps)) {
+    on.exit(optional_steps[["on_exit"]](
+      call_env = call_env,
+      eval_env = eval_env
+    ))
+  }
   assert_is_arg_dt(dt, lexis = TRUE)
   assert_is_arg_merge_dt_and_merge_dt_by(
     merge_dt,
@@ -144,33 +219,10 @@ surv_merge <- function(
     merge_dt_harmonisers <- lapply(merge_ts_col_nms, function(col_nm) {
       cut_breaks <- sort(unique(merge_dt[[col_nm]]))
       if (is.integer(cut_breaks) || is.double(cut_breaks)) {
-        if (all(diff(cut_breaks) == 1)) {
-          # @codedoc_comment_block popEpi::surv_merge
-          #   + If `merge_dt[[col_nm]]` contains numbers in increments of one and
-          #     nothing else, we define the `cut` breaks as the unique values of
-          #    `merge_dt[[col_nm]]` and as the ceiling
-          #    `max(merge_dt[[col_nm]]) + 1L`. E.g.
-          #    `1950:2021` for `merge_dt[[col_nm]]` containing unique values
-          #    `1950:2020`.
-          # @codedoc_comment_block popEpi::surv_merge
-          cut_breaks <- c(cut_breaks, cut_breaks[length(cut_breaks)] + 1L)
-        } else {
-          # @codedoc_comment_block popEpi::surv_merge
-          #   + If `merge_dt[[col_nm]]` contains numbers but they are not all in
-          #     increments of one then
-          #     we define `cut` breaks as the unique values of
-          #     `merge_dt[[col_nm]]` and as the ceiling
-          #     `max(merge_dt[[col_nm]]) + last_diff`. Where `last_diff` is the
-          #     difference between the highest and second highest values. E.g.
-          #     `c(1950, 1960, 1970:2020, 2021)` for `merge_dt[[col_nm]]`
-          #     containing unique values `c(1950, 1960, 1970:2020)`.
-          # @codedoc_comment_block popEpi::surv_merge
-          last_diff <- diff(utils::tail(cut_breaks, 2L))
-          cut_breaks <- c(
-            cut_breaks,
-            cut_breaks[length(cut_breaks)] + last_diff
-          )
-        }
+        # @codedoc_comment_block popEpi::surv_merge
+        # @codedoc_insert_comment_block surv_merge_guess_breaks__
+        # @codedoc_comment_block popEpi::surv_merge
+        cut_breaks <- surv_merge_guess_breaks__(cut_breaks)
       } else {
         # @codedoc_comment_block popEpi::surv_merge
         #   + If `merge_dt[[col_nm]]` does not contain numbers, an error is
@@ -182,34 +234,49 @@ surv_merge <- function(
           "Please supply argument `merge_dt_harmonisers` yourself."
         )
       }
+      #' @param merge_dt_default_harmoniser_lex_dur_multiplier `[numeric]`
+      #' (default 0.5)
+      #'
+      #' The default 0.5 causes such default harmonisers to be created that
+      #' each record's each time scale is used at the middle of the observed
+      #' record. E.g. with `ts_age = 55.9` and `lex.dur = 0.6` we arrive at
+      #' `ts_age = 55.9 + 0.6 * 0.2 = 56.2`, which is then harmonised with `cut`
+      #' to `ts_age = 56` for the purpose of merging with `merge_dt`. The
+      #' middle of the record is a rational choice when a record covers multiple
+      #' strata of `merge_dt`, at least when merging population expected
+      #' hazards.
+      surv_merge_default_harmoniser_arg_list <- list(
+        col_nm = col_nm,
+        cut_breaks = cut_breaks,
+        lex_dur_multiplier = merge_dt_default_harmoniser_lex_dur_multiplier
+      )
       # @codedoc_comment_block popEpi::surv_merge
-      #    + With the `cut` breaks defined, the automatically created harmoniser
-      #      becomes a `cut` call with arguments
-      #      * `x = COL + lex.dur / 2`, where `COL` is the current column,
-      #      * `breaks` as specified above,
-      #      * `right = FALSE`, and
-      #      * `labels = FALSE`.
-      #    + This results in indices to the breaks, and the harmoniser returns
-      #      break values at those indices. E.g. the cut results in
-      #      `3` in `breaks = c(1950, 1960, 1970:2020, 2021)` and output is
-      #      `1970` for every value of `COL + lex.dur / 2` in the interval
-      #      `]1970, 1971]`.
+      # - Run `optional_steps[["pre_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_env = environment())`
+      #   if that `optional_steps` element exists.
       # @codedoc_comment_block popEpi::surv_merge
-      substitute(
-        {
-          breaks <- CUT_BREAKS
-          idx <- cut(
-            x = COL + lex.dur / 2,
-            breaks = breaks,
-            right = FALSE,
-            labels = FALSE
-          )
-          breaks[idx]
-        },
-        list(COL = parse(text = col_nm)[[1]], CUT_BREAKS = cut_breaks)
+      if ("pre_default_harmoniser_creation" %in% names(optional_steps)) {
+        optional_steps[["pre_default_harmoniser_creation"]](
+          call_env = call_env,
+          eval_env = eval_env,
+          lapply_env = environment()
+        )
+      }
+      # @codedoc_comment_block popEpi::surv_merge
+      # @codedoc_insert_comment_block surv_merge_default_harmoniser__
+      # @codedoc_comment_block popEpi::surv_merge
+      do.call(
+        surv_merge_default_harmoniser__,
+        surv_merge_default_harmoniser_arg_list,
+        quote = TRUE
       )
     })
     names(merge_dt_harmonisers) <- merge_ts_col_nms
+  }
+  if ("post_merge_dt_harmonisers" %in% names(optional_steps)) {
+    optional_steps[["post_merge_dt_harmonisers"]](
+      call_env = call_env,
+      eval_env = eval_env
+    )
   }
   # @codedoc_comment_block popEpi::surv_merge
   # - Armed with either user-defined or automatically created
@@ -234,6 +301,12 @@ surv_merge <- function(
   }))
   data.table::setnames(join_dt, merge_dt_by)
   merge_value_col_nms <- setdiff(names(merge_dt), merge_dt_by)
+  if ("post_harmonisation" %in% names(optional_steps)) {
+    optional_steps[["post_harmonisation"]](
+      call_env = call_env,
+      eval_env = eval_env
+    )
+  }
   # @codedoc_comment_block popEpi::surv_merge
   # - Then we perform the actual merge between `merge_dt` and the harmonised
   #   data. This merges in data from `merge_dt` into every row of `dt` in-place.
@@ -251,6 +324,12 @@ surv_merge <- function(
       .SDcols = merge_value_col_nms
     ]
   )
+  if ("post_merge" %in% names(optional_steps)) {
+    optional_steps[["post_merge"]](
+      call_env = call_env,
+      eval_env = eval_env
+    )
+  }
   # @codedoc_comment_block popEpi::surv_merge
   # - Each merged-in column from `merge_dt` (all columns not in `merge_dt_by`)
   #   are inspected for missing values. If there are any, an error is raised.
@@ -262,7 +341,7 @@ surv_merge <- function(
   for (merge_value_col_nm in merge_value_col_nms) {
     is_missing <- is.na(dt[[merge_value_col_nm]])
     if (any(is_missing)) {
-      print(dt[is_missing, ])
+      print(data.table::setDT(dt[is_missing, ]))
       stop("Merging `merge_dt` into split (subset of) `dt` produced NA values ",
            "in column `dt$", merge_value_col_nm, "`. ",
            "See the table printed above.")
@@ -272,6 +351,72 @@ surv_merge <- function(
   # - `popEpi::surv_merge` returns `dt` invisibly after adding columns from
   #   `merge_dt` into `dt` in-place, without taking a copy.
   # @codedoc_comment_block popEpi::surv_merge
+  return(invisible(dt[]))
+}
+
+surv_merge_survival <- function(
+  dt,
+  survival_dt,
+  survival_dt_by,
+  survival_dt_harmonisers = NULL,
+  ts_fut_col_nm
+) {
+  stopifnot(
+    is.data.frame(survival_dt),
+    "survival" %in% names(survival_dt),
+    ts_fut_col_nm %in% names(survival_dt),
+    ts_fut_col_nm %in% survival_dt_by
+  )
+  survival_dt <- data.table::setDT(as.list(survival_dt))
+  data.table::set(
+    x = survival_dt,
+    j = c(
+      "cumulative_hazard",
+      "survival_interval_start",
+      "survival_interval_width"
+    ),
+    value = list(
+      -log(survival_dt[["survival"]]),
+      survival_dt[[ts_fut_col_nm]],
+      local({
+        breaks <- surv_merge_guess_breaks__(
+          sort(unique(survival_dt[[ts_fut_col_nm]]))
+        )
+        breaks[match(survival_dt[[ts_fut_col_nm]], breaks) + 1L] -
+          survival_dt[[ts_fut_col_nm]]
+      })
+    )
+  )
+  survival_dt[
+    #' @importFrom data.table := .SD
+    j = "hazard" := diff(c(0.0, .SD[["cumulative_hazard"]])),
+    by = setdiff(survival_dt_by, ts_fut_col_nm)
+  ]
+  surv_merge(
+    dt = dt,
+    merge_dt = survival_dt,
+    merge_dt_by = survival_dt_by,
+    merge_dt_harmonisers = survival_dt_harmonisers,
+    merge_dt_default_harmoniser_lex_dur_multiplier = 1.0
+  )
+  value_col_nms <- setdiff(names(survival_dt), survival_dt_by)
+  work_dt <- data.table::setDT(as.list(dt)[value_col_nms])
+  data.table::set(x = dt, j = value_col_nms, value = NULL)
+  work_dt[
+    j = "delta" := (
+      work_dt[["survival_interval_start"]] +
+        work_dt[["survival_interval_width"]]
+    ) - (dt[[ts_fut_col_nm]] + dt[["lex.dur"]])
+  ]
+  work_dt[
+    j = "cumulative_hazard" := work_dt[["cumulative_hazard"]] -
+      work_dt[["delta"]] * work_dt[["hazard"]]
+  ]
+  data.table::set(
+    x = dt,
+    j = "survival",
+    value = exp(-work_dt[["cumulative_hazard"]])
+  )
   return(invisible(dt[]))
 }
 
