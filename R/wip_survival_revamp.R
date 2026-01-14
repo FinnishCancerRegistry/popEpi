@@ -406,6 +406,10 @@ surv_aggregate_one_stratum__ <- function(
     is.environment(eval_env),
     is.environment(stratum_eval_env)
   )
+
+  expr_obj_nms <- all.vars(aggre_expr)
+  work_dt <- data.table::setDT(as.list(sub_dt))
+  data.table::setkeyv(work_dt, data.table::key(sub_dt))
   lapply(lexis_ts_col_nms, function(ts_col_nm) {
     add_col_nms <- unique(expr_obj_nms[
       grepl(sprintf("^%s_((lead)|(lag))[0-9]+$", ts_col_nm), expr_obj_nms)
@@ -416,7 +420,7 @@ surv_aggregate_one_stratum__ <- function(
         settings[["type"]] <- "lag"
       }
       settings[["n"]] <- as.integer(sub("^[^0-9]+", "", add_col_nm))
-      sub_dt[
+      work_dt[
         #' @importFrom data.table := .SD
         j = (add_col_nm) := .SD[[ts_col_nm]] - data.table::shift(
           x = .SD[[ts_col_nm]],
@@ -430,10 +434,11 @@ surv_aggregate_one_stratum__ <- function(
     })
   })
   data.table::set(
-    x = sub_dt,
+    x = work_dt,
     j = "box_id",
-    value = surv_box_id__(dt = sub_dt, box_dt = box_dt)
+    value = surv_box_id__(dt = work_dt, box_dt = box_dt)
   )
+  data.table::setkeyv(work_dt, c(data.table::key(work_dt), "box_id"))
   agg_expr <- substitute(
     sub_dt[
       j = EXPR,
@@ -443,6 +448,23 @@ surv_aggregate_one_stratum__ <- function(
       EXPR = aggre_expr
     )
   )
+  if ("pp" %in% all.vars(agg_expr)) {
+    lexis_set__(dt = work_dt, lexis_ts_col_nms = lexis_ts_col_nms)
+    data.table::set(
+      x = work_dt,
+      j = "pp",
+      value = surv_pohar_perme_weight__(
+        dt = work_dt,
+        ts_fut_breaks = eval_env[["breaks"]][[eval_env[["aggre_ts_col_nms"]]]],
+        ts_fut_col_nm = eval_env[["aggre_ts_col_nms"]],
+        hazard_col_nm = setdiff(
+          names(eval_env[["merge_dt"]]),
+          eval_env[["merge_dt_by"]]
+        )[1]
+      )
+    )
+    data.table::setDT(work_dt)
+  }
   env <- new.env(parent = call_env)
   env[["call_env"]] <- call_env
   env[["eval_env"]] <- eval_env
@@ -458,7 +480,7 @@ surv_aggregate_one_stratum__ <- function(
     c(names(box_dt), setdiff(names(out), names(box_dt)))
   )
   data.table::setkeyv(out, names(box_dt))
-  if (nrow(sub_dt) == 0) {
+  if (nrow(work_dt) == 0) {
     data.table::set(
       x = out,
       j = setdiff(names(out), names(box_dt)),
