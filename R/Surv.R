@@ -35,7 +35,7 @@ Surv <- function(
   time,
   time2,
   event,
-  type = c("right", "left", "interval", "counting", "interval2"),
+  type = c("right", "left", "interval", "counting", "interval2", "mstate"),
   origin = 0
 ) {
 
