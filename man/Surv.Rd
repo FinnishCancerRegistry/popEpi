@@ -27,22 +27,10 @@ Surv(
 See \verb{[survival::Surv]}.
 }
 \description{
-Wrapper for \link[survival:Surv]{survival::Surv}.
+\code{popEpi::Surv} simply calls \verb{[survival::Surv]}. This wrapper was written
+simply to avoid doing e.g. \code{library(survival)} when \code{Surv} used in a
+formula evaluated by \code{popEpi}.
 }
-\section{Surv in survival vs. in popEpi}{
-
-\code{popEpi::Surv} is a wrapper for \link[survival:Surv]{survival::Surv}.
-Therefore you don't need to to do \code{library("survival")} when using \code{Surv}
-with e.g.
-\verb{[survtab]}. Remember that if you do \code{library("survival")} after
-\code{library("popEpi")}, the \code{Surv} from \pkg{survival} is used instead of
-from \pkg{popEpi} (\code{R} throws a warning about this) when an expression
-such as \code{Surv(my_times, my_events)} is evaluated. You can avoid such
-conflicts by writing e.g. \code{popEpi::Surv(my_times, my_events)} instead.
-However, \code{popEpi::Surv} is designed in such a way that this should not
-become a problem and you should be able to use the two interchangeably.
-}
-
 \seealso{
 Other main functions: 
 \code{\link{rate}()},
