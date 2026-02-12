@@ -1,3 +1,7 @@
+## News for version 0.4.14
+
+Removed a broken unit test.
+
 ## News for version 0.4.13
 
 Removed support for `date` objects. Use base R `Date` objects or
