@@ -1,8 +1,6 @@
 ## News for version 0.4.14
 
-`pophaz` when used by `survtab` etc is checked for `NA` and negative hazard
-values. An informative error is raised if any are found. Previously `NA` hazard
-values lead to an incomprehensible error message later on.
+Removed a broken unit test.
 
 ## News for version 0.4.13
 
