@@ -39,18 +39,22 @@ level_space_list_to_level_space_data_table <- function(
 
 assert_is_arg_by <- function(by, dataset) {
   stopifnot(
-    inherits(by, c("data.table", "character", "list"))
+    inherits(by, c("data.table", "character", "list", "NULL"))
   )
-  if (is.character(by)) {
+  if (is.null(by)) {
+    return(NULL)
+  } else if (is.character(by)) {
     stratum_col_nms <- by
   } else if (inherits(by, "data.table")) {
     stratum_col_nms <- names(by)
   } else if (inherits(by, "list")) {
     stratum_col_nms <- unique(unlist(lapply(seq_along(by), function(i) {
       eval(substitute(stopifnot(
-        inherits(by[[i]], c("character", "data.table"))
+        inherits(by[[i]], c("character", "data.table", "NULL"))
       ), list(i = i)))
-      if (is.character(by)) {
+      if (is.null(by)) {
+        return(NULL)
+      } else if (is.character(by)) {
         return(by)
       } else {
         return(names(by))
@@ -68,6 +72,22 @@ handle_arg_by <- function(
   by,
   dataset
 ) {
+  # @codedoc_comment_block popEpi:::handle_arg_by
+  # @param aggre_by `[data.table, character, list, NULL]` (default `NULL`)
+  #
+  # - `NULL`: No stratification of output.
+  # - `data.table`: Compute produce results for each stratum defined in this
+  #   table, e.g. `data.table::data.table(sex = 1:2)`. You may even use this to
+  #   take a subset at the same time by doing
+  #   e.g. `data.table::data.table(sex = 1L)` even if your `dt` contains data
+  #   for both sexes.
+  # - `character`: Compute results for each stratum defined by these columns
+  #   in `dt`. E.g. `"sex"`.
+  # - `list`: Each element must be either a `data.table`, a `character` vector,
+  #   or `NULL`. These are combined to yield a big `data.table`. E.g.
+  #   `list("sex", data.table::data.table(ag = 1:18))` leading to the same as
+  #   `data.table::CJ(sex = 1:2, ag = 1:18)`.
+  # @codedoc_comment_block popEpi:::handle_arg_by
   assert_is_arg_by(by, dataset)
   if (is.character(by)) {
     stratum_col_nms <- by
@@ -81,9 +101,6 @@ handle_arg_by <- function(
     data.table::setkeyv(by, stratum_col_nms)
   } else if (inherits(by, "list")) {
     by <- level_space_list_to_level_space_data_table(by)
-    dbc::assert_prod_interim_is_data_table_with_required_names(
-      x = dataset, required_names = names(by)
-    )
   }
   bad_col_nms <- setdiff(names(by), names(dataset))
   if (length(bad_col_nms) > 0) {

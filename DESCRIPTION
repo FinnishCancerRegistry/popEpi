@@ -31,7 +31,8 @@ Imports:
     data.table (>= 1.10.4),
     Epi (>= 2.0),
     splines,
-    survival
+    survival,
+    directadjusting (>= 0.6.0)
 Suggests:
     covr,
     knitr,
