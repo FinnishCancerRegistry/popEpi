@@ -667,9 +667,6 @@ surv_estimate <- function(
     value = dt[[paste0(ts_fut_col_nm, "_stop")]] -
       dt[[paste0(ts_fut_col_nm, "_start")]]
   )
-  if ("wat" %in% names(expressions)) {
-    browser()
-  }
   for (estimator_name in names(expressions)) {
     # @codedoc_comment_block popEpi::surv_estimate
     # - Armed with a list of expressions based on `estimates`, called
