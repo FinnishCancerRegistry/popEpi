@@ -228,6 +228,11 @@ surv_estimate_expr_list__ <- list(
     estimate = quote(hazard_observed),
     standard_error = quote(sqrt(hazard_observed))
   ),
+  # h_exp_e2
+  hazard_excess_ederer_ii = list(
+    estimate = quote(hazard_expected_ederer_ii),
+    standard_error = quote(0.0)
+  ),
   # h_exc_e2
   hazard_excess_ederer_ii = list(
     estimate = quote(hazard_excess_ederer_ii),
@@ -307,22 +312,52 @@ surv_estimate_expr_list__ <- list(
         sqrt(cumsum((survival_interval_width ^ 2) * n_events_pp_double_weighted / (total_subject_time_pp ^ 2)))
     )
   ),
-  # ar_lt
-  lifetable_observed_absolute_risk <- list(
-    estimate = quote(
-      cumprod()
-    ),
+  # ar_lt_[x, y], ar_lt_y
+  "lifetable_observed_absolute_risk_[x, y]" = list(
+    estimate = quote({
+      q <- (1 - lifetable_observed_survival_conditional_estimate) *
+        `n_events_[x, y]` / n_events
+      q[n_events == 0] <- 0.0
+      cumsum(lifetable_observed_survival_estimate_lag1 * q)
+    }),
     standard_error = quote(
-      NA_real_
+      0.0 + NA_real_
     )
   ),
-  # ar_h
-  hazard_observed_absolute_risk <- list(
-    estimate = quote(
-      exp(-cumsum(hazard_observed))
-    ),
+  # ar_h_[x, y], ar_h_y
+  "hazard_observed_absolute_risk_[x, y]" = list(
+    estimate = quote({
+      q <- (1 - hazard_observed_survival_conditional_estimate) *
+        `n_events_[x, y]` / n_events
+      q[n_events == 0] <- 0.0
+      cumsum(hazard_observed_survival_estimate_lag1 * q)
+    }),
     standard_error = quote(
-      NA_real_
+      0.0 + NA_real_
+    )
+  ),
+  # er_lt_e2
+  lifetable_relative_absolute_risk_ederer_ii = list(
+    estimate = quote({
+      q <- (1 - lifetable_observed_survival_conditional_estimate) *
+        (n_events - n_events_expected_ederer_ii) / n_events
+      q[n_events == 0] <- 0.0
+      cumsum(lifetable_observed_survival_estimate_lag1 * q)
+    }),
+    standard_error = quote(
+      0.0 + NA_real_
+    )
+  ),
+  # er_h_e2
+  hazard_relative_absolute_risk_ederer_ii = list(
+    estimate = quote({
+      q <- (1 - hazard_observed_survival_conditional_estimate) *
+        (n_events - n_events_expected_ederer_ii) / n_events
+      q[n_events == 0] <- 0.0
+      cumsum(hazard_observed_survival_estimate_lag1 * q)
+    }),
+    standard_error = quote(
+      0.0 + NA_real_
     )
   ),
   # lifetable_expected_absolute_risk_ederer_i <- list(
@@ -416,6 +451,28 @@ make_surv_estimate_expr_list__ <- function(surv_estimate_expr_list) {
     ),
     hazard_excess_pp = quote(
       (n_events_pp - n_events_expected_pp) / total_subject_time_pp
+    ),
+    lifetable_observed_survival_conditional_estimate = quote(
+      1 - (n_events / n_at_risk)
+    ),
+    hazard_observed_survival_conditional_estimate = quote(
+      exp(-survival_interval_width * hazard_observed)
+    ),
+    lifetable_observed_survival_estimate_lag1 = quote(
+      c(
+        1.00,
+        cumprod(lifetable_observed_survival_conditional_estimate)[
+          -length(lifetable_observed_survival_conditional_estimate)
+        ]
+      )
+    ),
+    hazard_observed_survival_estimate_lag1 = quote(
+      c(
+        1.00,
+        exp(-cumsum(survival_interval_width * hazard_observed))[
+          -length(hazard_observed)
+        ]
+      )
     )
   )
   for (utility_expr_nm in names(utility_expr_list)) {
@@ -639,15 +696,15 @@ surv_estimate <- function(
   # ${paste0(knitr::kable(popEpi:::surv_estimate_expression_table__()), collapse = "\n")}
   #
   # @codedoc_comment_block popEpi::surv_estimate
-  expressions <- handle_arg_estimators(estimators)
+  estimator_dt <- handle_arg_estimators(estimators)
   if (length(conf_methods) == 1) {
-    conf_methods <- rep(conf_methods, length(expressions))
+    conf_methods <- rep(conf_methods, nrow(estimator_dt))
   }
-  names(conf_methods) <- names(expressions)
+  names(conf_methods) <- estimator_dt[["user_estimator_name"]]
   if (length(conf_lvls) == 1) {
-    conf_lvls <- rep(conf_lvls, length(expressions))
+    conf_lvls <- rep(conf_lvls, nrow(estimator_dt))
   }
-  names(conf_lvls) <- names(expressions)
+  names(conf_lvls) <- estimator_dt[["user_estimator_name"]]
 
   out <- data.table::setDT(as.list(dt))
   data.table::setkeyv(out, data.table::key(dt))
@@ -667,7 +724,8 @@ surv_estimate <- function(
     value = dt[[paste0(ts_fut_col_nm, "_stop")]] -
       dt[[paste0(ts_fut_col_nm, "_start")]]
   )
-  for (estimator_name in names(expressions)) {
+  for (i in seq_len(nrow(estimator_dt))) {
+    user_estimator_name <- estimator_dt[["user_estimator_name"]][i]
     # @codedoc_comment_block popEpi::surv_estimate
     # - Armed with a list of expressions based on `estimates`, called
     #   `expressions`, for each `i`:
@@ -675,7 +733,7 @@ surv_estimate <- function(
     #     `dt`. E.g. `hazard_observed_survival_estimate` and
     #     `hazard_observed_survival_standard_error`.
     # @codedoc_comment_block popEpi::surv_estimate
-    for (element_name in names(expressions[[estimator_name]])) {
+    for (element_name in names(estimator_dt[["expression_set"]][[i]])) {
       # @codedoc_comment_block popEpi::surv_estimate::estimators
       # - `list`: Each element must be a list with named elements
       #   + `estimate`: Quoted ([quote]) R expression which when evaluated with
@@ -686,11 +744,11 @@ surv_estimate <- function(
       #   + `standard_error`: Also a quoted R expression. This should produce
       #     the standard errors.
       # @codedoc_comment_block popEpi::surv_estimate::estimators
-      add_col_nm <- sprintf("%s_%s", estimator_name, element_name)
+      add_col_nm <- sprintf("%s_%s", user_estimator_name, element_name)
       out[
         #' @importFrom data.table := .SD
         j = (add_col_nm) := eval(
-          expressions[[estimator_name]][[element_name]],
+          estimator_dt[["expression_set"]][[i]][[element_name]],
           envir = .SD,
           enclos = call_env
         ),
@@ -703,7 +761,7 @@ surv_estimate <- function(
     #     and add them into `dt`.
     # @codedoc_comment_block popEpi::surv_estimate
     if (!isTRUE(all.equal(
-      conf_methods[[estimator_name]],
+      conf_methods[[user_estimator_name]],
       "none",
       check.attributes = FALSE
     ))) {
@@ -719,12 +777,14 @@ surv_estimate <- function(
       # @codedoc_comment_block popEpi::surv_estimate::conf_lvls
       data.table::set(
         x = out,
-        j = paste0(estimator_name, "_", c("lo", "hi")),
+        j = paste0(user_estimator_name, "_", c("lo", "hi")),
         value = directadjusting::delta_method_confidence_intervals(
-          statistics = out[[paste0(estimator_name, "_estimate")]],
-          variances = out[[paste0(estimator_name, "_standard_error")]] ^ 2,
-          conf_lvl = conf_lvls[[estimator_name]],
-          conf_method = conf_methods[[estimator_name]]
+          statistics = out[[paste0(user_estimator_name, "_estimate")]],
+          variances = out[[
+            paste0(user_estimator_name, "_standard_error")
+          ]] ^ 2,
+          conf_lvl = conf_lvls[[user_estimator_name]],
+          conf_method = conf_methods[[user_estimator_name]]
         )[
           #' @importFrom data.table .SD
           j = .SD,
@@ -736,8 +796,12 @@ surv_estimate <- function(
 
   if (do_direct_adjusting) {
     sdt <- local({
-      estimate_col_nms <- paste0(names(expressions), "_estimate")
-      standard_error_col_nms <- paste0(names(expressions), "_standard_error")
+      estimate_col_nms <- paste0(
+        estimator_dt[["user_estimator_name"]], "_estimate"
+      )
+      standard_error_col_nms <- paste0(
+        estimator_dt[["user_estimator_name"]], "_standard_error"
+      )
       data.table::set(
         sdt,
         j = standard_error_col_nms,

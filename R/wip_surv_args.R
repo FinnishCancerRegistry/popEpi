@@ -29,7 +29,27 @@ assert_is_arg_dt <- function(dt, lexis = FALSE) {
     data.table::is.data.table(dt)
   )
   if (lexis) {
-    stopifnot(inherits(dt, "Lexis"))
+    stopifnot(
+      inherits(dt, "Lexis"),
+      inherits(dt[["lex.Cst"]], c("logical", "integer", "factor")),
+      inherits(dt[["lex.Xst"]], c("logical", "integer", "factor")),
+      identical(class(dt[["lex.Cst"]]), class(dt[["lex.Xst"]])),
+      !is.na(dt[["lex.Cst"]]),
+      !is.na(dt[["lex.Xst"]]),
+      ifelse(
+        is.factor(dt[["lex.Cst"]]),
+        identical(
+          levels(dt[["lex.Cst"]]),
+          levels(dt[["lex.Xst"]])
+        ),
+        TRUE
+      ),
+      ifelse(
+        is.integer(dt[["lex.Cst"]]),
+        all(dt[["lex.Cst"]] >= 0 & dt[["lex.Xst"]] >= 0),
+        TRUE
+      )
+    )
   }
 }
 
@@ -136,7 +156,7 @@ box_dt_col_nms__ <- function(ts_col_nms) {
   )
 }
 
-handle_arg_estimators <- function(estimators) {
+handle_arg_estimators <- function(estimators, dt) {
   stopifnot(
     # @codedoc_comment_block popEpi::surv_estimate::estimators
     # @param estimators `[character, list]`
@@ -163,15 +183,104 @@ handle_arg_estimators <- function(estimators) {
       }
     }
   }
-  expressions <- lapply(seq_along(estimators), function(i) {
-    if (is.character(estimators[[i]])) {
-      out <- surv_estimate_expression__(estimators[[i]])
-    } else {
-      out <- estimators[i]
+  estimator_dt <- data.table::setDF(data.table::setDT(list(
+    estimator = as.list(estimators),
+    user_estimator_name = vapply(seq_along(estimators), function(i) {
+      if (is.character(estimators[[i]])) {
+        estimators[[i]]
+      } else {
+        names(estimators)[i]
+      }
+    }, character(1L))
+  )))
+  estimator_dt[["state_from"]] <- unlist(lapply(
+    seq_len(nrow(estimator_dt)),
+    function(i) {
+      if (!is.character(estimator_dt[["estimator"]][[i]])) {
+        return(NA)
+      }
+      state_from <- regex_extract_first__(
+        "(?<=[[])[^,]+(?=[,])",
+        estimator_dt[["user_estimator_name"]][i],
+        perl = TRUE
+      )
+      if (!is.na(state_from)) {
+        state_from <- eval(parse(text = state_from))
+      }
+      return(state_from)
     }
-    out
-  })
-  expressions <- unlist(expressions, recursive = FALSE)
-
-  return(expressions)
+  ))
+  estimator_dt[["state_to"]] <- unlist(lapply(
+    seq_len(nrow(estimator_dt)),
+    function(i) {
+      if (!is.character(estimator_dt[["estimator"]][[i]])) {
+        return(NA)
+      }
+      state_to <- regex_extract_first__(
+        "(?<=[,]).+(?=[]]$)",
+        estimator_dt[["user_estimator_name"]][i],
+        perl = TRUE
+      )
+      if (!is.na(state_to)) {
+        state_to <- eval(parse(text = state_to))
+      }
+      return(state_to)
+    }
+  ))
+  estimator_dt[["standard_estimator_name"]] <- data.table::fifelse(
+    is.na(estimator_dt[["state_from"]]),
+    estimator_dt[["user_estimator_name"]],
+    paste0(
+      sub(
+        "[[].+[]]$",
+        "",
+        estimator_dt[["user_estimator_name"]]
+      ),
+      "[x, y]"
+    )
+  )
+  if (is.numeric(estimator_dt[["state_to"]])) {
+    estimator_dt[["state_from"]] <- as.integer(estimator_dt[["state_from"]])
+    estimator_dt[["state_from"]][is.na(estimator_dt[["state_from"]])] <- 0L
+    estimator_dt[["state_to"]] <- as.integer(estimator_dt[["state_to"]])
+  } else if (is.logical(estimator_dt[["state_to"]])) {
+    estimator_dt[["state_from"]] <- FALSE
+    estimator_dt[["state_to"]] <- TRUE
+  }
+  estimator_dt[["expression_set"]] <- unlist(lapply(
+    seq_len(nrow(estimator_dt)),
+    function(i) {
+      if (is.character(estimator_dt[["estimator"]][[i]])) {
+        out <- surv_estimate_expression__(
+          estimator_dt[["standard_estimator_name"]][[i]]
+        )
+      } else {
+        out <- estimator_dt[["estimator"]][i]
+      }
+      out
+    }
+  ), recursive = FALSE)
+  estimator_dt[["expression_set"]] <- data.table::fifelse(
+    is.na(estimator_dt[["state_from"]]),
+    estimator_dt[["expression_set"]],
+    lapply(seq_len(nrow(estimator_dt)), function(i) {
+      expr_set <- estimator_dt[["expression_set"]][[i]]
+      lapply(expr_set, function(expr) {
+        expr_lines <- deparse(expr)
+        expr_lines <- gsub(
+          "[x, y]",
+          sprintf(
+            "[%s, %s]",
+            as.character(estimator_dt[["state_from"]][i]),
+            as.character(estimator_dt[["state_to"]][i])
+          ),
+          expr_lines,
+          fixed = TRUE
+        )
+        parse(text = paste0(expr_lines, collapse = "\n"))[[1]]
+      })
+    })
+  )
+  data.table::setDT(estimator_dt)
+  return(estimator_dt[])
 }
