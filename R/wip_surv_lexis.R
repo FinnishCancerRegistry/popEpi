@@ -186,11 +186,6 @@ surv_lexis <- function(
   conf_lvls = 0.95,
   weights = NULL
 ) {
-  # @codedoc_comment_block popEpi::surv_lexis
-  # Compute survival estimates on a `Lexis` dataset (`[Epi::Lexis]`).
-  #
-  # Performs the following steps:
-  # @codedoc_comment_block popEpi::surv_lexis
   subset <- handle_arg_subset()
   aggre_by <- handle_arg_by(by = aggre_by, dataset = dt)
   # @codedoc_comment_block surv_arg_weights
@@ -218,6 +213,10 @@ surv_lexis <- function(
     )
   }
   # @codedoc_comment_block popEpi::surv_lexis
+  # Compute survival estimates on a `Lexis` dataset (`[Epi::Lexis]`).
+  #
+  # Performs the following steps:
+  #
   # - Call `surv_split_merge_aggregate_by_stratum`. If `aggre_expr` is `NULL`,
   #   it is replaced with an internally specified expressions based on
   #   argument `estimators`. The resulting table of aggregated data is

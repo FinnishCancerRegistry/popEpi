@@ -187,6 +187,9 @@ surv_split_merge_aggregate_by_stratum <- function(
   # @codedoc_comment_block surv_arg_dt
 
   assert_is_arg_dt(dt, lexis = TRUE)
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum::breaks
+  # @codedoc_insert_comment_block popEpi:::assert_is_arg_breaks
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum::breaks
   assert_is_arg_breaks(breaks, dt)
   assert_is_arg_merge_dt_and_merge_dt_by(
     merge_dt = merge_dt,
@@ -222,11 +225,23 @@ surv_split_merge_aggregate_by_stratum <- function(
   #'
   #' - `NULL`: Use `names(breaks)`.
   #' - `character`: Aggregate by these time scales. E.g. `"ts_fut"`.
+  #'
+  #' @param optional_steps `[NULL, list]` (default `NULL`)
+  #'
+  #' Optional steps to perform along the way.
+  #'
+  #' - `NULL`: No optional steps are performed.
+  #' - `list`: Each named element is a function that is called in a specific
+  #'   stage of the run. See **Details** for what functions are recognised.
+  #'
   stopifnot(
     aggre_ts_col_nms %in% names(breaks),
     is.language(aggre_expr),
     inherits(optional_steps, c("NULL", "list"))
   )
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum::subset
+  # @codedoc_insert_comment_block popEpi:::handle_arg_subset
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum::subset
   subset <- handle_arg_subset()
 
   eval_env <- environment()

@@ -175,6 +175,11 @@ e.g. the same age group twice in a table stratified by age group only.
 allowed.
 }}
 
+\item{breaks}{\verb{[list]} (no default)
+
+List of breaks to split \code{Lexis} data by. Passed to \verb{[splitMulti]}.
+E.g. \code{list(ts_fut = seq(0, 5, 1 / 12), ts_cal = c(2001, 2006))}.}
+
 \item{merge_dt_by}{\verb{[character, NULL]} (no default or default \code{NULL})
 
 Names of columns in both \code{merge_dt} and \code{dt} by which \code{merge_dt} will be
@@ -254,6 +259,26 @@ for the stratum have been split and \code{merge_dt} has been merged when
 \item \code{character}: Aggregate by these time scales. E.g. \code{"ts_fut"}.
 }}
 
+\item{subset}{\verb{[NULL, logical, integer, data.table]} (default \code{NULL})
+
+This argument is evaluated within the context of \code{dt} and the environment
+where the function with this argument was called.
+\itemize{
+\item \code{NULL}: Implies no subsetting, i.e. retain all observations.
+\item \code{logical}: Keep only observations where this is \code{TRUE}. Must be of length
+\code{nrow(dt)}. E.g. \code{subset = my_column == 1.}
+\item \code{integer}: Keep only observations at these row numbers. E.g.
+\code{subset = 1:5}.
+\item \code{data.table}: Each column must also be a column of \code{dt}. Only those rows
+in \code{dt} are retained that match a row in \code{subset}. E.g.
+\code{subset = data.table::data.table(my_column = 1)}.
+}
+
+Due to the non-standard evaluation method used here, you can make use of
+data in the calling environment as well. E.g. with variable \code{my_value = 1}
+defined and \code{dt} containing column \code{my_column} you can do
+\code{subset = my_column == my_value} if you want.}
+
 \item{merge_dt_default_harmoniser_lex_dur_multiplier}{\verb{[numeric]}
 (default 0.5)
 
@@ -265,6 +290,15 @@ to \code{ts_age = 56} for the purpose of merging with \code{merge_dt}. The
 middle of the record is a rational choice when a record covers multiple
 strata of \code{merge_dt}, at least when merging population expected
 hazards.}
+
+\item{optional_steps}{\verb{[NULL, list]} (default \code{NULL})
+
+Optional steps to perform along the way.
+\itemize{
+\item \code{NULL}: No optional steps are performed.
+\item \code{list}: Each named element is a function that is called in a specific
+stage of the run. See \strong{Details} for what functions are recognised.
+}}
 }
 \value{
 \strong{popEpi::surv_estimate}

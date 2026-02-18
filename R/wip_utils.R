@@ -151,6 +151,27 @@ handle_arg_subset <- function(
     subset_expr
   })
 
+  # @codedoc_comment_block popEpi:::handle_arg_subset
+  # @param subset `[NULL, logical, integer, data.table]` (default `NULL`)
+  #
+  # This argument is evaluated within the context of `dt` and the environment
+  # where the function with this argument was called.
+  #
+  # - `NULL`: Implies no subsetting, i.e. retain all observations.
+  # - `logical`: Keep only observations where this is `TRUE`. Must be of length
+  #   `nrow(dt)`. E.g. `subset = my_column == 1.`
+  # - `integer`: Keep only observations at these row numbers. E.g.
+  #   `subset = 1:5`.
+  # - `data.table`: Each column must also be a column of `dt`. Only those rows
+  #   in `dt` are retained that match a row in `subset`. E.g.
+  #   `subset = data.table::data.table(my_column = 1)`.
+  #
+  # Due to the non-standard evaluation method used here, you can make use of
+  # data in the calling environment as well. E.g. with variable `my_value = 1`
+  # defined and `dt` containing column `my_column` you can do
+  # `subset = my_column == my_value` if you want.
+  #
+  # @codedoc_comment_block popEpi:::handle_arg_subset
   subset_value <- eval(
     subset_expr,
     envir = eval_env[[dataset_nm]],
@@ -159,7 +180,7 @@ handle_arg_subset <- function(
   if (!inherits(subset_value, c("NULL", "data.table", "integer", "logical"))) {
     stop("Subsetting argument `", arg_subset_nm, "` did not evaluate to ",
          "an object of class NULL, data.table, integer, nor logical. Instead ",
-         "it had class ", deparse1(class(subset_value)))
+         "it had class(es) ", deparse1(class(subset_value)))
   }
   if (output_type == "as-is") {
     return(subset_value)
