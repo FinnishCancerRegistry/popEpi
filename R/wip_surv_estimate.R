@@ -351,6 +351,22 @@ surv_estimate_expr_list__ <- list(
       sqrt(cumsum(survival_interval_width ^ 2 * `h_pch_[x, y]_se` ^ 2))
     )
   ),
+  "s_pch_[x, y]" = list(
+    est = quote(
+      exp(-`ch_pch_[x, y]`)
+    ),
+    se = quote(
+      s_pch_est *
+        sqrt(cumsum((survival_interval_width ^ 2) * `n_events_[x, y]` / (t_at_risk ^ 2)))
+    )
+  ),
+  "s_lt_[x, y]" = list(
+    est = quote(cumprod(1 - `n_events_[x, y]` / n_at_risk_eff)),
+    se = quote(
+      `s_lt_[x, y]_est` *
+        sqrt(cumsum(n_events / (n_at_risk_eff * (n_at_risk_eff - `n_events_[x, y]`))))
+    )
+  ),
   er_e2_lt = list(
     est = quote({
       q <- (1 - s_lt_cond_est) *
