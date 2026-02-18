@@ -611,8 +611,8 @@ stopifnot(
 lexis <- Epi::Lexis(
   entry = list(ts_fut = 0.0, ts_cal = 2010.3, ts_age = 56.8),
   exit = list(ts_cal = 2024.9999),
-  entry.status = 0,
-  exit.status = 0
+  entry.status = 0L,
+  exit.status = 0L
 )
 lexis$sex <- 0L
 lexis <- popEpi::splitMulti(
