@@ -604,7 +604,7 @@ sdt <- popEpi::surv_estimate(
   )
 )
 stopifnot(
-  c("h_pch_est", "my_surv_est") \%in\% names(sdt)
+  c("h_pch_est", "s_pch_est") \%in\% names(sdt)
 )
 
 # popEpi::surv_merge

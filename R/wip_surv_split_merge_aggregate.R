@@ -86,7 +86,7 @@ surv_aggregate_one_stratum__ <- function(
       had_event_during_interval = quote(lex.Cst != lex.Xst),
       left_early_during_interval = substitute(
         {
-          out <- duplicated(lex.id, fromLast = TRUE)
+          out <- duplicated(lex.id, fromLast = TRUE) # nolint
           out[out] <- lex.Cst[out] == lex.Xst[out]
           out[out] <- round(ts_fut[out] + lex.dur[out], 10) <
             round(box_dt[[ts_fut_stop_col_nm]][box_id[out]], 10)

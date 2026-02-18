@@ -38,8 +38,8 @@ surv_merge_default_harmoniser__ <- function(
   # @codedoc_comment_block surv_merge_default_harmoniser__
   substitute(
     {
-      breaks <- cut_breaks
-      idx <- cut(
+      breaks <- cut_breaks # nolint
+      idx <- cut( # nolint
         x = col + lex.dur * lex_dur_multiplier,
         breaks = breaks,
         right = FALSE,

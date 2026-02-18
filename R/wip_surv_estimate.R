@@ -637,7 +637,7 @@ surv_estimate_expression_table__ <- function() {
 #'   )
 #' )
 #' stopifnot(
-#'   c("h_pch_est", "my_surv_est") %in% names(sdt)
+#'   c("h_pch_est", "s_pch_est") %in% names(sdt)
 #' )
 #'
 surv_estimate <- function(
