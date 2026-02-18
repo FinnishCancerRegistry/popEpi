@@ -404,75 +404,72 @@ surv_estimate_expr_list__ <- list(
     se = quote(
       0.0 + NA_real_
     )
-  ),
-  ar_exp_e1_lt = list(
-    est = quote(
-      1 - s_exp_e1_lt_est
-    ),
-    se = quote(
-      s_lt_se
-    )
-  ),
-  ar_exp_e1_pch = list(
-    est = quote(
-      1 - s_exp_e1_pch_est
-    ),
-    se = quote(
-      s_pch_se
-    )
-  ),
-  ar_extra_e1_lt = list(
-    est = quote({
-      obs_abs_risk <- ar_lt
-      exp_abs_risk <- 1 - s_exp_e1_lt_est
-      obs_abs_risk - exp_abs_risk
-    }),
-    se = quote(
-      ar_lt_se
-    )
-  ),
-  ar_extra_e1_pch = list(
-    est = quote({
-      obs_abs_risk <- ar_pch_est
-      exp_abs_risk <- 1 - s_exp_e1_pch_est
-      obs_abs_risk - exp_abs_risk
-    }),
-    se = quote(
-      ar_lt_se
-    )
-  ),
-  s_exp_e1_lt = list(
-    est = quote(
-      s_exp_e1_lt_est
-    ),
-    se = quote(
-      0.0
-    )
-  ),
-  s_exp_e1_pch = list(
-    est = quote(
-      s_exp_e1_pch_est
-    ),
-    se = quote(
-      0.0
-    )
-  ),
-  s_def_e1_lt = list(
-    est = quote(
-      s_exp_e1_lt_est - s_lt_est
-    ),
-    se = quote(
-      s_lt_se
-    )
-  ),
-  s_def_e1_pch = list(
-    est = quote({
-      s_exp_e1_pch_est - s_pch_est
-    }),
-    se = quote(
-      s_pch_se
-    )
   )
+  # ,
+  # ar_exp_e1_lt = list(
+  #   est = quote(
+  #     1 - s_exp_e1_lt_est
+  #   ),
+  #   se = quote(
+  #     s_lt_se
+  #   )
+  # ),
+  # ar_exp_e1_pch = list(
+  #   est = quote(
+  #     1 - s_exp_e1_pch_est
+  #   ),
+  #   se = quote(
+  #     s_pch_se
+  #   )
+  # ),
+  # ar_extra_e1_lt = list(
+  #   est = quote(
+  #     ar_lt - (1 - s_exp_e1_lt_est)
+  #   ),
+  #   se = quote(
+  #     ar_lt_se
+  #   )
+  # ),
+  # ar_extra_e1_pch = list(
+  #   est = quote(
+  #     ar_pch_est - (1 - s_exp_e1_pch_est)
+  #   ),
+  #   se = quote(
+  #     ar_lt_se
+  #   )
+  # ),
+  # s_exp_e1_lt = list(
+  #   est = quote(
+  #     s_exp_e1_lt_est
+  #   ),
+  #   se = quote(
+  #     0.0
+  #   )
+  # ),
+  # s_exp_e1_pch = list(
+  #   est = quote(
+  #     s_exp_e1_pch_est
+  #   ),
+  #   se = quote(
+  #     0.0
+  #   )
+  # ),
+  # s_def_e1_lt = list(
+  #   est = quote(
+  #     s_exp_e1_lt_est - s_lt_est
+  #   ),
+  #   se = quote(
+  #     s_lt_se
+  #   )
+  # ),
+  # s_def_e1_pch = list(
+  #   est = quote({
+  #     s_exp_e1_pch_est - s_pch_est
+  #   }),
+  #   se = quote(
+  #     s_pch_se
+  #   )
+  # )
 )
 
 make_surv_estimate_expr_list__ <- function(surv_estimate_expr_list) {
@@ -552,13 +549,23 @@ surv_estimate_expression__ <- function(type) {
   out <- surv_estimate_expr_list__[type]
   return(out)
 }
+
+surv_estimate_expression_table_clean__ <- function(x) {
+  if (is.language(x)) {
+    x <- deparse1(x, collapse = "; ")
+  }
+  x <- sprintf("\\verb{%s}", x)
+  return(x)
+}
 surv_estimate_expression_table__ <- function() {
   out <- lapply(names(surv_estimate_expr_list__), function(estimator_name) {
     cbind(
-      estimator = estimator_name,
+      "Name of estimator" = surv_estimate_expression_table_clean__(
+        estimator_name
+      ),
       as.data.frame(lapply(
         surv_estimate_expr_list__[[estimator_name]],
-        deparse1
+        surv_estimate_expression_table_clean__
       ))
     )
   })
