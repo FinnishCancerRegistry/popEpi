@@ -347,7 +347,7 @@ surv_merge_survival <- function(
     j = c(
       "cumulative_hazard",
       "survival_interval_start",
-      "survival_interval_width"
+      "delta_t"
     ),
     value = list(
       -log(survival_dt[["survival"]]),
@@ -379,7 +379,7 @@ surv_merge_survival <- function(
   work_dt[
     j = "delta" := (
       work_dt[["survival_interval_start"]] +
-        work_dt[["survival_interval_width"]]
+        work_dt[["delta_t"]]
     ) - (dt[[ts_fut_col_nm]] + dt[["lex.dur"]])
   ]
   work_dt[

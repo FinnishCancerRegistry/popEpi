@@ -228,15 +228,15 @@ surv_estimate_expr_list__ <- list(
     se = quote(sqrt(h_pch_est / t_at_risk))
   ),
   ch_pch = list(
-    est = quote(cumsum(survival_interval_width * h_pch_est)),
-    se = quote(sqrt(cumsum(survival_interval_width ^ 2 * h_pch_se ^ 2)))
+    est = quote(cumsum(delta_t * h_pch_est)),
+    se = quote(sqrt(cumsum(delta_t ^ 2 * h_pch_se ^ 2)))
   ),
   h_lt = list(
     est = quote(-log(1 - n_events / n_at_risk_eff)),
     se = quote(0.0 + NA_real_)
   ),
   ch_lt = list(
-    est = quote(cumsum(survival_interval_width * h_pch_est)),
+    est = quote(cumsum(delta_t * h_pch_est)),
     se = quote(0.0 + NA_real_)
   ),
   h_exp_e2_pch = list(
@@ -256,11 +256,11 @@ surv_estimate_expr_list__ <- list(
   ),
   s_pch = list(
     est = quote(
-      exp(-cumsum(survival_interval_width * h_pch))
+      exp(-cumsum(delta_t * h_pch))
     ),
     se = quote(
       s_pch_est *
-        sqrt(cumsum((survival_interval_width ^ 2) * n_events / (t_at_risk ^ 2)))
+        sqrt(cumsum((delta_t ^ 2) * n_events / (t_at_risk ^ 2)))
     )
   ),
   s_exp_e2_lt = list(
@@ -273,7 +273,7 @@ surv_estimate_expr_list__ <- list(
   ),
   s_exp_e2_pch = list(
     est = quote(
-      exp(-cumsum(survival_interval_width * h_exp_e2_pch))
+      exp(-cumsum(delta_t * h_exp_e2_pch))
     ),
     se = quote(
       rep(0.0, length(h_exp_e2_pch))
@@ -289,7 +289,7 @@ surv_estimate_expr_list__ <- list(
   ),
   rs_e2_pch = list(
     est = quote(
-      exp(-cumsum(survival_interval_width * h_exc_e2_pch))
+      exp(-cumsum(delta_t * h_exc_e2_pch))
     ),
     se = quote(
       s_pch_se / s_exp_e2_pch_est
@@ -306,11 +306,11 @@ surv_estimate_expr_list__ <- list(
   ),
   ns_pp_pch = list(
     est = quote(
-      exp(-cumsum(survival_interval_width * h_exc_pp))
+      exp(-cumsum(delta_t * h_exc_pp))
     ),
     se = quote(
       ns_pp_pch_est *
-        sqrt(cumsum((survival_interval_width ^ 2) * n_events_pp_double_weighted / (t_at_risk_pp ^ 2)))
+        sqrt(cumsum((delta_t ^ 2) * n_events_pp_double_weighted / (t_at_risk_pp ^ 2)))
     )
   ),
   "ar_lt_[x, y]" = list(
@@ -345,10 +345,10 @@ surv_estimate_expr_list__ <- list(
   ),
   "ch_pch_[x, y]" = list(
     est = quote(
-      cumsum(survival_interval_width * `h_pch_[x, y]_est`)
+      cumsum(delta_t * `h_pch_[x, y]_est`)
     ),
     se = quote(
-      sqrt(cumsum(survival_interval_width ^ 2 * `h_pch_[x, y]_se` ^ 2))
+      sqrt(cumsum(delta_t ^ 2 * `h_pch_[x, y]_se` ^ 2))
     )
   ),
   "s_pch_[x, y]" = list(
@@ -357,7 +357,7 @@ surv_estimate_expr_list__ <- list(
     ),
     se = quote(
       s_pch_est *
-        sqrt(cumsum((survival_interval_width ^ 2) * `n_events_[x, y]` / (t_at_risk ^ 2)))
+        sqrt(cumsum((delta_t ^ 2) * `n_events_[x, y]` / (t_at_risk ^ 2)))
     )
   ),
   "s_lt_[x, y]" = list(
@@ -477,7 +477,7 @@ make_surv_estimate_expr_list__ <- function(surv_estimate_expr_list) {
       1 - (n_events / n_at_risk_eff)
     ),
     s_pch_cond_est = quote(
-      exp(-survival_interval_width * h_pch)
+      exp(-delta_t * h_pch)
     ),
     s_lt_est_lag1 = quote(
       c(
@@ -488,19 +488,19 @@ make_surv_estimate_expr_list__ <- function(surv_estimate_expr_list) {
     s_pch_est_lag1 = quote(
       c(
         1.00,
-        exp(-cumsum(survival_interval_width * h_pch))[-length(h_pch)]
+        exp(-cumsum(delta_t * h_pch))[-length(h_pch)]
       )
     )
   )
   for (utility_expr_nm in names(utility_expr_list)) {
-    # e.g. expr = quote(exp(-cumsum(survival_interval_width * h_pch)))
+    # e.g. expr = quote(exp(-cumsum(delta_t * h_pch)))
     expr <- utility_expr_list[[utility_expr_nm]]
-    # e.g. expr_expr = quote(substitute(exp(-cumsum(survival_interval_width * h_pch)), utility_expr_list))
+    # e.g. expr_expr = quote(substitute(exp(-cumsum(delta_t * h_pch)), utility_expr_list))
     expr_expr <- substitute(
       substitute(expr, utility_expr_list),
       list(expr = expr)
     )
-    # e.g. expr = quote(exp(-cumsum(survival_interval_width * n_events / t_at_risk)))
+    # e.g. expr = quote(exp(-cumsum(delta_t * n_events / t_at_risk)))
     expr <- eval(expr_expr)
     utility_expr_list[[utility_expr_nm]] <- expr
   }
@@ -737,7 +737,7 @@ surv_estimate <- function(
 
   data.table::set(
     x = out,
-    j = "survival_interval_width",
+    j = "delta_t",
     value = dt[[paste0(ts_fut_col_nm, "_stop")]] -
       dt[[paste0(ts_fut_col_nm, "_start")]]
   )
