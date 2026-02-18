@@ -555,21 +555,24 @@ dt <- data.table::data.table(
 )
 data.table::set(
   x = dt,
-  j = "h_pch",
+  j = "my_h_pch",
   value = dt[["n_events"]] / dt[["t_at_risk"]]
 )
-dt <- popEpi::surv_estimate(
+sdt <- popEpi::surv_estimate(
   dt = dt,
   ts_fut_col_nm = "ts_fut",
+  value_col_nms = c("n_events", "t_at_risk"),
   estimators = c("h_pch", "s_pch"),
   conf_methods = "log-log"
 )
 stopifnot(
-  c("h_pch_est", "s_pch_est") \%in\% names(dt)
+  c("h_pch_est", "s_pch_est") \%in\% names(sdt),
+  dt[["my_h_pch"]] == sdt[["h_pch_est"]]
 )
-dt <- popEpi::surv_estimate(
+sdt <- popEpi::surv_estimate(
   dt = dt,
   ts_fut_col_nm = "ts_fut",
+  value_col_nms = c("n_events", "t_at_risk"),
   estimators = list(
     "h_pch",
     my_surv = list(
@@ -582,7 +585,26 @@ dt <- popEpi::surv_estimate(
   conf_methods = c("log", "none")
 )
 stopifnot(
-  dt[["h_pch"]] == dt[["h_pch_est"]]
+  c("h_pch_est", "my_surv_est") \%in\% names(sdt)
+)
+sdt <- popEpi::surv_estimate(
+  dt = dt,
+  ts_fut_col_nm = "ts_fut",
+  value_col_nms = c("n_events", "t_at_risk"),
+  estimators = list(
+    "h_pch",
+    "s_pch"
+  ),
+  conf_methods = list(
+    "log",
+    list(
+      g = quote(stats::qnorm(p = theta)),
+      g_inv = quote(stats::pnorm(q = g))
+    )
+  )
+)
+stopifnot(
+  c("h_pch_est", "my_surv_est") \%in\% names(sdt)
 )
 
 # popEpi::surv_merge
