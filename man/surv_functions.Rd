@@ -312,7 +312,7 @@ Pre-defined estimators with their formulae:
    \verb{h_pch} \tab \verb{n_events/t_at_risk} \tab \verb{sqrt(n_events/t_at_risk/t_at_risk)} \cr
    \verb{ch_pch} \tab \verb{cumsum(delta_t * (n_events/t_at_risk))} \tab \verb{sqrt(cumsum(delta_t^2 * sqrt(n_events/t_at_risk/t_at_risk)^2))} \cr
    \verb{h_lt} \tab \verb{-log(1 - n_events/n_at_risk_eff)} \tab \verb{0 + NA_real_} \cr
-   \verb{ch_lt} \tab \verb{-log(cumprod(1 - n_events/n_at_risk_eff))} \tab \verb{0 + NA_real_} \cr
+   \verb{ch_lt} \tab \verb{cumsum(delta_t * -log(1 - n_events/n_at_risk_eff))} \tab \verb{0 + NA_real_} \cr
    \verb{h_exp_e2_pch} \tab \verb{n_events_exp_e2/t_at_risk} \tab \verb{0 + 0} \cr
    \verb{h_exc_e2_pch} \tab \verb{(n_events - n_events_exp_e2)/t_at_risk} \tab \verb{sqrt(n_events/t_at_risk/t_at_risk)} \cr
    \verb{s_lt} \tab \verb{cumprod(1 - n_events/n_at_risk_eff)} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr

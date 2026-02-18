@@ -236,7 +236,7 @@ surv_estimate_expr_list__ <- list(
     se = quote(0.0 + NA_real_)
   ),
   ch_lt = list(
-    est = quote(-log(cumprod(1 - n_events / n_at_risk_eff))),
+    est = quote(cumsum(delta_t * h_lt_est)),
     se = quote(0.0 + NA_real_)
   ),
   h_exp_e2_pch = list(
