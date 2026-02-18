@@ -591,26 +591,23 @@ surv_estimate_expression_table__ <- function() {
 #'   j = "h_pch",
 #'   value = dt[["n_events"]] / dt[["t_at_risk"]]
 #' )
-#' popEpi::surv_estimate(
+#' dt <- popEpi::surv_estimate(
 #'   dt = dt,
 #'   ts_fut_col_nm = "ts_fut",
 #'   estimators = c("h_pch", "s_pch"),
 #'   conf_methods = "log-log"
 #' )
-#' exp_col_nms <- sprintf(
-#'   "%s_est", c("h_pch", "s_pch")
-#' )
 #' stopifnot(
-#'   exp_col_nms %in% names(dt)
+#'   c("h_pch_est", "s_pch_est") %in% names(dt)
 #' )
-#' popEpi::surv_estimate(
+#' dt <- popEpi::surv_estimate(
 #'   dt = dt,
 #'   ts_fut_col_nm = "ts_fut",
 #'   estimators = list(
 #'     "h_pch",
 #'     my_surv = list(
 #'       est = quote(
-#'         exp(-cumsum((ts_fut_stop - ts_fut_start) * hazard_observed_est))
+#'         exp(-cumsum((ts_fut_stop - ts_fut_start) * h_pch_est))
 #'       ),
 #'       se = quote(rep(0.0, length(ts_fut_start)))
 #'     )
@@ -618,7 +615,7 @@ surv_estimate_expression_table__ <- function() {
 #'   conf_methods = c("log", "none")
 #' )
 #' stopifnot(
-#'   dt[["h_pch"]] == dt[["hazard_observed_est"]]
+#'   dt[["h_pch"]] == dt[["h_pch_est"]]
 #' )
 #'
 surv_estimate <- function(
