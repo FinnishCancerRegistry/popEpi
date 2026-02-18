@@ -15,7 +15,7 @@ surv_aggre_util_expressions__ <- list(
   n_left_early_during_interval = quote(
     sum(left_early_during_interval)
   ),
-  n_at_risk_effective = quote(
+  n_at_risk_eff = quote(
     sum((
       in_follow_up_at_interval_start +
         0.5 * (entered_late_during_interval & !left_early_during_interval) +
@@ -26,7 +26,7 @@ surv_aggre_util_expressions__ <- list(
   n_events = quote(
     sum((lex.Xst != lex.Cst) * iw)
   ),
-  total_subject_time = quote(
+  t_at_risk = quote(
     sum(lex.dur * iw)
   ),
   n_events_pp = quote(
@@ -35,10 +35,10 @@ surv_aggre_util_expressions__ <- list(
   n_events_pp_double_weighted = quote(
     sum((lex.Xst != lex.Cst) * pp * pp * iw)
   ),
-  n_events_expected_pp = quote(
+  n_events_exp_pp = quote(
     sum(lex.dur * haz * pp * iw)
   ),
-  total_subject_time_pp = quote(
+  t_at_risk_pp = quote(
     sum(lex.dur * pp * iw)
   ),
   "n_events_[x, y]" = quote(
@@ -46,49 +46,49 @@ surv_aggre_util_expressions__ <- list(
   )
 )
 surv_aggre_expressions__ <- list(
-  "lifetable_observed_survival" = quote(
+  "s_lt" = quote(
     list(
       n_in_follow_up_at_interval_start = n_in_follow_up_at_interval_start,
       n_entered_late_during_interval = n_entered_late_during_interval,
       n_left_early_during_interval = n_left_early_during_interval,
-      n_at_risk_effective = n_at_risk_effective,
+      n_at_risk_eff = n_at_risk_eff,
       n_events = n_events
     )
   ),
-  "hazard_observed_survival" = quote(
+  "s_pch" = quote(
     list(
-      total_subject_time = total_subject_time,
+      t_at_risk = t_at_risk,
       n_events = n_events
     )
   ),
-  "hazard_relative_survival_ederer_ii" = quote(
+  "rs_e2_pch" = quote(
     list(
-      total_subject_time = total_subject_time,
+      t_at_risk = t_at_risk,
       n_events = n_events,
-      n_events_expected_ederer_ii = sum(lex.dur * haz * iw)
+      n_events_exp_e2 = sum(lex.dur * haz * iw)
     )
   ),
-  "hazard_net_survival_pohar_perme" = quote(
+  "ns_pp_pch" = quote(
     list(
       n_events_pp = n_events_pp,
       n_events_pp_double_weighted = n_events_pp_double_weighted,
-      n_events_expected_pp = n_events_expected_pp,
-      total_subject_time_pp = total_subject_time_pp
+      n_events_exp_pp = n_events_exp_pp,
+      t_at_risk_pp = t_at_risk_pp
     )
   ),
-  "hazard_observed_absolute_risk_[x, y]" = quote(
+  "ar_pch_[x, y]" = quote(
     list(
-      total_subject_time = total_subject_time,
+      t_at_risk = t_at_risk,
       n_events = n_events,
       "n_events_[x, y]" = `n_events_[x, y]`
     )
   ),
-  "lifetable_observed_absolute_risk_[x, y]" = quote(
+  "ar_lt_[x, y]" = quote(
     list(
       n_in_follow_up_at_interval_start = n_in_follow_up_at_interval_start,
       n_entered_late_during_interval = n_entered_late_during_interval,
       n_left_early_during_interval = n_left_early_during_interval,
-      n_at_risk_effective = n_at_risk_effective,
+      n_at_risk_eff = n_at_risk_eff,
       n_events = n_events,
       "n_events_[x, y]" = `n_events_[x, y]`
     )
@@ -181,7 +181,7 @@ surv_lexis <- function(
   aggre_ts_col_nms = NULL,
   aggre_expr = NULL,
   subset = NULL,
-  estimators = "hazard_observed_survival",
+  estimators = "s_pch",
   conf_methods = "log",
   conf_lvls = 0.95,
   weights = NULL

@@ -70,13 +70,13 @@ surv_pohar_perme_weight__ <- function(
         #   probabilities from `t = 0.10` to the mid points `t = c(0.15, 0.25)`.
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         # note: interval `i` has breaks `[t_{i-1}, t_i[`.
-        # hence e.g. `h*_{i,j,k}` is the expected hazard in interval `i` between
+        # hence e.g. `h_pch*_{i,j,k}` is the expected hazard in interval `i` between
         # `[t_{i-1}, t_i[`.
         `H*(t_{i,j,k})` <- work_dt[["H*(t_{i,j,k})"]]
-        `h*_{i,j,k}` <- work_dt[["expected_hazard"]]
+        `h_pch*_{i,j,k}` <- work_dt[["expected_hazard"]]
         `u_{i,j,k}` <- work_dt[["lex.dur"]] / 2
         # note: m_{i,j,k} = t_{i,j,k} - u_{i,j,k}
-        `H*(m_{i,j,k})` <- `H*(t_{i,j,k})` - `h*_{i,j,k}` * `u_{i,j,k}`
+        `H*(m_{i,j,k})` <- `H*(t_{i,j,k})` - `h_pch*_{i,j,k}` * `u_{i,j,k}`
         # note: `w_{i,j,k}` = 1 / exp(-`H*(m_{i,j,k})`) = exp(`H*(m_{i,j,k})`)
         `w_{i,j,k}` <- exp(`H*(m_{i,j,k})`)
         `w_{i,j,k}`
@@ -113,18 +113,18 @@ surv_pohar_perme_weight__ <- function(
     )
     data.table::set(
       x = work_dt,
-      j = "h*_{i,j}",
+      j = "h_pch*_{i,j}",
       value = work_dt[["lex.dur"]] * work_dt[["expected_hazard"]]
     )
     work_dt <- work_dt[
       #' @importFrom data.table .SD
       j = lapply(.SD, sum),
-      .SDcols = c("h*_{i,j}", "lex.dur"),
+      .SDcols = c("h_pch*_{i,j}", "lex.dur"),
       by = c("lex.id", "survival_interval_id")
     ]
     data.table::set(
       x = work_dt,
-      j = c("integration_start", "integration_stop", "h*_{i,j}"),
+      j = c("integration_start", "integration_stop", "h_pch*_{i,j}"),
       value = list(
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         #   + Take as the start point of integration for survival interval i
@@ -153,10 +153,10 @@ surv_pohar_perme_weight__ <- function(
         #     the weighted average of subinterval expected hazards, where
         #     the observed width of the subinterval is the weight. E.g.
         #     with `t_start = c(0.1, 0.2)` and `t_stop = c(0.2, 0.3)`
-        #     we get `h*_{i,j}` as the average of `h*_{i,j,1}` and `h*_{i,j,2}`
+        #     we get `h_pch*_{i,j}` as the average of `h_pch*_{i,j,1}` and `h_pch*_{i,j,2}`
         #     for subject j in survival interval `[0.00, 1.00[`.
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
-        work_dt[["h*_{i,j}"]] / work_dt[["lex.dur"]]
+        work_dt[["h_pch*_{i,j}"]] / work_dt[["lex.dur"]]
       )
     )
     data.table::set(
@@ -167,7 +167,7 @@ surv_pohar_perme_weight__ <- function(
     data.table::set(
       x = work_dt,
       j = "H*(t_{i,j})",
-      value = work_dt[["h*_{i,j}"]] * work_dt[["l_{i,j}"]]
+      value = work_dt[["h_pch*_{i,j}"]] * work_dt[["l_{i,j}"]]
     )
     work_dt[
       #' @importFrom data.table := .SD
@@ -185,12 +185,12 @@ surv_pohar_perme_weight__ <- function(
         #     start and stop times. This results in values of `H*(t_{i,j})`
         #     for subject j and survival interval i, where this value is at the
         #     end of the interval. To get to the middle of the survival interval
-        #     we subtract from `H*(t_{i,j})` the corresponding `h*_{i,j}`
+        #     we subtract from `H*(t_{i,j})` the corresponding `h_pch*_{i,j}`
         #     multiplied with half the width of that survival interval.
         #     This yields `H*(m_{i,j})`.
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         `H*(m_{i,j})` <- work_dt[["H*(t_{i,j})"]]
-          - work_dt[["h*_{i,j}"]] * work_dt[["l_{i,j}"]] / 2
+          - work_dt[["h_pch*_{i,j}"]] * work_dt[["l_{i,j}"]] / 2
         # `w_{i,j}` = 1 / exp(-`H*(m_{i,j})`) = exp(`H*(m_{i,j})`)
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         #   + Then the Pohar Perme weight is simply
@@ -223,280 +223,281 @@ surv_pohar_perme_weight__ <- function(
 }
 
 surv_estimate_expr_list__ <- list(
-  # h
-  hazard_observed = list(
-    estimate = quote(hazard_observed),
-    standard_error = quote(sqrt(hazard_observed))
+  h_pch = list(
+    est = quote(n_events / t_at_risk),
+    se = quote(sqrt(h_pch_est / t_at_risk))
   ),
-  # h_exp_e2
-  hazard_excess_ederer_ii = list(
-    estimate = quote(hazard_expected_ederer_ii),
-    standard_error = quote(0.0)
+  ch_pch = list(
+    est = quote(cumsum(survival_interval_width * h_pch_est)),
+    se = quote(sqrt(cumsum(survival_interval_width ^ 2 * h_pch_se ^ 2)))
   ),
-  # h_exc_e2
-  hazard_excess_ederer_ii = list(
-    estimate = quote(hazard_excess_ederer_ii),
-    standard_error = quote(sqrt(hazard_observed))
+  h_lt = list(
+    est = quote(-log(1 - n_events / n_at_risk_eff)),
+    se = quote(0.0 + NA_real_)
   ),
-  # s_lt
-  lifetable_observed_survival = list(
-    estimate = quote(cumprod(1 -  n_events / n_at_risk_effective)),
-    standard_error = quote(
-      lifetable_observed_survival_estimate *
-        sqrt(cumsum(n_events / (n_at_risk_effective * (n_at_risk_effective - n_events))))
+  ch_lt = list(
+    est = quote(cumsum(survival_interval_width * h_pch_est)),
+    se = quote(0.0 + NA_real_)
+  ),
+  h_exp_e2_pch = list(
+    est = quote(h_exp_e2_pch),
+    se = quote(0.0 + 0.0)
+  ),
+  h_exc_e2_pch = list(
+    est = quote(h_exc_e2_pch),
+    se = quote(h_pch_se)
+  ),
+  s_lt = list(
+    est = quote(cumprod(1 -  n_events / n_at_risk_eff)),
+    se = quote(
+      s_lt_est *
+        sqrt(cumsum(n_events / (n_at_risk_eff * (n_at_risk_eff - n_events))))
     )
   ),
-  # s_h
-  hazard_observed_survival = list(
-    estimate = quote(
-      exp(-cumsum(survival_interval_width * hazard_observed))
+  s_pch = list(
+    est = quote(
+      exp(-cumsum(survival_interval_width * h_pch))
     ),
-    standard_error = quote(
-      hazard_observed_survival_estimate *
-        sqrt(cumsum((survival_interval_width ^ 2) * n_events / (total_subject_time ^ 2)))
+    se = quote(
+      s_pch_est *
+        sqrt(cumsum((survival_interval_width ^ 2) * n_events / (t_at_risk ^ 2)))
     )
   ),
-  # s_lt_exp_e2
-  lifetable_expected_survival_ederer_ii = list(
-    estimate = quote(
-      cumprod(1 - n_events_expected_ederer_ii / n_at_risk_effective)
+  s_exp_e2_lt = list(
+    est = quote(
+      cumprod(1 - n_events_exp_e2 / n_at_risk_eff)
     ),
-    standard_error = quote(
-      rep(0.0, length(lifetable_expected_survival_estimate))
+    se = quote(
+      rep(0.0, length(s_exp_e2_lt_est))
     )
   ),
-  # s_h_exp_e2
-  hazard_expected_survival_ederer_ii = list(
-    estimate = quote(
-      exp(-cumsum(survival_interval_width * hazard_expected_ederer_ii))
+  s_exp_e2_pch = list(
+    est = quote(
+      exp(-cumsum(survival_interval_width * h_exp_e2_pch))
     ),
-    standard_error = quote(
-      rep(0.0, length(hazard_expected_survival_ederer_ii))
+    se = quote(
+      rep(0.0, length(h_exp_e2_pch))
     )
   ),
-  # rs_lt_e2
-  lifetable_relative_survival_ederer_ii = list(
-    estimate = quote(
-      cumprod(1 - (n_events - n_events_expected_ederer_ii) / n_at_risk_effective)
+  rs_e2_lt = list(
+    est = quote(
+      cumprod(1 - (n_events - n_events_exp_e2) / n_at_risk_eff)
     ),
-    standard_error = quote(
-      lifetable_observed_survival_standard_error / lifetable_expected_survival_ederer_ii_estimate
+    se = quote(
+      s_lt_se / s_exp_e2_lt_est
     )
   ),
-  # rs_h_e2
-  hazard_relative_survival_ederer_ii = list(
-    estimate = quote(
-      exp(-cumsum(survival_interval_width * hazard_excess_ederer_ii))
+  rs_e2_pch = list(
+    est = quote(
+      exp(-cumsum(survival_interval_width * h_exc_e2_pch))
     ),
-    standard_error = quote(
-      hazard_observed_survival_standard_error / hazard_expected_survival_ederer_ii_estimate
+    se = quote(
+      s_pch_se / s_exp_e2_pch_est
     )
   ),
-  # ns_lt_pp
-  lifetable_net_survival_pohar_perme = list(
-    estimate = quote(
-      cumprod(1 - (n_events_pp - n_events_expected_pp) / n_in_follow_up_effective_pp)
+  ns_pp_lt = list(
+    est = quote(
+      cumprod(1 - (n_events_pp - n_events_exp_pp) / n_in_follow_up_eff_pp)
     ),
-    standard_error = quote(
-      lifetable_net_survival_pohar_perme_estimate *
-        sqrt(cumsum(n_events_pp_double_weighted / (n_at_risk_effective ^ 2)))
+    se = quote(
+      ns_pp_lt_est *
+        sqrt(cumsum(n_events_pp_double_weighted / (n_at_risk_eff ^ 2)))
     )
   ),
-  # ns_h_pp
-  hazard_net_survival_pohar_perme = list(
-    estimate = quote(
-      exp(-cumsum(survival_interval_width * hazard_excess_pp))
+  ns_pp_pch = list(
+    est = quote(
+      exp(-cumsum(survival_interval_width * h_exc_pp))
     ),
-    standard_error = quote(
-      hazard_net_survival_pohar_perme_estimate *
-        sqrt(cumsum((survival_interval_width ^ 2) * n_events_pp_double_weighted / (total_subject_time_pp ^ 2)))
+    se = quote(
+      ns_pp_pch_est *
+        sqrt(cumsum((survival_interval_width ^ 2) * n_events_pp_double_weighted / (t_at_risk_pp ^ 2)))
     )
   ),
-  # ar_lt_[x, y], ar_lt_y
-  "lifetable_observed_absolute_risk_[x, y]" = list(
-    estimate = quote({
-      q <- (1 - lifetable_observed_survival_conditional_estimate) *
+  "ar_lt_[x, y]" = list(
+    est = quote({
+      q <- (1 - s_lt_cond_est) *
         `n_events_[x, y]` / n_events
       q[n_events == 0] <- 0.0
-      cumsum(lifetable_observed_survival_estimate_lag1 * q)
+      cumsum(s_lt_est_lag1 * q)
     }),
-    standard_error = quote(
+    se = quote(
       0.0 + NA_real_
     )
   ),
-  # ar_h_[x, y], ar_h_y
-  "hazard_observed_absolute_risk_[x, y]" = list(
-    estimate = quote({
-      q <- (1 - hazard_observed_survival_conditional_estimate) *
+  "ar_pch_[x, y]" = list(
+    est = quote({
+      q <- (1 - s_pch_cond_est) *
         `n_events_[x, y]` / n_events
       q[n_events == 0] <- 0.0
-      cumsum(hazard_observed_survival_estimate_lag1 * q)
+      cumsum(s_pch_est_lag1 * q)
     }),
-    standard_error = quote(
+    se = quote(
       0.0 + NA_real_
     )
   ),
-  # er_lt_e2
-  lifetable_relative_absolute_risk_ederer_ii = list(
-    estimate = quote({
-      q <- (1 - lifetable_observed_survival_conditional_estimate) *
-        (n_events - n_events_expected_ederer_ii) / n_events
-      q[n_events == 0] <- 0.0
-      cumsum(lifetable_observed_survival_estimate_lag1 * q)
-    }),
-    standard_error = quote(
-      0.0 + NA_real_
-    )
-  ),
-  # er_h_e2
-  hazard_relative_absolute_risk_ederer_ii = list(
-    estimate = quote({
-      q <- (1 - hazard_observed_survival_conditional_estimate) *
-        (n_events - n_events_expected_ederer_ii) / n_events
-      q[n_events == 0] <- 0.0
-      cumsum(hazard_observed_survival_estimate_lag1 * q)
-    }),
-    standard_error = quote(
-      0.0 + NA_real_
-    )
-  ),
-  # lifetable_expected_absolute_risk_ederer_i <- list(
-  #   estimate = quote(
-  #     1 - lifetable_expected_survival_ederer_i_estimate
-  #   ),
-  #   standard_error = quote(
-  #     lifetable_observed_survival_standard_error
-  #   )
-  # ),
-  # hazard_expected_absolute_risk_ederer_i <- list(
-  #   estimate = quote(
-  #     1 - hazard_expected_survival_ederer_i_estimate
-  #   ),
-  #   standard_error = quote(
-  #     hazard_observed_survival_standard_error
-  #   )
-  # ),
-  # lifetable_observed_extra_absolute_risk = list(
-  #   estimate = quote({
-  #     obs_abs_risk <- lifetable_observed_absolute_risk
-  #     exp_abs_risk <- 1 - lifetable_expected_survival_estimate
-  #     obs_abs_risk - exp_abs_risk
-  #   }),
-  #   standard_error = quote(
-  #     lifetable_observed_absolute_risk_standard_error
-  #   )
-  # ),
-  # hazard_observed_extra_absolute_risk = list(
-  #   estimate = quote({
-  #     obs_abs_risk <- hazard_observed_absolute_risk_estimate
-  #     exp_abs_risk <- 1 - hazard_expected_survival_estimate
-  #     obs_abs_risk - exp_abs_risk
-  #   }),
-  #   standard_error = quote(
-  #     lifetable_observed_absolute_risk_standard_error
-  #   )
-  # ),
-  # s_lt_exp_e1
-  lifetable_expected_survival_ederer_i = list(
-    estimate = quote(
-      lifetable_expected_survival_ederer_i_estimate
+  "h_pch_[x, y]" = list(
+    est = quote(
+      `n_events_[x, y]` / t_at_risk
     ),
-    standard_error = quote(
+    se = quote(
+      sqrt(`h_pch_[x, y]_est` / t_at_risk)
+    )
+  ),
+  "ch_pch_[x, y]" = list(
+    est = quote(
+      cumsum(survival_interval_width * `h_pch_[x, y]_est`)
+    ),
+    se = quote(
+      sqrt(cumsum(survival_interval_width ^ 2 * `h_pch_[x, y]_se` ^ 2))
+    )
+  ),
+  er_e2_lt = list(
+    est = quote({
+      q <- (1 - s_lt_cond_est) *
+        (n_events - n_events_exp_e2) / n_events
+      q[n_events == 0] <- 0.0
+      cumsum(s_lt_est_lag1 * q)
+    }),
+    se = quote(
+      0.0 + NA_real_
+    )
+  ),
+  er_e2_pch = list(
+    est = quote({
+      q <- (1 - s_pch_cond_est) *
+        (n_events - n_events_exp_e2) / n_events
+      q[n_events == 0] <- 0.0
+      cumsum(s_pch_est_lag1 * q)
+    }),
+    se = quote(
+      0.0 + NA_real_
+    )
+  ),
+  ar_exp_e1_lt = list(
+    est = quote(
+      1 - s_exp_e1_lt_est
+    ),
+    se = quote(
+      s_lt_se
+    )
+  ),
+  ar_exp_e1_pch = list(
+    est = quote(
+      1 - s_exp_e1_pch_est
+    ),
+    se = quote(
+      s_pch_se
+    )
+  ),
+  ar_extra_e1_lt = list(
+    est = quote({
+      obs_abs_risk <- ar_lt
+      exp_abs_risk <- 1 - s_exp_e1_lt_est
+      obs_abs_risk - exp_abs_risk
+    }),
+    se = quote(
+      ar_lt_se
+    )
+  ),
+  ar_extra_e1_pch = list(
+    est = quote({
+      obs_abs_risk <- ar_pch_est
+      exp_abs_risk <- 1 - s_exp_e1_pch_est
+      obs_abs_risk - exp_abs_risk
+    }),
+    se = quote(
+      ar_lt_se
+    )
+  ),
+  s_exp_e1_lt = list(
+    est = quote(
+      s_exp_e1_lt_est
+    ),
+    se = quote(
       0.0
     )
   ),
-  # s_h_exp_e1
-  hazard_expected_survival_ederer_i = list(
-    estimate = quote(
-      hazard_expected_survival_ederer_i_estimate
+  s_exp_e1_pch = list(
+    est = quote(
+      s_exp_e1_pch_est
     ),
-    standard_error = quote(
+    se = quote(
       0.0
     )
   ),
-  # s_lt_def_e1
-  lifetable_observed_survival_deficit_ederer_i = list(
-    estimate = quote({
-      obs_surv <- lifetable_observed_survival_estimate
-      exp_surv <- lifetable_expected_survival_ederer_i_estimate
-      exp_surv - obs_surv
-    }),
-    standard_error = quote(
-      lifetable_observed_survival_standard_error
+  s_def_e1_lt = list(
+    est = quote(
+      s_exp_e1_lt_est - s_lt_est
+    ),
+    se = quote(
+      s_lt_se
     )
   ),
-  # s_h_def_e1
-  hazard_observed_survival_deficit_ederer_i = list(
-    estimate = quote({
-      obs_surv <- hazard_observed_survival_estimate
-      exp_surv <- hazard_expected_survival_ederer_i_estimate
-      exp_surv - obs_surv
+  s_def_e1_pch = list(
+    est = quote({
+      s_exp_e1_pch_est - s_pch_est
     }),
-    standard_error = quote(
-      hazard_observed_survival_standard_error
+    se = quote(
+      s_pch_se
     )
   )
 )
 
 make_surv_estimate_expr_list__ <- function(surv_estimate_expr_list) {
   utility_expr_list <- list(
-    hazard_observed = quote(
-      n_events / total_subject_time
+    h_pch = quote(
+      n_events / t_at_risk
     ),
-    hazard_expected_ederer_ii = quote(
-      n_events_expected_ederer_ii / total_subject_time
+    h_exp_e2_pch = quote(
+      n_events_exp_e2 / t_at_risk
     ),
-    hazard_excess_ederer_ii = quote(
-      (n_events - n_events_expected_ederer_ii) / total_subject_time
+    h_exc_e2_pch = quote(
+      (n_events - n_events_exp_e2) / t_at_risk
     ),
-    hazard_excess_pp = quote(
-      (n_events_pp - n_events_expected_pp) / total_subject_time_pp
+    h_exc_pp = quote(
+      (n_events_pp - n_events_exp_pp) / t_at_risk_pp
     ),
-    lifetable_observed_survival_conditional_estimate = quote(
-      1 - (n_events / n_at_risk)
+    s_lt_cond_est = quote(
+      1 - (n_events / n_at_risk_eff)
     ),
-    hazard_observed_survival_conditional_estimate = quote(
-      exp(-survival_interval_width * hazard_observed)
+    s_pch_cond_est = quote(
+      exp(-survival_interval_width * h_pch)
     ),
-    lifetable_observed_survival_estimate_lag1 = quote(
+    s_lt_est_lag1 = quote(
       c(
         1.00,
-        cumprod(lifetable_observed_survival_conditional_estimate)[
-          -length(lifetable_observed_survival_conditional_estimate)
-        ]
+        cumprod(s_lt_cond_est)[-length(s_lt_cond_est)]
       )
     ),
-    hazard_observed_survival_estimate_lag1 = quote(
+    s_pch_est_lag1 = quote(
       c(
         1.00,
-        exp(-cumsum(survival_interval_width * hazard_observed))[
-          -length(hazard_observed)
-        ]
+        exp(-cumsum(survival_interval_width * h_pch))[-length(h_pch)]
       )
     )
   )
   for (utility_expr_nm in names(utility_expr_list)) {
-    # e.g. expr = quote(exp(-cumsum(survival_interval_width * hazard_observed)))
+    # e.g. expr = quote(exp(-cumsum(survival_interval_width * h_pch)))
     expr <- utility_expr_list[[utility_expr_nm]]
-    # e.g. expr_expr = quote(substitute(exp(-cumsum(survival_interval_width * hazard_observed)), utility_expr_list))
+    # e.g. expr_expr = quote(substitute(exp(-cumsum(survival_interval_width * h_pch)), utility_expr_list))
     expr_expr <- substitute(
       substitute(expr, utility_expr_list),
       list(expr = expr)
     )
-    # e.g. expr = quote(exp(-cumsum(survival_interval_width * n_events / total_subject_time)))
+    # e.g. expr = quote(exp(-cumsum(survival_interval_width * n_events / t_at_risk)))
     expr <- eval(expr_expr)
     utility_expr_list[[utility_expr_nm]] <- expr
   }
   for (estimator_nm in names(surv_estimate_expr_list)) {
-    for (elem_nm in c("estimate", "standard_error")) {
-      # e.g. expr = quote(lifetable_observed_survival_estimate)
+    for (elem_nm in names(surv_estimate_expr_list[[estimator_nm]])) {
+      # e.g. expr = quote(s_lt_est)
       expr <- surv_estimate_expr_list[[estimator_nm]][[elem_nm]]
-      # e.g. expr_expr = quote(substitute(lifetable_observed_survival_estimate, utility_expr_list))
+      # e.g. expr_expr = quote(substitute(s_lt_est, utility_expr_list))
       expr_expr <- substitute(
         substitute(expr, utility_expr_list),
         list(expr = expr)
       )
-      # e.g. expr = quote(cumprod(1 - n_events / n_at_risk_effective))
+      # e.g. expr = quote(cumprod(1 - n_events / n_at_risk_eff))
       expr <- eval(expr_expr)
       utility_elem_nm <- paste0(
         estimator_nm,
@@ -544,21 +545,21 @@ surv_estimate_expression_table__ <- function() {
 #'   ts_fut_start = seq(0, 5 - 1 / 12, 1 / 12),
 #'   ts_fut_stop = seq(1 / 12, 5, 1 / 12),
 #'   n_events = rpois(n = 60, lambda = 60:1),
-#'   total_subject_time = rpois(n = 60, lambda = 300:240)
+#'   t_at_risk = rpois(n = 60, lambda = 300:240)
 #' )
 #' data.table::set(
 #'   x = dt,
-#'   j = "h",
-#'   value = dt[["n_events"]] / dt[["total_subject_time"]]
+#'   j = "h_pch",
+#'   value = dt[["n_events"]] / dt[["t_at_risk"]]
 #' )
 #' popEpi::surv_estimate(
 #'   dt = dt,
 #'   ts_fut_col_nm = "ts_fut",
-#'   estimators = c("hazard_observed", "hazard_observed_survival"),
+#'   estimators = c("h_pch", "s_pch"),
 #'   conf_methods = "log-log"
 #' )
 #' exp_col_nms <- sprintf(
-#'   "%s_estimate", c("hazard_observed", "hazard_observed_survival")
+#'   "%s_est", c("h_pch", "s_pch")
 #' )
 #' stopifnot(
 #'   exp_col_nms %in% names(dt)
@@ -567,18 +568,18 @@ surv_estimate_expression_table__ <- function() {
 #'   dt = dt,
 #'   ts_fut_col_nm = "ts_fut",
 #'   estimators = list(
-#'     "hazard_observed",
+#'     "h_pch",
 #'     my_surv = list(
-#'       estimate = quote(
-#'         exp(-cumsum((ts_fut_stop - ts_fut_start) * hazard_observed_estimate))
+#'       est = quote(
+#'         exp(-cumsum((ts_fut_stop - ts_fut_start) * hazard_observed_est))
 #'       ),
-#'       standard_error = quote(rep(0.0, length(ts_fut_start)))
+#'       se = quote(rep(0.0, length(ts_fut_start)))
 #'     )
 #'   ),
 #'   conf_methods = c("log", "none")
 #' )
 #' stopifnot(
-#'   dt[["h"]] == dt[["hazard_observed_estimate"]]
+#'   dt[["h_pch"]] == dt[["hazard_observed_est"]]
 #' )
 #'
 surv_estimate <- function(
@@ -586,7 +587,7 @@ surv_estimate <- function(
   ts_fut_col_nm,
   stratum_col_nms = NULL,
   value_col_nms = NULL,
-  estimators = "hazard_observed_survival",
+  estimators = "s_pch",
   weights = NULL,
   conf_methods = "log",
   conf_lvls = 0.95
@@ -663,7 +664,7 @@ surv_estimate <- function(
     #'   no value columns from `dt` to be included in the output.
     #' - `character`: One or more names of columns in `dt` containing values
     #'   to be included in the output in addition to the estimate etc. columns.
-    #'   E.g. `value_col_nms = c("n_events", "total_subject_time")`.
+    #'   E.g. `value_col_nms = c("n_events", "t_at_risk")`.
     is.null(value_col_nms) || all(value_col_nms %in% names(dt))
   )
   if (is.null(value_col_nms)) {
@@ -690,7 +691,7 @@ surv_estimate <- function(
   #
   # - Handles `estimators`. Elements of `estimators` that are character
   #   strings cause the corresponding pre-defined formulae to be used.
-  #   E.g. `"observed_survival"`.
+  #   E.g. `"s_pch"`.
   #   Pre-defined estimators with their formulae:
   #
   # ${paste0(knitr::kable(popEpi:::surv_estimate_expression_table__()), collapse = "\n")}
@@ -730,8 +731,8 @@ surv_estimate <- function(
     # - Armed with a list of expressions based on `estimates`, called
     #   `expressions`, for each `i`:
     #   + Evaluate each element of `expressions[[i]]` and add the result into
-    #     `dt`. E.g. `hazard_observed_survival_estimate` and
-    #     `hazard_observed_survival_standard_error`.
+    #     `dt`. E.g. `s_pch_est` and
+    #     `s_pch_se`.
     # @codedoc_comment_block popEpi::surv_estimate
     for (element_name in names(estimator_dt[["expression_set"]][[i]])) {
       # @codedoc_comment_block popEpi::surv_estimate::estimators
@@ -779,9 +780,9 @@ surv_estimate <- function(
         x = out,
         j = paste0(user_estimator_name, "_", c("lo", "hi")),
         value = directadjusting::delta_method_confidence_intervals(
-          statistics = out[[paste0(user_estimator_name, "_estimate")]],
+          statistics = out[[paste0(user_estimator_name, "_est")]],
           variances = out[[
-            paste0(user_estimator_name, "_standard_error")
+            paste0(user_estimator_name, "_se")
           ]] ^ 2,
           conf_lvl = conf_lvls[[user_estimator_name]],
           conf_method = conf_methods[[user_estimator_name]]
@@ -797,10 +798,10 @@ surv_estimate <- function(
   if (do_direct_adjusting) {
     sdt <- local({
       estimate_col_nms <- paste0(
-        estimator_dt[["user_estimator_name"]], "_estimate"
+        estimator_dt[["user_estimator_name"]], "_est"
       )
       standard_error_col_nms <- paste0(
-        estimator_dt[["user_estimator_name"]], "_standard_error"
+        estimator_dt[["user_estimator_name"]], "_se"
       )
       data.table::set(
         sdt,
@@ -810,7 +811,7 @@ surv_estimate <- function(
         })
       )
       variance_col_nms <- sub(
-        "_estimate$", "_variance", estimate_col_nms
+        "_est$", "_variance", estimate_col_nms
       )
       data.table::setnames(sdt, standard_error_col_nms, variance_col_nms)
       da_stratum_col_nms <- c(stratum_col_nms,  "box_id")

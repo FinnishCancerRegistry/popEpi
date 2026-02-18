@@ -160,7 +160,7 @@ handle_arg_estimators <- function(estimators, dt) {
   stopifnot(
     # @codedoc_comment_block popEpi::surv_estimate::estimators
     # @param estimators `[character, list]`
-    # (default `"hazard_observed_survival"`)
+    # (default `"s_pch"`)
     #
     # One or more names of estimators whose estimates will be computed into
     # `dt`.
@@ -176,9 +176,9 @@ handle_arg_estimators <- function(estimators, dt) {
     for (i in seq_along(estimators)) {
       if (!is.character(estimators[[i]])) {
         eval(substitute(stopifnot(
-          c("estimate", "standard_error") %in% names(estimators[[i]]),
-          is.language(estimators[[i]][["estimate"]]),
-          is.language(estimators[[i]][["standard_error"]])
+          c("est", "se") %in% names(estimators[[i]]),
+          is.language(estimators[[i]][["est"]]),
+          is.language(estimators[[i]][["se"]])
         ), list(i = i)))
       }
     }

@@ -156,7 +156,7 @@ prev_lexis <- function(
   browser()
   survival_dt[
     #' @importFrom data.table := .SD
-    j = "h" := diff(c(0.0, .SD[["H"]])) / .SD[["d"]],
+    j = "h_pch" := diff(c(0.0, .SD[["H"]])) / .SD[["d"]],
     by = eval(setdiff(names(survival_dt_by), names(breaks)[2]))
   ]
   data.table::set(
@@ -208,7 +208,7 @@ prev_lexis <- function(
     i = prev_dt[["exit_before_time_point"]] == TRUE,
     #' @importFrom data.table := .SD
     j = "surv_exit" := exp(
-      -(.SD[["H"]] - .SD[["h"]] *
+      -(.SD[["H"]] - .SD[["h_pch"]] *
         (.SD[["prevalence_time_point_ts_fut"]] - .SD[["surv_ts_fut"]]))
     )
   ]
@@ -225,7 +225,7 @@ prev_lexis <- function(
   #     we must take a survival value at a time point. a time point near the
   #     start of the interval should be almost the same as the survival at the
   #     start of the interval for instance. this could be handled for instance
-  #     via S_i = exp(-(H - h * (t_i - start))) where t_i is the index time
+  #     via S_i = exp(-(H - h_pch * (t_i - start))) where t_i is the index time
   #     point and start is the interval start point.
   work_dt <- surv_split__(
     dt = dt,
