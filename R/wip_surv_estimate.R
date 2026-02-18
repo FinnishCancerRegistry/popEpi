@@ -236,7 +236,7 @@ surv_estimate_expr_list__ <- list(
     se = quote(0.0 + NA_real_)
   ),
   ch_lt = list(
-    est = quote(cumsum(delta_t * h_pch_est)),
+    est = quote(-log(cumprod(1 - n_events / n_at_risk_eff))),
     se = quote(0.0 + NA_real_)
   ),
   h_exp_e2_pch = list(
@@ -313,6 +313,54 @@ surv_estimate_expr_list__ <- list(
         sqrt(cumsum((delta_t ^ 2) * n_events_pp_double_weighted / (t_at_risk_pp ^ 2)))
     )
   ),
+  "h_lt_[x, y]" = list(
+    est = quote(
+      -log(1 - `n_events_[x, y]` / n_at_risk_eff)
+    ),
+    se = quote(
+      0.0 + NA_real_
+    )
+  ),
+  "h_pch_[x, y]" = list(
+    est = quote(
+      `n_events_[x, y]` / t_at_risk
+    ),
+    se = quote(
+      sqrt(`h_pch_[x, y]_est` / t_at_risk)
+    )
+  ),
+  "ch_lt_[x, y]" = list(
+    est = quote(
+      -log(cumprod(1 - `n_events_[x, y]` / n_at_risk_eff))
+    ),
+    se = quote(
+      0.0 + NA_real_
+    )
+  ),
+  "ch_pch_[x, y]" = list(
+    est = quote(
+      cumsum(delta_t * `h_pch_[x, y]_est`)
+    ),
+    se = quote(
+      sqrt(cumsum(delta_t ^ 2 * `h_pch_[x, y]_se` ^ 2))
+    )
+  ),
+  "s_lt_[x, y]" = list(
+    est = quote(cumprod(1 - `n_events_[x, y]` / n_at_risk_eff)),
+    se = quote(
+      `s_lt_[x, y]_est` *
+        sqrt(cumsum(n_events / (n_at_risk_eff * (n_at_risk_eff - `n_events_[x, y]`))))
+    )
+  ),
+  "s_pch_[x, y]" = list(
+    est = quote(
+      exp(-`ch_pch_[x, y]`)
+    ),
+    se = quote(
+      s_pch_est *
+        sqrt(cumsum((delta_t ^ 2) * `n_events_[x, y]` / (t_at_risk ^ 2)))
+    )
+  ),
   "ar_lt_[x, y]" = list(
     est = quote({
       q <- (1 - s_lt_cond_est) *
@@ -333,38 +381,6 @@ surv_estimate_expr_list__ <- list(
     }),
     se = quote(
       0.0 + NA_real_
-    )
-  ),
-  "h_pch_[x, y]" = list(
-    est = quote(
-      `n_events_[x, y]` / t_at_risk
-    ),
-    se = quote(
-      sqrt(`h_pch_[x, y]_est` / t_at_risk)
-    )
-  ),
-  "ch_pch_[x, y]" = list(
-    est = quote(
-      cumsum(delta_t * `h_pch_[x, y]_est`)
-    ),
-    se = quote(
-      sqrt(cumsum(delta_t ^ 2 * `h_pch_[x, y]_se` ^ 2))
-    )
-  ),
-  "s_pch_[x, y]" = list(
-    est = quote(
-      exp(-`ch_pch_[x, y]`)
-    ),
-    se = quote(
-      s_pch_est *
-        sqrt(cumsum((delta_t ^ 2) * `n_events_[x, y]` / (t_at_risk ^ 2)))
-    )
-  ),
-  "s_lt_[x, y]" = list(
-    est = quote(cumprod(1 - `n_events_[x, y]` / n_at_risk_eff)),
-    se = quote(
-      `s_lt_[x, y]_est` *
-        sqrt(cumsum(n_events / (n_at_risk_eff * (n_at_risk_eff - `n_events_[x, y]`))))
     )
   ),
   er_e2_lt = list(
