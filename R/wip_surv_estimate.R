@@ -349,7 +349,7 @@ surv_estimate_expr_list__ <- list(
     est = quote(cumprod(1 - `n_events_[x, y]` / n_at_risk_eff)),
     se = quote(
       `s_lt_[x, y]_est` *
-        sqrt(cumsum(n_events / (n_at_risk_eff * (n_at_risk_eff - `n_events_[x, y]`))))
+        sqrt(cumsum(`n_events_[x, y]` / (n_at_risk_eff * (n_at_risk_eff - `n_events_[x, y]`))))
     )
   ),
   "s_pch_[x, y]" = list(
