@@ -41,6 +41,14 @@ surv_aggre_expression_list__ <- list(
   n_events_exp_pp = quote(
     sum(lex.dur * h_exp * pp * iw)
   ),
+  n_at_risk_eff_pp =  quote(
+    sum((
+      in_follow_up_at_interval_start +
+        0.5 * (entered_late_during_interval & !left_early_during_interval) +
+        0.25 * (entered_late_during_interval & left_early_during_interval) -
+        0.5 * (!entered_late_during_interval & left_early_during_interval)
+    ) * pp * iw)
+  ),
   t_at_risk_pp = quote(
     sum(lex.dur * pp * iw)
   ),
