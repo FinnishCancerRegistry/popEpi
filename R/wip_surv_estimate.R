@@ -979,7 +979,7 @@ surv_estimate_ederer_i <- function(
     "lex.id",
     attr(dt, "time.scales"),
     "lex.dur", "lex.Cst", "lex.Xst",
-    setdiff(names(merge_dt), "haz")
+    setdiff(names(merge_dt), "h_exp")
   ))
   work_dt <- data.table::setDT(as.list(dt)[keep_col_nms])
   surv_crop(dt = work_dt, breaks = breaks)
@@ -1000,7 +1000,7 @@ surv_estimate_ederer_i <- function(
     aggre_by = lex_id_dt,
     aggre_ts_col_nms = ts_col_nm,
     aggre_expr = quote(list(
-      ederer_i = sum(lex.dur * haz)
+      ederer_i = sum(lex.dur * h_exp)
     ))
   )
   data.table::set(

@@ -5,7 +5,7 @@
 #' @name surv_functions
 NULL
 
-surv_aggre_util_expressions__ <- list(
+surv_aggre_expression_list__ <- list(
   n_in_follow_up_at_interval_start = quote(
     sum(in_follow_up_at_interval_start)
   ),
@@ -29,6 +29,9 @@ surv_aggre_util_expressions__ <- list(
   t_at_risk = quote(
     sum(lex.dur * iw)
   ),
+  n_events_exp_e2 = quote(
+    sum(lex.dur * h_exp * iw)
+  ),
   n_events_pp = quote(
     sum((lex.Xst != lex.Cst) * pp * iw)
   ),
@@ -36,7 +39,7 @@ surv_aggre_util_expressions__ <- list(
     sum((lex.Xst != lex.Cst) * pp * pp * iw)
   ),
   n_events_exp_pp = quote(
-    sum(lex.dur * haz * pp * iw)
+    sum(lex.dur * h_exp * pp * iw)
   ),
   t_at_risk_pp = quote(
     sum(lex.dur * pp * iw)
@@ -45,125 +48,65 @@ surv_aggre_util_expressions__ <- list(
     sum((lex.Cst == x & lex.Xst == y) * iw)
   )
 )
-surv_aggre_expressions__ <- list(
-  "s_lt" = quote(
-    list(
-      n_in_follow_up_at_interval_start = n_in_follow_up_at_interval_start,
-      n_entered_late_during_interval = n_entered_late_during_interval,
-      n_left_early_during_interval = n_left_early_during_interval,
-      n_at_risk_eff = n_at_risk_eff,
-      n_events = n_events
-    )
-  ),
-  "s_pch" = quote(
-    list(
-      t_at_risk = t_at_risk,
-      n_events = n_events
-    )
-  ),
-  "rs_e2_pch" = quote(
-    list(
-      t_at_risk = t_at_risk,
-      n_events = n_events,
-      n_events_exp_e2 = sum(lex.dur * haz * iw)
-    )
-  ),
-  "ns_pp_pch" = quote(
-    list(
-      n_events_pp = n_events_pp,
-      n_events_pp_double_weighted = n_events_pp_double_weighted,
-      n_events_exp_pp = n_events_exp_pp,
-      t_at_risk_pp = t_at_risk_pp
-    )
-  ),
-  "ar_pch_[x, y]" = quote(
-    list(
-      t_at_risk = t_at_risk,
-      n_events = n_events,
-      "n_events_[x, y]" = `n_events_[x, y]`
-    )
-  ),
-  "ar_lt_[x, y]" = quote(
-    list(
-      n_in_follow_up_at_interval_start = n_in_follow_up_at_interval_start,
-      n_entered_late_during_interval = n_entered_late_during_interval,
-      n_left_early_during_interval = n_left_early_during_interval,
-      n_at_risk_eff = n_at_risk_eff,
-      n_events = n_events,
-      "n_events_[x, y]" = `n_events_[x, y]`
-    )
-  )
-)
-surv_aggre_expressions__ <- lapply(surv_aggre_expressions__, function(expr) {
-  # initially same as e.g.
-  # expr = quote(list(n_events = n_events))
-  expr <- substitute(
-    substitute(expr, surv_aggre_util_expressions__),
-    list(expr = expr)
-  )
-  # now same as e.g.
-  # quote(substitute(list(n_events = n_events), surv_aggre_util_expressions__))
-  expr <- eval(expr)
-  # now same as e.g.
-  # quote(list(n_events = sum(lex.Cst != lex.Xst * iw)))
-  return(expr)
-})
 surv_aggre_expression__ <- function(
   estimator_dt,
   individual_weight_col_nm = NULL
 ) {
-  out <- unlist(
-    lapply(
-      seq_len(nrow(estimator_dt)),
-      function(i) {
-        expr <- surv_aggre_expressions__[[
-          estimator_dt[["standard_estimator_name"]][i]
-        ]]
-        out <- as.list(expr)[-1]
-        names(out) <- sub(
-          "[x, y]",
-          sprintf(
-            "[%s, %s]",
-            as.character(estimator_dt[["state_from"]][i]),
-            as.character(estimator_dt[["state_to"]][i])
-          ),
-          names(out),
-          fixed = TRUE
-        )
-        out <- lapply(out, function(expr) {
-          expr_lines <- deparse(expr)
-          expr_lines <- sub(
-            "(?<=\\W)x(?=\\W)",
-            sprintf(" %s ", as.character(estimator_dt[["state_from"]][i])),
-            expr_lines,
-            perl = TRUE
-          )
-          expr_lines <- sub(
-            "(?<=\\W)y(?=\\W)",
-            sprintf(" %s ", as.character(estimator_dt[["state_to"]][i])),
-            expr_lines,
-            perl = TRUE
-          )
-          parse(text = paste0(expr_lines, collapse = "\n"))[[1]]
-        })
-        out
-      }
-    ),
-    recursive = FALSE, use.names = TRUE
-  )
-  out <- out[!duplicated(names(out))]
   if (!is.null(individual_weight_col_nm)) {
     iw_replacement <- paste0(" * ", individual_weight_col_nm)
   } else {
     iw_replacement <- ""
   }
-  out <- lapply(out, function(expr) {
-    expr_string <- deparse1(expr)
-    expr_string <- gsub(" *[*] *iw", iw_replacement, expr_string)
-    expr <- parse(text = expr_string)[[1]]
-    expr
-  })
-  out <- as.call(c(quote(list), out))
+  aggre_expr_set <- unlist(lapply(seq_len(nrow(estimator_dt)), function(i) {
+    est_expr_set <- estimator_dt[["expression_set"]][[i]]
+    var_nm_set <- unlist(lapply(est_expr_set, all.vars))
+    var_nm_set <- unique(var_nm_set)
+    var_nm_set <- var_nm_set[
+      var_nm_set %in% names(surv_aggre_expression_list__) |
+        grepl("^n_events_\\[.+, *.+\\]$", var_nm_set)
+    ]
+    var_nm_set <- sub(
+      "[x, y]",
+      sprintf(
+        "[%s, %s]",
+        as.character(estimator_dt[["state_from"]][i]),
+        as.character(estimator_dt[["state_to"]][i])
+      ),
+      var_nm_set,
+      fixed = TRUE
+    )
+    standard_var_nm_set <- sub(
+      "\\[.+, .+\\]$",
+      "[x, y]",
+      var_nm_set
+    )
+    aggre_expr_set <- surv_aggre_expression_list__[standard_var_nm_set]
+    names(aggre_expr_set) <- var_nm_set
+    aggre_expr_string_set <- vapply(aggre_expr_set, deparse1, character(1L))
+    aggre_expr_string_set <- sub(
+      "(?<=\\W)x(?=\\W)",
+      sprintf(" %s ", as.character(estimator_dt[["state_from"]][i])),
+      aggre_expr_string_set,
+      perl = TRUE
+    )
+    aggre_expr_string_set <- sub(
+      "(?<=\\W)y(?=\\W)",
+      sprintf(" %s ", as.character(estimator_dt[["state_to"]][i])),
+      aggre_expr_string_set,
+      perl = TRUE
+    )
+    aggre_expr_string_set <- gsub(
+      " *[*] *iw",
+      iw_replacement,
+      aggre_expr_string_set
+    )
+    lapply(aggre_expr_string_set, function(s) {
+      parse(text = s)[[1]]
+    })
+  }), recursive = FALSE, use.names = TRUE)
+  aggre_expr_set[duplicated(names(aggre_expr_set))] <- NULL
+  aggre_expr_set <- aggre_expr_set[order(names(aggre_expr_set))]
+  out <- as.call(c(quote(list), aggre_expr_set))
   return(out)
 }
 
