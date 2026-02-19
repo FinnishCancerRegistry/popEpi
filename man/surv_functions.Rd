@@ -431,9 +431,50 @@ Compute survival estimates on a \code{Lexis} dataset (\verb{[Epi::Lexis]}).
 
 Performs the following steps:
 \itemize{
-\item Call \code{surv_split_merge_aggregate_by_stratum}. If \code{aggre_expr} is \code{NULL},
-it is replaced with an internally specified expressions based on
-argument \code{estimators}. The resulting table of aggregated data is
+\item If \code{aggre_expr} is \code{NULL},
+\code{estimators} is analysed and \code{aggre_expr} will be created by \code{surv_lexis}
+as follows:
+\itemize{
+\item Detect variables used in the estimation expressions with \verb{[all.vars]}.
+\item Detect the general name of a transition-specific variable such as
+\code{n_events_[0, 1]} as \code{n_events_[x, y]}. This general name is used
+to fetch the general aggregation expression
+(e.g. \code{"n_events_[x, y]" = quote(sum(lex.Cst == x & lex.Xst == y))})
+and this definition is then made specific to the requested transition,
+e.g.  \code{n_events_[0, 1] = quote(sum(lex.Cst == x & lex.Xst == y))}.
+Of course aggregation expressions without a specific transition such
+as \code{t_at_risk} are unaffected by this. The table of general
+aggregation expressions known to \code{popEpi} is shown below.
+\item The general variable definitions usually have \verb{ * iw} in them for
+enabling individual weighting. But if this is not requested then
+those \verb{ * iw} parts are removed from the aggregation expressions.
+\item After going through every requested estimator we have a set of
+quoted expressions such as
+\code{list(t_at_risk = quote(sum(lex.dur)), n_events = quote(sum(lex.Cst != lex.Xst)))}.
+This is turned into a quoted list of expressions with \code{call} and we are
+done, e.g.
+\code{quote(list(t_at_risk = sum(lex.dur), n_events = sum(lex.Cst != lex.Xst)))}.
+\item Table of general aggregation expressions known to \code{popEpi}:
+}
+}\tabular{ll}{
+   Name \tab Expression \cr
+   \verb{n_in_follow_up_at_interval_start} \tab \verb{sum(in_follow_up_at_interval_start)} \cr
+   \verb{n_entered_late_during_interval} \tab \verb{sum(entered_late_during_interval)} \cr
+   \verb{n_left_early_during_interval} \tab \verb{sum(left_early_during_interval)} \cr
+   \verb{n_at_risk_eff} \tab \verb{sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & !left_early_during_interval) + 0.25 * (entered_late_during_interval & left_early_during_interval) - 0.5 * (!entered_late_during_interval & left_early_during_interval)) * iw)} \cr
+   \verb{n_events} \tab \verb{sum((lex.Xst != lex.Cst) * iw)} \cr
+   \verb{t_at_risk} \tab \verb{sum(lex.dur * iw)} \cr
+   \verb{n_events_exp_e2} \tab \verb{sum(lex.dur * h_exp * iw)} \cr
+   \verb{n_events_pp} \tab \verb{sum((lex.Xst != lex.Cst) * pp * iw)} \cr
+   \verb{n_events_pp_double_weighted} \tab \verb{sum((lex.Xst != lex.Cst) * pp * pp * iw)} \cr
+   \verb{n_events_exp_pp} \tab \verb{sum(lex.dur * h_exp * pp * iw)} \cr
+   \verb{t_at_risk_pp} \tab \verb{sum(lex.dur * pp * iw)} \cr
+   \verb{n_events_[x, y]} \tab \verb{sum((lex.Cst == x & lex.Xst == y) * iw)} \cr
+}
+
+\itemize{
+\item Call \code{surv_split_merge_aggregate_by_stratum}.
+The resulting table of aggregated data is
 stratified by both \code{aggre_by} and by any stratifying columns found in
 \code{weights} if a \code{data.table} was supplied as that argument. E.g.
 with \code{aggre_by = "sex"} and
