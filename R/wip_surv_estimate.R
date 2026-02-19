@@ -402,7 +402,7 @@ surv_estimate_expr_list__ <- list(
       0.0 + NA_real_
     )
   ),
-  F_exc_e2_pch = list(
+  RF_e2_pch = list(
     est = quote({
       q <- (1 - S_pch_cond_est) *
         (n_events - n_events_exp_e2) / n_events
@@ -412,7 +412,39 @@ surv_estimate_expr_list__ <- list(
     se = quote(
       0.0 + NA_real_
     )
-  )
+  ),
+  F_exp_e2_lt = list(
+    est = quote(
+      1 - S_exp_e2_lt_est
+    ),
+    se = quote(
+      0.0 + 0.0
+    )
+  ),
+  F_exp_e2_pch = list(
+    est = quote(
+      1 - S_exp_e2_pch_est
+    ),
+    se = quote(
+      0.0 + 0.0
+    )
+  ),
+  F_exc_e2_lt = list(
+    est = quote(
+      F_lt - F_exp_e2_lt
+    ),
+    se = quote(
+      F_lt_se
+    )
+  ),
+  F_exc_e2_pch = list(
+    est = quote(
+      F_pch - F_exp_e2_pch
+    ),
+    se = quote(
+      F_pch_se
+    )
+  ),
   # ,
   # F_exp_e1_lt = list(
   #   est = quote(
