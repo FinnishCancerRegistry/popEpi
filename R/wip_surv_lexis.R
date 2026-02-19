@@ -104,8 +104,8 @@ surv_aggre_expression__ <- function(
       "[x, y]",
       sprintf(
         "[%s, %s]",
-        as.character(estimator_dt[["state_from"]][i]),
-        as.character(estimator_dt[["state_to"]][i])
+        deparse1(estimator_dt[["state_from"]][i]),
+        deparse1(estimator_dt[["state_to"]][i])
       ),
       var_nm_set,
       fixed = TRUE
@@ -120,13 +120,13 @@ surv_aggre_expression__ <- function(
     aggre_expr_string_set <- vapply(aggre_expr_set, deparse1, character(1L))
     aggre_expr_string_set <- sub(
       "(?<=\\W)x(?=\\W)",
-      sprintf(" %s ", as.character(estimator_dt[["state_from"]][i])),
+      sprintf(" %s ", deparse1(estimator_dt[["state_from"]][i])),
       aggre_expr_string_set,
       perl = TRUE
     )
     aggre_expr_string_set <- sub(
       "(?<=\\W)y(?=\\W)",
-      sprintf(" %s ", as.character(estimator_dt[["state_to"]][i])),
+      sprintf(" %s ", deparse1(estimator_dt[["state_to"]][i])),
       aggre_expr_string_set,
       perl = TRUE
     )

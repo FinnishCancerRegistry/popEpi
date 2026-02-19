@@ -206,12 +206,15 @@ handle_arg_estimators <- function(estimators, dt) {
         return(NA)
       }
       state_from <- regex_extract_first__(
-        "(?<=[[])[^,]+(?=[,])",
+        "(?<=[[]).+(?=[,])",
         estimator_dt[["user_estimator_name"]][i],
         perl = TRUE
       )
       if (!is.na(state_from)) {
         state_from <- eval(parse(text = state_from))
+      }
+      if (is.numeric(state_from)) {
+        state_from <- as.integer(state_from)
       }
       return(state_from)
     }
@@ -230,10 +233,13 @@ handle_arg_estimators <- function(estimators, dt) {
       if (!is.na(state_to)) {
         state_to <- eval(parse(text = state_to))
       }
+      if (is.numeric(state_to)) {
+        state_to <- as.integer(state_to)
+      }
       return(state_to)
     }
   ))
-  estimator_dt[["standard_estimator_name"]] <- data.table::fifelse(
+  estimator_dt[["general_estimator_name"]] <- data.table::fifelse(
     is.na(estimator_dt[["state_from"]]),
     estimator_dt[["user_estimator_name"]],
     paste0(
@@ -258,7 +264,7 @@ handle_arg_estimators <- function(estimators, dt) {
     function(i) {
       if (is.character(estimator_dt[["estimator"]][[i]])) {
         out <- surv_estimate_expression__(
-          estimator_dt[["standard_estimator_name"]][[i]]
+          estimator_dt[["general_estimator_name"]][[i]]
         )
       } else {
         out <- estimator_dt[["estimator"]][i]
@@ -277,8 +283,8 @@ handle_arg_estimators <- function(estimators, dt) {
           "[x, y]",
           sprintf(
             "[%s, %s]",
-            as.character(estimator_dt[["state_from"]][i]),
-            as.character(estimator_dt[["state_to"]][i])
+            deparse1(estimator_dt[["state_from"]][i]),
+            deparse1(estimator_dt[["state_to"]][i])
           ),
           expr_lines,
           fixed = TRUE
