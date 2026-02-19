@@ -1,7 +1,7 @@
 surv_aggregate_one_stratum__ <- function(
   sub_dt,
   box_dt,
-  aggre_expr,
+  aggre_exprs,
   call_env,
   eval_env,
   stratum_eval_env
@@ -23,14 +23,14 @@ surv_aggregate_one_stratum__ <- function(
     )
   )
   assert_is_arg_box_dt(box_dt)
-  assert_is_arg_aggre_expr(aggre_expr)
+  assert_is_arg_aggre_exprs(aggre_exprs)
   stopifnot(
     is.environment(call_env),
     is.environment(eval_env),
     is.environment(stratum_eval_env)
   )
 
-  expr_obj_nms <- all.vars(aggre_expr)
+  expr_obj_nms <- unique(unlist(lapply(aggre_exprs, all.vars)))
   work_dt <- data.table::setDT(as.list(sub_dt))
   data.table::setkeyv(work_dt, data.table::key(sub_dt))
   lapply(lexis_ts_col_nms, function(ts_col_nm) {
@@ -137,7 +137,7 @@ surv_aggregate_one_stratum__ <- function(
       keyby = "box_id"
     ],
     list(
-      EXPR = aggre_expr
+      EXPR = as.call(c(quote(list), aggre_exprs))
     )
   )
   env <- new.env(parent = call_env)
@@ -172,12 +172,12 @@ surv_aggregate_one_stratum__ <- function(
 surv_split_merge_aggregate_by_stratum <- function(
   dt,
   breaks,
+  aggre_exprs,
+  aggre_by = NULL,
+  aggre_ts_col_nms = NULL,
   merge_dt = NULL,
   merge_dt_by = NULL,
   merge_dt_harmonisers = NULL,
-  aggre_by = NULL,
-  aggre_ts_col_nms = NULL,
-  aggre_expr,
   subset = NULL,
   optional_steps = NULL
 ) {
@@ -209,20 +209,22 @@ surv_split_merge_aggregate_by_stratum <- function(
   #' - `character`: Aggregate by these time scales. E.g. `"ts_fut"`.
   if (is.null(aggre_ts_col_nms)) {
     aggre_ts_col_nms <- names(breaks)
+  } else {
+    stopifnot(
+      aggre_ts_col_nms %in% names(breaks),
+    )
   }
-  #' @param aggre_expr `[call]` (no default)
+  #' @param aggre_exprs `[list]` (no default)
   #'
-  #' A quoted (`[quote]`) R expression. When this is evaluated within a stratum,
-  #' the desired summary statistics are produced for that stratum. One
-  #' evaluation stratum is based on `aggre_by` and `aggre_ts_col_nms`, and might
-  #' be e.g. `list(sex = 1, ag = 6, ts_fut_start = 3.0, ts_fut_stop = 4.0)`
-  #' with `aggre_by = c("sex", "ag")` and `aggre_ts_col_nms = "ts_fut"`.
-  #' The data
-  #' for the stratum have been split and `merge_dt` has been merged when
-  #' `aggre_expr` is evaluated. E.g.
-  #' `quote(list(n_at_risk = sum(at_risk), n_events = sum(lex.Cst != lex.Xst)))`
-  #' . See **Details** for what kinds of expressions are possible.
+  #' A named list of quoted R expressions. E.g.
+  #' `list(t_at_risk = quote(sum(lex.dur)))`.
   #'
+  #' In short, this defines what is aggregated within every stratum-interval
+  #' defined by `aggre_ts_col_nms` and the time scales `aggre_ts_col_nms`.
+  #' See **Details** for more.
+  #'
+  assert_is_arg_aggre_exprs(aggre_exprs)
+
   #' @param optional_steps `[NULL, list]` (default `NULL`)
   #'
   #' Optional steps to perform along the way.
@@ -232,8 +234,6 @@ surv_split_merge_aggregate_by_stratum <- function(
   #'   stage of the run. See **Details** for what functions are recognised.
   #'
   stopifnot(
-    aggre_ts_col_nms %in% names(breaks),
-    is.language(aggre_expr),
     inherits(optional_steps, c("NULL", "list"))
   )
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum::subset
@@ -284,7 +284,7 @@ surv_split_merge_aggregate_by_stratum <- function(
       lexis_col_nms,
       names(aggre_by),
       merge_dt_by,
-      all.vars(expr = aggre_expr, functions = FALSE)
+      unlist(lapply(aggre_exprs, all.vars))
     )
   )])
   if (!all(subset)) {
@@ -370,7 +370,7 @@ surv_split_merge_aggregate_by_stratum <- function(
         )
       }
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
-      #   + Evaluate `aggre_expr` in the context of the split data
+      #   + Evaluate `aggre_exprs` in the context of the split data
       #     with merged-in additional data. The enclosing environment is
       #     `call_env`. See `?eval`. This results in a `data.table` that
       #     contains one row per interval of `aggre_ts_col_nms`.
@@ -378,7 +378,7 @@ surv_split_merge_aggregate_by_stratum <- function(
       out <- surv_aggregate_one_stratum__(
         sub_dt = sub_dt,
         box_dt = box_dt,
-        aggre_expr = aggre_expr,
+        aggre_exprs = aggre_exprs,
         eval_env = eval_env,
         call_env = call_env,
         stratum_eval_env = stratum_eval_env
@@ -412,7 +412,7 @@ surv_split_merge_aggregate_by_stratum <- function(
   #   `list(stratum_col_nms, value_col_nms)` into the attribute named
   #   `surv_split_merge_aggregate_by_stratum_meta`, where
   #   `stratum_col_nms = names(aggre_by)`, `ts_col_nms = aggre_ts_col_nms`, and
-  #   `value_col_nms` are the names of the columns resulting from `aggre_expr`.
+  #   `value_col_nms` are the names of the columns resulting from `aggre_exprs`.
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   # to clear Epi attributes
   out <- as.list(out)
@@ -441,11 +441,11 @@ surv_split_merge_aggregate_by_stratum <- function(
   }
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   # - Return a `data.table` with stratum columns as specified via
-  #   `aggre_by` and value columns as specified via `aggre_expr`.
+  #   `aggre_by` and value columns as specified via `aggre_exprs`.
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
   # @codedoc_comment_block return(popEpi::surv_split_merge_aggregate_by_stratum)
   # Returns a `data.table` with stratum columns as specified via
-  # `aggre_by` and value columns as specified via `aggre_expr`.
+  # `aggre_by` and value columns as specified via `aggre_exprs`.
   # @codedoc_comment_block return(popEpi::surv_split_merge_aggregate_by_stratum)
   return(out[])
 }

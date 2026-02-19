@@ -130,10 +130,21 @@ assert_is_arg_breaks <- function(breaks, dt) {
   )
 }
 
-assert_is_arg_aggre_expr <- function(aggre_expr) {
+assert_is_arg_aggre_exprs <- function(aggre_exprs) {
   stopifnot(
-    inherits(aggre_expr, c("{", "call", "name"))
+    inherits(aggre_exprs, "list"),
+    data.table::uniqueN(names(aggre_exprs)) == length(aggre_exprs),
+    nchar(names(aggre_exprs)) > 0
   )
+  for (i in seq_along(aggre_exprs)) {
+    eval(substitute(stopifnot(
+      is.character(aggre_exprs[[i]]) || is.language(aggre_exprs[[i]])
+    ), list(i = i)))
+  }
+}
+handle_arg_aggre_exprs <- function(aggre_exprs) {
+  assert_is_arg_aggre_exprs(aggre_exprs)
+  stop("TODO")
 }
 
 assert_is_arg_box_dt <- function(

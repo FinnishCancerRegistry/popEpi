@@ -173,7 +173,7 @@ surv_lexis <- function(
   merge_dt_harmonisers = NULL,
   aggre_by = NULL,
   aggre_ts_col_nms = NULL,
-  aggre_expr = NULL,
+  aggre_exprs = NULL,
   subset = NULL,
   estimators = "S_pch",
   conf_methods = "log",
@@ -211,14 +211,14 @@ surv_lexis <- function(
   #
   # Performs the following steps:
   #
-  # - If `aggre_expr` is `NULL`,
-  #   `estimators` is analysed and `aggre_expr` will be created by `surv_lexis`
+  # - If `aggre_exprs` is `NULL`,
+  #   `estimators` is analysed and `aggre_exprs` will be created by `surv_lexis`
   #   as follows:
   # @codedoc_insert_comment_block popEpi:::surv_aggre_expression__
   # @codedoc_comment_block popEpi::surv_lexis
   estimator_dt <- handle_arg_estimators(estimators)
-  if (is.null(aggre_expr)) {
-    aggre_expr <- surv_aggre_expression__(
+  if (is.null(aggre_exprs)) {
+    aggre_exprs <- surv_aggre_expression__(
       estimator_dt = estimator_dt,
       individual_weight_col_nm = if (is.character(weights)) weights else NULL
     )
@@ -242,7 +242,7 @@ surv_lexis <- function(
     merge_dt_harmonisers = merge_dt_harmonisers,
     aggre_by = aggre_by,
     aggre_ts_col_nms = aggre_ts_col_nms,
-    aggre_expr = aggre_expr,
+    aggre_exprs = aggre_exprs,
     subset = subset
   )
   aggre_meta <- attr(sdt, "surv_split_merge_aggregate_by_stratum_meta")

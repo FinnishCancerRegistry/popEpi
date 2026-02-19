@@ -1039,7 +1039,7 @@ surv_estimate_ederer_i <- function(
     merge_dt_by = merge_dt_by,
     aggre_by = lex_id_dt,
     aggre_ts_col_nms = ts_col_nm,
-    aggre_expr = quote(list(
+    aggre_exprs = quote(list(
       ederer_i = sum(lex.dur * h_exp)
     ))
   )
