@@ -444,7 +444,7 @@ surv_estimate_expr_list__ <- list(
     se = quote(
       F_pch_se
     )
-  ),
+  )
   # ,
   # F_exp_e1_lt = list(
   #   est = quote(
