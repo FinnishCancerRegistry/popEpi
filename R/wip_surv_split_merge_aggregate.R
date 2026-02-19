@@ -223,9 +223,6 @@ surv_split_merge_aggregate_by_stratum <- function(
   #' `quote(list(n_at_risk = sum(at_risk), n_events = sum(lex.Cst != lex.Xst)))`
   #' . See **Details** for what kinds of expressions are possible.
   #'
-  #' - `NULL`: Use `names(breaks)`.
-  #' - `character`: Aggregate by these time scales. E.g. `"ts_fut"`.
-  #'
   #' @param optional_steps `[NULL, list]` (default `NULL`)
   #'
   #' Optional steps to perform along the way.

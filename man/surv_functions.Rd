@@ -253,11 +253,7 @@ The data
 for the stratum have been split and \code{merge_dt} has been merged when
 \code{aggre_expr} is evaluated. E.g.
 \code{quote(list(n_at_risk = sum(at_risk), n_events = sum(lex.Cst != lex.Xst)))}
-. See \strong{Details} for what kinds of expressions are possible.
-\itemize{
-\item \code{NULL}: Use \code{names(breaks)}.
-\item \code{character}: Aggregate by these time scales. E.g. \code{"ts_fut"}.
-}}
+. See \strong{Details} for what kinds of expressions are possible.}
 
 \item{subset}{\verb{[NULL, logical, integer, data.table]} (default \code{NULL})
 
