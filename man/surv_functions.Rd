@@ -352,12 +352,12 @@ Pre-defined estimators with their formulae:
    \verb{H_lt} \tab \verb{-log(cumprod(1 - n_events/n_at_risk_eff))} \tab \verb{0 + NA_real_} \cr
    \verb{h_lt} \tab \verb{diff(c(0, -log(cumprod(1 - n_events/n_at_risk_eff))))/delta_t} \tab \verb{0 + NA_real_} \cr
    \verb{F_lt} \tab \verb{1 - cumprod(1 - n_events/n_at_risk_eff)} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
-   \verb{S_exp_e2_lt} \tab \verb{cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \tab \verb{rep(0, length(cumprod(1 - n_events_exp_e2/n_at_risk_eff)))} \cr
-   \verb{S_exp_e2_pch} \tab \verb{exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \tab \verb{rep(0, length(n_events_exp_e2/t_at_risk))} \cr
-   \verb{rs_e2_lt} \tab \verb{cumprod(1 - (n_events - n_events_exp_e2)/n_at_risk_eff)} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))/cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \cr
-   \verb{rs_e2_pch} \tab \verb{exp(-cumsum(delta_t * ((n_events - n_events_exp_e2)/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))/exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \cr
-   \verb{ns_pp_lt} \tab \verb{cumprod(1 - (n_events_pp - n_events_exp_pp)/n_at_risk_eff_pp)} \tab \verb{cumprod(1 - (n_events_pp - n_events_exp_pp)/n_at_risk_eff_pp) * sqrt(cumsum(n_events_pp_double_weighted/(n_at_risk_eff^2)))} \cr
-   \verb{ns_pp_pch} \tab \verb{exp(-cumsum(delta_t * ((n_events_pp - n_events_exp_pp)/t_at_risk_pp)))} \tab \verb{exp(-cumsum(delta_t * ((n_events_pp - n_events_exp_pp)/t_at_risk_pp))) * sqrt(cumsum((delta_t^2) * n_events_pp_double_weighted/(t_at_risk_pp^2)))} \cr
+   \verb{S_exp_e2_lt} \tab \verb{cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \tab \verb{0 + 0} \cr
+   \verb{S_exp_e2_pch} \tab \verb{exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \tab \verb{0 + 0} \cr
+   \verb{RS_e2_lt} \tab \verb{cumprod(1 - (n_events - n_events_exp_e2)/n_at_risk_eff)} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))/cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \cr
+   \verb{RS_e2_pch} \tab \verb{exp(-cumsum(delta_t * ((n_events - n_events_exp_e2)/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))/exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \cr
+   \verb{NS_pp_lt} \tab \verb{cumprod(1 - (n_events_pp - n_events_exp_pp)/n_at_risk_eff_pp)} \tab \verb{cumprod(1 - (n_events_pp - n_events_exp_pp)/n_at_risk_eff_pp) * sqrt(cumsum(n_events_pp_double_weighted/(n_at_risk_eff^2)))} \cr
+   \verb{NS_pp_pch} \tab \verb{exp(-cumsum(delta_t * ((n_events_pp - n_events_exp_pp)/t_at_risk_pp)))} \tab \verb{exp(-cumsum(delta_t * ((n_events_pp - n_events_exp_pp)/t_at_risk_pp))) * sqrt(cumsum((delta_t^2) * n_events_pp_double_weighted/(t_at_risk_pp^2)))} \cr
    \verb{h_lt_[x, y]} \tab \verb{-log(1 - `n_events_[x, y]`/n_at_risk_eff)} \tab \verb{0 + NA_real_} \cr
    \verb{h_pch_[x, y]} \tab \verb{`n_events_[x, y]`/t_at_risk} \tab \verb{sqrt(`n_events_[x, y]`/t_at_risk/t_at_risk)} \cr
    \verb{H_lt_[x, y]} \tab \verb{-log(cumprod(1 - `n_events_[x, y]`/n_at_risk_eff))} \tab \verb{0 + NA_real_} \cr
@@ -366,8 +366,12 @@ Pre-defined estimators with their formulae:
    \verb{S_pch_[x, y]} \tab \verb{exp(-cumsum(delta_t * (`n_events_[x, y]`/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * `n_events_[x, y]`/(t_at_risk^2)))} \cr
    \verb{F_lt_[x, y]} \tab \verb{{;     q <- (1 - (1 - (n_events/n_at_risk_eff))) * `n_events_[x, y]`/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, cumprod(1 - (n_events/n_at_risk_eff))[-length(1 - (n_events/n_at_risk_eff))]) * q); }} \tab \verb{0 + NA_real_} \cr
    \verb{F_pch_[x, y]} \tab \verb{{;     q <- (1 - exp(-delta_t * (n_events/t_at_risk))) * `n_events_[x, y]`/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, exp(-cumsum(delta_t * (n_events/t_at_risk)))[-length(n_events/t_at_risk)]) * q); }} \tab \verb{0 + NA_real_} \cr
-   \verb{F_exc_e2_lt} \tab \verb{{;     q <- (1 - (1 - (n_events/n_at_risk_eff))) * (n_events - n_events_exp_e2)/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, cumprod(1 - (n_events/n_at_risk_eff))[-length(1 - (n_events/n_at_risk_eff))]) * q); }} \tab \verb{0 + NA_real_} \cr
-   \verb{F_exc_e2_pch} \tab \verb{{;     q <- (1 - exp(-delta_t * (n_events/t_at_risk))) * (n_events - n_events_exp_e2)/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, exp(-cumsum(delta_t * (n_events/t_at_risk)))[-length(n_events/t_at_risk)]) * q); }} \tab \verb{0 + NA_real_} \cr
+   \verb{RF_e2_lt} \tab \verb{{;     q <- (1 - (1 - (n_events/n_at_risk_eff))) * (n_events - n_events_exp_e2)/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, cumprod(1 - (n_events/n_at_risk_eff))[-length(1 - (n_events/n_at_risk_eff))]) * q); }} \tab \verb{0 + NA_real_} \cr
+   \verb{RF_e2_pch} \tab \verb{{;     q <- (1 - exp(-delta_t * (n_events/t_at_risk))) * (n_events - n_events_exp_e2)/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, exp(-cumsum(delta_t * (n_events/t_at_risk)))[-length(n_events/t_at_risk)]) * q); }} \tab \verb{0 + NA_real_} \cr
+   \verb{F_exp_e2_lt} \tab \verb{1 - cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \tab \verb{0 + 0} \cr
+   \verb{F_exp_e2_pch} \tab \verb{1 - exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \tab \verb{0 + 0} \cr
+   \verb{F_exc_e2_lt} \tab \verb{F_lt - F_exp_e2_lt} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
+   \verb{F_exc_e2_pch} \tab \verb{F_pch - F_exp_e2_pch} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
 }
 
 \itemize{
