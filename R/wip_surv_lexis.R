@@ -167,7 +167,7 @@ surv_lexis <- function(
   aggre_ts_col_nms = NULL,
   aggre_expr = NULL,
   subset = NULL,
-  estimators = "s_pch",
+  estimators = "S_pch",
   conf_methods = "log",
   conf_lvls = 0.95,
   weights = NULL

@@ -166,7 +166,7 @@ handle_arg_estimators <- function(estimators, dt) {
   stopifnot(
     # @codedoc_comment_block popEpi::surv_estimate::estimators
     # @param estimators `[character, list]`
-    # (default `"s_pch"`)
+    # (default `"S_pch"`)
     #
     # One or more names of estimators whose estimates will be computed into
     # `dt`.
