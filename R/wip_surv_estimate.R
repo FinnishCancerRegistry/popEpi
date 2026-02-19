@@ -276,7 +276,7 @@ surv_estimate_expr_list__ <- list(
       cumprod(1 - n_events_exp_e2 / n_at_risk_eff)
     ),
     se = quote(
-      rep(0.0, length(S_exp_e2_lt_est))
+      0.0 + 0.0
     )
   ),
   S_exp_e2_pch = list(
@@ -284,10 +284,10 @@ surv_estimate_expr_list__ <- list(
       exp(-cumsum(delta_t * h_exp_e2_pch))
     ),
     se = quote(
-      rep(0.0, length(h_exp_e2_pch))
+      0.0 + 0.0
     )
   ),
-  rs_e2_lt = list(
+  RS_e2_lt = list(
     est = quote(
       cumprod(1 - (n_events - n_events_exp_e2) / n_at_risk_eff)
     ),
@@ -295,7 +295,7 @@ surv_estimate_expr_list__ <- list(
       S_lt_se / S_exp_e2_lt_est
     )
   ),
-  rs_e2_pch = list(
+  RS_e2_pch = list(
     est = quote(
       exp(-cumsum(delta_t * h_exc_e2_pch))
     ),
@@ -303,21 +303,21 @@ surv_estimate_expr_list__ <- list(
       S_pch_se / S_exp_e2_pch_est
     )
   ),
-  ns_pp_lt = list(
+  NS_pp_lt = list(
     est = quote(
       cumprod(1 - (n_events_pp - n_events_exp_pp) / n_at_risk_eff_pp)
     ),
     se = quote(
-      ns_pp_lt_est *
+      NS_pp_lt_est *
         sqrt(cumsum(n_events_pp_double_weighted / (n_at_risk_eff ^ 2)))
     )
   ),
-  ns_pp_pch = list(
+  NS_pp_pch = list(
     est = quote(
       exp(-cumsum(delta_t * h_exc_pp))
     ),
     se = quote(
-      ns_pp_pch_est *
+      NS_pp_pch_est *
         sqrt(cumsum((delta_t ^ 2) * n_events_pp_double_weighted / (t_at_risk_pp ^ 2)))
     )
   ),
@@ -391,7 +391,7 @@ surv_estimate_expr_list__ <- list(
       0.0 + NA_real_
     )
   ),
-  F_exc_e2_lt = list(
+  RF_e2_lt = list(
     est = quote({
       q <- (1 - S_lt_cond_est) *
         (n_events - n_events_exp_e2) / n_events
