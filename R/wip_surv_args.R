@@ -132,19 +132,135 @@ assert_is_arg_breaks <- function(breaks, dt) {
 
 assert_is_arg_aggre_exprs <- function(aggre_exprs) {
   stopifnot(
-    inherits(aggre_exprs, "list"),
-    data.table::uniqueN(names(aggre_exprs)) == length(aggre_exprs),
-    nchar(names(aggre_exprs)) > 0
+    inherits(aggre_exprs, c("list", "character"))
   )
   for (i in seq_along(aggre_exprs)) {
     eval(substitute(stopifnot(
       is.character(aggre_exprs[[i]]) || is.language(aggre_exprs[[i]])
     ), list(i = i)))
+    if (is.character(aggre_exprs[[i]])) {
+      if (
+        !aggre_exprs[[i]] %in% names(SURV_AGGRE_EXPRS__) &&
+          !grepl("\\[.+, *.+\\]", aggre_exprs[[i]])
+      ) {
+        stop(
+          "`aggre_exprs[[", i, "]] = ", deparse1(aggre_exprs[[i]]),
+          "` was not identified as the ",
+          "name of an aggregation expression. Known names: ",
+          deparse1(names(SURV_AGGRE_EXPRS__))
+        )
+      }
+    } else {
+      eval(substitute(stopifnot(
+        !is.null(names(aggre_exprs)),
+        names(aggre_exprs)[i] != ""
+      ), list(i = i)))
+    }
   }
 }
-handle_arg_aggre_exprs <- function(aggre_exprs) {
+handle_arg_aggre_exprs <- function(
+  aggre_exprs,
+  weight_col_nm = NULL
+) {
   assert_is_arg_aggre_exprs(aggre_exprs)
-  stop("TODO")
+  aggre_exprs <- as.list(aggre_exprs)
+  wh_is_string <- which(vapply(aggre_exprs, is.character, logical(1L)))
+  names(aggre_exprs[wh_is_string]) <- unlist(aggre_exprs[wh_is_string])
+  if (is.null(weight_col_nm)) {
+    iw_replacement <- ""
+  } else {
+    iw_replacement <- sprintf("* %s", weight_col_nm)
+  }
+  aggre_exprs <- lapply(aggre_exprs, function(aggre_expr) {
+    if (is.character(aggre_expr)) {
+      user_var_nm <- aggre_expr
+      state_from <- regex_extract_first__(
+        "(?<=[[]).+(?=[,])",
+        user_var_nm,
+        perl = TRUE
+      )
+      if (!is.na(state_from)) {
+        state_from <- eval(parse(text = state_from))
+        if (is.numeric(state_from)) {
+          state_from <- as.integer(state_from)
+        }
+      }
+      state_to <- regex_extract_first__(
+        "(?<=[,]).+(?=[]]$)",
+        user_var_nm,
+        perl = TRUE
+      )
+      if (!is.na(state_to)) {
+        state_to <- eval(parse(text = state_to))
+        if (is.numeric(state_to)) {
+          state_to <- as.integer(state_to)
+        }
+      }
+      # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
+      #   + Detect the general name of a transition-specific variable such as
+      #     `n_events_[0, 1]` as `n_events_[x, y]`. This general name is used
+      #     to fetch the general aggregation expression
+      #     (e.g. `"n_events_[x, y]" = quote(sum(lex.Cst %in% x & lex.Xst %in% y))`)
+      #     and this definition is then made specific to the requested
+      #     transition,
+      #     e.g.  `n_events_[0, 1] = quote(sum(lex.Cst %in% x & lex.Xst %in% y))`.
+      #     Of course aggregation expressions without a specific transition such
+      #     as `t_at_risk` are unaffected by this. The table of general
+      #     aggregation expressions known to `popEpi` is shown below.
+      # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
+      general_var_nm <- sub(
+        "\\[.+, .+\\]$",
+        "[x, y]",
+        user_var_nm
+      )
+      if (!general_var_nm %in% names(SURV_AGGRE_EXPRS__)) {
+        stop(
+          deparse1(user_var_nm), " not recognised as the name of one of the ",
+          "pre-defined aggregation expressions."
+        )
+      }
+      general_var_nm <- general_var_nm
+      aggre_expr <- SURV_AGGRE_EXPRS__[[general_var_nm]]
+      aggre_expr_string <- deparse1(aggre_expr)
+      aggre_expr_string <- sub(
+        "(?<=\\W)x(?=\\W)",
+        sprintf(" %s ", deparse1(state_from)),
+        aggre_expr_string,
+        perl = TRUE
+      )
+      aggre_expr_string <- sub(
+        "(?<=\\W)y(?=\\W)",
+        sprintf(" %s ", deparse1(state_to)),
+        aggre_expr_string,
+        perl = TRUE
+      )
+    } else {
+      aggre_expr_string <- deparse1(aggre_expr)
+    }
+    # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
+    #   + The general variable definitions usually have ` * iw` in them for
+    #     enabling individual weighting. But if this is not requested then
+    #     those ` * iw` parts are removed from the aggregation expressions.
+    # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
+    aggre_expr_string <- gsub(
+      " *[*] *iw",
+      iw_replacement,
+      aggre_expr_string
+    )
+    parse(text = aggre_expr_string)[[1]]
+  })
+  # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
+  #   + After going through every requested estimator we have a set of
+  #     quoted expressions such as
+  #     `list(t_at_risk = quote(sum(lex.dur)), n_events = quote(sum(lex.Cst != lex.Xst)))`.
+  #     This is turned into a quoted list of expressions with `call` and we are
+  #     done, e.g.
+  #     `quote(list(t_at_risk = sum(lex.dur), n_events = sum(lex.Cst != lex.Xst)))`.
+  #   + Table of general aggregation expressions known to `popEpi`:
+  #
+  # ${paste0(knitr::kable(popEpi:::surv_aggre_exprs_table__()), collapse = "\n")}
+  # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
+  return(aggre_exprs)
 }
 
 assert_is_arg_box_dt <- function(
@@ -210,66 +326,35 @@ handle_arg_estimators <- function(estimators, dt) {
       }
     }, character(1L))
   )))
-  estimator_dt[["state_from"]] <- unlist(lapply(
-    seq_len(nrow(estimator_dt)),
-    function(i) {
-      if (!is.character(estimator_dt[["estimator"]][[i]])) {
-        return(NA)
-      }
-      state_from <- regex_extract_first__(
-        "(?<=[[]).+(?=[,])",
-        estimator_dt[["user_estimator_name"]][i],
-        perl = TRUE
-      )
-      if (!is.na(state_from)) {
-        state_from <- eval(parse(text = state_from))
-      }
-      if (is.numeric(state_from)) {
-        state_from <- as.integer(state_from)
-      }
-      return(state_from)
-    }
-  ))
-  estimator_dt[["state_to"]] <- unlist(lapply(
-    seq_len(nrow(estimator_dt)),
-    function(i) {
-      if (!is.character(estimator_dt[["estimator"]][[i]])) {
-        return(NA)
-      }
-      state_to <- regex_extract_first__(
-        "(?<=[,]).+(?=[]]$)",
-        estimator_dt[["user_estimator_name"]][i],
-        perl = TRUE
-      )
-      if (!is.na(state_to)) {
-        state_to <- eval(parse(text = state_to))
-      }
-      if (is.numeric(state_to)) {
-        state_to <- as.integer(state_to)
-      }
-      return(state_to)
-    }
-  ))
+  estimator_dt[["transition_string"]] <- regex_extract_first__(
+    "\\[.+, *.+\\]",
+    estimator_dt[["user_estimator_name"]],
+    perl = TRUE
+  )
+  estimator_dt[["state_from"]] <- gsub(
+    "(\\[)|(\\])|(,.+)",
+    "",
+    estimator_dt[["transition_string"]],
+    perl = TRUE
+  )
+  estimator_dt[["state_to"]] <- gsub(
+    "(\\])|(^.*, *)",
+    "",
+    estimator_dt[["transition_string"]],
+    perl = TRUE
+  )
   estimator_dt[["general_estimator_name"]] <- data.table::fifelse(
     is.na(estimator_dt[["state_from"]]),
     estimator_dt[["user_estimator_name"]],
-    paste0(
+    sprintf(
+      "%s[x, y]",
       sub(
-        "[[].+[]]$",
+        "\\[.+, *.+\\]$",
         "",
         estimator_dt[["user_estimator_name"]]
-      ),
-      "[x, y]"
+      )
     )
   )
-  if (is.numeric(estimator_dt[["state_to"]])) {
-    estimator_dt[["state_from"]] <- as.integer(estimator_dt[["state_from"]])
-    estimator_dt[["state_from"]][is.na(estimator_dt[["state_from"]])] <- 0L
-    estimator_dt[["state_to"]] <- as.integer(estimator_dt[["state_to"]])
-  } else if (is.logical(estimator_dt[["state_to"]])) {
-    estimator_dt[["state_from"]] <- FALSE
-    estimator_dt[["state_to"]] <- TRUE
-  }
   estimator_dt[["expression_set"]] <- unlist(lapply(
     seq_len(nrow(estimator_dt)),
     function(i) {
@@ -292,11 +377,7 @@ handle_arg_estimators <- function(estimators, dt) {
         expr_lines <- deparse(expr)
         expr_lines <- gsub(
           "[x, y]",
-          sprintf(
-            "[%s, %s]",
-            deparse1(estimator_dt[["state_from"]][i]),
-            deparse1(estimator_dt[["state_to"]][i])
-          ),
+          estimator_dt[["transition_string"]][i],
           expr_lines,
           fixed = TRUE
         )

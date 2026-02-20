@@ -32,7 +32,7 @@ surv_lexis(
   merge_dt_harmonisers = NULL,
   aggre_by = NULL,
   aggre_ts_col_nms = NULL,
-  aggre_expr = NULL,
+  aggre_exprs = NULL,
   subset = NULL,
   estimators = "S_pch",
   conf_methods = "log",
@@ -52,13 +52,14 @@ surv_merge(
 surv_split_merge_aggregate_by_stratum(
   dt,
   breaks,
+  aggre_exprs,
+  aggre_by = NULL,
+  aggre_ts_col_nms = NULL,
   merge_dt = NULL,
   merge_dt_by = NULL,
   merge_dt_harmonisers = NULL,
-  aggre_by = NULL,
-  aggre_ts_col_nms = NULL,
-  aggre_expr,
   subset = NULL,
+  weight_col_nm = NULL,
   optional_steps = NULL
 )
 }
@@ -242,18 +243,17 @@ Names of \code{Lexis} time scales in \code{dt} by which to aggregate results.
 \item \code{character}: Aggregate by these time scales. E.g. \code{"ts_fut"}.
 }}
 
-\item{aggre_expr}{\verb{[call]} (no default)
+\item{aggre_exprs}{\verb{[character, list]} (no default)
 
-A quoted (\verb{[quote]}) R expression. When this is evaluated within a stratum,
-the desired summary statistics are produced for that stratum. One
-evaluation stratum is based on \code{aggre_by} and \code{aggre_ts_col_nms}, and might
-be e.g. \code{list(sex = 1, ag = 6, ts_fut_start = 3.0, ts_fut_stop = 4.0)}
-with \code{aggre_by = c("sex", "ag")} and \code{aggre_ts_col_nms = "ts_fut"}.
-The data
-for the stratum have been split and \code{merge_dt} has been merged when
-\code{aggre_expr} is evaluated. E.g.
-\code{quote(list(n_at_risk = sum(at_risk), n_events = sum(lex.Cst != lex.Xst)))}
-. See \strong{Details} for what kinds of expressions are possible.}
+Defines what is aggregated within every stratum-interval
+defined by \code{aggre_ts_col_nms} and the time scales \code{aggre_ts_col_nms}.
+See \strong{Details} for how and where the expressions are evaluated.
+
+Each element must be either named and an R expression (see e.g. \verb{[quote]})
+or a character string which identifies the aggregation to perform from
+a table of pre-defined expressions within \code{popEpi} (shown in \strong{Details}).
+E.g. \code{c("n_events", "t_at_risk")},
+\code{list("n_events", t_at_risk = quote(sum(lex.dur)))}.}
 
 \item{subset}{\verb{[NULL, logical, integer, data.table]} (default \code{NULL})
 
@@ -295,6 +295,15 @@ Optional steps to perform along the way.
 \item \code{list}: Each named element is a function that is called in a specific
 stage of the run. See \strong{Details} for what functions are recognised.
 }}
+
+\item{weight_col_nm}{\verb{[NULL, character]} (default \code{NULL})
+
+Name of weight column in \code{dt} if you want to perform individual weighting.
+See \strong{Details} for where this comes into play.
+\itemize{
+\item \code{NULL}: No individual weighting is performed.
+\item \code{character}: This is the name of the column. E.g. \code{"my_iw"}.
+}}
 }
 \value{
 \strong{popEpi::surv_estimate}
@@ -320,7 +329,7 @@ Returns \code{dt} invisibly after adding columns from
 \strong{popEpi::surv_split_merge_aggregate_by_stratum}
 
 Returns a \code{data.table} with stratum columns as specified via
-\code{aggre_by} and value columns as specified via \code{aggre_expr}.
+\code{aggre_by} and value columns as specified via \code{aggre_exprs}.
 }
 \description{
 Functions used for estimation of various survival time statistics.
@@ -432,49 +441,22 @@ Compute survival estimates on a \code{Lexis} dataset (\verb{[Epi::Lexis]}).
 
 Performs the following steps:
 \itemize{
-\item If \code{aggre_expr} is \code{NULL},
-\code{estimators} is analysed and \code{aggre_expr} will be created by \code{surv_lexis}
-as follows:
+\item \code{estimators} is analysed and the following will be appended to
+\code{aggre_exprs}by \code{surv_lexis}:
 \itemize{
 \item Detect variables used in the estimation expressions with \verb{[all.vars]}.
-\item Detect the general name of a transition-specific variable such as
-\code{n_events_[0, 1]} as \code{n_events_[x, y]}. This general name is used
-to fetch the general aggregation expression
-(e.g. \code{"n_events_[x, y]" = quote(sum(lex.Cst == x & lex.Xst == y))})
-and this definition is then made specific to the requested transition,
-e.g.  \code{n_events_[0, 1] = quote(sum(lex.Cst == x & lex.Xst == y))}.
-Of course aggregation expressions without a specific transition such
-as \code{t_at_risk} are unaffected by this. The table of general
-aggregation expressions known to \code{popEpi} is shown below.
-\item The general variable definitions usually have \verb{ * iw} in them for
-enabling individual weighting. But if this is not requested then
-those \verb{ * iw} parts are removed from the aggregation expressions.
-\item After going through every requested estimator we have a set of
-quoted expressions such as
-\code{list(t_at_risk = quote(sum(lex.dur)), n_events = quote(sum(lex.Cst != lex.Xst)))}.
-This is turned into a quoted list of expressions with \code{call} and we are
-done, e.g.
-\code{quote(list(t_at_risk = sum(lex.dur), n_events = sum(lex.Cst != lex.Xst)))}.
-\item Table of general aggregation expressions known to \code{popEpi}:
+\item Retain only those known to \code{popEpi} --- see
+\code{?surv_split_merge_aggregate_by_stratum}. This results in a character
+string vector that the argument \code{aggre_exprs} of
+\code{surv_split_merge_aggregate_by_stratum} accepts.
 }
-}\tabular{ll}{
-   Name \tab Expression \cr
-   \verb{n_in_follow_up_at_interval_start} \tab \verb{sum(in_follow_up_at_interval_start)} \cr
-   \verb{n_entered_late_during_interval} \tab \verb{sum(entered_late_during_interval)} \cr
-   \verb{n_left_early_during_interval} \tab \verb{sum(left_early_during_interval)} \cr
-   \verb{n_at_risk_eff} \tab \verb{sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & !left_early_during_interval) + 0.25 * (entered_late_during_interval & left_early_during_interval) - 0.5 * (!entered_late_during_interval & left_early_during_interval)) * iw)} \cr
-   \verb{n_events} \tab \verb{sum((lex.Xst != lex.Cst) * iw)} \cr
-   \verb{t_at_risk} \tab \verb{sum(lex.dur * iw)} \cr
-   \verb{n_events_exp_e2} \tab \verb{sum(lex.dur * h_exp * iw)} \cr
-   \verb{n_events_pp} \tab \verb{sum((lex.Xst != lex.Cst) * pp * iw)} \cr
-   \verb{n_events_pp_double_weighted} \tab \verb{sum((lex.Xst != lex.Cst) * pp * pp * iw)} \cr
-   \verb{n_events_exp_pp} \tab \verb{sum(lex.dur * h_exp * pp * iw)} \cr
-   \verb{n_at_risk_eff_pp} \tab \verb{sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & !left_early_during_interval) + 0.25 * (entered_late_during_interval & left_early_during_interval) - 0.5 * (!entered_late_during_interval & left_early_during_interval)) * pp * iw)} \cr
-   \verb{t_at_risk_pp} \tab \verb{sum(lex.dur * pp * iw)} \cr
-   \verb{n_events_[x, y]} \tab \verb{sum((lex.Cst == x & lex.Xst == y) * iw)} \cr
-}
-
-\itemize{
+\item This results in \code{aggre_exprs} with both anything that the user defined
+and also what was added by \code{surv_lexis}. However, we drop duplicates
+in \code{aggre_exprs} based on both \code{duplicated(names(aggre_exprs))} and
+\code{duplicated(aggre_exprs)}. E.g. if you supply
+\code{aggre_exprs = list(n_events = quote(sum(lex.Xst != 0)))}
+and \code{n_events} is also added by \code{surv_lexis} then only the one you
+supplied is retained.
 \item Call \code{surv_split_merge_aggregate_by_stratum}.
 The resulting table of aggregated data is
 stratified by both \code{aggre_by} and by any stratifying columns found in
@@ -560,6 +542,47 @@ of producing nonsense results downstream.
 (\verb{[Epi::Lexis]}) data, merge something to it after the merge, and
 then perform an aggregation step. The following steps are performed:
 \itemize{
+\item Handle \code{aggre_exprs} as follows:
+\itemize{
+\item Detect the general name of a transition-specific variable such as
+\code{n_events_[0, 1]} as \code{n_events_[x, y]}. This general name is used
+to fetch the general aggregation expression
+(e.g. \code{"n_events_[x, y]" = quote(sum(lex.Cst \%in\% x & lex.Xst \%in\% y))})
+and this definition is then made specific to the requested
+transition,
+e.g.  \code{n_events_[0, 1] = quote(sum(lex.Cst \%in\% x & lex.Xst \%in\% y))}.
+Of course aggregation expressions without a specific transition such
+as \code{t_at_risk} are unaffected by this. The table of general
+aggregation expressions known to \code{popEpi} is shown below.
+\item The general variable definitions usually have \verb{ * iw} in them for
+enabling individual weighting. But if this is not requested then
+those \verb{ * iw} parts are removed from the aggregation expressions.
+\item After going through every requested estimator we have a set of
+quoted expressions such as
+\code{list(t_at_risk = quote(sum(lex.dur)), n_events = quote(sum(lex.Cst != lex.Xst)))}.
+This is turned into a quoted list of expressions with \code{call} and we are
+done, e.g.
+\code{quote(list(t_at_risk = sum(lex.dur), n_events = sum(lex.Cst != lex.Xst)))}.
+\item Table of general aggregation expressions known to \code{popEpi}:
+}
+}\tabular{ll}{
+   Name \tab Expression \cr
+   \verb{n_in_follow_up_at_interval_start} \tab \verb{sum(in_follow_up_at_interval_start)} \cr
+   \verb{n_entered_late_during_interval} \tab \verb{sum(entered_late_during_interval)} \cr
+   \verb{n_left_early_during_interval} \tab \verb{sum(left_early_during_interval)} \cr
+   \verb{n_at_risk_eff} \tab \verb{sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & !left_early_during_interval) + 0.25 * (entered_late_during_interval & left_early_during_interval) - 0.5 * (!entered_late_during_interval & left_early_during_interval)) * iw)} \cr
+   \verb{n_events} \tab \verb{sum((lex.Xst != lex.Cst) * iw)} \cr
+   \verb{t_at_risk} \tab \verb{sum(lex.dur * iw)} \cr
+   \verb{n_events_exp_e2} \tab \verb{sum(lex.dur * h_exp * iw)} \cr
+   \verb{n_events_pp} \tab \verb{sum((lex.Xst != lex.Cst) * pp * iw)} \cr
+   \verb{n_events_pp_double_weighted} \tab \verb{sum((lex.Xst != lex.Cst) * pp * pp * iw)} \cr
+   \verb{n_events_exp_pp} \tab \verb{sum(lex.dur * h_exp * pp * iw)} \cr
+   \verb{n_at_risk_eff_pp} \tab \verb{sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & !left_early_during_interval) + 0.25 * (entered_late_during_interval & left_early_during_interval) - 0.5 * (!entered_late_during_interval & left_early_during_interval)) * pp * iw)} \cr
+   \verb{t_at_risk_pp} \tab \verb{sum(lex.dur * pp * iw)} \cr
+   \verb{n_events_[x, y]} \tab \verb{sum((lex.Cst \%in\% x & lex.Xst \%in\% y) * iw)} \cr
+}
+
+\itemize{
 \item Call
 \code{optional_steps[["on_entry"]](eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
@@ -590,7 +613,7 @@ if that \code{optional_steps} element exists.
 \item Run
 \code{optional_steps[["stratum_post_merge"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
-\item Evaluate \code{aggre_expr} in the context of the split data
+\item Evaluate \code{aggre_exprs} in the context of the split data
 with merged-in additional data. The enclosing environment is
 \code{call_env}. See \code{?eval}. This results in a \code{data.table} that
 contains one row per interval of \code{aggre_ts_col_nms}.
@@ -604,12 +627,12 @@ with \code{cols = c(names(aggre_by), "box_id")}. We store the metadata
 \code{list(stratum_col_nms, value_col_nms)} into the attribute named
 \code{surv_split_merge_aggregate_by_stratum_meta}, where
 \code{stratum_col_nms = names(aggre_by)}, \code{ts_col_nms = aggre_ts_col_nms}, and
-\code{value_col_nms} are the names of the columns resulting from \code{aggre_expr}.
+\code{value_col_nms} are the names of the columns resulting from \code{aggre_exprs}.
 \item Run
 \code{optional_steps[["post_aggregation"]](eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
 \item Return a \code{data.table} with stratum columns as specified via
-\code{aggre_by} and value columns as specified via \code{aggre_expr}.
+\code{aggre_by} and value columns as specified via \code{aggre_exprs}.
 }
 }
 

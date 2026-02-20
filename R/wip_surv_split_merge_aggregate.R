@@ -1,3 +1,68 @@
+SURV_AGGRE_EXPRS__ <- list(
+  n_in_follow_up_at_interval_start = quote(
+    sum(in_follow_up_at_interval_start)
+  ),
+  n_entered_late_during_interval = quote(
+    sum(entered_late_during_interval)
+  ),
+  n_left_early_during_interval = quote(
+    sum(left_early_during_interval)
+  ),
+  n_at_risk_eff = quote(
+    sum((
+      in_follow_up_at_interval_start +
+        0.5 * (entered_late_during_interval & !left_early_during_interval) +
+        0.25 * (entered_late_during_interval & left_early_during_interval) -
+        0.5 * (!entered_late_during_interval & left_early_during_interval)
+    ) * iw)
+  ),
+  n_events = quote(
+    sum((lex.Xst != lex.Cst) * iw)
+  ),
+  t_at_risk = quote(
+    sum(lex.dur * iw)
+  ),
+  n_events_exp_e2 = quote(
+    sum(lex.dur * h_exp * iw)
+  ),
+  n_events_pp = quote(
+    sum((lex.Xst != lex.Cst) * pp * iw)
+  ),
+  n_events_pp_double_weighted = quote(
+    sum((lex.Xst != lex.Cst) * pp * pp * iw)
+  ),
+  n_events_exp_pp = quote(
+    sum(lex.dur * h_exp * pp * iw)
+  ),
+  n_at_risk_eff_pp =  quote(
+    sum((
+      in_follow_up_at_interval_start +
+        0.5 * (entered_late_during_interval & !left_early_during_interval) +
+        0.25 * (entered_late_during_interval & left_early_during_interval) -
+        0.5 * (!entered_late_during_interval & left_early_during_interval)
+    ) * pp * iw)
+  ),
+  t_at_risk_pp = quote(
+    sum(lex.dur * pp * iw)
+  ),
+  "n_events_[x, y]" = quote(
+    sum((lex.Cst %in% x & lex.Xst %in% y) * iw)
+  )
+)
+surv_aggre_exprs_table__ <- function() {
+  dt <- data.table::data.table(
+    "Name" = surv_estimate_expression_table_clean__(
+      names(SURV_AGGRE_EXPRS__)
+    ),
+    "Expression" = vapply(
+      SURV_AGGRE_EXPRS__,
+      surv_estimate_expression_table_clean__,
+      character(1L)
+    )
+  )
+  return(dt)
+}
+
 surv_aggregate_one_stratum__ <- function(
   sub_dt,
   box_dt,
@@ -179,6 +244,7 @@ surv_split_merge_aggregate_by_stratum <- function(
   merge_dt_by = NULL,
   merge_dt_harmonisers = NULL,
   subset = NULL,
+  weight_col_nm = NULL,
   optional_steps = NULL
 ) {
   # @codedoc_comment_block surv_arg_dt
@@ -211,19 +277,40 @@ surv_split_merge_aggregate_by_stratum <- function(
     aggre_ts_col_nms <- names(breaks)
   } else {
     stopifnot(
-      aggre_ts_col_nms %in% names(breaks),
+      aggre_ts_col_nms %in% names(breaks)
     )
   }
-  #' @param aggre_exprs `[list]` (no default)
+  #' @param aggre_exprs `[character, list]` (no default)
   #'
-  #' A named list of quoted R expressions. E.g.
-  #' `list(t_at_risk = quote(sum(lex.dur)))`.
-  #'
-  #' In short, this defines what is aggregated within every stratum-interval
+  #' Defines what is aggregated within every stratum-interval
   #' defined by `aggre_ts_col_nms` and the time scales `aggre_ts_col_nms`.
-  #' See **Details** for more.
+  #' See **Details** for how and where the expressions are evaluated.
   #'
-  assert_is_arg_aggre_exprs(aggre_exprs)
+  #' Each element must be either named and an R expression (see e.g. `[quote]`)
+  #' or a character string which identifies the aggregation to perform from
+  #' a table of pre-defined expressions within `popEpi` (shown in **Details**).
+  #' E.g. `c("n_events", "t_at_risk")`,
+  #' `list("n_events", t_at_risk = quote(sum(lex.dur)))`.
+  #'
+  #' @param weight_col_nm `[NULL, character]` (default `NULL`)
+  #'
+  #' Name of weight column in `dt` if you want to perform individual weighting.
+  #' See **Details** for where this comes into play.
+  #'
+  #' - `NULL`: No individual weighting is performed.
+  #' - `character`: This is the name of the column. E.g. `"my_iw"`.
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # `popEpi::surv_split_merge_aggregate_by_stratum` can be used to split `Lexis`
+  # (`[Epi::Lexis]`) data, merge something to it after the merge, and
+  # then perform an aggregation step. The following steps are performed:
+  #
+  # - Handle `aggre_exprs` as follows:
+  # @codedoc_insert_comment_block popEpi:::handle_arg_aggre_exprs
+  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  aggre_exprs <- handle_arg_aggre_exprs(
+    aggre_exprs = aggre_exprs,
+    weight_col_nm = weight_col_nm
+  )
 
   #' @param optional_steps `[NULL, list]` (default `NULL`)
   #'
@@ -244,10 +331,6 @@ surv_split_merge_aggregate_by_stratum <- function(
   eval_env <- environment()
   call_env <- parent.frame(1L)
   # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
-  # `popEpi::surv_split_merge_aggregate_by_stratum` can be used to split `Lexis`
-  # (`[Epi::Lexis]`) data, merge something to it after the merge, and
-  # then perform an aggregation step. The following steps are performed:
-  #
   # - Call
   #   `optional_steps[["on_entry"]](eval_env = eval_env, call_env = call_env)`
   #   if that `optional_steps` element exists.
