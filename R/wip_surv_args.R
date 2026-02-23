@@ -165,7 +165,7 @@ handle_arg_aggre_exprs <- function(
   assert_is_arg_aggre_exprs(aggre_exprs)
   aggre_exprs <- as.list(aggre_exprs)
   wh_is_string <- which(vapply(aggre_exprs, is.character, logical(1L)))
-  names(aggre_exprs[wh_is_string]) <- unlist(aggre_exprs[wh_is_string])
+  names(aggre_exprs)[wh_is_string] <- unlist(aggre_exprs[wh_is_string])
   if (is.null(weight_col_nm)) {
     iw_replacement <- ""
   } else {
