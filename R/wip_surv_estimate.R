@@ -1000,7 +1000,7 @@ surv_lexis_S_exp_e1_pch_est <- function(
     e1dt <- e1dt[e1dt[["keep"]], ]
   }
   data.table::set(e1dt, j = "keep", value = NULL)
-  surv_make_immortal(dt = e1dt, breaks = breaks[ts_fut_col_nm])
+  lexis_immortalise(dt = e1dt, breaks = breaks[ts_fut_col_nm])
   e1dt <- popEpi::splitMulti(
     data = e1dt,
     breaks = breaks[ts_fut_col_nm],

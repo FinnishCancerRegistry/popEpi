@@ -179,7 +179,7 @@ lexis_crop <- function(dt, breaks) {
   return(invisible(dt[]))
 }
 
-surv_make_immortal <- function(dt, breaks) {
+lexis_immortalise <- function(dt, breaks) {
   max_by_ts <- lapply(breaks, max)
   pmin_data <- lapply(names(max_by_ts), function(ts_col_nm) {
     max_by_ts[[ts_col_nm]] - dt[[ts_col_nm]]
