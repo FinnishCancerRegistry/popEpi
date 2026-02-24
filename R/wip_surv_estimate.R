@@ -232,16 +232,16 @@ surv_estimate_expr_list__ <- list(
     se = quote(sqrt(cumsum(delta_t ^ 2 * h_pch_se ^ 2)))
   ),
   h_exp_e2_pch = list(
-    est = quote(h_exp_e2_pch),
+    est = quote(n_events_exp_e2 / t_at_risk),
     se = quote(0.0 + 0.0)
   ),
   h_exc_e2_pch = list(
-    est = quote(h_exc_e2_pch),
+    est = quote((n_events - n_events_exp_e2) / t_at_risk),
     se = quote(h_pch_se)
   ),
   S_pch = list(
     est = quote(
-      exp(-cumsum(delta_t * h_pch))
+      exp(-cumsum(delta_t * h_pch_est))
     ),
     se = quote(
       S_pch_est *
@@ -281,7 +281,7 @@ surv_estimate_expr_list__ <- list(
   ),
   S_exp_e2_pch = list(
     est = quote(
-      exp(-cumsum(delta_t * h_exp_e2_pch))
+      exp(-cumsum(delta_t * h_exp_e2_pch_est))
     ),
     se = quote(
       0.0 + 0.0
@@ -297,7 +297,7 @@ surv_estimate_expr_list__ <- list(
   ),
   RS_e2_pch = list(
     est = quote(
-      exp(-cumsum(delta_t * h_exc_e2_pch))
+      exp(-cumsum(delta_t * h_exc_e2_pch_est))
     ),
     se = quote(
       S_pch_se / S_exp_e2_pch_est
@@ -314,7 +314,7 @@ surv_estimate_expr_list__ <- list(
   ),
   NS_pp_pch = list(
     est = quote(
-      exp(-cumsum(delta_t * h_exc_pp))
+      exp(-cumsum(delta_t * (n_events_pp - n_events_exp_pp) / t_at_risk_pp))
     ),
     se = quote(
       NS_pp_pch_est *
@@ -481,41 +481,32 @@ surv_estimate_expr_list__ <- list(
 
 make_surv_estimate_expr_list__ <- function(surv_estimate_expr_list) {
   utility_expr_list <- list(
-    h_pch = quote(
+    h_pch_est = quote(
       n_events / t_at_risk
-    ),
-    h_exp_e2_pch = quote(
-      n_events_exp_e2 / t_at_risk
-    ),
-    h_exc_e2_pch = quote(
-      (n_events - n_events_exp_e2) / t_at_risk
-    ),
-    h_exc_pp = quote(
-      (n_events_pp - n_events_exp_pp) / t_at_risk_pp
     ),
     S_lt_cond_est = quote(
       1 - (n_events / n_at_risk_eff)
     ),
     S_pch_cond_est = quote(
-      exp(-delta_t * h_pch)
+      exp(-delta_t * h_pch_est)
     ),
     S_lt_est_lag1 = quote(
       c(
         1.00,
-        cumprod(S_lt_cond_est)[-length(S_lt_cond_est)]
+        cumprod(S_lt_cond_est)[-length(n_events)]
       )
     ),
     S_pch_est_lag1 = quote(
       c(
         1.00,
-        exp(-cumsum(delta_t * h_pch))[-length(h_pch)]
+        exp(-cumsum(delta_t * h_pch_est))[-length(delta_t)]
       )
     )
   )
   for (utility_expr_nm in names(utility_expr_list)) {
-    # e.g. expr = quote(exp(-cumsum(delta_t * h_pch)))
+    # e.g. expr = quote(exp(-cumsum(delta_t * h_pch_est)))
     expr <- utility_expr_list[[utility_expr_nm]]
-    # e.g. expr_expr = quote(substitute(exp(-cumsum(delta_t * h_pch)), utility_expr_list))
+    # e.g. expr_expr = quote(substitute(exp(-cumsum(delta_t * h_pch_est)), utility_expr_list))
     expr_expr <- substitute(
       substitute(expr, utility_expr_list),
       list(expr = expr)
