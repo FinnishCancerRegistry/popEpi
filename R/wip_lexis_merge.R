@@ -1,6 +1,5 @@
-
-surv_merge_guess_breaks__ <- function(x) {
-  # @codedoc_comment_block surv_merge_guess_breaks__
+lexis_merge_guess_breaks__ <- function(x) {
+  # @codedoc_comment_block lexis_merge_guess_breaks__
   #   + If `merge_dt[[col_nm]]` contains numbers we define `cut` breaks as the
   #     unique values of
   #     `merge_dt[[col_nm]]` and as the ceiling
@@ -8,7 +7,7 @@ surv_merge_guess_breaks__ <- function(x) {
   #     difference between the highest and second highest values. E.g.
   #     `c(1950, 1960, 1970:2020, 2021)` for `merge_dt[[col_nm]]`
   #     containing unique values `c(1950, 1960, 1970:2020)`.
-  # @codedoc_comment_block surv_merge_guess_breaks__
+  # @codedoc_comment_block lexis_merge_guess_breaks__
   last_diff <- diff(utils::tail(x, 2L))
   cut_breaks <- c(
     x,
@@ -17,12 +16,12 @@ surv_merge_guess_breaks__ <- function(x) {
   return(cut_breaks)
 }
 
-surv_merge_default_harmoniser__ <- function(
+lexis_merge_default_harmoniser__ <- function(
   col_nm,
   cut_breaks,
   lex_dur_multiplier = 0.5
 ) {
-  # @codedoc_comment_block surv_merge_default_harmoniser__
+  # @codedoc_comment_block lexis_merge_default_harmoniser__
   #    + With the `cut` breaks defined, the automatically created harmoniser
   #      becomes a `cut` call with arguments
   #      * `x = col + lex.dur * lex_dur_multiplier`, where `COL` is the current
@@ -35,7 +34,7 @@ surv_merge_default_harmoniser__ <- function(
   #      `3` in `breaks = c(1950, 1960, 1970:2020, 2021)` and output is
   #      `1970` for every value of `COL + lex.dur / 2` in the interval
   #      `]1970, 1971]`.
-  # @codedoc_comment_block surv_merge_default_harmoniser__
+  # @codedoc_comment_block lexis_merge_default_harmoniser__
   substitute(
     {
       breaks <- cut_breaks # nolint
@@ -219,9 +218,9 @@ lexis_merge <- function(
       cut_breaks <- sort(unique(merge_dt[[col_nm]]))
       if (is.integer(cut_breaks) || is.double(cut_breaks)) {
         # @codedoc_comment_block popEpi::lexis_merge
-        # @codedoc_insert_comment_block surv_merge_guess_breaks__
+        # @codedoc_insert_comment_block lexis_merge_guess_breaks__
         # @codedoc_comment_block popEpi::lexis_merge
-        cut_breaks <- surv_merge_guess_breaks__(cut_breaks)
+        cut_breaks <- lexis_merge_guess_breaks__(cut_breaks)
       } else {
         # @codedoc_comment_block popEpi::lexis_merge
         #   + If `merge_dt[[col_nm]]` does not contain numbers, an error is
@@ -255,10 +254,10 @@ lexis_merge <- function(
         )
       }
       # @codedoc_comment_block popEpi::lexis_merge
-      # @codedoc_insert_comment_block surv_merge_default_harmoniser__
+      # @codedoc_insert_comment_block lexis_merge_default_harmoniser__
       # @codedoc_comment_block popEpi::lexis_merge
       do.call(
-        surv_merge_default_harmoniser__,
+        lexis_merge_default_harmoniser__,
         surv_merge_default_harmoniser_arg_list,
         quote = TRUE
       )
@@ -391,7 +390,7 @@ lexis_merge_survival <- function(
       -log(survival_dt[["survival"]]),
       survival_dt[[ts_fut_col_nm]],
       local({
-        breaks <- surv_merge_guess_breaks__(
+        breaks <- lexis_merge_guess_breaks__(
           sort(unique(survival_dt[[ts_fut_col_nm]]))
         )
         breaks[match(survival_dt[[ts_fut_col_nm]], breaks) + 1L] -
