@@ -208,3 +208,9 @@ stopifnot(
 )
 
 }
+\seealso{
+Other Lexis_functions: 
+\code{\link{lexis_funs}},
+\code{\link{lexis_split_merge_aggregate_by_stratum}()}
+}
+\concept{Lexis_functions}

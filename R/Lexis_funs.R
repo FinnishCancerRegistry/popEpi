@@ -2,6 +2,7 @@
 #' @description
 #' Make `[Epi::Lexis]` objects.
 #' @name lexis_funs
+#' @family Lexis_functions
 NULL
 
 #' @eval codedoc::pkg_doc_fun("popEpi::Lexis_fpa", "lexis_funs")

@@ -222,3 +222,9 @@ if that \code{optional_steps} element exists.
 \code{aggre_by} and value columns as specified via \code{aggre_exprs}.
 }
 }
+\seealso{
+Other Lexis_functions: 
+\code{\link{lexis_funs}},
+\code{\link{lexis_merge}()}
+}
+\concept{Lexis_functions}

@@ -59,6 +59,7 @@ lexis_merge_default_harmoniser__ <- function(
 #' Function(s) to merge data into `Lexis` objects intelligently when merging
 #' is (partially) based on time scales.
 #' @name lexis_merge
+#' @family Lexis_functions
 NULL
 
 #' @eval codedoc::pkg_doc_fun(

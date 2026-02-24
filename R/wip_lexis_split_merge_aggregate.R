@@ -254,6 +254,7 @@ lexis_aggregate_one_stratum__ <- function(
 #' @eval codedoc::pkg_doc_fun(
 #'   "popEpi::lexis_split_merge_aggregate_by_stratum"
 #' )
+#' @family Lexis_functions
 lexis_split_merge_aggregate_by_stratum <- function(
   dt,
   breaks,
