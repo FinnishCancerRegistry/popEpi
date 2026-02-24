@@ -366,7 +366,7 @@ lexis_merge <- function(
   return(invisible(dt[]))
 }
 
-surv_merge_survival <- function(
+lexis_merge_survival <- function(
   dt,
   survival_dt,
   survival_dt_by,

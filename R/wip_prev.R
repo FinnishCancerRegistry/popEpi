@@ -197,7 +197,7 @@ prev_lexis <- function(
   )
   lexis_set__(dt = prev_dt, lexis_ts_col_nms = names(breaks))
   browser()
-  surv_merge_survival(
+  lexis_merge_survival(
     dt = prev_dt,
     survival_dt = survival_dt,
     survival_dt_by = survival_dt_by,

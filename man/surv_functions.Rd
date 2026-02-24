@@ -40,8 +40,8 @@ surv_lexis(
 \arguments{
 \item{dt}{\itemize{
 \item \code{surv_estimate}: A \code{data.table}.
-\item \code{surv_individual_weights}: A \code{data.frame} / \code{data.table}.
 \item \code{lexis_merge}: A \code{Lexis} dataset (\verb{[Epi::Lexis]}).
+\item \code{surv_individual_weights}: A \code{data.frame} / \code{data.table}.
 }}
 
 \item{ts_fut_col_nm}{\verb{[character]} (no default)
