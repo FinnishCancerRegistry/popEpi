@@ -144,6 +144,10 @@ surv_aggregate_one_stratum__ <- function(
 
   work_dt <- data.table::setDT(as.list(dt_stratum_subset_split))
   data.table::setkeyv(work_dt, data.table::key(dt_stratum_subset_split))
+  lexis_set__(
+    dt = work_dt,
+    lexis_ts_col_nms = Epi::timeScales(dt_stratum_subset_split)
+  )
   expr_obj_nms <- unique(unlist(lapply(aggre_exprs, all.vars)))
   surv_box_id__(dt = work_dt, box_dt = box_dt)
   add_expr_eval_env <- environment()
