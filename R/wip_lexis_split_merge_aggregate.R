@@ -268,9 +268,11 @@ lexis_aggregate_one_stratum__ <- function(
   return(out[])
 }
 
+#' @title Split, Merge, and Aggregate a `Lexis` Object
+#' @description
+#' Function(s) which split, merge, and aggregate a `Lexis` object in one go.
 #' @eval codedoc::pkg_doc_fun(
-#'   "popEpi::lexis_split_merge_aggregate_by_stratum",
-#'   "surv_functions"
+#'   "popEpi::lexis_split_merge_aggregate_by_stratum"
 #' )
 lexis_split_merge_aggregate_by_stratum <- function(
   dt,
@@ -285,11 +287,9 @@ lexis_split_merge_aggregate_by_stratum <- function(
   weight_col_nm = NULL,
   optional_steps = NULL
 ) {
-  # @codedoc_comment_block surv_arg_dt
-  # - `lexis_split_merge_aggregate_by_stratum`:
-  #   A `Lexis` dataset (`[Epi::Lexis]`).
-  # @codedoc_comment_block surv_arg_dt
-
+  #' @param dt `[Lexis]` (no default)
+  #'   A `Lexis` dataset (`[Epi::Lexis]`).
+  #'
   assert_is_arg_dt(dt, lexis = TRUE)
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::breaks
   # @codedoc_insert_comment_block popEpi:::assert_is_arg_breaks
