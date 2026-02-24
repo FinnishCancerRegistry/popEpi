@@ -444,72 +444,39 @@ surv_estimate_expr_list__ <- list(
     se = quote(
       F_pch_se
     )
+  ),
+  F_exp_e1_pch = list(
+    est = quote(
+      1 - S_exp_e1_pch_est
+    ),
+    se = quote(
+      0.0 + 0.0
+    )
+  ),
+  F_extra_e1_pch = list(
+    est = quote(
+      F_pch_est - F_exp_e1_pch_est
+    ),
+    se = quote(
+      F_pch_se
+    )
+  ),
+  S_exp_e1_pch = list(
+    est = quote(
+      S_exp_e1_pch_est
+    ),
+    se = quote(
+      0.0 + 0.0
+    )
+  ),
+  S_def_e1_pch = list(
+    est = quote(
+      S_exp_e1_pch_est - S_pch_est
+    ),
+    se = quote(
+      S_pch_se
+    )
   )
-  # ,
-  # F_exp_e1_lt = list(
-  #   est = quote(
-  #     1 - S_exp_e1_lt_est
-  #   ),
-  #   se = quote(
-  #     S_lt_se
-  #   )
-  # ),
-  # F_exp_e1_pch = list(
-  #   est = quote(
-  #     1 - S_exp_e1_pch_est
-  #   ),
-  #   se = quote(
-  #     S_pch_se
-  #   )
-  # ),
-  # F_extra_e1_lt = list(
-  #   est = quote(
-  #     F_lt - F_exp_e1_lt_est
-  #   ),
-  #   se = quote(
-  #     F_lt_se
-  #   )
-  # ),
-  # F_extra_e1_pch = list(
-  #   est = quote(
-  #     F_pch_est - F_exp_e1_pch_est
-  #   ),
-  #   se = quote(
-  #     F_lt_se
-  #   )
-  # ),
-  # S_exp_e1_lt = list(
-  #   est = quote(
-  #     S_exp_e1_lt_est
-  #   ),
-  #   se = quote(
-  #     0.0
-  #   )
-  # ),
-  # S_exp_e1_pch = list(
-  #   est = quote(
-  #     S_exp_e1_pch_est
-  #   ),
-  #   se = quote(
-  #     0.0
-  #   )
-  # ),
-  # S_def_e1_lt = list(
-  #   est = quote(
-  #     S_exp_e1_lt_est - S_lt_est
-  #   ),
-  #   se = quote(
-  #     S_lt_se
-  #   )
-  # ),
-  # S_def_e1_pch = list(
-  #   est = quote({
-  #     S_exp_e1_pch_est - S_pch_est
-  #   }),
-  #   se = quote(
-  #     S_pch_se
-  #   )
-  # )
 )
 
 make_surv_estimate_expr_list__ <- function(surv_estimate_expr_list) {
