@@ -113,6 +113,22 @@ surv_lexis <- function(
   #   With `aggre_by = "sex"` and `weights = "individual_weight"` the table is
   #   stratified by sex and contains individually weighted statistics.
   # @codedoc_comment_block popEpi::surv_lexis
+  #' @param breaks
+  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+  #' @param merge_dt
+  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+  #' @param merge_dt_by
+  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+  #' @param merge_dt_harmonisers
+  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+  #' @param aggre_by
+  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+  #' @param aggre_ts_col_nms
+  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+  #' @param aggre_exprs
+  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+  #' @param subset
+  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   weight_col_nm <- if (is.character(weights)) weights else NULL
   sdt <- lexis_split_merge_aggregate_by_stratum(
     dt = dt,

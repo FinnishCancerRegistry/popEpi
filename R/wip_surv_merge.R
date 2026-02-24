@@ -111,14 +111,42 @@ surv_merge <- function(
   merge_dt_default_harmoniser_lex_dur_multiplier = 0.5,
   optional_steps = NULL
 ) {
+  # @codedoc_comment_block popEpi::surv_merge
+  # `popEpi::surv_merge` can be used to merge additional information into
+  # `Lexis` data, allowing the use of the `Lexis` time scales in the
+  # merge. The typical use-case is to split `Lexis` data and then merge
+  # population (expected) hazards to the subject-intervals.
+  # `popEpi::surv_merge` performs the following steps:
+  #
+  # @codedoc_comment_block popEpi::surv_merge
   call_env <- parent.frame(1L)
   eval_env <- environment()
+  #' @param optional_steps `[NULL, list]` (default `NULL`)
+  #'
+  #' Optional steps to perform during the function's run.
+  #'
+  #' - `NULL`: No additional steps are performed.
+  #' - `list`: Each element is named and a function. See **Details**
+  #'   For what each functions you can make use of what their arguments should
+  #'   be.
+  # @codedoc_comment_block popEpi::surv_merge
+  # - Run
+  #   `optional_steps[["on_entry"]](call_env = call_env, eval_env = eval_env)`
+  #   if that `optional_steps` element exists. `call_env` is the environment
+  #   where this function was called and `eval_env` is the temporary environment
+  #   in which the commands that this function consists of are evaluated.
+  # @codedoc_comment_block popEpi::surv_merge
   if ("on_entry" %in% names(optional_steps)) {
     optional_steps[["on_entry"]](
       call_env = call_env,
       eval_env = eval_env
     )
   }
+  # @codedoc_comment_block popEpi::surv_merge
+  # - Run
+  #   `on.exit(optional_steps[["on_exit"]](call_env = call_env, eval_env = eval_env))`
+  #   if that `optional_steps` element exists.
+  # @codedoc_comment_block popEpi::surv_merge
   if ("on_exit" %in% names(optional_steps)) {
     on.exit(optional_steps[["on_exit"]](
       call_env = call_env,
@@ -151,14 +179,6 @@ surv_merge <- function(
     dt,
     mandatory = TRUE
   )
-  # @codedoc_comment_block popEpi::surv_merge
-  # `popEpi::surv_merge` can be used to merge additional information into
-  # `Lexis` data, allowing the use of the `Lexis` time scales in the
-  # merge. The typical use-case is to split `Lexis` data and then merge
-  # population (expected) hazards to the subject-intervals.
-  # `popEpi::surv_merge` performs the following steps:
-  #
-  # @codedoc_comment_block popEpi::surv_merge
   call_env <- parent.frame(1L)
   lexis_ts_col_nms <- attr(dt, "time.scales")
   merge_ts_col_nms <- intersect(lexis_ts_col_nms, merge_dt_by)
@@ -180,7 +200,7 @@ surv_merge <- function(
   #'   and `merge_dt`. See **Examples**.
   if (is.null(merge_dt_harmonisers)) {
     # @codedoc_comment_block popEpi::surv_merge
-    # - If `is.null(merge_dt_harmonisers)`, `popEpi::surv_merge` attempts to
+    # - If `is.null(merge_dt_harmonisers)`, attempt to
     #   automatically determine the harmonisers making use of `cut` by looking
     #   at the unique
     #   values of the time scale to merge by in `merge_dt` (e.g. calendar year
@@ -221,14 +241,19 @@ surv_merge <- function(
         lex_dur_multiplier = merge_dt_default_harmoniser_lex_dur_multiplier
       )
       # @codedoc_comment_block popEpi::surv_merge
-      # - Run `optional_steps[["pre_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_env = environment())`
+      # - Run
+      #   `optional_steps[["pre_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_eval_env = lapply_eval_env)`
       #   if that `optional_steps` element exists.
+      #   Here `lapply_eval_env` is similar to `eval_env` but it is the
+      #   evaluation environment of the anonymous function passed to `lapply`
+      #   which attempts to handle each harmoniser.
       # @codedoc_comment_block popEpi::surv_merge
+      lapply_eval_env <- environment()
       if ("pre_default_harmoniser_creation" %in% names(optional_steps)) {
         optional_steps[["pre_default_harmoniser_creation"]](
           call_env = call_env,
           eval_env = eval_env,
-          lapply_env = environment()
+          lapply_env = lapply_eval_env
         )
       }
       # @codedoc_comment_block popEpi::surv_merge
@@ -242,6 +267,11 @@ surv_merge <- function(
     })
     names(merge_dt_harmonisers) <- merge_ts_col_nms
   }
+  # @codedoc_comment_block popEpi::surv_merge
+  # - Run
+  #   `optional_steps[["post_merge_dt_harmonisers"]](call_env = call_env, eval_env = eval_env)`
+  #   if that `optional_steps` element exists.
+  # @codedoc_comment_block popEpi::surv_merge
   if ("post_merge_dt_harmonisers" %in% names(optional_steps)) {
     optional_steps[["post_merge_dt_harmonisers"]](
       call_env = call_env,
@@ -271,6 +301,11 @@ surv_merge <- function(
   }))
   data.table::setnames(join_dt, merge_dt_by)
   merge_value_col_nms <- setdiff(names(merge_dt), merge_dt_by)
+  # @codedoc_comment_block popEpi::surv_merge
+  # - Run
+  #   `optional_steps[["post_harmonisation"]](call_env = call_env, eval_env = eval_env)`
+  #   if that `optional_steps` element exists.
+  # @codedoc_comment_block popEpi::surv_merge
   if ("post_harmonisation" %in% names(optional_steps)) {
     optional_steps[["post_harmonisation"]](
       call_env = call_env,
@@ -294,6 +329,11 @@ surv_merge <- function(
       .SDcols = merge_value_col_nms
     ]
   )
+  # @codedoc_comment_block popEpi::surv_merge
+  # - Run
+  #   `optional_steps[["post_merge"]](call_env = call_env, eval_env = eval_env)`
+  #   if that `optional_steps` element exists.
+  # @codedoc_comment_block popEpi::surv_merge
   if ("post_merge" %in% names(optional_steps)) {
     optional_steps[["post_merge"]](
       call_env = call_env,

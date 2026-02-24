@@ -276,6 +276,12 @@ lexis_split_merge_aggregate_by_stratum <- function(
   # @codedoc_insert_comment_block popEpi:::assert_is_arg_breaks
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::breaks
   assert_is_arg_breaks(breaks, dt)
+  #' @param merge_dt
+  #' Passed to `[surv_merge]`.
+  #' @param merge_dt_by
+  #' Passed to `[surv_merge]`.
+  #' @param merge_dt_harmonisers
+  #' Passed to `[surv_merge]`.
   assert_is_arg_merge_dt_and_merge_dt_by(
     merge_dt = merge_dt,
     merge_dt_by = merge_dt_by,

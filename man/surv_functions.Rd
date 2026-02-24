@@ -158,6 +158,8 @@ e.g. the same age group twice in a table stratified by age group only.
 allowed.
 }}
 
+\item{breaks}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
 \item{merge_dt_by}{\verb{[character, NULL]} (no default or default \code{NULL})
 
 Names of columns in both \code{merge_dt} and \code{dt} by which \code{merge_dt} will be
@@ -196,6 +198,14 @@ element must have a name corresponding to a column name in both \code{dt}
 and \code{merge_dt}. See \strong{Examples}.
 }}
 
+\item{aggre_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
+\item{aggre_ts_col_nms}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
+\item{aggre_exprs}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
+\item{subset}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
 \item{merge_dt_default_harmoniser_lex_dur_multiplier}{\verb{[numeric]}
 (default 0.5)
 
@@ -207,6 +217,16 @@ to \code{ts_age = 56} for the purpose of merging with \code{merge_dt}. The
 middle of the record is a rational choice when a record covers multiple
 strata of \code{merge_dt}, at least when merging population expected
 hazards.}
+
+\item{optional_steps}{\verb{[NULL, list]} (default \code{NULL})
+
+Optional steps to perform during the function's run.
+\itemize{
+\item \code{NULL}: No additional steps are performed.
+\item \code{list}: Each element is named and a function. See \strong{Details}
+For what each functions you can make use of what their arguments should
+be.
+}}
 }
 \value{
 \strong{popEpi::surv_estimate}
@@ -381,7 +401,15 @@ merge. The typical use-case is to split \code{Lexis} data and then merge
 population (expected) hazards to the subject-intervals.
 \code{popEpi::surv_merge} performs the following steps:
 \itemize{
-\item If \code{is.null(merge_dt_harmonisers)}, \code{popEpi::surv_merge} attempts to
+\item Run
+\code{optional_steps[["on_entry"]](call_env = call_env, eval_env = eval_env)}
+if that \code{optional_steps} element exists. \code{call_env} is the environment
+where this function was called and \code{eval_env} is the temporary environment
+in which the commands that this function consists of are evaluated.
+\item Run
+\code{on.exit(optional_steps[["on_exit"]](call_env = call_env, eval_env = eval_env))}
+if that \code{optional_steps} element exists.
+\item If \code{is.null(merge_dt_harmonisers)}, attempt to
 automatically determine the harmonisers making use of \code{cut} by looking
 at the unique
 values of the time scale to merge by in \code{merge_dt} (e.g. calendar year
@@ -398,8 +426,12 @@ containing unique values \code{c(1950, 1960, 1970:2020)}.
 raised because we don't know how to automatically form a
 harmoniser.
 }
-\item Run \code{optional_steps[["pre_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_env = environment())}
+\item Run
+\code{optional_steps[["pre_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_eval_env = lapply_eval_env)}
 if that \code{optional_steps} element exists.
+Here \code{lapply_eval_env} is similar to \code{eval_env} but it is the
+evaluation environment of the anonymous function passed to \code{lapply}
+which attempts to handle each harmoniser.
 \itemize{
 \item With the \code{cut} breaks defined, the automatically created harmoniser
 becomes a \code{cut} call with arguments
@@ -416,6 +448,9 @@ break values at those indices. E.g. the cut results in
 \code{1970} for every value of \code{COL + lex.dur / 2} in the interval
 \verb{]1970, 1971]}.
 }
+\item Run
+\code{optional_steps[["post_merge_dt_harmonisers"]](call_env = call_env, eval_env = eval_env)}
+if that \code{optional_steps} element exists.
 \item Armed with either user-defined or automatically created
 \code{merge_dt_harmonisers}, they are each evaluated to create a temporary
 \code{data.table} with harmonised data from \code{dt}. This is performed via
@@ -424,10 +459,16 @@ environment where \code{popEpi::surv_merge} was called. Of course if a column
 has no harmoniser at this point then it is used as-is. For instance there
 is no need to harmonise stratifying columns because they are not changed
 by splitting the \code{Lexis} data.
+\item Run
+\code{optional_steps[["post_harmonisation"]](call_env = call_env, eval_env = eval_env)}
+if that \code{optional_steps} element exists.
 \item Then we perform the actual merge between \code{merge_dt} and the harmonised
 data. This merges in data from \code{merge_dt} into every row of \code{dt} in-place.
 So \code{dt} is modified and no additional copy is taken for the sake of
 efficiency.
+\item Run
+\code{optional_steps[["post_merge"]](call_env = call_env, eval_env = eval_env)}
+if that \code{optional_steps} element exists.
 \item Each merged-in column from \code{merge_dt} (all columns not in \code{merge_dt_by})
 are inspected for missing values. If there are any, an error is raised.
 This usually occurs if \code{merge_dt} does not contain data for all data in

@@ -64,6 +64,12 @@ Names of \code{Lexis} time scales in \code{dt} by which to aggregate results.
 \item \code{character}: Aggregate by these time scales. E.g. \code{"ts_fut"}.
 }}
 
+\item{merge_dt}{Passed to \verb{[surv_merge]}.}
+
+\item{merge_dt_by}{Passed to \verb{[surv_merge]}.}
+
+\item{merge_dt_harmonisers}{Passed to \verb{[surv_merge]}.}
+
 \item{subset}{\verb{[NULL, logical, integer, data.table]} (default \code{NULL})
 
 This argument is evaluated within the context of \code{dt} and the environment
