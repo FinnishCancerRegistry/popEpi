@@ -198,12 +198,12 @@ lexis_immortalise <- function(dt, breaks) {
   return(invisible(dt[]))
 }
 
-surv_rule_based_interval_breaks <- function(
+surv_breaks_rule_based <- function(
   dt,
   ts_fut_nm = "ts_fut",
   breaks = NULL,
   mandatory_breaks = 0:5,
-  combination_test_expr = quote(sum(lex.Xst != lex.Cst) == 0)
+  combination_test_expr = quote(sum(lex.dur) == 0)
 ) {
   call_env <- parent.frame(1L)
   if (is.null(breaks)) {
