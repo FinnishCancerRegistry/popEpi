@@ -109,43 +109,41 @@ surv_box_id__ <- function(
   dt,
   box_dt
 ) {
+  assert_is_arg_dt(dt = dt, lexis = TRUE)
   start_col_nms <- sort(names(box_dt)[grepl("_start$", names(box_dt))])
-  stop_col_nms <- sort(names(box_dt)[grepl("_stop$", names(box_dt))])
   split_ts_col_nms <- sub("_start$", "", start_col_nms)
-  id_col_nms <- paste0(split_ts_col_nms, "_id")
-  stopifnot(
-    inherits(box_dt, "data.frame"),
-    "box_id" %in% names(box_dt),
-    id_col_nms %in% names(box_dt),
-    identical(split_ts_col_nms, sub("_stop$", "", stop_col_nms)),
-    inherits(dt, "data.frame"),
-    split_ts_col_nms %in% names(dt),
-    "lex.dur" %in% names(dt)
+  merge_dt <- data.table::setDT(as.list(box_dt)[start_col_nms])
+  data.table::setnames(merge_dt, split_ts_col_nms)
+  data.table::set(
+    x = merge_dt,
+    j = "box_id",
+    value = box_dt[["box_id"]]
   )
-  names(start_col_nms) <- names(stop_col_nms) <- split_ts_col_nms
-  work_dt <- data.table::setDT(lapply(split_ts_col_nms, function(ts_col_nm) {
-    breaks <- sort(union(
-      box_dt[[start_col_nms[ts_col_nm]]],
-      box_dt[[stop_col_nms[ts_col_nm]]]
-    ))
-    x <- dt[[ts_col_nm]] + dt[["lex.dur"]] * 0.5
-    idx <- cut(
-      x = x,
-      breaks = breaks,
-      right = FALSE,
-      labels = FALSE
+  breaks <- lapply(split_ts_col_nms, function(ts_col_nm) {
+    union(
+      box_dt[[paste0(ts_col_nm, "_start")]],
+      box_dt[[paste0(ts_col_nm, "_stop")]][nrow(box_dt)]
     )
-    return(idx)
-  }))
-  data.table::setnames(work_dt, names(work_dt), id_col_nms)
-  out <- box_dt[
-    i = work_dt,
-    on = id_col_nms,
-    #' @importFrom data.table .SD
-    j = .SD[["box_id"]],
-    .SDcols = "box_id"
-  ]
-  return(out)
+  })
+  names(breaks) <- split_ts_col_nms
+  surv_merge(
+    dt = dt,
+    merge_dt = merge_dt,
+    merge_dt_by = split_ts_col_nms,
+    merge_dt_harmonisers = structure(lapply(seq_along(breaks), function(i) {
+      substitute({
+        breaks <- BR
+        idx <- cut(
+          x = COL + 0.5 * lex.dur,
+          breaks = breaks,
+          right = FALSE,
+          labels = FALSE
+        )
+        breaks[idx]
+      }, list(COL = parse(text = names(breaks)[i])[[1]], BR = breaks[[i]]))
+    }), names = names(breaks))
+  )
+  return(invisible(dt[]))
 }
 
 
