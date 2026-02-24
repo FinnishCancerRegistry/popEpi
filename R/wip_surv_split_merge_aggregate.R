@@ -145,36 +145,7 @@ surv_aggregate_one_stratum__ <- function(
   work_dt <- data.table::setDT(as.list(dt_stratum_subset_split))
   data.table::setkeyv(work_dt, data.table::key(dt_stratum_subset_split))
   expr_obj_nms <- unique(unlist(lapply(aggre_exprs, all.vars)))
-  work_dt <- data.table::setDT(as.list(sub_dt))
-  data.table::setkeyv(work_dt, data.table::key(sub_dt))
-  lapply(lexis_ts_col_nms, function(ts_col_nm) {
-    add_col_nms <- unique(expr_obj_nms[
-      grepl(sprintf("^%s_((lead)|(lag))[0-9]+$", ts_col_nm), expr_obj_nms)
-    ])
-    lapply(add_col_nms, function(add_col_nm) {
-      settings <- list(type = "lead")
-      if (grepl("lag", add_col_nm)) {
-        settings[["type"]] <- "lag"
-      }
-      settings[["n"]] <- as.integer(sub("^[^0-9]+", "", add_col_nm))
-      work_dt[
-        #' @importFrom data.table := .SD
-        j = (add_col_nm) := .SD[[ts_col_nm]] - data.table::shift(
-          x = .SD[[ts_col_nm]],
-          n = settings[["n"]],
-          type = settings[["type"]],
-          fill = NA_integer_
-        ),
-        .SDcols = ts_col_nm,
-        by = "lex.id"
-      ]
-    })
-  })
-  data.table::set(
-    x = work_dt,
-    j = "box_id",
-    value = surv_box_id__(dt = work_dt, box_dt = box_dt)
-  )
+  surv_box_id__(dt = work_dt, box_dt = box_dt)
   add_expr_eval_env <- environment()
   local({
     ts_fut_col_nm <- eval_env[["aggre_ts_col_nms"]][
