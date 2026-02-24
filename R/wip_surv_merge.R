@@ -55,7 +55,17 @@ surv_merge_default_harmoniser__ <- function(
   )
 }
 
-#' @eval codedoc::pkg_doc_fun("popEpi::lexis_merge", "surv_functions")
+#' @title Merge Data into `Lexis` Object
+#' @description
+#' Function(s) to merge data into `Lexis` objects intelligently when merging
+#' is (partially) based on time scales.
+#' @name lexis_merge
+NULL
+
+#' @eval codedoc::pkg_doc_fun(
+#'   "popEpi::lexis_merge",
+#'   "lexis_merge"
+#' )
 #' @examples
 #' # popEpi::lexis_merge
 #' lexis <- Epi::Lexis(
