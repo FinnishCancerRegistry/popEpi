@@ -583,9 +583,10 @@ surv_estimate_expr_list__ <- make_surv_estimate_expr_list__(
   surv_estimate_expr_list__
 )
 surv_estimate_expression__ <- function(type) {
-  stopifnot(
-    type %in% names(surv_estimate_expr_list__)
-  )
+  if (!type %in% names(surv_estimate_expr_list__)) {
+    stop("Unidentified estimator name: ", deparse1(type), ". Known ",
+         "estimators: ", deparse1(names(surv_estimate_expr_list__)))
+  }
   out <- surv_estimate_expr_list__[type]
   return(out)
 }
