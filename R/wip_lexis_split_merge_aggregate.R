@@ -270,7 +270,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   optional_steps = NULL
 ) {
   #' @param dt `[Lexis]` (no default)
-  #'   A `Lexis` dataset (`[Epi::Lexis]`).
+  #' A `Lexis` dataset (`[Epi::Lexis]` / `[Lexis_dt]`).
   #'
   assert_is_arg_dt(dt, lexis = TRUE)
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::breaks

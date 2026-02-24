@@ -162,8 +162,9 @@ lexis_merge <- function(
       eval_env = eval_env
     ))
   }
-  # @codedoc_comment_block surv_arg_dt
-  # - `lexis_merge`: A `Lexis` dataset (`[Epi::Lexis]`).
+  #' @param dt `[Lexis]` (no default)
+  #'
+  #' A `Lexis` dataset (`[Epi::Lexis]` / `[Lexis_dt]`).
   # @codedoc_comment_block surv_arg_dt
   assert_is_arg_dt(dt, lexis = TRUE)
   #' @param merge_dt `[data.table, NULL]` (no default or default `NULL`)

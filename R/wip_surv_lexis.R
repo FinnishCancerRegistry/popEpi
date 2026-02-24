@@ -79,7 +79,8 @@ surv_lexis <- function(
     )
   }
   # @codedoc_comment_block popEpi::surv_lexis
-  # Compute survival estimates on a `Lexis` dataset (`[Epi::Lexis]`).
+  # Compute survival estimates on a `Lexis` dataset
+  # (`[Epi::Lexis]` / `[Lexis_dt]`).
   #
   # Performs the following steps:
   #
