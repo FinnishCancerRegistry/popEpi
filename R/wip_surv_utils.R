@@ -146,26 +146,35 @@ surv_box_id__ <- function(
   return(invisible(dt[]))
 }
 
-
-surv_crop <- function(dt, breaks) {
-  # "crop", e.g.
-  # breaks = list(ts_fut = seq(0, 5, 1 / 12), ts_cal = 2000:2010) means that
-  # follow-up starts only at ts_cal = 2000 at the earliest (period analysis).
-  min_by_ts <- lapply(breaks, min)
-  offset <- do.call(pmax, lapply(names(breaks), function(ts_col_nm) {
-    dt[[ts_col_nm]] - pmax(dt[[ts_col_nm]], min_by_ts[[ts_col_nm]])
+lexis_crop <- function(dt, breaks) {
+  assert_is_arg_dt(dt = dt, lexis = TRUE)
+  delay_entry <- do.call(pmax, lapply(names(breaks), function(ts_col_nm) {
+    entry <- dt[[ts_col_nm]]
+    cropped_entry <- min(breaks[[ts_col_nm]])
+    pmax(entry, cropped_entry) - entry
+  }))
+  earlify_exit <- do.call(pmax, lapply(names(breaks), function(ts_col_nm) {
+    exit <- dt[[ts_col_nm]] + dt[["lex.dur"]]
+    cropped_exit <- max(breaks[[ts_col_nm]])
+    exit - pmin(exit, cropped_exit)
   }))
   data.table::set(
     x = dt,
-    j = names(breaks),
-    value = lapply(names(breaks), function(ts_col_nm) {
-      dt[[ts_col_nm]] + offset
+    j = Epi::timeScales(dt),
+    value = lapply(Epi::timeScales(dt), function(ts_col_nm) {
+      dt[[ts_col_nm]] + delay_entry
     })
   )
   data.table::set(
     x = dt,
     j = "lex.dur",
-    value = dt[["lex.dur"]] - offset
+    value = dt[["lex.dur"]] - delay_entry - earlify_exit
+  )
+  data.table::set(
+    x = dt,
+    i = which(dt[["lex.dur"]] < 0),
+    j = c(Epi::timeScales(dt), "lex.dur"),
+    value = NA
   )
   return(invisible(dt[]))
 }
