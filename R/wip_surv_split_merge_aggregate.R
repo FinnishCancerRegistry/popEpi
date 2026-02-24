@@ -64,29 +64,33 @@ surv_aggre_exprs_table__ <- function() {
 }
 
 surv_aggregate_one_stratum__ <- function(
-  sub_dt,
+  dt_stratum_subset_split,
   box_dt,
   aggre_exprs,
   call_env,
   eval_env,
   stratum_eval_env
 ) {
-  assert_is_arg_dt(sub_dt, lexis = TRUE)
-  # `sub_dt` should be keyed by e.g. c("lex.id", "ts_cal", "ts_fut") or
+  assert_is_arg_dt(dt_stratum_subset_split, lexis = TRUE)
+  # `dt_stratum_subset_split` should be keyed by e.g.
+  # c("lex.id", "ts_cal", "ts_fut") or
   # c("lex.id", "ts_fut") or c("lex.id", "ts_fut", "ts_cal") etc if
-  # `box_ts_col_nms == "ts_fut"`. in particular `sub_dt` must not be keyed
+  # `box_ts_col_nms == "ts_fut"`. in particular `dt_stratum_subset_split`
+  # must not be keyed
   # by anything weird before the time scales. after the time scales it can be
   # keyed by whatever.
   box_ts_col_nms <- names(box_dt)[grepl("_stop$", names(box_dt))]
   box_ts_col_nms <- sub("_stop$", "", box_ts_col_nms)
-  lexis_ts_col_nms <- attr(sub_dt, "time.scales")
-  stopifnot(
-    data.table::key(sub_dt)[1] == "lex.id",
-    length(data.table::key(sub_dt)) >= length(box_ts_col_nms) + 1L,
-    data.table::key(sub_dt)[2:(length(box_ts_col_nms) + 1L)] %in% union(
-      box_ts_col_nms, lexis_ts_col_nms
+  lexis_ts_col_nms <- attr(dt_stratum_subset_split, "time.scales")
+  if (nrow(dt_stratum_subset_split) > 0) {
+    stopifnot(
+      data.table::key(dt_stratum_subset_split)[1] == "lex.id",
+      length(data.table::key(dt_stratum_subset_split)) >= length(box_ts_col_nms) + 1L,
+      data.table::key(dt_stratum_subset_split)[2:(length(box_ts_col_nms) + 1L)] %in% union(
+        box_ts_col_nms, lexis_ts_col_nms
+      )
     )
-  )
+  }
   assert_is_arg_box_dt(box_dt)
   assert_is_arg_aggre_exprs(aggre_exprs)
   stopifnot(
@@ -95,6 +99,8 @@ surv_aggregate_one_stratum__ <- function(
     is.environment(stratum_eval_env)
   )
 
+  work_dt <- data.table::setDT(as.list(dt_stratum_subset_split))
+  data.table::setkeyv(work_dt, data.table::key(dt_stratum_subset_split))
   expr_obj_nms <- unique(unlist(lapply(aggre_exprs, all.vars)))
   work_dt <- data.table::setDT(as.list(sub_dt))
   data.table::setkeyv(work_dt, data.table::key(sub_dt))
@@ -197,7 +203,7 @@ surv_aggregate_one_stratum__ <- function(
   })
   data.table::setkeyv(work_dt, c(data.table::key(work_dt), "box_id"))
   agg_expr <- substitute(
-    sub_dt[
+    dt_stratum_subset_split[
       j = EXPR,
       keyby = "box_id"
     ],
@@ -209,7 +215,7 @@ surv_aggregate_one_stratum__ <- function(
   env[["call_env"]] <- call_env
   env[["eval_env"]] <- eval_env
   env[["stratum_eval_env"]] <- stratum_eval_env
-  env[["sub_dt"]] <- work_dt
+  env[["dt_stratum_subset_split"]] <- work_dt
   out <- eval(agg_expr, envir = work_dt, enclos = env)
   out <- out[
     i = box_dt,
@@ -399,19 +405,19 @@ surv_split_merge_aggregate_by_stratum <- function(
       }
       if (.N == 0) {
         # for some reason .SD is a one-row data.table with all NA values
-        sub_dt <- dt[0L, ]
+        dt_stratum_subset <- dt[0L, ]
       } else {
-        sub_dt <- .SD
+        dt_stratum_subset <- .SD
       }
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
       #   + Run
       #     `popEpi::splitMulti` on the subset of `dt` which contains data from
       #     the current stratum.
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
-      sub_dt <- data.table::setDT(as.list(sub_dt))
-      lexis_set__(dt = sub_dt, lexis_ts_col_nms = lexis_ts_col_nms)
-      sub_dt <- surv_split__(
-        dt = sub_dt,
+      dt_stratum_subset <- data.table::setDT(as.list(dt_stratum_subset))
+      lexis_set__(dt = dt_stratum_subset, lexis_ts_col_nms = lexis_ts_col_nms)
+      dt_stratum_subset_split <- surv_split__(
+        dt = dt_stratum_subset,
         breaks = breaks,
         merge = TRUE
       )
@@ -434,7 +440,7 @@ surv_split_merge_aggregate_by_stratum <- function(
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
       if (!is.null(merge_dt)) {
         surv_merge(
-          dt = sub_dt,
+          dt = dt_stratum_subset_split,
           merge_dt = merge_dt,
           merge_dt_by = merge_dt_by,
           merge_dt_harmonisers = merge_dt_harmonisers
@@ -459,7 +465,7 @@ surv_split_merge_aggregate_by_stratum <- function(
       #     contains one row per interval of `aggre_ts_col_nms`.
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
       out <- surv_aggregate_one_stratum__(
-        sub_dt = sub_dt,
+        dt_stratum_subset_split = dt_stratum_subset_split,
         box_dt = box_dt,
         aggre_exprs = aggre_exprs,
         eval_env = eval_env,
