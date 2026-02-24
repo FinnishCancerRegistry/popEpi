@@ -63,6 +63,49 @@ surv_aggre_exprs_table__ <- function() {
   return(dt)
 }
 
+SPLIT_LEXIS_COLUMN_EXPRS__ <- list(
+  # tricky. ts_fut and box_id live in work_dt and box_dt has to be reachable
+  # from stratum_eval_env.
+  in_follow_up_at_interval_start = quote(
+    ts_fut == box_dt[[ts_fut_start_col_nm]][box_id]
+  ),
+  entered_late_during_interval = quote(
+    ts_fut > box_dt[[ts_fut_start_col_nm]][box_id]
+  ),
+  left_early_during_interval = quote(
+    {
+      out <- duplicated(lex.id, fromLast = TRUE) # nolint
+      out[out] <- lex.Cst[out] == lex.Xst[out]
+      out[out] <- round(ts_fut[out] + lex.dur[out], 10) <
+        round(box_dt[[ts_fut_stop_col_nm]][box_id[out]], 10)
+      out
+    }
+  ),
+  pp = quote(
+    {
+      surv_pohar_perme_weight__(
+        dt = work_dt,
+        ts_fut_breaks = eval_env[["breaks"]][[ts_fut_col_nm]],
+        ts_fut_col_nm = ts_fut_col_nm,
+        hazard_col_nm = "h_exp"
+      )
+    }
+  )
+)
+split_lexis_column_exprs_table__ <- function() {
+  dt <- data.table::data.table(
+    "Name" = surv_estimate_expression_table_clean__(
+      names(SPLIT_LEXIS_COLUMN_EXPRS__)
+    ),
+    "Expression" = vapply(
+      SPLIT_LEXIS_COLUMN_EXPRS__,
+      surv_estimate_expression_table_clean__,
+      character(1L)
+    )
+  )
+  return(dt)
+}
+
 surv_aggregate_one_stratum__ <- function(
   dt_stratum_subset_split,
   box_dt,
@@ -137,65 +180,28 @@ surv_aggregate_one_stratum__ <- function(
     ts_fut_col_nm <- eval_env[["aggre_ts_col_nms"]][
       length(eval_env[["aggre_ts_col_nms"]])
     ]
-    add_expr_list <- list(
-      # tricky. ts_fut and box_id live in work_dt and box_dt has to be reachable
-      # from stratum_eval_env.
-      in_follow_up_at_interval_start = substitute(
-        ts_fut == box_dt[[ts_fut_start_col_nm]][box_id],
-        list(
-          ts_fut = parse(text = ts_fut_col_nm)[[1]],
-          ts_fut_start_col_nm = paste0(ts_fut_col_nm, "_start")
-        )
-      ),
-      entered_late_during_interval = substitute(
-        ts_fut > box_dt[[ts_fut_start_col_nm]][box_id],
-        list(
-          ts_fut = parse(text = ts_fut_col_nm)[[1]],
-          ts_fut_start_col_nm = paste0(ts_fut_col_nm, "_start")
-        )
-      ),
-      had_event_during_interval = quote(lex.Cst != lex.Xst),
-      left_early_during_interval = substitute(
-        {
-          out <- duplicated(lex.id, fromLast = TRUE) # nolint
-          out[out] <- lex.Cst[out] == lex.Xst[out]
-          out[out] <- round(ts_fut[out] + lex.dur[out], 10) <
-            round(box_dt[[ts_fut_stop_col_nm]][box_id[out]], 10)
-          out
-        },
-        list(
-          ts_fut = parse(text = ts_fut_col_nm)[[1]],
-          ts_fut_stop_col_nm = paste0(ts_fut_col_nm, "_stop")
-        )
-      ),
-      pp = substitute(
-        {
-          lexis_set__(dt = work_dt, lexis_ts_col_nms = lexis_ts_col_nms)
-          out <- surv_pohar_perme_weight__(
-            dt = work_dt,
-            ts_fut_breaks = eval_env[["breaks"]][[
-              eval_env[["aggre_ts_col_nms"]]
-            ]],
-            ts_fut_col_nm = ts_fut_col_nm,
-            hazard_col_nm = hazard_col_nm
-          )
-          data.table::setDT(work_dt)
-          out
-        },
-        list(
-          ts_fut_col_nm = ts_fut_col_nm,
-          hazard_col_nm = setdiff(
-            names(eval_env[["merge_dt"]]),
-            eval_env[["merge_dt_by"]]
-          )[1]
-        )
-      )
+    substitute_env <- list(
+      ts_fut = parse(text = ts_fut_col_nm)[[1]],
+      ts_fut_col_nm = ts_fut_col_nm,
+      ts_fut_start_col_nm = paste0(ts_fut_col_nm, "_start"),
+      ts_fut_stop_col_nm = paste0(ts_fut_col_nm, "_stop")
     )
-    lapply(intersect(names(add_expr_list), expr_obj_nms), function(col_nm) {
+
+    add_expr_list <- SPLIT_LEXIS_COLUMN_EXPRS__[intersect(
+      expr_obj_nms,
+      names(SPLIT_LEXIS_COLUMN_EXPRS__)
+    )]
+    lapply(names(add_expr_list), function(col_nm) {
+      expr <- add_expr_list[[col_nm]]
+      expr <- substitute(
+        substitute(expr, substitute_env),
+        list(expr = expr)
+      )
+      expr <- eval(expr, list(substitute_env = substitute_env))
       data.table::set(
         x = work_dt,
         j = col_nm,
-        value = eval(add_expr_list[[col_nm]], work_dt, add_expr_eval_env)
+        value = eval(expr, work_dt, add_expr_eval_env)
       )
       NULL
     })
