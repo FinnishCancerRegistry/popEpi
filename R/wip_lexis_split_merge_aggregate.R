@@ -110,6 +110,7 @@ lexis_aggregate_one_stratum__ <- function(
   dt_stratum_subset_split,
   box_dt,
   aggre_exprs,
+  split_lexis_column_exprs = NULL,
   call_env,
   eval_env,
   stratum_eval_env
@@ -136,6 +137,7 @@ lexis_aggregate_one_stratum__ <- function(
   }
   assert_is_arg_box_dt(box_dt)
   assert_is_arg_aggre_exprs(aggre_exprs)
+  assert_is_arg_split_lexis_column_exprs(split_lexis_column_exprs)
   stopifnot(
     is.environment(call_env),
     is.environment(eval_env),
@@ -152,29 +154,6 @@ lexis_aggregate_one_stratum__ <- function(
   #    * First collect variables mentioned in `aggre_exprs` using `[all.vars]`.
   # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
   expr_obj_nms <- unique(unlist(lapply(aggre_exprs, all.vars)))
-  # lapply(lexis_ts_col_nms, function(ts_col_nm) {
-  #   add_col_nms <- unique(expr_obj_nms[
-  #     grepl(sprintf("^%s_((lead)|(lag))[0-9]+$", ts_col_nm), expr_obj_nms)
-  #   ])
-  #   lapply(add_col_nms, function(add_col_nm) {
-  #     settings <- list(type = "lead")
-  #     if (grepl("lag", add_col_nm)) {
-  #       settings[["type"]] <- "lag"
-  #     }
-  #     settings[["n"]] <- as.integer(sub("^[^0-9]+", "", add_col_nm))
-  #     work_dt[
-  #       #' @importFrom data.table := .SD
-  #       j = (add_col_nm) := .SD[[ts_col_nm]] - data.table::shift(
-  #         x = .SD[[ts_col_nm]],
-  #         n = settings[["n"]],
-  #         type = settings[["type"]],
-  #         fill = NA_integer_
-  #       ),
-  #       .SDcols = ts_col_nm,
-  #       by = "lex.id"
-  #     ]
-  #   })
-  # })
   surv_box_id__(dt = work_dt, box_dt = box_dt)
   add_expr_eval_env <- environment()
   local({
@@ -201,6 +180,7 @@ lexis_aggregate_one_stratum__ <- function(
       expr_obj_nms,
       names(SPLIT_LEXIS_COLUMN_EXPRS__)
     )]
+    add_expr_list <- c(add_expr_list, split_lexis_column_exprs)
     lapply(names(add_expr_list), function(col_nm) {
       expr <- add_expr_list[[col_nm]]
       expr <- substitute(
@@ -285,6 +265,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   merge_dt_harmonisers = NULL,
   subset = NULL,
   weight_col_nm = NULL,
+  split_lexis_column_exprs = NULL,
   optional_steps = NULL
 ) {
   #' @param dt `[Lexis]` (no default)
@@ -349,6 +330,19 @@ lexis_split_merge_aggregate_by_stratum <- function(
     aggre_exprs = aggre_exprs,
     weight_col_nm = weight_col_nm
   )
+
+  #' @param split_lexis_column_exprs `[NULL, list]`
+  #'
+  #' Additional columns to create in `Lexis` data after splitting and before
+  #' aggregation. Any column you create this way can be the used in an
+  #' aggregation expression.
+  #'
+  #' - `NULL`: Don't create additional columns.
+  #' - `list`: Each element is named and an R expression object, e.g.
+  #'   `list(my_col = quote(my_function(lex.Cst, lex.Xst)))`.
+  #'   See **Details** for more information on when and how these expressions
+  #'   are evaluated.
+  assert_is_arg_split_lexis_column_exprs(split_lexis_column_exprs)
 
   #' @param optional_steps `[NULL, list]` (default `NULL`)
   #'
@@ -497,6 +491,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
         dt_stratum_subset_split = dt_stratum_subset_split,
         box_dt = box_dt,
         aggre_exprs = aggre_exprs,
+        split_lexis_column_exprs = split_lexis_column_exprs,
         eval_env = eval_env,
         call_env = call_env,
         stratum_eval_env = stratum_eval_env

@@ -15,6 +15,7 @@ lexis_split_merge_aggregate_by_stratum(
   merge_dt_harmonisers = NULL,
   subset = NULL,
   weight_col_nm = NULL,
+  split_lexis_column_exprs = NULL,
   optional_steps = NULL
 )
 }
@@ -90,6 +91,19 @@ See \strong{Details} for where this comes into play.
 \itemize{
 \item \code{NULL}: No individual weighting is performed.
 \item \code{character}: This is the name of the column. E.g. \code{"my_iw"}.
+}}
+
+\item{split_lexis_column_exprs}{\verb{[NULL, list]}
+
+Additional columns to create in \code{Lexis} data after splitting and before
+aggregation. Any column you create this way can be the used in an
+aggregation expression.
+\itemize{
+\item \code{NULL}: Don't create additional columns.
+\item \code{list}: Each element is named and an R expression object, e.g.
+\code{list(my_col = quote(my_function(lex.Cst, lex.Xst)))}.
+See \strong{Details} for more information on when and how these expressions
+are evaluated.
 }}
 
 \item{optional_steps}{\verb{[NULL, list]} (default \code{NULL})

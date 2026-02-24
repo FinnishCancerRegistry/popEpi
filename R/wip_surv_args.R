@@ -389,3 +389,12 @@ handle_arg_estimators <- function(estimators, dt) {
   data.table::setDT(estimator_dt)
   return(estimator_dt[])
 }
+
+assert_is_arg_split_lexis_column_exprs <- function(split_lexis_column_exprs) {
+  stopifnot(
+    inherits(split_lexis_column_exprs, "list"),
+    vapply(split_lexis_column_exprs, is.language, logical(1L)),
+    data.table::uniqueN(split_lexis_column_exprs) ==
+      length(split_lexis_column_exprs)
+  )
+}
