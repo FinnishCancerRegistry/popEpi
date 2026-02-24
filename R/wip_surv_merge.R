@@ -108,7 +108,6 @@ surv_merge <- function(
   merge_dt,
   merge_dt_by,
   merge_dt_harmonisers = NULL,
-  merge_dt_default_harmoniser_lex_dur_multiplier = 0.5,
   optional_steps = NULL
 ) {
   # @codedoc_comment_block popEpi::surv_merge
@@ -224,21 +223,10 @@ surv_merge <- function(
           "Please supply argument `merge_dt_harmonisers` yourself."
         )
       }
-      #' @param merge_dt_default_harmoniser_lex_dur_multiplier `[numeric]`
-      #' (default 0.5)
-      #'
-      #' The default 0.5 causes such default harmonisers to be created that
-      #' each record's each time scale is used at the middle of the observed
-      #' record. E.g. with `ts_age = 55.9` and `lex.dur = 0.6` we arrive at
-      #' `ts_age = 55.9 + 0.6 * 0.2 = 56.2`, which is then harmonised with `cut`
-      #' to `ts_age = 56` for the purpose of merging with `merge_dt`. The
-      #' middle of the record is a rational choice when a record covers multiple
-      #' strata of `merge_dt`, at least when merging population expected
-      #' hazards.
       surv_merge_default_harmoniser_arg_list <- list(
         col_nm = col_nm,
         cut_breaks = cut_breaks,
-        lex_dur_multiplier = merge_dt_default_harmoniser_lex_dur_multiplier
+        lex_dur_multiplier = 0.5
       )
       # @codedoc_comment_block popEpi::surv_merge
       # - Run
@@ -411,7 +399,18 @@ surv_merge_survival <- function(
     merge_dt = survival_dt,
     merge_dt_by = survival_dt_by,
     merge_dt_harmonisers = survival_dt_harmonisers,
-    merge_dt_default_harmoniser_lex_dur_multiplier = 1.0
+    optional_steps = list(
+      pre_default_harmoniser_creation = function(
+        eval_env,
+        call_env,
+        lapply_eval_env
+      ) {
+        lapply_eval_env[["surv_merge_default_harmoniser_arg_list"]][[
+          "lex_dur_multiplier"
+        ]] <- 1.0
+        NULL
+      }
+    )
   )
   value_col_nms <- setdiff(names(survival_dt), survival_dt_by)
   work_dt <- data.table::setDT(as.list(dt)[value_col_nms])

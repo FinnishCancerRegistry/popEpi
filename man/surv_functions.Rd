@@ -43,7 +43,6 @@ surv_merge(
   merge_dt,
   merge_dt_by,
   merge_dt_harmonisers = NULL,
-  merge_dt_default_harmoniser_lex_dur_multiplier = 0.5,
   optional_steps = NULL
 )
 }
@@ -205,18 +204,6 @@ and \code{merge_dt}. See \strong{Examples}.
 \item{aggre_exprs}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{subset}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
-
-\item{merge_dt_default_harmoniser_lex_dur_multiplier}{\verb{[numeric]}
-(default 0.5)
-
-The default 0.5 causes such default harmonisers to be created that
-each record's each time scale is used at the middle of the observed
-record. E.g. with \code{ts_age = 55.9} and \code{lex.dur = 0.6} we arrive at
-\code{ts_age = 55.9 + 0.6 * 0.2 = 56.2}, which is then harmonised with \code{cut}
-to \code{ts_age = 56} for the purpose of merging with \code{merge_dt}. The
-middle of the record is a rational choice when a record covers multiple
-strata of \code{merge_dt}, at least when merging population expected
-hazards.}
 
 \item{optional_steps}{\verb{[NULL, list]} (default \code{NULL})
 
