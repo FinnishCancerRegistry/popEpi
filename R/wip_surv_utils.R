@@ -126,7 +126,7 @@ surv_box_id__ <- function(
     )
   })
   names(breaks) <- split_ts_col_nms
-  surv_merge(
+  lexis_merge(
     dt = dt,
     merge_dt = merge_dt,
     merge_dt_by = split_ts_col_nms,

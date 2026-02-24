@@ -1037,7 +1037,7 @@ surv_lexis_S_exp_e1_pch_est <- function(
     data = e1dt,
     breaks = breaks[ts_fut_col_nm]
   )
-  surv_merge(
+  lexis_merge(
     dt = e1dt,
     merge_dt = merge_dt,
     merge_dt_by = merge_dt_by

@@ -55,9 +55,9 @@ surv_merge_default_harmoniser__ <- function(
   )
 }
 
-#' @eval codedoc::pkg_doc_fun("popEpi::surv_merge", "surv_functions")
+#' @eval codedoc::pkg_doc_fun("popEpi::lexis_merge", "surv_functions")
 #' @examples
-#' # popEpi::surv_merge
+#' # popEpi::lexis_merge
 #' lexis <- Epi::Lexis(
 #'   entry = list(ts_fut = 0.0, ts_cal = 2010.3, ts_age = 56.8),
 #'   exit = list(ts_cal = 2024.9999),
@@ -75,7 +75,7 @@ surv_merge_default_harmoniser__ <- function(
 #'   j = "merge_value",
 #'   value = runif(nrow(my_merge_dt))
 #' )
-#' popEpi::surv_merge(
+#' popEpi::lexis_merge(
 #'   dt = lexis,
 #'   merge_dt = my_merge_dt,
 #'   merge_dt_by = c("sex", "ts_age", "ts_cal")
@@ -89,7 +89,7 @@ surv_merge_default_harmoniser__ <- function(
 #'   j = "merge_value",
 #'   value = NULL
 #' )
-#' popEpi::surv_merge(
+#' popEpi::lexis_merge(
 #'   dt = lexis,
 #'   merge_dt = my_merge_dt,
 #'   merge_dt_by = c("sex", "ts_age", "ts_cal"),
@@ -103,21 +103,21 @@ surv_merge_default_harmoniser__ <- function(
 #'   !is.na(lexis[["merge_value"]])
 #' )
 #'
-surv_merge <- function(
+lexis_merge <- function(
   dt,
   merge_dt,
   merge_dt_by,
   merge_dt_harmonisers = NULL,
   optional_steps = NULL
 ) {
-  # @codedoc_comment_block popEpi::surv_merge
-  # `popEpi::surv_merge` can be used to merge additional information into
+  # @codedoc_comment_block popEpi::lexis_merge
+  # `popEpi::lexis_merge` can be used to merge additional information into
   # `Lexis` data, allowing the use of the `Lexis` time scales in the
   # merge. The typical use-case is to split `Lexis` data and then merge
   # population (expected) hazards to the subject-intervals.
-  # `popEpi::surv_merge` performs the following steps:
+  # `popEpi::lexis_merge` performs the following steps:
   #
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   call_env <- parent.frame(1L)
   eval_env <- environment()
   #' @param optional_steps `[NULL, list]` (default `NULL`)
@@ -128,24 +128,24 @@ surv_merge <- function(
   #' - `list`: Each element is named and a function. See **Details**
   #'   For what each functions you can make use of what their arguments should
   #'   be.
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   # - Run
   #   `optional_steps[["on_entry"]](call_env = call_env, eval_env = eval_env)`
   #   if that `optional_steps` element exists. `call_env` is the environment
   #   where this function was called and `eval_env` is the temporary environment
   #   in which the commands that this function consists of are evaluated.
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   if ("on_entry" %in% names(optional_steps)) {
     optional_steps[["on_entry"]](
       call_env = call_env,
       eval_env = eval_env
     )
   }
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   # - Run
   #   `on.exit(optional_steps[["on_exit"]](call_env = call_env, eval_env = eval_env))`
   #   if that `optional_steps` element exists.
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   if ("on_exit" %in% names(optional_steps)) {
     on.exit(optional_steps[["on_exit"]](
       call_env = call_env,
@@ -153,7 +153,7 @@ surv_merge <- function(
     ))
   }
   # @codedoc_comment_block surv_arg_dt
-  # - `surv_merge`: A `Lexis` dataset (`[Epi::Lexis]`).
+  # - `lexis_merge`: A `Lexis` dataset (`[Epi::Lexis]`).
   # @codedoc_comment_block surv_arg_dt
   assert_is_arg_dt(dt, lexis = TRUE)
   #' @param merge_dt `[data.table, NULL]` (no default or default `NULL`)
@@ -198,26 +198,26 @@ surv_merge <- function(
   #'   element must have a name corresponding to a column name in both `dt`
   #'   and `merge_dt`. See **Examples**.
   if (is.null(merge_dt_harmonisers)) {
-    # @codedoc_comment_block popEpi::surv_merge
+    # @codedoc_comment_block popEpi::lexis_merge
     # - If `is.null(merge_dt_harmonisers)`, attempt to
     #   automatically determine the harmonisers making use of `cut` by looking
     #   at the unique
     #   values of the time scale to merge by in `merge_dt` (e.g. calendar year
     #   in `ts_cal`):
-    # @codedoc_comment_block popEpi::surv_merge
+    # @codedoc_comment_block popEpi::lexis_merge
     merge_dt_harmonisers <- lapply(merge_ts_col_nms, function(col_nm) {
       cut_breaks <- sort(unique(merge_dt[[col_nm]]))
       if (is.integer(cut_breaks) || is.double(cut_breaks)) {
-        # @codedoc_comment_block popEpi::surv_merge
+        # @codedoc_comment_block popEpi::lexis_merge
         # @codedoc_insert_comment_block surv_merge_guess_breaks__
-        # @codedoc_comment_block popEpi::surv_merge
+        # @codedoc_comment_block popEpi::lexis_merge
         cut_breaks <- surv_merge_guess_breaks__(cut_breaks)
       } else {
-        # @codedoc_comment_block popEpi::surv_merge
+        # @codedoc_comment_block popEpi::lexis_merge
         #   + If `merge_dt[[col_nm]]` does not contain numbers, an error is
         #     raised because we don't know how to automatically form a
         #     harmoniser.
-        # @codedoc_comment_block popEpi::surv_merge
+        # @codedoc_comment_block popEpi::lexis_merge
         stop(
           "Cannot automatically determine `merge_dt_harmonisers$", col_nm, "`;",
           "Please supply argument `merge_dt_harmonisers` yourself."
@@ -228,14 +228,14 @@ surv_merge <- function(
         cut_breaks = cut_breaks,
         lex_dur_multiplier = 0.5
       )
-      # @codedoc_comment_block popEpi::surv_merge
+      # @codedoc_comment_block popEpi::lexis_merge
       # - Run
       #   `optional_steps[["pre_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_eval_env = lapply_eval_env)`
       #   if that `optional_steps` element exists.
       #   Here `lapply_eval_env` is similar to `eval_env` but it is the
       #   evaluation environment of the anonymous function passed to `lapply`
       #   which attempts to handle each harmoniser.
-      # @codedoc_comment_block popEpi::surv_merge
+      # @codedoc_comment_block popEpi::lexis_merge
       lapply_eval_env <- environment()
       if ("pre_default_harmoniser_creation" %in% names(optional_steps)) {
         optional_steps[["pre_default_harmoniser_creation"]](
@@ -244,9 +244,9 @@ surv_merge <- function(
           lapply_env = lapply_eval_env
         )
       }
-      # @codedoc_comment_block popEpi::surv_merge
+      # @codedoc_comment_block popEpi::lexis_merge
       # @codedoc_insert_comment_block surv_merge_default_harmoniser__
-      # @codedoc_comment_block popEpi::surv_merge
+      # @codedoc_comment_block popEpi::lexis_merge
       do.call(
         surv_merge_default_harmoniser__,
         surv_merge_default_harmoniser_arg_list,
@@ -255,27 +255,27 @@ surv_merge <- function(
     })
     names(merge_dt_harmonisers) <- merge_ts_col_nms
   }
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   # - Run
   #   `optional_steps[["post_merge_dt_harmonisers"]](call_env = call_env, eval_env = eval_env)`
   #   if that `optional_steps` element exists.
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   if ("post_merge_dt_harmonisers" %in% names(optional_steps)) {
     optional_steps[["post_merge_dt_harmonisers"]](
       call_env = call_env,
       eval_env = eval_env
     )
   }
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   # - Armed with either user-defined or automatically created
   #   `merge_dt_harmonisers`, they are each evaluated to create a temporary
   #   `data.table` with harmonised data from `dt`. This is performed via
   #   `eval` with `envir = dt` and `enclos = call_env` where `call_env` is the
-  #   environment where `popEpi::surv_merge` was called. Of course if a column
+  #   environment where `popEpi::lexis_merge` was called. Of course if a column
   #   has no harmoniser at this point then it is used as-is. For instance there
   #   is no need to harmonise stratifying columns because they are not changed
   #   by splitting the `Lexis` data.
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   join_dt <- data.table::setDT(lapply(merge_dt_by, function(col_nm) {
     if (col_nm %in% names(merge_dt_harmonisers)) {
       eval(
@@ -289,23 +289,23 @@ surv_merge <- function(
   }))
   data.table::setnames(join_dt, merge_dt_by)
   merge_value_col_nms <- setdiff(names(merge_dt), merge_dt_by)
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   # - Run
   #   `optional_steps[["post_harmonisation"]](call_env = call_env, eval_env = eval_env)`
   #   if that `optional_steps` element exists.
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   if ("post_harmonisation" %in% names(optional_steps)) {
     optional_steps[["post_harmonisation"]](
       call_env = call_env,
       eval_env = eval_env
     )
   }
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   # - Then we perform the actual merge between `merge_dt` and the harmonised
   #   data. This merges in data from `merge_dt` into every row of `dt` in-place.
   #   So `dt` is modified and no additional copy is taken for the sake of
   #   efficiency.
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   data.table::set(
     x = dt,
     j = merge_value_col_nms,
@@ -317,25 +317,25 @@ surv_merge <- function(
       .SDcols = merge_value_col_nms
     ]
   )
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   # - Run
   #   `optional_steps[["post_merge"]](call_env = call_env, eval_env = eval_env)`
   #   if that `optional_steps` element exists.
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   if ("post_merge" %in% names(optional_steps)) {
     optional_steps[["post_merge"]](
       call_env = call_env,
       eval_env = eval_env
     )
   }
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   # - Each merged-in column from `merge_dt` (all columns not in `merge_dt_by`)
   #   are inspected for missing values. If there are any, an error is raised.
   #   This usually occurs if `merge_dt` does not contain data for all data in
   #   `dt`. For instance it only covers years 1950-2020 but `dt` contains also
   #   data for 2021. This error helps you to spot those problems early instead
   #   of producing nonsense results downstream.
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   for (merge_value_col_nm in merge_value_col_nms) {
     is_missing <- is.na(dt[[merge_value_col_nm]])
     if (any(is_missing)) {
@@ -345,14 +345,14 @@ surv_merge <- function(
            "See the table printed above.")
     }
   }
-  # @codedoc_comment_block popEpi::surv_merge
+  # @codedoc_comment_block popEpi::lexis_merge
   # - Returns `dt` invisibly after adding columns from
   #   `merge_dt` into `dt` in-place, without taking a copy.
-  # @codedoc_comment_block popEpi::surv_merge
-  # @codedoc_comment_block return(popEpi::surv_merge)
+  # @codedoc_comment_block popEpi::lexis_merge
+  # @codedoc_comment_block return(popEpi::lexis_merge)
   # Returns `dt` invisibly after adding columns from
   # `merge_dt` into `dt` in-place, without taking a copy.
-  # @codedoc_comment_block return(popEpi::surv_merge)
+  # @codedoc_comment_block return(popEpi::lexis_merge)
   return(invisible(dt[]))
 }
 
@@ -394,7 +394,7 @@ surv_merge_survival <- function(
     j = "hazard" := diff(c(0.0, .SD[["cumulative_hazard"]])),
     by = setdiff(survival_dt_by, ts_fut_col_nm)
   ]
-  surv_merge(
+  lexis_merge(
     dt = dt,
     merge_dt = survival_dt,
     merge_dt_by = survival_dt_by,

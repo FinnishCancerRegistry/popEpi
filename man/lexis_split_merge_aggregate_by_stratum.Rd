@@ -64,11 +64,11 @@ Names of \code{Lexis} time scales in \code{dt} by which to aggregate results.
 \item \code{character}: Aggregate by these time scales. E.g. \code{"ts_fut"}.
 }}
 
-\item{merge_dt}{Passed to \verb{[surv_merge]}.}
+\item{merge_dt}{Passed to \verb{[lexis_merge]}.}
 
-\item{merge_dt_by}{Passed to \verb{[surv_merge]}.}
+\item{merge_dt_by}{Passed to \verb{[lexis_merge]}.}
 
-\item{merge_dt_harmonisers}{Passed to \verb{[surv_merge]}.}
+\item{merge_dt_harmonisers}{Passed to \verb{[lexis_merge]}.}
 
 \item{subset}{\verb{[NULL, logical, integer, data.table]} (default \code{NULL})
 
@@ -198,7 +198,7 @@ the current stratum.
 \code{optional_steps[["stratum_post_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
 \item Run
-\code{surv_merge} with \code{merge_dt}, \code{merge_dt_by}, and
+\code{lexis_merge} with \code{merge_dt}, \code{merge_dt_by}, and
 \code{merge_dt_harmonisers}, if \code{merge_dt} has been supplied.
 \item Run
 \code{optional_steps[["stratum_post_merge"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}

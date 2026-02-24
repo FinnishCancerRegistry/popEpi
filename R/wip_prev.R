@@ -248,7 +248,7 @@ prev_lexis <- function(
       survival_dt[[names(breaks)[2]]] + survival_dt[["d"]]
     )
   )
-  surv_merge(
+  lexis_merge(
     dt = work_dt,
     merge_dt = survival_dt,
     merge_dt_by = survival_dt_by,

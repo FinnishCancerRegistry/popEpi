@@ -6,7 +6,7 @@
 \alias{surv_individual_weights}
 \alias{surv_functions}
 \alias{surv_lexis}
-\alias{surv_merge}
+\alias{lexis_merge}
 \title{Survival Time Statistics}
 \usage{
 surv_estimate(
@@ -38,7 +38,7 @@ surv_lexis(
   weights = NULL
 )
 
-surv_merge(
+lexis_merge(
   dt,
   merge_dt,
   merge_dt_by,
@@ -50,7 +50,7 @@ surv_merge(
 \item{dt}{\itemize{
 \item \code{surv_estimate}: A \code{data.table}.
 \item \code{surv_individual_weights}: A \code{data.frame} / \code{data.table}.
-\item \code{surv_merge}: A \code{Lexis} dataset (\verb{[Epi::Lexis]}).
+\item \code{lexis_merge}: A \code{Lexis} dataset (\verb{[Epi::Lexis]}).
 }}
 
 \item{ts_fut_col_nm}{\verb{[character]} (no default)
@@ -231,7 +231,7 @@ A vector of weights is returned.
 
 Returns a \code{data.table} as produced by \code{surv_estimate}.
 
-\strong{popEpi::surv_merge}
+\strong{popEpi::lexis_merge}
 
 Returns \code{dt} invisibly after adding columns from
 \code{merge_dt} into \code{dt} in-place, without taking a copy.
@@ -380,13 +380,13 @@ stratified by sex and contains individually weighted statistics.
 }
 
 
-\strong{popEpi::surv_merge}
+\strong{popEpi::lexis_merge}
 
-\code{popEpi::surv_merge} can be used to merge additional information into
+\code{popEpi::lexis_merge} can be used to merge additional information into
 \code{Lexis} data, allowing the use of the \code{Lexis} time scales in the
 merge. The typical use-case is to split \code{Lexis} data and then merge
 population (expected) hazards to the subject-intervals.
-\code{popEpi::surv_merge} performs the following steps:
+\code{popEpi::lexis_merge} performs the following steps:
 \itemize{
 \item Run
 \code{optional_steps[["on_entry"]](call_env = call_env, eval_env = eval_env)}
@@ -442,7 +442,7 @@ if that \code{optional_steps} element exists.
 \code{merge_dt_harmonisers}, they are each evaluated to create a temporary
 \code{data.table} with harmonised data from \code{dt}. This is performed via
 \code{eval} with \code{envir = dt} and \code{enclos = call_env} where \code{call_env} is the
-environment where \code{popEpi::surv_merge} was called. Of course if a column
+environment where \code{popEpi::lexis_merge} was called. Of course if a column
 has no harmoniser at this point then it is used as-is. For instance there
 is no need to harmonise stratifying columns because they are not changed
 by splitting the \code{Lexis} data.
@@ -537,7 +537,7 @@ stopifnot(
   c("h_pch_est", "S_pch_est") \%in\% names(sdt)
 )
 
-# popEpi::surv_merge
+# popEpi::lexis_merge
 lexis <- Epi::Lexis(
   entry = list(ts_fut = 0.0, ts_cal = 2010.3, ts_age = 56.8),
   exit = list(ts_cal = 2024.9999),
@@ -555,7 +555,7 @@ data.table::set(
   j = "merge_value",
   value = runif(nrow(my_merge_dt))
 )
-popEpi::surv_merge(
+popEpi::lexis_merge(
   dt = lexis,
   merge_dt = my_merge_dt,
   merge_dt_by = c("sex", "ts_age", "ts_cal")
@@ -569,7 +569,7 @@ data.table::set(
   j = "merge_value",
   value = NULL
 )
-popEpi::surv_merge(
+popEpi::lexis_merge(
   dt = lexis,
   merge_dt = my_merge_dt,
   merge_dt_by = c("sex", "ts_age", "ts_cal"),
