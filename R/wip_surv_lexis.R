@@ -113,6 +113,7 @@ surv_lexis <- function(
   #   With `aggre_by = "sex"` and `weights = "individual_weight"` the table is
   #   stratified by sex and contains individually weighted statistics.
   # @codedoc_comment_block popEpi::surv_lexis
+  weight_col_nm <- if (is.character(weights)) weights else NULL
   sdt <- lexis_split_merge_aggregate_by_stratum(
     dt = dt,
     breaks = breaks,
@@ -122,7 +123,7 @@ surv_lexis <- function(
     aggre_by = aggre_by,
     aggre_ts_col_nms = aggre_ts_col_nms,
     aggre_exprs = aggre_exprs,
-    weight_col_nm = if (is.character(weights)) weights else NULL,
+    weight_col_nm = weight_col_nm,
     subset = subset
   )
   aggre_meta <- attr(sdt, "surv_split_merge_aggregate_by_stratum_meta")
@@ -136,8 +137,11 @@ surv_lexis <- function(
     )
   }
   # @codedoc_comment_block popEpi::surv_lexis
-  # - Call `surv_estimate` and return its result.
+  # - Call `surv_estimate`.
   # @codedoc_comment_block popEpi::surv_lexis
+  # surv_lexis_env? see `est` of `S_exp_e1_pch`.
+  surv_lexis_env <- environment() # nolint
+  surv_lexis_env[["ts_fut_col_nm"]] <- utils::tail(aggre_ts_col_nms, 1L)
   sdt <- surv_estimate(
     dt = sdt,
     ts_fut_col_nm = aggre_ts_col_nms[length(aggre_ts_col_nms)],
@@ -148,6 +152,7 @@ surv_lexis <- function(
     ),
     conf_methods = conf_methods
   )
+
   # @codedoc_comment_block return(popEpi::surv_lexis)
   # Returns a `data.table` as produced by `surv_estimate`.
   # @codedoc_comment_block return(popEpi::surv_lexis)

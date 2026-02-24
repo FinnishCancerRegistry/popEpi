@@ -445,6 +445,21 @@ surv_estimate_expr_list__ <- list(
       F_pch_se
     )
   ),
+  S_exp_e1_pch = list(
+    est = quote(
+      surv_lexis_S_exp_e1_pch_est(
+        dt = surv_lexis_env[["dt"]],
+        breaks = surv_lexis_env[["breaks"]],
+        ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]],
+        merge_dt = surv_lexis_env[["merge_dt"]],
+        merge_dt_by = surv_lexis_env[["merge_dt_by"]],
+        weight_col_nm = surv_lexis_env[["weight_col_nm"]]
+      )
+    ),
+    se = quote(
+      0.0 + 0.0
+    )
+  ),
   F_exp_e1_pch = list(
     est = quote(
       1 - S_exp_e1_pch_est
@@ -967,19 +982,23 @@ surv_lexis_S_exp_e1_pch_est <- function(
   breaks,
   ts_fut_col_nm,
   merge_dt,
-  merge_dt_by
+  merge_dt_by,
+  weight_col_nm = NULL
 ) {
   assert_is_arg_dt(dt, lexis = TRUE)
   stopifnot(
     identical(data.table::key(dt)[1], "lex.id"),
     ts_fut_col_nm %in% data.table::key(dt),
-    !duplicated(dt[["lex.id"]])
+    !duplicated(dt[["lex.id"]]),
+
+    is.null(weight_col_nm) || weight_col_nm %in% names(dt)
   )
   keep_col_nms <- unique(c(
     "lex.id",
     attr(dt, "time.scales"),
     "lex.dur", "lex.Cst", "lex.Xst",
-    setdiff(names(merge_dt), "h_exp")
+    setdiff(names(merge_dt), "h_exp"),
+    weight_col_nm
   ))
   e1dt <- data.table::setDT(as.list(dt)[keep_col_nms])
   lexis_set__(e1dt, lexis_ts_col_nms = Epi::timeScales(dt))
@@ -1000,12 +1019,23 @@ surv_lexis_S_exp_e1_pch_est <- function(
     e1dt <- e1dt[e1dt[["keep"]], ]
   }
   data.table::set(e1dt, j = "keep", value = NULL)
+  if (!is.null(weight_col_nm)) {
+    data.table::set(
+      x = e1dt,
+      j = "w",
+      value = e1dt[[weight_col_nm]] / sum(e1dt[[weight_col_nm]])
+    )
+  } else {
+    data.table::set(
+      x = e1dt,
+      j = "w",
+      value = 1 / nrow(e1dt)
+    )
+  }
   lexis_immortalise(dt = e1dt, breaks = breaks[ts_fut_col_nm])
   e1dt <- popEpi::splitMulti(
     data = e1dt,
-    breaks = breaks[ts_fut_col_nm],
-    merge = TRUE,
-    drop = TRUE
+    breaks = breaks[ts_fut_col_nm]
   )
   surv_merge(
     dt = e1dt,
@@ -1030,7 +1060,7 @@ surv_lexis_S_exp_e1_pch_est <- function(
   # i.e. H(t_i|t_{i-1}), per subject
   data.table::set(
     x = e1dt,
-    j = setdiff(names(e1dt), c("lex.id", "box_id", "e1")),
+    j = setdiff(names(e1dt), c("lex.id", "box_id", "e1", "w")),
     value = NULL
   )
   data.table::setkeyv(e1dt, c("lex.id", "box_id"))
@@ -1047,9 +1077,14 @@ surv_lexis_S_exp_e1_pch_est <- function(
     value = exp(-e1dt[["e1"]])
   )
   # e1dt$e1 is now the expected survival per subject
+  data.table::set(
+    x = e1dt,
+    j = "e1",
+    value = e1dt[["e1"]] * e1dt[["w"]]
+  )
   e1dt <- e1dt[
     #' @importFrom data.table .SD
-    j = lapply(.SD, mean),
+    j = lapply(.SD, sum),
     .SDcols = "e1",
     keyby = "box_id"
   ]
