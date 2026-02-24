@@ -133,7 +133,7 @@ surv_box_id__ <- function(
     merge_dt_harmonisers = structure(lapply(seq_along(breaks), function(i) {
       substitute({
         breaks <- BR
-        idx <- cut(
+        idx <- cut( # nolint
           x = COL + 0.5 * lex.dur,
           breaks = breaks,
           right = FALSE,
