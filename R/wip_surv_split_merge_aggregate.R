@@ -148,7 +148,33 @@ surv_aggregate_one_stratum__ <- function(
     dt = work_dt,
     lexis_ts_col_nms = Epi::timeScales(dt_stratum_subset_split)
   )
+  # @codedoc_comment_block popEpi:::surv_aggregate_one_stratum__
+  #    * First collect variables mentioned in `aggre_exprs` using `[all.vars]`.
+  # @codedoc_comment_block popEpi:::surv_aggregate_one_stratum__
   expr_obj_nms <- unique(unlist(lapply(aggre_exprs, all.vars)))
+  # lapply(lexis_ts_col_nms, function(ts_col_nm) {
+  #   add_col_nms <- unique(expr_obj_nms[
+  #     grepl(sprintf("^%s_((lead)|(lag))[0-9]+$", ts_col_nm), expr_obj_nms)
+  #   ])
+  #   lapply(add_col_nms, function(add_col_nm) {
+  #     settings <- list(type = "lead")
+  #     if (grepl("lag", add_col_nm)) {
+  #       settings[["type"]] <- "lag"
+  #     }
+  #     settings[["n"]] <- as.integer(sub("^[^0-9]+", "", add_col_nm))
+  #     work_dt[
+  #       #' @importFrom data.table := .SD
+  #       j = (add_col_nm) := .SD[[ts_col_nm]] - data.table::shift(
+  #         x = .SD[[ts_col_nm]],
+  #         n = settings[["n"]],
+  #         type = settings[["type"]],
+  #         fill = NA_integer_
+  #       ),
+  #       .SDcols = ts_col_nm,
+  #       by = "lex.id"
+  #     ]
+  #   })
+  # })
   surv_box_id__(dt = work_dt, box_dt = box_dt)
   add_expr_eval_env <- environment()
   local({
@@ -162,6 +188,15 @@ surv_aggregate_one_stratum__ <- function(
       ts_fut_stop_col_nm = paste0(ts_fut_col_nm, "_stop")
     )
 
+    # @codedoc_comment_block popEpi:::surv_aggregate_one_stratum__
+    #    * There is a pre-defined table of expressions that are evaluated
+    #      and added as new columns in the split data if they appear in any
+    #      of the `aggre_exprs`. See below for the table.
+    #
+    #    * Table of expressions which create new columns into split data:
+    #
+    # ${paste0(knitr::kable(split_lexis_column_exprs_table__()), collapse = "\n")}
+    # @codedoc_comment_block popEpi:::surv_aggregate_one_stratum__
     add_expr_list <- SPLIT_LEXIS_COLUMN_EXPRS__[intersect(
       expr_obj_nms,
       names(SPLIT_LEXIS_COLUMN_EXPRS__)
@@ -214,6 +249,22 @@ surv_aggregate_one_stratum__ <- function(
       value = NA
     )
   }
+  # @codedoc_comment_block popEpi:::surv_aggregate_one_stratum__
+  #    * It can happen that e.g. a survival interval has absolutely no data in
+  #      it. Especially in sparse data and with delayed entry. For the
+  #      pre-specified aggregation expressions such as `n_events` we ensure
+  #      that empty time scale boxes have value zero. Your custom aggregation
+  #      expressions will result in `NA` values in empty time scale boxes.
+  # @codedoc_comment_block popEpi:::surv_aggregate_one_stratum__
+  lapply(intersect(names(out), names(SURV_AGGRE_EXPRS__)), function(col_nm) {
+    data.table::set(
+      x = out,
+      i = which(is.na(out[[col_nm]])),
+      j = col_nm,
+      value = 0L
+    )
+    NULL
+  })
   return(out[])
 }
 
@@ -440,10 +491,7 @@ surv_split_merge_aggregate_by_stratum <- function(
         )
       }
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
-      #   + Evaluate `aggre_exprs` in the context of the split data
-      #     with merged-in additional data. The enclosing environment is
-      #     `call_env`. See `?eval`. This results in a `data.table` that
-      #     contains one row per interval of `aggre_ts_col_nms`.
+      #   + Evaluate `aggre_exprs` as follows:
       # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
       out <- surv_aggregate_one_stratum__(
         dt_stratum_subset_split = dt_stratum_subset_split,

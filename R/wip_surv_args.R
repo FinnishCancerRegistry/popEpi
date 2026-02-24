@@ -197,16 +197,15 @@ handle_arg_aggre_exprs <- function(
         }
       }
       # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
-      #   + Detect the general name of a transition-specific variable such as
-      #     `n_events_[0, 1]` as `n_events_[x, y]`. This general name is used
-      #     to fetch the general aggregation expression
-      #     (e.g. `"n_events_[x, y]" = quote(sum(lex.Cst %in% x & lex.Xst %in% y))`)
-      #     and this definition is then made specific to the requested
-      #     transition,
-      #     e.g.  `n_events_[0, 1] = quote(sum(lex.Cst %in% x & lex.Xst %in% y))`.
-      #     Of course aggregation expressions without a specific transition such
-      #     as `t_at_risk` are unaffected by this. The table of general
-      #     aggregation expressions known to `popEpi` is shown below.
+      #   + An `aggre_exprs` element that is string such as `"n_events"`
+      #     is replaced with the appropriate expression retrieved from a table
+      #     of pre-defined expressions (see below).
+      #   + If a string element is transition-specific, e.g. `n_events_[0, 1]`,
+      #     we first turn it into its general form (e.g. `n_events_[x, y]`).
+      #     Additionally, any uses of `x` and `y` in the fetched expression
+      #     is replaced with the correct states, e.g.
+      #     `sum(lex.Cst == x & lex.Xst == y)` is turned into
+      #     `sum(lex.Cst == 0 & lex.Xst == 1)`.
       # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
       general_var_nm <- sub(
         "\\[.+, .+\\]$",
@@ -235,12 +234,20 @@ handle_arg_aggre_exprs <- function(
         perl = TRUE
       )
     } else {
+      # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
+      #   + An `aggre_exprs` element that is an expression already
+      #     (e.g. `my_n_events = quote(sum(lex.Cst == 0 & lex.Xst != 0))`)
+      #     does not receive the same treatment regarding the states and when
+      #     you write your own expressions you must specify them yourself.
+      #     Therefore e.g.
+      #     `my_n_events = quote(sum(lex.Cst == x & lex.Xst != y))` will not
+      #     work.
+      # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
       aggre_expr_string <- deparse1(aggre_expr)
     }
     # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
-    #   + The general variable definitions usually have ` * iw` in them for
-    #     enabling individual weighting. But if this is not requested then
-    #     those ` * iw` parts are removed from the aggregation expressions.
+    #   + Regardless of the type of the `aggre_exprs` element, we remove every
+    #     use of ` * iw` in the expression if individual weights are not used.
     # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
     aggre_expr_string <- gsub(
       " *[*] *iw",
@@ -250,12 +257,6 @@ handle_arg_aggre_exprs <- function(
     parse(text = aggre_expr_string)[[1]]
   })
   # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
-  #   + After going through every requested estimator we have a set of
-  #     quoted expressions such as
-  #     `list(t_at_risk = quote(sum(lex.dur)), n_events = quote(sum(lex.Cst != lex.Xst)))`.
-  #     This is turned into a quoted list of expressions with `call` and we are
-  #     done, e.g.
-  #     `quote(list(t_at_risk = sum(lex.dur), n_events = sum(lex.Cst != lex.Xst)))`.
   #   + Table of general aggregation expressions known to `popEpi`:
   #
   # ${paste0(knitr::kable(popEpi:::surv_aggre_exprs_table__()), collapse = "\n")}
