@@ -106,7 +106,7 @@ split_lexis_column_exprs_table__ <- function() {
   return(dt)
 }
 
-surv_aggregate_one_stratum__ <- function(
+lexis_aggregate_one_stratum__ <- function(
   dt_stratum_subset_split,
   box_dt,
   aggre_exprs,
@@ -148,9 +148,9 @@ surv_aggregate_one_stratum__ <- function(
     dt = work_dt,
     lexis_ts_col_nms = Epi::timeScales(dt_stratum_subset_split)
   )
-  # @codedoc_comment_block popEpi:::surv_aggregate_one_stratum__
+  # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
   #    * First collect variables mentioned in `aggre_exprs` using `[all.vars]`.
-  # @codedoc_comment_block popEpi:::surv_aggregate_one_stratum__
+  # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
   expr_obj_nms <- unique(unlist(lapply(aggre_exprs, all.vars)))
   # lapply(lexis_ts_col_nms, function(ts_col_nm) {
   #   add_col_nms <- unique(expr_obj_nms[
@@ -188,7 +188,7 @@ surv_aggregate_one_stratum__ <- function(
       ts_fut_stop_col_nm = paste0(ts_fut_col_nm, "_stop")
     )
 
-    # @codedoc_comment_block popEpi:::surv_aggregate_one_stratum__
+    # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
     #    * There is a pre-defined table of expressions that are evaluated
     #      and added as new columns in the split data if they appear in any
     #      of the `aggre_exprs`. See below for the table.
@@ -196,7 +196,7 @@ surv_aggregate_one_stratum__ <- function(
     #    * Table of expressions which create new columns into split data:
     #
     # ${paste0(knitr::kable(split_lexis_column_exprs_table__()), collapse = "\n")}
-    # @codedoc_comment_block popEpi:::surv_aggregate_one_stratum__
+    # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
     add_expr_list <- SPLIT_LEXIS_COLUMN_EXPRS__[intersect(
       expr_obj_nms,
       names(SPLIT_LEXIS_COLUMN_EXPRS__)
@@ -249,13 +249,13 @@ surv_aggregate_one_stratum__ <- function(
       value = NA
     )
   }
-  # @codedoc_comment_block popEpi:::surv_aggregate_one_stratum__
+  # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
   #    * It can happen that e.g. a survival interval has absolutely no data in
   #      it. Especially in sparse data and with delayed entry. For the
   #      pre-specified aggregation expressions such as `n_events` we ensure
   #      that empty time scale boxes have value zero. Your custom aggregation
   #      expressions will result in `NA` values in empty time scale boxes.
-  # @codedoc_comment_block popEpi:::surv_aggregate_one_stratum__
+  # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
   lapply(intersect(names(out), names(SURV_AGGRE_EXPRS__)), function(col_nm) {
     data.table::set(
       x = out,
@@ -269,10 +269,10 @@ surv_aggregate_one_stratum__ <- function(
 }
 
 #' @eval codedoc::pkg_doc_fun(
-#'   "popEpi::surv_split_merge_aggregate_by_stratum",
+#'   "popEpi::lexis_split_merge_aggregate_by_stratum",
 #'   "surv_functions"
 #' )
-surv_split_merge_aggregate_by_stratum <- function(
+lexis_split_merge_aggregate_by_stratum <- function(
   dt,
   breaks,
   aggre_exprs,
@@ -286,14 +286,14 @@ surv_split_merge_aggregate_by_stratum <- function(
   optional_steps = NULL
 ) {
   # @codedoc_comment_block surv_arg_dt
-  # - `surv_split_merge_aggregate_by_stratum`:
+  # - `lexis_split_merge_aggregate_by_stratum`:
   #   A `Lexis` dataset (`[Epi::Lexis]`).
   # @codedoc_comment_block surv_arg_dt
 
   assert_is_arg_dt(dt, lexis = TRUE)
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum::breaks
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::breaks
   # @codedoc_insert_comment_block popEpi:::assert_is_arg_breaks
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum::breaks
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::breaks
   assert_is_arg_breaks(breaks, dt)
   assert_is_arg_merge_dt_and_merge_dt_by(
     merge_dt = merge_dt,
@@ -301,9 +301,9 @@ surv_split_merge_aggregate_by_stratum <- function(
     dt = dt,
     mandatory = FALSE
   )
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum::aggre_by
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::aggre_by
   # @codedoc_insert_comment_block popEpi:::handle_arg_by
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum::aggre_by
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::aggre_by
   aggre_by <- handle_arg_by(by = aggre_by, dataset = dt)
   #' @param aggre_ts_col_nms `[NULL, character]` (default `NULL`)
   #'
@@ -337,14 +337,14 @@ surv_split_merge_aggregate_by_stratum <- function(
   #'
   #' - `NULL`: No individual weighting is performed.
   #' - `character`: This is the name of the column. E.g. `"my_iw"`.
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
-  # `popEpi::surv_split_merge_aggregate_by_stratum` can be used to split `Lexis`
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+  # `popEpi::lexis_split_merge_aggregate_by_stratum` can be used to split `Lexis`
   # (`[Epi::Lexis]`) data, merge something to it after the merge, and
   # then perform an aggregation step. The following steps are performed:
   #
   # - Handle `aggre_exprs` as follows:
   # @codedoc_insert_comment_block popEpi:::handle_arg_aggre_exprs
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   aggre_exprs <- handle_arg_aggre_exprs(
     aggre_exprs = aggre_exprs,
     weight_col_nm = weight_col_nm
@@ -361,31 +361,31 @@ surv_split_merge_aggregate_by_stratum <- function(
   stopifnot(
     inherits(optional_steps, c("NULL", "list"))
   )
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum::subset
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
   # @codedoc_insert_comment_block popEpi:::handle_arg_subset
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum::subset
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
   subset <- handle_arg_subset()
 
   eval_env <- environment()
   call_env <- parent.frame(1L)
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - Call
   #   `optional_steps[["on_entry"]](eval_env = eval_env, call_env = call_env)`
   #   if that `optional_steps` element exists.
   #   `eval_env` is the temporary evaluation environment of
-  #   `popEpi::surv_split_merge_aggregate_by_stratum` which contains all
+  #   `popEpi::lexis_split_merge_aggregate_by_stratum` which contains all
   #   contains all the arguments of
-  #   `popEpi::surv_split_merge_aggregate_by_stratum` and `call_env` is the environment
+  #   `popEpi::lexis_split_merge_aggregate_by_stratum` and `call_env` is the environment
   #   where it was called.
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   if ("on_entry" %in% names(optional_steps)) {
     optional_steps[["on_entry"]](eval_env = eval_env, call_env = call_env)
   }
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - Call
   #   `on.exit(optional_steps[["on_exit"]](eval_env = eval_env, call_env = call_env))`
   #   if that `optional_steps` element exists.
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   if ("on_exit" %in% names(optional_steps)) {
     on.exit(
       optional_steps[["on_exit"]](eval_env = eval_env, call_env = call_env)
@@ -419,14 +419,14 @@ surv_split_merge_aggregate_by_stratum <- function(
     i = aggre_by,
     on = names(aggre_by),
     j = {
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       # - For each stratum in `aggre_by`:
       #   + Run
       #     `optional_steps[["stratum_on_entry"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
       #     if that `optional_steps` element exists.
       #     `stratum_eval_env` is the environment where the stratum-specific
       #     steps are performed.
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       stratum_eval_env <- environment()
       if ("stratum_on_entry" %in% names(optional_steps)) {
         optional_steps[["stratum_on_entry"]](
@@ -441,11 +441,11 @@ surv_split_merge_aggregate_by_stratum <- function(
       } else {
         dt_stratum_subset <- .SD
       }
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       #   + Run
       #     `popEpi::splitMulti` on the subset of `dt` which contains data from
       #     the current stratum.
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       dt_stratum_subset <- data.table::setDT(as.list(dt_stratum_subset))
       lexis_set__(dt = dt_stratum_subset, lexis_ts_col_nms = lexis_ts_col_nms)
       dt_stratum_subset_split <- surv_split__(
@@ -453,11 +453,11 @@ surv_split_merge_aggregate_by_stratum <- function(
         breaks = breaks,
         merge = TRUE
       )
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       #   + Run
       #     `optional_steps[["stratum_post_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
       #     if that `optional_steps` element exists.
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       if ("stratum_post_split" %in% names(optional_steps)) {
         optional_steps[["stratum_post_split"]](
           stratum_eval_env = stratum_eval_env,
@@ -465,11 +465,11 @@ surv_split_merge_aggregate_by_stratum <- function(
           call_env = call_env
         )
       }
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       #   + Run
       #     `surv_merge` with `merge_dt`, `merge_dt_by`, and
       #     `merge_dt_harmonisers`, if `merge_dt` has been supplied.
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       if (!is.null(merge_dt)) {
         surv_merge(
           dt = dt_stratum_subset_split,
@@ -478,11 +478,11 @@ surv_split_merge_aggregate_by_stratum <- function(
           merge_dt_harmonisers = merge_dt_harmonisers
         )
       }
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       #   + Run
       #     `optional_steps[["stratum_post_merge"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
       #     if that `optional_steps` element exists.
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       if ("stratum_post_merge" %in% names(optional_steps)) {
         optional_steps[["stratum_post_merge"]](
           stratum_eval_env = stratum_eval_env,
@@ -490,10 +490,10 @@ surv_split_merge_aggregate_by_stratum <- function(
           call_env = call_env
         )
       }
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       #   + Evaluate `aggre_exprs` as follows:
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
-      out <- surv_aggregate_one_stratum__(
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+      out <- lexis_aggregate_one_stratum__(
         dt_stratum_subset_split = dt_stratum_subset_split,
         box_dt = box_dt,
         aggre_exprs = aggre_exprs,
@@ -501,11 +501,11 @@ surv_split_merge_aggregate_by_stratum <- function(
         call_env = call_env,
         stratum_eval_env = stratum_eval_env
       )
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       #   + Run
       #     `optional_steps[["stratum_post_aggregation"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
       #     if that `optional_steps` element exists.
-      # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       if ("stratum_post_aggregation" %in% names(optional_steps)) {
         optional_steps[["stratum_post_aggregation"]](
           stratum_eval_env = stratum_eval_env,
@@ -523,7 +523,7 @@ surv_split_merge_aggregate_by_stratum <- function(
     out[c("i", "on", "keyby")] <- NULL
   }
   out <- eval(out)
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - After every stratum has been processed, set proper `data.table`
   #   attributes on the resulting big table and call `data.table::setkeyv`
   #   with `cols = c(names(aggre_by), "box_id")`. We store the metadata
@@ -531,7 +531,7 @@ surv_split_merge_aggregate_by_stratum <- function(
   #   `surv_split_merge_aggregate_by_stratum_meta`, where
   #   `stratum_col_nms = names(aggre_by)`, `ts_col_nms = aggre_ts_col_nms`, and
   #   `value_col_nms` are the names of the columns resulting from `aggre_exprs`.
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # to clear Epi attributes
   out <- as.list(out)
   attributes(out) <- attributes(out)["names"]
@@ -546,24 +546,24 @@ surv_split_merge_aggregate_by_stratum <- function(
       value_col_nms = setdiff(names(out), c(names(aggre_by), names(box_dt)))
     )
   )
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - Run
   #   `optional_steps[["post_aggregation"]](eval_env = eval_env, call_env = call_env)`
   #   if that `optional_steps` element exists.
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   if ("post_aggregation" %in% names(optional_steps)) {
     optional_steps[["post_aggregation"]](
       eval_env = eval_env,
       call_env = call_env
     )
   }
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - Return a `data.table` with stratum columns as specified via
   #   `aggre_by` and value columns as specified via `aggre_exprs`.
-  # @codedoc_comment_block popEpi::surv_split_merge_aggregate_by_stratum
-  # @codedoc_comment_block return(popEpi::surv_split_merge_aggregate_by_stratum)
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+  # @codedoc_comment_block return(popEpi::lexis_split_merge_aggregate_by_stratum)
   # Returns a `data.table` with stratum columns as specified via
   # `aggre_by` and value columns as specified via `aggre_exprs`.
-  # @codedoc_comment_block return(popEpi::surv_split_merge_aggregate_by_stratum)
+  # @codedoc_comment_block return(popEpi::lexis_split_merge_aggregate_by_stratum)
   return(out[])
 }

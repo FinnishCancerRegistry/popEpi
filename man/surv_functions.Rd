@@ -8,7 +8,7 @@
 \alias{surv_functions}
 \alias{surv_lexis}
 \alias{surv_merge}
-\alias{surv_split_merge_aggregate_by_stratum}
+\alias{lexis_split_merge_aggregate_by_stratum}
 \title{Survival Time Statistics}
 \usage{
 surv_estimate(
@@ -49,7 +49,7 @@ surv_merge(
   optional_steps = NULL
 )
 
-surv_split_merge_aggregate_by_stratum(
+lexis_split_merge_aggregate_by_stratum(
   dt,
   breaks,
   aggre_exprs,
@@ -68,7 +68,7 @@ surv_split_merge_aggregate_by_stratum(
 \item \code{surv_estimate}: A \code{data.table}.
 \item \code{surv_individual_weights}: A \code{data.frame} / \code{data.table}.
 \item \code{surv_merge}: A \code{Lexis} dataset (\verb{[Epi::Lexis]}).
-\item \code{surv_split_merge_aggregate_by_stratum}:
+\item \code{lexis_split_merge_aggregate_by_stratum}:
 A \code{Lexis} dataset (\verb{[Epi::Lexis]}).
 }}
 
@@ -84,7 +84,7 @@ E.g. \code{"ts_fut"}. \code{dt} must contain columns named
 Stratum column names in \code{dt}, if any.
 \itemize{
 \item \code{NULL}: If \code{dt} was the result of calling
-\verb{[surv_split_merge_aggregate_by_stratum]}, then \code{stratum_col_nms} is
+\verb{[lexis_split_merge_aggregate_by_stratum]}, then \code{stratum_col_nms} is
 taken from the attributes of \code{dt}. If not, this causes no
 stratification of output.
 \item \code{character}: \code{dt} is stratified by these columns. \code{character(0)} is
@@ -96,7 +96,7 @@ also allowed and causes no stratification of output.
 Value column names in \code{dt}, if any.
 \itemize{
 \item \code{NULL}: If \code{dt} was the result of calling
-\verb{[surv_split_merge_aggregate_by_stratum]}, then \code{value_col_nms} is
+\verb{[lexis_split_merge_aggregate_by_stratum]}, then \code{value_col_nms} is
 taken from the attributes of \code{dt}. If not, having this \code{NULL} causes
 no value columns from \code{dt} to be included in the output.
 \item \code{character}: One or more names of columns in \code{dt} containing values
@@ -326,7 +326,7 @@ Returns a \code{data.table} as produced by \code{surv_estimate}.
 Returns \code{dt} invisibly after adding columns from
 \code{merge_dt} into \code{dt} in-place, without taking a copy.
 
-\strong{popEpi::surv_split_merge_aggregate_by_stratum}
+\strong{popEpi::lexis_split_merge_aggregate_by_stratum}
 
 Returns a \code{data.table} with stratum columns as specified via
 \code{aggre_by} and value columns as specified via \code{aggre_exprs}.
@@ -450,9 +450,9 @@ Performs the following steps:
 \itemize{
 \item Detect variables used in the estimation expressions with \verb{[all.vars]}.
 \item Retain only those known to \code{popEpi} --- see
-\code{?surv_split_merge_aggregate_by_stratum}. This results in a character
+\code{?lexis_split_merge_aggregate_by_stratum}. This results in a character
 string vector that the argument \code{aggre_exprs} of
-\code{surv_split_merge_aggregate_by_stratum} accepts.
+\code{lexis_split_merge_aggregate_by_stratum} accepts.
 }
 \item This results in \code{aggre_exprs} with both anything that the user defined
 and also what was added by \code{surv_lexis}. However, we drop duplicates
@@ -461,7 +461,7 @@ in \code{aggre_exprs} based on both \code{duplicated(names(aggre_exprs))} and
 \code{aggre_exprs = list(n_events = quote(sum(lex.Xst != 0)))}
 and \code{n_events} is also added by \code{surv_lexis} then only the one you
 supplied is retained.
-\item Call \code{surv_split_merge_aggregate_by_stratum}.
+\item Call \code{lexis_split_merge_aggregate_by_stratum}.
 The resulting table of aggregated data is
 stratified by both \code{aggre_by} and by any stratifying columns found in
 \code{weights} if a \code{data.table} was supplied as that argument. E.g.
@@ -540,9 +540,9 @@ of producing nonsense results downstream.
 }
 
 
-\strong{popEpi::surv_split_merge_aggregate_by_stratum}
+\strong{popEpi::lexis_split_merge_aggregate_by_stratum}
 
-\code{popEpi::surv_split_merge_aggregate_by_stratum} can be used to split \code{Lexis}
+\code{popEpi::lexis_split_merge_aggregate_by_stratum} can be used to split \code{Lexis}
 (\verb{[Epi::Lexis]}) data, merge something to it after the merge, and
 then perform an aggregation step. The following steps are performed:
 \itemize{
@@ -590,9 +590,9 @@ use of \verb{ * iw} in the expression if individual weights are not used.
 \code{optional_steps[["on_entry"]](eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
 \code{eval_env} is the temporary evaluation environment of
-\code{popEpi::surv_split_merge_aggregate_by_stratum} which contains all
+\code{popEpi::lexis_split_merge_aggregate_by_stratum} which contains all
 contains all the arguments of
-\code{popEpi::surv_split_merge_aggregate_by_stratum} and \code{call_env} is the environment
+\code{popEpi::lexis_split_merge_aggregate_by_stratum} and \code{call_env} is the environment
 where it was called.
 \item Call
 \code{on.exit(optional_steps[["on_exit"]](eval_env = eval_env, call_env = call_env))}

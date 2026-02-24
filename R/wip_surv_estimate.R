@@ -699,7 +699,7 @@ surv_estimate <- function(
     #' Stratum column names in `dt`, if any.
     #'
     #' - `NULL`: If `dt` was the result of calling
-    #'   `[surv_split_merge_aggregate_by_stratum]`, then `stratum_col_nms` is
+    #'   `[lexis_split_merge_aggregate_by_stratum]`, then `stratum_col_nms` is
     #'   taken from the attributes of `dt`. If not, this causes no
     #'   stratification of output.
     #' - `character`: `dt` is stratified by these columns. `character(0)` is
@@ -716,7 +716,7 @@ surv_estimate <- function(
     #' Value column names in `dt`, if any.
     #'
     #' - `NULL`: If `dt` was the result of calling
-    #'   `[surv_split_merge_aggregate_by_stratum]`, then `value_col_nms` is
+    #'   `[lexis_split_merge_aggregate_by_stratum]`, then `value_col_nms` is
     #'   taken from the attributes of `dt`. If not, having this `NULL` causes
     #'   no value columns from `dt` to be included in the output.
     #' - `character`: One or more names of columns in `dt` containing values

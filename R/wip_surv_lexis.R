@@ -18,9 +18,9 @@ surv_lexis_aggre_exprs__ <- function(
   })))
   # @codedoc_comment_block popEpi:::surv_lexis_aggre_exprs__
   #   + Retain only those known to `popEpi` --- see
-  #    `?surv_split_merge_aggregate_by_stratum`. This results in a character
+  #    `?lexis_split_merge_aggregate_by_stratum`. This results in a character
   #    string vector that the argument `aggre_exprs` of
-  #    `surv_split_merge_aggregate_by_stratum` accepts.
+  #    `lexis_split_merge_aggregate_by_stratum` accepts.
   # @codedoc_comment_block popEpi:::surv_lexis_aggre_exprs__
   standard_var_nm_set <- sub(
     "\\[.+, .+\\]",
@@ -103,7 +103,7 @@ surv_lexis <- function(
     !duplicated(aggre_exprs) & !duplicated(names(aggre_exprs))
   ]
   # @codedoc_comment_block popEpi::surv_lexis
-  # - Call `surv_split_merge_aggregate_by_stratum`.
+  # - Call `lexis_split_merge_aggregate_by_stratum`.
   #   The resulting table of aggregated data is
   #   stratified by both `aggre_by` and by any stratifying columns found in
   #   `weights` if a `data.table` was supplied as that argument. E.g.
@@ -113,7 +113,7 @@ surv_lexis <- function(
   #   With `aggre_by = "sex"` and `weights = "individual_weight"` the table is
   #   stratified by sex and contains individually weighted statistics.
   # @codedoc_comment_block popEpi::surv_lexis
-  sdt <- surv_split_merge_aggregate_by_stratum(
+  sdt <- lexis_split_merge_aggregate_by_stratum(
     dt = dt,
     breaks = breaks,
     merge_dt_by = merge_dt_by,
