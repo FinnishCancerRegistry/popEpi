@@ -5,7 +5,8 @@ Authors@R: c(
     person("Joonas", "Miettinen", , "joonas.miettinen@cancer.fi", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0001-8624-6754")),
     person("Matti", "Rantanen", , "matti.rantanen@statfinn.com", role = "aut"),
-    person("Karri", "Seppa", , "karri.seppa@cancer.fi", role = "ctb")
+    person("Karri", "Seppa", , "karri.seppa@cancer.fi", role = "ctb",
+           comment = c(ORCID = "0000-0002-3847-8814"))
   )
 Description: Enables computation of epidemiological statistics, including
     those where counts or mortality rates of the reference population are
