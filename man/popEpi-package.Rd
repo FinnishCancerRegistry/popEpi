@@ -51,7 +51,7 @@ Authors:
 
 Other contributors:
 \itemize{
-  \item Karri Seppa \email{karri.seppa@cancer.fi} [contributor]
+  \item Karri Seppa \email{karri.seppa@cancer.fi} (\href{https://orcid.org/0000-0002-3847-8814}{ORCID}) [contributor]
 }
 
 }
