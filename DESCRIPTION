@@ -48,6 +48,3 @@ Language: en-GB
 LazyData: true
 RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
-Config/Needs/development:
-    codedoc (GitHub: FinnishCancerRegistry/codedoc)
-    revdepcheck (GitHub: r-lib/revdepcheck)
