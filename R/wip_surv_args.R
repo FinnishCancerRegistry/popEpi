@@ -392,9 +392,15 @@ handle_arg_estimators <- function(estimators, dt) {
 
 assert_is_arg_split_lexis_column_exprs <- function(split_lexis_column_exprs) {
   stopifnot(
-    inherits(split_lexis_column_exprs, "list"),
-    vapply(split_lexis_column_exprs, is.language, logical(1L)),
-    data.table::uniqueN(split_lexis_column_exprs) ==
-      length(split_lexis_column_exprs)
+    inherits(split_lexis_column_exprs, c("list", "NULL"))
   )
+  if (inherits(split_lexis_column_exprs, "list")) {
+    for (i in seq_along(split_lexis_column_exprs)) {
+      if (!is.language(split_lexis_column_exprs[[i]])) {
+        stop("`split_lexis_column_exprs[[", i, "]]` was not an R expression ",
+             "but instead had class(es) ",
+             deparse1(class(split_lexis_column_exprs[[i]])))
+      }
+    }
+  }
 }
