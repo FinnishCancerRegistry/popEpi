@@ -7,10 +7,6 @@ Authors@R: c(
     person("Matti", "Rantanen", , "matti.rantanen@statfinn.com", role = "aut"),
     person("Karri", "Seppa", , "karri.seppa@cancer.fi", role = "ctb")
   )
-Author: Joonas Miettinen [cre, aut]
-    (<https://orcid.org/0000-0001-8624-6754>), Matti Rantanen [aut], Karri
-    Seppa [ctb]
-Maintainer: Joonas Miettinen <joonas.miettinen@cancer.fi>
 Description: Enables computation of epidemiological statistics, including
     those where counts or mortality rates of the reference population are
     used.  Currently supported: excess hazard models (Dickman, Sloggett,
