@@ -1,6 +1,4 @@
 [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/popEpi)](https://cran.r-project.org/package=popEpi)
-[![Codecov test
-coverage](https://codecov.io/gh/FinnishCancerRegistry/popEpi/branch/master/graph/badge.svg)](https://app.codecov.io/gh/FinnishCancerRegistry/popEpi?branch=master)
 [![CRAN_DLs_via_RStudio](https://cranlogs.r-pkg.org/badges/popEpi)](https://cran.r-project.org/package=popEpi)
 [![R-CMD-check](https://github.com/FinnishCancerRegistry/popEpi/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/FinnishCancerRegistry/popEpi/actions/workflows/R-CMD-check.yaml)
 
@@ -130,6 +128,7 @@ function estimates.
 
 ``` r
 library(Epi)
+#> Warning: package 'Epi' was built under R version 4.5.2
 
 data(sibr)
 sire$cancer <- "rectal"
