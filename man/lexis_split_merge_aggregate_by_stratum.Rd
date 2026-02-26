@@ -5,7 +5,7 @@
 \title{Split, Merge, and Aggregate a \code{Lexis} Object}
 \usage{
 lexis_split_merge_aggregate_by_stratum(
-  dt,
+  lexis,
   breaks,
   aggre_exprs,
   aggre_by = NULL,
@@ -20,7 +20,8 @@ lexis_split_merge_aggregate_by_stratum(
 )
 }
 \arguments{
-\item{dt}{\verb{[Lexis]} (no default)
+\item{lexis}{\verb{[Lexis]} (no default)
+
 A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
 
 \item{breaks}{\verb{[list]} (no default)

@@ -139,7 +139,7 @@ surv_lexis <- function(
   #' @param subset
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   sdt <- lexis_split_merge_aggregate_by_stratum(
-    dt = dt,
+    lexis = dt,
     breaks = breaks,
     merge_dt_by = merge_dt_by,
     merge_dt = merge_dt,

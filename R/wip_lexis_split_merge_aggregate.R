@@ -107,7 +107,7 @@ split_lexis_column_exprs_table__ <- function() {
 }
 
 lexis_aggregate_one_stratum__ <- function(
-  dt_stratum_subset_split,
+  lexis_stratum_subset_split,
   box_dt,
   aggre_exprs,
   split_lexis_column_exprs = NULL,
@@ -115,22 +115,22 @@ lexis_aggregate_one_stratum__ <- function(
   eval_env,
   stratum_eval_env
 ) {
-  assert_is_arg_dt(dt_stratum_subset_split, lexis = TRUE)
-  # `dt_stratum_subset_split` should be keyed by e.g.
+  assert_is_arg_dt(lexis_stratum_subset_split, lexis = TRUE)
+  # `lexis_stratum_subset_split` should be keyed by e.g.
   # c("lex.id", "ts_cal", "ts_fut") or
   # c("lex.id", "ts_fut") or c("lex.id", "ts_fut", "ts_cal") etc if
-  # `box_ts_col_nms == "ts_fut"`. in particular `dt_stratum_subset_split`
+  # `box_ts_col_nms == "ts_fut"`. in particular `lexis_stratum_subset_split`
   # must not be keyed
   # by anything weird before the time scales. after the time scales it can be
   # keyed by whatever.
   box_ts_col_nms <- names(box_dt)[grepl("_stop$", names(box_dt))]
   box_ts_col_nms <- sub("_stop$", "", box_ts_col_nms)
-  lexis_ts_col_nms <- attr(dt_stratum_subset_split, "time.scales")
-  if (nrow(dt_stratum_subset_split) > 0) {
+  lexis_ts_col_nms <- attr(lexis_stratum_subset_split, "time.scales")
+  if (nrow(lexis_stratum_subset_split) > 0) {
     stopifnot(
-      data.table::key(dt_stratum_subset_split)[1] == "lex.id",
-      length(data.table::key(dt_stratum_subset_split)) >= length(box_ts_col_nms) + 1L,
-      data.table::key(dt_stratum_subset_split)[2:(length(box_ts_col_nms) + 1L)] %in% union(
+      data.table::key(lexis_stratum_subset_split)[1] == "lex.id",
+      length(data.table::key(lexis_stratum_subset_split)) >= length(box_ts_col_nms) + 1L,
+      data.table::key(lexis_stratum_subset_split)[2:(length(box_ts_col_nms) + 1L)] %in% union(
         box_ts_col_nms, lexis_ts_col_nms
       )
     )
@@ -144,11 +144,11 @@ lexis_aggregate_one_stratum__ <- function(
     is.environment(stratum_eval_env)
   )
 
-  work_dt <- data.table::setDT(as.list(dt_stratum_subset_split))
-  data.table::setkeyv(work_dt, data.table::key(dt_stratum_subset_split))
+  work_dt <- data.table::setDT(as.list(lexis_stratum_subset_split))
+  data.table::setkeyv(work_dt, data.table::key(lexis_stratum_subset_split))
   lexis_set__(
     dt = work_dt,
-    lexis_ts_col_nms = Epi::timeScales(dt_stratum_subset_split)
+    lexis_ts_col_nms = Epi::timeScales(lexis_stratum_subset_split)
   )
   # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
   #    * First collect variables mentioned in `aggre_exprs` using `[all.vars]`.
@@ -199,7 +199,7 @@ lexis_aggregate_one_stratum__ <- function(
   })
   data.table::setkeyv(work_dt, c(data.table::key(work_dt), "box_id"))
   agg_expr <- substitute(
-    dt_stratum_subset_split[
+    lexis_stratum_subset_split[
       j = EXPR,
       keyby = "box_id"
     ],
@@ -211,7 +211,7 @@ lexis_aggregate_one_stratum__ <- function(
   env[["call_env"]] <- call_env
   env[["eval_env"]] <- eval_env
   env[["stratum_eval_env"]] <- stratum_eval_env
-  env[["dt_stratum_subset_split"]] <- work_dt
+  env[["lexis_stratum_subset_split"]] <- work_dt
   out <- eval(agg_expr, envir = work_dt, enclos = env)
   out <- out[
     i = box_dt,
@@ -256,7 +256,7 @@ lexis_aggregate_one_stratum__ <- function(
 #' )
 #' @family Lexis_functions
 lexis_split_merge_aggregate_by_stratum <- function(
-  dt,
+  lexis,
   breaks,
   aggre_exprs,
   aggre_by = NULL,
@@ -269,14 +269,15 @@ lexis_split_merge_aggregate_by_stratum <- function(
   split_lexis_column_exprs = NULL,
   optional_steps = NULL
 ) {
-  #' @param dt `[Lexis]` (no default)
+  #' @param lexis `[Lexis]` (no default)
+  #'
   #' A `Lexis` dataset (`[Epi::Lexis]` / `[Lexis_dt]`).
   #'
-  assert_is_arg_dt(dt, lexis = TRUE)
+  assert_is_arg_lexis(lexis)
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::breaks
   # @codedoc_insert_comment_block popEpi:::assert_is_arg_breaks
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::breaks
-  assert_is_arg_breaks(breaks, dt)
+  assert_is_arg_breaks(breaks, lexis)
   #' @param merge_dt
   #' Passed to `[lexis_merge]`.
   #' @param merge_dt_by
@@ -286,13 +287,13 @@ lexis_split_merge_aggregate_by_stratum <- function(
   assert_is_arg_merge_dt_and_merge_dt_by(
     merge_dt = merge_dt,
     merge_dt_by = merge_dt_by,
-    dt = dt,
+    dt = lexis,
     mandatory = FALSE
   )
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::aggre_by
   # @codedoc_insert_comment_block popEpi:::handle_arg_by
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::aggre_by
-  aggre_by <- handle_arg_by(by = aggre_by, dataset = dt)
+  aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis)
   #' @param aggre_ts_col_nms `[NULL, character]` (default `NULL`)
   #'
   #' Names of `Lexis` time scales in `dt` by which to aggregate results.
@@ -366,7 +367,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
   # @codedoc_insert_comment_block popEpi:::handle_arg_subset
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
-  subset <- handle_arg_subset()
+  subset <- handle_arg_subset(dataset_nm = "lexis")
 
   eval_env <- environment()
   call_env <- parent.frame(1L)
@@ -395,14 +396,14 @@ lexis_split_merge_aggregate_by_stratum <- function(
   }
 
   lexis_ts_col_nms <- intersect(
-    attr(dt, "time.scales"),
+    attr(lexis, "time.scales"),
     c(aggre_ts_col_nms, names(breaks), merge_dt_by)
   )
   lexis_col_nms <- c(
     "lex.id", lexis_ts_col_nms, "lex.dur", "lex.Cst", "lex.Xst"
   )
-  dt <- data.table::setDT(as.list(dt)[intersect(
-    names(dt),
+  dt <- data.table::setDT(as.list(lexis)[intersect(
+    names(lexis),
     c(
       lexis_col_nms,
       names(aggre_by),
@@ -439,19 +440,19 @@ lexis_split_merge_aggregate_by_stratum <- function(
       }
       if (.N == 0) {
         # for some reason .SD is a one-row data.table with all NA values
-        dt_stratum_subset <- dt[0L, ]
+        lexis_stratum_subset <- dt[0L, ]
       } else {
-        dt_stratum_subset <- .SD
+        lexis_stratum_subset <- .SD
       }
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       #   + Run
       #     `popEpi::splitMulti` on the subset of `dt` which contains data from
       #     the current stratum.
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      dt_stratum_subset <- data.table::setDT(as.list(dt_stratum_subset))
-      lexis_set__(dt = dt_stratum_subset, lexis_ts_col_nms = lexis_ts_col_nms)
-      dt_stratum_subset_split <- surv_split__(
-        dt = dt_stratum_subset,
+      lexis_stratum_subset <- data.table::setDT(as.list(lexis_stratum_subset))
+      lexis_set__(dt = lexis_stratum_subset, lexis_ts_col_nms = lexis_ts_col_nms)
+      lexis_stratum_subset_split <- surv_split__(
+        dt = lexis_stratum_subset,
         breaks = breaks,
         merge = TRUE
       )
@@ -474,7 +475,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       if (!is.null(merge_dt)) {
         lexis_merge(
-          dt = dt_stratum_subset_split,
+          dt = lexis_stratum_subset_split,
           merge_dt = merge_dt,
           merge_dt_by = merge_dt_by,
           merge_dt_harmonisers = merge_dt_harmonisers
@@ -496,7 +497,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
       #   + Evaluate `aggre_exprs` as follows:
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       out <- lexis_aggregate_one_stratum__(
-        dt_stratum_subset_split = dt_stratum_subset_split,
+        lexis_stratum_subset_split = lexis_stratum_subset_split,
         box_dt = box_dt,
         aggre_exprs = aggre_exprs,
         split_lexis_column_exprs = split_lexis_column_exprs,

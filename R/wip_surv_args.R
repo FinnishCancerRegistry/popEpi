@@ -29,28 +29,31 @@ assert_is_arg_dt <- function(dt, lexis = FALSE) {
     data.table::is.data.table(dt)
   )
   if (lexis) {
-    stopifnot(
-      inherits(dt, "Lexis"),
-      inherits(dt[["lex.Cst"]], c("logical", "integer", "factor")),
-      inherits(dt[["lex.Xst"]], c("logical", "integer", "factor")),
-      identical(class(dt[["lex.Cst"]]), class(dt[["lex.Xst"]])),
-      !is.na(dt[["lex.Cst"]]),
-      !is.na(dt[["lex.Xst"]]),
-      ifelse(
-        is.factor(dt[["lex.Cst"]]),
-        identical(
-          levels(dt[["lex.Cst"]]),
-          levels(dt[["lex.Xst"]])
-        ),
-        TRUE
-      ),
-      ifelse(
-        is.integer(dt[["lex.Cst"]]),
-        all(dt[["lex.Cst"]] >= 0 & dt[["lex.Xst"]] >= 0),
-        TRUE
-      )
-    )
   }
+}
+
+assert_is_arg_lexis <- function(lexis) {
+  stopifnot(
+    inherits(lexis, "Lexis"),
+    inherits(lexis[["lex.Cst"]], c("logical", "integer", "factor")),
+    inherits(lexis[["lex.Xst"]], c("logical", "integer", "factor")),
+    identical(class(lexis[["lex.Cst"]]), class(lexis[["lex.Xst"]])),
+    !is.na(lexis[["lex.Cst"]]),
+    !is.na(lexis[["lex.Xst"]]),
+    ifelse(
+      is.factor(lexis[["lex.Cst"]]),
+      identical(
+        levels(lexis[["lex.Cst"]]),
+        levels(lexis[["lex.Xst"]])
+      ),
+      TRUE
+    ),
+    ifelse(
+      is.integer(lexis[["lex.Cst"]]),
+      all(lexis[["lex.Cst"]] >= 0 & lexis[["lex.Xst"]] >= 0),
+      TRUE
+    )
+  )
 }
 
 assert_is_arg_weight_col_nm <- function(
