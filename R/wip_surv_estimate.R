@@ -595,6 +595,7 @@ surv_estimate_expression_table__ <- function() {
 #'
 #' # popEpi::surv_estimate
 #' dt <- data.table::data.table(
+#'   box_id = 1:60,
 #'   ts_fut_start = seq(0, 5 - 1 / 12, 1 / 12),
 #'   ts_fut_stop = seq(1 / 12, 5, 1 / 12),
 #'   n_events = rpois(n = 60, lambda = 60:1),
@@ -671,11 +672,16 @@ surv_estimate <- function(
   # @codedoc_comment_block popEpi::surv_estimate::dt
   # @param dt
   #
-  # - `surv_estimate`: A `data.table`.
+  # - `surv_estimate`: A `data.table`. It must contain aggregate statistics
+  #   which can be used to compute survival function estimates. Must also have
+  #   column `box_id`, a running number like the one produced by
+  #   `[lexis_split_merge_aggregate_by_stratum]`.
   # @codedoc_insert_comment_block surv_arg_dt
   # @codedoc_comment_block popEpi::surv_estimate::dt
   assert_is_arg_dt(dt, lexis = FALSE)
   stopifnot(
+    "box_id" %in% names(dt),
+
     #' @param ts_fut_col_nm `[character]` (no default)
     #'
     #' Name of time scale column over which survival estimates will be computed.
@@ -889,13 +895,12 @@ surv_estimate <- function(
     data.table::setnames(sdta, variance_col_nms, standard_error_col_nms)
 
     ci_col_nms <- names(out)[grepl("(_lo$)|(_hi$)", names(out))]
-    sum_col_nms <- aggre_meta[["value_col_nms"]]
     nonsum_col_nms <- c(
       intersect(aggre_meta[["stratum_col_nms"]], names(sdta)),
       setdiff(
         names(out),
         c(
-          sum_col_nms, variance_col_nms, estimate_col_nms, ci_col_nms,
+          value_col_nms, variance_col_nms, estimate_col_nms, ci_col_nms,
           aggre_meta[["stratum_col_nms"]]
         )
       )
@@ -908,7 +913,7 @@ surv_estimate <- function(
     sum_dt <- out[
       #' @importFrom data.table .SD
       j = lapply(.SD, sum),
-      .SDcols = sum_col_nms,
+      .SDcols = value_col_nms,
       #' @importFrom data.table .EACHI
       keyby = eval(nonsum_col_nms)
     ]

@@ -39,7 +39,10 @@ surv_lexis(
 }
 \arguments{
 \item{dt}{\itemize{
-\item \code{surv_estimate}: A \code{data.table}.
+\item \code{surv_estimate}: A \code{data.table}. It must contain aggregate statistics
+which can be used to compute survival function estimates. Must also have
+column \code{box_id}, a running number like the one produced by
+\verb{[lexis_split_merge_aggregate_by_stratum]}.
 \item \code{surv_individual_weights}: A \code{data.frame} / \code{data.table}.
 }}
 
@@ -350,6 +353,7 @@ functions using aggregated data.
 
 # popEpi::surv_estimate
 dt <- data.table::data.table(
+  box_id = 1:60,
   ts_fut_start = seq(0, 5 - 1 / 12, 1 / 12),
   ts_fut_stop = seq(1 / 12, 5, 1 / 12),
   n_events = rpois(n = 60, lambda = 60:1),
