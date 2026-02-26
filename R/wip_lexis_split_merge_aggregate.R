@@ -84,7 +84,7 @@ SPLIT_LEXIS_COLUMN_EXPRS__ <- list(
   pp = quote(
     {
       surv_pohar_perme_weight__(
-        dt = work_dt,
+        lexis = work_dt,
         ts_fut_breaks = eval_env[["breaks"]][[ts_fut_col_nm]],
         ts_fut_col_nm = ts_fut_col_nm,
         hazard_col_nm = "h_exp"
