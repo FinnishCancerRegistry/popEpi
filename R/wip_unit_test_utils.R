@@ -10,7 +10,7 @@ test_make_pm__ <- function() {
     list(pm),
     lapply(101:110, function(age) {
       sub_pm <- pm[
-        pm[["ts_age"]] == max(pm[["ts_age"]])
+        pm[["ts_age"]] == 100
       ]
       sub_pm[
         j = "ts_age" := age
@@ -19,6 +19,20 @@ test_make_pm__ <- function() {
     })
   )
   pm <- data.table::rbindlist(pm)
+  # pm <- c(
+  #   list(pm),
+  #   lapply(2014:2024, function(y) {
+  #     sub_pm <- pm[
+  #       pm[["ts_cal"]] == 2013
+  #     ]
+  #     sub_pm[
+  #       j = "ts_cal" := y
+  #     ]
+  #     sub_pm[]
+  #   })
+  # )
+  # pm <- data.table::rbindlist(pm)
+  data.table::setkeyv(pm, c("sex", "ts_cal", "ts_age"))
   return(pm[])
 }
 

@@ -787,10 +787,14 @@ surv_estimate <- function(
   if (do_direct_adjusting) {
     estimate_stratum_col_nms <- union(
       stratum_col_nms,
-      setdiff(names(do_direct_adjusting), "weight")
+      setdiff(names(weight_dt), "weight")
     )
   }
 
+  # @codedoc_comment_block popEpi::surv_estimate
+  # - Add column `delta_t` as the difference between the `_stop` and `_start`
+  #   columns of the follow-up time scale, e.g. `ts_fut_stop - ts_fut_start`.
+  # @codedoc_comment_block popEpi::surv_estimate
   data.table::set(
     x = out,
     j = "delta_t",
@@ -828,144 +832,115 @@ surv_estimate <- function(
         by = eval(estimate_stratum_col_nms)
       ]
     }
-    # @codedoc_comment_block popEpi::surv_estimate
-    #   + If `conf_methods[[i]]` is not `"none"`, compute confidence intervals
-    #     by calling `[directadjusting::delta_method_confidence_intervals]`
-    #     and add them into `dt`.
-    # @codedoc_comment_block popEpi::surv_estimate
-    if (!isTRUE(all.equal(
-      conf_methods[[user_estimator_name]],
-      "none",
-      check.attributes = FALSE
-    ))) {
-      # @codedoc_comment_block popEpi::surv_estimate::conf_methods
-      # Passed one at a time to
-      # `[directadjusting::delta_method_confidence_intervals]`.
-      # Except `"none"` causes no confidence intervals to be computed for that
-      # estimator.
-      # @codedoc_comment_block popEpi::surv_estimate::conf_methods
-      # @codedoc_comment_block popEpi::surv_estimate::conf_lvls
-      # Passed one at a time to
-      # `[directadjusting::delta_method_confidence_intervals]`.
-      # @codedoc_comment_block popEpi::surv_estimate::conf_lvls
-      data.table::set(
-        x = out,
-        j = paste0(user_estimator_name, "_", c("lo", "hi")),
-        value = directadjusting::delta_method_confidence_intervals(
-          statistics = out[[paste0(user_estimator_name, "_est")]],
-          variances = out[[
-            paste0(user_estimator_name, "_se")
-          ]] ^ 2,
-          conf_lvl = conf_lvls[[user_estimator_name]],
-          conf_method = conf_methods[[user_estimator_name]]
-        )[
-          #' @importFrom data.table .SD
-          j = .SD,
-          .SDcols = c("ci_lo", "ci_hi")
-        ]
-      )
-    }
   }
 
-  if (do_direct_adjusting) {
-    out <- local({
-      estimate_col_nms <- paste0(
-        estimator_dt[["user_estimator_name"]], "_est"
-      )
-      standard_error_col_nms <- paste0(
-        estimator_dt[["user_estimator_name"]], "_se"
-      )
-      data.table::set(
-        out,
-        j = standard_error_col_nms,
-        value = lapply(standard_error_col_nms, function(secn) {
-          out[[secn]] ^ 2
-        })
-      )
-      variance_col_nms <- sub(
-        "_est$", "_variance", estimate_col_nms
-      )
-      data.table::setnames(out, standard_error_col_nms, variance_col_nms)
-      da_stratum_col_nms <- c(stratum_col_nms,  "box_id")
-      da_adjust_col_nms <- character(0)
-      if (data.table::is.data.table(weight_dt)) {
-        da_adjust_col_nms <- setdiff(names(weight_dt), "weight")
-      }
-      # @codedoc_comment_block popEpi::surv_estimate
-      # - If `weights` was a `data.table`, we perform an additional direct
-      #   adjusting step by calling
-      #   `[directadjusting::directly_adjusted_estimates]`.
-      # @codedoc_comment_block popEpi::surv_estimate
-      sdta <- directadjusting::directly_adjusted_estimates(
-        stats_dt = out,
-        stratum_col_nms = da_stratum_col_nms,
-        stat_col_nms = estimate_col_nms,
-        var_col_nms = variance_col_nms,
-        adjust_col_nms = da_adjust_col_nms,
-        conf_methods = conf_methods,
-        conf_lvls = conf_lvls,
-        weights = weight_dt
-      )
-      data.table::set(
-        x = sdta,
-        j = variance_col_nms,
-        value = lapply(variance_col_nms, function(vcn) {
-          sqrt(sdta[[vcn]])
-        })
-      )
-      data.table::setnames(sdta, variance_col_nms, standard_error_col_nms)
+  out <- local({
+    estimate_col_nms <- paste0(
+      estimator_dt[["user_estimator_name"]], "_est"
+    )
+    standard_error_col_nms <- paste0(
+      estimator_dt[["user_estimator_name"]], "_se"
+    )
+    data.table::set(
+      out,
+      j = standard_error_col_nms,
+      value = lapply(standard_error_col_nms, function(secn) {
+        out[[secn]] ^ 2
+      })
+    )
+    variance_col_nms <- sub(
+      "_est$", "_variance", estimate_col_nms
+    )
+    data.table::setnames(out, standard_error_col_nms, variance_col_nms)
+    da_stratum_col_nms <- c(stratum_col_nms,  "box_id")
+    da_adjust_col_nms <- character(0)
+    if (data.table::is.data.table(weight_dt)) {
+      da_adjust_col_nms <- setdiff(names(weight_dt), "weight")
+    }
+    #' @param conf_lvls
+    #' Passed one at a time to
+    #' `[directadjusting::directly_adjusted_estimates]`.
+    #' @param conf_methods
+    #' Passed one at a time to
+    #' `[directadjusting::directly_adjusted_estimates]`.
+    # @codedoc_comment_block popEpi::surv_estimate
+    # - Call
+    #   `[directadjusting::directly_adjusted_estimates]`.
+    #   If no weights were given for direct adjusting then this step simply
+    #   produces the confidence intervals.
+    # @codedoc_comment_block popEpi::surv_estimate
+    sdta <- directadjusting::directly_adjusted_estimates(
+      stats_dt = out,
+      stratum_col_nms = da_stratum_col_nms,
+      stat_col_nms = estimate_col_nms,
+      var_col_nms = variance_col_nms,
+      adjust_col_nms = da_adjust_col_nms,
+      conf_methods = conf_methods,
+      conf_lvls = conf_lvls,
+      weights = weight_dt
+    )
+    data.table::set(
+      x = sdta,
+      j = variance_col_nms,
+      value = lapply(variance_col_nms, function(vcn) {
+        sqrt(sdta[[vcn]])
+      })
+    )
+    data.table::setnames(sdta, variance_col_nms, standard_error_col_nms)
 
-      ci_col_nms <- names(out)[grepl("(_lo$)|(_hi$)", names(out))]
-      sum_col_nms <- aggre_meta[["value_col_nms"]]
-      nonsum_col_nms <- c(
-        intersect(aggre_meta[["stratum_col_nms"]], names(sdta)),
-        setdiff(
-          names(out),
-          c(
-            sum_col_nms, variance_col_nms, estimate_col_nms, ci_col_nms,
-            aggre_meta[["stratum_col_nms"]]
-          )
+    ci_col_nms <- names(out)[grepl("(_lo$)|(_hi$)", names(out))]
+    sum_col_nms <- aggre_meta[["value_col_nms"]]
+    nonsum_col_nms <- c(
+      intersect(aggre_meta[["stratum_col_nms"]], names(sdta)),
+      setdiff(
+        names(out),
+        c(
+          sum_col_nms, variance_col_nms, estimate_col_nms, ci_col_nms,
+          aggre_meta[["stratum_col_nms"]]
         )
       )
-      # @codedoc_comment_block popEpi::surv_estimate
-      # - If `weights` was a `data.table`, the summary statistics such as
-      #   `n_events` are summed over the adjusting strata and will be included
-      #   in the output. These are not weighted averages/sums but simple sums.
-      # @codedoc_comment_block popEpi::surv_estimate
-      sum_dt <- out[
-        #' @importFrom data.table .SD
-        j = lapply(.SD, sum),
-        .SDcols = sum_col_nms,
-        #' @importFrom data.table .EACHI
-        keyby = eval(nonsum_col_nms)
-      ]
-      add_col_nms <- setdiff(
-        names(sdta),
-        names(sum_dt)
-      )
-      data.table::set(
-        x = sum_dt,
-        j = add_col_nms,
-        value = as.list(sdta)[add_col_nms]
-      )
-      ci_col_nms <- names(sum_dt)[grepl("(_lo$)|(_hi$)", names(sum_dt))]
-      data.table::setnames(
-        sum_dt,
-        ci_col_nms,
-        sub("_est_", "_", ci_col_nms)
-      )
-      sum_dt[]
-    })
-  }
+    )
+    # @codedoc_comment_block popEpi::surv_estimate
+    # - If direct adjusting was performed, the summary statistics such as
+    #   `n_events` are summed over the adjusting strata and will be included
+    #   in the output. These are not weighted averages/sums but simple sums.
+    # @codedoc_comment_block popEpi::surv_estimate
+    sum_dt <- out[
+      #' @importFrom data.table .SD
+      j = lapply(.SD, sum),
+      .SDcols = sum_col_nms,
+      #' @importFrom data.table .EACHI
+      keyby = eval(nonsum_col_nms)
+    ]
+    add_col_nms <- setdiff(
+      names(sdta),
+      names(sum_dt)
+    )
+    data.table::set(
+      x = sum_dt,
+      j = add_col_nms,
+      value = as.list(sdta)[add_col_nms]
+    )
+    ci_col_nms <- names(sum_dt)[grepl("(_lo$)|(_hi$)", names(sum_dt))]
+    data.table::setnames(
+      sum_dt,
+      ci_col_nms,
+      sub("_est_", "_", ci_col_nms)
+    )
+    sum_dt[]
+  })
 
   # @codedoc_comment_block popEpi::surv_estimate
-  # - Return `dt` invisibly.
+  # - Return a `data.table` containing all columns in `dt` (unless direct
+  #   adjusting was performed --- then the adjusting column(s) are not present)
+  #   and additional columns of estimates, standard errors, and confidence
+  #   intervals.
   # @codedoc_comment_block popEpi::surv_estimate
   # @codedoc_comment_block return(popEpi::surv_estimate)
-  # Returns `dt` invisibly after adding new columns depending on argument
-  # `estimators`.
-  # You don't need to keep the output of `popEpi::surv_estimate` because it
-  # modifies `dt` in place.
+  # Returns a `data.table` containing all columns in `dt` (unless direct
+  # adjusting was performed --- then the adjusting column(s) are not present)
+  # and additional columns of estimates, standard errors, and confidence
+  # intervals.
   # @codedoc_comment_block return(popEpi::surv_estimate)
   return(out[])
 }

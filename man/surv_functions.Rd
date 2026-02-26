@@ -14,7 +14,7 @@ surv_estimate(
   stratum_col_nms = NULL,
   value_col_nms = NULL,
   estimators = "S_pch",
-  weights = NULL,
+  weight_dt = NULL,
   conf_methods = "log",
   conf_lvls = 0.95
 )
@@ -96,26 +96,11 @@ the standard errors.
 }
 }}
 
-\item{weights}{Specifies weights to adjust by. What is accepted depends on the function.
-See \strong{Details} to understand how the \code{weights} argument is used.
-\itemize{
-\item \code{popEpi::surv_estimate}: \verb{[data.table, NULL]} (default \code{NULL})
-\item \code{popEpi::surv_lexis}: \verb{[data.table, character, NULL]} (default \code{NULL})
-}}
+\item{conf_methods}{Passed one at a time to
+\verb{[directadjusting::directly_adjusted_estimates]}.}
 
-\item{conf_methods}{\verb{[character, list]} (default \code{"log"})
-
-Must be of length 1 or \code{length(estimators)}.
-Passed one at a time to
-\verb{[directadjusting::delta_method_confidence_intervals]}.
-Except \code{"none"} causes no confidence intervals to be computed for that
-estimator.}
-
-\item{conf_lvls}{\verb{[numeric]} (default \code{0.95})
-
-Must be of length 1 or \code{length(estimators)}.
-Passed one at a time to
-\verb{[directadjusting::delta_method_confidence_intervals]}.}
+\item{conf_lvls}{Passed one at a time to
+\verb{[directadjusting::directly_adjusted_estimates]}.}
 
 \item{standard_weight_dt}{\verb{[data.table]} (no default)
 
@@ -162,14 +147,21 @@ allowed.
 \item{aggre_exprs}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{subset}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
+\item{weights}{Specifies weights to adjust by. What is accepted depends on the function.
+See \strong{Details} to understand how the \code{weights} argument is used.
+\itemize{
+\item \code{popEpi::surv_estimate}: \verb{[data.table, NULL]} (default \code{NULL})
+\item \code{popEpi::surv_lexis}: \verb{[data.table, character, NULL]} (default \code{NULL})
+}}
 }
 \value{
 \strong{popEpi::surv_estimate}
 
-Returns \code{dt} invisibly after adding new columns depending on argument
-\code{estimators}.
-You don't need to keep the output of \code{popEpi::surv_estimate} because it
-modifies \code{dt} in place.
+Returns a \code{data.table} containing all columns in \code{dt} (unless direct
+adjusting was performed --- then the adjusting column(s) are not present)
+and additional columns of estimates, standard errors, and confidence
+intervals.
 
 \strong{popEpi::surv_individual_weights}
 
@@ -233,23 +225,26 @@ Pre-defined estimators with their formulae:
 }
 
 \itemize{
+\item Add column \code{delta_t} as the difference between the \verb{_stop} and \verb{_start}
+columns of the follow-up time scale, e.g. \code{ts_fut_stop - ts_fut_start}.
 \item Armed with a list of expressions based on \code{estimates}, called
 \code{expressions}, for each \code{i}:
 \itemize{
 \item Evaluate each element of \code{expressions[[i]]} and add the result into
 \code{dt}. E.g. \code{S_pch_est} and
 \code{S_pch_se}.
-\item If \code{conf_methods[[i]]} is not \code{"none"}, compute confidence intervals
-by calling \verb{[directadjusting::delta_method_confidence_intervals]}
-and add them into \code{dt}.
 }
-\item If \code{weights} was a \code{data.table}, we perform an additional direct
-adjusting step by calling
+\item Call
 \verb{[directadjusting::directly_adjusted_estimates]}.
-\item If \code{weights} was a \code{data.table}, the summary statistics such as
+If no weights were given for direct adjusting then this step simply
+produces the confidence intervals.
+\item If direct adjusting was performed, the summary statistics such as
 \code{n_events} are summed over the adjusting strata and will be included
 in the output. These are not weighted averages/sums but simple sums.
-\item Return \code{dt} invisibly.
+\item Return a \code{data.table} containing all columns in \code{dt} (unless direct
+adjusting was performed --- then the adjusting column(s) are not present)
+and additional columns of estimates, standard errors, and confidence
+intervals.
 }
 
 
