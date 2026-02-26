@@ -153,6 +153,10 @@ e.g. the same age group twice in a table stratified by age group only.
 allowed.
 }}
 
+\item{lexis}{\verb{[Lexis]} (no default)
+
+A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
+
 \item{breaks}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{merge_dt_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}

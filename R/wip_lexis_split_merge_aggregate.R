@@ -269,10 +269,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   split_lexis_column_exprs = NULL,
   optional_steps = NULL
 ) {
-  #' @param lexis `[Lexis]` (no default)
-  #'
-  #' A `Lexis` dataset (`[Epi::Lexis]` / `[Lexis_dt]`).
-  #'
+  #' @template param_lexis
   assert_is_arg_lexis(lexis)
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::breaks
   # @codedoc_insert_comment_block popEpi:::assert_is_arg_breaks
