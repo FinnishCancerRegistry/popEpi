@@ -472,7 +472,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       if (!is.null(merge_dt)) {
         lexis_merge(
-          dt = lexis_stratum_subset_split,
+          lexis = lexis_stratum_subset_split,
           merge_dt = merge_dt,
           merge_dt_by = merge_dt_by,
           merge_dt_harmonisers = merge_dt_harmonisers

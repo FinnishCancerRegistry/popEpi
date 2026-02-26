@@ -249,7 +249,7 @@ prev_lexis <- function(
     )
   )
   lexis_merge(
-    dt = work_dt,
+    lexis = work_dt,
     merge_dt = survival_dt,
     merge_dt_by = survival_dt_by,
     merge_dt_harmonisers = survival_dt_harmonisers

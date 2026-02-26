@@ -86,7 +86,7 @@ NULL
 #'   value = runif(nrow(my_merge_dt))
 #' )
 #' popEpi::lexis_merge(
-#'   dt = lexis,
+#'   lexis = lexis,
 #'   merge_dt = my_merge_dt,
 #'   merge_dt_by = c("sex", "ts_age", "ts_cal")
 #' )
@@ -100,7 +100,7 @@ NULL
 #'   value = NULL
 #' )
 #' popEpi::lexis_merge(
-#'   dt = lexis,
+#'   lexis = lexis,
 #'   merge_dt = my_merge_dt,
 #'   merge_dt_by = c("sex", "ts_age", "ts_cal"),
 #'   merge_dt_harmonisers = list(
@@ -114,7 +114,7 @@ NULL
 #' )
 #'
 lexis_merge <- function(
-  dt,
+  lexis,
   merge_dt,
   merge_dt_by,
   merge_dt_harmonisers = NULL,
@@ -162,13 +162,12 @@ lexis_merge <- function(
       eval_env = eval_env
     ))
   }
-  #' @param dt `[Lexis]` (no default)
-  #'
-  #' A `Lexis` dataset (`[Epi::Lexis]` / `[Lexis_dt]`).
-  assert_is_arg_dt(dt, lexis = TRUE)
+  #' @template param_lexis
+  assert_is_arg_lexis(lexis)
   #' @param merge_dt `[data.table, NULL]` (no default or default `NULL`)
   #'
-  #' A `data.table` to merge with `dt`, possibly after splitting.
+  #' A `data.table` to merge with `lexis`. Usually `lexis` has been split
+  #' with e.g. `[splitMulti]`.
   #'
   #' - `NULL`: Allowed only if this is the function's default for this argument.
   #'   When both `merge_dt` and `merge_dt_by` are `NULL`, no merge is performed.
@@ -176,8 +175,8 @@ lexis_merge <- function(
   #'   expected hazards for the estimation of relative or net survival.
   #' @param merge_dt_by `[character, NULL]` (no default or default `NULL`)
   #'
-  #' Names of columns in both `merge_dt` and `dt` by which `merge_dt` will be
-  #' merged with ` dt`.
+  #' Names of columns in both `merge_dt` and `lexis` by which `merge_dt` will be
+  #' merged with ` lexis`.
   #'
   #' - `NULL`: Allowed only if this is the function's default for this argument.
   #'   When both `merge_dt` and `merge_dt_by` are `NULL`, no merge is performed.
@@ -185,27 +184,29 @@ lexis_merge <- function(
   assert_is_arg_merge_dt_and_merge_dt_by(
     merge_dt,
     merge_dt_by,
-    dt,
+    lexis,
     mandatory = TRUE
   )
   call_env <- parent.frame(1L)
-  lexis_ts_col_nms <- attr(dt, "time.scales")
+  lexis_ts_col_nms <- attr(lexis, "time.scales")
   merge_ts_col_nms <- intersect(lexis_ts_col_nms, merge_dt_by)
   #' @param merge_dt_harmonisers `[NULL, list]` (default `NULL`)
   #'
   #' Optional list of quoted expressions which, when evaluated, harmonise
-  #' data in `dt` (possibly after splitting) to look the same as the data in
+  #' data in `lexis` (possibly after splitting) to look the same as the data in
   #' `merge_dt`. For example, if `merge_dt` contains expected hazards by
-  #' calendar year `ts_cal` and 1-year age group `ts_age`, and if `dt` has been
+  #' calendar year `ts_cal` and 1-year age group `ts_age`, and if `lexis` has
+  #' been
   #' split into monthly survival intervals, then we must somehow find the
-  #' correct row in `merge_dt` for each row in `dt`. E.g. `ts_cal = 2010.5323`
+  #' correct row in `merge_dt` for each row in `lexis`. E.g.
+  #' `ts_cal = 2010.5323`
   #' and `ts_age = 76.4435` need to be harmonised into values found in
   #' `merge_dt` such as `ts_cal = 2010` and `ts_age = 76`.
   #'
   #' - `NULL`: This function comes up with reasonable harmonisers if possible.
   #'   See **Details**.
   #' - `list`: Each element must a quoted expression (`[quote]`) and each
-  #'   element must have a name corresponding to a column name in both `dt`
+  #'   element must have a name corresponding to a column name in both `lexis`
   #'   and `merge_dt`. See **Examples**.
   if (is.null(merge_dt_harmonisers)) {
     # @codedoc_comment_block popEpi::lexis_merge
@@ -279,8 +280,8 @@ lexis_merge <- function(
   # @codedoc_comment_block popEpi::lexis_merge
   # - Armed with either user-defined or automatically created
   #   `merge_dt_harmonisers`, they are each evaluated to create a temporary
-  #   `data.table` with harmonised data from `dt`. This is performed via
-  #   `eval` with `envir = dt` and `enclos = call_env` where `call_env` is the
+  #   `data.table` with harmonised data from `lexis`. This is performed via
+  #   `eval` with `envir = lexis` and `enclos = call_env` where `call_env` is the
   #   environment where `popEpi::lexis_merge` was called. Of course if a column
   #   has no harmoniser at this point then it is used as-is. For instance there
   #   is no need to harmonise stratifying columns because they are not changed
@@ -290,11 +291,11 @@ lexis_merge <- function(
     if (col_nm %in% names(merge_dt_harmonisers)) {
       eval(
         merge_dt_harmonisers[[col_nm]],
-        envir = dt,
+        envir = lexis,
         enclos = call_env
       )
     } else {
-      dt[[col_nm]]
+      lexis[[col_nm]]
     }
   }))
   data.table::setnames(join_dt, merge_dt_by)
@@ -312,12 +313,12 @@ lexis_merge <- function(
   }
   # @codedoc_comment_block popEpi::lexis_merge
   # - Then we perform the actual merge between `merge_dt` and the harmonised
-  #   data. This merges in data from `merge_dt` into every row of `dt` in-place.
-  #   So `dt` is modified and no additional copy is taken for the sake of
+  #   data. This merges in data from `merge_dt` into every row of `lexis` in-place.
+  #   So `lexis` is modified and no additional copy is taken for the sake of
   #   efficiency.
   # @codedoc_comment_block popEpi::lexis_merge
   data.table::set(
-    x = dt,
+    x = lexis,
     j = merge_value_col_nms,
     value = merge_dt[
       i = join_dt,
@@ -342,32 +343,32 @@ lexis_merge <- function(
   # - Each merged-in column from `merge_dt` (all columns not in `merge_dt_by`)
   #   are inspected for missing values. If there are any, an error is raised.
   #   This usually occurs if `merge_dt` does not contain data for all data in
-  #   `dt`. For instance it only covers years 1950-2020 but `dt` contains also
+  #   `lexis`. For instance it only covers years 1950-2020 but `lexis` contains also
   #   data for 2021. This error helps you to spot those problems early instead
   #   of producing nonsense results downstream.
   # @codedoc_comment_block popEpi::lexis_merge
   for (merge_value_col_nm in merge_value_col_nms) {
-    is_missing <- is.na(dt[[merge_value_col_nm]])
+    is_missing <- is.na(lexis[[merge_value_col_nm]])
     if (any(is_missing)) {
-      print(data.table::setDT(dt[is_missing, ]))
-      stop("Merging `merge_dt` into split (subset of) `dt` produced NA values ",
-           "in column `dt$", merge_value_col_nm, "`. ",
+      print(data.table::setDT(lexis[is_missing, ]))
+      stop("Merging `merge_dt` into split (subset of) `lexis` produced NA ",
+           "values in column `lexis$", merge_value_col_nm, "`. ",
            "See the table printed above.")
     }
   }
   # @codedoc_comment_block popEpi::lexis_merge
-  # - Returns `dt` invisibly after adding columns from
-  #   `merge_dt` into `dt` in-place, without taking a copy.
+  # - Returns `lexis` invisibly after adding columns from
+  #   `merge_dt` into `lexis` in-place, without taking a copy.
   # @codedoc_comment_block popEpi::lexis_merge
   # @codedoc_comment_block return(popEpi::lexis_merge)
-  # Returns `dt` invisibly after adding columns from
-  # `merge_dt` into `dt` in-place, without taking a copy.
+  # Returns `lexis` invisibly after adding columns from
+  # `merge_dt` into `lexis` in-place, without taking a copy.
   # @codedoc_comment_block return(popEpi::lexis_merge)
-  return(invisible(dt[]))
+  return(invisible(lexis[]))
 }
 
 lexis_merge_survival <- function(
-  dt,
+  lexis,
   survival_dt,
   survival_dt_by,
   survival_dt_harmonisers = NULL,
@@ -405,7 +406,7 @@ lexis_merge_survival <- function(
     by = setdiff(survival_dt_by, ts_fut_col_nm)
   ]
   lexis_merge(
-    dt = dt,
+    lexis = lexis,
     merge_dt = survival_dt,
     merge_dt_by = survival_dt_by,
     merge_dt_harmonisers = survival_dt_harmonisers,
@@ -423,22 +424,22 @@ lexis_merge_survival <- function(
     )
   )
   value_col_nms <- setdiff(names(survival_dt), survival_dt_by)
-  work_dt <- data.table::setDT(as.list(dt)[value_col_nms])
-  data.table::set(x = dt, j = value_col_nms, value = NULL)
+  work_dt <- data.table::setDT(as.list(lexis)[value_col_nms])
+  data.table::set(x = lexis, j = value_col_nms, value = NULL)
   work_dt[
     j = "delta" := (
       work_dt[["survival_interval_start"]] +
         work_dt[["delta_t"]]
-    ) - (dt[[ts_fut_col_nm]] + dt[["lex.dur"]])
+    ) - (lexis[[ts_fut_col_nm]] + lexis[["lex.dur"]])
   ]
   work_dt[
     j = "cumulative_hazard" := work_dt[["cumulative_hazard"]] -
       work_dt[["delta"]] * work_dt[["hazard"]]
   ]
   data.table::set(
-    x = dt,
+    x = lexis,
     j = "survival",
     value = exp(-work_dt[["cumulative_hazard"]])
   )
-  return(invisible(dt[]))
+  return(invisible(lexis[]))
 }

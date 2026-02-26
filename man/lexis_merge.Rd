@@ -5,7 +5,7 @@
 \title{Merge Data into \code{Lexis} Object}
 \usage{
 lexis_merge(
-  dt,
+  lexis,
   merge_dt,
   merge_dt_by,
   merge_dt_harmonisers = NULL,
@@ -13,13 +13,14 @@ lexis_merge(
 )
 }
 \arguments{
-\item{dt}{\verb{[Lexis]} (no default)
+\item{lexis}{\verb{[Lexis]} (no default)
 
 A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
 
 \item{merge_dt}{\verb{[data.table, NULL]} (no default or default \code{NULL})
 
-A \code{data.table} to merge with \code{dt}, possibly after splitting.
+A \code{data.table} to merge with \code{lexis}. Usually \code{lexis} has been split
+with e.g. \verb{[splitMulti]}.
 \itemize{
 \item \code{NULL}: Allowed only if this is the function's default for this argument.
 When both \code{merge_dt} and \code{merge_dt_by} are \code{NULL}, no merge is performed.
@@ -29,8 +30,8 @@ expected hazards for the estimation of relative or net survival.
 
 \item{merge_dt_by}{\verb{[character, NULL]} (no default or default \code{NULL})
 
-Names of columns in both \code{merge_dt} and \code{dt} by which \code{merge_dt} will be
-merged with \code{ dt}.
+Names of columns in both \code{merge_dt} and \code{lexis} by which \code{merge_dt} will be
+merged with \code{ lexis}.
 \itemize{
 \item \code{NULL}: Allowed only if this is the function's default for this argument.
 When both \code{merge_dt} and \code{merge_dt_by} are \code{NULL}, no merge is performed.
@@ -40,18 +41,20 @@ When both \code{merge_dt} and \code{merge_dt_by} are \code{NULL}, no merge is pe
 \item{merge_dt_harmonisers}{\verb{[NULL, list]} (default \code{NULL})
 
 Optional list of quoted expressions which, when evaluated, harmonise
-data in \code{dt} (possibly after splitting) to look the same as the data in
+data in \code{lexis} (possibly after splitting) to look the same as the data in
 \code{merge_dt}. For example, if \code{merge_dt} contains expected hazards by
-calendar year \code{ts_cal} and 1-year age group \code{ts_age}, and if \code{dt} has been
+calendar year \code{ts_cal} and 1-year age group \code{ts_age}, and if \code{lexis} has
+been
 split into monthly survival intervals, then we must somehow find the
-correct row in \code{merge_dt} for each row in \code{dt}. E.g. \code{ts_cal = 2010.5323}
+correct row in \code{merge_dt} for each row in \code{lexis}. E.g.
+\code{ts_cal = 2010.5323}
 and \code{ts_age = 76.4435} need to be harmonised into values found in
 \code{merge_dt} such as \code{ts_cal = 2010} and \code{ts_age = 76}.
 \itemize{
 \item \code{NULL}: This function comes up with reasonable harmonisers if possible.
 See \strong{Details}.
 \item \code{list}: Each element must a quoted expression (\verb{[quote]}) and each
-element must have a name corresponding to a column name in both \code{dt}
+element must have a name corresponding to a column name in both \code{lexis}
 and \code{merge_dt}. See \strong{Examples}.
 }}
 
@@ -68,8 +71,8 @@ be.
 \value{
 \strong{popEpi::lexis_merge}
 
-Returns \code{dt} invisibly after adding columns from
-\code{merge_dt} into \code{dt} in-place, without taking a copy.
+Returns \code{lexis} invisibly after adding columns from
+\code{merge_dt} into \code{lexis} in-place, without taking a copy.
 }
 \description{
 Function(s) to merge data into \code{Lexis} objects intelligently when merging
@@ -137,8 +140,8 @@ break values at those indices. E.g. the cut results in
 if that \code{optional_steps} element exists.
 \item Armed with either user-defined or automatically created
 \code{merge_dt_harmonisers}, they are each evaluated to create a temporary
-\code{data.table} with harmonised data from \code{dt}. This is performed via
-\code{eval} with \code{envir = dt} and \code{enclos = call_env} where \code{call_env} is the
+\code{data.table} with harmonised data from \code{lexis}. This is performed via
+\code{eval} with \code{envir = lexis} and \code{enclos = call_env} where \code{call_env} is the
 environment where \code{popEpi::lexis_merge} was called. Of course if a column
 has no harmoniser at this point then it is used as-is. For instance there
 is no need to harmonise stratifying columns because they are not changed
@@ -147,8 +150,8 @@ by splitting the \code{Lexis} data.
 \code{optional_steps[["post_harmonisation"]](call_env = call_env, eval_env = eval_env)}
 if that \code{optional_steps} element exists.
 \item Then we perform the actual merge between \code{merge_dt} and the harmonised
-data. This merges in data from \code{merge_dt} into every row of \code{dt} in-place.
-So \code{dt} is modified and no additional copy is taken for the sake of
+data. This merges in data from \code{merge_dt} into every row of \code{lexis} in-place.
+So \code{lexis} is modified and no additional copy is taken for the sake of
 efficiency.
 \item Run
 \code{optional_steps[["post_merge"]](call_env = call_env, eval_env = eval_env)}
@@ -156,11 +159,11 @@ if that \code{optional_steps} element exists.
 \item Each merged-in column from \code{merge_dt} (all columns not in \code{merge_dt_by})
 are inspected for missing values. If there are any, an error is raised.
 This usually occurs if \code{merge_dt} does not contain data for all data in
-\code{dt}. For instance it only covers years 1950-2020 but \code{dt} contains also
+\code{lexis}. For instance it only covers years 1950-2020 but \code{lexis} contains also
 data for 2021. This error helps you to spot those problems early instead
 of producing nonsense results downstream.
-\item Returns \code{dt} invisibly after adding columns from
-\code{merge_dt} into \code{dt} in-place, without taking a copy.
+\item Returns \code{lexis} invisibly after adding columns from
+\code{merge_dt} into \code{lexis} in-place, without taking a copy.
 }
 }
 
@@ -184,7 +187,7 @@ data.table::set(
   value = runif(nrow(my_merge_dt))
 )
 popEpi::lexis_merge(
-  dt = lexis,
+  lexis = lexis,
   merge_dt = my_merge_dt,
   merge_dt_by = c("sex", "ts_age", "ts_cal")
 )
@@ -198,7 +201,7 @@ data.table::set(
   value = NULL
 )
 popEpi::lexis_merge(
-  dt = lexis,
+  lexis = lexis,
   merge_dt = my_merge_dt,
   merge_dt_by = c("sex", "ts_age", "ts_cal"),
   merge_dt_harmonisers = list(
