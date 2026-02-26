@@ -54,8 +54,13 @@ surv_lexis <- function(
 ) {
   subset <- handle_arg_subset()
   aggre_by <- handle_arg_by(by = aggre_by, dataset = dt)
-  # @codedoc_comment_block surv_arg_weights
-  # - `popEpi::surv_lexis`: `[data.table, character, NULL]` (default `NULL`)
+  #' @param weights `[NULL, data.table, character]` (default `NULL`)
+  #'
+  #' Weights for adjusting estimates.
+  #'
+  #' - `NULL`: No adjusting is performed.
+  #' - `data.table`: Passed to `[surv_estimate]`.
+  #' - `character`: Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   # @codedoc_comment_block surv_arg_weights
   weight_dt <- weight_col_nm <- NULL
   do_direct_adjusting <- data.table::is.data.table(weights)
