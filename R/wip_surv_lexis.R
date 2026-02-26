@@ -38,7 +38,7 @@ surv_lexis_aggre_exprs__ <- function(
 #'   "surv_functions"
 #' )
 surv_lexis <- function(
-  dt,
+  lexis,
   breaks,
   merge_dt_by = NULL,
   merge_dt = NULL,
@@ -52,8 +52,8 @@ surv_lexis <- function(
   conf_lvls = 0.95,
   weights = NULL
 ) {
-  subset <- handle_arg_subset()
-  aggre_by <- handle_arg_by(by = aggre_by, dataset = dt)
+  subset <- handle_arg_subset(dataset_nm = "lexis")
+  aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis)
   #' @param weights `[NULL, data.table, character]` (default `NULL`)
   #'
   #' Weights for adjusting estimates.
@@ -70,8 +70,8 @@ surv_lexis <- function(
         aggre_by,
         local({
           da_stratum_col_nms <- setdiff(names(weights), "weight")
-          nondup <- !duplicated(dt, by = da_stratum_col_nms)
-          da_stratum_dt <- dt[
+          nondup <- !duplicated(lexis, by = da_stratum_col_nms)
+          da_stratum_dt <- lexis[
             i = nondup,
             #' @importFrom data.table .SD
             j = .SD,
@@ -81,7 +81,7 @@ surv_lexis <- function(
           da_stratum_dt[]
         })
       ),
-      dataset = dt
+      dataset = lexis
     )
   } else {
     weight_col_nm <- weights
@@ -115,9 +115,9 @@ surv_lexis <- function(
   # - Call `lexis_split_merge_aggregate_by_stratum`.
   #   The resulting table of aggregated data is
   #   stratified by both `aggre_by` and by any stratifying columns found in
-  #   `weights` if a `data.table` was supplied as that argument. E.g.
+  #   `weight_dt if a `data.table` was supplied as that argument. E.g.
   #   with `aggre_by = "sex"` and
-  #   `weights = data.table::data.table(ag = 1:3, weight = c(100, 150, 200))`,
+  #   `weight_dt = data.table::data.table(ag = 1:3, weight = c(100, 150, 200))`,
   #   the statistics table is stratified by both `sex` and `ag`.
   #   With `aggre_by = "sex"` and `weights = "individual_weight"` the table is
   #   stratified by sex and contains individually weighted statistics.
@@ -139,7 +139,7 @@ surv_lexis <- function(
   #' @param subset
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   sdt <- lexis_split_merge_aggregate_by_stratum(
-    lexis = dt,
+    lexis = lexis,
     breaks = breaks,
     merge_dt_by = merge_dt_by,
     merge_dt = merge_dt,

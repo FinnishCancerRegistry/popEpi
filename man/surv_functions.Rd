@@ -22,7 +22,7 @@ surv_estimate(
 surv_individual_weights(dt, standard_weight_dt, observed_weight_dt = NULL)
 
 surv_lexis(
-  dt,
+  lexis,
   breaks,
   merge_dt_by = NULL,
   merge_dt = NULL,
@@ -240,11 +240,11 @@ Pre-defined estimators with their formulae:
    \verb{F_exp_e2_pch} \tab \verb{1 - exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \tab \verb{0 + 0} \cr
    \verb{F_exc_e2_lt} \tab \verb{F_lt - F_exp_e2_lt} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
    \verb{F_exc_e2_pch} \tab \verb{F_pch - F_exp_e2_pch} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
-   \verb{S_exp_e1_pch} \tab \verb{surv_lexis_S_exp_e1_pch_est(dt = surv_lexis_env[["dt"]], breaks = surv_lexis_env[["breaks"]], ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]], merge_dt = surv_lexis_env[["merge_dt"]], merge_dt_by = surv_lexis_env[["merge_dt_by"]], weight_col_nm = surv_lexis_env[["weight_col_nm"]])} \tab \verb{0 + 0} \cr
-   \verb{F_exp_e1_pch} \tab \verb{1 - surv_lexis_S_exp_e1_pch_est(dt = surv_lexis_env[["dt"]], breaks = surv_lexis_env[["breaks"]], ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]], merge_dt = surv_lexis_env[["merge_dt"]], merge_dt_by = surv_lexis_env[["merge_dt_by"]], weight_col_nm = surv_lexis_env[["weight_col_nm"]])} \tab \verb{0 + 0} \cr
-   \verb{F_extra_e1_pch} \tab \verb{1 - exp(-cumsum(delta_t * (n_events/t_at_risk))) - (1 - surv_lexis_S_exp_e1_pch_est(dt = surv_lexis_env[["dt"]], breaks = surv_lexis_env[["breaks"]], ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]], merge_dt = surv_lexis_env[["merge_dt"]], merge_dt_by = surv_lexis_env[["merge_dt_by"]], weight_col_nm = surv_lexis_env[["weight_col_nm"]]))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
-   \verb{S_exp_e1_pch} \tab \verb{surv_lexis_S_exp_e1_pch_est(dt = surv_lexis_env[["dt"]], breaks = surv_lexis_env[["breaks"]], ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]], merge_dt = surv_lexis_env[["merge_dt"]], merge_dt_by = surv_lexis_env[["merge_dt_by"]], weight_col_nm = surv_lexis_env[["weight_col_nm"]])} \tab \verb{0 + 0} \cr
-   \verb{S_def_e1_pch} \tab \verb{surv_lexis_S_exp_e1_pch_est(dt = surv_lexis_env[["dt"]], breaks = surv_lexis_env[["breaks"]], ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]], merge_dt = surv_lexis_env[["merge_dt"]], merge_dt_by = surv_lexis_env[["merge_dt_by"]], weight_col_nm = surv_lexis_env[["weight_col_nm"]]) - exp(-cumsum(delta_t * (n_events/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
+   \verb{S_exp_e1_pch} \tab \verb{surv_lexis_S_exp_e1_pch_est(lexis = surv_lexis_env[["lexis"]], breaks = surv_lexis_env[["breaks"]], ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]], merge_dt = surv_lexis_env[["merge_dt"]], merge_dt_by = surv_lexis_env[["merge_dt_by"]], weight_col_nm = surv_lexis_env[["weight_col_nm"]])} \tab \verb{0 + 0} \cr
+   \verb{F_exp_e1_pch} \tab \verb{1 - surv_lexis_S_exp_e1_pch_est(lexis = surv_lexis_env[["lexis"]], breaks = surv_lexis_env[["breaks"]], ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]], merge_dt = surv_lexis_env[["merge_dt"]], merge_dt_by = surv_lexis_env[["merge_dt_by"]], weight_col_nm = surv_lexis_env[["weight_col_nm"]])} \tab \verb{0 + 0} \cr
+   \verb{F_extra_e1_pch} \tab \verb{1 - exp(-cumsum(delta_t * (n_events/t_at_risk))) - (1 - surv_lexis_S_exp_e1_pch_est(lexis = surv_lexis_env[["lexis"]], breaks = surv_lexis_env[["breaks"]], ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]], merge_dt = surv_lexis_env[["merge_dt"]], merge_dt_by = surv_lexis_env[["merge_dt_by"]], weight_col_nm = surv_lexis_env[["weight_col_nm"]]))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
+   \verb{S_exp_e1_pch} \tab \verb{surv_lexis_S_exp_e1_pch_est(lexis = surv_lexis_env[["lexis"]], breaks = surv_lexis_env[["breaks"]], ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]], merge_dt = surv_lexis_env[["merge_dt"]], merge_dt_by = surv_lexis_env[["merge_dt_by"]], weight_col_nm = surv_lexis_env[["weight_col_nm"]])} \tab \verb{0 + 0} \cr
+   \verb{S_def_e1_pch} \tab \verb{surv_lexis_S_exp_e1_pch_est(lexis = surv_lexis_env[["lexis"]], breaks = surv_lexis_env[["breaks"]], ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]], merge_dt = surv_lexis_env[["merge_dt"]], merge_dt_by = surv_lexis_env[["merge_dt_by"]], weight_col_nm = surv_lexis_env[["weight_col_nm"]]) - exp(-cumsum(delta_t * (n_events/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
 }
 
 \itemize{
@@ -332,11 +332,7 @@ supplied is retained.
 \item Call \code{lexis_split_merge_aggregate_by_stratum}.
 The resulting table of aggregated data is
 stratified by both \code{aggre_by} and by any stratifying columns found in
-\code{weights} if a \code{data.table} was supplied as that argument. E.g.
-with \code{aggre_by = "sex"} and
-\code{weights = data.table::data.table(ag = 1:3, weight = c(100, 150, 200))},
-the statistics table is stratified by both \code{sex} and \code{ag}.
-With \code{aggre_by = "sex"} and \code{weights = "individual_weight"} the table is
+\verb{weight_dt if a }data.table\verb{was supplied as that argument. E.g. with}aggre_by = "sex"\code{and}weight_dt = data.table::data.table(ag = 1:3, weight = c(100, 150, 200))\verb{, the statistics table is stratified by both }sex\code{and}ag\verb{. With }aggre_by = "sex"\code{and}weights = "individual_weight"` the table is
 stratified by sex and contains individually weighted statistics.
 \item Call \code{surv_estimate}.
 }

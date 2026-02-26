@@ -448,7 +448,7 @@ surv_estimate_expr_list__ <- list(
   S_exp_e1_pch = list(
     est = quote(
       surv_lexis_S_exp_e1_pch_est(
-        dt = surv_lexis_env[["dt"]],
+        lexis = surv_lexis_env[["lexis"]],
         breaks = surv_lexis_env[["breaks"]],
         ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]],
         merge_dt = surv_lexis_env[["merge_dt"]],
@@ -951,29 +951,29 @@ surv_estimate <- function(
 }
 
 surv_lexis_S_exp_e1_pch_est <- function(
-  dt,
+  lexis,
   breaks,
   ts_fut_col_nm,
   merge_dt,
   merge_dt_by,
   weight_col_nm = NULL
 ) {
-  assert_is_arg_dt(dt, lexis = TRUE)
+  assert_is_arg_lexis(lexis)
   stopifnot(
-    identical(data.table::key(dt)[1], "lex.id"),
-    ts_fut_col_nm %in% data.table::key(dt),
-    !duplicated(dt[["lex.id"]])
+    identical(data.table::key(lexis)[1], "lex.id"),
+    ts_fut_col_nm %in% data.table::key(lexis),
+    !duplicated(lexis[["lex.id"]])
   )
   assert_is_arg_weight_col_nm(weight_col_nm)
   keep_col_nms <- unique(c(
     "lex.id",
-    attr(dt, "time.scales"),
+    attr(lexis, "time.scales"),
     "lex.dur", "lex.Cst", "lex.Xst",
     setdiff(names(merge_dt), "h_exp"),
     weight_col_nm
   ))
-  e1dt <- data.table::setDT(as.list(dt)[keep_col_nms])
-  lexis_set__(e1dt, lexis_ts_col_nms = Epi::timeScales(dt))
+  e1dt <- data.table::setDT(as.list(lexis)[keep_col_nms])
+  lexis_set__(e1dt, lexis_ts_col_nms = Epi::timeScales(lexis))
   data.table::set(
     x = e1dt,
     j = "keep",

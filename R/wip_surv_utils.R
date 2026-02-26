@@ -199,7 +199,7 @@ lexis_immortalise <- function(dt, breaks) {
 }
 
 surv_breaks_rule_based <- function(
-  dt,
+  lexis,
   ts_fut_nm = "ts_fut",
   breaks = NULL,
   mandatory_breaks = 0:5,
@@ -207,14 +207,14 @@ surv_breaks_rule_based <- function(
 ) {
   call_env <- parent.frame(1L)
   if (is.null(breaks)) {
-    breaks <- dt[
-      i = dt[["lex.Cst"]] != dt[["lex.Xst"]],
+    breaks <- lexis[
+      i = lexis[["lex.Cst"]] != lexis[["lex.Xst"]],
       j = .SD[[ts_fut_nm]] + .SD[["lex.dur"]],
       .SDcols = c(ts_fut_nm, "lex.dur")
     ]
     breaks <- sort(unique(round(breaks, 10)))
     breaks <- union(0L, breaks)
-    storage.mode(breaks) <- storage.mode(dt[["lex.dur"]])
+    storage.mode(breaks) <- storage.mode(lexis[["lex.dur"]])
   }
   out <- rep(NA_integer_, length(breaks))
   out[1L] <- 1L
@@ -234,7 +234,7 @@ surv_breaks_rule_based <- function(
     can_combine <- can_combine_next || can_combine_previous
     do_combine <- can_combine && local({
       work_dt <- surv_interval(
-        dt = dt,
+        dt = lexis,
         break_lo = break_lo,
         break_hi = break_hi,
         ts_col_nm = ts_fut_nm,
