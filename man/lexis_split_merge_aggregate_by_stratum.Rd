@@ -23,6 +23,11 @@ lexis_split_merge_aggregate_by_stratum(
 \item{dt}{\verb{[Lexis]} (no default)
 A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
 
+\item{breaks}{\verb{[list]} (no default)
+
+List of breaks to split \code{Lexis} data by. Passed to \verb{[splitMulti]}.
+E.g. \code{list(ts_fut = seq(0, 5, 1 / 12), ts_cal = c(2001, 2006))}.}
+
 \item{aggre_exprs}{\verb{[character, list]} (no default)
 
 Defines what is aggregated within every stratum-interval
@@ -34,6 +39,22 @@ or a character string which identifies the aggregation to perform from
 a table of pre-defined expressions within \code{popEpi} (shown in \strong{Details}).
 E.g. \code{c("n_events", "t_at_risk")},
 \code{list("n_events", t_at_risk = quote(sum(lex.dur)))}.}
+
+\item{aggre_by}{\verb{[data.table, character, list, NULL]} (default \code{NULL})
+\itemize{
+\item \code{NULL}: No stratification of output.
+\item \code{data.table}: Compute produce results for each stratum defined in this
+table, e.g. \code{data.table::data.table(sex = 1:2)}. You may even use this to
+take a subset at the same time by doing
+e.g. \code{data.table::data.table(sex = 1L)} even if your \code{dt} contains data
+for both sexes.
+\item \code{character}: Compute results for each stratum defined by these columns
+in \code{dt}. E.g. \code{"sex"}.
+\item \code{list}: Each element must be either a \code{data.table}, a \code{character} vector,
+or \code{NULL}. These are combined to yield a big \code{data.table}. E.g.
+\code{list("sex", data.table::data.table(ag = 1:18))} leading to the same as
+\code{data.table::CJ(sex = 1:2, ag = 1:18)}.
+}}
 
 \item{aggre_ts_col_nms}{\verb{[NULL, character]} (default \code{NULL})
 
@@ -48,6 +69,26 @@ Names of \code{Lexis} time scales in \code{dt} by which to aggregate results.
 \item{merge_dt_by}{Passed to \verb{[lexis_merge]}.}
 
 \item{merge_dt_harmonisers}{Passed to \verb{[lexis_merge]}.}
+
+\item{subset}{\verb{[NULL, logical, integer, data.table]} (default \code{NULL})
+
+This argument is evaluated within the context of \code{dt} and the environment
+where the function with this argument was called.
+\itemize{
+\item \code{NULL}: Implies no subsetting, i.e. retain all observations.
+\item \code{logical}: Keep only observations where this is \code{TRUE}. Must be of length
+\code{nrow(dt)}. E.g. \code{subset = my_column == 1.}
+\item \code{integer}: Keep only observations at these row numbers. E.g.
+\code{subset = 1:5}.
+\item \code{data.table}: Each column must also be a column of \code{dt}. Only those rows
+in \code{dt} are retained that match a row in \code{subset}. E.g.
+\code{subset = data.table::data.table(my_column = 1)}.
+}
+
+Due to the non-standard evaluation method used here, you can make use of
+data in the calling environment as well. E.g. with variable \code{my_value = 1}
+defined and \code{dt} containing column \code{my_column} you can do
+\code{subset = my_column == my_value} if you want.}
 
 \item{weight_col_nm}{\verb{[NULL, character]} (default \code{NULL})
 
@@ -80,8 +121,106 @@ Optional steps to perform along the way.
 stage of the run. See \strong{Details} for what functions are recognised.
 }}
 }
+\value{
+Returns a \code{data.table} with stratum columns as specified via
+\code{aggre_by} and value columns as specified via \code{aggre_exprs}.
+}
 \description{
 Function(s) which split, merge, and aggregate a \code{Lexis} object in one go.
+}
+\details{
+\code{popEpi::lexis_split_merge_aggregate_by_stratum} can be used to split \code{Lexis}
+(\verb{[Epi::Lexis]}) data, merge something to it after the merge, and
+then perform an aggregation step. The following steps are performed:
+\itemize{
+\item Handle \code{aggre_exprs} as follows:
+\itemize{
+\item An \code{aggre_exprs} element that is string such as \code{"n_events"}
+is replaced with the appropriate expression retrieved from a table
+of pre-defined expressions (see below).
+\item If a string element is transition-specific, e.g. \code{n_events_[0, 1]},
+we first turn it into its general form (e.g. \code{n_events_[x, y]}).
+Additionally, any uses of \code{x} and \code{y} in the fetched expression
+is replaced with the correct states, e.g.
+\code{sum(lex.Cst == x & lex.Xst == y)} is turned into
+\code{sum(lex.Cst == 0 & lex.Xst == 1)}.
+\item An \code{aggre_exprs} element that is an expression already
+(e.g. \code{my_n_events = quote(sum(lex.Cst == 0 & lex.Xst != 0))})
+does not receive the same treatment regarding the states and when
+you write your own expressions you must specify them yourself.
+Therefore e.g.
+\code{my_n_events = quote(sum(lex.Cst == x & lex.Xst != y))} will not
+work.
+\item Regardless of the type of the \code{aggre_exprs} element, we remove every
+use of \verb{ * iw} in the expression if individual weights are not used.
+\item Table of general aggregation expressions known to \code{popEpi}:
+}
+}\tabular{ll}{
+   Name \tab Expression \cr
+   \verb{n_in_follow_up_at_interval_start} \tab \verb{sum(in_follow_up_at_interval_start)} \cr
+   \verb{n_entered_late_during_interval} \tab \verb{sum(entered_late_during_interval)} \cr
+   \verb{n_left_early_during_interval} \tab \verb{sum(left_early_during_interval)} \cr
+   \verb{n_at_risk_eff} \tab \verb{sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & !left_early_during_interval) + 0.25 * (entered_late_during_interval & left_early_during_interval) - 0.5 * (!entered_late_during_interval & left_early_during_interval)) * iw)} \cr
+   \verb{n_events} \tab \verb{sum((lex.Xst != lex.Cst) * iw)} \cr
+   \verb{t_at_risk} \tab \verb{sum(lex.dur * iw)} \cr
+   \verb{n_events_exp_e2} \tab \verb{sum(lex.dur * h_exp * iw)} \cr
+   \verb{n_events_pp} \tab \verb{sum((lex.Xst != lex.Cst) * pp * iw)} \cr
+   \verb{n_events_pp_double_weighted} \tab \verb{sum((lex.Xst != lex.Cst) * pp * pp * iw)} \cr
+   \verb{n_events_exp_pp} \tab \verb{sum(lex.dur * h_exp * pp * iw)} \cr
+   \verb{n_at_risk_eff_pp} \tab \verb{sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & !left_early_during_interval) + 0.25 * (entered_late_during_interval & left_early_during_interval) - 0.5 * (!entered_late_during_interval & left_early_during_interval)) * pp * iw)} \cr
+   \verb{t_at_risk_pp} \tab \verb{sum(lex.dur * pp * iw)} \cr
+   \verb{n_events_[x, y]} \tab \verb{sum((lex.Cst \%in\% x & lex.Xst \%in\% y) * iw)} \cr
+}
+
+\itemize{
+\item Call
+\code{optional_steps[["on_entry"]](eval_env = eval_env, call_env = call_env)}
+if that \code{optional_steps} element exists.
+\code{eval_env} is the temporary evaluation environment of
+\code{popEpi::lexis_split_merge_aggregate_by_stratum} which contains all
+contains all the arguments of
+\code{popEpi::lexis_split_merge_aggregate_by_stratum} and \code{call_env} is the environment
+where it was called.
+\item Call
+\code{on.exit(optional_steps[["on_exit"]](eval_env = eval_env, call_env = call_env))}
+if that \code{optional_steps} element exists.
+\item For each stratum in \code{aggre_by}:
+\itemize{
+\item Run
+\code{optional_steps[["stratum_on_entry"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
+if that \code{optional_steps} element exists.
+\code{stratum_eval_env} is the environment where the stratum-specific
+steps are performed.
+\item Run
+\code{popEpi::splitMulti} on the subset of \code{dt} which contains data from
+the current stratum.
+\item Run
+\code{optional_steps[["stratum_post_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
+if that \code{optional_steps} element exists.
+\item Run
+\code{lexis_merge} with \code{merge_dt}, \code{merge_dt_by}, and
+\code{merge_dt_harmonisers}, if \code{merge_dt} has been supplied.
+\item Run
+\code{optional_steps[["stratum_post_merge"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
+if that \code{optional_steps} element exists.
+\item Evaluate \code{aggre_exprs} as follows:
+\item Run
+\code{optional_steps[["stratum_post_aggregation"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
+if that \code{optional_steps} element exists.
+}
+\item After every stratum has been processed, set proper \code{data.table}
+attributes on the resulting big table and call \code{data.table::setkeyv}
+with \code{cols = c(names(aggre_by), "box_id")}. We store the metadata
+\code{list(stratum_col_nms, value_col_nms)} into the attribute named
+\code{surv_split_merge_aggregate_by_stratum_meta}, where
+\code{stratum_col_nms = names(aggre_by)}, \code{ts_col_nms = aggre_ts_col_nms}, and
+\code{value_col_nms} are the names of the columns resulting from \code{aggre_exprs}.
+\item Run
+\code{optional_steps[["post_aggregation"]](eval_env = eval_env, call_env = call_env)}
+if that \code{optional_steps} element exists.
+\item Return a \code{data.table} with stratum columns as specified via
+\code{aggre_by} and value columns as specified via \code{aggre_exprs}.
+}
 }
 \seealso{
 Other Lexis_functions: 

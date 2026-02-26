@@ -2,9 +2,173 @@
 % Please edit documentation in R/Lexis_funs.R
 \name{lexis_funs}
 \alias{lexis_funs}
+\alias{Lexis_fpa}
+\alias{Lexis_dt}
 \title{\code{Lexis} Datasets}
+\usage{
+Lexis_fpa(
+  data,
+  birth = NULL,
+  entry = NULL,
+  exit = NULL,
+  entry.status = NULL,
+  exit.status = NULL,
+  subset = NULL,
+  ...
+)
+
+Lexis_dt(...)
+}
+\arguments{
+\item{data}{a \code{data.frame}; mandatory}
+
+\item{birth}{the time of birth; A character string naming the variable in
+data or an expression to evaluate - see
+\link[=flexible_argument]{Flexible input}}
+
+\item{entry}{the time at entry to follow-up; supplied the
+same way as \code{birth}}
+
+\item{exit}{the time at exit from follow-up; supplied the
+same way as \code{birth}}
+
+\item{entry.status}{passed on to \verb{[Epi::Lexis]} if not \code{NULL};
+supplied the same way as \code{birth}}
+
+\item{exit.status}{passed on to \verb{[Epi::Lexis]} if not \code{NULL};
+supplied the same way as \code{birth}}
+
+\item{subset}{a logical condition to subset by before passing data
+and arguments to \verb{[Epi::Lexis]}}
+
+\item{...}{arguments passed to \verb{[Epi::Lexis]}}
+}
+\value{
+\strong{popEpi::Lexis_fpa}
+
+Returns a \code{Lexis} object with the additional class \code{data.table}. It has
+the usual columns that \code{Lexis} objects
+have, and with time scale columns \code{fot}, \code{per}, and \code{age}.
+They are calculated as
+
+\code{fot = entry - entry} (to ensure correct format, e.g. difftime)
+
+\code{per = entry}
+
+and
+
+\code{age = entry - birth}.
+
+\strong{popEpi::Lexis_dt}
+
+Returns a \code{Lexis} object that is also a \code{data.table} ---
+therefore output has the classes \code{c("Lexis", "data.table", "data.frame")}.
+}
 \description{
 Make \verb{[Epi::Lexis]} objects.
+}
+\section{Functions}{
+
+\strong{popEpi::Lexis_fpa}
+
+\code{popEpi::Lexis_fpa} collects data from its inputs to to call \verb{[Epi::Lexis]}.
+This is a convenience function for making a \code{Lexis} object with the
+time scales \code{fot}, \code{per}, and \code{age}.
+
+
+\strong{popEpi::Lexis_dt}
+
+\code{popEpi::Lexis_dt} performs the following steps:
+\itemize{
+\item Calls \verb{[Epi::Lexis]}.
+\item Calls \verb{[data.table::setDT]} to make output into a \code{data.table},
+\verb{[data.table::setattr]} to set its class to
+\code{c("Lexis", "data.table", "data.frame")}, and
+\verb{[data.table::setkeyv]} to sort the output by \code{lex.id} and the time
+scales.
+\item Returns the \code{Lexis} / \code{data.table} object.
+}
+}
+
+\section{News for version 0.5.0}{
+
+
+\code{Lexis_fpa} output is now also a \code{data.table}, so the complete class vector
+is \code{c("Lexis", "data.table", "data.frame")}.
+
+
+
+New function \code{Lexis_dt}, a wrapper of \code{Epi::Lexis} which also sets class to
+\code{c("Lexis", "data.table", "data.frame")}.
+}
+
+\examples{
+
+# popEpi::Lexis_fpa
+data("sire", package = "popEpi")
+lex <- Lexis_fpa(sire,
+                 birth = "bi_date",
+                 entry = dg_date,
+                 exit = ex_date + 1L,
+                 exit.status = "status")
+
+## some special cases
+myVar <- "bi_date"
+l <- list(myVar = "bi_date")
+sire$l <- sire$myVar <- 1
+
+## conflict: myVar taken from data when "bi_date" was intended
+lex <- Lexis_fpa(sire,
+                 birth = myVar,
+                 entry = dg_date,
+                 exit = ex_date + 1L,
+                 exit.status = "status")
+
+## no conflict with names in data
+lex <- Lexis_fpa(sire,
+                 birth = l$myVar,
+                 entry = dg_date,
+                 exit = ex_date + 1L,
+                 exit.status = "status")
+stopifnot(
+  identical(class(lex), c("Lexis", "data.table", "data.frame")),
+  Epi::timeScales(lex) \%in\% c("fot", "per", "age")
+)
+
+
+# popEpi::Lexis_dt
+lex_1 <- popEpi::Lexis_dt(
+  data = popEpi::sire,
+  entry = list(
+    ts_fut = 0L,
+    ts_age = as.integer(dg_date - bi_date),
+    ts_cal = as.integer(dg_date)
+  ),
+  exit = list(ts_cal = as.integer(ex_date)),
+  entry.status = 0L,
+  exit.status = status
+)
+stopifnot(
+  class(lex_1) == c("Lexis", "data.table", "data.frame"),
+  Epi::timeScales(lex_1) \%in\% c("ts_fut", "ts_age", "ts_cal")
+)
+
+lex_2 <- popEpi::Lexis_dt(
+  data = popEpi::sire,
+  entry = list(
+    ts_fut = 0L,
+    ts_age = as.integer(dg_date - bi_date),
+    ts_cal = as.integer(dg_date)
+  ),
+  duration = as.integer(ex_date - dg_date),
+  entry.status = 0L,
+  exit.status = status
+)
+stopifnot(
+  class(lex_2) == c("Lexis", "data.table", "data.frame"),
+  Epi::timeScales(lex_2) \%in\% c("ts_fut", "ts_age", "ts_cal")
+)
+
 }
 \seealso{
 Other Lexis_functions: 

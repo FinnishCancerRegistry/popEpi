@@ -65,10 +65,105 @@ For what each functions you can make use of what their arguments should
 be.
 }}
 }
+\value{
+\strong{popEpi::lexis_merge}
+
+Returns \code{dt} invisibly after adding columns from
+\code{merge_dt} into \code{dt} in-place, without taking a copy.
+}
 \description{
 Function(s) to merge data into \code{Lexis} objects intelligently when merging
 is (partially) based on time scales.
 }
+\section{Functions}{
+
+\strong{popEpi::lexis_merge}
+
+\code{popEpi::lexis_merge} can be used to merge additional information into
+\code{Lexis} data, allowing the use of the \code{Lexis} time scales in the
+merge. The typical use-case is to split \code{Lexis} data and then merge
+population (expected) hazards to the subject-intervals.
+\code{popEpi::lexis_merge} performs the following steps:
+\itemize{
+\item Run
+\code{optional_steps[["on_entry"]](call_env = call_env, eval_env = eval_env)}
+if that \code{optional_steps} element exists. \code{call_env} is the environment
+where this function was called and \code{eval_env} is the temporary environment
+in which the commands that this function consists of are evaluated.
+\item Run
+\code{on.exit(optional_steps[["on_exit"]](call_env = call_env, eval_env = eval_env))}
+if that \code{optional_steps} element exists.
+\item If \code{is.null(merge_dt_harmonisers)}, attempt to
+automatically determine the harmonisers making use of \code{cut} by looking
+at the unique
+values of the time scale to merge by in \code{merge_dt} (e.g. calendar year
+in \code{ts_cal}):
+\itemize{
+\item If \code{merge_dt[[col_nm]]} contains numbers we define \code{cut} breaks as the
+unique values of
+\code{merge_dt[[col_nm]]} and as the ceiling
+\code{max(merge_dt[[col_nm]]) + last_diff}. Here \code{last_diff} is the
+difference between the highest and second highest values. E.g.
+\code{c(1950, 1960, 1970:2020, 2021)} for \code{merge_dt[[col_nm]]}
+containing unique values \code{c(1950, 1960, 1970:2020)}.
+\item If \code{merge_dt[[col_nm]]} does not contain numbers, an error is
+raised because we don't know how to automatically form a
+harmoniser.
+}
+\item Run
+\code{optional_steps[["pre_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_eval_env = lapply_eval_env)}
+if that \code{optional_steps} element exists.
+Here \code{lapply_eval_env} is similar to \code{eval_env} but it is the
+evaluation environment of the anonymous function passed to \code{lapply}
+which attempts to handle each harmoniser.
+\itemize{
+\item With the \code{cut} breaks defined, the automatically created harmoniser
+becomes a \code{cut} call with arguments
+\itemize{
+\item \code{x = col + lex.dur * lex_dur_multiplier}, where \code{COL} is the current
+column and \code{lex_dur_multiplier} is by default \code{0.5},
+\item \code{breaks} as specified above,
+\item \code{right = FALSE}, and
+\item \code{labels = FALSE}.
+}
+\item This results in indices to the breaks, and the harmoniser returns
+break values at those indices. E.g. the cut results in
+\code{3} in \code{breaks = c(1950, 1960, 1970:2020, 2021)} and output is
+\code{1970} for every value of \code{COL + lex.dur / 2} in the interval
+\verb{]1970, 1971]}.
+}
+\item Run
+\code{optional_steps[["post_merge_dt_harmonisers"]](call_env = call_env, eval_env = eval_env)}
+if that \code{optional_steps} element exists.
+\item Armed with either user-defined or automatically created
+\code{merge_dt_harmonisers}, they are each evaluated to create a temporary
+\code{data.table} with harmonised data from \code{dt}. This is performed via
+\code{eval} with \code{envir = dt} and \code{enclos = call_env} where \code{call_env} is the
+environment where \code{popEpi::lexis_merge} was called. Of course if a column
+has no harmoniser at this point then it is used as-is. For instance there
+is no need to harmonise stratifying columns because they are not changed
+by splitting the \code{Lexis} data.
+\item Run
+\code{optional_steps[["post_harmonisation"]](call_env = call_env, eval_env = eval_env)}
+if that \code{optional_steps} element exists.
+\item Then we perform the actual merge between \code{merge_dt} and the harmonised
+data. This merges in data from \code{merge_dt} into every row of \code{dt} in-place.
+So \code{dt} is modified and no additional copy is taken for the sake of
+efficiency.
+\item Run
+\code{optional_steps[["post_merge"]](call_env = call_env, eval_env = eval_env)}
+if that \code{optional_steps} element exists.
+\item Each merged-in column from \code{merge_dt} (all columns not in \code{merge_dt_by})
+are inspected for missing values. If there are any, an error is raised.
+This usually occurs if \code{merge_dt} does not contain data for all data in
+\code{dt}. For instance it only covers years 1950-2020 but \code{dt} contains also
+data for 2021. This error helps you to spot those problems early instead
+of producing nonsense results downstream.
+\item Returns \code{dt} invisibly after adding columns from
+\code{merge_dt} into \code{dt} in-place, without taking a copy.
+}
+}
+
 \examples{
 # popEpi::lexis_merge
 lexis <- Epi::Lexis(
