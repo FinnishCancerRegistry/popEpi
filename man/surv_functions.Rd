@@ -96,6 +96,24 @@ the standard errors.
 }
 }}
 
+\item{weight_dt}{\verb{[NULL, data.table]} (default \code{NULL})
+
+Weights for direct adjusting.
+See \strong{Details} to understand how the \code{weights} argument is used.
+\itemize{
+\item \code{NULL}: No direct adjusting is performed.
+\item \code{data.table}: These weights are used for adjusting.
+}
+
+A table of weights must fulfill these requirements:
+\itemize{
+\item Is a \code{data.table}.
+\item Has at least one stratifying column. No duplicate strata are permitted,
+e.g. the same age group twice in a table stratified by age group only.
+\item Has column \code{"weight"}. All values must be >= 0. No missing values are
+allowed.
+}}
+
 \item{conf_methods}{Passed one at a time to
 \verb{[directadjusting::directly_adjusted_estimates]}.}
 
@@ -119,7 +137,7 @@ allowed.
 
 Table of weights in your dataset.
 \itemize{
-\item \code{NULL}: This is computed based on \code{dt}.
+\item \code{NULL}: Weights are computed using \code{dt}. See \strong{Details}.
 \item \code{data.table}: Must be a valid table of weights.
 }
 
@@ -147,13 +165,6 @@ allowed.
 \item{aggre_exprs}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{subset}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
-
-\item{weights}{Specifies weights to adjust by. What is accepted depends on the function.
-See \strong{Details} to understand how the \code{weights} argument is used.
-\itemize{
-\item \code{popEpi::surv_estimate}: \verb{[data.table, NULL]} (default \code{NULL})
-\item \code{popEpi::surv_lexis}: \verb{[data.table, character, NULL]} (default \code{NULL})
-}}
 }
 \value{
 \strong{popEpi::surv_estimate}

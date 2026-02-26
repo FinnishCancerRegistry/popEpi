@@ -53,36 +53,41 @@ assert_is_arg_dt <- function(dt, lexis = FALSE) {
   }
 }
 
+assert_is_arg_weight_col_nm <- function(
+  weight_col_nm,
+  dt = NULL
+) {
+  stopifnot(
+    is.null(weight_col_nm) || is.character(weight_col_nm)
+  )
+  if (is.character(weight_col_nm)) {
+    stopifnot(
+      length(weight_col_nm) == 1
+    )
+    if (!is.null(dt)) {
+      stopifnot(
+        weight_col_nm %in% names(dt),
+        !is.na(dt[[weight_col_nm]]),
+        dt[[weight_col_nm]] >= 0
+      )
+    }
+  }
+}
+
 assert_is_arg_weights <- function(
   weights,
   dt = NULL,
   allowed = c("NULL", "character", "data.table")
 ) {
-  # @codedoc_comment_block popEpi:::assert_is_arg_weights
-  # A table of weights must fulfill these requirements:
-  # - Is a `data.table`.
-  # - Has at least one stratifying column. No duplicate strata are permitted,
-  #   e.g. the same age group twice in a table stratified by age group only.
-  # - Has column `"weight"`. All values must be >= 0. No missing values are
-  #   allowed.
-  # @codedoc_comment_block popEpi:::assert_is_arg_weights
   stopifnot(
     inherits(weights, allowed)
   )
   if (data.table::is.data.table(weights)) {
-    stopifnot(
-      ncol(weights) >= 2,
-      "weight" %in% names(weights),
-      !duplicated(weights, by = setdiff(names(weights), "weight")),
-
-      !is.na(weights[["weight"]]),
-      weights[["weight"]] >= 0.0
+    assert_is_arg_weight_dt(
+      weight_dt = weights,
+      dt = dt,
+      allowed = "data.table"
     )
-    if (!is.null(dt)) {
-      stopifnot(
-        setdiff(names(weights), "weight") %in% names(dt)
-      )
-    }
   } else if (is.character(weights)) {
     stopifnot(
       weights %in% names(dt),
@@ -92,10 +97,22 @@ assert_is_arg_weights <- function(
   }
 }
 
-assert_is_arg_weight_dt <- function(weight_dt, dt = NULL) {
-  stopifnot(
-    is.null(weight_dt) || data.table::is.data.table(weight_dt)
-  )
+assert_is_arg_weight_dt <- function(
+  weight_dt,
+  dt = NULL,
+  allowed = c("NULL", "data.table")
+) {
+  # @codedoc_comment_block popEpi:::assert_is_arg_weight_dt
+  # A table of weights must fulfill these requirements:
+  # - Is a `data.table`.
+  # - Has at least one stratifying column. No duplicate strata are permitted,
+  #   e.g. the same age group twice in a table stratified by age group only.
+  # - Has column `"weight"`. All values must be >= 0. No missing values are
+  #   allowed.
+  # @codedoc_comment_block popEpi:::assert_is_arg_weight_dt
+  eval(substitute(stopifnot(
+    inherits(weight_dt, allowed)
+  ), list(allowed = allowed)))
   if (data.table::is.data.table(weight_dt)) {
     stopifnot(
       ncol(weight_dt) >= 2,
@@ -184,6 +201,7 @@ handle_arg_aggre_exprs <- function(
   weight_col_nm = NULL
 ) {
   assert_is_arg_aggre_exprs(aggre_exprs)
+  assert_is_arg_weight_col_nm(weight_col_nm)
   aggre_exprs <- as.list(aggre_exprs)
   wh_is_string <- which(vapply(aggre_exprs, is.character, logical(1L)))
   names(aggre_exprs)[wh_is_string] <- unlist(aggre_exprs[wh_is_string])

@@ -325,6 +325,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   #'
   #' - `NULL`: No individual weighting is performed.
   #' - `character`: This is the name of the column. E.g. `"my_iw"`.
+  assert_is_arg_weight_col_nm(weight_col_nm)
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # `popEpi::lexis_split_merge_aggregate_by_stratum` can be used to split `Lexis`
   # (`[Epi::Lexis]`) data, merge something to it after the merge, and

@@ -699,9 +699,7 @@ surv_estimate <- function(
     # Must be of length 1 or `length(estimators)`.
     # @codedoc_comment_block popEpi::surv_estimate::conf_lvls
     is.numeric(conf_lvls),
-    length(conf_lvls) %in% c(1L, length(estimators)),
-
-    inherits(weight_dt, c("NULL", "data.table"))
+    length(conf_lvls) %in% c(1L, length(estimators))
   )
   call_env <- parent.frame(1L)
 
@@ -747,15 +745,17 @@ surv_estimate <- function(
     }
   }
 
-  # @codedoc_comment_block popEpi::surv_estimate::weights
-  # @param weights
+  # @codedoc_comment_block popEpi::surv_estimate::weight_dt
+  # @param weight_dt `[NULL, data.table]` (default `NULL`)
   #
-  # Specifies weights to adjust by. What is accepted depends on the function.
+  # Weights for direct adjusting.
   # See **Details** to understand how the `weights` argument is used.
   #
-  # - `popEpi::surv_estimate`: `[data.table, NULL]` (default `NULL`)
-  # @codedoc_insert_comment_block surv_arg_weights
-  # @codedoc_comment_block popEpi::surv_estimate::weights
+  # - `NULL`: No direct adjusting is performed.
+  # - `data.table`: These weights are used for adjusting.
+  #
+  # @codedoc_insert_comment_block popEpi:::assert_is_arg_weight_dt
+  # @codedoc_comment_block popEpi::surv_estimate::weight_dt
   assert_is_arg_weight_dt(weight_dt = weight_dt, dt = dt)
 
   # @codedoc_comment_block popEpi::surv_estimate
@@ -957,10 +957,9 @@ surv_lexis_S_exp_e1_pch_est <- function(
   stopifnot(
     identical(data.table::key(dt)[1], "lex.id"),
     ts_fut_col_nm %in% data.table::key(dt),
-    !duplicated(dt[["lex.id"]]),
-
-    is.null(weight_col_nm) || weight_col_nm %in% names(dt)
+    !duplicated(dt[["lex.id"]])
   )
+  assert_is_arg_weight_col_nm(weight_col_nm)
   keep_col_nms <- unique(c(
     "lex.id",
     attr(dt, "time.scales"),

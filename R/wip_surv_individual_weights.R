@@ -16,9 +16,9 @@ surv_individual_weights <- function(
   #
   # Table of standardisation weights, e.g. ICSS weights.
   #
-  # @codedoc_insert_comment_block popEpi:::assert_is_arg_weights
+  # @codedoc_insert_comment_block popEpi:::assert_is_arg_weight_dt
   # @codedoc_comment_block popEpi::surv_individual_weights::standard_weight_dt
-  assert_is_arg_weights(standard_weight_dt, allowed = "data.table")
+  assert_is_arg_weight_dt(standard_weight_dt, dt)
   # @codedoc_comment_block popEpi::surv_individual_weights
   # Produce a vector of weights, one weight for each row in `dt`.
   # These weights have been called individual weights, Brenner weights,
@@ -43,12 +43,12 @@ surv_individual_weights <- function(
   #
   # Table of weights in your dataset.
   #
-  # - `NULL`: This is computed based on `dt`.
+  # - `NULL`: Weights are computed using `dt`. See **Details**.
   # - `data.table`: Must be a valid table of weights.
   #
-  # @codedoc_insert_comment_block popEpi:::assert_is_arg_weights
+  # @codedoc_insert_comment_block popEpi:::assert_is_arg_weight_dt
   # @codedoc_comment_block popEpi::surv_individual_weights::observed_weight_dt
-  assert_is_arg_weights(observed_weight_dt, allowed = c("NULL", "data.table"))
+  assert_is_arg_weight_dt(observed_weight_dt, dt)
   if (is.null(observed_weight_dt)) {
     # @codedoc_comment_block popEpi::surv_individual_weights
     # - If `is.null(observed_weight_dt)`, `observed_weight_dt` is computed
