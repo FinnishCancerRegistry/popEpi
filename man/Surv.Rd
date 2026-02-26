@@ -13,22 +13,22 @@ Surv(
 )
 }
 \arguments{
-\item{time}{see  \link[survival:Surv]{survival::Surv}}
+\item{time}{See \verb{[survival::Surv]}}
 
-\item{time2}{see  \link[survival:Surv]{survival::Surv}}
+\item{time2}{See \verb{[survival::Surv]}}
 
-\item{event}{see  \link[survival:Surv]{survival::Surv}}
+\item{event}{See \verb{[survival::Surv]}}
 
-\item{type}{see  \link[survival:Surv]{survival::Surv}}
+\item{type}{See \verb{[survival::Surv]}}
 
-\item{origin}{see \link[survival:Surv]{survival::Surv}}
+\item{origin}{See \verb{[survival::Surv]}}
 }
 \value{
 See \verb{[survival::Surv]}.
 }
 \description{
 \code{popEpi::Surv} simply calls \verb{[survival::Surv]}. This wrapper was written
-simply to avoid doing e.g. \code{library(survival)} when \code{Surv} used in a
+simply to avoid doing e.g. \code{library(survival)} when \code{Surv} is used in a
 formula evaluated by \code{popEpi}.
 }
 \seealso{

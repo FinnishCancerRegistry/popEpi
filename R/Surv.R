@@ -1,13 +1,13 @@
 #' @description
 #' `popEpi::Surv` simply calls `[survival::Surv]`. This wrapper was written
-#' simply to avoid doing e.g. `library(survival)` when `Surv` used in a
+#' simply to avoid doing e.g. `library(survival)` when `Surv` is used in a
 #' formula evaluated by `popEpi`.
 #' @title Survival Objects
-#' @param time see  [survival::Surv]
-#' @param time2 see  [survival::Surv]
-#' @param event see  [survival::Surv]
-#' @param type see  [survival::Surv]
-#' @param origin see [survival::Surv]
+#' @param time See `[survival::Surv]`
+#' @param time2 See `[survival::Surv]`
+#' @param event See `[survival::Surv]`
+#' @param type See `[survival::Surv]`
+#' @param origin See `[survival::Surv]`
 #' @export
 #' @family main functions
 #' @family survtab functions
