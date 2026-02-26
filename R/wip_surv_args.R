@@ -92,6 +92,27 @@ assert_is_arg_weights <- function(
   }
 }
 
+assert_is_arg_weight_dt <- function(weight_dt, dt = NULL) {
+  stopifnot(
+    is.null(weight_dt) || data.table::is.data.table(weight_dt)
+  )
+  if (data.table::is.data.table(weight_dt)) {
+    stopifnot(
+      ncol(weight_dt) >= 2,
+      "weight" %in% names(weight_dt),
+      !duplicated(weight_dt, by = setdiff(names(weight_dt), "weight")),
+
+      !is.na(weight_dt[["weight"]]),
+      weight_dt[["weight"]] >= 0.0
+    )
+    if (!is.null(dt)) {
+      stopifnot(
+        setdiff(names(weight_dt), "weight") %in% names(dt)
+      )
+    }
+  }
+}
+
 assert_is_arg_merge_dt_and_merge_dt_by <- function(
   merge_dt,
   merge_dt_by,

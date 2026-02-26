@@ -57,8 +57,10 @@ surv_lexis <- function(
   # @codedoc_comment_block surv_arg_weights
   # - `popEpi::surv_lexis`: `[data.table, character, NULL]` (default `NULL`)
   # @codedoc_comment_block surv_arg_weights
+  weight_dt <- weight_col_nm <- NULL
   do_direct_adjusting <- data.table::is.data.table(weights)
   if (do_direct_adjusting) {
+    weight_dt <- weights
     aggre_by <- handle_arg_by(
       by = list(
         aggre_by,
@@ -77,6 +79,8 @@ surv_lexis <- function(
       ),
       dataset = dt
     )
+  } else {
+    weight_col_nm <- weights
   }
   # @codedoc_comment_block popEpi::surv_lexis
   # Compute survival estimates on a `Lexis` dataset
@@ -130,7 +134,6 @@ surv_lexis <- function(
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   #' @param subset
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
-  weight_col_nm <- if (is.character(weights)) weights else NULL
   sdt <- lexis_split_merge_aggregate_by_stratum(
     dt = dt,
     breaks = breaks,
@@ -144,7 +147,10 @@ surv_lexis <- function(
     subset = subset
   )
   aggre_meta <- attr(sdt, "surv_split_merge_aggregate_by_stratum_meta")
-  estimation_stratum_col_nms <- aggre_meta[["stratum_col_nms"]]
+  estimation_stratum_col_nms <- setdiff(
+    aggre_meta[["stratum_col_nms"]],
+    names(weights)
+  )
   aggre_ts_col_nms <- aggre_meta[["ts_col_nms"]]
   if (length(aggre_ts_col_nms) > 1) {
     # e.g. if aggregating by ts_cal to get a period analysis time series.
@@ -167,7 +173,8 @@ surv_lexis <- function(
       estimator_dt[["expression_set"]],
       names = estimator_dt[["user_estimator_name"]]
     ),
-    conf_methods = conf_methods
+    conf_methods = conf_methods,
+    weight_dt = weight_dt
   )
 
   # @codedoc_comment_block return(popEpi::surv_lexis)

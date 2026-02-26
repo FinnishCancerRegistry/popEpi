@@ -660,7 +660,7 @@ surv_estimate <- function(
   stratum_col_nms = NULL,
   value_col_nms = NULL,
   estimators = "S_pch",
-  weights = NULL,
+  weight_dt = NULL,
   conf_methods = "log",
   conf_lvls = 0.95
 ) {
@@ -701,7 +701,7 @@ surv_estimate <- function(
     is.numeric(conf_lvls),
     length(conf_lvls) %in% c(1L, length(estimators)),
 
-    inherits(weights, c("NULL", "data.table"))
+    inherits(weight_dt, c("NULL", "data.table"))
   )
   call_env <- parent.frame(1L)
 
@@ -756,7 +756,7 @@ surv_estimate <- function(
   # - `popEpi::surv_estimate`: `[data.table, NULL]` (default `NULL`)
   # @codedoc_insert_comment_block surv_arg_weights
   # @codedoc_comment_block popEpi::surv_estimate::weights
-  assert_is_arg_weights(weights = weights, dt = out)
+  assert_is_arg_weight_dt(weight_dt = weight_dt, dt = dt)
 
   # @codedoc_comment_block popEpi::surv_estimate
   # Compute survival time function estimates. Performs the following steps:
@@ -783,7 +783,7 @@ surv_estimate <- function(
   data.table::setkeyv(out, data.table::key(dt))
 
   estimate_stratum_col_nms <- stratum_col_nms
-  do_direct_adjusting <- data.table::is.data.table(weights)
+  do_direct_adjusting <- data.table::is.data.table(weight_dt)
   if (do_direct_adjusting) {
     estimate_stratum_col_nms <- union(
       stratum_col_nms,
@@ -868,7 +868,7 @@ surv_estimate <- function(
   }
 
   if (do_direct_adjusting) {
-    sdt <- local({
+    out <- local({
       estimate_col_nms <- paste0(
         estimator_dt[["user_estimator_name"]], "_est"
       )
@@ -876,20 +876,20 @@ surv_estimate <- function(
         estimator_dt[["user_estimator_name"]], "_se"
       )
       data.table::set(
-        sdt,
+        out,
         j = standard_error_col_nms,
         value = lapply(standard_error_col_nms, function(secn) {
-          sdt[[secn]] ^ 2
+          out[[secn]] ^ 2
         })
       )
       variance_col_nms <- sub(
         "_est$", "_variance", estimate_col_nms
       )
-      data.table::setnames(sdt, standard_error_col_nms, variance_col_nms)
+      data.table::setnames(out, standard_error_col_nms, variance_col_nms)
       da_stratum_col_nms <- c(stratum_col_nms,  "box_id")
       da_adjust_col_nms <- character(0)
-      if (data.table::is.data.table(weights)) {
-        da_adjust_col_nms <- setdiff(names(weights), "weight")
+      if (data.table::is.data.table(weight_dt)) {
+        da_adjust_col_nms <- setdiff(names(weight_dt), "weight")
       }
       # @codedoc_comment_block popEpi::surv_estimate
       # - If `weights` was a `data.table`, we perform an additional direct
@@ -897,14 +897,14 @@ surv_estimate <- function(
       #   `[directadjusting::directly_adjusted_estimates]`.
       # @codedoc_comment_block popEpi::surv_estimate
       sdta <- directadjusting::directly_adjusted_estimates(
-        stats_dt = sdt,
+        stats_dt = out,
         stratum_col_nms = da_stratum_col_nms,
         stat_col_nms = estimate_col_nms,
         var_col_nms = variance_col_nms,
         adjust_col_nms = da_adjust_col_nms,
         conf_methods = conf_methods,
         conf_lvls = conf_lvls,
-        weights = weights
+        weights = weight_dt
       )
       data.table::set(
         x = sdta,
@@ -915,13 +915,14 @@ surv_estimate <- function(
       )
       data.table::setnames(sdta, variance_col_nms, standard_error_col_nms)
 
+      ci_col_nms <- names(out)[grepl("(_lo$)|(_hi$)", names(out))]
       sum_col_nms <- aggre_meta[["value_col_nms"]]
       nonsum_col_nms <- c(
         intersect(aggre_meta[["stratum_col_nms"]], names(sdta)),
         setdiff(
-          names(sdt),
+          names(out),
           c(
-            sum_col_nms, variance_col_nms, estimate_col_nms,
+            sum_col_nms, variance_col_nms, estimate_col_nms, ci_col_nms,
             aggre_meta[["stratum_col_nms"]]
           )
         )
@@ -931,7 +932,7 @@ surv_estimate <- function(
       #   `n_events` are summed over the adjusting strata and will be included
       #   in the output. These are not weighted averages/sums but simple sums.
       # @codedoc_comment_block popEpi::surv_estimate
-      sum_dt <- sdt[
+      sum_dt <- out[
         #' @importFrom data.table .SD
         j = lapply(.SD, sum),
         .SDcols = sum_col_nms,
@@ -939,29 +940,21 @@ surv_estimate <- function(
         keyby = eval(nonsum_col_nms)
       ]
       add_col_nms <- setdiff(
-        names(sum_dt),
-        names(sdta)
+        names(sdta),
+        names(sum_dt)
       )
       data.table::set(
-        x = sdta,
+        x = sum_dt,
         j = add_col_nms,
-        value = sum_dt[
-          #' @importFrom data.table .SD
-          j = .SD,
-          .SDcols = add_col_nms
-        ]
+        value = as.list(sdta)[add_col_nms]
       )
-      ci_col_nms <- names(sdta)[grepl("(_lo$)|(_hi$)", names(sdta))]
-      data.table::setcolorder(
-        sdta,
-        setdiff(
-          names(sdta),
-          c(estimate_col_nms, standard_error_col_nms, ci_col_nms)
-        )
+      ci_col_nms <- names(sum_dt)[grepl("(_lo$)|(_hi$)", names(sum_dt))]
+      data.table::setnames(
+        sum_dt,
+        ci_col_nms,
+        sub("_est_", "_", ci_col_nms)
       )
-      data.table::setkeyv(sdta, nonsum_col_nms)
-      data.table::setnames(sdta, ci_col_nms, sub("estimate_", "", ci_col_nms))
-      sdta
+      sum_dt[]
     })
   }
 
