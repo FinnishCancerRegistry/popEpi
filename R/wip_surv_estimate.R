@@ -1,22 +1,22 @@
 surv_pohar_perme_weight__ <- function(
-  dt,
+  lexis,
   ts_fut_breaks,
   ts_fut_col_nm,
   hazard_col_nm,
   method = c("subject subinterval", "survival interval")[1L]
 ) {
-  assert_is_arg_dt(dt = dt, lexis = TRUE)
-  lexis_ts_col_nms <- attr(dt, "time.scales")
-  dt_key_col_nms <- data.table::key(dt)
+  assert_is_arg_lexis(lexis)
+  lexis_ts_col_nms <- Epi::timeScales(lexis)
+  dt_key_col_nms <- data.table::key(lexis)
   stopifnot(
-    c("lex.id", "lex.dur") %in% names(dt),
+    c("lex.id", "lex.dur") %in% names(lexis),
 
     length(ts_fut_col_nm) == 1,
-    ts_fut_col_nm %in% names(dt),
+    ts_fut_col_nm %in% names(lexis),
     ts_fut_col_nm %in% lexis_ts_col_nms,
 
     length(hazard_col_nm) == 1,
-    hazard_col_nm %in% names(dt),
+    hazard_col_nm %in% names(lexis),
     # we actually only care about ts_fut_col_nm, but it is not always
     # the second key. note that the order of the data
     # is always the same regardless of the order of lexis_ts_col_nms
@@ -32,10 +32,10 @@ surv_pohar_perme_weight__ <- function(
     method %in% c("survival interval", "subject subinterval")
   )
   work_dt <- data.table::setDT(list(
-    lex.id = dt[["lex.id"]],
-    ts_fut = dt[[ts_fut_col_nm]],
-    lex.dur = dt[["lex.dur"]],
-    "expected_hazard" = dt[[hazard_col_nm]]
+    lex.id = lexis[["lex.id"]],
+    ts_fut = lexis[[ts_fut_col_nm]],
+    lex.dur = lexis[["lex.dur"]],
+    "expected_hazard" = lexis[[hazard_col_nm]]
   ))
   data.table::setkeyv(work_dt, c("lex.id", "ts_fut"))
   if (method == "subject subinterval") {
@@ -101,7 +101,7 @@ surv_pohar_perme_weight__ <- function(
       x = work_dt,
       j = "survival_interval_id",
       value = cut(
-        x = dt[[ts_fut_col_nm]],
+        x = lexis[[ts_fut_col_nm]],
         breaks = ts_fut_breaks,
         right = FALSE,
         labels = FALSE
@@ -137,7 +137,7 @@ surv_pohar_perme_weight__ <- function(
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         {
           rep(
-            dt[[ts_fut_col_nm]][!duplicated(dt, by = "lex.id")],
+            lexis[[ts_fut_col_nm]][!duplicated(lexis, by = "lex.id")],
             #' @importFrom data.table .N
             times = work_dt[j = list(n = .N), by = "lex.id"][["n"]]
           )
