@@ -61,7 +61,6 @@ surv_lexis <- function(
   #' - `NULL`: No adjusting is performed.
   #' - `data.table`: Passed to `[surv_estimate]`.
   #' - `character`: Passed to `[lexis_split_merge_aggregate_by_stratum]`.
-  # @codedoc_comment_block surv_arg_weights
   weight_dt <- weight_col_nm <- NULL
   do_direct_adjusting <- data.table::is.data.table(weights)
   if (do_direct_adjusting) {
