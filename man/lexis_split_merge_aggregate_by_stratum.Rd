@@ -59,7 +59,7 @@ or \code{NULL}. These are combined to yield a big \code{data.table}. E.g.
 
 \item{aggre_ts_col_nms}{\verb{[NULL, character]} (default \code{NULL})
 
-Names of \code{Lexis} time scales in \code{dt} by which to aggregate results.
+Names of \code{Lexis} time scales in \code{lexis} by which to aggregate results.
 \itemize{
 \item \code{NULL}: Use \code{names(breaks)}.
 \item \code{character}: Aggregate by these time scales. E.g. \code{"ts_fut"}.
@@ -93,7 +93,8 @@ defined and \code{dt} containing column \code{my_column} you can do
 
 \item{weight_col_nm}{\verb{[NULL, character]} (default \code{NULL})
 
-Name of weight column in \code{dt} if you want to perform individual weighting.
+Name of weight column in \code{lexis} if you want to perform individual
+weighting.
 See \strong{Details} for where this comes into play.
 \itemize{
 \item \code{NULL}: No individual weighting is performed.
@@ -193,7 +194,7 @@ if that \code{optional_steps} element exists.
 \code{stratum_eval_env} is the environment where the stratum-specific
 steps are performed.
 \item Run
-\code{popEpi::splitMulti} on the subset of \code{dt} which contains data from
+\code{popEpi::splitMulti} on the subset of \code{lexis} which contains data from
 the current stratum.
 \item Run
 \code{optional_steps[["stratum_post_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}

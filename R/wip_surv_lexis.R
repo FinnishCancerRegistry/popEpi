@@ -53,7 +53,7 @@ surv_lexis <- function(
   weights = NULL
 ) {
   #' @template param_lexis
-  assert_is_arg_lexis(lexis)
+  assert_is_arg_lexis(lexis, dt = FALSE)
   subset <- handle_arg_subset(dataset_nm = "lexis")
   aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis)
   #' @param weights `[NULL, data.table, character]` (default `NULL`)

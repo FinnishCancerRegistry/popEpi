@@ -32,7 +32,12 @@ assert_is_arg_dt <- function(dt, lexis = FALSE) {
   }
 }
 
-assert_is_arg_lexis <- function(lexis) {
+assert_is_arg_lexis <- function(lexis, dt) {
+  if (dt) {
+    stopifnot(
+      data.table::is.data.table(lexis)
+    )
+  }
   stopifnot(
     inherits(lexis, "Lexis"),
     inherits(lexis[["lex.Cst"]], c("logical", "integer", "factor")),

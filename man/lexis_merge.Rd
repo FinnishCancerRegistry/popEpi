@@ -71,8 +71,8 @@ be.
 \value{
 \strong{popEpi::lexis_merge}
 
-Returns \code{lexis} invisibly after adding columns from
-\code{merge_dt} into \code{lexis} in-place, without taking a copy.
+Returns \code{lexis} after adding value columns from
+\code{merge_dt} into \code{lexis}.
 }
 \description{
 Function(s) to merge data into \code{Lexis} objects intelligently when merging
@@ -150,20 +150,21 @@ by splitting the \code{Lexis} data.
 \code{optional_steps[["post_harmonisation"]](call_env = call_env, eval_env = eval_env)}
 if that \code{optional_steps} element exists.
 \item Then we perform the actual merge between \code{merge_dt} and the harmonised
-data. This merges in data from \code{merge_dt} into every row of \code{lexis} in-place.
-So \code{lexis} is modified and no additional copy is taken for the sake of
-efficiency.
+data. The value columns in \code{merge_dt} are added into \code{lexis} either
+using \code{data.table::set} for a \code{data.table} or a simple
+\code{lexis[, merge_value_col_nms] <- join_result} assignment.
+Note that \code{data.table::set} modifies the \code{lexis} object in-place.
 \item Run
 \code{optional_steps[["post_merge"]](call_env = call_env, eval_env = eval_env)}
 if that \code{optional_steps} element exists.
 \item Each merged-in column from \code{merge_dt} (all columns not in \code{merge_dt_by})
 are inspected for missing values. If there are any, an error is raised.
 This usually occurs if \code{merge_dt} does not contain data for all data in
-\code{lexis}. For instance it only covers years 1950-2020 but \code{lexis} contains also
-data for 2021. This error helps you to spot those problems early instead
-of producing nonsense results downstream.
-\item Returns \code{lexis} invisibly after adding columns from
-\code{merge_dt} into \code{lexis} in-place, without taking a copy.
+\code{lexis}. For instance it only covers years 1950-2020 but \code{lexis} contains
+also data for 2021. This error helps you to spot those problems early
+isntead of producing nonsense results downstream.
+\item Returns \code{lexis} after adding value columns from
+\code{merge_dt} into \code{lexis}.
 }
 }
 
@@ -186,6 +187,8 @@ data.table::set(
   j = "merge_value",
   value = runif(nrow(my_merge_dt))
 )
+# lexis is also a data.table and is modified in-place. no need to keep
+# output of popEpi::lexis_merge call.
 popEpi::lexis_merge(
   lexis = lexis,
   merge_dt = my_merge_dt,

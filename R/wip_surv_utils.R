@@ -1,48 +1,75 @@
-lexis_set__ <- function(dt, lexis_ts_col_nms) {
-  attr_nms <- c("time.scales", "time.since", "breaks")
-  if (inherits(dt, "Lexis")) {
-    attrs <- lapply(attr_nms, attr, x = dt)
-  } else {
-    attrs <- list(
-      lexis_ts_col_nms,
-      rep("", length(lexis_ts_col_nms)),
-      structure(lapply(lexis_ts_col_nms, function(x) NULL), names = lexis_ts_col_nms)
-    )
+lexis_dt_set__ <- function(lexis, lexis_ts_col_nms = NULL) {
+  if (inherits(lexis, "Lexis")) {
+    data.table::setDT(lexis)
+    data.table::setattr(lexis, "class", c("Lexis", "data.table", "data.frame"))
+    return(lexis[])
   }
-  names(attrs) <- attr_nms
-  data.table::setDT(dt)
-  attrs <- c(attrs, list(class = c("Lexis", "data.table", "data.frame")))
+  if (is.null(lexis_ts_col_nms)) {
+    stop("Internal error: internal function lexis_dt_set__ ",
+         "cannot automatically determine lexis_ts_col_nms. Please ",
+         "complain to the maintainer if you see this.")
+  }
+  stopifnot(
+    is.data.frame(lexis),
+    lexis_ts_col_nms %in% names(lexis)
+  )
+
+  attrs <- list(
+    time.scales = lexis_ts_col_nms,
+    time.since = rep("", length(lexis_ts_col_nms)),
+    breaks = structure(
+      lapply(lexis_ts_col_nms, function(x) NULL),
+      names = lexis_ts_col_nms
+    ),
+    class = c("Lexis", "data.table", "data.frame")
+  )
+  data.table::setDT(lexis)
   for (attr_nm in names(attrs)) {
-    data.table::setattr(dt, name = attr_nm, value = attrs[[attr_nm]])
+    data.table::setattr(lexis, name = attr_nm, value = attrs[[attr_nm]])
   }
-  return(invisible(dt[]))
+  return(invisible(lexis[]))
+}
+
+lexis_dt__ <- function(lexis, lexis_ts_col_nms = NULL) {
+  if (inherits(lexis, "Lexis")) {
+    out <- data.table::setDT(as.list(lexis))
+    data.table::setattr(out, "class", c("Lexis", "data.table", "data.frame"))
+    return(out[])
+  }
+  if (is.null(lexis_ts_col_nms)) {
+    stop("Internal error: internal function lexis_dt__ ",
+         "cannot automatically determine lexis_ts_col_nms. Please ",
+         "complain to the maintainer if you see this.")
+  }
+  lexis_dt_set__(out, lexis_ts_col_nms = lexis_ts_col_nms)
+  return(out)
 }
 
 surv_split__ <- function(
-  dt,
-  subset = NULL,
+  lexis,
   breaks,
+  subset = NULL,
   merge = TRUE
 ) {
-  assert_is_arg_dt(dt = dt, lexis = TRUE)
-  if (nrow(dt) == 0) {
-    return(dt[])
+  assert_is_arg_lexis(lexis, dt = FALSE)
+  if (nrow(lexis) == 0) {
+    return(lexis[])
   }
-  lexis_ts_col_nms <- attr(dt, "time.scales")
+  lexis_ts_col_nms <- Epi::timeScales(lexis)
   lexis_col_nms <- c(
     "lex.id", lexis_ts_col_nms, "lex.dur", "lex.Cst", "lex.Xst"
   )
   if (isTRUE(merge)) {
-    merge <- setdiff(names(dt), lexis_col_nms)
+    merge <- setdiff(names(lexis), lexis_col_nms)
   } else if (isFALSE(merge)) {
     merge <- character(0L)
   }
-  out <- data.table::setDT(as.list(dt)[union(lexis_col_nms, merge)])
-  subset <- handle_arg_subset()
+  out <- data.table::setDT(as.list(lexis)[union(lexis_col_nms, merge)])
+  subset <- handle_arg_subset(dataset_nm = "lexis")
   if (any(!subset)) {
     out <- out[(subset), ]
   }
-  lexis_set__(out, lexis_ts_col_nms = lexis_ts_col_nms)
+  lexis_dt_set__(lexis = out, lexis_ts_col_nms = lexis_ts_col_nms)
   out <- popEpi::splitMulti(
     data = out,
     breaks = breaks,
@@ -106,10 +133,10 @@ surv_box_dt__ <- function(
 }
 
 surv_box_id__ <- function(
-  dt,
+  lexis,
   box_dt
 ) {
-  assert_is_arg_dt(dt = dt, lexis = TRUE)
+  assert_is_arg_lexis(lexis, dt = TRUE)
   start_col_nms <- sort(names(box_dt)[grepl("_start$", names(box_dt))])
   split_ts_col_nms <- sub("_start$", "", start_col_nms)
   merge_dt <- data.table::setDT(as.list(box_dt)[start_col_nms])
@@ -126,8 +153,8 @@ surv_box_id__ <- function(
     )
   })
   names(breaks) <- split_ts_col_nms
-  lexis_merge(
-    lexis = dt,
+  lexis <- lexis_merge(
+    lexis = lexis,
     merge_dt = merge_dt,
     merge_dt_by = split_ts_col_nms,
     merge_dt_harmonisers = structure(lapply(seq_along(breaks), function(i) {
@@ -143,59 +170,60 @@ surv_box_id__ <- function(
       }, list(COL = parse(text = names(breaks)[i])[[1]], BR = breaks[[i]]))
     }), names = names(breaks))
   )
-  return(invisible(dt[]))
+  return(invisible(lexis[]))
 }
 
-lexis_crop <- function(dt, breaks) {
-  assert_is_arg_dt(dt = dt, lexis = TRUE)
+lexis_crop <- function(lexis, breaks) {
+  assert_is_arg_lexis(lexis, dt = FALSE)
   delay_entry <- do.call(pmax, lapply(names(breaks), function(ts_col_nm) {
-    entry <- dt[[ts_col_nm]]
+    entry <- lexis[[ts_col_nm]]
     cropped_entry <- min(breaks[[ts_col_nm]])
     pmax(entry, cropped_entry) - entry
   }))
   earlify_exit <- do.call(pmax, lapply(names(breaks), function(ts_col_nm) {
-    exit <- dt[[ts_col_nm]] + dt[["lex.dur"]]
+    exit <- lexis[[ts_col_nm]] + lexis[["lex.dur"]]
     cropped_exit <- max(breaks[[ts_col_nm]])
     exit - pmin(exit, cropped_exit)
   }))
   data.table::set(
-    x = dt,
-    j = Epi::timeScales(dt),
-    value = lapply(Epi::timeScales(dt), function(ts_col_nm) {
-      dt[[ts_col_nm]] + delay_entry
+    x = lexis,
+    j = Epi::timeScales(lexis),
+    value = lapply(Epi::timeScales(lexis), function(ts_col_nm) {
+      lexis[[ts_col_nm]] + delay_entry
     })
   )
   data.table::set(
-    x = dt,
+    x = lexis,
     j = "lex.dur",
-    value = dt[["lex.dur"]] - delay_entry - earlify_exit
+    value = lexis[["lex.dur"]] - delay_entry - earlify_exit
   )
   data.table::set(
-    x = dt,
-    i = which(dt[["lex.dur"]] < 0),
-    j = c(Epi::timeScales(dt), "lex.dur"),
+    x = lexis,
+    i = which(lexis[["lex.dur"]] < 0),
+    j = c(Epi::timeScales(lexis), "lex.dur"),
     value = NA
   )
-  return(invisible(dt[]))
+  return(invisible(lexis[]))
 }
 
-lexis_immortalise <- function(dt, breaks) {
+lexis_immortalise <- function(lexis, breaks) {
+  assert_is_arg_lexis(lexis, dt = FALSE)
   max_by_ts <- lapply(breaks, max)
   pmin_data <- lapply(names(max_by_ts), function(ts_col_nm) {
-    max_by_ts[[ts_col_nm]] - dt[[ts_col_nm]]
+    max_by_ts[[ts_col_nm]] - lexis[[ts_col_nm]]
   })
   names(pmin_data) <- names(max_by_ts)
   data.table::set(
-    x = dt,
+    x = lexis,
     j = "lex.dur",
     value = do.call(pmin, pmin_data, quote = TRUE)
   )
   data.table::set(
-    x = dt,
+    x = lexis,
     j = "lex.Xst",
-    value = dt[["lex.Cst"]]
+    value = lexis[["lex.Cst"]]
   )
-  return(invisible(dt[]))
+  return(invisible(lexis[]))
 }
 
 surv_breaks_rule_based <- function(
@@ -234,7 +262,7 @@ surv_breaks_rule_based <- function(
     can_combine <- can_combine_next || can_combine_previous
     do_combine <- can_combine && local({
       work_dt <- surv_interval(
-        dt = lexis,
+        lexis = lexis,
         break_lo = break_lo,
         break_hi = break_hi,
         ts_col_nm = ts_fut_nm,
@@ -270,38 +298,38 @@ surv_breaks_rule_based <- function(
 
 
 surv_interval <- function(
-  dt,
+  lexis,
   break_lo,
   break_hi,
   ts_col_nm,
   merge = FALSE
 ) {
-  assert_is_arg_dt(dt, lexis = TRUE)
-  merge <- handle_arg_merge(merge, dt)
+  assert_is_arg_lexis(lexis, dt = FALSE)
+  merge <- handle_arg_merge(merge, lexis)
   lexis_col_nms <- c(
     "lex.id",
     "lex.dur",
     "lex.Cst",
     "lex.Xst"
   )
-  work_dt <- data.table::setDT(as.list(dt)[lexis_col_nms])
-  ts_dt <- data.table::setDT(as.list(dt)[attr(dt, "time.scales")])
+  work_dt <- data.table::setDT(as.list(lexis)[lexis_col_nms])
+  ts_dt <- data.table::setDT(as.list(lexis)[attr(lexis, "time.scales")])
   data.table::set(
     x = ts_dt,
     j = ts_col_nm,
-    value = pmax(dt[[ts_col_nm]], break_lo)
+    value = pmax(lexis[[ts_col_nm]], break_lo)
   )
   ts_stop_col_nm <- paste0(ts_col_nm, "_stop")
   data.table::set(
     x = work_dt,
     j = ts_stop_col_nm,
-    value = dt[[ts_col_nm]] + dt[["lex.dur"]]
+    value = lexis[[ts_col_nm]] + lexis[["lex.dur"]]
   )
   data.table::set(
     x = work_dt,
     j = "in_interval",
     value = work_dt[[ts_stop_col_nm]] >= break_lo &
-      dt[[ts_col_nm]] < break_hi
+      lexis[[ts_col_nm]] < break_hi
   )
   data.table::set(
     x = work_dt,
@@ -323,12 +351,12 @@ surv_interval <- function(
     value = work_dt[[ts_stop_col_nm]] - ts_dt[[ts_col_nm]]
   )
   local({
-    offset <- ts_dt[[ts_col_nm]] - dt[[ts_col_nm]]
-    lapply(setdiff(attr(dt, "time.scales"), ts_col_nm), function(ts_col_nm_) {
+    offset <- ts_dt[[ts_col_nm]] - lexis[[ts_col_nm]]
+    lapply(setdiff(attr(lexis, "time.scales"), ts_col_nm), function(ts_col_nm_) {
       data.table::set(
         x = ts_dt,
         j = ts_col_nm_,
-        value = dt[[ts_col_nm_]] + offset
+        value = lexis[[ts_col_nm_]] + offset
       )
     })
     NULL
@@ -338,8 +366,8 @@ surv_interval <- function(
     j = "lex.Xst",
     value = data.table::fifelse(
       work_dt[["end_in_interval"]],
-      dt[["lex.Xst"]],
-      dt[["lex.Cst"]]
+      lexis[["lex.Xst"]],
+      lexis[["lex.Cst"]]
     )
   )
 
@@ -352,7 +380,7 @@ surv_interval <- function(
     data.table::set(
       x = work_dt,
       j = merge,
-      value = as.list(dt)[merge]
+      value = as.list(lexis)[merge]
     )
   }
   work_dt <- subset(
@@ -360,7 +388,7 @@ surv_interval <- function(
     subset = work_dt[["in_interval"]],
     select = c(
       "lex.id",
-      attr(dt, "time.scales"),
+      attr(lexis, "time.scales"),
       "lex.dur",
       "lex.Cst", "lex.Xst",
       merge

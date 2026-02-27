@@ -5,7 +5,7 @@ surv_pohar_perme_weight__ <- function(
   hazard_col_nm,
   method = c("subject subinterval", "survival interval")[1L]
 ) {
-  assert_is_arg_lexis(lexis)
+  assert_is_arg_lexis(lexis, dt = FALSE)
   lexis_ts_col_nms <- Epi::timeScales(lexis)
   dt_key_col_nms <- data.table::key(lexis)
   stopifnot(
@@ -958,7 +958,7 @@ surv_lexis_S_exp_e1_pch_est <- function(
   merge_dt_by,
   weight_col_nm = NULL
 ) {
-  assert_is_arg_lexis(lexis)
+  assert_is_arg_lexis(lexis, dt = TRUE)
   stopifnot(
     identical(data.table::key(lexis)[1], "lex.id"),
     ts_fut_col_nm %in% data.table::key(lexis),
@@ -973,7 +973,7 @@ surv_lexis_S_exp_e1_pch_est <- function(
     weight_col_nm
   ))
   e1dt <- data.table::setDT(as.list(lexis)[keep_col_nms])
-  lexis_set__(e1dt, lexis_ts_col_nms = Epi::timeScales(lexis))
+  lexis_dt_set__(lexis = e1dt, lexis_ts_col_nms = Epi::timeScales(lexis))
   data.table::set(
     x = e1dt,
     j = "keep",
@@ -1004,7 +1004,7 @@ surv_lexis_S_exp_e1_pch_est <- function(
       value = 1 / nrow(e1dt)
     )
   }
-  lexis_immortalise(dt = e1dt, breaks = breaks[ts_fut_col_nm])
+  lexis_immortalise(lexis = e1dt, breaks = breaks[ts_fut_col_nm])
   e1dt <- popEpi::splitMulti(
     data = e1dt,
     breaks = breaks[ts_fut_col_nm]
@@ -1015,7 +1015,7 @@ surv_lexis_S_exp_e1_pch_est <- function(
     merge_dt_by = merge_dt_by
   )
   box_dt <- surv_box_dt__(breaks = breaks[ts_fut_col_nm])
-  surv_box_id__(dt = e1dt, box_dt = box_dt)
+  surv_box_id__(lexis = e1dt, box_dt = box_dt)
   data.table::setDT(e1dt)
   data.table::set(
     x = box_dt,

@@ -85,6 +85,8 @@ NULL
 #'   j = "merge_value",
 #'   value = runif(nrow(my_merge_dt))
 #' )
+#' # lexis is also a data.table and is modified in-place. no need to keep
+#' # output of popEpi::lexis_merge call.
 #' popEpi::lexis_merge(
 #'   lexis = lexis,
 #'   merge_dt = my_merge_dt,
@@ -163,7 +165,7 @@ lexis_merge <- function(
     ))
   }
   #' @template param_lexis
-  assert_is_arg_lexis(lexis)
+  assert_is_arg_lexis(lexis, dt = FALSE)
   #' @param merge_dt `[data.table, NULL]` (no default or default `NULL`)
   #'
   #' A `data.table` to merge with `lexis`. Usually `lexis` has been split
@@ -313,21 +315,28 @@ lexis_merge <- function(
   }
   # @codedoc_comment_block popEpi::lexis_merge
   # - Then we perform the actual merge between `merge_dt` and the harmonised
-  #   data. This merges in data from `merge_dt` into every row of `lexis` in-place.
-  #   So `lexis` is modified and no additional copy is taken for the sake of
-  #   efficiency.
+  #   data. The value columns in `merge_dt` are added into `lexis` either
+  #   using `data.table::set` for a `data.table` or a simple
+  #   `lexis[, merge_value_col_nms] <- join_result` assignment.
+  #   Note that `data.table::set` modifies the `lexis` object in-place.
   # @codedoc_comment_block popEpi::lexis_merge
-  data.table::set(
-    x = lexis,
-    j = merge_value_col_nms,
-    value = merge_dt[
-      i = join_dt,
-      on = names(join_dt),
-      #' @importFrom data.table .SD
-      j = .SD,
-      .SDcols = merge_value_col_nms
-    ]
-  )
+  join_result <- merge_dt[
+    i = join_dt,
+    on = names(join_dt),
+    #' @importFrom data.table .SD
+    j = .SD,
+    .SDcols = merge_value_col_nms
+  ]
+  if (data.table::is.data.table(lexis)) {
+    data.table::set(
+      x = lexis,
+      j = merge_value_col_nms,
+      value = join_result
+    )
+  } else {
+    lexis[, merge_value_col_nms] <- join_result
+  }
+  rm(list = "join_result")
   # @codedoc_comment_block popEpi::lexis_merge
   # - Run
   #   `optional_steps[["post_merge"]](call_env = call_env, eval_env = eval_env)`
@@ -343,9 +352,9 @@ lexis_merge <- function(
   # - Each merged-in column from `merge_dt` (all columns not in `merge_dt_by`)
   #   are inspected for missing values. If there are any, an error is raised.
   #   This usually occurs if `merge_dt` does not contain data for all data in
-  #   `lexis`. For instance it only covers years 1950-2020 but `lexis` contains also
-  #   data for 2021. This error helps you to spot those problems early instead
-  #   of producing nonsense results downstream.
+  #   `lexis`. For instance it only covers years 1950-2020 but `lexis` contains
+  #   also data for 2021. This error helps you to spot those problems early
+  #   isntead of producing nonsense results downstream.
   # @codedoc_comment_block popEpi::lexis_merge
   for (merge_value_col_nm in merge_value_col_nms) {
     is_missing <- is.na(lexis[[merge_value_col_nm]])
@@ -357,14 +366,14 @@ lexis_merge <- function(
     }
   }
   # @codedoc_comment_block popEpi::lexis_merge
-  # - Returns `lexis` invisibly after adding columns from
-  #   `merge_dt` into `lexis` in-place, without taking a copy.
+  # - Returns `lexis` after adding value columns from
+  #   `merge_dt` into `lexis`.
   # @codedoc_comment_block popEpi::lexis_merge
   # @codedoc_comment_block return(popEpi::lexis_merge)
-  # Returns `lexis` invisibly after adding columns from
-  # `merge_dt` into `lexis` in-place, without taking a copy.
+  # Returns `lexis` after adding value columns from
+  # `merge_dt` into `lexis`.
   # @codedoc_comment_block return(popEpi::lexis_merge)
-  return(invisible(lexis[]))
+  return(lexis[])
 }
 
 lexis_merge_survival <- function(

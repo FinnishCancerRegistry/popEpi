@@ -153,7 +153,6 @@ prev_lexis <- function(
       survival_dt[[names(breaks)[2]]]
     )
   )
-  browser()
   survival_dt[
     #' @importFrom data.table := .SD
     j = "h_pch" := diff(c(0.0, .SD[["H"]])) / .SD[["d"]],
@@ -195,10 +194,9 @@ prev_lexis <- function(
       lexis_dt[[col_nm]][prev_dt[["dt_row_no"]]]
     })
   )
-  lexis_set__(dt = prev_dt, lexis_ts_col_nms = names(breaks))
-  browser()
+  lexis_dt_set__(lexis = prev_dt, lexis_ts_col_nms = names(breaks))
   lexis_merge_survival(
-    dt = prev_dt,
+    lexis = prev_dt,
     survival_dt = survival_dt,
     survival_dt_by = survival_dt_by,
     survival_dt_harmonisers = survival_dt_harmonisers,
@@ -213,8 +211,6 @@ prev_lexis <- function(
     )
   ]
 
-  browser()
-
   # for each prevalence time point,
   # - use S = 1 if person still in follow-up
   # - use S = 0 if person has died before this time point
@@ -228,7 +224,7 @@ prev_lexis <- function(
   #     via S_i = exp(-(H - h_pch * (t_i - start))) where t_i is the index time
   #     point and start is the interval start point.
   work_dt <- surv_split__(
-    dt = dt,
+    lexis = dt,
     breaks = breaks[1],
     subset = subset,
     merge = intersect(
@@ -254,7 +250,6 @@ prev_lexis <- function(
     merge_dt_by = survival_dt_by,
     merge_dt_harmonisers = survival_dt_harmonisers
   )
-  browser()
   data.table::setDT(work_dt)
   work_dt <- work_dt[
     i = work_dt[[names(breaks)[1]]] == breaks[[1]],
