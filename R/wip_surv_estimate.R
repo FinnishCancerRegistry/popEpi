@@ -669,15 +669,12 @@ surv_estimate <- function(
   # New function `surv_estimate` for estimating arbitrary survival time
   # functions using aggregated data.
   # @codedoc_comment_block news("popEpi::surv_estimate", "2026-02-03", "0.5.0")
-  # @codedoc_comment_block popEpi::surv_estimate::dt
-  # @param dt
-  #
-  # - `surv_estimate`: A `data.table`. It must contain aggregate statistics
-  #   which can be used to compute survival function estimates. Must also have
-  #   column `box_id`, a running number like the one produced by
-  #   `[lexis_split_merge_aggregate_by_stratum]`.
-  # @codedoc_insert_comment_block surv_arg_dt
-  # @codedoc_comment_block popEpi::surv_estimate::dt
+  #' @param dt `[data.table]` (no default)
+  #'
+  #' Dataset containing aggregate statistics
+  #' which can be used to compute survival function estimates. Must also have
+  #' column `box_id`, a running number like the one produced by
+  #' `[lexis_split_merge_aggregate_by_stratum]`.
   assert_is_arg_dt(dt, lexis = FALSE)
   stopifnot(
     "box_id" %in% names(dt),

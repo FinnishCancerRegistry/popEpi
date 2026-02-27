@@ -19,7 +19,7 @@ surv_estimate(
   conf_lvls = 0.95
 )
 
-surv_individual_weights(dt, standard_weight_dt, observed_weight_dt = NULL)
+surv_individual_weights(df, standard_weight_dt, observed_weight_dt = NULL)
 
 surv_lexis(
   lexis,
@@ -38,13 +38,12 @@ surv_lexis(
 )
 }
 \arguments{
-\item{dt}{\itemize{
-\item \code{surv_estimate}: A \code{data.table}. It must contain aggregate statistics
+\item{dt}{\verb{[data.table]} (no default)
+
+Dataset containing aggregate statistics
 which can be used to compute survival function estimates. Must also have
 column \code{box_id}, a running number like the one produced by
-\verb{[lexis_split_merge_aggregate_by_stratum]}.
-\item \code{surv_individual_weights}: A \code{data.frame} / \code{data.table}.
-}}
+\verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{ts_fut_col_nm}{\verb{[character]} (no default)
 
@@ -123,6 +122,10 @@ allowed.
 \item{conf_lvls}{Passed one at a time to
 \verb{[directadjusting::directly_adjusted_estimates]}.}
 
+\item{df}{\verb{[data.frame, data.table]} (no default)
+
+Dataset containing stratum columns also found in \code{standard_weight_dt}.}
+
 \item{standard_weight_dt}{\verb{[data.table]} (no default)
 
 Table of standardisation weights, e.g. ICSS weights.
@@ -140,7 +143,7 @@ allowed.
 
 Table of weights in your dataset.
 \itemize{
-\item \code{NULL}: Weights are computed using \code{dt}. See \strong{Details}.
+\item \code{NULL}: Weights are computed using \code{df}. See \strong{Details}.
 \item \code{data.table}: Must be a valid table of weights.
 }
 
@@ -277,7 +280,7 @@ intervals.
 
 \strong{popEpi::surv_individual_weights}
 
-Produce a vector of weights, one weight for each row in \code{dt}.
+Produce a vector of weights, one weight for each row in \code{df}.
 These weights have been called individual weights, Brenner weights,
 (Brenner et al 2004, https://doi.org/10.1016/j.ejca.2004.07.007),
 pre-weights, and maybe even others. A beloved child has many names.
@@ -304,8 +307,8 @@ Scale the standard weights and the observed weights to sum into one
 \item Compute the individual weights as the standard weights divided by the
 observed weights. E.g. one stratum has
 \code{weight_brenner = 0.5 / 0.4 = 1.2}.
-\item Using left-join, produce a vector of length \code{nrow(dt)} where each row in
-\code{dt} gets an individual weight based on its stratum.
+\item Using left-join, produce a vector of length \code{nrow(df)} where each row in
+\code{df} gets an individual weight based on its stratum.
 A vector of weights is returned.
 }
 

@@ -3,14 +3,16 @@
 #'   "surv_functions"
 #' )
 surv_individual_weights <- function(
-  dt,
+  df,
   standard_weight_dt,
   observed_weight_dt = NULL
 ) {
-  # @codedoc_comment_block surv_arg_dt
-  # - `surv_individual_weights`: A `data.frame` / `data.table`.
-  # @codedoc_comment_block surv_arg_dt
-  assert_is_arg_dt(dt = dt, lexis = FALSE)
+  #' @param df `[data.frame, data.table]` (no default)
+  #'
+  #' Dataset containing stratum columns also found in `standard_weight_dt`.
+  stopifnot(
+    is.data.frame(df)
+  )
   # @codedoc_comment_block popEpi::surv_individual_weights::standard_weight_dt
   # @param standard_weight_dt `[data.table]` (no default)
   #
@@ -18,9 +20,12 @@ surv_individual_weights <- function(
   #
   # @codedoc_insert_comment_block popEpi:::assert_is_arg_weight_dt
   # @codedoc_comment_block popEpi::surv_individual_weights::standard_weight_dt
-  assert_is_arg_weight_dt(standard_weight_dt, dt)
+  assert_is_arg_weight_dt(standard_weight_dt, df)
+
+  stratum_col_nms <- setdiff(names(standard_weight_dt), "weight")
+  dt <- data.table::setDT(as.list(df)[stratum_col_nms])
   # @codedoc_comment_block popEpi::surv_individual_weights
-  # Produce a vector of weights, one weight for each row in `dt`.
+  # Produce a vector of weights, one weight for each row in `df`.
   # These weights have been called individual weights, Brenner weights,
   # (Brenner et al 2004, https://doi.org/10.1016/j.ejca.2004.07.007),
   # pre-weights, and maybe even others. A beloved child has many names.
@@ -37,13 +42,12 @@ surv_individual_weights <- function(
   # This function makes producing these weights easier. It performs the
   # following steps:
   # @codedoc_comment_block popEpi::surv_individual_weights
-  stratum_col_nms <- setdiff(names(standard_weight_dt), "weight")
   # @codedoc_comment_block popEpi::surv_individual_weights::observed_weight_dt
   # @param observed_weight_dt `[NULL, data.table]` (default `NULL`)
   #
   # Table of weights in your dataset.
   #
-  # - `NULL`: Weights are computed using `dt`. See **Details**.
+  # - `NULL`: Weights are computed using `df`. See **Details**.
   # - `data.table`: Must be a valid table of weights.
   #
   # @codedoc_insert_comment_block popEpi:::assert_is_arg_weight_dt
@@ -103,8 +107,8 @@ surv_individual_weights <- function(
     value = weight_dt[["weight_standard"]] / weight_dt[["weight_observed"]]
   )
   # @codedoc_comment_block popEpi::surv_individual_weights
-  # - Using left-join, produce a vector of length `nrow(dt)` where each row in
-  #   `dt` gets an individual weight based on its stratum.
+  # - Using left-join, produce a vector of length `nrow(df)` where each row in
+  #   `df` gets an individual weight based on its stratum.
   # @codedoc_comment_block popEpi::surv_individual_weights
   out <- weight_dt[
     i = dt,
