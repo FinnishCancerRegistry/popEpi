@@ -87,7 +87,7 @@ test_make_sire__ <- function() {
     j = c("individual_weight", "dg_age_group"),
     value = list(
       popEpi::surv_individual_weights(
-        dt = sire,
+        df = sire,
         standard_weight_dt = test_make_standard_weight_dt__(),
         observed_weight_dt = NULL
       ),
