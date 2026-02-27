@@ -64,23 +64,25 @@ surv_aggre_exprs_table__ <- function() {
 }
 
 SPLIT_LEXIS_COLUMN_EXPRS__ <- list(
-  # tricky. ts_fut and box_id live in work_dt and box_dt has to be reachable
-  # from stratum_eval_env.
-  in_follow_up_at_interval_start = quote(
-    ts_fut == box_dt[[ts_fut_start_col_nm]][box_id]
-  ),
-  entered_late_during_interval = quote(
-    ts_fut > box_dt[[ts_fut_start_col_nm]][box_id]
-  ),
-  left_early_during_interval = quote(
-    {
-      out <- duplicated(lex.id, fromLast = TRUE) # nolint
-      out[out] <- lex.Cst[out] == lex.Xst[out]
-      out[out] <- round(ts_fut[out] + lex.dur[out], 10) <
-        round(box_dt[[ts_fut_stop_col_nm]][box_id[out]], 10)
-      out
-    }
-  ),
+  in_follow_up_at_interval_start = quote({
+    ts_fut_floor <- box_dt[[ts_fut_start_col_nm]][box_id]
+    absolute_distance_from_floor <- abs(ts_fut - ts_fut_floor)
+    absolute_distance_from_floor < 1e-10
+  }),
+  entered_late_during_interval = quote({
+    ts_fut_floor <- box_dt[[ts_fut_start_col_nm]][box_id]
+    distance_from_floor <- (ts_fut - ts_fut_floor)
+    distance_from_floor > 1e-10
+  }),
+  left_early_during_interval = quote({
+    out <- duplicated(lex.id, fromLast = TRUE) # nolint
+    out[out] <- lex.Cst[out] == lex.Xst[out]
+    ts_fut_stop <- ts_fut[out] + lex.dur[out]
+    ts_fut_ceiling <- box_dt[[ts_fut_stop_col_nm]][box_id[out]]
+    distance_from_ceiling <- ts_fut_ceiling - ts_fut_stop
+    out[out] <- distance_from_ceiling > 1e-10
+    out
+  }),
   pp = quote(
     {
       surv_pohar_perme_weight__(
