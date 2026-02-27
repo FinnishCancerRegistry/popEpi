@@ -955,31 +955,25 @@ surv_lexis_S_exp_e1_pch_est <- function(
   merge_dt_by,
   weight_col_nm = NULL
 ) {
-  assert_is_arg_lexis(lexis, dt = TRUE)
-  stopifnot(
-    identical(data.table::key(lexis)[1], "lex.id"),
-    ts_fut_col_nm %in% data.table::key(lexis),
-    !duplicated(lexis[["lex.id"]])
-  )
+  assert_is_arg_lexis(lexis, dt = FALSE)
   assert_is_arg_weight_col_nm(weight_col_nm)
   keep_col_nms <- unique(c(
     "lex.id",
-    attr(lexis, "time.scales"),
+    Epi::timeScales(lexis),
     "lex.dur", "lex.Cst", "lex.Xst",
     setdiff(names(merge_dt), "h_exp"),
     weight_col_nm
   ))
-  e1dt <- data.table::setDT(as.list(lexis)[keep_col_nms])
-  lexis_dt_set__(lexis = e1dt, lexis_ts_col_nms = Epi::timeScales(lexis))
+  e1dt <- lexis_to_lexis_dt__(lexis, select = keep_col_nms)
   data.table::set(
     x = e1dt,
     j = "keep",
-    value = !is.na(e1dt[["lex.dur"]]) &
+    value = !duplicated(e1dt[["lex.id"]]) &
       do.call(pmin, lapply(names(breaks), function(ts_col_nm) {
         data.table::between(
           e1dt[[ts_col_nm]],
-          lower = min(breaks[[ts_col_nm]]),
-          upper = max(breaks[[ts_col_nm]]),
+          lower = min(breaks[[ts_col_nm]]) - 1e-10,
+          upper = max(breaks[[ts_col_nm]]) - 1e-10,
           incbounds = TRUE
         )
       })) == 1
@@ -1006,6 +1000,7 @@ surv_lexis_S_exp_e1_pch_est <- function(
     data = e1dt,
     breaks = breaks[ts_fut_col_nm]
   )
+  data.table::setkeyv(e1dt, c("lex.id", ts_fut_col_nm))
   lexis_merge(
     lexis = e1dt,
     merge_dt = merge_dt,
