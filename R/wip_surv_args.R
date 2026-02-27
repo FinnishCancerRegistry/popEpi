@@ -267,17 +267,17 @@ handle_arg_aggre_exprs <- function(
       }
       general_var_nm <- general_var_nm
       aggre_expr <- SURV_AGGRE_EXPRS__[[general_var_nm]]
-      aggre_expr_string <- deparse1(aggre_expr)
-      aggre_expr_string <- sub(
+      aggre_expr_lines <- deparse(aggre_expr)
+      aggre_expr_lines <- sub(
         "(?<=\\W)x(?=\\W)",
         sprintf(" %s ", deparse1(state_from)),
-        aggre_expr_string,
+        aggre_expr_lines,
         perl = TRUE
       )
-      aggre_expr_string <- sub(
+      aggre_expr_lines <- sub(
         "(?<=\\W)y(?=\\W)",
         sprintf(" %s ", deparse1(state_to)),
-        aggre_expr_string,
+        aggre_expr_lines,
         perl = TRUE
       )
     } else {
@@ -290,18 +290,18 @@ handle_arg_aggre_exprs <- function(
       #     `my_n_events = quote(sum(lex.Cst == x & lex.Xst != y))` will not
       #     work.
       # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
-      aggre_expr_string <- deparse1(aggre_expr)
+      aggre_expr_lines <- deparse(aggre_expr)
     }
     # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
     #   + Regardless of the type of the `aggre_exprs` element, we remove every
     #     use of ` * iw` in the expression if individual weights are not used.
     # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
-    aggre_expr_string <- gsub(
+    aggre_expr_lines <- gsub(
       " *[*] *iw",
       iw_replacement,
-      aggre_expr_string
+      aggre_expr_lines
     )
-    parse(text = aggre_expr_string)[[1]]
+    parse(text = aggre_expr_lines)[[1]]
   })
   # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
   #   + Table of general aggregation expressions known to `popEpi`:
