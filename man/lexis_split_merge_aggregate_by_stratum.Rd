@@ -224,6 +224,262 @@ if that \code{optional_steps} element exists.
 \code{aggre_by} and value columns as specified via \code{aggre_exprs}.
 }
 }
+\examples{
+
+# popEpi::split_merge_aggregate_by_stratum
+make_pm <- function() {
+  pm <- data.table::copy(popEpi::popmort)
+  data.table::setnames(
+    pm,
+    c("year", "agegroup", "haz"),
+    c("ts_cal", "ts_age", "h_exp")
+  )
+  data.table::setkeyv(pm, c("sex", "ts_cal", "ts_age"))
+  data.table::setkeyv(pm, c("sex", "ts_cal", "ts_age"))
+  return(pm[])
+}
+
+make_column_icss_ag <- function(age) {
+  cut(
+    age,
+    breaks = c(0, 60, 70, 80, Inf),
+    right = FALSE,
+    labels = c("0-59", "60-69", "70-79", "80+")
+  )
+}
+
+make_standard_weight_dt <- function() {
+  return(popEpi::ICSS[
+    j = list(
+      weight = as.double(sum(.SD[["ICSS1"]]))
+    ),
+    keyby = list(
+      icss_ag = make_column_icss_ag(popEpi::ICSS[["age"]])
+    )
+  ][])
+}
+
+make_sire <- function() {
+  sire <- popEpi::sire[
+    popEpi::sire[["dg_date"]] < popEpi::sire[["ex_date"]] &
+      data.table::between(
+        popEpi::sire[["ex_date"]],
+        as.Date("1999-01-01"),
+        as.Date("2003-12-31"),
+        incbounds = TRUE
+      )
+  ]
+  sire[j = "my_stratum" := sample(2L, size = nrow(sire), replace = TRUE)]
+  sire <- sire[
+    j = .SD[as.integer(seq(1L, .N, length.out = 50L))],
+    keyby = "my_stratum"
+  ]
+  sire <- Epi::Lexis(
+    entry = list(
+      ts_cal = popEpi::get.yrs(dg_date),
+      ts_age = popEpi::get.yrs(dg_date) - popEpi::get.yrs(bi_date),
+      ts_fut = 0.0
+    ),
+    duration = popEpi::get.yrs(ex_date) - popEpi::get.yrs(dg_date),
+    entry.status = 0L,
+    exit.status = status,
+    data = sire
+  )
+  sire[["icss_ag"]] <- make_column_icss_ag(sire[["dg_age"]])
+  sire[["individual_weight"]] <- popEpi::surv_individual_weights(
+    df = sire,
+    standard_weight_dt = wdt
+  )
+  sire
+}
+
+pm <- make_pm()
+wdt <- make_standard_weight_dt()
+sire <- make_sire()
+
+# note that we use here 1-year survival intervals which are too wide for
+# practical survival estimation. we also aggregate for period analysis
+# for demonstration purposes.
+bl <- list(ts_cal = c(1999, 2004), ts_fut = 0:5)
+
+# using some pre-defined aggregation expressions
+agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+  lexis = sire,
+  breaks = bl,
+  aggre_exprs = c("n_events", "t_at_risk", "n_events_[0, 1]"),
+  aggre_by = "my_stratum",
+  aggre_ts_col_nms = "ts_fut"
+)
+stopifnot(
+  c("n_events", "t_at_risk", "n_events_[0, 1]") \%in\% names(agdt)
+)
+
+# using some pre-defined aggregation expressions + using expected hazard.
+agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+  lexis = sire,
+  breaks = bl,
+  aggre_exprs = c(
+    "n_events", "t_at_risk", "n_events_[0, 1]",
+    "n_events_exp_e2"
+  ),
+  aggre_by = "my_stratum",
+  aggre_ts_col_nms = "ts_fut",
+  merge_dt = pm,
+  merge_dt_by = c("sex", "ts_cal", "ts_age")
+)
+
+# using custom expressions --- `h_exp` is merged from `merge_dt`
+agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+  lexis = sire,
+  breaks = bl,
+  aggre_exprs = list(
+    "n_events", "t_at_risk", "n_events_[0, 1]",
+    "n_events_exp_e2",
+    "my_n_events" = quote(sum(lex.Cst == 0 & lex.Xst != 0)),
+    "my_n_events_exp_e2" = quote(sum(h_exp * lex.dur))
+  ),
+  aggre_by = "my_stratum",
+  aggre_ts_col_nms = "ts_fut",
+  merge_dt = pm,
+  merge_dt_by = c("sex", "ts_cal", "ts_age")
+)
+stopifnot(
+  agdt[["my_n_events"]] == agdt[["n_events"]],
+  all.equal(agdt[["my_n_events_exp_e2"]], agdt[["n_events_exp_e2"]])
+)
+
+# using custom expressions --- some pre-defined variables which are added
+# automatically
+agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+  lexis = sire,
+  breaks = bl,
+  aggre_exprs = list(
+    "n_events_pp",
+    "my_n_events_pp" = quote(sum((lex.Cst == 0 & lex.Xst != 0) * pp)),
+    "n_at_risk_eff",
+    "my_n_at_risk_eff" = quote(sum(
+      in_follow_up_at_interval_start +
+        0.5 * entered_late_during_interval -
+        0.5 * left_early_during_interval
+    )),
+    "my_n_at_risk_eff_2" = quote({
+      # custom definition for detecting late entry. in this example we add
+      # a larger tolerance than is used normally. you can find the normal
+      # tolerance used in the table of expressions which create columns into
+      # the split lexis dataset.
+      ts_fut_floor <- eval_env[["box_dt"]][["ts_fut_start"]][box_id]
+      distance_from_floor <- (ts_fut - ts_fut_floor)
+      entered_late_during_interval <- distance_from_floor > 1e-3
+      sum(
+        in_follow_up_at_interval_start +
+          0.5 * entered_late_during_interval -
+          0.5 * left_early_during_interval
+      )
+    })
+  ),
+  aggre_by = "my_stratum",
+  aggre_ts_col_nms = "ts_fut",
+  merge_dt = pm,
+  merge_dt_by = c("sex", "ts_cal", "ts_age")
+)
+stopifnot(
+  all.equal(agdt[["my_n_events_pp"]], agdt[["n_events_pp"]]),
+  all.equal(agdt[["n_at_risk_eff"]], agdt[["my_n_at_risk_eff"]]),
+  all.equal(agdt[["n_at_risk_eff"]], agdt[["my_n_at_risk_eff_2"]])
+)
+
+# using custom expressions --- also a custom column at the split lexis level.
+# this is for demonstration of what is possible and probably no-one would
+# need such an h_exp_mean in a real application.
+agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+  lexis = sire,
+  breaks = bl,
+  aggre_exprs = list(
+    "my_stat" = quote(sum(lex.dur * h_exp_mean))
+  ),
+  aggre_by = "my_stratum",
+  aggre_ts_col_nms = "ts_fut",
+  merge_dt = pm,
+  merge_dt_by = c("sex", "ts_cal", "ts_age"),
+  split_lexis_column_exprs = list(
+    h_exp_mean = quote({
+      dt <- data.table::setDT(list(lex.id = lex.id, h_exp = h_exp))
+      h_exp_lag1 <- dt[
+        j = list(lag1 = data.table::shift(h_exp, n = 1L, type = "lag")),
+        by = "lex.id"
+      ][["lag1"]]
+      h_exp_lag1[is.na(h_exp_lag1)] <- h_exp[is.na(h_exp_lag1)]
+      h_exp_lead1 <- dt[
+        j = list(lead1 = data.table::shift(h_exp, n = 1L, type = "lead")),
+        by = "lex.id"
+      ][["lead1"]]
+      h_exp_lead1[is.na(h_exp_lead1)] <- h_exp[is.na(h_exp_lead1)]
+      (h_exp + h_exp_lag1 + h_exp_lead1) / 3
+    })
+  )
+)
+stopifnot(
+  "my_stat" \%in\% names(agdt),
+  !is.na(agdt[["my_stat"]])
+)
+
+# this function was written for survival estimation but is is in fact more
+# general. for instance we can look at a calendar year / age grid.
+agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+  lexis = sire,
+  breaks = list(ts_cal = 1999:2004, ts_age = seq(0, 100, 10)),
+  aggre_exprs = list(
+    "n_events_exp_e2"
+  ),
+  aggre_ts_col_nms = c("ts_cal", "ts_age"),
+  merge_dt = pm,
+  merge_dt_by = c("sex", "ts_cal", "ts_age")
+)
+stopifnot(
+  c("ts_cal_start", "ts_age_start") \%in\% names(agdt)
+)
+agdt_wide <- data.table::dcast(
+  data = agdt,
+  formula = ts_age_start ~ ts_cal_start,
+  value.var = "n_events_exp_e2"
+)
+# print(round(agdt_wide, 2))
+# Key: <ts_age_start>
+#     ts_age_start  1999  2000  2001  2002  2003
+#            <num> <num> <num> <num> <num> <num>
+#  1:            0  0.00  0.00  0.00  0.00  0.00
+#  2:           10  0.00  0.00  0.00  0.00  0.00
+#  3:           20  0.00  0.00  0.00  0.00  0.00
+#  4:           30  0.00  0.00  0.00  0.00  0.00
+#  5:           40  0.00  0.00  0.00  0.00  0.00
+#  6:           50  0.01  0.01  0.01  0.00  0.00
+#  7:           60  0.04  0.04  0.03  0.01  0.02
+#  8:           70  0.33  0.28  0.31  0.16  0.05
+#  9:           80  1.36  1.04  0.89  0.48  0.20
+# 10:           90  0.39  0.29  0.47  0.37  0.56
+
+# this is what happens when there is an empty interval
+agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+  lexis = popEpi::Lexis_dt(
+    entry = list(ts_fut = c(0.0, 3.5)),
+    exit = list(ts_fut = c(1.5, 4.5)),
+    entry.status = 0L,
+    exit.status = 1L
+  ),
+  breaks = list(ts_fut = 0:5),
+  aggre_exprs = list(
+    "t_at_risk",
+    "n_events",
+    my_n_events = quote(sum(lex.Cst == 0 & lex.Xst != 0))
+  )
+)
+stopifnot(
+  identical(agdt[["t_at_risk"]], c(1.0, 0.5, 0.0, 0.5, 0.5)),
+  identical(agdt[["n_events"]], c(0L, 1L, 0L, 0L, 1L)),
+  identical(agdt[["my_n_events"]], c(0L, 1L, NA, 0L, 1L))
+)
+
+}
 \seealso{
 Other Lexis_functions: 
 \code{\link{lexis_funs}},
