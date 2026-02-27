@@ -88,23 +88,16 @@ handle_arg_by <- function(
   #   `list("sex", data.table::data.table(ag = 1:18))` leading to the same as
   #   `data.table::CJ(sex = 1:2, ag = 1:18)`.
   # @codedoc_comment_block popEpi:::handle_arg_by
+  stopifnot(is.data.frame(dataset))
   assert_is_arg_by(by, dataset)
   if (is.character(by)) {
     stratum_col_nms <- by
+    dataset <- data.table::setDT(as.list(dataset)[stratum_col_nms])
     nondup <- !duplicated(dataset, by = stratum_col_nms)
-    by <- dataset[
-      i = (nondup),
-      #' @importFrom data.table .SD
-      j = .SD,
-      .SDcols = stratum_col_nms
-    ]
+    by <- dataset[(nondup), ]
     data.table::setkeyv(by, stratum_col_nms)
   } else if (inherits(by, "list")) {
     by <- level_space_list_to_level_space_data_table(by)
-  }
-  bad_col_nms <- setdiff(names(by), names(dataset))
-  if (length(bad_col_nms) > 0) {
-    stop("Column names in `by` not in the dataset: ", deparse1(bad_col_nms))
   }
   return(by[])
 }
