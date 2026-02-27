@@ -54,8 +54,9 @@ surv_lexis <- function(
 ) {
   #' @template param_lexis
   assert_is_arg_lexis(lexis, dt = FALSE)
-  subset <- handle_arg_subset(dataset_nm = "lexis")
-  aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis)
+  lexis_dt <- lexis_to_lexis_dt__(lexis)
+  subset <- handle_arg_subset(dataset_nm = "lexis_dt")
+  aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis_dt)
   #' @param weights `[NULL, data.table, character]` (default `NULL`)
   #'
   #' Weights for adjusting estimates.
@@ -72,8 +73,8 @@ surv_lexis <- function(
         aggre_by,
         local({
           da_stratum_col_nms <- setdiff(names(weights), "weight")
-          nondup <- !duplicated(lexis, by = da_stratum_col_nms)
-          da_stratum_dt <- lexis[
+          nondup <- !duplicated(lexis_dt, by = da_stratum_col_nms)
+          da_stratum_dt <- lexis_dt[
             i = nondup,
             #' @importFrom data.table .SD
             j = .SD,
@@ -83,7 +84,7 @@ surv_lexis <- function(
           da_stratum_dt[]
         })
       ),
-      dataset = lexis
+      dataset = lexis_dt
     )
   } else {
     weight_col_nm <- weights
@@ -141,7 +142,7 @@ surv_lexis <- function(
   #' @param subset
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   sdt <- lexis_split_merge_aggregate_by_stratum(
-    lexis = lexis,
+    lexis = lexis_dt,
     breaks = breaks,
     merge_dt_by = merge_dt_by,
     merge_dt = merge_dt,

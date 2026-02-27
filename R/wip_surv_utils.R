@@ -30,11 +30,36 @@ lexis_dt_set__ <- function(lexis, lexis_ts_col_nms = NULL) {
   return(invisible(lexis[]))
 }
 
+lexis_to_lexis_dt__ <- function(
+  lexis,
+  subset = NULL,
+  select = NULL
+) {
+  stopifnot(inherits(lexis, "Lexis"))
+  if (is.null(select)) {
+    select <- names(lexis)
+  }
+  out <- data.table::setDT(as.list(lexis)[select])
+  if (!is.null(subset)) {
+    out <- out[(subset), ]
+  }
+  attr_nms <- c("time.scales", "time.since", "breaks")
+  attr_nms <- intersect(attr_nms, names(attributes(lexis)))
+  attrs <- lapply(attr_nms, attr, x = lexis)
+  names(attrs) <- attr_nms
+  attrs[["class"]] <- c("Lexis", "data.table", "data.frame")
+  for (attr_nm in names(attrs)) {
+    data.table::setattr(out, attr_nm, attrs[[attr_nm]])
+  }
+  if (data.table::is.data.table(lexis)) {
+    data.table::setkeyv(out, data.table::key(lexis))
+  }
+  return(out[])
+}
+
 lexis_dt__ <- function(lexis, lexis_ts_col_nms = NULL) {
   if (inherits(lexis, "Lexis")) {
-    out <- data.table::setDT(as.list(lexis))
-    data.table::setattr(out, "class", c("Lexis", "data.table", "data.frame"))
-    return(out[])
+    return(lexis_to_lexis_dt__(lexis)[])
   }
   if (is.null(lexis_ts_col_nms)) {
     stop("Internal error: internal function lexis_dt__ ",

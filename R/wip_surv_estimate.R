@@ -448,7 +448,7 @@ surv_estimate_expr_list__ <- list(
   S_exp_e1_pch = list(
     est = quote(
       surv_lexis_S_exp_e1_pch_est(
-        lexis = surv_lexis_env[["lexis"]],
+        lexis = surv_lexis_env[["lexis_dt"]],
         breaks = surv_lexis_env[["breaks"]],
         ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]],
         merge_dt = surv_lexis_env[["merge_dt"]],
