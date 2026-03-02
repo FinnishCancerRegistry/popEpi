@@ -673,9 +673,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
 
   box_dt <- surv_box_dt__(breaks[aggre_ts_col_nms])
 
-  out <- quote(lexis_dt[
-    i = aggre_by,
-    on = names(aggre_by),
+  out_expr <- quote(lexis_dt[
     j = {
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       # - For each stratum in `aggre_by`:
@@ -692,6 +690,9 @@ lexis_split_merge_aggregate_by_stratum <- function(
           eval_env = eval_env,
           call_env = call_env
         )
+      }
+      if (length(aggre_exprs) == 0) {
+        return(list())
       }
       if (.N == 0) {
         # for some reason .SD is a one-row data.table with all NA values
@@ -778,13 +779,20 @@ lexis_split_merge_aggregate_by_stratum <- function(
       out
     },
     .SDcols = names(lexis_dt),
-    #' @importFrom data.table .EACHI
-    keyby = .EACHI
+    keyby = eval(names(aggre_by))
   ])
   if (is.null(aggre_by)) {
-    out[c("i", "on", "keyby")] <- NULL
+    out_expr["keyby"] <- NULL
   }
-  out <- eval(out)
+  out <- eval(out_expr)
+  if (data.table::is.data.table(aggre_by) && ncol(aggre_by) > 0) {
+    out <- out[
+      i = aggre_by,
+      on = names(aggre_by),
+      #' @importFrom data.table .SD
+      j = .SD
+    ]
+  }
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - After every stratum has been processed, set proper `data.table`
   #   attributes on the resulting big table and call `data.table::setkeyv`
