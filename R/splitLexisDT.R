@@ -53,9 +53,13 @@
 #' ## all produce identical results
 #'
 #' ## using Date variables
-#' x <- Lexis(data=sire[1000:1100, ],
-#'            entry = list(fot=0, per=dg_date, age=dg_date-bi_date),
-#'            exit=list(per=ex_date), exit.status=status)
+#' x <- Lexis(
+#'   data=sire[1000:1100, ],
+#'   entry = list(fot = 0L, per = dg_date, age = as.integer(dg_date - bi_date)),
+#'   duration = as.integer(ex_date - dg_date),
+#'   entry.status = 0L,
+#'   exit.status = status
+#' )
 #' BL <- list(fot = 0:5*365.25, per = as.Date(c("2008-01-01", "2013-01-01")))
 #'
 #' x2 <- splitMulti(x, breaks = BL, drop = FALSE)
