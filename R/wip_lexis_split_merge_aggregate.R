@@ -691,9 +691,6 @@ lexis_split_merge_aggregate_by_stratum <- function(
           call_env = call_env
         )
       }
-      if (length(aggre_exprs) == 0) {
-        return(list())
-      }
       if (.N == 0) {
         # for some reason .SD is a one-row data.table with all NA values
         lexis_stratum_subset <- lexis_dt[0L, ]
@@ -783,6 +780,10 @@ lexis_split_merge_aggregate_by_stratum <- function(
   ])
   if (is.null(aggre_by)) {
     out_expr["keyby"] <- NULL
+  }
+  if (length(aggre_exprs) == 0) {
+    out_expr[".SDcols"] <- NULL
+    out_expr[["j"]] <- quote(as.list(box_dt))
   }
   out <- eval(out_expr)
   if (data.table::is.data.table(aggre_by) && ncol(aggre_by) > 0) {
