@@ -66,6 +66,7 @@ lexis_dt__ <- function(lexis, lexis_ts_col_nms = NULL) {
          "cannot automatically determine lexis_ts_col_nms. Please ",
          "complain to the maintainer if you see this.")
   }
+  out <- data.table::setDT(as.list(lexis))
   lexis_dt_set__(out, lexis_ts_col_nms = lexis_ts_col_nms)
   return(out)
 }
