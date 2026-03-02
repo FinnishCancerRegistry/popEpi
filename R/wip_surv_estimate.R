@@ -907,13 +907,22 @@ surv_estimate <- function(
     #   `n_events` are summed over the adjusting strata and will be included
     #   in the output. These are not weighted averages/sums but simple sums.
     # @codedoc_comment_block popEpi::surv_estimate
-    sum_dt <- out[
-      #' @importFrom data.table .SD
-      j = lapply(.SD, sum),
-      .SDcols = value_col_nms,
-      #' @importFrom data.table .EACHI
-      keyby = eval(nonsum_col_nms)
-    ]
+    if (length(value_col_nms) > 0) {
+      sum_dt <- out[
+        #' @importFrom data.table .SD
+        j = lapply(.SD, sum),
+        .SDcols = value_col_nms,
+        #' @importFrom data.table .EACHI
+        keyby = eval(nonsum_col_nms)
+      ]
+    } else {
+      sum_dt <- out[
+        i = !duplicated(out, by = nonsum_col_nms),
+        #' @importFrom data.table .SD
+        j = .SD,
+        .SDcols = nonsum_col_nms
+      ]
+    }
     add_col_nms <- setdiff(
       names(sdta),
       names(sum_dt)
