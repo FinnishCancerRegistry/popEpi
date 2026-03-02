@@ -33,6 +33,18 @@ surv_lexis_aggre_exprs__ <- function(
   return(var_nm_set)
 }
 
+SURV_LEXIS_ADD_COL_EXPRS__ <- list(
+  S_exp_e1_pch_mean = quote(surv_lexis_S_exp_e1_pch_mean(
+    lexis = surv_lexis_eval_env[["lexis_dt"]],
+    breaks = surv_lexis_eval_env[["breaks"]],
+    ts_fut_col_nm = surv_lexis_eval_env[["ts_fut_col_nm"]],
+    merge_dt = surv_lexis_eval_env[["merge_dt"]],
+    merge_dt_by = surv_lexis_eval_env[["merge_dt_by"]],
+    aggre_by = surv_lexis_eval_env[["aggre_by"]],
+    weight_col_nm = surv_lexis_eval_env[["weight_col_nm"]]
+  ))
+)
+
 #' @eval codedoc::pkg_doc_fun(
 #'   "popEpi::surv_lexis",
 #'   "surv_functions"
@@ -111,9 +123,11 @@ surv_lexis <- function(
     aggre_exprs,
     surv_lexis_aggre_exprs__(estimator_dt = estimator_dt)
   )
-  aggre_exprs <- aggre_exprs[
-    !duplicated(aggre_exprs) & !duplicated(names(aggre_exprs))
-  ]
+  keep <- !duplicated(aggre_exprs)
+  if (!is.null(names(aggre_exprs))) {
+    keep <- keep & !duplicated(names(aggre_exprs))
+  }
+  aggre_exprs <- aggre_exprs[keep]
   # @codedoc_comment_block popEpi::surv_lexis
   # - Call `lexis_split_merge_aggregate_by_stratum`.
   #   The resulting table of aggregated data is
@@ -153,6 +167,35 @@ surv_lexis <- function(
     weight_col_nm = weight_col_nm,
     subset = subset
   )
+  surv_lexis_call_env <- parent.frame(1L)
+  surv_lexis_eval_env <- environment()
+  surv_lexis_eval_env[["ts_fut_col_nm"]] <- utils::tail(aggre_ts_col_nms, 1L)
+  local({
+    add_col_nms <- lapply(estimator_dt[["expression_set"]], function(es) {
+      var_nms <- unlist(lapply(es, all.vars))
+      intersect(var_nms, names(SURV_LEXIS_ADD_COL_EXPRS__))
+    })
+    add_col_nms <- intersect(
+      names(SURV_LEXIS_ADD_COL_EXPRS__),
+      unlist(add_col_nms)
+    )
+    eval_env <- new.env(parent = surv_lexis_eval_env)
+    eval_env[["surv_lexis_call_env"]] <- surv_lexis_call_env
+    eval_env[["surv_lexis_eval_env"]] <- surv_lexis_eval_env
+    eval_env[["sdt"]] <- sdt
+    for (add_col_nm in add_col_nms) {
+      data.table::set(
+        x = sdt,
+        j = add_col_nm,
+        value = eval(
+          expr = SURV_LEXIS_ADD_COL_EXPRS__[[add_col_nm]],
+          envir = sdt,
+          enclos = eval_env
+        )
+      )
+    }
+  })
+
   aggre_meta <- attr(sdt, "surv_split_merge_aggregate_by_stratum_meta")
   estimation_stratum_col_nms <- setdiff(
     aggre_meta[["stratum_col_nms"]],
@@ -169,9 +212,6 @@ surv_lexis <- function(
   # @codedoc_comment_block popEpi::surv_lexis
   # - Call `surv_estimate`.
   # @codedoc_comment_block popEpi::surv_lexis
-  # surv_lexis_env? see `est` of `S_exp_e1_pch`.
-  surv_lexis_env <- environment() # nolint
-  surv_lexis_env[["ts_fut_col_nm"]] <- utils::tail(aggre_ts_col_nms, 1L)
   sdt <- surv_estimate(
     dt = sdt,
     ts_fut_col_nm = aggre_ts_col_nms[length(aggre_ts_col_nms)],

@@ -134,6 +134,34 @@ test_survfit_dt__ <- function(data, stratum_col_nms = NULL, t, ...) {
   return(out[])
 }
 
+test_survexp_dt__ <- function(data, stratum_col_nms = NULL, t) {
+  requireNamespace("survival")
+  rt <- test_relsurv_ratetable__()
+  year_mult <- 365.2425
+  t <- setdiff(t, 0.0)
+  out <- data[
+    j = {
+      rs_ts_age <- rs_sex <- rs_ts_cal <- NULL # for R CMD CHECK
+      fit <- survival::survexp(
+        formula = ~ 1,
+        data = .SD,
+        ratetable = rt,
+        method = "ederer",
+        rmap = list(age = rs_ts_age, sex = rs_sex, year = rs_ts_cal),
+        times = t * year_mult
+      )
+      out <- data.table::data.table(
+        t = t,
+        est = fit[["surv"]]
+      )
+      out[]
+    },
+    .SDcols = c("rs_ts_age", "rs_sex", "rs_ts_cal"),
+    keyby = eval(stratum_col_nms)
+  ]
+  return(out[])
+}
+
 test_relsurv_ratetable__ <- function() {
   # male
   pm <- data.table::data.table(popEpi::popmort)

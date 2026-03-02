@@ -447,14 +447,7 @@ surv_estimate_expr_list__ <- list(
   ),
   S_exp_e1_pch = list(
     est = quote(
-      surv_lexis_S_exp_e1_pch_est(
-        lexis = surv_lexis_env[["lexis_dt"]],
-        breaks = surv_lexis_env[["breaks"]],
-        ts_fut_col_nm = surv_lexis_env[["ts_fut_col_nm"]],
-        merge_dt = surv_lexis_env[["merge_dt"]],
-        merge_dt_by = surv_lexis_env[["merge_dt_by"]],
-        weight_col_nm = surv_lexis_env[["weight_col_nm"]]
-      )
+      S_exp_e1_pch_mean
     ),
     se = quote(
       0.0 + 0.0
@@ -474,14 +467,6 @@ surv_estimate_expr_list__ <- list(
     ),
     se = quote(
       F_pch_se
-    )
-  ),
-  S_exp_e1_pch = list(
-    est = quote(
-      S_exp_e1_pch_est
-    ),
-    se = quote(
-      0.0 + 0.0
     )
   ),
   S_def_e1_pch = list(
@@ -723,7 +708,9 @@ surv_estimate <- function(
     is.null(stratum_col_nms) || all(stratum_col_nms %in% names(dt))
   )
   if (is.null(stratum_col_nms)) {
-    stratum_col_nms <- as.character(aggre_meta[["stratum_col_nms"]])
+    if ("stratum_col_nms" %in% names(aggre_meta)) {
+      stratum_col_nms <- as.character(aggre_meta[["stratum_col_nms"]])
+    }
   }
 
   stopifnot(
@@ -740,12 +727,11 @@ surv_estimate <- function(
     #'   E.g. `value_col_nms = c("n_events", "t_at_risk")`.
     is.null(value_col_nms) || all(value_col_nms %in% names(dt))
   )
-  if (is.null(value_col_nms)) {
+  if ("value_col_nms" %in% names(aggre_meta)) {
     value_col_nms <- as.character(aggre_meta[["value_col_nms"]])
-    if (length(value_col_nms) == 0) {
-      stop("Could not infer argument `value_col_nms`. Please supply it ",
-           "yourself.")
-    }
+  } else if (is.null(value_col_nms)) {
+    stop("Could not infer argument `value_col_nms`. Please supply it ",
+         "yourself.")
   }
 
   # @codedoc_comment_block popEpi::surv_estimate::weight_dt
@@ -956,12 +942,13 @@ surv_estimate <- function(
   return(out[])
 }
 
-surv_lexis_S_exp_e1_pch_est <- function(
+surv_lexis_S_exp_e1_pch_mean <- function(
   lexis,
   breaks,
   ts_fut_col_nm,
   merge_dt,
   merge_dt_by,
+  aggre_by = NULL,
   weight_col_nm = NULL
 ) {
   assert_is_arg_lexis(lexis, dt = FALSE)
@@ -971,7 +958,8 @@ surv_lexis_S_exp_e1_pch_est <- function(
     Epi::timeScales(lexis),
     "lex.dur", "lex.Cst", "lex.Xst",
     setdiff(names(merge_dt), "h_exp"),
-    weight_col_nm
+    weight_col_nm,
+    names(aggre_by)
   ))
   e1dt <- lexis_to_lexis_dt__(lexis, select = keep_col_nms)
   data.table::set(
@@ -991,76 +979,130 @@ surv_lexis_S_exp_e1_pch_est <- function(
     e1dt <- e1dt[e1dt[["keep"]], ]
   }
   data.table::set(e1dt, j = "keep", value = NULL)
-  if (!is.null(weight_col_nm)) {
-    data.table::set(
-      x = e1dt,
-      j = "w",
-      value = e1dt[[weight_col_nm]] / sum(e1dt[[weight_col_nm]])
-    )
-  } else {
-    data.table::set(
-      x = e1dt,
-      j = "w",
-      value = 1 / nrow(e1dt)
-    )
-  }
+  # if (!is.null(weight_col_nm)) {
+  #   data.table::set(
+  #     x = e1dt,
+  #     j = "w",
+  #     value = e1dt[[weight_col_nm]] / sum(e1dt[[weight_col_nm]])
+  #   )
+  # } else {
+  #   data.table::set(
+  #     x = e1dt,
+  #     j = "w",
+  #     value = 1 / nrow(e1dt)
+  #   )
+  # }
   lexis_immortalise(lexis = e1dt, breaks = breaks[ts_fut_col_nm])
-  e1dt <- popEpi::splitMulti(
-    data = e1dt,
-    breaks = breaks[ts_fut_col_nm]
-  )
-  data.table::setkeyv(e1dt, c("lex.id", ts_fut_col_nm))
-  lexis_merge(
+  e1dt <- lexis_split_merge_aggregate_by_stratum(
     lexis = e1dt,
+    breaks = breaks[ts_fut_col_nm],
+    aggre_exprs = list(
+      S_exp_e1_pch_mean = quote({
+        if (!is.null(eval_env[["weight_col_nm"]])) {
+          w <- iw
+          w <- w / sum(w[!duplicated(lex.id)])
+          sum(S_exp_e1_pch_individual * w)
+        } else {
+          mean(S_exp_e1_pch_individual)
+        }
+      })
+    ),
+    aggre_by = aggre_by,
+    aggre_ts_col_nms = ts_fut_col_nm,
     merge_dt = merge_dt,
-    merge_dt_by = merge_dt_by
+    merge_dt_by = merge_dt_by,
+    weight_col_nm = weight_col_nm,
+    split_lexis_column_exprs = list(
+      S_exp_e1_pch_individual = quote({
+        e1dt <- data.table::setDT(list(
+          lex.id = lex.id,
+          ts_fut = ts_fut,
+          box_id = box_id,
+          lex.dur = lex.dur, # this is here equal to width of interval always
+          h_exp = h_exp
+        ))
+        data.table::set(
+          x = e1dt,
+          j = "e1",
+          value = e1dt[["h_exp"]] * e1dt[["lex.dur"]]
+        )
+        # e1dt$e1 is now the integrated hazard over the individual survival
+        # interval,i.e. H(t_i|t_{i-1}), per subject & interval
+        data.table::setkeyv(e1dt, c("lex.id", "box_id"))
+        e1dt[
+          #' @importFrom data.table := .SD
+          j = "e1" := lapply(.SD, cumsum),
+          .SDcols = "e1",
+          by = "lex.id"
+        ]
+        # e1dt$e1 is now the cumulative hazard (i.e. H(t_i)) per subject
+        data.table::set(
+          x = e1dt,
+          j = "e1",
+          value = exp(-e1dt[["e1"]])
+        )
+        # e1dt$e1 is now the expected survival per subject
+        e1dt[["e1"]]
+      })
+    )
   )
-  box_dt <- surv_box_dt__(breaks = breaks[ts_fut_col_nm])
-  surv_box_id__(lexis = e1dt, box_dt = box_dt)
-  data.table::setDT(e1dt)
-  data.table::set(
-    x = box_dt,
-    j = "delta_t",
-    value = box_dt[[paste0(ts_fut_col_nm, "_stop")]] -
-      box_dt[[paste0(ts_fut_col_nm, "_start")]]
-  )
-  data.table::set(
-    x = e1dt,
-    j = "e1",
-    value = e1dt[["h_exp"]] * box_dt[["delta_t"]][e1dt[["box_id"]]]
-  )
-  # e1dt$e1 is now the integrated hazard over the individual survival interval,
-  # i.e. H(t_i|t_{i-1}), per subject
-  data.table::set(
-    x = e1dt,
-    j = setdiff(names(e1dt), c("lex.id", "box_id", "e1", "w")),
-    value = NULL
-  )
-  data.table::setkeyv(e1dt, c("lex.id", "box_id"))
-  e1dt[
-    #' @importFrom data.table := .SD
-    j = "e1" := lapply(.SD, cumsum),
-    .SDcols = "e1",
-    by = "lex.id"
-  ]
-  # e1dt$e1 is now the cumulative hazard (i.e. H(t_i)) per subject
-  data.table::set(
-    x = e1dt,
-    j = "e1",
-    value = exp(-e1dt[["e1"]])
-  )
-  # e1dt$e1 is now the expected survival per subject
-  data.table::set(
-    x = e1dt,
-    j = "e1",
-    value = e1dt[["e1"]] * e1dt[["w"]]
-  )
-  e1dt <- e1dt[
-    #' @importFrom data.table .SD
-    j = lapply(.SD, sum),
-    .SDcols = "e1",
-    keyby = "box_id"
-  ]
-  # e1dt$e1 is now the overall expected survival
-  return(e1dt[["e1"]])
+  return(e1dt[["S_exp_e1_pch_mean"]])
+  # e1dt <- popEpi::splitMulti(
+  #   data = e1dt,
+  #   breaks = breaks[ts_fut_col_nm]
+  # )
+  # data.table::setkeyv(e1dt, c("lex.id", ts_fut_col_nm))
+  # lexis_merge(
+  #   lexis = e1dt,
+  #   merge_dt = merge_dt,
+  #   merge_dt_by = merge_dt_by
+  # )
+  # box_dt <- surv_box_dt__(breaks = breaks[ts_fut_col_nm])
+  # surv_box_id__(lexis = e1dt, box_dt = box_dt)
+  # data.table::setDT(e1dt)
+  # data.table::set(
+  #   x = box_dt,
+  #   j = "delta_t",
+  #   value = box_dt[[paste0(ts_fut_col_nm, "_stop")]] -
+  #     box_dt[[paste0(ts_fut_col_nm, "_start")]]
+  # )
+  # data.table::set(
+  #   x = e1dt,
+  #   j = "e1",
+  #   value = e1dt[["h_exp"]] * box_dt[["delta_t"]][e1dt[["box_id"]]]
+  # )
+  # # e1dt$e1 is now the integrated hazard over the individual survival interval,
+  # # i.e. H(t_i|t_{i-1}), per subject
+  # data.table::set(
+  #   x = e1dt,
+  #   j = setdiff(names(e1dt), c("lex.id", "box_id", "e1", "w")),
+  #   value = NULL
+  # )
+  # data.table::setkeyv(e1dt, c("lex.id", "box_id"))
+  # e1dt[
+  #   #' @importFrom data.table := .SD
+  #   j = "e1" := lapply(.SD, cumsum),
+  #   .SDcols = "e1",
+  #   by = "lex.id"
+  # ]
+  # # e1dt$e1 is now the cumulative hazard (i.e. H(t_i)) per subject
+  # data.table::set(
+  #   x = e1dt,
+  #   j = "e1",
+  #   value = exp(-e1dt[["e1"]])
+  # )
+  # # e1dt$e1 is now the expected survival per subject
+  # data.table::set(
+  #   x = e1dt,
+  #   j = "e1",
+  #   value = e1dt[["e1"]] * e1dt[["w"]]
+  # )
+  # e1dt <- e1dt[
+  #   #' @importFrom data.table .SD
+  #   j = lapply(.SD, sum),
+  #   .SDcols = "e1",
+  #   keyby = "box_id"
+  # ]
+  # # e1dt$e1 is now the overall expected survival
+  # return(e1dt[["e1"]])
 }
