@@ -40,8 +40,11 @@ lexis_to_lexis_dt__ <- function(
     select <- names(lexis)
   }
   out <- data.table::setDT(as.list(lexis)[select])
-  if (!is.null(subset)) {
-    out <- out[(subset), ]
+  if (is.logical(subset)) {
+    subset[is.na(subset)] <- FALSE
+    if (!all(subset)) {
+      out <- out[(subset), ]
+    }
   }
   attr_nms <- c("time.scales", "time.since", "breaks")
   attr_nms <- intersect(attr_nms, names(attributes(lexis)))
