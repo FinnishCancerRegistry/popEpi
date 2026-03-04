@@ -247,10 +247,6 @@ Pre-defined estimators with their formulae:
    \verb{F_exp_e2_pch} \tab \verb{1 - exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \tab \verb{0 + 0} \cr
    \verb{F_exc_e2_lt} \tab \verb{F_lt - F_exp_e2_lt} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
    \verb{F_exc_e2_pch} \tab \verb{F_pch - F_exp_e2_pch} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
-   \verb{S_exp_e1_pch} \tab \verb{S_exp_e1_pch_mean} \tab \verb{0 + 0} \cr
-   \verb{F_exp_e1_pch} \tab \verb{1 - S_exp_e1_pch_mean} \tab \verb{0 + 0} \cr
-   \verb{F_extra_e1_pch} \tab \verb{1 - exp(-cumsum(delta_t * (n_events/t_at_risk))) - (1 - S_exp_e1_pch_mean)} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
-   \verb{S_def_e1_pch} \tab \verb{S_exp_e1_pch_mean - exp(-cumsum(delta_t * (n_events/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
 }
 
 \itemize{

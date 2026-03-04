@@ -444,39 +444,40 @@ surv_estimate_expr_list__ <- list(
     se = quote(
       F_pch_se
     )
-  ),
-  S_exp_e1_pch = list(
-    est = quote(
-      S_exp_e1_pch_mean
-    ),
-    se = quote(
-      0.0 + 0.0
-    )
-  ),
-  F_exp_e1_pch = list(
-    est = quote(
-      1 - S_exp_e1_pch_est
-    ),
-    se = quote(
-      0.0 + 0.0
-    )
-  ),
-  F_extra_e1_pch = list(
-    est = quote(
-      F_pch_est - F_exp_e1_pch_est
-    ),
-    se = quote(
-      F_pch_se
-    )
-  ),
-  S_def_e1_pch = list(
-    est = quote(
-      S_exp_e1_pch_est - S_pch_est
-    ),
-    se = quote(
-      S_pch_se
-    )
   )
+  # ,
+  # S_exp_e1_pch = list(
+  #   est = quote(
+  #     S_exp_e1_pch_mean
+  #   ),
+  #   se = quote(
+  #     0.0 + 0.0
+  #   )
+  # ),
+  # F_exp_e1_pch = list(
+  #   est = quote(
+  #     1 - S_exp_e1_pch_est
+  #   ),
+  #   se = quote(
+  #     0.0 + 0.0
+  #   )
+  # ),
+  # F_extra_e1_pch = list(
+  #   est = quote(
+  #     F_pch_est - F_exp_e1_pch_est
+  #   ),
+  #   se = quote(
+  #     F_pch_se
+  #   )
+  # ),
+  # S_def_e1_pch = list(
+  #   est = quote(
+  #     S_exp_e1_pch_est - S_pch_est
+  #   ),
+  #   se = quote(
+  #     S_pch_se
+  #   )
+  # )
 )
 
 make_surv_estimate_expr_list__ <- function(surv_estimate_expr_list) {
@@ -945,7 +946,7 @@ surv_estimate <- function(
 surv_lexis_S_exp_e1_pch_mean <- function(
   lexis,
   breaks,
-  ts_fut_col_nm,
+  aggre_ts_col_nms,
   merge_dt,
   merge_dt_by,
   aggre_by = NULL,
@@ -953,53 +954,76 @@ surv_lexis_S_exp_e1_pch_mean <- function(
 ) {
   assert_is_arg_lexis(lexis, dt = FALSE)
   assert_is_arg_weight_col_nm(weight_col_nm)
-  keep_col_nms <- unique(c(
-    "lex.id",
-    Epi::timeScales(lexis),
-    "lex.dur", "lex.Cst", "lex.Xst",
-    setdiff(names(merge_dt), "h_exp"),
-    weight_col_nm,
-    names(aggre_by)
-  ))
-  e1dt <- lexis_to_lexis_dt__(lexis, select = keep_col_nms)
-  data.table::set(
-    x = e1dt,
-    j = "keep",
-    value = !duplicated(e1dt[["lex.id"]]) &
-      do.call(pmin, lapply(names(breaks), function(ts_col_nm) {
-        data.table::between(
-          e1dt[[ts_col_nm]],
-          lower = min(breaks[[ts_col_nm]]) - 1e-10,
-          upper = max(breaks[[ts_col_nm]]) - 1e-10,
-          incbounds = TRUE
-        )
-      })) == 1
-  )
-  if (any(!e1dt[["keep"]])) {
-    e1dt <- e1dt[e1dt[["keep"]], ]
-  }
-  data.table::set(e1dt, j = "keep", value = NULL)
-  # if (!is.null(weight_col_nm)) {
+  # keep_col_nms <- unique(c(
+  #   "lex.id",
+  #   Epi::timeScales(lexis),
+  #   "lex.dur", "lex.Cst", "lex.Xst",
+  #   setdiff(names(merge_dt), "h_exp"),
+  #   weight_col_nm,
+  #   names(aggre_by)
+  # ))
+  # e1dt <- lexis_to_lexis_dt__(lexis, select = keep_col_nms)
+  # data.table::set(
+  #   x = e1dt,
+  #   j = "keep",
+  #   value = !duplicated(e1dt[["lex.id"]]) &
+  #     # e.g. ts_fut = 0.5 is rejected if breaks[["ts_fut"]] = c(0, ...)
+  #     # e.g. ts_cal = 2021.1 is rejected if breaks[["ts_cal"]] = c(..., 2021)
+  #     rowSums(
+  #       data.table::setDT(lapply(names(breaks), function(ts_col_nm) {
+  #         data.table::between(
+  #           e1dt[[ts_col_nm]],
+  #           lower = min(breaks[[ts_col_nm]]) - 1e-10,
+  #           upper = max(breaks[[ts_col_nm]]) - 1e-10,
+  #           incbounds = TRUE
+  #         )
+  #       }))
+  #     ) == length(breaks)
+  # )
+  # if (any(!e1dt[["keep"]])) {
+  #   e1dt <- e1dt[e1dt[["keep"]], ]
+  # }
+  # data.table::set(e1dt, j = "keep", value = NULL)
+  # ts_fut_col_nm <- utils::tail(aggre_ts_col_nms, 1L)
+  # lexis_immortalise(lexis = e1dt, breaks = breaks[ts_fut_col_nm])
+  # if (length(aggre_ts_col_nms) > 1) {
+  #   stratum_ts_col_nms <- aggre_ts_col_nms[-length(aggre_ts_col_nms)]
   #   data.table::set(
   #     x = e1dt,
-  #     j = "w",
-  #     value = e1dt[[weight_col_nm]] / sum(e1dt[[weight_col_nm]])
+  #     j = stratum_ts_col_nms,
+  #     value = lapply(stratum_ts_col_nms, function(ts_col_nm) {
+  #       br <- breaks[[ts_col_nm]]
+  #       idx <- cut(
+  #         x = e1dt[[ts_col_nm]],
+  #         breaks = br,
+  #         right = FALSE,
+  #         labels = FALSE
+  #       )
+  #       br[idx]
+  #     })
   #   )
-  # } else {
-  #   data.table::set(
-  #     x = e1dt,
-  #     j = "w",
-  #     value = 1 / nrow(e1dt)
+  #   aggre_by <- handle_arg_by(
+  #     by = c(
+  #       list(aggre_by),
+  #       lapply(stratum_ts_col_nms, function(stratum_ts_col_nm) {
+  #         br <- breaks[[stratum_ts_col_nm]]
+  #         dt <- data.table::setDT(list(
+  #           x = br[-length(br)]
+  #         ))
+  #         data.table::setnames(dt, "x", stratum_ts_col_nm)
+  #         return(dt[])
+  #       })
+  #     ),
+  #     dataset = e1dt
   #   )
   # }
-  lexis_immortalise(lexis = e1dt, breaks = breaks[ts_fut_col_nm])
   e1dt <- lexis_split_merge_aggregate_by_stratum(
-    lexis = e1dt,
-    breaks = breaks[ts_fut_col_nm],
+    lexis = lexis,
+    breaks = breaks,
     aggre_exprs = list(
       S_exp_e1_pch_mean = quote({
         if (!is.null(eval_env[["weight_col_nm"]])) {
-          w <- iw
+          w <- .SD[[eval_env[["weight_col_nm"]]]]
           w <- w / sum(w[!duplicated(lex.id)])
           sum(S_exp_e1_pch_individual * w)
         } else {
@@ -1008,10 +1032,55 @@ surv_lexis_S_exp_e1_pch_mean <- function(
       })
     ),
     aggre_by = aggre_by,
-    aggre_ts_col_nms = ts_fut_col_nm,
+    aggre_ts_col_nms = aggre_ts_col_nms,
     merge_dt = merge_dt,
     merge_dt_by = merge_dt_by,
     weight_col_nm = weight_col_nm,
+    optional_steps = list(
+      stratum_post_merge = function(
+        eval_env,
+        call_env,
+        stratum_eval_env
+      ) {
+        lexis_dt <- stratum_eval_env[["lexis_stratum_subset_split"]]
+        aggre_ts_col_nms <- eval_env[["aggre_ts_col_nms"]]
+        stratum_ts_col_nms <- aggre_ts_col_nms[-length(aggre_ts_col_nms)]
+        if (length(stratum_ts_col_nms) > 0) {
+          # problem: we want Ederer I curves to not be "period analysis" curves
+          # where the same curve can contribute to multiple periods. instead
+          # we want the whole curve to stay within the same period. or in other
+          # words we want to turn the period analysis into a cohort analysis for
+          # Ederer I.
+          #
+          # e.g. if breaks[["ts_fut"]] = seq(0, 5, 1 / 12), then certainly
+          # `lexis_stratum_subset_split` has multiple calendar years for one
+          # lex.id. if we want to aggregate by ts_cal, it can normally
+          # happen that the same expected survival curve crosses over the
+          # boundary of the periods, e.g. breaks[["ts_cal"]] = c(2003, 2008)
+          # and one lex.id starts with ts_cal = 2007.13. but for the purpose
+          # of computing the Ederer I curve per period we want the whole curve
+          # to stay in the same period. we accomplish this by cheating --- we
+          # set the (for instance) ts_cal value back to what the lex.id started
+          # with for all observations for that lex.id in the split dataset.
+          # e.g. then `ts_cal == 2007.13` for every observation for that lex.id.
+          # then when the split data are aggregated by (e.g.) ts_cal we use the
+          # whole Ederer I curve for that lex.id within the same period.
+          data.table::set(
+            x = lexis_dt,
+            j = stratum_ts_col_nms,
+            value = stratum_eval_env[["lexis_stratum_subset"]][
+              i = lexis_dt,
+              on = "lex.id",
+              j = .SD,
+              .SDcols = stratum_ts_col_nms
+            ]
+          )
+          lexis_dt <- lexis_dt[]
+          data.table::setkeyv(lexis_dt, c("lex.id", Epi::timeScales(lexis_dt)))
+          stratum_eval_env[["lexis_stratum_subset_split"]] <- lexis_dt
+        }
+      }
+    ),
     split_lexis_column_exprs = list(
       S_exp_e1_pch_individual = quote({
         e1dt <- data.table::setDT(list(
