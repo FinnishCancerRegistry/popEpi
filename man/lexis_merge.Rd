@@ -17,7 +17,7 @@ lexis_merge(
 
 A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
 
-\item{merge_dt}{\verb{[data.table, NULL]} (no default or default \code{NULL})
+\item{merge_dt}{\verb{[data.table, NULL]} (no default)
 
 A \code{data.table} to merge with \code{lexis}. Usually \code{lexis} has been split
 with e.g. \verb{[splitMulti]}.
@@ -28,7 +28,7 @@ When both \code{merge_dt} and \code{merge_dt_by} are \code{NULL}, no merge is pe
 expected hazards for the estimation of relative or net survival.
 }}
 
-\item{merge_dt_by}{\verb{[character, NULL]} (no default or default \code{NULL})
+\item{merge_dt_by}{\verb{[character, NULL]} (no default)
 
 Names of columns in both \code{merge_dt} and \code{lexis} by which \code{merge_dt} will be
 merged with \code{ lexis}.
@@ -97,11 +97,13 @@ in which the commands that this function consists of are evaluated.
 \code{on.exit(optional_steps[["on_exit"]](call_env = call_env, eval_env = eval_env))}
 if that \code{optional_steps} element exists.
 \item If \code{is.null(merge_dt_harmonisers)}, attempt to
-automatically determine the harmonisers making use of \code{cut} by looking
-at the unique
-values of the time scale to merge by in \code{merge_dt} (e.g. calendar year
-in \code{ts_cal}):
+automatically determine the harmonisers making use of \code{cut} for each
+time scale column to merge by as follows:
 \itemize{
+\item If \code{merge_dt[[col_nm]]} is a character or factor column,
+look at the unique values / \code{levels()} of the column. If they all look
+like \verb{[x, y[}, \verb{]x, y]}, or \code{x - y}, extract breaks from them and
+infer whether \code{right = FALSE} or \code{TRUE}.
 \item If \code{merge_dt[[col_nm]]} contains numbers we define \code{cut} breaks as the
 unique values of
 \code{merge_dt[[col_nm]]} and as the ceiling
@@ -112,28 +114,23 @@ containing unique values \code{c(1950, 1960, 1970:2020)}.
 \item If \code{merge_dt[[col_nm]]} does not contain numbers, an error is
 raised because we don't know how to automatically form a
 harmoniser.
-}
 \item Run
 \code{optional_steps[["pre_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_eval_env = lapply_eval_env)}
 if that \code{optional_steps} element exists.
 Here \code{lapply_eval_env} is similar to \code{eval_env} but it is the
 evaluation environment of the anonymous function passed to \code{lapply}
 which attempts to handle each harmoniser.
-\itemize{
 \item With the \code{cut} breaks defined, the automatically created harmoniser
-becomes a \code{cut} call with arguments
+becomes a \code{cut} call with arguments inferred above and with
 \itemize{
 \item \code{x = col + lex.dur * lex_dur_multiplier}, where \code{COL} is the current
-column and \code{lex_dur_multiplier} is by default \code{0.5},
-\item \code{breaks} as specified above,
-\item \code{right = FALSE}, and
-\item \code{labels = FALSE}.
+column and \code{lex_dur_multiplier} is by default \code{0.5}.
 }
-\item This results in indices to the breaks, and the harmoniser returns
-break values at those indices. E.g. the cut results in
-\code{3} in \code{breaks = c(1950, 1960, 1970:2020, 2021)} and output is
-\code{1970} for every value of \code{COL + lex.dur / 2} in the interval
-\verb{]1970, 1971]}.
+\item Depending on what we are harmonising with, the harmoniser will return
+either a \code{factor} with labels based on the
+\code{cut} call, e.g. \code{ts_cal = 2021.524} turns into \verb{[2021, 2022[}
+with both 2021 and 2022 in \code{breaks}, or the identified interval's
+lower bound such as \code{2021}.
 }
 \item Run
 \code{optional_steps[["post_merge_dt_harmonisers"]](call_env = call_env, eval_env = eval_env)}
@@ -211,6 +208,31 @@ popEpi::lexis_merge(
     ts_cal = quote(as.integer(ts_cal)),
     ts_age = quote(as.integer(ts_age))
   )
+)
+stopifnot(
+  "merge_value" \%in\% names(lexis),
+  !is.na(lexis[["merge_value"]])
+)
+
+# special factor columns in merge_dt
+data.table::set(
+  x = lexis,
+  j = "merge_value",
+  value = NULL
+)
+data.table::set(
+  x = my_merge_dt,
+  j = c("ts_age", "ts_cal"),
+  value = list(
+    cut(my_merge_dt[["ts_age"]], breaks = 0:101, right = FALSE),
+    cut(my_merge_dt[["ts_cal"]], breaks = 2000:2026, right = FALSE,
+        dig.lab = 4)
+  )
+)
+popEpi::lexis_merge(
+  lexis = lexis,
+  merge_dt = my_merge_dt,
+  merge_dt_by = c("sex", "ts_age", "ts_cal")
 )
 stopifnot(
   "merge_value" \%in\% names(lexis),
