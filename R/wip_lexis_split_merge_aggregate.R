@@ -293,20 +293,23 @@ lexis_aggregate_one_stratum__ <- function(
 #' }
 #'
 #' make_sire <- function() {
-#'   sire <- popEpi::sire[
-#'     popEpi::sire[["dg_date"]] < popEpi::sire[["ex_date"]] &
+#'   sire <- popEpi::sire
+#'   sire <- sire[
+#'     sire[["dg_date"]] < sire[["ex_date"]] &
 #'       data.table::between(
-#'         popEpi::sire[["ex_date"]],
+#'         sire[["ex_date"]],
 #'         as.Date("1999-01-01"),
 #'         as.Date("2003-12-31"),
 #'         incbounds = TRUE
-#'       )
+#'       ) &
+#'       (get.yrs(sire[["ex_date"]]) - get.yrs(sire[["bi_date"]])) < 100
 #'   ]
 #'   sire[j = "my_stratum" := sample(2L, size = nrow(sire), replace = TRUE)]
 #'   sire <- sire[
 #'     j = .SD[as.integer(seq(1L, .N, length.out = 50L))],
 #'     keyby = "my_stratum"
 #'   ]
+#'   # you can also use popEpi::Lexis_dt
 #'   sire <- Epi::Lexis(
 #'     entry = list(
 #'       ts_cal = popEpi::get.yrs(dg_date),
