@@ -21,19 +21,21 @@ lexis_merge_default_harmoniser__ <- function(
   lex_dur_multiplier = 0.5,
   breaks,
   right,
-  return_type
+  labels
 ) {
   # @codedoc_comment_block lexis_merge_default_harmoniser__
   #    + With the `cut` breaks defined, the automatically created harmoniser
   #      becomes a `cut` call with arguments inferred above and with
   #      * `x = col + lex.dur * lex_dur_multiplier`, where `COL` is the current
   #        column and `lex_dur_multiplier` is by default `0.5`.
+  #      * `dig.lab = 10`.
   #    + Depending on what we are harmonising with, the harmoniser will return
   #      either a `factor` with labels based on the
   #      `cut` call, e.g. `ts_cal = 2021.524` turns into `[2021, 2022[`
   #      with both 2021 and 2022 in `breaks`, or the identified interval's
   #      lower bound such as `2021`.
   # @codedoc_comment_block lexis_merge_default_harmoniser__
+  is_num <- is.numeric(labels)
   substitute(
     {
       cut_breaks <- breaks # nolint
@@ -51,19 +53,8 @@ lexis_merge_default_harmoniser__ <- function(
       lex_dur_multiplier = lex_dur_multiplier,
       breaks = breaks,
       right = right,
-      labels = switch(
-        return_type,
-        "factor" = NULL,
-        "character" = NULL,
-        FALSE
-      ),
-      return_expr = switch(
-        return_type,
-        "index" = quote(out),
-        "lower bound" = quote(cut_breaks[out]),
-        "factor" = quote(out),
-        "character" = quote(as.character(out))
-      )
+      labels = if (is_num) FALSE else labels,
+      return_expr = if (is_num) quote(cut_breaks[out]) else quote(out)
     )
   )
 }
@@ -205,23 +196,14 @@ lexis_merge <- function(
   }
   #' @template param_lexis
   assert_is_arg_lexis(lexis, dt = FALSE)
-  #' @param merge_dt `[data.table, NULL]` (no default)
+  #' @param merge_dt `[data.table]` (no default)
   #'
   #' A `data.table` to merge with `lexis`. Usually `lexis` has been split
   #' with e.g. `[splitMulti]`.
-  #'
-  #' - `NULL`: Allowed only if this is the function's default for this argument.
-  #'   When both `merge_dt` and `merge_dt_by` are `NULL`, no merge is performed.
-  #' - `data.table`: Merge this table. Typically this contains the
-  #'   expected hazards for the estimation of relative or net survival.
-  #' @param merge_dt_by `[character, NULL]` (no default)
+  #' @param merge_dt_by `[character]` (no default)
   #'
   #' Names of columns in both `merge_dt` and `lexis` by which `merge_dt` will be
   #' merged with ` lexis`.
-  #'
-  #' - `NULL`: Allowed only if this is the function's default for this argument.
-  #'   When both `merge_dt` and `merge_dt_by` are `NULL`, no merge is performed.
-  #' - `character`: Use these columns.
   assert_is_arg_merge_dt_and_merge_dt_by(
     merge_dt,
     merge_dt_by,
@@ -257,43 +239,44 @@ lexis_merge <- function(
     # @codedoc_comment_block popEpi::lexis_merge
     merge_dt_harmonisers <- lapply(merge_ts_col_nms, function(col_nm) {
       col <- merge_dt[[col_nm]]
-      if (inherits(col, c("factor", "character"))) {
+      if (is.factor(col)) {
         # @codedoc_comment_block popEpi::lexis_merge
-        #   + If `merge_dt[[col_nm]]` is a character or factor column,
+        #   + If `merge_dt[[col_nm]]` is a factor column,
         # @codedoc_insert_comment_block popEpi:::infer_cut_args__
         # @codedoc_comment_block popEpi::lexis_merge
-        cut_arg_list <- infer_cut_args__(col)[["cut_arg_list"]]
+        cut_arg_list <- infer_cut_args__(col)
         if (is.null(cut_arg_list)) {
           stop(
-            "merge_dt$", col_nm, " was of class factor or character, ",
+            "merge_dt$", col_nm, " was of class factor, ",
             "but could infer how it can be created using on split lexis ",
             "data. Either ensure that merge_dt$", col_nm, " has levels such ",
             "as `\"[2000,2001[\"`, `\"[60, 61[\"` etc or supply argument ",
             "`merge_dt_harmonisers`."
           )
         }
-        cut_arg_list[["return_type"]] <- intersect(
-          class(col),
-          c("factor", "character")
-        )[1]
+        cut_arg_list[["labels"]] <- attr(cut_arg_list, "infer_cut_args_meta")[[
+          "level"
+        ]]
       } else if (is.integer(col) || is.double(col)) {
-        cut_breaks <- sort(unique(merge_dt[[col_nm]]))
+        lower_bounds <- sort(unique(merge_dt[[col_nm]]))
         # @codedoc_comment_block popEpi::lexis_merge
         # @codedoc_insert_comment_block lexis_merge_guess_breaks__
         # @codedoc_comment_block popEpi::lexis_merge
         cut_arg_list <- list(
-          breaks = lexis_merge_guess_breaks__(cut_breaks),
+          breaks = lexis_merge_guess_breaks__(lower_bounds),
           right = FALSE,
-          return_type = "lower bound"
+          labels = lower_bounds
         )
       } else {
         # @codedoc_comment_block popEpi::lexis_merge
-        #   + If `merge_dt[[col_nm]]` does not contain numbers, an error is
+        #   + If `merge_dt[[col_nm]]` is not of class integer, numeric, or
+        #     factor, an error is
         #     raised because we don't know how to automatically form a
         #     harmoniser.
         # @codedoc_comment_block popEpi::lexis_merge
         stop(
-          "Column merge_dt$", col_nm, " was of class integer/numeric, but ",
+          "Column merge_dt$", col_nm, " was not of class ",
+          "integer, numeric, or factor, so we ",
           "could not infer a harmoniser for it. ",
           "Please supply one yourself via `merge_dt_harmonisers`."
         )

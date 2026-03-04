@@ -17,26 +17,15 @@ lexis_merge(
 
 A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
 
-\item{merge_dt}{\verb{[data.table, NULL]} (no default)
+\item{merge_dt}{\verb{[data.table]} (no default)
 
 A \code{data.table} to merge with \code{lexis}. Usually \code{lexis} has been split
-with e.g. \verb{[splitMulti]}.
-\itemize{
-\item \code{NULL}: Allowed only if this is the function's default for this argument.
-When both \code{merge_dt} and \code{merge_dt_by} are \code{NULL}, no merge is performed.
-\item \code{data.table}: Merge this table. Typically this contains the
-expected hazards for the estimation of relative or net survival.
-}}
+with e.g. \verb{[splitMulti]}.}
 
-\item{merge_dt_by}{\verb{[character, NULL]} (no default)
+\item{merge_dt_by}{\verb{[character]} (no default)
 
 Names of columns in both \code{merge_dt} and \code{lexis} by which \code{merge_dt} will be
-merged with \code{ lexis}.
-\itemize{
-\item \code{NULL}: Allowed only if this is the function's default for this argument.
-When both \code{merge_dt} and \code{merge_dt_by} are \code{NULL}, no merge is performed.
-\item \code{character}: Use these columns.
-}}
+merged with \code{ lexis}.}
 
 \item{merge_dt_harmonisers}{\verb{[NULL, list]} (default \code{NULL})
 
@@ -100,10 +89,12 @@ if that \code{optional_steps} element exists.
 automatically determine the harmonisers making use of \code{cut} for each
 time scale column to merge by as follows:
 \itemize{
-\item If \code{merge_dt[[col_nm]]} is a character or factor column,
-look at the unique values / \code{levels()} of the column. If they all look
-like \verb{[x, y[}, \verb{]x, y]}, or \code{x - y}, extract breaks from them and
-infer whether \code{right = FALSE} or \code{TRUE}.
+\item If \code{merge_dt[[col_nm]]} is a factor column,
+look at the \code{levels()} of the column. If they all look
+like \verb{[x, y[}, \verb{]x, y]}, or \code{x - y}, extract breaks from them,
+infer whether \code{right = FALSE} or \code{TRUE}, and use the \code{levels()}
+as \code{labels}. E.g. \code{factor("[60, 61[")} produces
+\code{list(breaks = 60:61, right = FALSE, labels = "[60, 61[")}.
 \item If \code{merge_dt[[col_nm]]} contains numbers we define \code{cut} breaks as the
 unique values of
 \code{merge_dt[[col_nm]]} and as the ceiling
@@ -111,7 +102,8 @@ unique values of
 difference between the highest and second highest values. E.g.
 \code{c(1950, 1960, 1970:2020, 2021)} for \code{merge_dt[[col_nm]]}
 containing unique values \code{c(1950, 1960, 1970:2020)}.
-\item If \code{merge_dt[[col_nm]]} does not contain numbers, an error is
+\item If \code{merge_dt[[col_nm]]} is not of class integer, numeric, or
+factor, an error is
 raised because we don't know how to automatically form a
 harmoniser.
 \item Run
@@ -125,6 +117,7 @@ becomes a \code{cut} call with arguments inferred above and with
 \itemize{
 \item \code{x = col + lex.dur * lex_dur_multiplier}, where \code{COL} is the current
 column and \code{lex_dur_multiplier} is by default \code{0.5}.
+\item \code{dig.lab = 10}.
 }
 \item Depending on what we are harmonising with, the harmoniser will return
 either a \code{factor} with labels based on the

@@ -1,21 +1,23 @@
 infer_cut_args__ <- function(x) {
-  if (!inherits(x, c("factor", "character"))) {
-    return(NULL)
-  }
+  stopifnot(
+    is.factor(x)
+  )
   # @codedoc_comment_block popEpi:::infer_cut_args__
-  #     look at the unique values / `levels()` of the column. If they all look
-  #     like `[x, y[`, `]x, y]`, or `x - y`, extract breaks from them and
-  #     infer whether `right = FALSE` or `TRUE`.
+  #     look at the `levels()` of the column. If they all look
+  #     like `[x, y[`, `]x, y]`, or `x - y`, extract breaks from them,
+  #     infer whether `right = FALSE` or `TRUE`, and use the `levels()`
+  #     as `labels`. E.g. `factor("[60, 61[")` produces
+  #     `list(breaks = 60:61, right = FALSE, labels = "[60, 61[")`.
   # @codedoc_comment_block popEpi:::infer_cut_args__
   out <- data.table::data.table(
-    level = if (is.factor(x)) levels(x) else sort(unique(x))
+    level = levels(x)
   )
   clean_levels <- sub(
     "(?<=[0-9])-(?=[0-9])", " - ",
     out[["level"]],
     perl = TRUE
   )
-  re_number <- "-?(?:[0-9]+[.]?[0-9]*)(?:[eE][+-]?[0-9]+)?"
+  re_number <- "[^\\[\\)(),-]+"
   re_left_number <- paste0("(?<left_number>", re_number, ")")
   re_right_number <- paste0("(?<right_number>", re_number, ")")
   re_left_inc <- "(?<left_inc>[\\[\\](] *)?"
@@ -41,6 +43,11 @@ infer_cut_args__ <- function(x) {
       },
       character(nrow(starts))
     )
+    if (nrow(starts) == 1) {
+      substrings_matrix <- matrix(substrings, nrow = 1L)
+      colnames(substrings_matrix) <- names(substrings)
+      substrings <- substrings_matrix
+    }
     data.table::set(
       x = out,
       j = colnames(substrings),
@@ -71,6 +78,7 @@ infer_cut_args__ <- function(x) {
   if (!all(is_valid)) {
     return(NULL)
   }
+  eval_env <- new.env(parent = parent.frame(1L))
   data.table::set(
     x = out,
     j = c("lo", "hi"),
@@ -78,11 +86,11 @@ infer_cut_args__ <- function(x) {
       col <- vapply(
         out[[col_nm]],
         function(col_elem) {
-          eval(parse(text = col_elem))
+          eval(parse(text = col_elem), eval_env)
         },
         numeric(1L)
       )
-      if (all(col %% 1 == 0)) {
+      if (all(is.finite(col) & col %% 1 == 0)) {
         col <- as.integer(col)
       }
       col
@@ -110,8 +118,7 @@ infer_cut_args__ <- function(x) {
       )
     }
   }
-  return(list(
-    meta_dt = out[],
-    cut_arg_list =  cut_arg_list
-  ))
+  cut_arg_list[["labels"]] <- out[["level"]]
+  data.table::setattr(cut_arg_list, "infer_cut_args_meta", out)
+  return(cut_arg_list)
 }
