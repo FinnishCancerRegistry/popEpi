@@ -250,6 +250,10 @@ Pre-defined estimators with their formulae:
 }
 
 \itemize{
+\item Check columns \code{t_at_risk}, \code{n_at_risk_eff} for zeroes if they are in the
+\code{dt}. Intervals with e.g. \code{t_at_risk == 0} have no survival probability
+defined for them which causes \code{NA} values (i.e. zero divided by zero
+is not defined). Throw a warning if such intervals are found.
 \item Add column \code{delta_t} as the difference between the \verb{_stop} and \verb{_start}
 columns of the follow-up time scale, e.g. \code{ts_fut_stop - ts_fut_start}.
 \item Armed with a list of expressions based on \code{estimates}, called

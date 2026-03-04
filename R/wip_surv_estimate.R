@@ -780,6 +780,23 @@ surv_estimate <- function(
       setdiff(names(weight_dt), "weight")
     )
   }
+  # @codedoc_comment_block popEpi::surv_estimate
+  # - Check columns `t_at_risk`, `n_at_risk_eff` for zeroes if they are in the
+  #   `dt`. Intervals with e.g. `t_at_risk == 0` have no survival probability
+  #   defined for them which causes `NA` values (i.e. zero divided by zero
+  #   is not defined). Throw a warning if such intervals are found.
+  # @codedoc_comment_block popEpi::surv_estimate
+  lapply(intersect(names(dt), c("t_at_risk", "n_at_risk_eff")), function(nm) {
+    is_na <- is.na(dt[[nm]])
+    if (any(is_na)) {
+      message("WARNING: intervals in `dt` where `dt$", nm, "` is zero:")
+      print(dt[is_na, ])
+      warning(
+        "There were ", sum(is_na), " intervals in `dt` where `dt$", nm, "` ",
+        "was zero. No survival probability can be estimated for such intervals."
+      )
+    }
+  })
 
   # @codedoc_comment_block popEpi::surv_estimate
   # - Add column `delta_t` as the difference between the `_stop` and `_start`
