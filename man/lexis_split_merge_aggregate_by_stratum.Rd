@@ -194,6 +194,9 @@ if that \code{optional_steps} element exists.
 \code{stratum_eval_env} is the environment where the stratum-specific
 steps are performed.
 \item Run
+\code{optional_steps[["stratum_pre_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
+if that \code{optional_steps} element exists.
+\item Run
 \code{popEpi::splitMulti} on the subset of \code{lexis} which contains data from
 the current stratum.
 \item Run

@@ -700,16 +700,28 @@ lexis_split_merge_aggregate_by_stratum <- function(
       } else {
         lexis_stratum_subset <- .SD
       }
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      #   + Run
-      #     `popEpi::splitMulti` on the subset of `lexis` which contains data from
-      #     the current stratum.
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       lexis_stratum_subset <- data.table::setDT(as.list(lexis_stratum_subset))
       lexis_dt_set__(
         lexis = lexis_stratum_subset,
         lexis_ts_col_nms = lexis_ts_col_nms
       )
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+      #   + Run
+      #     `optional_steps[["stratum_pre_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
+      #     if that `optional_steps` element exists.
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+      if ("stratum_pre_split" %in% names(optional_steps)) {
+        optional_steps[["stratum_pre_split"]](
+          stratum_eval_env = stratum_eval_env,
+          eval_env = eval_env,
+          call_env = call_env
+        )
+      }
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+      #   + Run
+      #     `popEpi::splitMulti` on the subset of `lexis` which contains data from
+      #     the current stratum.
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       lexis_stratum_subset_split <- surv_split__(
         lexis = lexis_stratum_subset,
         breaks = breaks,
