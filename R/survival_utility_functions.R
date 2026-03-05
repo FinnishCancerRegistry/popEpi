@@ -1,4 +1,4 @@
-globalVariables(c("tab", "SE.A", "pp.table"))
+utils::globalVariables(c("tab", "SE.A", "pp.table"))
 
 comp.st.surv <- function(surv.var = "p", surv.expr = "1-d/(n.eff-n.cens/2)",
                          SE.expr = "sqrt(p*(1-p)/(n.eff))", cumu = TRUE) {

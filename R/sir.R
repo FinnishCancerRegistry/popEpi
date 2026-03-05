@@ -1443,6 +1443,6 @@ sir_ag <- function(x, obs = 'from0to1', print = attr(x, 'aggre.meta')$by, exp = 
 
 
 
-globalVariables(c('observed','expected','p_adj','p_value','temp','coh.observations','coh.personyears',
+utils::globalVariables(c('observed','expected','p_adj','p_value','temp','coh.observations','coh.personyears',
                   'd.exp', 'lower', 'pop.haz', 'sir.hi','sir.lo','upper'))
 

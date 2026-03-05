@@ -937,5 +937,5 @@ lexpand <- function(data,
 }
 
 
-globalVariables(c('.EACHI', "dg_date", "ex_date", "bi_date"))
+utils::globalVariables(c('.EACHI', "dg_date", "ex_date", "bi_date"))
 

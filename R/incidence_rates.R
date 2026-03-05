@@ -256,7 +256,7 @@ stdr.weights <- function(wp = 'world00_1') {
   }
   sr[]
 }
-globalVariables(c('stdpop18','stdpop101','agegroup','world_std'))
+utils::globalVariables(c('stdpop18','stdpop101','agegroup','world_std'))
 
 
 rate_est <- function(data = data,
@@ -343,5 +343,5 @@ rate_est <- function(data = data,
   return(data[])
 }
 
-globalVariables(c('var.temp','lam.temp','rate.adj','SE.rate.adj','SE.rate','SE.log.rate','SE.log.rate.adj'))
+utils::globalVariables(c('var.temp','lam.temp','rate.adj','SE.rate.adj','SE.rate','SE.log.rate','SE.log.rate.adj'))
 
