@@ -12,42 +12,29 @@ infer_cut_args__ <- function(x) {
   out <- data.table::data.table(
     level = levels(x)
   )
-  clean_levels <- sub(
-    "(?<=[0-9])-(?=[0-9])", " - ",
-    out[["level"]],
-    perl = TRUE
-  )
-  re_number <- "[^\\[\\)(),-]+"
-  re_left_number <- paste0("(?<left_number>", re_number, ")")
+  re_number <- "[^\\[\\]\\(\\),]+"
+  re_left_number <- paste0("(?<left_number>", re_number, "(?!<))")
   re_right_number <- paste0("(?<right_number>", re_number, ")")
-  re_left_inc <- "(?<left_inc>[\\[\\](] *)?"
-  re_right_inc <- "(?<right_inc> *[\\[\\])])?"
-  re_sep <- "(?<sep> *[,-] *)"
+  re_left_inc <- "^(?<left_inc>[\\[\\]\\(])?"
+  re_right_inc <- "(?<right_inc>[\\[\\]\\)])?$"
+  re_sep <- "(?<sep> *[,] *)"
   re_total <- paste0(
-    "^",
     re_left_inc,
+    " *",
     re_left_number,
+    " *",
     re_sep,
+    " *",
     re_right_number,
-    re_right_inc,
-    "$"
+    " *",
+    re_right_inc
   )
   is_valid <- local({
-    matches <- regexpr(re_total, clean_levels, perl = TRUE)
-    starts <- attr(matches, "capture.start")
-    stops <- starts + attr(matches, "capture.length") - 1L
-    substrings <- vapply(
-      colnames(starts),
-      function(grp_nm) {
-        substr(clean_levels, starts[, grp_nm], stops[, grp_nm])
-      },
-      character(nrow(starts))
+    substrings <- regex_extract_groups__(
+      pattern = re_total,
+      text = out[["level"]],
+      perl = TRUE
     )
-    if (nrow(starts) == 1) {
-      substrings_matrix <- matrix(substrings, nrow = 1L)
-      colnames(substrings_matrix) <- names(substrings)
-      substrings <- substrings_matrix
-    }
     data.table::set(
       x = out,
       j = colnames(substrings),
@@ -55,7 +42,14 @@ infer_cut_args__ <- function(x) {
         substrings[, col_nm]
       })
     )
-    substrings[, "left_number"] != ""
+    data.table::set(
+      x = out,
+      j = c("left_inc", "right_inc"),
+      value = lapply(c("left_inc", "right_inc"), function(col_nm) {
+        gsub(" ", "", out[[col_nm]])
+      })
+    )
+    out[["left_number"]] != "" & out[["right_number"]] != ""
   })
   if (!all(is_valid)) {
     return(NULL)
@@ -64,8 +58,8 @@ infer_cut_args__ <- function(x) {
     x = out,
     j = c("is_left_inclusive", "is_right_inclusive"),
     value = list(
-      !grepl("^ *[\\]()]", out[["left_inc"]]),
-      !grepl("[\\[()] *$", out[["right_inc"]])
+      out[["left_inc"]] %in% c("[", ""),
+      out[["right_inc"]] %in% c("]", "")
     )
   )
   if (
@@ -74,7 +68,7 @@ infer_cut_args__ <- function(x) {
   ) {
     return(NULL)
   }
-  is_valid <- out[["is_left_inclusive"]] | out[["is_right_inclusive"]]
+  is_valid <- out[["is_left_inclusive"]] + out[["is_right_inclusive"]] %in% 1:2
   if (!all(is_valid)) {
     return(NULL)
   }
