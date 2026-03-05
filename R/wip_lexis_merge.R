@@ -16,47 +16,147 @@ lexis_merge_guess_breaks__ <- function(x) {
   return(cut_breaks)
 }
 
-lexis_merge_default_harmoniser__ <- function(
+lexis_merge_make_harmoniser__ <- function(
   col_nm,
-  lex_dur_multiplier = 0.5,
-  breaks,
-  right,
-  labels
+  merge_dt,
+  optional_steps,
+  call_env,
+  eval_env,
+  lex_dur_multiplier
 ) {
-  # @codedoc_comment_block lexis_merge_default_harmoniser__
+  col <- merge_dt[[col_nm]]
+  if (is.factor(col)) {
+    # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
+    #   + If `merge_dt[[col_nm]]` is a factor column,
+    # @codedoc_insert_comment_block popEpi:::infer_cut_args__
+    # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
+    cut_arg_list <- infer_cut_args__(col)
+    if (is.null(cut_arg_list)) {
+      stop(
+        "merge_dt$", col_nm, " was of class factor, ",
+        "but could infer how it can be created using on split lexis ",
+        "data. Either ensure that merge_dt$", col_nm, " has levels such ",
+        "as `\"[2000,2001[\"`, `\"[60, 61[\"` etc or supply argument ",
+        "`merge_dt_harmonisers`."
+      )
+    }
+    cut_arg_list[["labels"]] <- attr(cut_arg_list, "infer_cut_args_meta")[[
+      "level"
+    ]]
+  } else if (is.integer(col) || is.double(col)) {
+    lower_bounds <- sort(unique(merge_dt[[col_nm]]))
+    # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
+    # @codedoc_insert_comment_block lexis_merge_guess_breaks__
+    # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
+    cut_arg_list <- list(
+      breaks = lexis_merge_guess_breaks__(lower_bounds),
+      right = FALSE,
+      labels = lower_bounds
+    )
+  } else {
+    # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
+    #   + If `merge_dt[[col_nm]]` is not of class integer, numeric, or
+    #     factor, an error is
+    #     raised because we don't know how to automatically form a
+    #     harmoniser.
+    # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
+    stop(
+      "Column merge_dt$", col_nm, " was not of class ",
+      "integer, numeric, or factor, so we ",
+      "could not infer a harmoniser for it. ",
+      "Please supply one yourself via `merge_dt_harmonisers`."
+    )
+  }
+  # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
+  #   + Run
+  #     `optional_steps[["pre_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_eval_env = lapply_eval_env)`
+  #     if that `optional_steps` element exists.
+  #     Here `make_harmoniser_eval_env` is similar to `eval_env` but it is the
+  #     evaluation environment of the function passed to `lapply`
+  #     which attempts to make each default harmoniser.
+  # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
+  is_num <- is.numeric(labels)
+  substitute_arg_list <- list(
+    breaks = cut_arg_list[["breaks"]],
+    right = cut_arg_list[["right"]],
+    labels = if (is_num) FALSE else cut_arg_list[["labels"]],
+    # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__::lex_dur_multiplier
+    # `lex_dur_multiplier` is used in the following expression when a default
+    # harmoniser is being made: `col + lex.dur * lex_dur_multiplier`.
+    # Here `col` is the column in question. When merging population expected
+    # hazards into split `lexis` data it is reasonable to use
+    # `lex_dur_multiplier = 0.5`, e.g. with `ts_cal = 2001.9`, `ts_fut = 0.0`,
+    # and `lex_dur = 0.5`
+    # we arrive to the middle of the interval (or end of follow-up for that
+    # subject) at `ts_cal = 2002.15` and `ts_fut = 0.25`. Here it is more
+    # reasonable to merge data from 2002 rather than 2001 because the majority
+    # of follow-up occurs in 2002 for that record.
+    #
+    # As an aside, of course if you split also by calendar time (and age and
+    # whatever you have in your `merge_dt`) then this makes no difference
+    # because every split `lexis` record is strictly within each interval of
+    # your `merge_dt`. But in practice this does not improve much and can be
+    # computationally costly.
+    # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__::lex_dur_multiplier
+    cut_x = substitute(
+      col + lex.dur * lex_dur_multiplier,
+      list(
+        col = parse(text = col_nm)[[1]],
+        lex_dur_multiplier = lex_dur_multiplier
+      )
+    ),
+    return_expr = if (is_num) quote(cut_breaks[out]) else quote(out), # nolint
+    lex_dur_multiplier = lex_dur_multiplier
+  )
+  make_harmoniser_eval_env <- environment()
+  if ("pre_default_harmoniser_creation" %in% names(optional_steps)) {
+    optional_steps[["pre_default_harmoniser_creation"]](
+      call_env = call_env,
+      eval_env = eval_env,
+      make_harmoniser_eval_env = make_harmoniser_eval_env
+    )
+  }
+
+  # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
   #    + With the `cut` breaks defined, the automatically created harmoniser
   #      becomes a `cut` call with arguments inferred above and with
-  #      * `x = col + lex.dur * lex_dur_multiplier`, where `COL` is the current
-  #        column and `lex_dur_multiplier` is by default `0.5`.
+  #      * `x = col + lex.dur * lex_dur_multiplier`, where `col` is the current
+  #        column.
   #      * `dig.lab = 10`.
   #    + Depending on what we are harmonising with, the harmoniser will return
   #      either a `factor` with labels based on the
   #      `cut` call, e.g. `ts_cal = 2021.524` turns into `[2021, 2022[`
   #      with both 2021 and 2022 in `breaks`, or the identified interval's
   #      lower bound such as `2021`.
-  # @codedoc_comment_block lexis_merge_default_harmoniser__
-  is_num <- is.numeric(labels)
-  substitute(
+  # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
+  out <- substitute(
     {
       cut_breaks <- breaks # nolint
+      cut_labels <- labels # nolint
       out <- cut( # nolint
-        x = col + lex.dur * lex_dur_multiplier,
+        x = cut_x, # nolint
         breaks = cut_breaks,
-        right = right,
-        labels = labels,
+        right = right, # nolint
+        labels = cut_labels,
         dig.lab = 10
       )
       return_expr
     },
-    list(
-      col = parse(text = col_nm)[[1]],
-      lex_dur_multiplier = lex_dur_multiplier,
-      breaks = breaks,
-      right = right,
-      labels = if (is_num) FALSE else labels,
-      return_expr = if (is_num) quote(cut_breaks[out]) else quote(out)
-    )
+    substitute_arg_list
   )
+  # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
+  #   + Run
+  #     `optional_steps[["post_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_eval_env = lapply_eval_env)`
+  #     if that `optional_steps` element exists.
+  # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
+  if ("post_default_harmoniser_creation" %in% names(optional_steps)) {
+    optional_steps[["post_default_harmoniser_creation"]](
+      call_env = call_env,
+      eval_env = eval_env,
+      make_harmoniser_eval_env = make_harmoniser_eval_env
+    )
+  }
+  return(out)
 }
 
 #' @title Merge Data into `Lexis` Object
@@ -150,7 +250,8 @@ lexis_merge <- function(
   merge_dt,
   merge_dt_by,
   merge_dt_harmonisers = NULL,
-  optional_steps = NULL
+  optional_steps = NULL,
+  lex_dur_multiplier = NULL
 ) {
   # @codedoc_comment_block popEpi::lexis_merge
   # `popEpi::lexis_merge` can be used to merge additional information into
@@ -210,6 +311,25 @@ lexis_merge <- function(
     lexis,
     mandatory = TRUE
   )
+
+  # @codedoc_comment_block popEpi::lexis_merge::lex_dur_multiplier
+  # @param lex_dur_multiplier `[NULL, integer, numeric]` (default `NULL`)
+  #
+  # - `NULL`: Use `0.5`.
+  # - `integer` / `numeric`: Use this is multiplier.
+  #
+  # @codedoc_insert_comment_block popEpi:::lexis_merge_make_harmoniser__::lex_dur_multiplier
+  # @codedoc_comment_block popEpi::lexis_merge::lex_dur_multiplier
+  if (is.null(lex_dur_multiplier)) {
+    lex_dur_multiplier <- 0.5
+  } else {
+    stopifnot(
+      length(lex_dur_multiplier) == 1,
+      !is.na(lex_dur_multiplier),
+      inherits(lex_dur_multiplier, c("integer", "numeric", "double"))
+    )
+  }
+
   call_env <- parent.frame(1L)
   lexis_ts_col_nms <- attr(lexis, "time.scales")
   merge_ts_col_nms <- intersect(lexis_ts_col_nms, merge_dt_by)
@@ -236,84 +356,17 @@ lexis_merge <- function(
     # - If `is.null(merge_dt_harmonisers)`, attempt to
     #   automatically determine the harmonisers making use of `cut` for each
     #   time scale column to merge by as follows:
+    # @codedoc_insert_comment_block popEpi:::lexis_merge_make_harmoniser__
     # @codedoc_comment_block popEpi::lexis_merge
-    merge_dt_harmonisers <- lapply(merge_ts_col_nms, function(col_nm) {
-      col <- merge_dt[[col_nm]]
-      if (is.factor(col)) {
-        # @codedoc_comment_block popEpi::lexis_merge
-        #   + If `merge_dt[[col_nm]]` is a factor column,
-        # @codedoc_insert_comment_block popEpi:::infer_cut_args__
-        # @codedoc_comment_block popEpi::lexis_merge
-        cut_arg_list <- infer_cut_args__(col)
-        if (is.null(cut_arg_list)) {
-          stop(
-            "merge_dt$", col_nm, " was of class factor, ",
-            "but could infer how it can be created using on split lexis ",
-            "data. Either ensure that merge_dt$", col_nm, " has levels such ",
-            "as `\"[2000,2001[\"`, `\"[60, 61[\"` etc or supply argument ",
-            "`merge_dt_harmonisers`."
-          )
-        }
-        cut_arg_list[["labels"]] <- attr(cut_arg_list, "infer_cut_args_meta")[[
-          "level"
-        ]]
-      } else if (is.integer(col) || is.double(col)) {
-        lower_bounds <- sort(unique(merge_dt[[col_nm]]))
-        # @codedoc_comment_block popEpi::lexis_merge
-        # @codedoc_insert_comment_block lexis_merge_guess_breaks__
-        # @codedoc_comment_block popEpi::lexis_merge
-        cut_arg_list <- list(
-          breaks = lexis_merge_guess_breaks__(lower_bounds),
-          right = FALSE,
-          labels = lower_bounds
-        )
-      } else {
-        # @codedoc_comment_block popEpi::lexis_merge
-        #   + If `merge_dt[[col_nm]]` is not of class integer, numeric, or
-        #     factor, an error is
-        #     raised because we don't know how to automatically form a
-        #     harmoniser.
-        # @codedoc_comment_block popEpi::lexis_merge
-        stop(
-          "Column merge_dt$", col_nm, " was not of class ",
-          "integer, numeric, or factor, so we ",
-          "could not infer a harmoniser for it. ",
-          "Please supply one yourself via `merge_dt_harmonisers`."
-        )
-      }
-      harmoniser_make_arg_list <- list(
-        col_nm = col_nm,
-        lex_dur_multiplier = 0.5
-      )
-      harmoniser_make_arg_list <- c(
-        harmoniser_make_arg_list,
-        cut_arg_list
-      )
-      # @codedoc_comment_block popEpi::lexis_merge
-      #   + Run
-      #     `optional_steps[["pre_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_eval_env = lapply_eval_env)`
-      #     if that `optional_steps` element exists.
-      #     Here `lapply_eval_env` is similar to `eval_env` but it is the
-      #     evaluation environment of the anonymous function passed to `lapply`
-      #     which attempts to handle each harmoniser.
-      # @codedoc_comment_block popEpi::lexis_merge
-      lapply_eval_env <- environment()
-      if ("pre_default_harmoniser_creation" %in% names(optional_steps)) {
-        optional_steps[["pre_default_harmoniser_creation"]](
-          call_env = call_env,
-          eval_env = eval_env,
-          lapply_env = lapply_eval_env
-        )
-      }
-      # @codedoc_comment_block popEpi::lexis_merge
-      # @codedoc_insert_comment_block lexis_merge_default_harmoniser__
-      # @codedoc_comment_block popEpi::lexis_merge
-      do.call(
-        lexis_merge_default_harmoniser__,
-        harmoniser_make_arg_list,
-        quote = TRUE
-      )
-    })
+    merge_dt_harmonisers <- lapply(
+      merge_ts_col_nms,
+      lexis_merge_make_harmoniser__,
+      merge_dt = merge_dt,
+      optional_steps = optional_steps,
+      call_env = call_env,
+      eval_env = eval_env,
+      lex_dur_multiplier = lex_dur_multiplier
+    )
     names(merge_dt_harmonisers) <- merge_ts_col_nms
   }
   # @codedoc_comment_block popEpi::lexis_merge
@@ -331,18 +384,27 @@ lexis_merge <- function(
   # - Armed with either user-defined or automatically created
   #   `merge_dt_harmonisers`, they are each evaluated to create a temporary
   #   `data.table` with harmonised data from `lexis`. This is performed via
-  #   `eval` with `envir = lexis` and `enclos = call_env` where `call_env` is the
-  #   environment where `popEpi::lexis_merge` was called. Of course if a column
+  #   `eval` with `envir = lexis` and `enclos = harmoniser_eval_env` where
+  #   `harmoniser_eval_env` is a temporary environment which contains every
+  #   argument passed to `lexis_merge` as well as `eval_env` and `call_env`
+  #   which you can read about in the detailed explanation of `optional_steps`.
+  #   However, if a column
   #   has no harmoniser at this point then it is used as-is. For instance there
-  #   is no need to harmonise stratifying columns because they are not changed
-  #   by splitting the `Lexis` data.
+  #   is no need to harmonise stratifying columns such as area because they are
+  #   not changed by splitting the `Lexis` data.
   # @codedoc_comment_block popEpi::lexis_merge
+  harmoniser_eval_env <- new.env(parent = call_env)
+  lapply(names(formals(lexis_merge)), function(arg_nm) {
+    harmoniser_eval_env[[arg_nm]] <- eval_env[[arg_nm]]
+  })
+  harmoniser_eval_env[["eval_env"]] <- eval_env
+  harmoniser_eval_env[["call_env"]] <- call_env
   join_dt <- data.table::setDT(lapply(merge_dt_by, function(col_nm) {
     if (col_nm %in% names(merge_dt_harmonisers)) {
       eval(
         merge_dt_harmonisers[[col_nm]],
         envir = lexis,
-        enclos = call_env
+        enclos = harmoniser_eval_env
       )
     } else {
       lexis[[col_nm]]
@@ -422,81 +484,4 @@ lexis_merge <- function(
   # `merge_dt` into `lexis`.
   # @codedoc_comment_block return(popEpi::lexis_merge)
   return(lexis[])
-}
-
-lexis_merge_survival <- function(
-  lexis,
-  survival_dt,
-  survival_dt_by,
-  survival_dt_harmonisers = NULL,
-  ts_fut_col_nm
-) {
-  stopifnot(
-    is.data.frame(survival_dt),
-    "survival" %in% names(survival_dt),
-    ts_fut_col_nm %in% names(survival_dt),
-    ts_fut_col_nm %in% survival_dt_by
-  )
-  survival_dt <- data.table::setDT(as.list(survival_dt))
-  data.table::set(
-    x = survival_dt,
-    j = c(
-      "cumulative_hazard",
-      "survival_interval_start",
-      "delta_t"
-    ),
-    value = list(
-      -log(survival_dt[["survival"]]),
-      survival_dt[[ts_fut_col_nm]],
-      local({
-        breaks <- lexis_merge_guess_breaks__(
-          sort(unique(survival_dt[[ts_fut_col_nm]]))
-        )
-        breaks[match(survival_dt[[ts_fut_col_nm]], breaks) + 1L] -
-          survival_dt[[ts_fut_col_nm]]
-      })
-    )
-  )
-  survival_dt[
-    #' @importFrom data.table := .SD
-    j = "hazard" := diff(c(0.0, .SD[["cumulative_hazard"]])),
-    by = setdiff(survival_dt_by, ts_fut_col_nm)
-  ]
-  lexis_merge(
-    lexis = lexis,
-    merge_dt = survival_dt,
-    merge_dt_by = survival_dt_by,
-    merge_dt_harmonisers = survival_dt_harmonisers,
-    optional_steps = list(
-      pre_default_harmoniser_creation = function(
-        eval_env,
-        call_env,
-        lapply_eval_env
-      ) {
-        lapply_eval_env[["surv_merge_default_harmoniser_arg_list"]][[
-          "lex_dur_multiplier"
-        ]] <- 1.0
-        NULL
-      }
-    )
-  )
-  value_col_nms <- setdiff(names(survival_dt), survival_dt_by)
-  work_dt <- data.table::setDT(as.list(lexis)[value_col_nms])
-  data.table::set(x = lexis, j = value_col_nms, value = NULL)
-  work_dt[
-    j = "delta" := (
-      work_dt[["survival_interval_start"]] +
-        work_dt[["delta_t"]]
-    ) - (lexis[[ts_fut_col_nm]] + lexis[["lex.dur"]])
-  ]
-  work_dt[
-    j = "cumulative_hazard" := work_dt[["cumulative_hazard"]] -
-      work_dt[["delta"]] * work_dt[["hazard"]]
-  ]
-  data.table::set(
-    x = lexis,
-    j = "survival",
-    value = exp(-work_dt[["cumulative_hazard"]])
-  )
-  return(invisible(lexis[]))
 }

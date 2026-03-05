@@ -9,7 +9,8 @@ lexis_merge(
   merge_dt,
   merge_dt_by,
   merge_dt_harmonisers = NULL,
-  optional_steps = NULL
+  optional_steps = NULL,
+  lex_dur_multiplier = NULL
 )
 }
 \arguments{
@@ -56,6 +57,29 @@ Optional steps to perform during the function's run.
 For what each functions you can make use of what their arguments should
 be.
 }}
+
+\item{lex_dur_multiplier}{\verb{[NULL, integer, numeric]} (default \code{NULL})
+\itemize{
+\item \code{NULL}: Use \code{0.5}.
+\item \code{integer} / \code{numeric}: Use this is multiplier.
+}
+
+\code{lex_dur_multiplier} is used in the following expression when a default
+harmoniser is being made: \code{col + lex.dur * lex_dur_multiplier}.
+Here \code{col} is the column in question. When merging population expected
+hazards into split \code{lexis} data it is reasonable to use
+\code{lex_dur_multiplier = 0.5}, e.g. with \code{ts_cal = 2001.9}, \code{ts_fut = 0.0},
+and \code{lex_dur = 0.5}
+we arrive to the middle of the interval (or end of follow-up for that
+subject) at \code{ts_cal = 2002.15} and \code{ts_fut = 0.25}. Here it is more
+reasonable to merge data from 2002 rather than 2001 because the majority
+of follow-up occurs in 2002 for that record.
+
+As an aside, of course if you split also by calendar time (and age and
+whatever you have in your \code{merge_dt}) then this makes no difference
+because every split \code{lexis} record is strictly within each interval of
+your \code{merge_dt}. But in practice this does not improve much and can be
+computationally costly.}
 }
 \value{
 \strong{popEpi::lexis_merge}
@@ -109,14 +133,14 @@ harmoniser.
 \item Run
 \code{optional_steps[["pre_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_eval_env = lapply_eval_env)}
 if that \code{optional_steps} element exists.
-Here \code{lapply_eval_env} is similar to \code{eval_env} but it is the
-evaluation environment of the anonymous function passed to \code{lapply}
-which attempts to handle each harmoniser.
+Here \code{make_harmoniser_eval_env} is similar to \code{eval_env} but it is the
+evaluation environment of the function passed to \code{lapply}
+which attempts to make each default harmoniser.
 \item With the \code{cut} breaks defined, the automatically created harmoniser
 becomes a \code{cut} call with arguments inferred above and with
 \itemize{
-\item \code{x = col + lex.dur * lex_dur_multiplier}, where \code{COL} is the current
-column and \code{lex_dur_multiplier} is by default \code{0.5}.
+\item \code{x = col + lex.dur * lex_dur_multiplier}, where \code{col} is the current
+column.
 \item \code{dig.lab = 10}.
 }
 \item Depending on what we are harmonising with, the harmoniser will return
@@ -124,6 +148,9 @@ either a \code{factor} with labels based on the
 \code{cut} call, e.g. \code{ts_cal = 2021.524} turns into \verb{[2021, 2022[}
 with both 2021 and 2022 in \code{breaks}, or the identified interval's
 lower bound such as \code{2021}.
+\item Run
+\code{optional_steps[["post_default_harmoniser_creation"]](call_env = call_env, eval_env = eval_env, lapply_eval_env = lapply_eval_env)}
+if that \code{optional_steps} element exists.
 }
 \item Run
 \code{optional_steps[["post_merge_dt_harmonisers"]](call_env = call_env, eval_env = eval_env)}
@@ -131,11 +158,14 @@ if that \code{optional_steps} element exists.
 \item Armed with either user-defined or automatically created
 \code{merge_dt_harmonisers}, they are each evaluated to create a temporary
 \code{data.table} with harmonised data from \code{lexis}. This is performed via
-\code{eval} with \code{envir = lexis} and \code{enclos = call_env} where \code{call_env} is the
-environment where \code{popEpi::lexis_merge} was called. Of course if a column
+\code{eval} with \code{envir = lexis} and \code{enclos = harmoniser_eval_env} where
+\code{harmoniser_eval_env} is a temporary environment which contains every
+argument passed to \code{lexis_merge} as well as \code{eval_env} and \code{call_env}
+which you can read about in the detailed explanation of \code{optional_steps}.
+However, if a column
 has no harmoniser at this point then it is used as-is. For instance there
-is no need to harmonise stratifying columns because they are not changed
-by splitting the \code{Lexis} data.
+is no need to harmonise stratifying columns such as area because they are
+not changed by splitting the \code{Lexis} data.
 \item Run
 \code{optional_steps[["post_harmonisation"]](call_env = call_env, eval_env = eval_env)}
 if that \code{optional_steps} element exists.
