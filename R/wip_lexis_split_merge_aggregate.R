@@ -524,6 +524,8 @@ lexis_split_merge_aggregate_by_stratum <- function(
   merge_dt = NULL,
   merge_dt_by = NULL,
   merge_dt_harmonisers = NULL,
+  merge_optional_steps = NULL,
+  merge_lex_dur_multiplier = NULL,
   subset = NULL,
   weight_col_nm = NULL,
   split_lexis_column_exprs = NULL,
@@ -535,12 +537,6 @@ lexis_split_merge_aggregate_by_stratum <- function(
   # @codedoc_insert_comment_block popEpi:::assert_is_arg_breaks
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::breaks
   assert_is_arg_breaks(breaks, lexis)
-  #' @param merge_dt
-  #' Passed to `[lexis_merge]`.
-  #' @param merge_dt_by
-  #' Passed to `[lexis_merge]`.
-  #' @param merge_dt_harmonisers
-  #' Passed to `[lexis_merge]`.
   assert_is_arg_merge_dt_and_merge_dt_by(
     merge_dt = merge_dt,
     merge_dt_by = merge_dt_by,
@@ -745,11 +741,21 @@ lexis_split_merge_aggregate_by_stratum <- function(
       #     `merge_dt_harmonisers`, if `merge_dt` has been supplied.
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       if (!is.null(merge_dt)) {
+        #' @param merge_dt
+        #' Passed to `[lexis_merge]`.
+        #' @param merge_dt_by
+        #' Passed to `[lexis_merge]`.
+        #' @param merge_dt_harmonisers
+        #' Passed to `[lexis_merge]`.
+        #' @param merge_optional_steps
+        #' Passed to `[lexis_merge]` argument `optional_steps`.
         lexis_merge(
           lexis = lexis_stratum_subset_split,
           merge_dt = merge_dt,
           merge_dt_by = merge_dt_by,
-          merge_dt_harmonisers = merge_dt_harmonisers
+          merge_dt_harmonisers = merge_dt_harmonisers,
+          optional_steps = merge_optional_steps,
+          lex_dur_multiplier = merge_lex_dur_multiplier
         )
       }
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum

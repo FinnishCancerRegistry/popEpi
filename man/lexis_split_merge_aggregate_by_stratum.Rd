@@ -13,6 +13,8 @@ lexis_split_merge_aggregate_by_stratum(
   merge_dt = NULL,
   merge_dt_by = NULL,
   merge_dt_harmonisers = NULL,
+  merge_optional_steps = NULL,
+  merge_lex_dur_multiplier = NULL,
   subset = NULL,
   weight_col_nm = NULL,
   split_lexis_column_exprs = NULL,
@@ -70,6 +72,8 @@ Names of \code{Lexis} time scales in \code{lexis} by which to aggregate results.
 \item{merge_dt_by}{Passed to \verb{[lexis_merge]}.}
 
 \item{merge_dt_harmonisers}{Passed to \verb{[lexis_merge]}.}
+
+\item{merge_optional_steps}{Passed to \verb{[lexis_merge]} argument \code{optional_steps}.}
 
 \item{subset}{\verb{[NULL, logical, integer, data.table]} (default \code{NULL})
 
