@@ -209,6 +209,9 @@ lexis_aggregate_one_stratum__ <- function(
       EXPR = as.call(c(quote(list), aggre_exprs))
     )
   )
+  if (".SD" %in% all.vars(agg_expr)) {
+    agg_expr[[".SD"]] <- quote(names(lexis_stratum_subset_split))
+  }
   env <- new.env(parent = call_env)
   env[["call_env"]] <- call_env
   env[["eval_env"]] <- eval_env
