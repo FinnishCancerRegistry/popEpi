@@ -235,8 +235,11 @@ lexis_crop <- function(lexis, breaks) {
   return(invisible(lexis[]))
 }
 
-lexis_immortalise <- function(lexis, breaks) {
+lexis_immortalise <- function(lexis, breaks, crop = TRUE) {
   assert_is_arg_lexis(lexis, dt = FALSE)
+  if (crop) {
+    lexis_crop(lexis, breaks = breaks)
+  }
   max_by_ts <- lapply(breaks, max)
   pmin_data <- lapply(names(max_by_ts), function(ts_col_nm) {
     max_by_ts[[ts_col_nm]] - lexis[[ts_col_nm]]
