@@ -77,7 +77,7 @@ testthat::test_that("popEpi splitters retain time.since attribute", {
   sldt <- splitLexisDT(dmi, breaks = 0:30/2, timeScale = "DMdur")
   sm <- splitMulti(dmi, breaks = list(DMdur = 0:30/2))
 
-  lex_attr_nms <- c("time.since", "breaks", "time.scales")
+  lex_attr_nms <- lexis_attr_nms__()
   testthat::expect_identical(
     attributes(Si)[lex_attr_nms], attributes(sm)[lex_attr_nms]
   )
@@ -86,8 +86,3 @@ testthat::test_that("popEpi splitters retain time.since attribute", {
   )
 
 })
-
-
-
-
-

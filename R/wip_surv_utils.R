@@ -30,6 +30,10 @@ lexis_dt_set__ <- function(lexis, lexis_ts_col_nms = NULL) {
   return(invisible(lexis[]))
 }
 
+lexis_attr_nms__ <- function() {
+  c("time.scales", "time.since", "breaks")
+}
+
 lexis_to_lexis_dt__ <- function(
   lexis,
   subset = NULL,
@@ -46,7 +50,7 @@ lexis_to_lexis_dt__ <- function(
       out <- out[(subset), ]
     }
   }
-  attr_nms <- c("time.scales", "time.since", "breaks")
+  attr_nms <- lexis_attr_nms__()
   attr_nms <- intersect(attr_nms, names(attributes(lexis)))
   attrs <- lapply(attr_nms, attr, x = lexis)
   names(attrs) <- attr_nms
