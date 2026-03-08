@@ -39,7 +39,12 @@ assert_is_arg_lexis <- function(lexis, dt) {
     )
   }
   stopifnot(
-    inherits(lexis, "Lexis"),
+    inherits(lexis, "Lexis")
+  )
+  if (nrow(lexis) == 0) {
+    return(invisible(NULL))
+  }
+  stopifnot(
     inherits(lexis[["lex.Cst"]], c("logical", "integer", "factor")),
     inherits(lexis[["lex.Xst"]], c("logical", "integer", "factor")),
     identical(class(lexis[["lex.Cst"]]), class(lexis[["lex.Xst"]])),
@@ -59,6 +64,7 @@ assert_is_arg_lexis <- function(lexis, dt) {
       TRUE
     )
   )
+  return(invisible(NULL))
 }
 
 assert_is_arg_weight_col_nm <- function(
