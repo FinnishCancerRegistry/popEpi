@@ -202,6 +202,39 @@ surv_box_id__ <- function(
   return(invisible(lexis[]))
 }
 
+lexis_delay_entry <- function(lexis, ts_col_new_entry, ts_col_nm) {
+  assert_is_arg_lexis(lexis, dt = FALSE)
+  stopifnot(
+    ts_col_nm %in% names(lexis),
+    ts_col_nm %in% Epi::timeScales(lexis),
+    length(ts_col_new_entry) == 1,
+    identical(class(ts_col_new_entry), class(lexis[[ts_col_nm]]))
+  )
+  cannot_be_delayed <- lexis[[ts_col_nm]] > ts_col_new_entry |
+    (lexis[[ts_col_nm]] + lexis[["lex.dur"]] <= ts_col_new_entry)
+  # e.g. from ts_cal = 2001.5 to ts_col_rebase = 2002.3,
+  # move_entry = 2002.3 - 2001.5 = 0.8
+  # e.g. from ts_cal = 2002.5 to ts_col_rebase = 2002.3,
+  # move_entry = -0.2
+  move_entry <- ts_col_new_entry - lexis[[ts_col_nm]]
+  move_entry[cannot_be_delayed] <- NA
+  # e.g. ts_cal = 2001.5 -> 2002.3
+  data.table::set(
+    x = lexis,
+    j = Epi::timeScales(lexis),
+    value = lapply(Epi::timeScales(lexis), function(ts_col_nm) {
+      lexis[[ts_col_nm]] + move_entry
+    })
+  )
+  # e.g. lex.dur = 1.5 - 0.8 = 0.7
+  data.table::set(
+    x = lexis,
+    j = "lex.dur",
+    value = lexis[["lex.dur"]] - move_entry
+  )
+  return(invisible(lexis))
+}
+
 lexis_crop <- function(lexis, breaks) {
   assert_is_arg_lexis(lexis, dt = FALSE)
   delay_entry <- do.call(pmax, lapply(names(breaks), function(ts_col_nm) {
