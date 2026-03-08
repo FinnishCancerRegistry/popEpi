@@ -92,19 +92,23 @@ lexis_merge_make_harmoniser__ <- function(
     # reasonable to merge data from 2002 rather than 2001 because the majority
     # of follow-up occurs in 2002 for that record.
     #
+    # When `lex_dur_multiplier == 0` we simplify the expression to just `col`
+    # instead of using `col + lex.dur * 0`. This handles correctly edge cases
+    # such as `lex.dur = Inf`.
+    #
     # As an aside, of course if you split also by calendar time (and age and
     # whatever you have in your `merge_dt`) then this makes no difference
     # because every split `lexis` record is strictly within each interval of
     # your `merge_dt`. But in practice this does not improve much and can be
     # computationally costly.
     # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__::lex_dur_multiplier
-    cut_x = substitute(
+    cut_x = if (lex_dur_multiplier != 0L) substitute(
       col + lex.dur * lex_dur_multiplier,
       list(
         col = parse(text = col_nm)[[1]],
         lex_dur_multiplier = lex_dur_multiplier
       )
-    ),
+    ) else parse(text = col_nm)[[1]],
     return_expr = if (is_num) quote(cut_breaks[out]) else quote(out), # nolint
     lex_dur_multiplier = lex_dur_multiplier
   )

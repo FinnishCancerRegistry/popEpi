@@ -75,6 +75,10 @@ subject) at \code{ts_cal = 2002.15} and \code{ts_fut = 0.25}. Here it is more
 reasonable to merge data from 2002 rather than 2001 because the majority
 of follow-up occurs in 2002 for that record.
 
+When \code{lex_dur_multiplier == 0} we simplify the expression to just \code{col}
+instead of using \code{col + lex.dur * 0}. This handles correctly edge cases
+such as \code{lex.dur = Inf}.
+
 As an aside, of course if you split also by calendar time (and age and
 whatever you have in your \code{merge_dt}) then this makes no difference
 because every split \code{lexis} record is strictly within each interval of
