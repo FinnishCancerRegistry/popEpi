@@ -235,25 +235,29 @@ lexis_crop <- function(lexis, breaks) {
   return(invisible(lexis[]))
 }
 
-lexis_immortalise <- function(lexis, breaks, crop = TRUE) {
+lexis_immortalise <- function(lexis, breaks = NULL, crop = TRUE) {
   assert_is_arg_lexis(lexis, dt = FALSE)
-  if (crop) {
-    lexis_crop(lexis, breaks = breaks)
+  if (is.null(breaks)) {
+    immortalise_to <- as(.Machine$integer.max, class(lexis[["lex.dur"]])[1])
+    return(invisible(lexis[]))
+  } else {
+    if (crop) {
+      lexis_crop(lexis, breaks = breaks)
+    }
+    max_by_ts <- lapply(breaks, max)
+    pmin_data <- lapply(names(max_by_ts), function(ts_col_nm) {
+      max_by_ts[[ts_col_nm]] - lexis[[ts_col_nm]]
+    })
+    names(pmin_data) <- names(max_by_ts)
+    immortalise_to <- do.call(pmin, pmin_data, quote = TRUE)
   }
-  max_by_ts <- lapply(breaks, max)
-  pmin_data <- lapply(names(max_by_ts), function(ts_col_nm) {
-    max_by_ts[[ts_col_nm]] - lexis[[ts_col_nm]]
-  })
-  names(pmin_data) <- names(max_by_ts)
   data.table::set(
     x = lexis,
-    j = "lex.dur",
-    value = do.call(pmin, pmin_data, quote = TRUE)
-  )
-  data.table::set(
-    x = lexis,
-    j = "lex.Xst",
-    value = lexis[["lex.Cst"]]
+    j = c("lex.dur", "lex.Cst"),
+    value = list(
+      immortalise_to,
+      lexis[["lex.Cst"]]
+    )
   )
   return(invisible(lexis[]))
 }
