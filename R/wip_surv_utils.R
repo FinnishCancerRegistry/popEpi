@@ -39,9 +39,17 @@ lexis_to_lexis_dt__ <- function(
   subset = NULL,
   select = NULL
 ) {
-  stopifnot(inherits(lexis, "Lexis"))
+  stopifnot(
+    inherits(lexis, "Lexis"),
+
+    inherits(select, c("NULL", "character")),
+
+    inherits(subset, c("NULL", "logical"))
+  )
   if (is.null(select)) {
     select <- names(lexis)
+  } else {
+    stopifnot(select %in% names(lexis))
   }
   out <- data.table::setDT(as.list(lexis)[select])
   if (is.logical(subset)) {
