@@ -208,12 +208,12 @@ lexis_crop <- function(lexis, breaks) {
     entry <- lexis[[ts_col_nm]]
     cropped_entry <- min(breaks[[ts_col_nm]])
     pmax(entry, cropped_entry) - entry
-  }))
+  }), quote = TRUE)
   earlify_exit <- do.call(pmax, lapply(names(breaks), function(ts_col_nm) {
     exit <- lexis[[ts_col_nm]] + lexis[["lex.dur"]]
     cropped_exit <- max(breaks[[ts_col_nm]])
     exit - pmin(exit, cropped_exit)
-  }))
+  }), quote = TRUE)
   data.table::set(
     x = lexis,
     j = Epi::timeScales(lexis),
