@@ -146,12 +146,7 @@ lexis_aggregate_one_stratum__ <- function(
     is.environment(stratum_eval_env)
   )
 
-  work_dt <- data.table::setDT(as.list(lexis_stratum_subset_split))
-  data.table::setkeyv(work_dt, data.table::key(lexis_stratum_subset_split))
-  lexis_dt_set__(
-    lexis = work_dt,
-    lexis_ts_col_nms = Epi::timeScales(lexis_stratum_subset_split)
-  )
+  work_dt <- lexis_to_lexis_dt__(lexis_stratum_subset_split)
   # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
   #    * First collect variables mentioned in `aggre_exprs` using `[all.vars]`.
   # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
