@@ -283,8 +283,11 @@ lexis_crop <- function(lexis, breaks) {
 lexis_immortalise <- function(lexis, breaks = NULL, crop = TRUE) {
   assert_is_arg_lexis(lexis, dt = FALSE)
   if (is.null(breaks)) {
-    immortalise_to <- as(.Machine$integer.max, class(lexis[["lex.dur"]])[1])
-    return(invisible(lexis[]))
+    if (identical(class(lexis[["lex.dur"]]), "numeric")) {
+      immortalise_to <- Inf
+    } else {
+      immortalise_to <- as(.Machine$integer.max, class(lexis[["lex.dur"]])[1])
+    }
   } else {
     if (crop) {
       lexis_crop(lexis, breaks = breaks)
