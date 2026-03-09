@@ -75,7 +75,7 @@ lexis_merge_make_harmoniser__ <- function(
   #     evaluation environment of the function passed to `lapply`
   #     which attempts to make each default harmoniser.
   # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
-  is_num <- is.numeric(labels)
+  is_num <- inherits(cut_arg_list[["labels"]], c("numeric", "integer"))
   substitute_arg_list <- list(
     breaks = cut_arg_list[["breaks"]],
     right = cut_arg_list[["right"]],
