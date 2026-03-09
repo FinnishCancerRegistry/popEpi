@@ -39,7 +39,10 @@ assert_is_arg_lexis <- function(lexis, dt) {
     )
   }
   stopifnot(
-    inherits(lexis, "Lexis")
+    inherits(lexis, "Lexis"),
+    "lex.Cst" %in% names(lexis),
+    "lex.Xst" %in% names(lexis),
+    "lex.dur" %in% names(lexis)
   )
   if (nrow(lexis) == 0) {
     return(invisible(NULL))
