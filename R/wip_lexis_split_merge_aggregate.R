@@ -654,19 +654,20 @@ lexis_split_merge_aggregate_by_stratum <- function(
   lexis_col_nms <- c(
     "lex.id", lexis_ts_col_nms, "lex.dur", "lex.Cst", "lex.Xst"
   )
-  lexis_dt <- data.table::setDT(as.list(lexis)[intersect(
-    names(lexis),
-    c(
-      lexis_col_nms,
-      names(aggre_by),
-      merge_dt_by,
-      unlist(lapply(aggre_exprs, all.vars))
+  lexis_dt <- lexis_to_lexis_dt__(
+    lexis = lexis,
+    select = intersect(
+      names(lexis),
+      c(
+        lexis_col_nms,
+        names(aggre_by),
+        merge_dt_by,
+        unlist(lapply(aggre_exprs, all.vars))
+      )
     )
-  )])
-  if (!all(subset)) {
-    lexis_dt <- lexis_dt[(subset), ]
-  }
-  lexis_dt_set__(lexis = lexis_dt, lexis_ts_col_nms = lexis_ts_col_nms)
+  )
+  lexis_crop(lexis = lexis, breaks = breaks)
+  subset <- subset & !is.na(lexis_dt[["lex.dur"]]) # due to crop
 
   box_dt <- surv_box_dt__(breaks[aggre_ts_col_nms])
 
@@ -803,6 +804,9 @@ lexis_split_merge_aggregate_by_stratum <- function(
   if (length(aggre_exprs) == 0) {
     out_expr[".SDcols"] <- NULL
     out_expr[["j"]] <- quote(as.list(box_dt))
+  }
+  if (!all(subset)) {
+    out_expr[["i"]] <- quote(subset)
   }
   out <- eval(out_expr)
   if (data.table::is.data.table(aggre_by) && ncol(aggre_by) > 0) {
