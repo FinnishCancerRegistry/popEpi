@@ -137,7 +137,7 @@ lexis_aggregate_one_stratum__ <- function(
       )
     )
   }
-  assert_is_arg_box_dt(box_dt)
+  assert_is_arg_box_dt(box_dt, ts_col_nms = box_ts_col_nms)
   assert_is_arg_aggre_exprs(aggre_exprs)
   assert_is_arg_split_lexis_column_exprs(split_lexis_column_exprs)
   stopifnot(
@@ -666,11 +666,10 @@ lexis_split_merge_aggregate_by_stratum <- function(
       )
     )
   )
-  lexis_crop(lexis = lexis, breaks = breaks)
+  lexis_crop(lexis = lexis_dt, breaks = breaks)
   subset <- subset & !is.na(lexis_dt[["lex.dur"]]) # due to crop
 
   box_dt <- surv_box_dt__(breaks[aggre_ts_col_nms])
-
   out_expr <- quote(lexis_dt[
     j = {
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
