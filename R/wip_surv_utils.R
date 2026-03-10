@@ -67,7 +67,9 @@ lexis_to_lexis_dt__ <- function(
     data.table::setattr(out, attr_nm, attrs[[attr_nm]])
   }
   if (data.table::is.data.table(lexis)) {
-    data.table::setkeyv(out, data.table::key(lexis))
+    if (all(data.table::key(lexis) %in% names(out))) {
+      data.table::setkeyv(out, data.table::key(lexis))
+    }
   }
   return(out[])
 }
