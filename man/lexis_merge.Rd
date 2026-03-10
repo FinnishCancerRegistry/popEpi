@@ -9,6 +9,7 @@ lexis_merge(
   merge_dt,
   merge_dt_by,
   merge_dt_harmonisers = NULL,
+  subset = NULL,
   optional_steps = NULL,
   lex_dur_multiplier = NULL
 )
@@ -46,6 +47,16 @@ See \strong{Details}.
 \item \code{list}: Each element must a quoted expression (\verb{[quote]}) and each
 element must have a name corresponding to a column name in both \code{lexis}
 and \code{merge_dt}. See \strong{Examples}.
+}}
+
+\item{subset}{\verb{[NULL, logical, integer]} (default \code{NULL})
+
+Merge data only into specific rows in \code{lexis}.
+\itemize{
+\item \code{NULL}: All rows.
+\item \code{logical}: Only rows where this is \code{TRUE}. Must of length \code{nrow(lexis)}.
+\item \code{integer}: Only rows identified by these indices. Every index must be in
+\code{1:nrow(lexis)}.
 }}
 
 \item{optional_steps}{\verb{[NULL, list]} (default \code{NULL})
@@ -166,6 +177,7 @@ if that \code{optional_steps} element exists.
 \code{harmoniser_eval_env} is a temporary environment which contains every
 argument passed to \code{lexis_merge} as well as \code{eval_env} and \code{call_env}
 which you can read about in the detailed explanation of \code{optional_steps}.
+\code{lexis} is a subset if \code{!is.null(subset)}.
 However, if a column
 has no harmoniser at this point then it is used as-is. For instance there
 is no need to harmonise stratifying columns such as area because they are

@@ -254,6 +254,7 @@ lexis_merge <- function(
   merge_dt,
   merge_dt_by,
   merge_dt_harmonisers = NULL,
+  subset = NULL,
   optional_steps = NULL,
   lex_dur_multiplier = NULL
 ) {
@@ -299,6 +300,20 @@ lexis_merge <- function(
       eval_env = eval_env
     ))
   }
+  #' @param subset `[NULL, logical, integer]` (default `NULL`)
+  #'
+  #' Merge data only into specific rows in `lexis`.
+  #'
+  #' - `NULL`: All rows.
+  #' - `logical`: Only rows where this is `TRUE`. Must of length `nrow(lexis)`.
+  #' - `integer`: Only rows identified by these indices. Every index must be in
+  #'   `1:nrow(lexis)`.
+  need_to_subset <- !identical(substitute(subset), NULL)
+  if (need_to_subset) {
+    subset <- handle_arg_subset(dataset_nm = "lexis", output_type = "logical")
+    need_to_subset <- !all(subset)
+  }
+
   #' @template param_lexis
   assert_is_arg_lexis(lexis, dt = FALSE)
   #' @param merge_dt `[data.table]` (no default)
@@ -392,6 +407,7 @@ lexis_merge <- function(
   #   `harmoniser_eval_env` is a temporary environment which contains every
   #   argument passed to `lexis_merge` as well as `eval_env` and `call_env`
   #   which you can read about in the detailed explanation of `optional_steps`.
+  #   `lexis` is a subset if `!is.null(subset)`.
   #   However, if a column
   #   has no harmoniser at this point then it is used as-is. For instance there
   #   is no need to harmonise stratifying columns such as area because they are
@@ -405,14 +421,25 @@ lexis_merge <- function(
   harmoniser_eval_env[["call_env"]] <- call_env
   join_dt <- data.table::setDT(lapply(merge_dt_by, function(col_nm) {
     if (col_nm %in% names(merge_dt_harmonisers)) {
-      eval(
-        merge_dt_harmonisers[[col_nm]],
-        envir = lexis,
+      expr <- merge_dt_harmonisers[[col_nm]]
+      lexis_dt <- data.table::setDT(as.list(lexis)[
+        intersect(names(lexis), all.vars(expr))
+      ])
+      if (!all(subset)) {
+        lexis_dt <- lexis_dt[(subset), ]
+      }
+      out <- eval(
+        expr,
+        envir = lexis_dt,
         enclos = harmoniser_eval_env
       )
     } else {
-      lexis[[col_nm]]
+      out <- lexis[[col_nm]]
+      if (need_to_subset) {
+        out <- out[subset]
+      }
     }
+    out
   }))
   data.table::setnames(join_dt, merge_dt_by)
   merge_value_col_nms <- setdiff(names(merge_dt), merge_dt_by)
@@ -444,11 +471,12 @@ lexis_merge <- function(
   if (data.table::is.data.table(lexis)) {
     data.table::set(
       x = lexis,
+      i = if (need_to_subset) which(subset) else NULL,
       j = merge_value_col_nms,
       value = join_result
     )
   } else {
-    lexis[, merge_value_col_nms] <- join_result
+    lexis[subset, merge_value_col_nms] <- join_result
   }
   rm(list = "join_result")
   # @codedoc_comment_block popEpi::lexis_merge
@@ -472,11 +500,15 @@ lexis_merge <- function(
   # @codedoc_comment_block popEpi::lexis_merge
   for (merge_value_col_nm in merge_value_col_nms) {
     is_missing <- is.na(lexis[[merge_value_col_nm]])
+    if (need_to_subset) {
+      is_missing[!subset] <- FALSE
+    }
     if (any(is_missing)) {
       print(data.table::setDT(lexis[is_missing, ]))
+      print(data.table::setDT(join_dt[is_missing, ]))
       stop("Merging `merge_dt` into split (subset of) `lexis` produced NA ",
            "values in column `lexis$", merge_value_col_nm, "`. ",
-           "See the table printed above.")
+           "See the `lexis` and its harmonised form printed above.")
     }
   }
   # @codedoc_comment_block popEpi::lexis_merge
