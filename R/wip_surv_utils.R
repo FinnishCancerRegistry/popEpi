@@ -273,12 +273,28 @@ lexis_crop <- function(lexis, breaks) {
     j = "lex.dur",
     value = lexis[["lex.dur"]] - delay_entry - earlify_exit
   )
-  data.table::set(
-    x = lexis,
-    i = which(lexis[["lex.dur"]] < 0),
-    j = c(Epi::timeScales(lexis), "lex.dur"),
-    value = NA
-  )
+  na_idx <- which(lexis[["lex.dur"]] < 0)
+  if (length(na_idx) > 0) {
+    # I don't know why but only lex.Cst and lex.Xst are modified erroneously
+    # also in the original if lexis is a shallow copy via
+    # data.table::setDT(as.list(lexis)) if they are modified here. so I have
+    # chosen not to modify them at all.
+    data.table::set(
+      x = lexis,
+      i = na_idx,
+      j = c(Epi::timeScales(lexis), "lex.dur"),
+      value = NA
+    )
+  }
+  earlify_exit_idx <- which(earlify_exit > 0)
+  if (length(earlify_exit_idx) > 0) {
+    data.table::set(
+      x = lexis,
+      i = earlify_exit_idx,
+      j = "lex.Xst",
+      value = lexis[["lex.Cst"]][earlify_exit_idx]
+    )
+  }
   return(invisible(lexis[]))
 }
 
