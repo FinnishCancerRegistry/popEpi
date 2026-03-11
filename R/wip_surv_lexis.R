@@ -34,7 +34,7 @@ surv_lexis_aggre_exprs__ <- function(
 }
 
 # SURV_LEXIS_ADD_COL_EXPRS__ <- list(
-#   S_exp_e1_pch_mean = quote(surv_lexis_S_exp_e1_pch_mean(
+#   S_exp_e1_ch_mean = quote(surv_lexis_S_exp_e1_ch_mean(
 #     lexis = surv_lexis_eval_env[["lexis_dt"]],
 #     breaks = surv_lexis_eval_env[["breaks"]],
 #     aggre_ts_col_nms = surv_lexis_eval_env[["aggre_ts_col_nms"]],
@@ -59,7 +59,7 @@ surv_lexis <- function(
   aggre_ts_col_nms = NULL,
   aggre_exprs = NULL,
   subset = NULL,
-  estimators = "S_pch",
+  estimators = "S_ch",
   conf_methods = "log",
   conf_lvls = 0.95,
   weights = NULL

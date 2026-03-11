@@ -9,7 +9,7 @@ testthat::test_that("surv_lexis & survival produce comparable results", {
     aggre_by = "my_stratum",
     aggre_ts_col_nms = "ts_fut",
     subset = NULL,
-    estimators = "S_pch"
+    estimators = "S_ch"
   )
   exp <- test_survfit_dt__(
     data = sire,
@@ -17,13 +17,13 @@ testthat::test_that("surv_lexis & survival produce comparable results", {
     stratum_col_nms = "my_stratum"
   )
   testthat::expect_true(all.equal(
-    obs[["S_pch_est"]],
+    obs[["S_ch_est"]],
     exp[["est"]],
     scale = 1L,
     tolerance = 0.001
   ))
   testthat::expect_true(all.equal(
-    obs[["S_pch_se"]],
+    obs[["S_ch_se"]],
     exp[["se"]],
     scale = 1L,
     tolerance = 0.001
@@ -41,7 +41,7 @@ testthat::test_that("surv_lexis & relsurv produce comparable results", {
     aggre_by = "my_stratum",
     aggre_ts_col_nms = "ts_fut",
     subset = NULL,
-    estimators = c("RS_e2_pch", "NS_pp_pch")
+    estimators = c("RS_e2_ch", "NS_pp_ch")
   )
   exp <- test_relsurv_dt__(
     data = sire,
@@ -50,10 +50,10 @@ testthat::test_that("surv_lexis & relsurv produce comparable results", {
     method = "ederer2"
   )
   testthat::expect_true(
-    max(abs(obs[["RS_e2_pch_est"]] - exp[["est"]])) < 0.026
+    max(abs(obs[["RS_e2_ch_est"]] - exp[["est"]])) < 0.026
   )
   testthat::expect_true(
-    max(abs(obs[["RS_e2_pch_se"]] - exp[["se"]])) < 0.001
+    max(abs(obs[["RS_e2_ch_se"]] - exp[["se"]])) < 0.001
   )
   exp <- test_relsurv_dt__(
     data = sire,
@@ -62,9 +62,9 @@ testthat::test_that("surv_lexis & relsurv produce comparable results", {
     method = "pohar-perme"
   )
   testthat::expect_true(
-    max(abs(obs[["NS_pp_pch_est"]] - exp[["est"]])) < 0.028
+    max(abs(obs[["NS_pp_ch_est"]] - exp[["est"]])) < 0.028
   )
   testthat::expect_true(
-    max(abs(obs[["NS_pp_pch_se"]] - exp[["se"]])) < 0.001
+    max(abs(obs[["NS_pp_ch_se"]] - exp[["se"]])) < 0.001
   )
 })

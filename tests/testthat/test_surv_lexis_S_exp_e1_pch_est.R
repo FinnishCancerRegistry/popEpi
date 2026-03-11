@@ -1,6 +1,6 @@
-testthat::context("surv_lexis_S_exp_e1_pch_est")
+testthat::context("surv_lexis_S_exp_e1_ch_est")
 
-# testthat::test_that("surv_lexis_S_exp_e1_pch_est & survival in harmony", {
+# testthat::test_that("surv_lexis_S_exp_e1_ch_est & survival in harmony", {
 #   sire <- test_make_sire__()
 #   bl <- list(ts_fut = seq(0, 5, 1 / 12))
 #   pm <- test_make_pm__()
@@ -14,7 +14,7 @@ testthat::context("surv_lexis_S_exp_e1_pch_est")
 #     aggre_ts_col_nms = "ts_fut",
 #     merge_dt = pm,
 #     merge_dt_by = setdiff(names(pm), "h_exp"),
-#     estimators = "S_exp_e1_pch"
+#     estimators = "S_exp_e1_ch"
 #   )
 #   exp <- test_survexp_dt__(
 #     data = sire,
@@ -23,7 +23,7 @@ testthat::context("surv_lexis_S_exp_e1_pch_est")
 #   )
 #   # these are rather different.
 #   testthat::expect_true(all.equal(
-#     obs[["S_exp_e1_pch_est"]],
+#     obs[["S_exp_e1_ch_est"]],
 #     exp[["est"]],
 #     scale = 1L,
 #     tolerance = 0.033

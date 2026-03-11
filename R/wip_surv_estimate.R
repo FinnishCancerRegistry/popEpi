@@ -223,34 +223,34 @@ surv_pohar_perme_weight__ <- function(
 }
 
 surv_estimate_expr_list__ <- list(
-  h_pch = list(
+  h_ch = list(
     est = quote(n_events / t_at_risk),
-    se = quote(sqrt(h_pch_est / t_at_risk))
+    se = quote(sqrt(h_ch_est / t_at_risk))
   ),
-  H_pch = list(
-    est = quote(cumsum(delta_t * h_pch_est)),
-    se = quote(sqrt(cumsum(delta_t ^ 2 * h_pch_se ^ 2)))
+  H_ch = list(
+    est = quote(cumsum(delta_t * h_ch_est)),
+    se = quote(sqrt(cumsum(delta_t ^ 2 * h_ch_se ^ 2)))
   ),
-  h_exp_e2_pch = list(
+  h_exp_e2_ch = list(
     est = quote(n_events_exp_e2 / t_at_risk),
     se = quote(0.0 + 0.0)
   ),
-  h_exc_e2_pch = list(
+  h_exc_e2_ch = list(
     est = quote((n_events - n_events_exp_e2) / t_at_risk),
-    se = quote(h_pch_se)
+    se = quote(h_ch_se)
   ),
-  S_pch = list(
+  S_ch = list(
     est = quote(
-      exp(-cumsum(delta_t * h_pch_est))
+      exp(-cumsum(delta_t * h_ch_est))
     ),
     se = quote(
-      S_pch_est *
+      S_ch_est *
         sqrt(cumsum((delta_t ^ 2) * n_events / (t_at_risk ^ 2)))
     )
   ),
-  F_pch = list(
-    est = quote(1 - S_pch_est),
-    se = quote(S_pch_se)
+  F_ch = list(
+    est = quote(1 - S_ch_est),
+    se = quote(S_ch_se)
   ),
   S_lt = list(
     est = quote(cumprod(1 -  n_events / n_at_risk_eff)),
@@ -279,9 +279,9 @@ surv_estimate_expr_list__ <- list(
       0.0 + 0.0
     )
   ),
-  S_exp_e2_pch = list(
+  S_exp_e2_ch = list(
     est = quote(
-      exp(-cumsum(delta_t * h_exp_e2_pch_est))
+      exp(-cumsum(delta_t * h_exp_e2_ch_est))
     ),
     se = quote(
       0.0 + 0.0
@@ -295,12 +295,12 @@ surv_estimate_expr_list__ <- list(
       S_lt_se / S_exp_e2_lt_est
     )
   ),
-  RS_e2_pch = list(
+  RS_e2_ch = list(
     est = quote(
-      exp(-cumsum(delta_t * h_exc_e2_pch_est))
+      exp(-cumsum(delta_t * h_exc_e2_ch_est))
     ),
     se = quote(
-      S_pch_se / S_exp_e2_pch_est
+      S_ch_se / S_exp_e2_ch_est
     )
   ),
   NS_pp_lt = list(
@@ -312,12 +312,12 @@ surv_estimate_expr_list__ <- list(
         sqrt(cumsum(n_events_pp_double_weighted / (n_at_risk_eff ^ 2)))
     )
   ),
-  NS_pp_pch = list(
+  NS_pp_ch = list(
     est = quote(
       exp(-cumsum(delta_t * (n_events_pp - n_events_exp_pp) / t_at_risk_pp))
     ),
     se = quote(
-      NS_pp_pch_est *
+      NS_pp_ch_est *
         sqrt(cumsum((delta_t ^ 2) * n_events_pp_double_weighted / (t_at_risk_pp ^ 2)))
     )
   ),
@@ -329,12 +329,12 @@ surv_estimate_expr_list__ <- list(
       0.0 + NA_real_
     )
   ),
-  "h_pch_[x, y]" = list(
+  "h_ch_[x, y]" = list(
     est = quote(
       `n_events_[x, y]` / t_at_risk
     ),
     se = quote(
-      sqrt(`h_pch_[x, y]_est` / t_at_risk)
+      sqrt(`h_ch_[x, y]_est` / t_at_risk)
     )
   ),
   "H_lt_[x, y]" = list(
@@ -345,12 +345,12 @@ surv_estimate_expr_list__ <- list(
       0.0 + NA_real_
     )
   ),
-  "H_pch_[x, y]" = list(
+  "H_ch_[x, y]" = list(
     est = quote(
-      cumsum(delta_t * `h_pch_[x, y]_est`)
+      cumsum(delta_t * `h_ch_[x, y]_est`)
     ),
     se = quote(
-      sqrt(cumsum(delta_t ^ 2 * `h_pch_[x, y]_se` ^ 2))
+      sqrt(cumsum(delta_t ^ 2 * `h_ch_[x, y]_se` ^ 2))
     )
   ),
   "S_lt_[x, y]" = list(
@@ -360,12 +360,12 @@ surv_estimate_expr_list__ <- list(
         sqrt(cumsum(`n_events_[x, y]` / (n_at_risk_eff * (n_at_risk_eff - `n_events_[x, y]`))))
     )
   ),
-  "S_pch_[x, y]" = list(
+  "S_ch_[x, y]" = list(
     est = quote(
-      exp(-`H_pch_[x, y]_est`)
+      exp(-`H_ch_[x, y]_est`)
     ),
     se = quote(
-      S_pch_est *
+      S_ch_est *
         sqrt(cumsum((delta_t ^ 2) * `n_events_[x, y]` / (t_at_risk ^ 2)))
     )
   ),
@@ -380,12 +380,12 @@ surv_estimate_expr_list__ <- list(
       0.0 + NA_real_
     )
   ),
-  "F_pch_[x, y]" = list(
+  "F_ch_[x, y]" = list(
     est = quote({
-      q <- (1 - S_pch_cond_est) *
+      q <- (1 - S_ch_cond_est) *
         `n_events_[x, y]` / n_events
       q[n_events == 0] <- 0.0
-      cumsum(S_pch_est_lag1 * q)
+      cumsum(S_ch_est_lag1 * q)
     }),
     se = quote(
       0.0 + NA_real_
@@ -402,12 +402,12 @@ surv_estimate_expr_list__ <- list(
       0.0 + NA_real_
     )
   ),
-  RF_e2_pch = list(
+  RF_e2_ch = list(
     est = quote({
-      q <- (1 - S_pch_cond_est) *
+      q <- (1 - S_ch_cond_est) *
         (n_events - n_events_exp_e2) / n_events
       q[n_events == 0] <- 0.0
-      cumsum(S_pch_est_lag1 * q)
+      cumsum(S_ch_est_lag1 * q)
     }),
     se = quote(
       0.0 + NA_real_
@@ -421,9 +421,9 @@ surv_estimate_expr_list__ <- list(
       0.0 + 0.0
     )
   ),
-  F_exp_e2_pch = list(
+  F_exp_e2_ch = list(
     est = quote(
-      1 - S_exp_e2_pch_est
+      1 - S_exp_e2_ch_est
     ),
     se = quote(
       0.0 + 0.0
@@ -437,59 +437,59 @@ surv_estimate_expr_list__ <- list(
       F_lt_se
     )
   ),
-  F_exc_e2_pch = list(
+  F_exc_e2_ch = list(
     est = quote(
-      F_pch - F_exp_e2_pch
+      F_ch - F_exp_e2_ch
     ),
     se = quote(
-      F_pch_se
+      F_ch_se
     )
   )
   # ,
-  # S_exp_e1_pch = list(
+  # S_exp_e1_ch = list(
   #   est = quote(
-  #     S_exp_e1_pch_mean
+  #     S_exp_e1_ch_mean
   #   ),
   #   se = quote(
   #     0.0 + 0.0
   #   )
   # ),
-  # F_exp_e1_pch = list(
+  # F_exp_e1_ch = list(
   #   est = quote(
-  #     1 - S_exp_e1_pch_est
+  #     1 - S_exp_e1_ch_est
   #   ),
   #   se = quote(
   #     0.0 + 0.0
   #   )
   # ),
-  # F_extra_e1_pch = list(
+  # F_extra_e1_ch = list(
   #   est = quote(
-  #     F_pch_est - F_exp_e1_pch_est
+  #     F_ch_est - F_exp_e1_ch_est
   #   ),
   #   se = quote(
-  #     F_pch_se
+  #     F_ch_se
   #   )
   # ),
-  # S_def_e1_pch = list(
+  # S_def_e1_ch = list(
   #   est = quote(
-  #     S_exp_e1_pch_est - S_pch_est
+  #     S_exp_e1_ch_est - S_ch_est
   #   ),
   #   se = quote(
-  #     S_pch_se
+  #     S_ch_se
   #   )
   # )
 )
 
 make_surv_estimate_expr_list__ <- function(surv_estimate_expr_list) {
   utility_expr_list <- list(
-    h_pch_est = quote(
+    h_ch_est = quote(
       n_events / t_at_risk
     ),
     S_lt_cond_est = quote(
       1 - (n_events / n_at_risk_eff)
     ),
-    S_pch_cond_est = quote(
-      exp(-delta_t * h_pch_est)
+    S_ch_cond_est = quote(
+      exp(-delta_t * h_ch_est)
     ),
     S_lt_est_lag1 = quote(
       c(
@@ -497,17 +497,17 @@ make_surv_estimate_expr_list__ <- function(surv_estimate_expr_list) {
         cumprod(S_lt_cond_est)[-length(n_events)]
       )
     ),
-    S_pch_est_lag1 = quote(
+    S_ch_est_lag1 = quote(
       c(
         1.00,
-        exp(-cumsum(delta_t * h_pch_est))[-length(delta_t)]
+        exp(-cumsum(delta_t * h_ch_est))[-length(delta_t)]
       )
     )
   )
   for (utility_expr_nm in names(utility_expr_list)) {
-    # e.g. expr = quote(exp(-cumsum(delta_t * h_pch_est)))
+    # e.g. expr = quote(exp(-cumsum(delta_t * h_ch_est)))
     expr <- utility_expr_list[[utility_expr_nm]]
-    # e.g. expr_expr = quote(substitute(exp(-cumsum(delta_t * h_pch_est)), utility_expr_list))
+    # e.g. expr_expr = quote(substitute(exp(-cumsum(delta_t * h_ch_est)), utility_expr_list))
     expr_expr <- substitute(
       substitute(expr, utility_expr_list),
       list(expr = expr)
@@ -589,29 +589,29 @@ surv_estimate_expression_table__ <- function() {
 #' )
 #' data.table::set(
 #'   x = dt,
-#'   j = "my_h_pch",
+#'   j = "my_h_ch",
 #'   value = dt[["n_events"]] / dt[["t_at_risk"]]
 #' )
 #' sdt <- popEpi::surv_estimate(
 #'   dt = dt,
 #'   ts_fut_col_nm = "ts_fut",
 #'   value_col_nms = c("n_events", "t_at_risk"),
-#'   estimators = c("h_pch", "S_pch"),
+#'   estimators = c("h_ch", "S_ch"),
 #'   conf_methods = "log-log"
 #' )
 #' stopifnot(
-#'   c("h_pch_est", "S_pch_est") %in% names(sdt),
-#'   dt[["my_h_pch"]] == sdt[["h_pch_est"]]
+#'   c("h_ch_est", "S_ch_est") %in% names(sdt),
+#'   dt[["my_h_ch"]] == sdt[["h_ch_est"]]
 #' )
 #' sdt <- popEpi::surv_estimate(
 #'   dt = dt,
 #'   ts_fut_col_nm = "ts_fut",
 #'   value_col_nms = c("n_events", "t_at_risk"),
 #'   estimators = list(
-#'     "h_pch",
+#'     "h_ch",
 #'     my_surv = list(
 #'       est = quote(
-#'         exp(-cumsum((ts_fut_stop - ts_fut_start) * h_pch_est))
+#'         exp(-cumsum((ts_fut_stop - ts_fut_start) * h_ch_est))
 #'       ),
 #'       se = quote(rep(0.0, length(ts_fut_start)))
 #'     )
@@ -619,15 +619,15 @@ surv_estimate_expression_table__ <- function() {
 #'   conf_methods = c("log", "none")
 #' )
 #' stopifnot(
-#'   c("h_pch_est", "my_surv_est") %in% names(sdt)
+#'   c("h_ch_est", "my_surv_est") %in% names(sdt)
 #' )
 #' sdt <- popEpi::surv_estimate(
 #'   dt = dt,
 #'   ts_fut_col_nm = "ts_fut",
 #'   value_col_nms = c("n_events", "t_at_risk"),
 #'   estimators = list(
-#'     "h_pch",
-#'     "S_pch"
+#'     "h_ch",
+#'     "S_ch"
 #'   ),
 #'   conf_methods = list(
 #'     "log",
@@ -638,7 +638,7 @@ surv_estimate_expression_table__ <- function() {
 #'   )
 #' )
 #' stopifnot(
-#'   c("h_pch_est", "S_pch_est") %in% names(sdt)
+#'   c("h_ch_est", "S_ch_est") %in% names(sdt)
 #' )
 #'
 surv_estimate <- function(
@@ -646,7 +646,7 @@ surv_estimate <- function(
   ts_fut_col_nm,
   stratum_col_nms = NULL,
   value_col_nms = NULL,
-  estimators = "S_pch",
+  estimators = "S_ch",
   weight_dt = NULL,
   conf_methods = "log",
   conf_lvls = 0.95
@@ -753,7 +753,7 @@ surv_estimate <- function(
   #
   # - Handles `estimators`. Elements of `estimators` that are character
   #   strings cause the corresponding pre-defined formulae to be used.
-  #   E.g. `"S_pch"`.
+  #   E.g. `"S_ch"`.
   #   Pre-defined estimators with their formulae:
   #
   # ${paste0(knitr::kable(popEpi:::surv_estimate_expression_table__()), collapse = "\n")}
@@ -814,8 +814,8 @@ surv_estimate <- function(
     # - Armed with a list of expressions based on `estimates`, called
     #   `expressions`, for each `i`:
     #   + Evaluate each element of `expressions[[i]]` and add the result into
-    #     `dt`. E.g. `S_pch_est` and
-    #     `S_pch_se`.
+    #     `dt`. E.g. `S_ch_est` and
+    #     `S_ch_se`.
     # @codedoc_comment_block popEpi::surv_estimate
     for (element_name in names(estimator_dt[["expression_set"]][[i]])) {
       # @codedoc_comment_block popEpi::surv_estimate::estimators
@@ -960,7 +960,7 @@ surv_estimate <- function(
   return(out[])
 }
 
-surv_lexis_S_exp_e1_pch_mean <- function(
+surv_lexis_S_exp_e1_ch_mean <- function(
   lexis,
   breaks,
   aggre_ts_col_nms,
@@ -1038,13 +1038,13 @@ surv_lexis_S_exp_e1_pch_mean <- function(
     lexis = lexis,
     breaks = breaks,
     aggre_exprs = list(
-      S_exp_e1_pch_mean = quote({
+      S_exp_e1_ch_mean = quote({
         if (!is.null(eval_env[["weight_col_nm"]])) {
           w <- .SD[[eval_env[["weight_col_nm"]]]]
           w <- w / sum(w[!duplicated(lex.id)])
-          sum(S_exp_e1_pch_individual * w)
+          sum(S_exp_e1_ch_individual * w)
         } else {
-          mean(S_exp_e1_pch_individual)
+          mean(S_exp_e1_ch_individual)
         }
       })
     ),
@@ -1099,7 +1099,7 @@ surv_lexis_S_exp_e1_pch_mean <- function(
       }
     ),
     split_lexis_column_exprs = list(
-      S_exp_e1_pch_individual = quote({
+      S_exp_e1_ch_individual = quote({
         e1dt <- data.table::setDT(list(
           lex.id = lex.id,
           ts_fut = ts_fut,
@@ -1132,7 +1132,7 @@ surv_lexis_S_exp_e1_pch_mean <- function(
       })
     )
   )
-  return(e1dt[["S_exp_e1_pch_mean"]])
+  return(e1dt[["S_exp_e1_ch_mean"]])
   # e1dt <- popEpi::splitMulti(
   #   data = e1dt,
   #   breaks = breaks[ts_fut_col_nm]

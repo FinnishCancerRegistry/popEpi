@@ -13,7 +13,7 @@ surv_estimate(
   ts_fut_col_nm,
   stratum_col_nms = NULL,
   value_col_nms = NULL,
-  estimators = "S_pch",
+  estimators = "S_ch",
   weight_dt = NULL,
   conf_methods = "log",
   conf_lvls = 0.95
@@ -31,7 +31,7 @@ surv_lexis(
   aggre_ts_col_nms = NULL,
   aggre_exprs = NULL,
   subset = NULL,
-  estimators = "S_pch",
+  estimators = "S_ch",
   conf_methods = "log",
   conf_lvls = 0.95,
   weights = NULL
@@ -78,7 +78,7 @@ E.g. \code{value_col_nms = c("n_events", "t_at_risk")}.
 }}
 
 \item{estimators}{\verb{[character, list]}
-(default \code{"S_pch"})
+(default \code{"S_ch"})
 
 One or more names of estimators whose estimates will be computed into
 \code{dt}.
@@ -213,40 +213,40 @@ Compute survival time function estimates. Performs the following steps:
 \itemize{
 \item Handles \code{estimators}. Elements of \code{estimators} that are character
 strings cause the corresponding pre-defined formulae to be used.
-E.g. \code{"S_pch"}.
+E.g. \code{"S_ch"}.
 Pre-defined estimators with their formulae:
 }\tabular{lll}{
    Name of estimator \tab est \tab se \cr
-   \verb{h_pch} \tab \verb{n_events/t_at_risk} \tab \verb{sqrt(n_events/t_at_risk/t_at_risk)} \cr
-   \verb{H_pch} \tab \verb{cumsum(delta_t * (n_events/t_at_risk))} \tab \verb{sqrt(cumsum(delta_t^2 * sqrt(n_events/t_at_risk/t_at_risk)^2))} \cr
-   \verb{h_exp_e2_pch} \tab \verb{n_events_exp_e2/t_at_risk} \tab \verb{0 + 0} \cr
-   \verb{h_exc_e2_pch} \tab \verb{(n_events - n_events_exp_e2)/t_at_risk} \tab \verb{sqrt(n_events/t_at_risk/t_at_risk)} \cr
-   \verb{S_pch} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
-   \verb{F_pch} \tab \verb{1 - exp(-cumsum(delta_t * (n_events/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
+   \verb{h_ch} \tab \verb{n_events/t_at_risk} \tab \verb{sqrt(n_events/t_at_risk/t_at_risk)} \cr
+   \verb{H_ch} \tab \verb{cumsum(delta_t * (n_events/t_at_risk))} \tab \verb{sqrt(cumsum(delta_t^2 * sqrt(n_events/t_at_risk/t_at_risk)^2))} \cr
+   \verb{h_exp_e2_ch} \tab \verb{n_events_exp_e2/t_at_risk} \tab \verb{0 + 0} \cr
+   \verb{h_exc_e2_ch} \tab \verb{(n_events - n_events_exp_e2)/t_at_risk} \tab \verb{sqrt(n_events/t_at_risk/t_at_risk)} \cr
+   \verb{S_ch} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
+   \verb{F_ch} \tab \verb{1 - exp(-cumsum(delta_t * (n_events/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
    \verb{S_lt} \tab \verb{cumprod(1 - n_events/n_at_risk_eff)} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
    \verb{H_lt} \tab \verb{-log(cumprod(1 - n_events/n_at_risk_eff))} \tab \verb{0 + NA_real_} \cr
    \verb{h_lt} \tab \verb{diff(c(0, -log(cumprod(1 - n_events/n_at_risk_eff))))/delta_t} \tab \verb{0 + NA_real_} \cr
    \verb{F_lt} \tab \verb{1 - cumprod(1 - n_events/n_at_risk_eff)} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
    \verb{S_exp_e2_lt} \tab \verb{cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \tab \verb{0 + 0} \cr
-   \verb{S_exp_e2_pch} \tab \verb{exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \tab \verb{0 + 0} \cr
+   \verb{S_exp_e2_ch} \tab \verb{exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \tab \verb{0 + 0} \cr
    \verb{RS_e2_lt} \tab \verb{cumprod(1 - (n_events - n_events_exp_e2)/n_at_risk_eff)} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))/cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \cr
-   \verb{RS_e2_pch} \tab \verb{exp(-cumsum(delta_t * ((n_events - n_events_exp_e2)/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))/exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \cr
+   \verb{RS_e2_ch} \tab \verb{exp(-cumsum(delta_t * ((n_events - n_events_exp_e2)/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))/exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \cr
    \verb{NS_pp_lt} \tab \verb{cumprod(1 - (n_events_pp - n_events_exp_pp)/n_at_risk_eff_pp)} \tab \verb{cumprod(1 - (n_events_pp - n_events_exp_pp)/n_at_risk_eff_pp) * sqrt(cumsum(n_events_pp_double_weighted/(n_at_risk_eff^2)))} \cr
-   \verb{NS_pp_pch} \tab \verb{exp(-cumsum(delta_t * (n_events_pp - n_events_exp_pp)/t_at_risk_pp))} \tab \verb{exp(-cumsum(delta_t * (n_events_pp - n_events_exp_pp)/t_at_risk_pp)) * sqrt(cumsum((delta_t^2) * n_events_pp_double_weighted/(t_at_risk_pp^2)))} \cr
+   \verb{NS_pp_ch} \tab \verb{exp(-cumsum(delta_t * (n_events_pp - n_events_exp_pp)/t_at_risk_pp))} \tab \verb{exp(-cumsum(delta_t * (n_events_pp - n_events_exp_pp)/t_at_risk_pp)) * sqrt(cumsum((delta_t^2) * n_events_pp_double_weighted/(t_at_risk_pp^2)))} \cr
    \verb{h_lt_[x, y]} \tab \verb{-log(1 - `n_events_[x, y]`/n_at_risk_eff)} \tab \verb{0 + NA_real_} \cr
-   \verb{h_pch_[x, y]} \tab \verb{`n_events_[x, y]`/t_at_risk} \tab \verb{sqrt(`n_events_[x, y]`/t_at_risk/t_at_risk)} \cr
+   \verb{h_ch_[x, y]} \tab \verb{`n_events_[x, y]`/t_at_risk} \tab \verb{sqrt(`n_events_[x, y]`/t_at_risk/t_at_risk)} \cr
    \verb{H_lt_[x, y]} \tab \verb{-log(cumprod(1 - `n_events_[x, y]`/n_at_risk_eff))} \tab \verb{0 + NA_real_} \cr
-   \verb{H_pch_[x, y]} \tab \verb{cumsum(delta_t * (`n_events_[x, y]`/t_at_risk))} \tab \verb{sqrt(cumsum(delta_t^2 * sqrt(`n_events_[x, y]`/t_at_risk/t_at_risk)^2))} \cr
+   \verb{H_ch_[x, y]} \tab \verb{cumsum(delta_t * (`n_events_[x, y]`/t_at_risk))} \tab \verb{sqrt(cumsum(delta_t^2 * sqrt(`n_events_[x, y]`/t_at_risk/t_at_risk)^2))} \cr
    \verb{S_lt_[x, y]} \tab \verb{cumprod(1 - `n_events_[x, y]`/n_at_risk_eff)} \tab \verb{cumprod(1 - `n_events_[x, y]`/n_at_risk_eff) * sqrt(cumsum(`n_events_[x, y]`/(n_at_risk_eff * (n_at_risk_eff - `n_events_[x, y]`))))} \cr
-   \verb{S_pch_[x, y]} \tab \verb{exp(-cumsum(delta_t * (`n_events_[x, y]`/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * `n_events_[x, y]`/(t_at_risk^2)))} \cr
+   \verb{S_ch_[x, y]} \tab \verb{exp(-cumsum(delta_t * (`n_events_[x, y]`/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * `n_events_[x, y]`/(t_at_risk^2)))} \cr
    \verb{F_lt_[x, y]} \tab \verb{{;     q <- (1 - (1 - (n_events/n_at_risk_eff))) * `n_events_[x, y]`/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, cumprod(1 - (n_events/n_at_risk_eff))[-length(n_events)]) * q); }} \tab \verb{0 + NA_real_} \cr
-   \verb{F_pch_[x, y]} \tab \verb{{;     q <- (1 - exp(-delta_t * (n_events/t_at_risk))) * `n_events_[x, y]`/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, exp(-cumsum(delta_t * (n_events/t_at_risk)))[-length(delta_t)]) * q); }} \tab \verb{0 + NA_real_} \cr
+   \verb{F_ch_[x, y]} \tab \verb{{;     q <- (1 - exp(-delta_t * (n_events/t_at_risk))) * `n_events_[x, y]`/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, exp(-cumsum(delta_t * (n_events/t_at_risk)))[-length(delta_t)]) * q); }} \tab \verb{0 + NA_real_} \cr
    \verb{RF_e2_lt} \tab \verb{{;     q <- (1 - (1 - (n_events/n_at_risk_eff))) * (n_events - n_events_exp_e2)/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, cumprod(1 - (n_events/n_at_risk_eff))[-length(n_events)]) * q); }} \tab \verb{0 + NA_real_} \cr
-   \verb{RF_e2_pch} \tab \verb{{;     q <- (1 - exp(-delta_t * (n_events/t_at_risk))) * (n_events - n_events_exp_e2)/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, exp(-cumsum(delta_t * (n_events/t_at_risk)))[-length(delta_t)]) * q); }} \tab \verb{0 + NA_real_} \cr
+   \verb{RF_e2_ch} \tab \verb{{;     q <- (1 - exp(-delta_t * (n_events/t_at_risk))) * (n_events - n_events_exp_e2)/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, exp(-cumsum(delta_t * (n_events/t_at_risk)))[-length(delta_t)]) * q); }} \tab \verb{0 + NA_real_} \cr
    \verb{F_exp_e2_lt} \tab \verb{1 - cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \tab \verb{0 + 0} \cr
-   \verb{F_exp_e2_pch} \tab \verb{1 - exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \tab \verb{0 + 0} \cr
+   \verb{F_exp_e2_ch} \tab \verb{1 - exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \tab \verb{0 + 0} \cr
    \verb{F_exc_e2_lt} \tab \verb{F_lt - F_exp_e2_lt} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
-   \verb{F_exc_e2_pch} \tab \verb{F_pch - F_exp_e2_pch} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
+   \verb{F_exc_e2_ch} \tab \verb{F_ch - F_exp_e2_ch} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
 }
 
 \itemize{
@@ -260,8 +260,8 @@ columns of the follow-up time scale, e.g. \code{ts_fut_stop - ts_fut_start}.
 \code{expressions}, for each \code{i}:
 \itemize{
 \item Evaluate each element of \code{expressions[[i]]} and add the result into
-\code{dt}. E.g. \code{S_pch_est} and
-\code{S_pch_se}.
+\code{dt}. E.g. \code{S_ch_est} and
+\code{S_ch_se}.
 }
 \item Call
 \verb{[directadjusting::directly_adjusted_estimates]}.
@@ -363,29 +363,29 @@ dt <- data.table::data.table(
 )
 data.table::set(
   x = dt,
-  j = "my_h_pch",
+  j = "my_h_ch",
   value = dt[["n_events"]] / dt[["t_at_risk"]]
 )
 sdt <- popEpi::surv_estimate(
   dt = dt,
   ts_fut_col_nm = "ts_fut",
   value_col_nms = c("n_events", "t_at_risk"),
-  estimators = c("h_pch", "S_pch"),
+  estimators = c("h_ch", "S_ch"),
   conf_methods = "log-log"
 )
 stopifnot(
-  c("h_pch_est", "S_pch_est") \%in\% names(sdt),
-  dt[["my_h_pch"]] == sdt[["h_pch_est"]]
+  c("h_ch_est", "S_ch_est") \%in\% names(sdt),
+  dt[["my_h_ch"]] == sdt[["h_ch_est"]]
 )
 sdt <- popEpi::surv_estimate(
   dt = dt,
   ts_fut_col_nm = "ts_fut",
   value_col_nms = c("n_events", "t_at_risk"),
   estimators = list(
-    "h_pch",
+    "h_ch",
     my_surv = list(
       est = quote(
-        exp(-cumsum((ts_fut_stop - ts_fut_start) * h_pch_est))
+        exp(-cumsum((ts_fut_stop - ts_fut_start) * h_ch_est))
       ),
       se = quote(rep(0.0, length(ts_fut_start)))
     )
@@ -393,15 +393,15 @@ sdt <- popEpi::surv_estimate(
   conf_methods = c("log", "none")
 )
 stopifnot(
-  c("h_pch_est", "my_surv_est") \%in\% names(sdt)
+  c("h_ch_est", "my_surv_est") \%in\% names(sdt)
 )
 sdt <- popEpi::surv_estimate(
   dt = dt,
   ts_fut_col_nm = "ts_fut",
   value_col_nms = c("n_events", "t_at_risk"),
   estimators = list(
-    "h_pch",
-    "S_pch"
+    "h_ch",
+    "S_ch"
   ),
   conf_methods = list(
     "log",
@@ -412,7 +412,7 @@ sdt <- popEpi::surv_estimate(
   )
 )
 stopifnot(
-  c("h_pch_est", "S_pch_est") \%in\% names(sdt)
+  c("h_ch_est", "S_ch_est") \%in\% names(sdt)
 )
 
 }
