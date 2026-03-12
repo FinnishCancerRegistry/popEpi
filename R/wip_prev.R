@@ -60,9 +60,8 @@ prev_lexis <- function(
   #' what you need to have.
   #'
   #' - `NULL`: No projection is performed.
-  #' - `data.table`: Must contain stratum columns also found in `lexis`
-  #'   and
-  #'   exactly one value column named `S`. This is table is  passed
+  #' - `data.table`: Must contain stratum columns also found in `lexis` and
+  #'   exactly one value column named `S`. This table is passed
   #'   to `[lexis_merge]` and should conform to its requirements. E.g.
   #'   `data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))`.
   if (!is.null(merge_dt)) {
