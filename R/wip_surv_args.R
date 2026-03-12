@@ -476,3 +476,22 @@ assert_is_arg_split_lexis_column_exprs <- function(split_lexis_column_exprs) {
     }
   }
 }
+
+assert_is_arg_select <- function(select, lexis) {
+  stopifnot(
+    inherits(select, c("NULL", "character")),
+    select %in% names(lexis)
+  )
+}
+handle_arg_select <- function(select, lexis) {
+  assert_is_arg_select(select, lexis)
+  if (is.null(select)) {
+    select <- names(lexis)
+  } else {
+    select <- union(
+      c("lex.id", Epi::timeScales(lexis), "lex.dur", "lex.Cst", "lex.Xst"),
+      select
+    )
+  }
+  return(select)
+}

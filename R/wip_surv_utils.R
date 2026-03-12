@@ -42,15 +42,9 @@ lexis_to_lexis_dt__ <- function(
   stopifnot(
     inherits(lexis, "Lexis"),
 
-    inherits(select, c("NULL", "character")),
-
     inherits(subset, c("NULL", "logical"))
   )
-  if (is.null(select)) {
-    select <- names(lexis)
-  } else {
-    stopifnot(select %in% names(lexis))
-  }
+  select <- handle_arg_select(select, lexis)
   out <- data.table::setDT(as.list(lexis)[select])
   if (is.logical(subset)) {
     subset[is.na(subset)] <- FALSE
