@@ -232,7 +232,7 @@ surv_estimate_expression__ <- function(type) {
   return(out)
 }
 
-surv_estimate_expression_table_clean__ <- function(x) {
+doc_verb__ <- function(x) {
   if (is.language(x)) {
     x <- deparse1(x, collapse = "; ")
   }
@@ -242,10 +242,10 @@ surv_estimate_expression_table_clean__ <- function(x) {
 surv_estimate_expression_table__ <- function() {
   dt <- get_internal_dataset("surv_estimate_expr_table__")
   out <- data.table::data.table(
-    Name = surv_estimate_expression_table_clean__(dt[["name"]]),
+    Name = doc_verb__(dt[["name"]]),
     Explanation = dt[["info"]],
-    Estimator = surv_estimate_expression_table_clean__(dt[["est"]]),
-    "Standard Error" = surv_estimate_expression_table_clean__(dt[["se"]])
+    Estimator = doc_verb__(dt[["est"]]),
+    "Standard Error" = doc_verb__(dt[["se"]])
   )
   return(out[])
 }

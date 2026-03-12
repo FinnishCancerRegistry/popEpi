@@ -1,107 +1,20 @@
-SURV_AGGRE_EXPRS__ <- list(
-  n_in_follow_up_at_interval_start = quote(
-    sum(in_follow_up_at_interval_start)
-  ),
-  n_entered_late_during_interval = quote(
-    sum(entered_late_during_interval)
-  ),
-  n_left_early_during_interval = quote(
-    sum(left_early_during_interval)
-  ),
-  n_at_risk_eff = quote(
-    sum((
-      in_follow_up_at_interval_start +
-        0.5 * (entered_late_during_interval & !left_early_during_interval) +
-        0.25 * (entered_late_during_interval & left_early_during_interval) -
-        0.5 * (!entered_late_during_interval & left_early_during_interval)
-    ) * iw)
-  ),
-  n_events = quote(
-    sum((lex.Xst != lex.Cst) * iw)
-  ),
-  t_at_risk = quote(
-    sum(lex.dur * iw)
-  ),
-  n_events_exp_e2 = quote(
-    sum(lex.dur * h_exp * iw)
-  ),
-  n_events_pp = quote(
-    sum((lex.Xst != lex.Cst) * pp * iw)
-  ),
-  n_events_pp_double_weighted = quote(
-    sum((lex.Xst != lex.Cst) * pp * pp * iw)
-  ),
-  n_events_exp_pp = quote(
-    sum(lex.dur * h_exp * pp * iw)
-  ),
-  n_at_risk_eff_pp =  quote(
-    sum((
-      in_follow_up_at_interval_start +
-        0.5 * (entered_late_during_interval & !left_early_during_interval) +
-        0.25 * (entered_late_during_interval & left_early_during_interval) -
-        0.5 * (!entered_late_during_interval & left_early_during_interval)
-    ) * pp * iw)
-  ),
-  t_at_risk_pp = quote(
-    sum(lex.dur * pp * iw)
-  ),
-  "n_events_[x, y]" = quote(
-    sum((lex.Cst %in% x & lex.Xst %in% y) * iw)
-  )
-)
-surv_aggre_exprs_table__ <- function() {
+lexis_aggre_exprs_table_doc__ <- function() {
+  dt <- get_internal_dataset("lexis_aggre_exprs_table__")
   dt <- data.table::data.table(
-    "Name" = surv_estimate_expression_table_clean__(
-      names(SURV_AGGRE_EXPRS__)
-    ),
-    "Expression" = vapply(
-      SURV_AGGRE_EXPRS__,
-      surv_estimate_expression_table_clean__,
-      character(1L)
-    )
+    "Name" = doc_verb__(dt[["name"]]),
+    "Expression" = doc_verb__(dt[["expr"]])
   )
   return(dt)
 }
 
-SPLIT_LEXIS_COLUMN_EXPRS__ <- list(
-  in_follow_up_at_interval_start = quote({
-    ts_fut_floor <- box_dt[[ts_fut_start_col_nm]][box_id]
-    absolute_distance_from_floor <- abs(ts_fut - ts_fut_floor)
-    absolute_distance_from_floor < 1e-10
-  }),
-  entered_late_during_interval = quote({
-    ts_fut_floor <- box_dt[[ts_fut_start_col_nm]][box_id]
-    distance_from_floor <- (ts_fut - ts_fut_floor)
-    distance_from_floor > 1e-10
-  }),
-  left_early_during_interval = quote({
-    out <- duplicated(lex.id, fromLast = TRUE) # nolint
-    out[out] <- lex.Cst[out] == lex.Xst[out]
-    ts_fut_stop <- ts_fut[out] + lex.dur[out]
-    ts_fut_ceiling <- box_dt[[ts_fut_stop_col_nm]][box_id[out]]
-    distance_from_ceiling <- ts_fut_ceiling - ts_fut_stop
-    out[out] <- distance_from_ceiling > 1e-10
-    out
-  }),
-  pp = quote(
-    {
-      surv_pohar_perme_weight__(
-        lexis = work_dt,
-        ts_fut_breaks = eval_env[["breaks"]][[ts_fut_col_nm]],
-        ts_fut_col_nm = ts_fut_col_nm,
-        hazard_col_nm = "h_exp"
-      )
-    }
-  )
-)
 split_lexis_column_exprs_table__ <- function() {
   dt <- data.table::data.table(
-    "Name" = surv_estimate_expression_table_clean__(
-      names(SPLIT_LEXIS_COLUMN_EXPRS__)
+    "Name" = doc_verb__(
+      names(get_internal_dataset("lexis_split_column_expr_list__"))
     ),
     "Expression" = vapply(
-      SPLIT_LEXIS_COLUMN_EXPRS__,
-      surv_estimate_expression_table_clean__,
+      get_internal_dataset("lexis_split_column_expr_list__"),
+      doc_verb__,
       character(1L)
     )
   )
@@ -173,9 +86,9 @@ lexis_aggregate_one_stratum__ <- function(
     #
     # ${paste0(knitr::kable(split_lexis_column_exprs_table__()), collapse = "\n")}
     # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
-    add_expr_list <- SPLIT_LEXIS_COLUMN_EXPRS__[intersect(
+    add_expr_list <- get_internal_dataset("lexis_split_column_expr_list__")[intersect(
       expr_obj_nms,
-      names(SPLIT_LEXIS_COLUMN_EXPRS__)
+      names(get_internal_dataset("lexis_split_column_expr_list__"))
     )]
     add_expr_list <- c(add_expr_list, split_lexis_column_exprs)
     lapply(names(add_expr_list), function(col_nm) {

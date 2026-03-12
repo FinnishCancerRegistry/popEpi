@@ -1,0 +1,20 @@
+name,info,expr
+n_in_follow_up_at_interval_start,Number of Lexis subjects in follow-up at the start of a follow-up time scale interval.,sum(in_follow_up_at_interval_start)
+n_entered_late_during_interval,Number of Lexis subjects who entered a follow-up time scale interval late.,sum(entered_late_during_interval)
+n_left_early_during_interval,Number of Lexis subjects who left a follow-up time scale interval early.,sum(left_early_during_interval)
+n_at_risk_eff,"Effective number of subjects at risk. Whereas in the Kaplan-Meier (product-limit) estimator of survival we simply estimate the conditional survival probabilities as `n_events / n_at_risk` at each event time point, in the actuarial approach we estimate the conditional survival probabilities of follow-up time intervals such as `]0, 0.1]`. Using the number at risk at the start of the interval is problematic because subjects may enter late, leave early, or both. We adjust our number at risk in each of these special cases to arrive out our effective number. The `iw` in the expression stands for the individual weight and is included to allow for individual weighting.","sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & 
+    !left_early_during_interval) + 0.25 * (entered_late_during_interval & 
+    left_early_during_interval) - 0.5 * (!entered_late_during_interval & 
+    left_early_during_interval)) * iw)"
+n_events,"Number of events, i.e. the total number of all kinds of transitions. The `iw` in the expression stands for the individual weight and is included to allow for individual weighting.",sum((lex.Xst != lex.Cst) * iw)
+t_at_risk,Total time at risk. The `iw` in the expression stands for the individual weight and is included to allow for individual weighting.,sum(lex.dur * iw)
+n_events_exp_e2,"Number of expected events according to the Ederer II method. Well, there is only one formula for the expected number of events, `h_exp * t_at_risk`, but this name is reserved for the Ederer II method and is used with observed data (as opposed to extrapolated data according to the Ederer I method). The `iw` in the expression stands for the individual weight and is included to allow for individual weighting.",sum(lex.dur * h_exp * iw)
+n_events_pp,The same `n_events` but with Pohar Perme weighting.,sum((lex.Xst != lex.Cst) * pp * iw)
+n_events_pp_double_weighted,The same as `n_events` but with Pohar Perme weighting where the weights are squared.,sum((lex.Xst != lex.Cst) * pp * pp * iw)
+n_events_exp_pp,The number of expected events with Pohar Perme weighting. The `iw` in the expression stands for the individual weight and is included to allow for individual weighting.,sum(lex.dur * h_exp * pp * iw)
+n_at_risk_eff_pp,The same as `n_at_risk_eff` but with Pohar Perme weighting.,"sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & 
+    !left_early_during_interval) + 0.25 * (entered_late_during_interval & 
+    left_early_during_interval) - 0.5 * (!entered_late_during_interval & 
+    left_early_during_interval)) * pp * iw)"
+t_at_risk_pp,The same as `t_at_risk` but with Pohar Perme weighting.,sum(lex.dur * pp * iw)
+"n_events_[x, y]",The number of transitions from `x` to `y`. The `iw` in the expression stands for the individual weight and is included to allow for individual weighting.,sum((lex.Cst %in% x & lex.Xst %in% y) * iw)
