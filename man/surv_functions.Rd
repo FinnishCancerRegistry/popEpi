@@ -26,7 +26,7 @@ surv_lexis(
   breaks,
   merge_dt_by = NULL,
   merge_dt = NULL,
-  merge_dt_harmonisers = NULL,
+  merge_optional_args = NULL,
   aggre_by = NULL,
   aggre_ts_col_nms = NULL,
   aggre_exprs = NULL,
@@ -166,7 +166,7 @@ A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
 
 \item{merge_dt}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
-\item{merge_dt_harmonisers}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+\item{merge_optional_args}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{aggre_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 

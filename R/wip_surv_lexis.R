@@ -54,7 +54,7 @@ surv_lexis <- function(
   breaks,
   merge_dt_by = NULL,
   merge_dt = NULL,
-  merge_dt_harmonisers = NULL,
+  merge_optional_args = NULL,
   aggre_by = NULL,
   aggre_ts_col_nms = NULL,
   aggre_exprs = NULL,
@@ -145,7 +145,7 @@ surv_lexis <- function(
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   #' @param merge_dt_by
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
-  #' @param merge_dt_harmonisers
+  #' @param merge_optional_args
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   #' @param aggre_by
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
@@ -160,7 +160,7 @@ surv_lexis <- function(
     breaks = breaks,
     merge_dt_by = merge_dt_by,
     merge_dt = merge_dt,
-    merge_dt_harmonisers = merge_dt_harmonisers,
+    merge_optional_args = merge_optional_args,
     aggre_by = aggre_by,
     aggre_ts_col_nms = aggre_ts_col_nms,
     aggre_exprs = aggre_exprs,

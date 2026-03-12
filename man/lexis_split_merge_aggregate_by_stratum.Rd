@@ -12,9 +12,7 @@ lexis_split_merge_aggregate_by_stratum(
   aggre_ts_col_nms = NULL,
   merge_dt = NULL,
   merge_dt_by = NULL,
-  merge_dt_harmonisers = NULL,
-  merge_optional_steps = NULL,
-  merge_lex_dur_multiplier = NULL,
+  merge_optional_args = NULL,
   subset = NULL,
   weight_col_nm = NULL,
   split_lexis_column_exprs = NULL,
@@ -71,9 +69,10 @@ Names of \code{Lexis} time scales in \code{lexis} by which to aggregate results.
 
 \item{merge_dt_by}{Passed to \verb{[lexis_merge]}.}
 
-\item{merge_dt_harmonisers}{Passed to \verb{[lexis_merge]}.}
+\item{merge_optional_args}{\verb{[NULL, list]} (default \code{NULL})
 
-\item{merge_optional_steps}{Passed to \verb{[lexis_merge]} argument \code{optional_steps}.}
+Each element passed to \verb{[lexis_merge]}.
+E.g. \code{list(merge_dt_harmonisers = my_harmonisers)}.}
 
 \item{subset}{\verb{[NULL, logical, integer, data.table]} (default \code{NULL})
 
@@ -208,7 +207,7 @@ the current stratum.
 if that \code{optional_steps} element exists.
 \item Run
 \code{lexis_merge} with \code{merge_dt}, \code{merge_dt_by}, and
-\code{merge_dt_harmonisers}, if \code{merge_dt} has been supplied.
+\code{merged_optional_args}, if \code{merge_dt} has been supplied.
 \item Run
 \code{optional_steps[["stratum_post_merge"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.

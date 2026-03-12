@@ -12,14 +12,11 @@ prev_lexis <- function(
   lexis,
   observation_time_points,
   stratum_breaks,
-  survival_dt_by = NULL,
-  survival_dt = NULL,
-  survival_dt_harmonisers = NULL,
-  subset = NULL,
   aggre_by = NULL,
-  conf_methods = "identity",
-  conf_lvls = 0.95,
-  weight_dt = NULL
+  subset = NULL,
+  merge_dt_by = NULL,
+  merge_dt = NULL,
+  merge_optional_args = NULL
 ) {
   #' @template param_lexis
   assert_is_arg_lexis(lexis, dt = FALSE)
@@ -67,13 +64,13 @@ prev_lexis <- function(
       dataset = lexis
     )
   }
-  if (!is.null(survival_dt)) {
+  if (!is.null(merge_dt)) {
     stopifnot(
-      "S" %in% names(survival_dt),
-      !is.na(survival_dt[["S"]]),
-      survival_dt[["S"]] > 0,
-      !duplicated(survival_dt, by = survival_dt_by),
-      survival_dt_by %in% names(lexis)
+      "S" %in% names(merge_dt),
+      !is.na(merge_dt[["S"]]),
+      merge_dt[["S"]] > 0,
+      !duplicated(merge_dt, by = merge_dt_by),
+      merge_dt_by %in% names(lexis)
     )
   }
   # @codedoc_comment_block popEpi::prev_lexis
@@ -142,10 +139,10 @@ prev_lexis <- function(
       )
       agdt_i[]
     })
-    if (!is.null(survival_dt)) {
+    if (!is.null(merge_dt)) {
       local({
         # @codedoc_comment_block popEpi::prev_lexis
-        #   + If `!is.null(survival_dt)`,
+        #   + If `!is.null(merge_dt)`,
         #     collect subjects in `lexis` who were censored before the
         #     current observation time point. This is defined as those in
         #     `lexis` who have `lexis[["lex.Cst"]] == lexis[["lex.Xst"]]` and
@@ -166,12 +163,12 @@ prev_lexis <- function(
             select = intersect(names(lexis), c(
               "lex.id", Epi::timeScales(lexis), "lex.dur", "lex.Cst", "lex.Xst",
               names(aggre_by),
-              survival_dt_by
+              merge_dt_by
             ))
           )
           lexis_dt_extrapolate
         })
-        #' @param survival_dt `[NULL, data.table]` (default `NULL`)
+        #' @param merge_dt `[NULL, data.table]` (default `NULL`)
         #'
         #' Table containing survival estimates applicable to `lexis`.
         #' These survival
@@ -184,30 +181,32 @@ prev_lexis <- function(
         #' - `NULL`: No projection is performed.
         #' - `data.table`: Must contain stratum columns also found in `lexis`
         #'   and
-        #'   exactly one value column named `S`. This is table is ultimately
-        #'   passed
+        #'   exactly one value column named `S`. This is table is  passed
         #'   to `[lexis_merge]` and should conform to its requirements. E.g.
         #'   `data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))`.
-        #' @param survival_dt_by `[NULL, character]` (default `NULL`)
+        #' @param merge_dt_by Passed to `[lexis_merge]`.
+        #' @param merge_optional_args `[NULL, list]` (default `NULL`)
         #'
-        #' Passed to `[lexis_merge]` as argument `merge_dt_by`.
-        #' @param survival_dt_harmonisers `[NULL, list]` (default `NULL`)
-        #'
-        #' Passed to `[lexis_merge]` as argument `merge_dt_harmonisers`.
+        #' Each element passed to `[lexis_merge]`.
+        #' E.g. `list(merge_dt_harmonisers = my_harmonisers)`.
         # @codedoc_comment_block popEpi::prev_lexis
-        #   + Merge (for the first time) `survival_dt` with the collected
+        #   + Merge (for the first time) `merge_dt` with the collected
         #     subjects at the original exit time of each
         #     subject. This yields the survival probability for each subject
         #     at exit, in math `S(t_e)`
         #     (starting from zero --- delayed entry is not supported).
         # @codedoc_comment_block popEpi::prev_lexis
-        popEpi::lexis_merge(
-          lexis = lexis_dt_extrapolate,
-          merge_dt = survival_dt,
-          merge_dt_by = survival_dt_by,
-          merge_dt_harmonisers = survival_dt_harmonisers,
-          lex_dur_multiplier = 1L
-        )
+        merge_arg_list <- as.list(merge_optional_args)
+        merge_arg_list[
+          c("lexis", "merge_dt", "merge_dt_by", "lex_dur_multiplier")
+        ] <-
+          list(
+            lexis_dt_extrapolate,
+            merge_dt,
+            merge_dt_by,
+            1L
+          )
+        do.call(popEpi::lexis_merge, merge_arg_list, quote = TRUE)
         data.table::setnames(
           x = lexis_dt_extrapolate,
           old = "S",
@@ -224,19 +223,23 @@ prev_lexis <- function(
           ts_col_nm = obs_ts_col_nm
         )
         # @codedoc_comment_block popEpi::prev_lexis
-        #   + Merge `survival_dt` for the second time, this time at the
+        #   + Merge `merge_dt` for the second time, this time at the
         #     current prevalence observation time point such as at
         #     `ts_cal = 2009.999`.
         #     In math this is `S(t_p)` where `t_p` is the prevalence
         #     observation time point.
         # @codedoc_comment_block popEpi::prev_lexis
-        popEpi::lexis_merge(
-          lexis = lexis_dt_extrapolate,
-          merge_dt = survival_dt,
-          merge_dt_by = survival_dt_by,
-          merge_dt_harmonisers = survival_dt_harmonisers,
-          lex_dur_multiplier = 0L
-        )
+        merge_arg_list <- as.list(merge_optional_args)
+        merge_arg_list[
+          c("lexis", "merge_dt", "merge_dt_by", "lex_dur_multiplier")
+        ] <-
+          list(
+            lexis_dt_extrapolate,
+            merge_dt,
+            merge_dt_by,
+            0L
+          )
+        do.call(popEpi::lexis_merge, merge_arg_list, quote = TRUE)
         data.table::setnames(
           x = lexis_dt_extrapolate,
           old = "S",

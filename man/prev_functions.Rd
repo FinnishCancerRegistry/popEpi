@@ -9,14 +9,11 @@ prev_lexis(
   lexis,
   observation_time_points,
   stratum_breaks,
-  survival_dt_by = NULL,
-  survival_dt = NULL,
-  survival_dt_harmonisers = NULL,
-  subset = NULL,
   aggre_by = NULL,
-  conf_methods = "identity",
-  conf_lvls = 0.95,
-  weight_dt = NULL
+  subset = NULL,
+  merge_dt_by = NULL,
+  merge_dt = NULL,
+  merge_optional_args = NULL
 )
 }
 \arguments{
@@ -42,11 +39,9 @@ E.g. \code{list(ts_age = seq(0, 100, 10), ts_fut = c(0, 1, 5, Inf))}
 to stratify output by age interval and time since entry interval at a
 given observation point.}
 
-\item{survival_dt_by}{\verb{[NULL, character]} (default \code{NULL})
+\item{merge_dt_by}{Passed to \verb{[lexis_merge]}.}
 
-Passed to \verb{[lexis_merge]} as argument \code{merge_dt_by}.}
-
-\item{survival_dt}{\verb{[NULL, data.table]} (default \code{NULL})
+\item{merge_dt}{\verb{[NULL, data.table]} (default \code{NULL})
 
 Table containing survival estimates applicable to \code{lexis}.
 These survival
@@ -59,15 +54,15 @@ what you need to have.
 \item \code{NULL}: No projection is performed.
 \item \code{data.table}: Must contain stratum columns also found in \code{lexis}
 and
-exactly one value column named \code{S}. This is table is ultimately
-passed
+exactly one value column named \code{S}. This is table is  passed
 to \verb{[lexis_merge]} and should conform to its requirements. E.g.
 \code{data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))}.
 }}
 
-\item{survival_dt_harmonisers}{\verb{[NULL, list]} (default \code{NULL})
+\item{merge_optional_args}{\verb{[NULL, list]} (default \code{NULL})
 
-Passed to \verb{[lexis_merge]} as argument \code{merge_dt_harmonisers}.}
+Each element passed to \verb{[lexis_merge]}.
+E.g. \code{list(merge_dt_harmonisers = my_harmonisers)}.}
 }
 \value{
 \strong{popEpi::prev_lexis}
@@ -104,7 +99,7 @@ This produces a table stratified by
 \code{aggre_by} and all time scales used in \code{stratum_breaks}.
 The only value column at this point is \code{n_prev}, the number
 of subjects in follow-up at the given observation time point.
-\item If \code{!is.null(survival_dt)},
+\item If \code{!is.null(merge_dt)},
 collect subjects in \code{lexis} who were censored before the
 current observation time point. This is defined as those in
 \code{lexis} who have \code{lexis[["lex.Cst"]] == lexis[["lex.Xst"]]} and
@@ -113,12 +108,12 @@ current observation time point. This is defined as those in
 \code{obs_tp} is the current observation time point. These collected
 subjects are the ones we need to extrapolate to the current
 observation time point.
-\item Merge (for the first time) \code{survival_dt} with the collected
+\item Merge (for the first time) \code{merge_dt} with the collected
 subjects at the original exit time of each
 subject. This yields the survival probability for each subject
 at exit, in math \code{S(t_e)}
 (starting from zero --- delayed entry is not supported).
-\item Merge \code{survival_dt} for the second time, this time at the
+\item Merge \code{merge_dt} for the second time, this time at the
 current prevalence observation time point such as at
 \code{ts_cal = 2009.999}.
 In math this is \code{S(t_p)} where \code{t_p} is the prevalence
