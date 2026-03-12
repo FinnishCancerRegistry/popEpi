@@ -39,6 +39,8 @@ E.g. \code{list(ts_age = seq(0, 100, 10), ts_fut = c(0, 1, 5, Inf))}
 to stratify output by age interval and time since entry interval at a
 given observation point.}
 
+\item{aggre_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
 \item{merge_dt_by}{Passed to \verb{[lexis_merge]}.}
 
 \item{merge_dt}{\verb{[NULL, data.table]} (default \code{NULL})

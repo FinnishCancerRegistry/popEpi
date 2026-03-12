@@ -46,24 +46,25 @@ prev_lexis <- function(
   # @codedoc_insert_comment_block popEpi:::handle_arg_subset
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
   subset <- handle_arg_subset(dataset_nm = "lexis")
-  assert_is_arg_weight_dt(
-    weight_dt = weight_dt,
-    dt = lexis,
-    allowed = c("NULL", "data.table")
-  )
-  do_direct_adjusting <- data.table::is.data.table(weight_dt)
+  #' @param aggre_by Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis)
-  if (do_direct_adjusting) {
-    aggre_by <- handle_arg_by(
-      by = list(
-        aggre_by,
-        data.table::setDT(
-          as.list(weight_dt)[setdiff(names(weight_dt), "weight")]
-        )[]
-      ),
-      dataset = lexis
-    )
-  }
+
+  #' @param merge_dt `[NULL, data.table]` (default `NULL`)
+  #'
+  #' Table containing survival estimates applicable to `lexis`.
+  #' These survival
+  #' estimates are used in the "projection" of prevalence in those
+  #' observations
+  #' which have been lost to follow-up. See **Details** for how this
+  #' works and
+  #' what you need to have.
+  #'
+  #' - `NULL`: No projection is performed.
+  #' - `data.table`: Must contain stratum columns also found in `lexis`
+  #'   and
+  #'   exactly one value column named `S`. This is table is  passed
+  #'   to `[lexis_merge]` and should conform to its requirements. E.g.
+  #'   `data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))`.
   if (!is.null(merge_dt)) {
     stopifnot(
       "S" %in% names(merge_dt),
@@ -168,22 +169,6 @@ prev_lexis <- function(
           )
           lexis_dt_extrapolate
         })
-        #' @param merge_dt `[NULL, data.table]` (default `NULL`)
-        #'
-        #' Table containing survival estimates applicable to `lexis`.
-        #' These survival
-        #' estimates are used in the "projection" of prevalence in those
-        #' observations
-        #' which have been lost to follow-up. See **Details** for how this
-        #' works and
-        #' what you need to have.
-        #'
-        #' - `NULL`: No projection is performed.
-        #' - `data.table`: Must contain stratum columns also found in `lexis`
-        #'   and
-        #'   exactly one value column named `S`. This is table is  passed
-        #'   to `[lexis_merge]` and should conform to its requirements. E.g.
-        #'   `data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))`.
         #' @param merge_dt_by Passed to `[lexis_merge]`.
         #' @param merge_optional_args `[NULL, list]` (default `NULL`)
         #'
