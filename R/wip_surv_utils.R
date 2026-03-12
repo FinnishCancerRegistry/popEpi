@@ -267,21 +267,34 @@ lexis_crop <- function(lexis, breaks) {
     j = "lex.dur",
     value = lexis[["lex.dur"]] - delay_entry - earlify_exit
   )
+  copied_statuses <- FALSE
   na_idx <- which(lexis[["lex.dur"]] < 0)
   if (length(na_idx) > 0) {
-    # I don't know why but only lex.Cst and lex.Xst are modified erroneously
-    # also in the original if lexis is a shallow copy via
-    # data.table::setDT(as.list(lexis)) if they are modified here. so I have
-    # chosen not to modify them at all.
+    # this takes copies of the two columns which we modify below. although
+    # now lexis will be modified, if lexis itself is a shallow copy then the
+    # original is not modified.
+    copied_statuses <- TRUE
+    data.table::set(
+      x = lexis,
+      j = c("lex.Cst", "lex.Xst"),
+      value = list(lexis[["lex.Cst"]], lexis[["lex.Xst"]])
+    )
     data.table::set(
       x = lexis,
       i = na_idx,
-      j = c(Epi::timeScales(lexis), "lex.dur"),
+      j = c(Epi::timeScales(lexis), "lex.dur", "lex.Cst", "lex.Xst"),
       value = NA
     )
   }
   earlify_exit_idx <- which(earlify_exit > 0)
   if (length(earlify_exit_idx) > 0) {
+    if (!copied_statuses) {
+      data.table::set(
+        x = lexis,
+        j = c("lex.Cst", "lex.Xst"),
+        value = list(lexis[["lex.Cst"]], lexis[["lex.Xst"]])
+      )
+    }
     data.table::set(
       x = lexis,
       i = earlify_exit_idx,
