@@ -29,7 +29,8 @@ Imports:
     Epi (>= 2.0),
     splines,
     survival,
-    directadjusting (>= 0.6.0)
+    directadjusting (>= 0.6.0),
+    methods
 Suggests:
     knitr,
     mstate,

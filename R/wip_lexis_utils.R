@@ -311,7 +311,10 @@ lexis_immortalise <- function(lexis, breaks = NULL, crop = TRUE) {
     if (identical(class(lexis[["lex.dur"]]), "numeric")) {
       immortalise_to <- Inf
     } else {
-      immortalise_to <- as(.Machine$integer.max, class(lexis[["lex.dur"]])[1])
+      immortalise_to <- methods::as(
+        .Machine$integer.max,
+        class(lexis[["lex.dur"]])[1]
+      )
     }
   } else {
     if (crop) {
