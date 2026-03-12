@@ -41,7 +41,7 @@ testthat::test_that("rate CIs and SEs are correct", {
                   std.pop=c(2773,2556,1113,184))
 
   a1 <- ci[,sum(obs/pyrs*std.pop)/sum(std.pop)] # oikea estimaatti
-  a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)] # myös oikea tulos
+  a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)]
 
   ci0 <- rate(data = ci, obs = 'obs', pyrs = 'pyrs', print = NULL, adjust = 'agegroup', weights = list(agegroup = c(2773,2556,1113,184)))
   testthat::expect_equal(ci0[,SE.rate.adj], a2, tolerance=0.0005) # test
@@ -55,7 +55,7 @@ testthat::test_that("rate CIs and SEs are correct", {
                   std.pop=c(2773,2556,1113,184))
 
   a1 <- ci[,sum(obs/pyrs*std.pop)/sum(std.pop)] # oikea estimaatti
-  a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)] # myös oikea tulos
+  a2 <- ci[,sqrt(sum(std.pop^2*((obs/pyrs)*(1-obs/pyrs))/pyrs))/sum(std.pop)]
 
   ci0 <- rate(data = ci, obs = 'obs', pyrs = 'pyrs', print = NULL, adjust = 'agegroup', weights = list(agegroup = c(2773,2556,1113,184)))
   testthat::expect_equal(c(ci0$rate.adj.lo, ci0$rate.adj.hi),c(a1 - a2*1.96, a1 + a2*1.96), tolerance = 0.0006)
@@ -253,8 +253,8 @@ testthat::test_that("rate_ratio works", {
   x <- c(w1[1, rate], w1[1, SE.rate])
   y <- c(w1[2, rate], w1[2, SE.rate])
 
-  testthat::expect_error( rate_ratio( x, y, crude = FALSE, SE.method = FALSE) ) # error, käyttäjän vastuu?
-  testthat::expect_error( rate_ratio( x, y, crude = TRUE,  SE.method = FALSE) )  # error, käyttäjän vastuu?
+  testthat::expect_error( rate_ratio( x, y, crude = FALSE, SE.method = FALSE) )
+  testthat::expect_error( rate_ratio( x, y, crude = TRUE,  SE.method = FALSE) ) 
   testthat::expect_equal( rate_ratio( x, y, crude = FALSE, SE.method = TRUE),
                 rate_ratio( x, y, crude = TRUE,  SE.method = TRUE))
 
@@ -270,10 +270,6 @@ testthat::test_that("rate_ratio works", {
 
   testthat::expect_equal(a0[1,], b0)
   testthat::expect_equal(c(a0[2,]), c(c0))
-
-  #rate_ratio( w1, w2[1], crude = FALSE, SE.method = TRUE) # väärä, pitäisi tulla data.frame
-  #rate_ratio( w1, c(0.0005,0.00002), crude = FALSE, SE.method = TRUE) # väärä, pitäisi tulla data.frame
-
 })
 
 

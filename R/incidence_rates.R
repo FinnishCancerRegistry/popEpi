@@ -310,7 +310,7 @@ rate_est <- function(data = data,
 
     data <- data[, eval(l), by=print]
     # rate.adj: S.E.
-    data[, SE.log.rate.adj := sqrt((1/lam.temp)^2 * var.temp) ] # tämä on log-rate
+    data[, SE.log.rate.adj := sqrt((1/lam.temp)^2 * var.temp) ] # log-rate
     data[, SE.rate.adj := sqrt(var.temp)]
     # rate.adj: CI
     data[, ':='(rate.adj.lo = exp( log(rate.adj) - SE.log.rate.adj*1.96 ),

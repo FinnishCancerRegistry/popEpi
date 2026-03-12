@@ -8,7 +8,7 @@ dims_list <- list(
   Alue = c('SSS'),
   Vuosi = c('*'),
   Sukupuoli = c('1', '2'),
-  Ikä = formatC(0:100, flag = "0", width = 3)
+  "Ik\U00E4" = formatC(0:100, flag = "0", width = 3)
 )
 
 px_url <- "http://pxnet2.stat.fi/PXWeb/api/v1/en/StatFin/vrm/vaerak/071_vaerak_tau_109.px"
