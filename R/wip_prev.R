@@ -42,9 +42,9 @@ prev_lexis <- function(
   stopifnot(
     stratum_breaks[[length(stratum_breaks)]][1] == 0
   )
-  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
+  # @codedoc_comment_block popEpi::prev_lexis::subset
   # @codedoc_insert_comment_block popEpi:::handle_arg_subset
-  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
+  # @codedoc_comment_block popEpi::prev_lexis::subset
   subset <- handle_arg_subset(dataset_nm = "lexis")
   #' @param aggre_by Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis)

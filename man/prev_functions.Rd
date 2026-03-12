@@ -41,6 +41,26 @@ given observation point.}
 
 \item{aggre_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
+\item{subset}{\verb{[NULL, logical, integer, data.table]} (default \code{NULL})
+
+This argument is evaluated within the context of \code{dt} and the environment
+where the function with this argument was called.
+\itemize{
+\item \code{NULL}: Implies no subsetting, i.e. retain all observations.
+\item \code{logical}: Keep only observations where this is \code{TRUE}. Must be of length
+\code{nrow(dt)}. E.g. \code{subset = my_column == 1.}
+\item \code{integer}: Keep only observations at these row numbers. E.g.
+\code{subset = 1:5}.
+\item \code{data.table}: Each column must also be a column of \code{dt}. Only those rows
+in \code{dt} are retained that match a row in \code{subset}. E.g.
+\code{subset = data.table::data.table(my_column = 1)}.
+}
+
+Due to the non-standard evaluation method used here, you can make use of
+data in the calling environment as well. E.g. with variable \code{my_value = 1}
+defined and \code{dt} containing column \code{my_column} you can do
+\code{subset = my_column == my_value} if you want.}
+
 \item{merge_dt_by}{Passed to \verb{[lexis_merge]}.}
 
 \item{merge_dt}{\verb{[NULL, data.table]} (default \code{NULL})
