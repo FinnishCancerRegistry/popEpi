@@ -151,7 +151,7 @@ lexis_aggregate_one_stratum__ <- function(
   #    * First collect variables mentioned in `aggre_exprs` using `[all.vars]`.
   # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
   expr_obj_nms <- unique(unlist(lapply(aggre_exprs, all.vars)))
-  surv_box_id__(lexis = work_dt, box_dt = box_dt)
+  lexis_box_id__(lexis = work_dt, box_dt = box_dt)
   add_expr_eval_env <- environment()
   local({
     ts_fut_col_nm <- eval_env[["aggre_ts_col_nms"]][
@@ -669,7 +669,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   lexis_crop(lexis = lexis_dt, breaks = breaks)
   subset <- subset & !is.na(lexis_dt[["lex.dur"]]) # due to crop
 
-  box_dt <- surv_box_dt__(breaks[aggre_ts_col_nms])
+  box_dt <- lexis_box_dt__(breaks[aggre_ts_col_nms])
   out_expr <- quote(lexis_dt[
     j = {
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum

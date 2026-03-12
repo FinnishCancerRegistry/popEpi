@@ -119,7 +119,7 @@ surv_split__ <- function(
 }
 
 
-surv_box_dt__ <- function(
+lexis_box_dt__ <- function(
   breaks
 ) {
   stopifnot(
@@ -169,7 +169,7 @@ surv_box_dt__ <- function(
   return(box_dt[])
 }
 
-surv_box_id__ <- function(
+lexis_box_id__ <- function(
   lexis,
   box_dt
 ) {

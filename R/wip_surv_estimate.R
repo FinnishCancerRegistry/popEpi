@@ -1143,8 +1143,8 @@ surv_lexis_S_exp_e1_ch_mean <- function(
   #   merge_dt = merge_dt,
   #   merge_dt_by = merge_dt_by
   # )
-  # box_dt <- surv_box_dt__(breaks = breaks[ts_fut_col_nm])
-  # surv_box_id__(lexis = e1dt, box_dt = box_dt)
+  # box_dt <- lexis_box_dt__(breaks = breaks[ts_fut_col_nm])
+  # lexis_box_id__(lexis = e1dt, box_dt = box_dt)
   # data.table::setDT(e1dt)
   # data.table::set(
   #   x = box_dt,
