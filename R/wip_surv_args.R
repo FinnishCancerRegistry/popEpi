@@ -182,7 +182,7 @@ assert_is_arg_merge_dt_and_merge_dt_by <- function(
   }
 }
 
-assert_is_arg_breaks <- function(breaks, dt) {
+assert_is_arg_breaks <- function(breaks, lexis) {
   # @codedoc_comment_block popEpi:::assert_is_arg_breaks
   # @param breaks `[list]` (no default)
   #
@@ -191,8 +191,14 @@ assert_is_arg_breaks <- function(breaks, dt) {
   # @codedoc_comment_block popEpi:::assert_is_arg_breaks
   stopifnot(
     inherits(breaks, "list"),
-    names(breaks) %in% attr(dt, "time.scales")
+    names(breaks) %in% Epi::timeScales(lexis)
   )
+  for (ts_col_nm in names(breaks)) {
+    eval(substitute(stopifnot(
+      storage.mode(breaks[[ts_col_nm]]) %in%
+        c("integer", storage.mode(lexis[[ts_col_nm]]))
+    ), list(ts_col_nm = ts_col_nm)))
+  }
 }
 
 assert_is_arg_aggre_exprs <- function(aggre_exprs) {
