@@ -30,7 +30,7 @@ prev_lexis <- function(
   #' supplied, e.g. `list(ts_cal = c(2009.999, 2010.999))`.
   #' The output of this function will have these observation time points as
   #' a column with the same name as the time scale.
-  assert_is_arg_breaks(observation_time_points, dt = lexis)
+  assert_is_arg_breaks(observation_time_points, lexis)
   stopifnot(length(observation_time_points) == 1)
   #' @param stratum_breaks `[list]` (no default)
   #'
@@ -41,7 +41,7 @@ prev_lexis <- function(
   #' E.g. `list(ts_age = seq(0, 100, 10), ts_fut = c(0, 1, 5, Inf))`
   #' to stratify output by age interval and time since entry interval at a
   #' given observation point.
-  assert_is_arg_breaks(stratum_breaks, dt = lexis)
+  assert_is_arg_breaks(stratum_breaks, lexis)
   stopifnot(
     stratum_breaks[[length(stratum_breaks)]][1] == 0
   )
