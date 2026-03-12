@@ -3,7 +3,7 @@ testthat::context("surv_lexis")
 testthat::test_that("surv_lexis & survival produce comparable results", {
   sire <- test_make_sire__()
   bl <- list(ts_fut = seq(0, 5, 1 / 12))
-  obs <- popEpi:::surv_lexis(
+  obs <- popEpi::surv_lexis(
     lexis = sire,
     breaks = bl,
     aggre_by = "my_stratum",
@@ -33,7 +33,7 @@ testthat::test_that("surv_lexis & survival produce comparable results", {
 testthat::test_that("surv_lexis & relsurv produce comparable results", {
   sire <- test_make_sire__()
   bl <- list(ts_fut = seq(0, 5, 1 / 12))
-  obs <- popEpi:::surv_lexis(
+  obs <- popEpi::surv_lexis(
     lexis = sire,
     breaks = bl,
     merge_dt = test_make_pm__(),

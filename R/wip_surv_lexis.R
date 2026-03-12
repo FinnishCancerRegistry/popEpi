@@ -9,19 +9,19 @@ surv_lexis_aggre_exprs__ <- function(
   estimator_dt
 ) {
   var_nm_set <- unique(unlist(lapply(seq_len(nrow(estimator_dt)), function(i) {
-    # @codedoc_comment_block popEpi:::surv_lexis_aggre_exprs__
+    # @codedoc_comment_block popEpi::surv_lexis_aggre_exprs__
     #   + Detect variables used in the estimation expressions with `[all.vars]`.
-    # @codedoc_comment_block popEpi:::surv_lexis_aggre_exprs__
+    # @codedoc_comment_block popEpi::surv_lexis_aggre_exprs__
     est_expr_set <- estimator_dt[["expression_set"]][[i]]
     var_nm_set <- unlist(lapply(est_expr_set, all.vars))
     return(var_nm_set)
   })))
-  # @codedoc_comment_block popEpi:::surv_lexis_aggre_exprs__
+  # @codedoc_comment_block popEpi::surv_lexis_aggre_exprs__
   #   + Retain only those known to `popEpi` --- see
   #    `?lexis_split_merge_aggregate_by_stratum`. This results in a character
   #    string vector that the argument `aggre_exprs` of
   #    `lexis_split_merge_aggregate_by_stratum` accepts.
-  # @codedoc_comment_block popEpi:::surv_lexis_aggre_exprs__
+  # @codedoc_comment_block popEpi::surv_lexis_aggre_exprs__
   standard_var_nm_set <- sub(
     "\\[.+, .+\\]",
     "[x, y]",
@@ -109,7 +109,7 @@ surv_lexis <- function(
   #
   # - `estimators` is analysed and the following will be appended to
   #   `aggre_exprs`by `surv_lexis`:
-  # @codedoc_insert_comment_block popEpi:::surv_lexis_aggre_exprs__
+  # @codedoc_insert_comment_block popEpi::surv_lexis_aggre_exprs__
   # - This results in `aggre_exprs` with both anything that the user defined
   #   and also what was added by `surv_lexis`. However, we drop duplicates
   #   in `aggre_exprs` based on both `duplicated(names(aggre_exprs))` and
