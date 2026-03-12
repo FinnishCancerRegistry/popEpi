@@ -215,38 +215,50 @@ Compute survival time function estimates. Performs the following steps:
 strings cause the corresponding pre-defined formulae to be used.
 E.g. \code{"S_ch"}.
 Pre-defined estimators with their formulae:
-}\tabular{lll}{
-   Name of estimator \tab est \tab se \cr
-   \verb{h_ch} \tab \verb{n_events/t_at_risk} \tab \verb{sqrt(n_events/t_at_risk/t_at_risk)} \cr
-   \verb{H_ch} \tab \verb{cumsum(delta_t * (n_events/t_at_risk))} \tab \verb{sqrt(cumsum(delta_t^2 * sqrt(n_events/t_at_risk/t_at_risk)^2))} \cr
-   \verb{h_exp_e2_ch} \tab \verb{n_events_exp_e2/t_at_risk} \tab \verb{0 + 0} \cr
-   \verb{h_exc_e2_ch} \tab \verb{(n_events - n_events_exp_e2)/t_at_risk} \tab \verb{sqrt(n_events/t_at_risk/t_at_risk)} \cr
-   \verb{S_ch} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
-   \verb{F_ch} \tab \verb{1 - exp(-cumsum(delta_t * (n_events/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
-   \verb{S_lt} \tab \verb{cumprod(1 - n_events/n_at_risk_eff)} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
-   \verb{H_lt} \tab \verb{-log(cumprod(1 - n_events/n_at_risk_eff))} \tab \verb{0 + NA_real_} \cr
-   \verb{h_lt} \tab \verb{diff(c(0, -log(cumprod(1 - n_events/n_at_risk_eff))))/delta_t} \tab \verb{0 + NA_real_} \cr
-   \verb{F_lt} \tab \verb{1 - cumprod(1 - n_events/n_at_risk_eff)} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
-   \verb{S_exp_e2_lt} \tab \verb{cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \tab \verb{0 + 0} \cr
-   \verb{S_exp_e2_ch} \tab \verb{exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \tab \verb{0 + 0} \cr
-   \verb{RS_e2_lt} \tab \verb{cumprod(1 - (n_events - n_events_exp_e2)/n_at_risk_eff)} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))/cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \cr
-   \verb{RS_e2_ch} \tab \verb{exp(-cumsum(delta_t * ((n_events - n_events_exp_e2)/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))/exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \cr
-   \verb{NS_pp_lt} \tab \verb{cumprod(1 - (n_events_pp - n_events_exp_pp)/n_at_risk_eff_pp)} \tab \verb{cumprod(1 - (n_events_pp - n_events_exp_pp)/n_at_risk_eff_pp) * sqrt(cumsum(n_events_pp_double_weighted/(n_at_risk_eff^2)))} \cr
-   \verb{NS_pp_ch} \tab \verb{exp(-cumsum(delta_t * (n_events_pp - n_events_exp_pp)/t_at_risk_pp))} \tab \verb{exp(-cumsum(delta_t * (n_events_pp - n_events_exp_pp)/t_at_risk_pp)) * sqrt(cumsum((delta_t^2) * n_events_pp_double_weighted/(t_at_risk_pp^2)))} \cr
-   \verb{h_lt_[x, y]} \tab \verb{-log(1 - `n_events_[x, y]`/n_at_risk_eff)} \tab \verb{0 + NA_real_} \cr
-   \verb{h_ch_[x, y]} \tab \verb{`n_events_[x, y]`/t_at_risk} \tab \verb{sqrt(`n_events_[x, y]`/t_at_risk/t_at_risk)} \cr
-   \verb{H_lt_[x, y]} \tab \verb{-log(cumprod(1 - `n_events_[x, y]`/n_at_risk_eff))} \tab \verb{0 + NA_real_} \cr
-   \verb{H_ch_[x, y]} \tab \verb{cumsum(delta_t * (`n_events_[x, y]`/t_at_risk))} \tab \verb{sqrt(cumsum(delta_t^2 * sqrt(`n_events_[x, y]`/t_at_risk/t_at_risk)^2))} \cr
-   \verb{S_lt_[x, y]} \tab \verb{cumprod(1 - `n_events_[x, y]`/n_at_risk_eff)} \tab \verb{cumprod(1 - `n_events_[x, y]`/n_at_risk_eff) * sqrt(cumsum(`n_events_[x, y]`/(n_at_risk_eff * (n_at_risk_eff - `n_events_[x, y]`))))} \cr
-   \verb{S_ch_[x, y]} \tab \verb{exp(-cumsum(delta_t * (`n_events_[x, y]`/t_at_risk)))} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * `n_events_[x, y]`/(t_at_risk^2)))} \cr
-   \verb{F_lt_[x, y]} \tab \verb{{;     q <- (1 - (1 - (n_events/n_at_risk_eff))) * `n_events_[x, y]`/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, cumprod(1 - (n_events/n_at_risk_eff))[-length(n_events)]) * q); }} \tab \verb{0 + NA_real_} \cr
-   \verb{F_ch_[x, y]} \tab \verb{{;     q <- (1 - exp(-delta_t * (n_events/t_at_risk))) * `n_events_[x, y]`/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, exp(-cumsum(delta_t * (n_events/t_at_risk)))[-length(delta_t)]) * q); }} \tab \verb{0 + NA_real_} \cr
-   \verb{RF_e2_lt} \tab \verb{{;     q <- (1 - (1 - (n_events/n_at_risk_eff))) * (n_events - n_events_exp_e2)/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, cumprod(1 - (n_events/n_at_risk_eff))[-length(n_events)]) * q); }} \tab \verb{0 + NA_real_} \cr
-   \verb{RF_e2_ch} \tab \verb{{;     q <- (1 - exp(-delta_t * (n_events/t_at_risk))) * (n_events - n_events_exp_e2)/n_events;     q[n_events == 0] <- 0;     cumsum(c(1, exp(-cumsum(delta_t * (n_events/t_at_risk)))[-length(delta_t)]) * q); }} \tab \verb{0 + NA_real_} \cr
-   \verb{F_exp_e2_lt} \tab \verb{1 - cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \tab \verb{0 + 0} \cr
-   \verb{F_exp_e2_ch} \tab \verb{1 - exp(-cumsum(delta_t * (n_events_exp_e2/t_at_risk)))} \tab \verb{0 + 0} \cr
-   \verb{F_exc_e2_lt} \tab \verb{F_lt - F_exp_e2_lt} \tab \verb{cumprod(1 - n_events/n_at_risk_eff) * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
-   \verb{F_exc_e2_ch} \tab \verb{F_ch - F_exp_e2_ch} \tab \verb{exp(-cumsum(delta_t * (n_events/t_at_risk))) * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
+}\tabular{llll}{
+   Name \tab Explanation \tab Estimator \tab Standard Error \cr
+   \verb{h_ch} \tab Constant hazards estimate of... hazard. The most basic hazard estimate where the number of events is Poisson distributed. \tab \verb{n_events/t_at_risk} \tab \verb{sqrt(h_ch_est/t_at_risk)} \cr
+   \verb{H_ch} \tab Cumulative hazard function estimate based on the above. \tab \verb{cumsum(delta_t * h_ch_est)} \tab \verb{sqrt(cumsum(delta_t^2 * h_ch_se^2))} \cr
+   \verb{h_exp_e2_ch} \tab Expected constant hazards estimated by the Ederer II method. \tab \verb{n_events_exp_e2/t_at_risk} \tab \verb{0 + 0} \cr
+   \verb{h_exc_e2_ch} \tab Excess hazard, observed - expected. Based on Ederer II expected hazard. \tab \verb{(n_events - n_events_exp_e2)/t_at_risk} \tab \verb{h_ch_se} \cr
+   \verb{S_ch} \tab Observed survival, constant hazards estimator. We estimate the hazard first for each survival interval and derive survival from that. \tab \verb{exp(-cumsum(delta_t * h_ch_est))} \tab \verb{S_ch_est * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
+   \verb{F_ch} \tab The is the cumulative density / distribution function. It is simply \code{1 - S}. Based on constant hazards. \tab \verb{1 - S_ch_est} \tab \verb{S_ch_se} \cr
+   \verb{S_lt} \tab Observed survival, lifetable estimator. We first estimate the (conditional) probabilities of surviving each survival interval and cumulate those. The lifetable estimator in its simplest form assumes that outcomes in an interval are binomially distributed, but we perform corrections on those who were censored etc. See the definition of \code{n_at_risk_eff}. \tab \verb{cumprod(1 - n_events/n_at_risk_eff)} \tab \verb{S_lt_est * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
+   \verb{H_lt} \tab This cumulative hazard estimator is derived from \code{S_lt}. We don't know the standard error formula for this one. \tab \verb{-log(S_lt_est)} \tab \verb{0 + NA_real_} \cr
+   \verb{h_lt} \tab This hazard estimator is derived from \code{S_lt}. We don't know the standard error formula for this one. \tab \verb{diff(c(0, H_lt_est))/delta_t} \tab \verb{0 + NA_real_} \cr
+   \verb{F_lt} \tab This is simply \code{1 - S_lt}. \tab \verb{1 - S_lt_est} \tab \verb{S_lt_se} \cr
+   \verb{S_exp_e2_lt} \tab Expected Ederer II survival, lifetable estimator. \tab \verb{cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \tab \verb{0 + 0} \cr
+   \verb{S_exp_e2_ch} \tab Expected Ederer II survival, constant hazards estimator. \tab \verb{exp(-cumsum(delta_t * h_exp_e2_ch_est))} \tab \verb{0 + 0} \cr
+   \verb{RS_e2_lt} \tab Relative survival, Ederer II, lifetable estimator. \tab \verb{cumprod(1 - (n_events - n_events_exp_e2)/n_at_risk_eff)} \tab \verb{S_lt_se/S_exp_e2_lt_est} \cr
+   \verb{RS_e2_ch} \tab Relative survival, Ederer II, constant hazards estimator. \tab \verb{exp(-cumsum(delta_t * h_exc_e2_ch_est))} \tab \verb{S_ch_se/S_exp_e2_ch_est} \cr
+   \verb{NS_pp_lt} \tab Net survival, Pohar Perme, constan hazards estimator. The Pohar Perme method is the least biased method for estimating net survival when follow-up is complete but it can have larger uncertainty. Net survival is the hypothetical survival probability in a world where the event of interest is the only event possible, e.g. when estimated using a cohort of cancer patients we get the hypothetical survival probability when cancer is the only thing that kills people. Maja Pohar Perme, Janez Stare, Jacques Esteve, On Estimation in Relative Survival, Biometrics, Volume 68, Issue 1, March 2012, Pages 113-120, https://doi.org/10.1111/j.1541-0420.2011.01640.x; Karri Seppa, Timo Hakulinen, Arun Pokhrel, Choosing the net survival method for cancer survival estimation, European Journal of Cancer, Volume 51, Issue 9, 2015, Pages 1123-1129, ISSN 0959-8049, https://doi.org/10.1016/j.ejca.2013.09.019 \tab \verb{cumprod(1 - (n_events_pp - n_events_exp_pp)/n_at_risk_eff_pp)} \tab \verb{NS_pp_lt_est * sqrt(cumsum(n_events_pp_double_weighted/(n_at_risk_eff^2)))} \cr
+   \verb{NS_pp_ch} \tab Net survival, Pohar Perme, lifetable estimator. The Pohar Perme method is the least biased method for estimating net survival when follow-up is complete but it can have larger uncertainty. Net survival is the hypothetical survival probability in a world where the event of interest is the only event possible, e.g. when estimated using a cohort of cancer patients we get the hypothetical survival probability when cancer is the only thing that kills people. Maja Pohar Perme, Janez Stare, Jacques Esteve, On Estimation in Relative Survival, Biometrics, Volume 68, Issue 1, March 2012, Pages 113-120, https://doi.org/10.1111/j.1541-0420.2011.01640.x; Karri Seppa, Timo Hakulinen, Arun Pokhrel, Choosing the net survival method for cancer survival estimation, European Journal of Cancer, Volume 51, Issue 9, 2015, Pages 1123-1129, ISSN 0959-8049, https://doi.org/10.1016/j.ejca.2013.09.019 \tab \verb{exp(-cumsum(delta_t * (n_events_pp - n_events_exp_pp)/t_at_risk_pp))} \tab \verb{NS_pp_ch_est * sqrt(cumsum((delta_t^2) * n_events_pp_double_weighted/(t_at_risk_pp^2)))} \cr
+   \verb{h_lt_[x, y]} \tab Cause-specific (transition-specific) hazard, life table estimator, for transitioning from x to y. We don't know the standard error formula for this one. \tab \verb{-log(1 - `n_events_[x, y]`/n_at_risk_eff)} \tab \verb{0 + NA_real_} \cr
+   \verb{h_ch_[x, y]} \tab Cause-specific (transition-specific) hazard, constant hazards estimator, for transitioning from x to y. \tab \verb{`n_events_[x, y]`/t_at_risk} \tab \verb{sqrt(`h_ch_[x, y]_est`/t_at_risk)} \cr
+   \verb{H_lt_[x, y]} \tab Cumulative version of \code{h_lt_[x, y]}. We don't know the standard error formula for this one. \tab \verb{-log(cumprod(1 - `n_events_[x, y]`/n_at_risk_eff))} \tab \verb{0 + NA_real_} \cr
+   \verb{H_ch_[x, y]} \tab Cumulative version of \code{h_ch_[x, y]}. \tab \verb{cumsum(delta_t * `h_ch_[x, y]_est`)} \tab \verb{sqrt(cumsum(delta_t^2 * `h_ch_[x, y]_se`^2))} \cr
+   \verb{S_lt_[x, y]} \tab Cause-specific (transition-specific) survival, life table estimator, for transitioning from x to y. Cause-specific survival treats all other events but the one of interest as random censoring. \tab \verb{cumprod(1 - `n_events_[x, y]`/n_at_risk_eff)} \tab \verb{`S_lt_[x, y]_est` * sqrt(cumsum(`n_events_[x, y]`/(n_at_risk_eff * (n_at_risk_eff - `n_events_[x, y]`))))} \cr
+   \verb{S_ch_[x, y]} \tab Cause-specific (transition-specific) survival, constant hazards estimator, for transitioning from x to y. Cause-specific survival treats all other events but the one of interest as random censoring. \tab \verb{exp(-`H_ch_[x, y]_est`)} \tab \verb{S_ch_est * sqrt(cumsum((delta_t^2) * `n_events_[x, y]`/(t_at_risk^2)))} \cr
+   \verb{F_lt_[x, y]} \tab Cause-specific (transition-specific) (absolute) risk, lifetable estimator. Here we use the estimator presented in Prentice et al. We don't know the standard error formula for this one. Prentice RL, Kalbfleisch JD, Peterson AV Jr, Flournoy N, Farewell VT, Breslow NE. The analysis of failure times in the presence of competing risks. Biometrics. 1978 Dec;34(4):541-54. PMID: 373811 \tab \verb{{
+    q <- (1 - S_lt_cond_est) * `n_events_[x, y]`/n_events
+    q[n_events == 0] <- 0
+    cumsum(S_lt_est_lag1 * q)
+}} \tab \verb{0 + NA_real_} \cr
+   \verb{F_ch_[x, y]} \tab Cause-specific (transition-specific) (absolute) risk, constant hazards estimator. Here we use the estimator presented in Prentice et al. We don't know the standard error formula for this one. Prentice RL, Kalbfleisch JD, Peterson AV Jr, Flournoy N, Farewell VT, Breslow NE. The analysis of failure times in the presence of competing risks. Biometrics. 1978 Dec;34(4):541-54. PMID: 373811 \tab \verb{{
+    q <- (1 - S_ch_cond_est) * `n_events_[x, y]`/n_events
+    q[n_events == 0] <- 0
+    cumsum(S_ch_est_lag1 * q)
+}} \tab \verb{0 + NA_real_} \cr
+   \verb{RF_e2_lt} \tab ""Relative"" absolute risk, lifetable estimator. This was proposed by Karri Seppa at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients. We don't know the standard error formula for this one. \tab \verb{{
+    q <- (1 - S_lt_cond_est) * (n_events - n_events_exp_e2)/n_events
+    q[n_events == 0] <- 0
+    cumsum(S_lt_est_lag1 * q)
+}} \tab \verb{0 + NA_real_} \cr
+   \verb{RF_e2_ch} \tab ""Relative"" absolute risk, constant hazards estimator. This was proposed by Karri Seppa at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients. We don't know the standard error formula for this one. \tab \verb{{
+    q <- (1 - S_ch_cond_est) * (n_events - n_events_exp_e2)/n_events
+    q[n_events == 0] <- 0
+    cumsum(S_ch_est_lag1 * q)
+}} \tab \verb{0 + NA_real_} \cr
 }
 
 \itemize{
