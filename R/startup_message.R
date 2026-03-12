@@ -1,43 +1,16 @@
-
-
-
-
-
-.onAttach <- function(...) {
-
-  if (interactive()) {
-    msg <- paste0("Using popEpi. See ?popEpi for info and ",
-                  "news(package = \"popEpi\") for news.")
-    packageStartupMessage(msg)
-  }
-
-  using_r_devel <- grepl(pattern = "devel", x = base::R.version$status)
-  if (using_r_devel) {
-    ## memory leak problem in data.table 1.11.2 in R-devel (3.6.0 atm)
-    requireNamespace("data.table")
-    data.table::setDTthreads(threads = 1L)
-  }
-  invisible(NULL)
-}
-
-
-
-
-
 .onLoad <- function(...) {
   opt <- getOption("popEpi.datatable")
-  if (!is.null(opt) && is.logical(opt) && !isTRUE(opt)) {
-    warning("Option 'popEpi.datatable' was set to TRUE when loading popEpi.",
-            call. = FALSE)
+  if (is.null(opt)) {
+    options("popEpi.datatable" = TRUE)
   }
-  options("popEpi.datatable" = TRUE)
+  # rm_fun_nms <- c("ltable", "expr.by.cj")
+  # packageStartupMessage(
+  #   "popEpi: ",
+  #   "The following functions have been marked for removal in popEpi 1.0.0 ",
+  #   "to be released in June 2027: ",
+  #   paste0(rm_fun_nms, collapse = ", "),
+  #   ". Some of them have replacements --- see the help page of the function ",
+  #   "in question for whether they have a replacement."
+  # )
   invisible(NULL)
 }
-
-
-
-
-
-
-
-
