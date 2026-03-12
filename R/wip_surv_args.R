@@ -44,6 +44,16 @@ assert_is_arg_lexis <- function(lexis, dt) {
     "lex.Xst" %in% names(lexis),
     "lex.dur" %in% names(lexis)
   )
+  for (attr_nm in lexis_attr_nms__()) {
+    eval(substitute(stopifnot(
+      attr_nm %in% names(attributes(lexis))
+    ), list(attr_nm = attr_nm)))
+  }
+  for (ts_col_nm in Epi::timeScales(lexis)) {
+    eval(substitute(stopifnot(
+      storage.mode(lexis[[ts_col_nm]]) == storage.mode(lexis[["lex.dur"]])
+    ), list(ts_col_nm = ts_col_nm)))
+  }
   if (nrow(lexis) == 0) {
     return(invisible(NULL))
   }
