@@ -5,10 +5,9 @@ h_exp_e2_ch,Expected constant hazards estimated by the Ederer II method.,n_event
 h_exc_e2_ch,"Excess hazard, observed - expected. Based on Ederer II expected hazard.",(n_events - n_events_exp_e2)/t_at_risk,h_ch_se
 S_ch,"Observed survival, constant hazards estimator. We estimate the hazard first for each survival interval and derive survival from that.",exp(-cumsum(delta_t * h_ch_est)),S_ch_est * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))
 F_ch,The is the cumulative density / distribution function. It is simply 1 - S. Based on constant hazards.,1 - S_ch_est,S_ch_se
-S_lt,"Observed survival, lifetable estimator. We first estimate the (conditional) probabilities of surviving each survival interval and cumulate those.",cumprod(1 - n_events/n_at_risk_eff),"S_lt_est * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - 
-    n_events))))"
-H_lt,This cumulative hazard estimator is derived from S_lt.,-log(S_lt_est),0 + NA_real_
-h_lt,This hazard estimator is derived from S_lt.,"diff(c(0, H_lt_est))/delta_t",0 + NA_real_
+S_lt,"Observed survival, lifetable estimator. We first estimate the (conditional) probabilities of surviving each survival interval and cumulate those.",cumprod(1 - n_events/n_at_risk_eff),"S_lt_est * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))"
+H_lt,This cumulative hazard estimator is derived from S_lt. We don't know the standard error formula for this one.,-log(S_lt_est),0 + NA_real_
+h_lt,This hazard estimator is derived from S_lt. We don't know the standard error formula for this one.s,"diff(c(0, H_lt_est))/delta_t",0 + NA_real_
 F_lt,This is simply 1 - S_lt.,1 - S_lt_est,S_lt_se
 S_exp_e2_lt,"Expected Ederer II survival, lifetable estimator.",cumprod(1 - n_events_exp_e2/n_at_risk_eff),0 + 0
 S_exp_e2_ch,"Expected Ederer II survival, constant hazards estimator. ",exp(-cumsum(delta_t * h_exp_e2_ch_est)),0 + 0
@@ -42,29 +41,28 @@ https://doi.org/10.1016/j.ejca.2013.09.019.",exp(-cumsum(delta_t * (n_events_pp 
 "h_ch_[x, y]","Cause-specific (transition-specific) hazard, constant hazards estimator, for transitioning from x to y.","`n_events_[x, y]`/t_at_risk","sqrt(`h_ch_[x, y]_est`/t_at_risk)"
 "H_lt_[x, y]","Cumulative version of h_lt_[x, y].","-log(cumprod(1 - `n_events_[x, y]`/n_at_risk_eff))",0 + NA_real_
 "H_ch_[x, y]","Cumulative version of h_ch_[x, y].","cumsum(delta_t * `h_ch_[x, y]_est`)","sqrt(cumsum(delta_t^2 * `h_ch_[x, y]_se`^2))"
-"S_lt_[x, y]","Cause-specific (transition-specific) survival, life table estimator, for transitioning from x to y.","cumprod(1 - `n_events_[x, y]`/n_at_risk_eff)","`S_lt_[x, y]_est` * sqrt(cumsum(`n_events_[x, y]`/(n_at_risk_eff * 
-    (n_at_risk_eff - `n_events_[x, y]`))))"
-"S_ch_[x, y]","Cause-specific (transition-specific) survival, constant hazards estimator, for transitioning from x to y.","exp(-`H_ch_[x, y]_est`)","S_ch_est * sqrt(cumsum((delta_t^2) * `n_events_[x, y]`/(t_at_risk^2)))"
-"F_lt_[x, y]","Cause-specific (transition-specific) (absolute) risk, lifetable estimator. Here we use the estimator presented in Prentice et al.
+"S_lt_[x, y]","Cause-specific (transition-specific) survival, life table estimator, for transitioning from x to y. Cause-specific survival treats all other events but the one of interest as random censoring.","cumprod(1 - `n_events_[x, y]`/n_at_risk_eff)","`S_lt_[x, y]_est` * sqrt(cumsum(`n_events_[x, y]`/(n_at_risk_eff * (n_at_risk_eff - `n_events_[x, y]`))))"
+"S_ch_[x, y]","Cause-specific (transition-specific) survival, constant hazards estimator, for transitioning from x to y. Cause-specific survival treats all other events but the one of interest as random censoring.","exp(-`H_ch_[x, y]_est`)","S_ch_est * sqrt(cumsum((delta_t^2) * `n_events_[x, y]`/(t_at_risk^2)))"
+"F_lt_[x, y]","Cause-specific (transition-specific) (absolute) risk, lifetable estimator. Here we use the estimator presented in Prentice et al. We don't know the standard error formula for this one.
 
 Prentice RL, Kalbfleisch JD, Peterson AV Jr, Flournoy N, Farewell VT, Breslow NE. The analysis of failure times in the presence of competing risks. Biometrics. 1978 Dec;34(4):541-54. PMID: 373811.","{
     q <- (1 - S_lt_cond_est) * `n_events_[x, y]`/n_events
     q[n_events == 0] <- 0
     cumsum(S_lt_est_lag1 * q)
 }",0 + NA_real_
-"F_ch_[x, y]","Cause-specific (transition-specific) (absolute) risk, constant hazards estimator. Here we use the estimator presented in Prentice et al.
+"F_ch_[x, y]","Cause-specific (transition-specific) (absolute) risk, constant hazards estimator. Here we use the estimator presented in Prentice et al. We don't know the standard error formula for this one.
 
 Prentice RL, Kalbfleisch JD, Peterson AV Jr, Flournoy N, Farewell VT, Breslow NE. The analysis of failure times in the presence of competing risks. Biometrics. 1978 Dec;34(4):541-54. PMID: 373811.","{
     q <- (1 - S_ch_cond_est) * `n_events_[x, y]`/n_events
     q[n_events == 0] <- 0
     cumsum(S_ch_est_lag1 * q)
 }",0 + NA_real_
-RF_e2_lt,"""Relative"" absolute risk, lifetable estimator. This was proposed by Karri Seppä at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients.","{
+RF_e2_lt,"""Relative"" absolute risk, lifetable estimator. This was proposed by Karri Seppä at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients. We don't know the standard error formula for this one.","{
     q <- (1 - S_lt_cond_est) * (n_events - n_events_exp_e2)/n_events
     q[n_events == 0] <- 0
     cumsum(S_lt_est_lag1 * q)
 }",0 + NA_real_
-RF_e2_ch,"""Relative"" absolute risk, constant hazards estimator. This was proposed by Karri Seppä at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients.","{
+RF_e2_ch,"""Relative"" absolute risk, constant hazards estimator. This was proposed by Karri Seppä at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients. We don't know the standard error formula for this one.","{
     q <- (1 - S_ch_cond_est) * (n_events - n_events_exp_e2)/n_events
     q[n_events == 0] <- 0
     cumsum(S_ch_est_lag1 * q)
