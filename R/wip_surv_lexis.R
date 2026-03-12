@@ -565,8 +565,16 @@ surv_lexis <- function(
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   #' @param aggre_by
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
-  #' @param aggre_ts_col_nms
-  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+  #' @param aggre_ts_col_nms `[NULL, character]` (default `NULL`)
+  #'
+  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`. However, for the
+  #' purpose of survival estimation we must know which time scale is the
+  #' follow-up time scale. The follow-up time scale is the last element of
+  #' this vector. E.g. `c("ts_cal", "ts_fut")` causes aggregation by the two
+  #' time scales and treats `ts_fut` as the follow-up time scale.
+  #'
+  #' - `NULL`: Use `names(breaks)`.
+  #' - `character`: Aggregate by these time scales.
   #' @param aggre_exprs
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   #' @param subset

@@ -170,7 +170,17 @@ A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
 
 \item{aggre_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
-\item{aggre_ts_col_nms}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+\item{aggre_ts_col_nms}{\verb{[NULL, character]} (default \code{NULL})
+
+Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}. However, for the
+purpose of survival estimation we must know which time scale is the
+follow-up time scale. The follow-up time scale is the last element of
+this vector. E.g. \code{c("ts_cal", "ts_fut")} causes aggregation by the two
+time scales and treats \code{ts_fut} as the follow-up time scale.
+\itemize{
+\item \code{NULL}: Use \code{names(breaks)}.
+\item \code{character}: Aggregate by these time scales.
+}}
 
 \item{aggre_exprs}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 

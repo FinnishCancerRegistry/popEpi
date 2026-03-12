@@ -75,7 +75,7 @@ what you need to have.
 \itemize{
 \item \code{NULL}: No projection is performed.
 \item \code{data.table}: Must contain stratum columns also found in \code{lexis} and
-exactly one value column named \code{S}. This table is  passed
+exactly one value column named \code{S}. This table is passed
 to \verb{[lexis_merge]} and should conform to its requirements. E.g.
 \code{data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))}.
 }}
