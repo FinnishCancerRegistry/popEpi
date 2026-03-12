@@ -283,10 +283,14 @@ make_surv_estimate_expr_list__ <- function(surv_estimate_expr_list) {
 surv_estimate_expr_list__ <- lapply(
   seq_len(nrow(surv_estimate_expr_table__)),
   function(i) {
-    list(
-      est = parse(text = surv_estimate_expr_table__[["est"]][[i]]),
-      se = parse(text = surv_estimate_expr_table__[["se"]][[i]])
-    )
+    nms <- c("est", "se")
+    expr_list <- lapply(nms, function(nm) {
+      string <- surv_estimate_expr_table__[[nm]][[i]]
+      lines <- strsplit(string, "(\\r\\n)|(\\n)")[[1]]
+      parse(text = lines)[[1]]
+    })
+    names(expr_list) <- nms
+    return(expr_list)
   }
 )
 names(surv_estimate_expr_list__) <- surv_estimate_expr_table__[["name"]]
@@ -310,18 +314,13 @@ surv_estimate_expression_table_clean__ <- function(x) {
   return(x)
 }
 surv_estimate_expression_table__ <- function() {
-  out <- lapply(names(surv_estimate_expr_list__), function(estimator_name) {
-    cbind(
-      "Name of estimator" = surv_estimate_expression_table_clean__(
-        estimator_name
-      ),
-      as.data.frame(lapply(
-        surv_estimate_expr_list__[[estimator_name]],
-        surv_estimate_expression_table_clean__
-      ))
-    )
-  })
-  out <- data.table::rbindlist(out)
+  dt <- surv_estimate_expr_table__
+  out <- data.table::data.table(
+    Name = surv_estimate_expression_table_clean__(dt[["name"]]),
+    Explanation = dt[["info"]],
+    Estimator = surv_estimate_expression_table_clean__(dt[["est"]]),
+    Estimator = surv_estimate_expression_table_clean__(dt[["se"]])
+  )
   return(out[])
 }
 
