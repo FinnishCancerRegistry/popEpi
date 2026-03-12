@@ -8,11 +8,13 @@ stopifnot(
 # meanpop_fi <- e$mp
 # devtools::use_data(meanpop_fi, internal = FALSE, overwrite = TRUE)
 
-surv_estimate_expr_table__ <- data.table::fread(
-  "data-raw/surv_estimate_expr_table__.csv"
-)
+e <- new.env()
+source("data-raw/surv_estimate_objs.R", encoding = "UTF-8", local = e)
+surv_estimate_expr_table__ <- e$surv_estimate_expr_table__
+surv_estimate_expr_list__ <- e$surv_estimate_expr_list__
 usethis::use_data(
   surv_estimate_expr_table__,
+  surv_estimate_expr_list__,
   internal = TRUE, overwrite = TRUE
 )
 system2("git", c("add", "--all"))
