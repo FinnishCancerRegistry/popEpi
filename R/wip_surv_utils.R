@@ -492,3 +492,56 @@ surv_interval <- function(
   )
   return(work_dt[])
 }
+
+lexis_subset <- function(
+  lexis,
+  breaks
+) {
+  assert_is_arg_lexis(lexis, dt = FALSE)
+  assert_is_arg_breaks(breaks, lexis)
+
+  tmp_dt <- data.table::setDT(list(keep = rep(TRUE, nrow(lexis))))
+  tmp_dt_idx <- seq_len(nrow(tmp_dt))
+  for (ts_col_nm in names(breaks)) {
+    data.table::set(
+      x = tmp_dt,
+      i = tmp_dt_idx, # no copy
+      j = "keep",
+      value = tmp_dt[["keep"]] &
+        (lexis[[ts_col_nm]] + lexis[["lex.dur"]]) >= min(breaks[[ts_col_nm]])
+    )
+    data.table::set(
+      x = tmp_dt,
+      i = tmp_dt_idx, # no copy
+      j = "keep",
+      value = tmp_dt[["keep"]] &
+        lexis[[ts_col_nm]] < max(breaks[[ts_col_nm]])
+    )
+  }
+  return(tmp_dt[["keep"]])
+}
+
+lexis_drop <- function(
+  lexis,
+  breaks,
+  subset = NULL,
+  select = NULL
+) {
+  assert_is_arg_lexis(lexis, dt = FALSE)
+  assert_is_arg_breaks(breaks, lexis)
+  subset <- handle_arg_subset(dataset_nm = "lexis", output_type = "logical")
+  select <- handle_arg_select(select, lexis)
+
+  subset <- subset & lexis_subset(lexis = lexis, breaks = breaks)
+  if (data.table::is.data.table(lexis)) {
+    out <- lexis[
+      i = (subset),
+      #' @importFrom data.table .SD
+      j = .SD,
+      .SDcols = select
+    ]
+  } else {
+    out <- lexis[subset, select, drop = FALSE]
+  }
+  return(out[])
+}
