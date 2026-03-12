@@ -608,15 +608,3 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
 
   trans[]
 }
-
-
-
-
-
-
-
-
-
-
-
-
