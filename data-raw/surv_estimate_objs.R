@@ -69,9 +69,9 @@ surv_estimate_expr_list__ <- lapply(
     dt <- surv_estimate_expr_table__
     nms <- c("est", "se")
     expr_list <- lapply(nms, function(nm) {
-      string <- dt[[nm]][[i]]
-      lines <- strsplit(string, "(\\r\\n)|(\\n)")[[1]]
-      parse(text = lines)[[1]]
+      expr_string <- dt[[nm]][[i]]
+      expr_string <- gsub("\\r", "", expr_string)
+      parse(text = expr_string)[[1]]
     })
     names(expr_list) <- nms
     return(expr_list)

@@ -5,6 +5,7 @@ lexis_split_column_expr_table__ <- data.table::fread(
 lexis_split_column_expr_list__ <- lapply(
   lexis_split_column_expr_table__[["expr"]],
   function(expr_string) {
+    expr_string <- gsub("\\r", "", expr_string)
     parse(text = expr_string)[[1]]
   }
 )
