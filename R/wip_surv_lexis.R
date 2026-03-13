@@ -5,6 +5,150 @@
 #' @name surv_functions
 NULL
 
+#' @eval codedoc::pkg_doc_fun(
+#'   "popEpi::lexis_collapse_breaks_1d",
+#'   "surv_functions"
+#' )
+#' @examples
+#'
+#' # popEpi::lexis_collapse_breaks_1d
+#' lexis <- Epi::Lexis(
+#'   entry = list(ts_fut = c(0.0, 3.0)),
+#'   duration = c(2.5, 10.0),
+#'   entry.status = 0L,
+#'   exit.status = c(0L, 1L)
+#' )
+#' bl <- list(ts_fut = seq(0, 5, 0.5))
+#' agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+#'   lexis = lexis,
+#'   breaks = bl,
+#'   aggre_exprs = "t_at_risk"
+#' )
+#' # what to do about empty intervals? we have intervals with no subjects in them.
+#' stopifnot(
+#'   agdt[["t_at_risk"]][-6] > 0,
+#'   agdt[["t_at_risk"]][6] == 0.0
+#' )
+#' # combine intervals until there are no empty ones left.
+#' breaks_ts_fut <- popEpi::lexis_collapse_breaks_1d(
+#'   lexis = lexis,
+#'   breaks_1d = bl
+#' )
+#' # this has resulted in the combined interval ]2.5, 3.5].
+#' stopifnot(!3.0 %in% breaks_ts_fut)
+#'
+#' # but sometimes we want to retain specific breaks in the output. for instance
+#' # if the goal is to produce survival estimates for every year.
+#' # we can make use of arg `mandatory_breaks` to achieve this.
+#' breaks_ts_fut <- popEpi::lexis_collapse_breaks_1d(
+#'   lexis = lexis,
+#'   breaks_1d = bl,
+#'   mandatory_breaks = 0:5
+#' )
+#' # this has resulted in the combined interval ]2.0, 3.0].
+#' stopifnot(!2.5 %in% breaks_ts_fut)
+#' agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+#'   lexis = lexis,
+#'   breaks = list(ts_fut = breaks_ts_fut),
+#'   aggre_exprs = "t_at_risk"
+#' )
+#' stopifnot(
+#'   agdt[["t_at_risk"]] > 0.0
+#' )
+#'
+lexis_collapse_breaks_1d <- function(
+  lexis,
+  breaks_1d,
+  test_expr = NULL,
+  mandatory_breaks = NULL
+) {
+  assert_is_arg_lexis(lexis, dt = FALSE)
+  #' @param breaks_1d `[list]` (no default)
+  #'
+  #' List of breaks with one element. These define the initial intervals which
+  #' are subject to being combined. E.g. `list(ts_fut = seq(0, 5, 1 / 12))`.
+  assert_is_arg_breaks(breaks_1d, lexis = lexis)
+  stopifnot(length(breaks_1d) == 1, breaks_1d[[1]][1] == 0)
+  #' @param test_expr `[NULL, call]` (default `NULL`)
+  #'
+  #' This expression is evaluated for every interval. If the test does not pass,
+  #' the interval must be aggregated with one of its neighbours.
+  stopifnot(
+    inherits(test_expr, c("call", "NULL"))
+  )
+  #' @param mandatory_breaks `[NULL, other]` (default `NULL`)
+  #'
+  #' These breaks cannot be aggregated over. E.g. with `mandatory_breaks = 1.0`
+  #' this function will not attempt to aggregate `]0.9, 1.0]` and `]1.0, 1.1]`
+  #' into `]0.9, 1.1]`, not even if it is the only way to produce intervals
+  #' which all pass `test_expr`.
+  stopifnot(
+    is.null(mandatory_breaks) || is.vector(mandatory_breaks)
+  )
+  ts_col_nm <- names(breaks_1d)[1]
+  if (!is.null(mandatory_breaks)) {
+    mandatory_breaks <- methods::as(
+      mandatory_breaks,
+      class(lexis[[ts_col_nm]])[1]
+    )
+  }
+  if (is.null(test_expr)) {
+    test_expr <- quote(sum(lex.dur) == 0)
+  }
+  ts_breaks <- breaks_1d[[1]]
+  out <- rep(NA_integer_, length(ts_breaks))
+  out[1L] <- 1L
+  out_pos <- 1L
+  break_lo_pos <- 1L
+  break_hi_pos <- 2L
+  call_env <- parent.frame(1L)
+  while (TRUE) {
+    if (break_hi_pos > length(ts_breaks)) {
+      break
+    }
+    break_lo <- ts_breaks[break_lo_pos]
+    break_hi <- ts_breaks[break_hi_pos]
+    can_combine_next <- break_hi_pos + 1L <= length(ts_breaks) &&
+      !break_hi %in% mandatory_breaks
+    can_combine_previous <- break_lo_pos > 1 &&
+      !break_lo %in% mandatory_breaks
+    can_combine <- can_combine_next || can_combine_previous
+    do_combine <- can_combine && local({
+      work_dt <- surv_interval(
+        lexis = lexis,
+        break_lo = break_lo,
+        break_hi = break_hi,
+        ts_col_nm = ts_col_nm,
+        merge = FALSE
+      )
+      eval(test_expr, envir = work_dt, enclos = call_env)
+    })
+
+    if (do_combine) {
+      if (can_combine_next) {
+        break_lo_pos <- break_lo_pos
+        break_hi_pos <- break_hi_pos + 1L
+      } else if (can_combine_previous) {
+        break_lo_pos <- out[out_pos - 1L]
+        break_hi_pos <- break_hi_pos
+      }
+    } else {
+      if (out_pos > 1 && break_lo_pos == out[out_pos - 1L]) {
+        # combined with previous interval
+        # out_pos <- out_pos # no need to run this...
+      } else {
+        out_pos <- out_pos + 1L
+      }
+      out[out_pos - 1L] <- break_lo_pos
+      out[out_pos] <- break_hi_pos
+      break_lo_pos <- break_hi_pos
+      break_hi_pos <- break_lo_pos + 1L
+    }
+  }
+  out <- ts_breaks[union(out[!is.na(out)], length(ts_breaks))]
+  return(out)
+}
+
 surv_lexis_aggre_exprs__ <- function(
   estimator_dt
 ) {
@@ -137,10 +281,9 @@ surv_lexis_aggre_exprs__ <- function(
 #' # this is done here for demonstration purposes but of course everything works
 #' # also without ts_cal breaks.
 #' bl <- list(
-#'   ts_fut = surv_breaks_rule_based(
+#'   ts_fut = popEpi::lexis_collapse_breaks_1d(
 #'     lexis = sire,
-#'     ts_fut_nm = "ts_fut",
-#'     breaks = seq(0, 5, 1 / 12),
+#'     breaks_1d = list(ts_fut = seq(0, 5, 1 / 12)),
 #'     mandatory_breaks = 0:5
 #'   ),
 #'   ts_cal = c(1999, 2004)

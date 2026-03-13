@@ -5,6 +5,7 @@
 \alias{surv_estimate}
 \alias{surv_individual_weights}
 \alias{surv_functions}
+\alias{lexis_collapse_breaks_1d}
 \alias{surv_lexis}
 \title{Survival Time Statistics}
 \usage{
@@ -20,6 +21,13 @@ surv_estimate(
 )
 
 surv_individual_weights(df, standard_weight_dt, observed_weight_dt = NULL)
+
+lexis_collapse_breaks_1d(
+  lexis,
+  breaks_1d,
+  test_expr = NULL,
+  mandatory_breaks = NULL
+)
 
 surv_lexis(
   lexis,
@@ -159,6 +167,23 @@ allowed.
 \item{lexis}{\verb{[Lexis]} (no default)
 
 A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
+
+\item{breaks_1d}{\verb{[list]} (no default)
+
+List of breaks with one element. These define the initial intervals which
+are subject to being combined. E.g. \code{list(ts_fut = seq(0, 5, 1 / 12))}.}
+
+\item{test_expr}{\verb{[NULL, call]} (default \code{NULL})
+
+This expression is evaluated for every interval. If the test does not pass,
+the interval must be aggregated with one of its neighbours.}
+
+\item{mandatory_breaks}{\verb{[NULL, other]} (default \code{NULL})
+
+These breaks cannot be aggregated over. E.g. with \code{mandatory_breaks = 1.0}
+this function will not attempt to aggregate \verb{]0.9, 1.0]} and \verb{]1.0, 1.1]}
+into \verb{]0.9, 1.1]}, not even if it is the only way to produce intervals
+which all pass \code{test_expr}.}
 
 \item{breaks}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
@@ -438,6 +463,52 @@ stopifnot(
 )
 
 
+# popEpi::lexis_collapse_breaks_1d
+lexis <- Epi::Lexis(
+  entry = list(ts_fut = c(0.0, 3.0)),
+  duration = c(2.5, 10.0),
+  entry.status = 0L,
+  exit.status = c(0L, 1L)
+)
+bl <- list(ts_fut = seq(0, 5, 0.5))
+agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+  lexis = lexis,
+  breaks = bl,
+  aggre_exprs = "t_at_risk"
+)
+# what to do about empty intervals? we have intervals with no subjects in them.
+stopifnot(
+  agdt[["t_at_risk"]][-6] > 0,
+  agdt[["t_at_risk"]][6] == 0.0
+)
+# combine intervals until there are no empty ones left.
+breaks_ts_fut <- popEpi::lexis_collapse_breaks_1d(
+  lexis = lexis,
+  breaks_1d = bl
+)
+# this has resulted in the combined interval ]2.5, 3.5].
+stopifnot(!3.0 \%in\% breaks_ts_fut)
+
+# but sometimes we want to retain specific breaks in the output. for instance
+# if the goal is to produce survival estimates for every year.
+# we can make use of arg `mandatory_breaks` to achieve this.
+breaks_ts_fut <- popEpi::lexis_collapse_breaks_1d(
+  lexis = lexis,
+  breaks_1d = bl,
+  mandatory_breaks = 0:5
+)
+# this has resulted in the combined interval ]2.0, 3.0].
+stopifnot(!2.5 \%in\% breaks_ts_fut)
+agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+  lexis = lexis,
+  breaks = list(ts_fut = breaks_ts_fut),
+  aggre_exprs = "t_at_risk"
+)
+stopifnot(
+  agdt[["t_at_risk"]] > 0.0
+)
+
+
 # popEpi::surv_lexis
 make_pm <- function() {
   pm <- data.table::copy(popEpi::popmort)
@@ -521,10 +592,9 @@ sire <- make_sire()
 # this is done here for demonstration purposes but of course everything works
 # also without ts_cal breaks.
 bl <- list(
-  ts_fut = surv_breaks_rule_based(
+  ts_fut = popEpi::lexis_collapse_breaks_1d(
     lexis = sire,
-    ts_fut_nm = "ts_fut",
-    breaks = seq(0, 5, 1 / 12),
+    breaks_1d = list(ts_fut = seq(0, 5, 1 / 12)),
     mandatory_breaks = 0:5
   ),
   ts_cal = c(1999, 2004)

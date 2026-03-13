@@ -433,6 +433,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   subset = NULL,
   weight_col_nm = NULL,
   split_lexis_column_exprs = NULL,
+  collapse_breaks_arg_list = NULL,
   optional_steps = NULL
 ) {
   #' @template param_lexis
@@ -635,6 +636,29 @@ lexis_split_merge_aggregate_by_stratum <- function(
           call_env = call_env
         )
       }
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+      #   + If `!is.null(collapse_breaks_arg_list)`, run
+      #     `popEpi::lexis_collapse_breaks_1d` on the last element of `breaks`.
+      #     Arguments `lexis` and `breaks_1d` are set automatically.
+      #' @param collapse_breaks_arg_list `[NULL, list]` (default `NULL`)
+      #'
+      #' Optional, if you supply this argument then
+      #' `[lexis_collapse_breaks_1d]` will be called for each stratum defined
+      #' via `aggre_by` separately.
+      #' 
+      #' - `NULL`: Normal behaviour.
+      #' - `list`: E.g. `list(mandatory_breaks = 0:5)`. Causes 
+      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+      if (!is.null(collapse_breaks_arg_list)) {
+        collapse_breaks_arg_list <- as.list(collapse_breaks_arg_list)
+        collapse_breaks_arg_list[["lexis"]] <- lexis_stratum_subset
+        collapse_breaks_arg_list[["breaks_1d"]] <- breaks[length(breaks)]
+        breaks[[length(breaks)]] <- do.call(
+          popEpi::lexis_collapse_breaks_1d,
+          collapse_breaks_arg_list
+        )
+      }
+
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       #   + Run
       #     `popEpi::splitMulti` on the subset of `lexis` which contains data from
