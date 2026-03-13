@@ -58,13 +58,16 @@ surv_interval <- function(
   )
   local({
     offset <- ts_dt[[ts_col_nm]] - lexis[[ts_col_nm]]
-    lapply(setdiff(attr(lexis, "time.scales"), ts_col_nm), function(ts_col_nm_) {
-      data.table::set(
-        x = ts_dt,
-        j = ts_col_nm_,
-        value = lexis[[ts_col_nm_]] + offset
-      )
-    })
+    lapply(
+      setdiff(attr(lexis, "time.scales"), ts_col_nm),
+      function(ts_col_nm_) {
+        data.table::set(
+          x = ts_dt,
+          j = ts_col_nm_,
+          value = lexis[[ts_col_nm_]] + offset
+        )
+      }
+    )
     NULL
   })
   data.table::set(
