@@ -31,10 +31,12 @@ lexis_aggregate_one_stratum__ <- function(
   if (nrow(lexis_stratum_subset_split) > 0) {
     stopifnot(
       data.table::key(lexis_stratum_subset_split)[1] == "lex.id",
-      length(data.table::key(lexis_stratum_subset_split)) >= length(box_ts_col_nms) + 1L,
-      data.table::key(lexis_stratum_subset_split)[2:(length(box_ts_col_nms) + 1L)] %in% union(
-        box_ts_col_nms, lexis_ts_col_nms
-      )
+      length(data.table::key(lexis_stratum_subset_split)) >=
+        length(box_ts_col_nms) + 1L,
+      data.table::key(lexis_stratum_subset_split)[
+        2:(length(box_ts_col_nms) + 1L)
+      ] %in%
+        union(box_ts_col_nms, lexis_ts_col_nms)
     )
   }
   assert_is_arg_box_dt(box_dt, ts_col_nms = box_ts_col_nms)
