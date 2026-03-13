@@ -27,7 +27,10 @@ surv_lexis_aggre_exprs__ <- function(
     "[x, y]",
     var_nm_set
   )
-  var_nm_set <- var_nm_set[standard_var_nm_set %in% names(SURV_AGGRE_EXPRS__)]
+  lexis_aggre_expr_list__ <- get_internal_dataset("lexis_aggre_expr_list__")
+  var_nm_set <- var_nm_set[
+    standard_var_nm_set %in% names(lexis_aggre_expr_list__)
+  ]
   names(var_nm_set) <- var_nm_set
   var_nm_set <- as.list(var_nm_set)
   return(var_nm_set)

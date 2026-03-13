@@ -205,20 +205,21 @@ assert_is_arg_aggre_exprs <- function(aggre_exprs) {
   stopifnot(
     inherits(aggre_exprs, c("list", "character"))
   )
+  lexis_aggre_expr_list__ <- get_internal_dataset("lexis_aggre_expr_list__")
   for (i in seq_along(aggre_exprs)) {
     eval(substitute(stopifnot(
       is.character(aggre_exprs[[i]]) || is.language(aggre_exprs[[i]])
     ), list(i = i)))
     if (is.character(aggre_exprs[[i]])) {
       if (
-        !aggre_exprs[[i]] %in% names(SURV_AGGRE_EXPRS__) &&
+        !aggre_exprs[[i]] %in% names(lexis_aggre_expr_list__) &&
           !grepl("\\[.+, *.+\\]", aggre_exprs[[i]])
       ) {
         stop(
           "`aggre_exprs[[", i, "]] = ", deparse1(aggre_exprs[[i]]),
           "` was not identified as the ",
           "name of an aggregation expression. Known names: ",
-          deparse1(names(SURV_AGGRE_EXPRS__))
+          deparse1(names(lexis_aggre_expr_list__))
         )
       }
     } else {
@@ -228,6 +229,15 @@ assert_is_arg_aggre_exprs <- function(aggre_exprs) {
       ), list(i = i)))
     }
   }
+}
+lexis_aggre_expr_table_doc__ <- function() {
+  dt <- get_internal_dataset("lexis_aggre_expr_table__")
+  dt <- data.table::data.table(
+    "Name" = doc_verb__(dt[["name"]]),
+    "Explanation" = dt[["info"]],
+    "Expression" = doc_verb__(dt[["expr"]])
+  )
+  return(dt)
 }
 handle_arg_aggre_exprs <- function(
   aggre_exprs,
@@ -284,14 +294,15 @@ handle_arg_aggre_exprs <- function(
         "[x, y]",
         user_var_nm
       )
-      if (!general_var_nm %in% names(SURV_AGGRE_EXPRS__)) {
+      lexis_aggre_expr_list__ <- get_internal_dataset("lexis_aggre_expr_list__")
+      if (!general_var_nm %in% names(lexis_aggre_expr_list__)) {
         stop(
           deparse1(user_var_nm), " not recognised as the name of one of the ",
           "pre-defined aggregation expressions."
         )
       }
       general_var_nm <- general_var_nm
-      aggre_expr <- SURV_AGGRE_EXPRS__[[general_var_nm]]
+      aggre_expr <- lexis_aggre_expr_list__[[general_var_nm]]
       aggre_expr_lines <- deparse(aggre_expr)
       aggre_expr_lines <- sub(
         "(?<=\\W)x(?=\\W)",
@@ -331,7 +342,7 @@ handle_arg_aggre_exprs <- function(
   # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
   #   + Table of general aggregation expressions known to `popEpi`:
   #
-  # ${paste0(knitr::kable(popEpi:::surv_aggre_exprs_table__()), collapse = "\n")}
+  # ${paste0(knitr::kable(popEpi:::lexis_aggre_expr_table_doc__()), collapse = "\n")}
   # @codedoc_comment_block popEpi:::handle_arg_aggre_exprs
   return(aggre_exprs)
 }
@@ -432,7 +443,7 @@ handle_arg_estimators <- function(estimators, dt) {
     seq_len(nrow(estimator_dt)),
     function(i) {
       if (is.character(estimator_dt[["estimator"]][[i]])) {
-        out <- surv_estimate_expression__(
+        out <- surv_estimate_expr__(
           estimator_dt[["general_estimator_name"]][[i]]
         )
       } else {

@@ -222,7 +222,7 @@ surv_pohar_perme_weight__ <- function(
   return(work_dt[["pp_weight"]])
 }
 
-surv_estimate_expression__ <- function(type) {
+surv_estimate_expr__ <- function(type) {
   surv_estimate_expr_list__ <- get_internal_dataset("surv_estimate_expr_list__")
   if (!type %in% names(surv_estimate_expr_list__)) {
     stop("Unidentified estimator name: ", deparse1(type), ". Known ",

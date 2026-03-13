@@ -1,22 +1,9 @@
-lexis_aggre_exprs_table_doc__ <- function() {
-  dt <- get_internal_dataset("lexis_aggre_exprs_table__")
+lexis_split_column_expr_table_doc__ <- function() {
+  dt <- get_internal_dataset("lexis_split_column_expr_table__")
   dt <- data.table::data.table(
     "Name" = doc_verb__(dt[["name"]]),
+    "Explanation" = dt[["info"]],
     "Expression" = doc_verb__(dt[["expr"]])
-  )
-  return(dt)
-}
-
-split_lexis_column_exprs_table__ <- function() {
-  dt <- data.table::data.table(
-    "Name" = doc_verb__(
-      names(get_internal_dataset("lexis_split_column_expr_list__"))
-    ),
-    "Expression" = vapply(
-      get_internal_dataset("lexis_split_column_expr_list__"),
-      doc_verb__,
-      character(1L)
-    )
   )
   return(dt)
 }
@@ -84,11 +71,13 @@ lexis_aggregate_one_stratum__ <- function(
     #
     #    * Table of expressions which create new columns into split data:
     #
-    # ${paste0(knitr::kable(split_lexis_column_exprs_table__()), collapse = "\n")}
+    # ${paste0(knitr::kable(lexis_split_column_expr_table_doc__()), collapse = "\n")}
     # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
-    add_expr_list <- get_internal_dataset("lexis_split_column_expr_list__")[intersect(
+    lexis_split_column_expr_list__ <-
+      get_internal_dataset("lexis_split_column_expr_list__")
+    add_expr_list <- lexis_split_column_expr_list__[intersect(
       expr_obj_nms,
-      names(get_internal_dataset("lexis_split_column_expr_list__"))
+      names(lexis_split_column_expr_list__)
     )]
     add_expr_list <- c(add_expr_list, split_lexis_column_exprs)
     lapply(names(add_expr_list), function(col_nm) {
@@ -149,15 +138,19 @@ lexis_aggregate_one_stratum__ <- function(
   #      that empty time scale boxes have value zero. Your custom aggregation
   #      expressions will result in `NA` values in empty time scale boxes.
   # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
-  lapply(intersect(names(out), names(SURV_AGGRE_EXPRS__)), function(col_nm) {
-    data.table::set(
-      x = out,
-      i = which(is.na(out[[col_nm]])),
-      j = col_nm,
-      value = 0L
-    )
-    NULL
-  })
+  lexis_aggre_expr_list__ <- get_internal_dataset("lexis_aggre_expr_list__")
+  lapply(
+    intersect(names(out), names(lexis_aggre_expr_list__)),
+    function(col_nm) {
+      data.table::set(
+        x = out,
+        i = which(is.na(out[[col_nm]])),
+        j = col_nm,
+        value = 0L
+      )
+      NULL
+    }
+  )
   return(out[])
 }
 
