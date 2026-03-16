@@ -18,7 +18,7 @@
 ^R/nse\.R$
 ^revdep$
 ^Rplots.pdf$
-^popEpi\.code-workspace$
+^.+\.code-workspace$
 ^CRAN-SUBMISSION$
 ^dev$
 ^codecov\.yml$
