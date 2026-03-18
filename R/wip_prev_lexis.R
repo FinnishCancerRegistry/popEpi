@@ -15,7 +15,6 @@ prev_lexis <- function(
   aggre_by = NULL,
   subset = NULL,
   merge_dt = NULL,
-  merge_dt_by = NULL,
   merge_optional_args = NULL
 ) {
   #' @template param_lexis
@@ -64,13 +63,14 @@ prev_lexis <- function(
   #'   exactly one value column named `S`. This table is passed
   #'   to `[lexis_merge]` and should conform to its requirements. E.g.
   #'   `data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))`.
-  if (!is.null(merge_dt)) {
+  merge_dt_by <- NULL
     stopifnot(
       "S" %in% names(merge_dt),
       !is.na(merge_dt[["S"]]),
       merge_dt[["S"]] > 0,
-      !duplicated(merge_dt, by = merge_dt_by),
-      merge_dt_by %in% names(lexis)
+      setdiff(names(merge_dt), "S") %in% names(lexis)
+    )
+    merge_dt_by <- setdiff(names(merge_dt), "S")
     )
   }
   # @codedoc_comment_block popEpi::prev_lexis
@@ -168,7 +168,6 @@ prev_lexis <- function(
           )
           lexis_dt_extrapolate
         })
-        #' @param merge_dt_by Passed to `[lexis_merge]`.
         #' @param merge_optional_args `[NULL, list]` (default `NULL`)
         #'
         #' Each element passed to `[lexis_merge]`.
