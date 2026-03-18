@@ -614,8 +614,8 @@ surv_lexis_aggre_exprs__ <- function(
 surv_lexis <- function(
   lexis,
   breaks,
-  merge_dt_by = NULL,
   merge_dt = NULL,
+  merge_dt_by = NULL,
   merge_optional_args = NULL,
   aggre_by = NULL,
   aggre_ts_col_nms = NULL,

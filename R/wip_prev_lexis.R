@@ -14,8 +14,8 @@ prev_lexis <- function(
   stratum_breaks,
   aggre_by = NULL,
   subset = NULL,
-  merge_dt_by = NULL,
   merge_dt = NULL,
+  merge_dt_by = NULL,
   merge_optional_args = NULL
 ) {
   #' @template param_lexis

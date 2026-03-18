@@ -32,8 +32,8 @@ lexis_collapse_breaks_1d(
 surv_lexis(
   lexis,
   breaks,
-  merge_dt_by = NULL,
   merge_dt = NULL,
+  merge_dt_by = NULL,
   merge_optional_args = NULL,
   aggre_by = NULL,
   aggre_ts_col_nms = NULL,
@@ -187,9 +187,9 @@ which all pass \code{test_expr}.}
 
 \item{breaks}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
-\item{merge_dt_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
-
 \item{merge_dt}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
+\item{merge_dt_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{merge_optional_args}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
