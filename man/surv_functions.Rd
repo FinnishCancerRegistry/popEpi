@@ -5,7 +5,7 @@
 \alias{surv_estimate}
 \alias{surv_individual_weights}
 \alias{surv_functions}
-\alias{lexis_collapse_breaks_1d}
+\alias{lexis_breaks_collapse_1d}
 \alias{surv_lexis}
 \title{Survival Time Statistics}
 \usage{
@@ -22,7 +22,7 @@ surv_estimate(
 
 surv_individual_weights(df, standard_weight_dt, observed_weight_dt = NULL)
 
-lexis_collapse_breaks_1d(
+lexis_breaks_collapse_1d(
   lexis,
   breaks_1d,
   test_expr = NULL,
@@ -463,7 +463,7 @@ stopifnot(
 )
 
 
-# popEpi::lexis_collapse_breaks_1d
+# popEpi::lexis_breaks_collapse_1d
 lexis <- Epi::Lexis(
   entry = list(ts_fut = c(0.0, 3.0)),
   duration = c(2.5, 10.0),
@@ -482,7 +482,7 @@ stopifnot(
   agdt[["t_at_risk"]][6] == 0.0
 )
 # combine intervals until there are no empty ones left.
-breaks_ts_fut <- popEpi::lexis_collapse_breaks_1d(
+breaks_ts_fut <- popEpi::lexis_breaks_collapse_1d(
   lexis = lexis,
   breaks_1d = bl
 )
@@ -492,7 +492,7 @@ stopifnot(!3.0 \%in\% breaks_ts_fut)
 # but sometimes we want to retain specific breaks in the output. for instance
 # if the goal is to produce survival estimates for every year.
 # we can make use of arg `mandatory_breaks` to achieve this.
-breaks_ts_fut <- popEpi::lexis_collapse_breaks_1d(
+breaks_ts_fut <- popEpi::lexis_breaks_collapse_1d(
   lexis = lexis,
   breaks_1d = bl,
   mandatory_breaks = 0:5
@@ -592,7 +592,7 @@ sire <- make_sire()
 # this is done here for demonstration purposes but of course everything works
 # also without ts_cal breaks.
 bl <- list(
-  ts_fut = popEpi::lexis_collapse_breaks_1d(
+  ts_fut = popEpi::lexis_breaks_collapse_1d(
     lexis = sire,
     breaks_1d = list(ts_fut = seq(0, 5, 1 / 12)),
     mandatory_breaks = 0:5

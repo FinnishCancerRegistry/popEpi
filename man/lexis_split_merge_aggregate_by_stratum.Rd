@@ -121,7 +121,7 @@ are evaluated.
 \item{collapse_breaks_arg_list}{\verb{[NULL, list]} (default \code{NULL})
 
 Optional, if you supply this argument then
-\verb{[lexis_collapse_breaks_1d]} will be called for each stratum defined
+\verb{[lexis_breaks_collapse_1d]} will be called for each stratum defined
 via \code{aggre_by} separately.
 \itemize{
 \item \code{NULL}: Normal behaviour.
@@ -217,12 +217,12 @@ steps are performed.
 \code{optional_steps[["stratum_pre_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
 \item If \code{!is.null(collapse_breaks_arg_list)}, run
-\code{popEpi::lexis_collapse_breaks_1d} on the last element of \code{breaks}.
+\code{popEpi::lexis_breaks_collapse_1d} on the last element of \code{breaks}.
 Arguments \code{lexis} and \code{breaks_1d} are set automatically.
 ' @param collapse_breaks_arg_list \verb{[NULL, list]} (default \code{NULL})
 '
 ' Optional, if you supply this argument then
-' \verb{[lexis_collapse_breaks_1d]} will be called for each stratum defined
+' \verb{[lexis_breaks_collapse_1d]} will be called for each stratum defined
 ' via \code{aggre_by} separately.
 '
 ' - \code{NULL}: Normal behaviour.
