@@ -6,13 +6,16 @@ level_space_list_to_level_space_data_table <- function(
 ) {
   stopifnot(inherits(x, "list"))
   x[vapply(x, is.null, logical(1L))] <- NULL
-  dt <- do.call(data.table::CJ, lapply(seq_along(x), function(i) {
-    if (data.table::is.data.table(x[[i]])) {
-      seq_len(nrow(x[[i]]))
-    } else {
-      seq_along(x[[i]])
-    }
-  }))
+  dt <- call_with_arg_list__(
+    data.table::CJ,
+    lapply(seq_along(x), function(i) {
+      if (data.table::is.data.table(x[[i]])) {
+        seq_len(nrow(x[[i]]))
+      } else {
+        seq_along(x[[i]])
+      }
+    })
+  )
   pos_col_nms <- sprintf("_____x[[%i]]_____", seq_along(x))
   data.table::setnames(dt, names(dt), pos_col_nms)
   lapply(seq_along(x), function(i) {

@@ -653,7 +653,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
         collapse_breaks_arg_list <- as.list(collapse_breaks_arg_list)
         collapse_breaks_arg_list[["lexis"]] <- lexis_stratum_subset
         collapse_breaks_arg_list[["breaks_1d"]] <- breaks[length(breaks)]
-        breaks[[length(breaks)]] <- do.call(
+        breaks[[length(breaks)]] <- call_with_arg_list__(
           popEpi::lexis_breaks_collapse_1d,
           collapse_breaks_arg_list
         )
@@ -688,7 +688,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       if (!is.null(merge_dt)) {
         lexis_merge_arg_list[["lexis"]] <- lexis_stratum_subset_split
-        do.call(lexis_merge, lexis_merge_arg_list, quote = TRUE)
+        call_with_arg_list__(lexis_merge, lexis_merge_arg_list)
       }
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
       #   + Run

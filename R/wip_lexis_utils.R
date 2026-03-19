@@ -131,7 +131,7 @@ lexis_box_dt__ <- function(
   box_dt <- lapply(split_ts_col_nms, function(ts_col_nm) {
     seq_len(length(breaks[[ts_col_nm]]) - 1L)
   })
-  box_dt <- do.call(data.table::CJ, box_dt, quote = TRUE)
+  box_dt <- call_with_arg_list__(data.table::CJ, box_dt)
   id_col_nms <- paste0(split_ts_col_nms, "_id")
   data.table::setnames(box_dt, id_col_nms)
   data.table::set(
@@ -245,16 +245,22 @@ lexis_delay_entry <- function(lexis, ts_col_new_entry, ts_col_nm) {
 
 lexis_crop <- function(lexis, breaks) {
   assert_is_arg_lexis(lexis, dt = FALSE)
-  delay_entry <- do.call(pmax, lapply(names(breaks), function(ts_col_nm) {
-    entry <- lexis[[ts_col_nm]]
-    cropped_entry <- min(breaks[[ts_col_nm]])
-    pmax(entry, cropped_entry) - entry
-  }), quote = TRUE)
-  earlify_exit <- do.call(pmax, lapply(names(breaks), function(ts_col_nm) {
-    exit <- lexis[[ts_col_nm]] + lexis[["lex.dur"]]
-    cropped_exit <- max(breaks[[ts_col_nm]])
-    exit - pmin(exit, cropped_exit)
-  }), quote = TRUE)
+  delay_entry <- call_with_arg_list__(
+    pmax, 
+    lapply(names(breaks), function(ts_col_nm) {
+      entry <- lexis[[ts_col_nm]]
+      cropped_entry <- min(breaks[[ts_col_nm]])
+      pmax(entry, cropped_entry) - entry
+    })
+  )
+  earlify_exit <- call_with_arg_list__(
+    pmax,
+    lapply(names(breaks), function(ts_col_nm) {
+      exit <- lexis[[ts_col_nm]] + lexis[["lex.dur"]]
+      cropped_exit <- max(breaks[[ts_col_nm]])
+      exit - pmin(exit, cropped_exit)
+    })
+  )
   data.table::set(
     x = lexis,
     j = Epi::timeScales(lexis),
@@ -325,7 +331,7 @@ lexis_immortalise <- function(lexis, breaks = NULL, crop = TRUE) {
       max_by_ts[[ts_col_nm]] - lexis[[ts_col_nm]]
     })
     names(pmin_data) <- names(max_by_ts)
-    immortalise_to <- do.call(pmin, pmin_data, quote = TRUE)
+    immortalise_to <- call_with_arg_list__(pmin, pmin_data)
   }
   data.table::set(
     x = lexis,
