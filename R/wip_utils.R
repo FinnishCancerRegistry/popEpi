@@ -230,6 +230,7 @@ call_with_arg_list__ <- function(
   }
   stopifnot(
     inherits(fun, c("function", "character")),
+    is.function(eval(str2lang(fun_nm), environment(call_with_arg_list__))),
 
     inherits(arg_list, "list"),
     # this in fact allows for is.null(names(arg_list))
@@ -240,9 +241,6 @@ call_with_arg_list__ <- function(
   if (is.null(eval_env)) {
     eval_env <- parent.frame(1L)
   }
-  stopifnot(
-    is.function(eval(str2lang(fun_nm), eval_env))
-  )
   if (is.null(names(arg_list))) {
     names(arg_list) <- ""
   }
