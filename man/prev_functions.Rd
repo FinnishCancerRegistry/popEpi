@@ -75,9 +75,9 @@ what you need to have.
 exactly one value column named \code{S}. This table is passed
 to \verb{[lexis_merge]} and should conform to its requirements. E.g.
 \code{data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))}.
+\item \code{list}: We produce a table of survival estimates on the fly and
+these are arguments passed to \verb{[surv_lexis]}. See \strong{Details}.
 }}
-
-\item{merge_dt_by}{Passed to \verb{[lexis_merge]}.}
 
 \item{merge_optional_args}{\verb{[NULL, list]} (default \code{NULL})
 
@@ -128,6 +128,27 @@ current observation time point. This is defined as those in
 \code{obs_tp} is the current observation time point. These collected
 subjects are the ones we need to extrapolate to the current
 observation time point.
+\item If there are no observations that need to be extrapolated
+then we end the extrapolation step early and simply use
+\code{n_prev_eff = n_prev}. Otherwise proceed as described below.
+\item If \code{inherits(merge_dt, "list")}, collect arguments from
+\code{merge_dt} to call \verb{[surv_lexis]}.
+Arguments \code{lexis}, \code{subset}, and \code{aggre_by} are assigned
+internally to the respective arguments supplied to \code{prev_lexis}
+except \code{subset} additionally is used to detect only those cases
+who entered follow-up (any time) before the current
+observation time point. It may be worth emphasizing that \code{lexis}
+really is the input argument \code{lexis} and not only those whose
+follow-up we need to "extrapolate".
+We also set \code{estimators = "S_ch"}.
+Any arguments that are passed via
+\code{merge_dt} override even the internally set arguments.
+The arguments not set internally or supplied by the user via
+\code{merge_dt} make use of the defaults of \verb{[surv_lexis]}.
+E.g.
+\code{merge_dt = list(aggre_by = NULL, breaks = list(ts_fut = futs))}
+are both passed to \verb{[surv_lexis]} despite what \code{aggre_by} was
+for \code{prev_lexis}.
 \item Merge (for the first time) \code{merge_dt} with the collected
 subjects at the original exit time of each
 subject. This yields the survival probability for each subject

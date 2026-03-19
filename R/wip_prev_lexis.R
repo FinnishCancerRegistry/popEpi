@@ -63,7 +63,13 @@ prev_lexis <- function(
   #'   exactly one value column named `S`. This table is passed
   #'   to `[lexis_merge]` and should conform to its requirements. E.g.
   #'   `data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))`.
+  #' - `list`: We produce a table of survival estimates on the fly and
+  #'   these are arguments passed to `[surv_lexis]`. See **Details**.
+  stopifnot(
+    inherits(merge_dt, c("list", "data.table", "NULL"))
+  )
   merge_dt_by <- NULL
+  if (data.table::is.data.table(merge_dt)) {
     stopifnot(
       "S" %in% names(merge_dt),
       !is.na(merge_dt[["S"]]),
@@ -71,6 +77,10 @@ prev_lexis <- function(
       setdiff(names(merge_dt), "S") %in% names(lexis)
     )
     merge_dt_by <- setdiff(names(merge_dt), "S")
+  } else if (inherits(merge_dt, "list")) {
+    stopifnot(
+      data.table::uniqueN(names(merge_dt)) == length(merge_dt),
+      names(merge_dt) %in% names(formals(popEpi::surv_lexis))
     )
   }
   # @codedoc_comment_block popEpi::prev_lexis
@@ -140,143 +150,205 @@ prev_lexis <- function(
       agdt_i[]
     })
     if (!is.null(merge_dt)) {
-      local({
-        # @codedoc_comment_block popEpi::prev_lexis
-        #   + If `!is.null(merge_dt)`,
-        #     collect subjects in `lexis` who were censored before the
-        #     current observation time point. This is defined as those in
-        #     `lexis` who have `lexis[["lex.Cst"]] == lexis[["lex.Xst"]]` and
-        #     `lexis[[obs_ts_col_nm]] + lexis[["lex.dur"]] < obs_tp`, where
-        #     `obs_ts_col_nm = names(observation_time_points)` and
-        #     `obs_tp` is the current observation time point. These collected
-        #     subjects are the ones we need to extrapolate to the current
-        #     observation time point.
-        # @codedoc_comment_block popEpi::prev_lexis
-        lexis_dt_extrapolate <- local({
-          was_censored <- lexis[["lex.Cst"]] == lexis[["lex.Xst"]]
-          before_obs_tp <-
-            (lexis[[obs_ts_col_nm]] + lexis[["lex.dur"]]) <
-            obs_tp_i
-          lexis_dt_extrapolate <- lexis_to_lexis_dt__(
-            lexis,
-            subset = subset & was_censored & before_obs_tp,
-            select = intersect(names(lexis), c(
-              "lex.id", Epi::timeScales(lexis), "lex.dur", "lex.Cst", "lex.Xst",
-              names(aggre_by),
-              merge_dt_by
-            ))
-          )
-          lexis_dt_extrapolate
-        })
-        #' @param merge_optional_args `[NULL, list]` (default `NULL`)
-        #'
-        #' Each element passed to `[lexis_merge]`.
-        #' E.g. `list(merge_dt_harmonisers = my_harmonisers)`.
-        # @codedoc_comment_block popEpi::prev_lexis
-        #   + Merge (for the first time) `merge_dt` with the collected
-        #     subjects at the original exit time of each
-        #     subject. This yields the survival probability for each subject
-        #     at exit, in math `S(t_e)`
-        #     (starting from zero --- delayed entry is not supported).
-        # @codedoc_comment_block popEpi::prev_lexis
-        merge_arg_list <- as.list(merge_optional_args)
-        merge_arg_list[
-          c("lexis", "merge_dt", "merge_dt_by", "lex_dur_multiplier")
-        ] <-
-          list(
-            lexis_dt_extrapolate,
-            merge_dt,
-            merge_dt_by,
-            1L
-          )
-        do.call(popEpi::lexis_merge, merge_arg_list, quote = TRUE)
-        data.table::setnames(
-          x = lexis_dt_extrapolate,
-          old = "S",
-          new = "S_at_original_exit__"
+      # @codedoc_comment_block popEpi::prev_lexis
+      #   + If `!is.null(merge_dt)`,
+      #     collect subjects in `lexis` who were censored before the
+      #     current observation time point. This is defined as those in
+      #     `lexis` who have `lexis[["lex.Cst"]] == lexis[["lex.Xst"]]` and
+      #     `lexis[[obs_ts_col_nm]] + lexis[["lex.dur"]] < obs_tp`, where
+      #     `obs_ts_col_nm = names(observation_time_points)` and
+      #     `obs_tp` is the current observation time point. These collected
+      #     subjects are the ones we need to extrapolate to the current
+      #     observation time point.
+      # @codedoc_comment_block popEpi::prev_lexis
+      lexis_dt_extrapolate <- local({
+        was_censored <- lexis[["lex.Cst"]] == lexis[["lex.Xst"]]
+        before_obs_tp <-
+          (lexis[[obs_ts_col_nm]] + lexis[["lex.dur"]]) <
+          obs_tp_i
+        lexis_dt_extrapolate <- lexis_to_lexis_dt__(
+          lexis,
+          subset = subset & was_censored & before_obs_tp,
+          select = intersect(names(lexis), c(
+            "lex.id", Epi::timeScales(lexis), "lex.dur", "lex.Cst", "lex.Xst",
+            names(aggre_by),
+            merge_dt_by
+          ))
         )
-
-        lexis_immortalise(
-          lexis = lexis_dt_extrapolate,
-          breaks = NULL
-        )
-        lexis_delay_entry(
-          lexis = lexis_dt_extrapolate,
-          ts_col_new_entry = obs_tp_i,
-          ts_col_nm = obs_ts_col_nm
-        )
-        # @codedoc_comment_block popEpi::prev_lexis
-        #   + Merge `merge_dt` for the second time, this time at the
-        #     current prevalence observation time point such as at
-        #     `ts_cal = 2009.999`.
-        #     In math this is `S(t_p)` where `t_p` is the prevalence
-        #     observation time point.
-        # @codedoc_comment_block popEpi::prev_lexis
-        merge_arg_list <- as.list(merge_optional_args)
-        merge_arg_list[
-          c("lexis", "merge_dt", "merge_dt_by", "lex_dur_multiplier")
-        ] <-
-          list(
-            lexis_dt_extrapolate,
-            merge_dt,
-            merge_dt_by,
-            0L
-          )
-        do.call(popEpi::lexis_merge, merge_arg_list, quote = TRUE)
-        data.table::setnames(
-          x = lexis_dt_extrapolate,
-          old = "S",
-          new = "S_at_obs_tp_i__"
-        )
-        # @codedoc_comment_block popEpi::prev_lexis
-        #   + With both `S(t_e)` and `S(t_p)` available, our "extrapolated" or
-        #     "effective" number of being in follow-up is between zero and
-        #     one for each subject and defined simply as the conditional
-        #     survival up to `t_p` starting from `t_e`,
-        #     `S(t_p|t_e) = S(t_p) / S(t_e)`. E.g.
-        #     `S(t_p) / S(t_e) = 0.8 / 0.9 ~ 0.8888889`.
-        # @codedoc_comment_block popEpi::prev_lexis
-        data.table::set(
-          x = lexis_dt_extrapolate,
-          j = "n_prev_extrapolated",
-          value = lexis_dt_extrapolate[["S_at_obs_tp_i__"]] /
-            lexis_dt_extrapolate[["S_at_original_exit__"]]
-        )
-        # @codedoc_comment_block popEpi::prev_lexis
-        #   + Call `[lexis_split_merge_aggregate_by_stratum]` for the second
-        #     time, this time with the subjects collected for extrapolation,
-        #     and sum the number of extrapolated subjects in follow-up into a
-        #     table with the identical stratification as the one created before.
-        # @codedoc_comment_block popEpi::prev_lexis
-        agdt_add <- popEpi::lexis_split_merge_aggregate_by_stratum(
-          lexis = lexis_dt_extrapolate,
-          breaks = stratum_breaks,
-          aggre_exprs = list(
-            n_prev_extrapolated = quote(sum(n_prev_extrapolated))
-          ),
-          aggre_by = aggre_by,
-          aggre_ts_col_nms = names(stratum_breaks)
-        )
-        na_idx <- which(is.na(agdt_add[["n_prev_extrapolated"]]))
-        if (length(na_idx) > 0) {
-          data.table::set(
-            x = agdt_add,
-            i = na_idx,
-            j = "n_prev_extrapolated",
-            value = 0.0
-          )
-        }
-        # @codedoc_comment_block popEpi::prev_lexis
-        #   + Add column `n_prev_eff` as the sum of the number of extrapolated
-        #     subjects and the original `n_prev` into the first table we
-        #     created.
-        # @codedoc_comment_block popEpi::prev_lexis
+        lexis_dt_extrapolate
+      })
+      # @codedoc_comment_block popEpi::prev_lexis
+      #   + If there are no observations that need to be extrapolated
+      #     then we end the extrapolation step early and simply use
+      #     `n_prev_eff = n_prev`. Otherwise proceed as described below.
+      # @codedoc_comment_block popEpi::prev_lexis
+      if (nrow(lexis_dt_extrapolate) == 0) {
         data.table::set(
           x = agdt_i,
           j = "n_prev_eff",
-          value = agdt_i[["n_prev"]] + agdt_add[["n_prev_eff"]]
+          value = agdt_i[["n_prev"]]
         )
-      })
+      } else {
+        merge_arg_list <- as.list(merge_optional_args)
+        merge_arg_list[["merge_dt"]] <- merge_dt
+        merge_arg_list[["merge_dt_by"]] <- merge_dt_by
+        if (inherits(merge_dt, "list")) {
+          # @codedoc_comment_block popEpi::prev_lexis
+          #   + If `inherits(merge_dt, "list")`, collect arguments from
+          #     `merge_dt` to call `[surv_lexis]`.
+          #     Arguments `lexis`, `subset`, and `aggre_by` are assigned
+          #     internally to the respective arguments supplied to `prev_lexis`
+          #     except `subset` additionally is used to detect only those cases
+          #     who entered follow-up (any time) before the current
+          #     observation time point. It may be worth emphasizing that `lexis`
+          #     really is the input argument `lexis` and not only those whose
+          #     follow-up we need to "extrapolate".
+          #     We also set `estimators = "S_ch"`.
+          #     Any arguments that are passed via
+          #     `merge_dt` override even the internally set arguments.
+          #     The arguments not set internally or supplied by the user via
+          #     `merge_dt` make use of the defaults of `[surv_lexis]`.
+          #     E.g.
+          #     `merge_dt = list(aggre_by = NULL, breaks = list(ts_fut = futs))`
+          #     are both passed to `[surv_lexis]` despite what `aggre_by` was
+          #     for `prev_lexis`.
+          # @codedoc_comment_block popEpi::prev_lexis
+          merge_arg_list[["merge_dt"]] <- local({
+            surv_lexis_arg_list <- list(
+              lexis = lexis,
+              subset = subset & lexis[[obs_ts_col_nm]] < obs_tp_i,
+              aggre_by = aggre_by,
+              estimators = "S_ch"
+            )
+            surv_lexis_arg_list[names(merge_dt)] <- merge_dt
+            sdt <- call_with_arg_list__(
+              popEpi::surv_lexis,
+              surv_lexis_arg_list
+            )
+            ts_col_nms <- names(surv_lexis_arg_list[["breaks"]])
+            data.table::set(
+              x = sdt,
+              j = ts_col_nms,
+              value = lapply(ts_col_nms, function(ts_col_nm) {
+                x <- paste0(
+                  "]",
+                  round(sdt[[paste0(ts_col_nm, "_start")]], 11L),
+                  ", ",
+                  round(sdt[[paste0(ts_col_nm, "_stop")]], 11L),
+                  "]"
+                )
+                levels <- unique(x)
+                factor(x = x, levels = levels)
+              })
+            )
+            data.table::setnames(
+              x = sdt,
+              old = intersect(c("S_ch_est", "S_lt_est"), names(sdt))[1],
+              new = "S"
+            )
+            sdt <- as.list(sdt)[c(names(aggre_by), ts_col_nms, "S")]
+            data.table::setDT(sdt)
+            sdt[]
+          })
+          merge_arg_list[["merge_dt_by"]] <- setdiff(
+            names(merge_arg_list[["merge_dt"]]),
+            "S"
+          )
+        }
+        local({
+          #' @param merge_optional_args `[NULL, list]` (default `NULL`)
+          #'
+          #' Each element passed to `[lexis_merge]`.
+          #' E.g. `list(merge_dt_harmonisers = my_harmonisers)`.
+          # @codedoc_comment_block popEpi::prev_lexis
+          #   + Merge (for the first time) `merge_dt` with the collected
+          #     subjects at the original exit time of each
+          #     subject. This yields the survival probability for each subject
+          #     at exit, in math `S(t_e)`
+          #     (starting from zero --- delayed entry is not supported).
+          # @codedoc_comment_block popEpi::prev_lexis
+          merge_arg_list[["lexis"]] <- lexis_dt_extrapolate
+          merge_arg_list[["lex_dur_multiplier"]] <- 1L
+          call_with_arg_list__(popEpi::lexis_merge, merge_arg_list)
+          data.table::setnames(
+            x = lexis_dt_extrapolate,
+            old = "S",
+            new = "S_at_original_exit__"
+          )
+
+          lexis_immortalise(
+            lexis = lexis_dt_extrapolate,
+            breaks = NULL
+          )
+          lexis_delay_entry(
+            lexis = lexis_dt_extrapolate,
+            ts_col_new_entry = obs_tp_i,
+            ts_col_nm = obs_ts_col_nm
+          )
+          # @codedoc_comment_block popEpi::prev_lexis
+          #   + Merge `merge_dt` for the second time, this time at the
+          #     current prevalence observation time point such as at
+          #     `ts_cal = 2009.999`.
+          #     In math this is `S(t_p)` where `t_p` is the prevalence
+          #     observation time point.
+          # @codedoc_comment_block popEpi::prev_lexis
+          merge_arg_list[["lex_dur_multiplier"]] <- 0L
+          call_with_arg_list__(popEpi::lexis_merge, merge_arg_list)
+          data.table::setnames(
+            x = lexis_dt_extrapolate,
+            old = "S",
+            new = "S_at_obs_tp_i__"
+          )
+          # @codedoc_comment_block popEpi::prev_lexis
+          #   + With both `S(t_e)` and `S(t_p)` available, our "extrapolated" or
+          #     "effective" number of being in follow-up is between zero and
+          #     one for each subject and defined simply as the conditional
+          #     survival up to `t_p` starting from `t_e`,
+          #     `S(t_p|t_e) = S(t_p) / S(t_e)`. E.g.
+          #     `S(t_p) / S(t_e) = 0.8 / 0.9 ~ 0.8888889`.
+          # @codedoc_comment_block popEpi::prev_lexis
+          data.table::set(
+            x = lexis_dt_extrapolate,
+            j = "n_prev_extrapolated",
+            value = lexis_dt_extrapolate[["S_at_obs_tp_i__"]] /
+              lexis_dt_extrapolate[["S_at_original_exit__"]]
+          )
+          # @codedoc_comment_block popEpi::prev_lexis
+          #   + Call `[lexis_split_merge_aggregate_by_stratum]` for the second
+          #     time, this time with the subjects collected for extrapolation,
+          #     and sum the number of extrapolated subjects in follow-up into a
+          #     table with the identical stratification as the one created before.
+          # @codedoc_comment_block popEpi::prev_lexis
+          agdt_add <- popEpi::lexis_split_merge_aggregate_by_stratum(
+            lexis = lexis_dt_extrapolate,
+            breaks = stratum_breaks,
+            aggre_exprs = list(
+              n_prev_extrapolated = quote(sum(n_prev_extrapolated))
+            ),
+            aggre_by = aggre_by,
+            aggre_ts_col_nms = names(stratum_breaks)
+          )
+          na_idx <- which(is.na(agdt_add[["n_prev_extrapolated"]]))
+          if (length(na_idx) > 0) {
+            data.table::set(
+              x = agdt_add,
+              i = na_idx,
+              j = "n_prev_extrapolated",
+              value = 0.0
+            )
+          }
+          # @codedoc_comment_block popEpi::prev_lexis
+          #   + Add column `n_prev_eff` as the sum of the number of extrapolated
+          #     subjects and the original `n_prev` into the first table we
+          #     created.
+          # @codedoc_comment_block popEpi::prev_lexis
+          data.table::set(
+            x = agdt_i,
+            j = "n_prev_eff",
+            value = agdt_i[["n_prev"]] + agdt_add[["n_prev_eff"]]
+          )
+        })
+      }
     }
     ts_fut_col_nm <- names(stratum_breaks)[length(stratum_breaks)]
     ts_fut_start_col_nm <- paste0(ts_fut_col_nm, "_start")

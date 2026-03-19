@@ -210,3 +210,54 @@ handle_arg_subset <- function(
   }
   return(subset_value)
 }
+
+call_with_arg_list__ <- function(
+  fun,
+  arg_list,
+  eval_env = NULL
+) {
+  stopifnot(
+    # `"pkg::fun"`, `fun`, or `pkg::fun`
+    inherits(substitute(fun), c("character", "name")) ||
+      identical(substitute(fun)[[1]], quote(`::`))
+  )
+  fun_nm <- substitute(fun)
+  if (!is.character(fun_nm)) {
+    fun_nm <- deparse1(fun_nm)
+  }
+  stopifnot(
+    inherits(fun, c("function", "character")),
+
+    inherits(arg_list, "list"),
+    # this in fact allows for is.null(names(arg_list))
+    !duplicated(names(arg_list)[names(arg_list) != ""]),
+
+    inherits(eval_env, c("NULL", "environment"))
+  )
+  if (is.null(eval_env)) {
+    eval_env <- parent.frame(1L)
+  }
+  stopifnot(
+    is.function(eval(str2lang(fun_nm), eval_env))
+  )
+  if (is.null(names(arg_list))) {
+    names(arg_list) <- ""
+  }
+  names(arg_list)[is.na(names(arg_list))] <- ""
+  arg_expr_list <- lapply(seq_along(arg_list), function(i) {
+    if (names(arg_list)[i] == "") {
+      arg_ref <- i
+    } else {
+      arg_ref <- names(arg_list)[i]
+    }
+    substitute(arg_list[[arg_ref]], list(arg_ref = arg_ref))
+  })
+  names(arg_expr_list) <- names(arg_list)
+  expr <- as.call(c(
+    str2lang(fun_nm),
+    arg_expr_list
+  ))
+  expr_eval_env <- new.env(parent = eval_env)
+  expr_eval_env[["arg_list"]] <- arg_list
+  return(eval(expr, expr_eval_env))
+}
