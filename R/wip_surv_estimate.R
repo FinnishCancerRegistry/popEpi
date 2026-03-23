@@ -26,8 +26,8 @@ surv_pohar_perme_weight__ <- function(
     # being e.g. the third key and the second being some other time scale.
     dt_key_col_nms[1] == "lex.id",
     ts_fut_col_nm %in% dt_key_col_nms,
-    dt_key_col_nms[seq(2L, which(dt_key_col_nms == ts_fut_col_nm) - 1L)] %in%
-      lexis_ts_col_nms,
+    dt_key_col_nms[seq(which(dt_key_col_nms == ts_fut_col_nm))] %in%
+      c("lex.id", lexis_ts_col_nms),
 
     method %in% c("survival interval", "subject subinterval")
   )
