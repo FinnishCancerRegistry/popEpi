@@ -8,8 +8,8 @@ surv_interval <- function(
   assert_is_arg_lexis(lexis, dt = FALSE)
   stopifnot(
     ts_col_nm %in% Epi::timeScales(lexis),
-    identical(class(break_lo), class(lexis[[ts_col_nm]])),
-    identical(class(break_hi), class(lexis[[ts_col_nm]]))
+    identical(storage.mode(break_lo), storage.mode(lexis[[ts_col_nm]])),
+    identical(storage.mode(break_hi), storage.mode(lexis[[ts_col_nm]]))
   )
   merge <- handle_arg_merge(merge, lexis)
   lexis_col_nms <- c(
