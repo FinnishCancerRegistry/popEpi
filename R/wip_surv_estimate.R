@@ -463,16 +463,15 @@ surv_estimate <- function(
   #   defined for them which causes `NA` values (i.e. zero divided by zero
   #   is not defined). Throw a warning if such intervals are found.
   # @codedoc_comment_block popEpi::surv_estimate
+  surv_estimate_call <- match.call()
   lapply(intersect(names(dt), c("t_at_risk", "n_at_risk_eff")), function(nm) {
     is_bad <- dt[[nm]] %in% c(NA, 0L)
     if (any(is_bad)) {
-      message("WARNING: intervals in `dt` where `dt$", nm, "` is zero/NA:")
-      print(dt[is_bad, ])
-      warning(
+      warning(simpleWarning(paste0(
         "There were ", sum(is_bad), " intervals in `dt` where `dt$", nm, "` ",
         "was zero/NA. No survival probability can be estimated for such ",
         "intervals."
-      )
+      ), call = surv_estimate_call))
     }
   })
 
