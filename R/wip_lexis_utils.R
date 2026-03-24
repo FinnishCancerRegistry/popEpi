@@ -315,11 +315,13 @@ lexis_immortalise <- function(lexis, breaks = NULL, crop = TRUE) {
   assert_is_arg_lexis(lexis, dt = FALSE)
   if (is.null(breaks)) {
     if (identical(class(lexis[["lex.dur"]]), "numeric")) {
+      # note that e.g. Date objects use storage.mode "double" so we cannot
+      # safely detect Inf-able data that way.
       immortalise_to <- Inf
     } else {
       immortalise_to <- methods::as(
         .Machine$integer.max,
-        class(lexis[["lex.dur"]])[1]
+        storage.mode(lexis[["lex.dur"]])
       )
     }
   } else {

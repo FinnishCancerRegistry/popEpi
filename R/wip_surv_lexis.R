@@ -89,7 +89,7 @@ lexis_breaks_collapse_1d <- function(
   if (!is.null(mandatory_breaks)) {
     mandatory_breaks <- methods::as(
       mandatory_breaks,
-      class(lexis[[ts_col_nm]])[1]
+      storage.mode(lexis[[ts_col_nm]])
     )
   }
   if (is.null(test_expr)) {

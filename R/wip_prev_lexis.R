@@ -116,9 +116,9 @@ prev_lexis <- function(
         i = which(could_delay_entry),
         j = "lex.dur",
         value = if (storage.mode(lexis[["lex.dur"]]) == "integer") {
-          methods::as(1L, class(lexis_dt_obs_tp[["lex.dur"]])[1])
+          methods::as(1L, storage.mode(lexis_dt_obs_tp[["lex.dur"]]))
         } else {
-          methods::as(1e-6, class(lexis_dt_obs_tp[["lex.dur"]])[1])
+          methods::as(1e-6, storage.mode(lexis_dt_obs_tp[["lex.dur"]]))
         }
       )
       agdt_i <- popEpi::lexis_split_merge_aggregate_by_stratum(
@@ -356,7 +356,7 @@ prev_lexis <- function(
       x = agdt_i,
       j = ts_fut_start_col_nm,
       value = rep(
-        methods::as(0L, class(agdt_i[[ts_fut_start_col_nm]])[1]),
+        methods::as(0L, storage.mode(agdt_i[[ts_fut_start_col_nm]])),
         nrow(agdt_i)
       )
     )
