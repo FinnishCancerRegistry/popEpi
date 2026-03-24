@@ -501,6 +501,21 @@ stopifnot(
   identical(agdt[["my_n_events"]], c(0L, 1L, NA, 0L, 1L))
 )
 
+# this is what happens when an empty stratum is requested
+agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+  lexis = sire,
+  aggre_by = data.table::data.table(sex = 0:2),
+  breaks = list(ts_fut = 0:5),
+  aggre_exprs = list(
+    "t_at_risk",
+    "my_stat" = quote(sum(lex.dur ^ 2))
+  )
+)
+stopifnot(
+  nrow(agdt) == length(0:2) * (length(0:5) - 1),
+  agdt[["t_at_risk"]][!agdt[["sex"]] \%in\% sire[["sex"]]] == 0,
+  is.na(agdt[["my_stat"]][!agdt[["sex"]] \%in\% sire[["sex"]]])
+)
 }
 \seealso{
 Other Lexis_functions: 
