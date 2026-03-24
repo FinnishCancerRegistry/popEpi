@@ -92,8 +92,7 @@ prev_lexis <- function(
   #   + Calls `[lexis_split_merge_aggregate_by_stratum]` with the
   #     `lexis`, `subset`, `aggre_by` supplied to
   #     `popEpi::prev_lexis` and with
-  #     `aggre_exprs = list(n_prev = quote(.N))`, `breaks = stratum_breaks` and
-  #     `aggre_ts_col_nms = names(stratum_breaks)`.
+  #     `aggre_exprs = list(n_prev = quote(.N))`, and `breaks = stratum_breaks`.
   #     This produces a table stratified by
   #     `aggre_by` and all time scales used in `stratum_breaks`.
   #     The only value column at this point is `n_prev`, the number
@@ -126,8 +125,7 @@ prev_lexis <- function(
         subset = subset & could_delay_entry,
         breaks = stratum_breaks,
         aggre_exprs = list(n_prev = quote(.N)),
-        aggre_by = aggre_by,
-        aggre_ts_col_nms = names(stratum_breaks)
+        aggre_by = aggre_by
       )
       na_idx <- which(is.na(agdt_i[["n_prev"]]))
       if (length(na_idx) > 0) {
@@ -325,8 +323,7 @@ prev_lexis <- function(
             aggre_exprs = list(
               n_prev_extrapolated = quote(sum(n_prev_extrapolated))
             ),
-            aggre_by = aggre_by,
-            aggre_ts_col_nms = names(stratum_breaks)
+            aggre_by = aggre_by
           )
           na_idx <- which(is.na(agdt_add[["n_prev_extrapolated"]]))
           if (length(na_idx) > 0) {

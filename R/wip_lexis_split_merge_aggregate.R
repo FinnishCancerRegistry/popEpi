@@ -56,9 +56,7 @@ lexis_aggregate_one_stratum__ <- function(
   lexis_box_id__(lexis = work_dt, box_dt = box_dt)
   add_expr_eval_env <- environment()
   local({
-    ts_fut_col_nm <- eval_env[["aggre_ts_col_nms"]][
-      length(eval_env[["aggre_ts_col_nms"]])
-    ]
+    ts_fut_col_nm <- utils::tail(box_ts_col_nms, 1)
     substitute_env <- list(
       ts_fut = parse(text = ts_fut_col_nm)[[1]],
       ts_fut_col_nm = ts_fut_col_nm,
@@ -249,8 +247,7 @@ lexis_aggregate_one_stratum__ <- function(
 #'   lexis = sire,
 #'   breaks = bl,
 #'   aggre_exprs = c("n_events", "t_at_risk", "n_events_[0, 1]"),
-#'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = "ts_fut"
+#'   aggre_by = "my_stratum"
 #' )
 #' stopifnot(
 #'   c("n_events", "t_at_risk", "n_events_[0, 1]") %in% names(agdt)
@@ -265,7 +262,6 @@ lexis_aggregate_one_stratum__ <- function(
 #'     "n_events_exp_e2"
 #'   ),
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = "ts_fut",
 #'   merge_dt = pm,
 #'   merge_dt_by = c("sex", "ts_cal", "ts_age")
 #' )
@@ -281,7 +277,6 @@ lexis_aggregate_one_stratum__ <- function(
 #'     "my_n_events_exp_e2" = quote(sum(h_exp * lex.dur))
 #'   ),
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = "ts_fut",
 #'   merge_dt = pm,
 #'   merge_dt_by = c("sex", "ts_cal", "ts_age")
 #' )
@@ -320,7 +315,6 @@ lexis_aggregate_one_stratum__ <- function(
 #'     })
 #'   ),
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = "ts_fut",
 #'   merge_dt = pm,
 #'   merge_dt_by = c("sex", "ts_cal", "ts_age")
 #' )
@@ -340,7 +334,6 @@ lexis_aggregate_one_stratum__ <- function(
 #'     "my_stat" = quote(sum(lex.dur * h_exp_mean))
 #'   ),
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = "ts_fut",
 #'   merge_dt = pm,
 #'   merge_dt_by = c("sex", "ts_cal", "ts_age"),
 #'   split_lexis_column_exprs = list(
@@ -373,7 +366,6 @@ lexis_aggregate_one_stratum__ <- function(
 #'   aggre_exprs = list(
 #'     "n_events_exp_e2"
 #'   ),
-#'   aggre_ts_col_nms = c("ts_cal", "ts_age"),
 #'   merge_dt = pm,
 #'   merge_dt_by = c("sex", "ts_cal", "ts_age")
 #' )
@@ -426,7 +418,6 @@ lexis_split_merge_aggregate_by_stratum <- function(
   breaks,
   aggre_exprs,
   aggre_by = NULL,
-  aggre_ts_col_nms = NULL,
   merge_dt = NULL,
   merge_dt_by = NULL,
   merge_optional_args = NULL,
@@ -452,23 +443,10 @@ lexis_split_merge_aggregate_by_stratum <- function(
   # @codedoc_insert_comment_block popEpi:::handle_arg_by
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::aggre_by
   aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis)
-  #' @param aggre_ts_col_nms `[NULL, character]` (default `NULL`)
-  #'
-  #' Names of `Lexis` time scales in `lexis` by which to aggregate results.
-  #'
-  #' - `NULL`: Use `names(breaks)`.
-  #' - `character`: Aggregate by these time scales. E.g. `"ts_fut"`.
-  if (is.null(aggre_ts_col_nms)) {
-    aggre_ts_col_nms <- names(breaks)
-  } else {
-    stopifnot(
-      aggre_ts_col_nms %in% names(breaks)
-    )
-  }
   #' @param aggre_exprs `[character, list]` (no default)
   #'
-  #' Defines what is aggregated within every stratum-interval
-  #' defined by `aggre_ts_col_nms` and the time scales `aggre_ts_col_nms`.
+  #' Defines what is aggregated within every stratum-box
+  #' defined via `aggre_by` and `breaks`.
   #' See **Details** for how and where the expressions are evaluated.
   #'
   #' Each element must be either named and an R expression (see e.g. `[quote]`)
@@ -556,7 +534,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
 
   lexis_ts_col_nms <- intersect(
     attr(lexis, "time.scales"),
-    c(aggre_ts_col_nms, names(breaks), merge_dt_by)
+    c(names(breaks), merge_dt_by)
   )
   lexis_col_nms <- c(
     "lex.id", lexis_ts_col_nms, "lex.dur", "lex.Cst", "lex.Xst"
@@ -594,7 +572,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
     merge_dt_by
   )
 
-  box_dt <- lexis_box_dt__(breaks[aggre_ts_col_nms])
+  box_dt <- lexis_box_dt__(breaks)
   out_expr <- quote(lexis_dt[
     j = {
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
@@ -756,7 +734,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   #   with `cols = c(names(aggre_by), "box_id")`. We store the metadata
   #   `list(stratum_col_nms, value_col_nms)` into the attribute named
   #   `lexis_split_merge_aggregate_by_stratum_meta`, where
-  #   `stratum_col_nms = names(aggre_by)`, `ts_col_nms = aggre_ts_col_nms`, and
+  #   `stratum_col_nms = names(aggre_by)`, `ts_col_nms = names(breaks)`, and
   #   `value_col_nms` are the names of the columns resulting from `aggre_exprs`.
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # to clear Epi attributes
@@ -769,7 +747,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
     "lexis_split_merge_aggregate_by_stratum_meta",
     list(
       stratum_col_nms = names(aggre_by),
-      ts_col_nms = aggre_ts_col_nms,
+      ts_col_nms = names(breaks),
       value_col_nms = setdiff(names(out), c(names(aggre_by), names(box_dt)))
     )
   )

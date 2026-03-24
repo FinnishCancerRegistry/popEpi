@@ -113,8 +113,7 @@ points. It performs the following steps:
 \item Calls \verb{[lexis_split_merge_aggregate_by_stratum]} with the
 \code{lexis}, \code{subset}, \code{aggre_by} supplied to
 \code{popEpi::prev_lexis} and with
-\code{aggre_exprs = list(n_prev = quote(.N))}, \code{breaks = stratum_breaks} and
-\code{aggre_ts_col_nms = names(stratum_breaks)}.
+\code{aggre_exprs = list(n_prev = quote(.N))}, and \code{breaks = stratum_breaks}.
 This produces a table stratified by
 \code{aggre_by} and all time scales used in \code{stratum_breaks}.
 The only value column at this point is \code{n_prev}, the number

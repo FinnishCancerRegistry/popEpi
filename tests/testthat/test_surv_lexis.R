@@ -7,7 +7,6 @@ testthat::test_that("surv_lexis & survival produce comparable results", {
     lexis = sire,
     breaks = bl,
     aggre_by = "my_stratum",
-    aggre_ts_col_nms = "ts_fut",
     subset = NULL,
     estimators = "S_ch"
   )
@@ -39,7 +38,6 @@ testthat::test_that("surv_lexis & relsurv produce comparable results", {
     merge_dt = test_make_pm__(),
     merge_dt_by = c("sex", "ts_cal", "ts_age"),
     aggre_by = "my_stratum",
-    aggre_ts_col_nms = "ts_fut",
     subset = NULL,
     estimators = c("RS_e2_ch", "NS_pp_ch")
   )

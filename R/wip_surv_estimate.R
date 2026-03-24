@@ -640,7 +640,6 @@ surv_estimate <- function(
 surv_lexis_S_exp_e1_ch_mean <- function(
   lexis,
   breaks,
-  aggre_ts_col_nms,
   merge_dt,
   merge_dt_by,
   aggre_by = NULL,
@@ -678,10 +677,10 @@ surv_lexis_S_exp_e1_ch_mean <- function(
   #   e1dt <- e1dt[e1dt[["keep"]], ]
   # }
   # data.table::set(e1dt, j = "keep", value = NULL)
-  # ts_fut_col_nm <- utils::tail(aggre_ts_col_nms, 1L)
   # lexis_immortalise(lexis = e1dt, breaks = breaks[ts_fut_col_nm])
-  # if (length(aggre_ts_col_nms) > 1) {
-  #   stratum_ts_col_nms <- aggre_ts_col_nms[-length(aggre_ts_col_nms)]
+  # ts_col_nms <- names(breaks)
+  # if (length(ts_col_nms) > 1) {
+  #   stratum_ts_col_nms <- ts_col_nms[-length(ts_col_nms)]
   #   data.table::set(
   #     x = e1dt,
   #     j = stratum_ts_col_nms,
@@ -726,7 +725,6 @@ surv_lexis_S_exp_e1_ch_mean <- function(
       })
     ),
     aggre_by = aggre_by,
-    aggre_ts_col_nms = aggre_ts_col_nms,
     merge_dt = merge_dt,
     merge_dt_by = merge_dt_by,
     weight_col_nm = weight_col_nm,
@@ -737,8 +735,8 @@ surv_lexis_S_exp_e1_ch_mean <- function(
         stratum_eval_env
       ) {
         lexis_dt <- stratum_eval_env[["lexis_stratum_subset_split"]]
-        aggre_ts_col_nms <- eval_env[["aggre_ts_col_nms"]]
-        stratum_ts_col_nms <- aggre_ts_col_nms[-length(aggre_ts_col_nms)]
+        ts_col_nms <- names(eval_env[["breaks"]])
+        stratum_ts_col_nms <- ts_col_nms[-length(ts_col_nms)]
         if (length(stratum_ts_col_nms) > 0) {
           # problem: we want Ederer I curves to not be "period analysis" curves
           # where the same curve can contribute to multiple periods. instead

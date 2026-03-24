@@ -11,7 +11,6 @@ testthat::context("surv_lexis_S_exp_e1_ch_est")
 #     lexis = sire,
 #     breaks = bl,
 #     aggre_by = "my_stratum",
-#     aggre_ts_col_nms = "ts_fut",
 #     merge_dt = pm,
 #     merge_dt_by = setdiff(names(pm), "h_exp"),
 #     estimators = "S_exp_e1_ch"

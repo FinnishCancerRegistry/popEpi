@@ -9,7 +9,6 @@ lexis_split_merge_aggregate_by_stratum(
   breaks,
   aggre_exprs,
   aggre_by = NULL,
-  aggre_ts_col_nms = NULL,
   merge_dt = NULL,
   merge_dt_by = NULL,
   merge_optional_args = NULL,
@@ -32,8 +31,8 @@ E.g. \code{list(ts_fut = seq(0, 5, 1 / 12), ts_cal = c(2001, 2006))}.}
 
 \item{aggre_exprs}{\verb{[character, list]} (no default)
 
-Defines what is aggregated within every stratum-interval
-defined by \code{aggre_ts_col_nms} and the time scales \code{aggre_ts_col_nms}.
+Defines what is aggregated within every stratum-box
+defined via \code{aggre_by} and \code{breaks}.
 See \strong{Details} for how and where the expressions are evaluated.
 
 Each element must be either named and an R expression (see e.g. \verb{[quote]})
@@ -56,14 +55,6 @@ in \code{dt}. E.g. \code{"sex"}.
 or \code{NULL}. These are combined to yield a big \code{data.table}. E.g.
 \code{list("sex", data.table::data.table(ag = 1:18))} leading to the same as
 \code{data.table::CJ(sex = 1:2, ag = 1:18)}.
-}}
-
-\item{aggre_ts_col_nms}{\verb{[NULL, character]} (default \code{NULL})
-
-Names of \code{Lexis} time scales in \code{lexis} by which to aggregate results.
-\itemize{
-\item \code{NULL}: Use \code{names(breaks)}.
-\item \code{character}: Aggregate by these time scales. E.g. \code{"ts_fut"}.
 }}
 
 \item{merge_dt}{Passed to \verb{[lexis_merge]}.}
@@ -249,7 +240,7 @@ attributes on the resulting big table and call \code{data.table::setkeyv}
 with \code{cols = c(names(aggre_by), "box_id")}. We store the metadata
 \code{list(stratum_col_nms, value_col_nms)} into the attribute named
 \code{lexis_split_merge_aggregate_by_stratum_meta}, where
-\code{stratum_col_nms = names(aggre_by)}, \code{ts_col_nms = aggre_ts_col_nms}, and
+\code{stratum_col_nms = names(aggre_by)}, \code{ts_col_nms = names(breaks)}, and
 \code{value_col_nms} are the names of the columns resulting from \code{aggre_exprs}.
 \item Run
 \code{optional_steps[["post_aggregation"]](eval_env = eval_env, call_env = call_env)}
@@ -344,8 +335,7 @@ agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
   lexis = sire,
   breaks = bl,
   aggre_exprs = c("n_events", "t_at_risk", "n_events_[0, 1]"),
-  aggre_by = "my_stratum",
-  aggre_ts_col_nms = "ts_fut"
+  aggre_by = "my_stratum"
 )
 stopifnot(
   c("n_events", "t_at_risk", "n_events_[0, 1]") \%in\% names(agdt)
@@ -360,7 +350,6 @@ agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
     "n_events_exp_e2"
   ),
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = "ts_fut",
   merge_dt = pm,
   merge_dt_by = c("sex", "ts_cal", "ts_age")
 )
@@ -376,7 +365,6 @@ agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
     "my_n_events_exp_e2" = quote(sum(h_exp * lex.dur))
   ),
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = "ts_fut",
   merge_dt = pm,
   merge_dt_by = c("sex", "ts_cal", "ts_age")
 )
@@ -415,7 +403,6 @@ agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
     })
   ),
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = "ts_fut",
   merge_dt = pm,
   merge_dt_by = c("sex", "ts_cal", "ts_age")
 )
@@ -435,7 +422,6 @@ agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
     "my_stat" = quote(sum(lex.dur * h_exp_mean))
   ),
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = "ts_fut",
   merge_dt = pm,
   merge_dt_by = c("sex", "ts_cal", "ts_age"),
   split_lexis_column_exprs = list(
@@ -468,7 +454,6 @@ agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
   aggre_exprs = list(
     "n_events_exp_e2"
   ),
-  aggre_ts_col_nms = c("ts_cal", "ts_age"),
   merge_dt = pm,
   merge_dt_by = c("sex", "ts_cal", "ts_age")
 )

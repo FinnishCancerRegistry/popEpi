@@ -184,7 +184,6 @@ surv_lexis_aggre_exprs__ <- function(
 #   S_exp_e1_ch_mean = quote(surv_lexis_S_exp_e1_ch_mean(
 #     lexis = surv_lexis_eval_env[["lexis_dt"]],
 #     breaks = surv_lexis_eval_env[["breaks"]],
-#     aggre_ts_col_nms = surv_lexis_eval_env[["aggre_ts_col_nms"]],
 #     merge_dt = surv_lexis_eval_env[["merge_dt"]],
 #     merge_dt_by = surv_lexis_eval_env[["merge_dt_by"]],
 #     aggre_by = surv_lexis_eval_env[["aggre_by"]],
@@ -616,7 +615,6 @@ surv_lexis <- function(
   merge_dt = NULL,
   merge_dt_by = NULL,
   aggre_by = NULL,
-  aggre_ts_col_nms = NULL,
   subset = NULL,
   split_merge_aggregate_optional_args = NULL,
   estimators = "S_ch",
@@ -632,17 +630,10 @@ surv_lexis <- function(
     merge_dt = merge_dt,
     merge_dt_by = merge_dt_by,
     aggre_by = handle_arg_by(by = aggre_by, dataset = lexis),
-    aggre_ts_col_nms = local({
-      if (is.null(aggre_ts_col_nms)) {
-        names(breaks)
-      } else {
-        aggre_ts_col_nms
-      }
-    }),
     subset = handle_arg_subset(dataset_nm = "lexis")
   )
   surv_estimate_args <- list(
-    ts_fut_col_nm = utils::tail(split_merge_aggregate_args$aggre_ts_col_nms, 1),
+    ts_fut_col_nm = utils::tail(names(breaks), 1),
     stratum_col_nms = names(split_merge_aggregate_args[["aggre_by"]]),
     conf_methods = conf_methods,
     conf_lvls = conf_lvls
@@ -724,16 +715,6 @@ surv_lexis <- function(
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   #' @param aggre_by
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
-  #' @param aggre_ts_col_nms `[NULL, character]` (default `NULL`)
-  #'
-  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`. However, for the
-  #' purpose of survival estimation we must know which time scale is the
-  #' follow-up time scale. The follow-up time scale is the last element of
-  #' this vector. E.g. `c("ts_cal", "ts_fut")` causes aggregation by the two
-  #' time scales and treats `ts_fut` as the follow-up time scale.
-  #'
-  #' - `NULL`: Use `names(breaks)`.
-  #' - `character`: Aggregate by these time scales.
   #' @param split_merge_aggregate_optional_args `[NULL, list]` (default `NULL`)
   #'
   #' Optional arguments to pass to `[lexis_split_merge_aggregate_by_stratum]`.
@@ -757,13 +738,12 @@ surv_lexis <- function(
 
   surv_estimate_args[["stratum_col_nms"]] <- local({
     scn <- surv_estimate_args[["stratum_col_nms"]]
-    aggre_meta <- attr(sdt, "lexis_split_merge_aggregate_by_stratum_meta")
-    aggre_ts_col_nms <- aggre_meta[["ts_col_nms"]]
-    if (length(aggre_ts_col_nms) > 1) {
+    if (length(breaks) > 1) {
       # e.g. if aggregating by ts_cal to get a period analysis time series.
+      stratum_ts_col_nms <- names(breaks)[-length(breaks)]
       scn <- c(
         surv_estimate_args[["stratum_col_nms"]],
-        paste0(aggre_ts_col_nms[seq_len(length(aggre_ts_col_nms) - 1L)], "_id")
+        paste0(stratum_ts_col_nms, "_id")
       )
     }
     scn
