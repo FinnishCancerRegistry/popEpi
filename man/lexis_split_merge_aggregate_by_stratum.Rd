@@ -248,7 +248,7 @@ if that \code{optional_steps} element exists.
 attributes on the resulting big table and call \code{data.table::setkeyv}
 with \code{cols = c(names(aggre_by), "box_id")}. We store the metadata
 \code{list(stratum_col_nms, value_col_nms)} into the attribute named
-\code{surv_split_merge_aggregate_by_stratum_meta}, where
+\code{lexis_split_merge_aggregate_by_stratum_meta}, where
 \code{stratum_col_nms = names(aggre_by)}, \code{ts_col_nms = aggre_ts_col_nms}, and
 \code{value_col_nms} are the names of the columns resulting from \code{aggre_exprs}.
 \item Run
