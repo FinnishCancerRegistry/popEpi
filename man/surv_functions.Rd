@@ -288,7 +288,7 @@ Pre-defined estimators with their formulae:
 }
 
 \itemize{
-\item Check columns \code{t_at_risk}, \code{n_at_risk_eff} for zeroes if they are in the
+\item Check columns \code{t_at_risk}, \code{n_at_risk_eff} for zeroes/NAs if they are in
 \code{dt}. Intervals with e.g. \code{t_at_risk == 0} have no survival probability
 defined for them which causes \code{NA} values (i.e. zero divided by zero
 is not defined). Throw a warning if such intervals are found.
