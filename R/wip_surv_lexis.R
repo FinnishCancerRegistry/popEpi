@@ -281,12 +281,12 @@ surv_lexis_aggre_exprs__ <- function(
 #' # this is done here for demonstration purposes but of course everything works
 #' # also without ts_cal breaks.
 #' bl <- list(
+#'   ts_cal = c(1999, 2004),
 #'   ts_fut = popEpi::lexis_breaks_collapse_1d(
 #'     lexis = sire,
 #'     breaks_1d = list(ts_fut = seq(0, 5, 1 / 12)),
 #'     mandatory_breaks = 0:5
-#'   ),
-#'   ts_cal = c(1999, 2004)
+#'   )
 #' )
 #'
 #' # observed survival
@@ -294,7 +294,6 @@ surv_lexis_aggre_exprs__ <- function(
 #'   lexis = sire,
 #'   breaks = bl,
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = "ts_fut",
 #'   subset = NULL,
 #'   estimators = "S_ch",
 #'   conf_methods = "log",
@@ -311,7 +310,6 @@ surv_lexis_aggre_exprs__ <- function(
 #'   lexis = sire,
 #'   breaks = bl,
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = "ts_fut",
 #'   estimators = "S_ch",
 #'   weights = wdt
 #' )
@@ -326,7 +324,6 @@ surv_lexis_aggre_exprs__ <- function(
 #'   lexis = sire,
 #'   breaks = bl,
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = "ts_fut",
 #'   estimators = "S_ch",
 #'   weights = "individual_weight"
 #' )
@@ -349,7 +346,6 @@ surv_lexis_aggre_exprs__ <- function(
 #'   lexis = sire,
 #'   breaks = bl_multi_period,
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = c("ts_cal", "ts_fut"),
 #'   estimators = "S_ch",
 #'   weights = wdt
 #' )
@@ -364,7 +360,6 @@ surv_lexis_aggre_exprs__ <- function(
 #'   lexis = sire,
 #'   breaks = bl_multi_period,
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = c("ts_cal", "ts_fut"),
 #'   estimators = "S_ch",
 #'   weights = "individual_weight"
 #' )
@@ -386,7 +381,6 @@ surv_lexis_aggre_exprs__ <- function(
 #'   merge_dt_by = c("sex", "ts_cal", "ts_age"),
 #'   merge_dt = pm,
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = "ts_fut",
 #'   estimators = c(
 #'     "S_ch",
 #'     "RS_e2_ch",
@@ -405,7 +399,6 @@ surv_lexis_aggre_exprs__ <- function(
 #'   merge_dt_by = c("sex", "ts_cal", "ts_age"),
 #'   merge_dt = pm,
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = "ts_fut",
 #'   estimators = list(
 #'     my_estimator = list(
 #'       est = quote(n_events / n_events_exp_e2),
@@ -425,7 +418,6 @@ surv_lexis_aggre_exprs__ <- function(
 #'   merge_dt_by = c("sex", "ts_cal", "ts_age"),
 #'   merge_dt = pm,
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = "ts_fut",
 #'   estimators = list(
 #'     my_estimator = list(
 #'       est = quote(n_events / n_events_exp_e2),
@@ -446,7 +438,6 @@ surv_lexis_aggre_exprs__ <- function(
 #'   merge_dt_by = c("sex", "ts_cal", "ts_age"),
 #'   merge_dt = pm,
 #'   aggre_by = "my_stratum",
-#'   aggre_ts_col_nms = "ts_fut",
 #'   estimators = list(
 #'     my_estimator = list(
 #'       est = quote(n_events / n_events_exp_e2),
@@ -464,7 +455,6 @@ surv_lexis_aggre_exprs__ <- function(
 #' sdt <- popEpi::surv_lexis(
 #'   lexis = sire,
 #'   breaks = bl,
-#'   aggre_ts_col_nms = "ts_fut",
 #'   estimators = c("S_ch", "S_lt"),
 #'   conf_methods = list(list(
 #'     g = quote(qnorm(theta)),
@@ -485,7 +475,6 @@ surv_lexis_aggre_exprs__ <- function(
 #'   merge_dt_by = c("sex", "ts_cal", "ts_age"),
 #'   merge_dt = pm,
 #'   aggre_by = NULL,
-#'   aggre_ts_col_nms = c("ts_fut"),
 #'   subset = NULL,
 #'   estimators = c(
 #'     "h_ch_[0, 1]",
@@ -570,7 +559,6 @@ surv_lexis_aggre_exprs__ <- function(
 #'   merge_dt_by = c("sex", "ts_cal", "ts_age"),
 #'   merge_dt = pm,
 #'   aggre_by = NULL,
-#'   aggre_ts_col_nms = c("ts_fut"),
 #'   subset = NULL,
 #'   estimators = c(
 #'     "F_ch_['alive', 'dead from cancer']",
@@ -598,7 +586,6 @@ surv_lexis_aggre_exprs__ <- function(
 #'   merge_dt_by = c("sex", "ts_cal", "ts_age"),
 #'   merge_dt = pm,
 #'   aggre_by = NULL,
-#'   aggre_ts_col_nms = c("ts_fut"),
 #'   subset = NULL,
 #'   estimators = c(
 #'     "F_ch",
@@ -611,16 +598,27 @@ surv_lexis_aggre_exprs__ <- function(
 #'   max(abs(sdt[["F_ch_[F, T]_est"]] - sdt[["F_ch_est"]])) < 1e-15
 #' )
 #'
+#' # more arguments to popEpi::lexis_split_merge_aggregate_by_stratum
+#' sdt <- popEpi::surv_lexis(
+#'   lexis = sire,
+#'   breaks = bl,
+#'   split_merge_aggregate_optional_args = list(
+#'     breaks_collapse_args = list(mandatory_breaks = 0:5)
+#'   ),
+#'   estimators = "S_ch"
+#' )
+#' stopifnot(
+#'   1:5 %in% sdt[["ts_fut_stop"]]
+#' )
 surv_lexis <- function(
   lexis,
   breaks,
   merge_dt = NULL,
   merge_dt_by = NULL,
-  merge_optional_args = NULL,
   aggre_by = NULL,
   aggre_ts_col_nms = NULL,
-  aggre_exprs = NULL,
   subset = NULL,
+  split_merge_aggregate_optional_args = NULL,
   estimators = "S_ch",
   conf_methods = "log",
   conf_lvls = 0.95,
@@ -628,9 +626,27 @@ surv_lexis <- function(
 ) {
   #' @template param_lexis
   assert_is_arg_lexis(lexis, dt = FALSE)
-  lexis_dt <- lexis_to_lexis_dt__(lexis)
-  subset <- handle_arg_subset(dataset_nm = "lexis_dt")
-  aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis_dt)
+  split_merge_aggregate_args <- list(
+    lexis = lexis_to_lexis_dt__(lexis),
+    breaks = breaks,
+    merge_dt = merge_dt,
+    merge_dt_by = merge_dt_by,
+    aggre_by = handle_arg_by(by = aggre_by, dataset = lexis),
+    aggre_ts_col_nms = local({
+      if (is.null(aggre_ts_col_nms)) {
+        names(breaks)
+      } else {
+        aggre_ts_col_nms
+      }
+    }),
+    subset = handle_arg_subset(dataset_nm = "lexis")
+  )
+  surv_estimate_args <- list(
+    ts_fut_col_nm = utils::tail(split_merge_aggregate_args$aggre_ts_col_nms, 1),
+    stratum_col_nms = names(split_merge_aggregate_args[["aggre_by"]]),
+    conf_methods = conf_methods,
+    conf_lvls = conf_lvls
+  )
   #' @param weights `[NULL, data.table, character]` (default `NULL`)
   #'
   #' Weights for adjusting estimates.
@@ -638,30 +654,21 @@ surv_lexis <- function(
   #' - `NULL`: No adjusting is performed.
   #' - `data.table`: Passed to `[surv_estimate]`.
   #' - `character`: Passed to `[lexis_split_merge_aggregate_by_stratum]`.
-  weight_dt <- weight_col_nm <- NULL
-  do_direct_adjusting <- data.table::is.data.table(weights)
-  if (do_direct_adjusting) {
-    weight_dt <- weights
-    aggre_by <- handle_arg_by(
+  if (data.table::is.data.table(weights)) {
+    surv_estimate_args[["weight_dt"]] <- weights
+    split_merge_aggregate_args[["aggre_by"]] <- handle_arg_by(
       by = list(
-        aggre_by,
+        split_merge_aggregate_args[["aggre_by"]],
         local({
-          da_stratum_col_nms <- setdiff(names(weights), "weight")
-          nondup <- !duplicated(lexis_dt, by = da_stratum_col_nms)
-          da_stratum_dt <- lexis_dt[
-            i = nondup,
-            #' @importFrom data.table .SD
-            j = .SD,
-            .SDcols = da_stratum_col_nms
-          ]
-          data.table::setkeyv(da_stratum_dt, names(da_stratum_dt))
+          da_stratum_dt <- as.list(weights)[setdiff(names(weights), "weight")]
+          data.table::setDT(da_stratum_dt)
           da_stratum_dt[]
         })
       ),
-      dataset = lexis_dt
+      dataset = lexis
     )
   } else {
-    weight_col_nm <- weights
+    split_merge_aggregate_args[["weight_col_nm"]] <- weights
   }
   # @codedoc_comment_block popEpi::surv_lexis
   # Compute survival estimates on a `Lexis` dataset
@@ -670,7 +677,8 @@ surv_lexis <- function(
   # Performs the following steps:
   #
   # - `estimators` is analysed and the following will be appended to
-  #   `aggre_exprs`by `surv_lexis`:
+  #   `aggre_exprs` arg of `[lexis_split_merge_aggregate_by_stratum]` by
+  #   `surv_lexis`:
   # @codedoc_insert_comment_block popEpi::surv_lexis_aggre_exprs__
   # - This results in `aggre_exprs` with both anything that the user defined
   #   and also what was added by `surv_lexis`. However, we drop duplicates
@@ -681,15 +689,22 @@ surv_lexis <- function(
   #   supplied is retained.
   # @codedoc_comment_block popEpi::surv_lexis
   estimator_dt <- handle_arg_estimators(estimators)
-  aggre_exprs <- c(
-    aggre_exprs,
-    surv_lexis_aggre_exprs__(estimator_dt = estimator_dt)
+  split_merge_aggregate_args[["aggre_exprs"]] <- local({
+    aggre_exprs <- c(
+      split_merge_aggregate_args[["aggre_exprs"]],
+      surv_lexis_aggre_exprs__(estimator_dt = estimator_dt)
+    )
+    keep <- !duplicated(aggre_exprs)
+    if (!is.null(names(aggre_exprs))) {
+      keep <- keep & !duplicated(names(aggre_exprs))
+    }
+    aggre_exprs <- aggre_exprs[keep]
+    aggre_exprs
+  })
+  surv_estimate_args[["estimators"]] <- structure(
+    estimator_dt[["expression_set"]],
+    names = estimator_dt[["user_estimator_name"]]
   )
-  keep <- !duplicated(aggre_exprs)
-  if (!is.null(names(aggre_exprs))) {
-    keep <- keep & !duplicated(names(aggre_exprs))
-  }
-  aggre_exprs <- aggre_exprs[keep]
   # @codedoc_comment_block popEpi::surv_lexis
   # - Call `lexis_split_merge_aggregate_by_stratum`.
   #   The resulting table of aggregated data is
@@ -707,8 +722,6 @@ surv_lexis <- function(
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   #' @param merge_dt_by
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
-  #' @param merge_optional_args
-  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   #' @param aggre_by
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   #' @param aggre_ts_col_nms `[NULL, character]` (default `NULL`)
@@ -721,77 +734,46 @@ surv_lexis <- function(
   #'
   #' - `NULL`: Use `names(breaks)`.
   #' - `character`: Aggregate by these time scales.
-  #' @param aggre_exprs
-  #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+  #' @param split_merge_aggregate_optional_args `[NULL, list]` (default `NULL`)
+  #'
+  #' Optional arguments to pass to `[lexis_split_merge_aggregate_by_stratum]`.
+  #'
+  #' - `NULL`: No additional arguments.
+  #' - `list`: Pass these arguments. E.g.
+  #'   `list(breaks_collapse_args = list(mandatory_breaks = 0:5))`.
   #' @param subset
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
-  sdt <- lexis_split_merge_aggregate_by_stratum(
-    lexis = lexis_dt,
-    breaks = breaks,
-    merge_dt_by = merge_dt_by,
-    merge_dt = merge_dt,
-    merge_optional_args = merge_optional_args,
-    aggre_by = aggre_by,
-    aggre_ts_col_nms = aggre_ts_col_nms,
-    aggre_exprs = aggre_exprs,
-    weight_col_nm = weight_col_nm,
-    subset = subset
+  split_merge_aggregate_args <- c(
+    split_merge_aggregate_args,
+    split_merge_aggregate_optional_args
   )
-  # surv_lexis_call_env <- parent.frame(1L)
-  # surv_lexis_eval_env <- environment()
-  # surv_lexis_eval_env[["ts_fut_col_nm"]] <- utils::tail(aggre_ts_col_nms, 1L)
-  # local({
-  #   add_col_nms <- lapply(estimator_dt[["expression_set"]], function(es) {
-  #     var_nms <- unlist(lapply(es, all.vars))
-  #     intersect(var_nms, names(SURV_LEXIS_ADD_COL_EXPRS__))
-  #   })
-  #   add_col_nms <- intersect(
-  #     names(SURV_LEXIS_ADD_COL_EXPRS__),
-  #     unlist(add_col_nms)
-  #   )
-  #   eval_env <- new.env(parent = surv_lexis_eval_env)
-  #   eval_env[["surv_lexis_call_env"]] <- surv_lexis_call_env
-  #   eval_env[["surv_lexis_eval_env"]] <- surv_lexis_eval_env
-  #   eval_env[["sdt"]] <- sdt
-  #   for (add_col_nm in add_col_nms) {
-  #     data.table::set(
-  #       x = sdt,
-  #       j = add_col_nm,
-  #       value = eval(
-  #         expr = SURV_LEXIS_ADD_COL_EXPRS__[[add_col_nm]],
-  #         envir = sdt,
-  #         enclos = eval_env
-  #       )
-  #     )
-  #   }
-  # })
+  split_merge_aggregate_args <- split_merge_aggregate_args[
+    !duplicated(names(split_merge_aggregate_args))
+  ]
+  surv_estimate_args[["dt"]] <- sdt <- call_with_arg_list__(
+    popEpi::lexis_split_merge_aggregate_by_stratum,
+    split_merge_aggregate_args
+  )
 
-  aggre_meta <- attr(sdt, "surv_split_merge_aggregate_by_stratum_meta")
-  estimation_stratum_col_nms <- setdiff(
-    aggre_meta[["stratum_col_nms"]],
-    names(weights)
-  )
-  aggre_ts_col_nms <- aggre_meta[["ts_col_nms"]]
-  if (length(aggre_ts_col_nms) > 1) {
-    # e.g. if aggregating by ts_cal to get a period analysis time series.
-    estimation_stratum_col_nms <- c(
-      estimation_stratum_col_nms,
-      paste0(aggre_ts_col_nms[seq_len(length(aggre_ts_col_nms) - 1L)], "_id")
-    )
-  }
+  surv_estimate_args[["stratum_col_nms"]] <- local({
+    scn <- surv_estimate_args[["stratum_col_nms"]]
+    aggre_meta <- attr(sdt, "lexis_split_merge_aggregate_by_stratum_meta")
+    aggre_ts_col_nms <- aggre_meta[["ts_col_nms"]]
+    if (length(aggre_ts_col_nms) > 1) {
+      # e.g. if aggregating by ts_cal to get a period analysis time series.
+      scn <- c(
+        surv_estimate_args[["stratum_col_nms"]],
+        paste0(aggre_ts_col_nms[seq_len(length(aggre_ts_col_nms) - 1L)], "_id")
+      )
+    }
+    scn
+  })
   # @codedoc_comment_block popEpi::surv_lexis
   # - Call `surv_estimate`.
   # @codedoc_comment_block popEpi::surv_lexis
-  sdt <- surv_estimate(
-    dt = sdt,
-    ts_fut_col_nm = aggre_ts_col_nms[length(aggre_ts_col_nms)],
-    stratum_col_nms = estimation_stratum_col_nms,
-    estimators = structure(
-      estimator_dt[["expression_set"]],
-      names = estimator_dt[["user_estimator_name"]]
-    ),
-    conf_methods = conf_methods,
-    weight_dt = weight_dt
+  sdt <- call_with_arg_list__(
+    popEpi::surv_estimate,
+    surv_estimate_args
   )
 
   # @codedoc_comment_block return(popEpi::surv_lexis)

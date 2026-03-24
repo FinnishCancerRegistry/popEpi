@@ -371,7 +371,7 @@ surv_estimate <- function(
 
   # attribute can be NULL if `dt` is not the result of this function's call.
   # which we allow for generality.
-  aggre_meta <- as.list(attr(dt, "surv_split_merge_aggregate_by_stratum_meta"))
+  aggre_meta <- as.list(attr(dt, "lexis_split_merge_aggregate_by_stratum_meta"))
   stopifnot(
     #' @param stratum_col_nms `[NULL, character]` (default `NULL`)
     #'

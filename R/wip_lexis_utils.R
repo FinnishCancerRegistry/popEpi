@@ -246,7 +246,7 @@ lexis_delay_entry <- function(lexis, ts_col_new_entry, ts_col_nm) {
 lexis_crop <- function(lexis, breaks) {
   assert_is_arg_lexis(lexis, dt = FALSE)
   delay_entry <- call_with_arg_list__(
-    pmax, 
+    pmax,
     lapply(names(breaks), function(ts_col_nm) {
       entry <- lexis[[ts_col_nm]]
       cropped_entry <- min(breaks[[ts_col_nm]])

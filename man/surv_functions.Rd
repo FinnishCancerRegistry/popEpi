@@ -34,11 +34,10 @@ surv_lexis(
   breaks,
   merge_dt = NULL,
   merge_dt_by = NULL,
-  merge_optional_args = NULL,
   aggre_by = NULL,
   aggre_ts_col_nms = NULL,
-  aggre_exprs = NULL,
   subset = NULL,
+  split_merge_aggregate_optional_args = NULL,
   estimators = "S_ch",
   conf_methods = "log",
   conf_lvls = 0.95,
@@ -191,8 +190,6 @@ which all pass \code{test_expr}.}
 
 \item{merge_dt_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
-\item{merge_optional_args}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
-
 \item{aggre_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{aggre_ts_col_nms}{\verb{[NULL, character]} (default \code{NULL})
@@ -207,9 +204,16 @@ time scales and treats \code{ts_fut} as the follow-up time scale.
 \item \code{character}: Aggregate by these time scales.
 }}
 
-\item{aggre_exprs}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
-
 \item{subset}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
+\item{split_merge_aggregate_optional_args}{\verb{[NULL, list]} (default \code{NULL})
+
+Optional arguments to pass to \verb{[lexis_split_merge_aggregate_by_stratum]}.
+\itemize{
+\item \code{NULL}: No additional arguments.
+\item \code{list}: Pass these arguments. E.g.
+\code{list(breaks_collapse_args = list(mandatory_breaks = 0:5))}.
+}}
 
 \item{weights}{\verb{[NULL, data.table, character]} (default \code{NULL})
 
@@ -367,7 +371,8 @@ Compute survival estimates on a \code{Lexis} dataset
 Performs the following steps:
 \itemize{
 \item \code{estimators} is analysed and the following will be appended to
-\code{aggre_exprs}by \code{surv_lexis}:
+\code{aggre_exprs} arg of \verb{[lexis_split_merge_aggregate_by_stratum]} by
+\code{surv_lexis}:
 \itemize{
 \item Detect variables used in the estimation expressions with \verb{[all.vars]}.
 \item Retain only those known to \code{popEpi} --- see
@@ -592,12 +597,12 @@ sire <- make_sire()
 # this is done here for demonstration purposes but of course everything works
 # also without ts_cal breaks.
 bl <- list(
+  ts_cal = c(1999, 2004),
   ts_fut = popEpi::lexis_breaks_collapse_1d(
     lexis = sire,
     breaks_1d = list(ts_fut = seq(0, 5, 1 / 12)),
     mandatory_breaks = 0:5
-  ),
-  ts_cal = c(1999, 2004)
+  )
 )
 
 # observed survival
@@ -605,7 +610,6 @@ sdt <- popEpi::surv_lexis(
   lexis = sire,
   breaks = bl,
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = "ts_fut",
   subset = NULL,
   estimators = "S_ch",
   conf_methods = "log",
@@ -622,7 +626,6 @@ sdt_da <- popEpi::surv_lexis(
   lexis = sire,
   breaks = bl,
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = "ts_fut",
   estimators = "S_ch",
   weights = wdt
 )
@@ -637,7 +640,6 @@ sdt_iw <- popEpi::surv_lexis(
   lexis = sire,
   breaks = bl,
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = "ts_fut",
   estimators = "S_ch",
   weights = "individual_weight"
 )
@@ -660,7 +662,6 @@ sdt_da <- popEpi::surv_lexis(
   lexis = sire,
   breaks = bl_multi_period,
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = c("ts_cal", "ts_fut"),
   estimators = "S_ch",
   weights = wdt
 )
@@ -675,7 +676,6 @@ sdt_iw <- popEpi::surv_lexis(
   lexis = sire,
   breaks = bl_multi_period,
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = c("ts_cal", "ts_fut"),
   estimators = "S_ch",
   weights = "individual_weight"
 )
@@ -697,7 +697,6 @@ sdt <- popEpi::surv_lexis(
   merge_dt_by = c("sex", "ts_cal", "ts_age"),
   merge_dt = pm,
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = "ts_fut",
   estimators = c(
     "S_ch",
     "RS_e2_ch",
@@ -716,7 +715,6 @@ sdt <- popEpi::surv_lexis(
   merge_dt_by = c("sex", "ts_cal", "ts_age"),
   merge_dt = pm,
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = "ts_fut",
   estimators = list(
     my_estimator = list(
       est = quote(n_events / n_events_exp_e2),
@@ -736,7 +734,6 @@ sdt <- popEpi::surv_lexis(
   merge_dt_by = c("sex", "ts_cal", "ts_age"),
   merge_dt = pm,
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = "ts_fut",
   estimators = list(
     my_estimator = list(
       est = quote(n_events / n_events_exp_e2),
@@ -757,7 +754,6 @@ sdt <- popEpi::surv_lexis(
   merge_dt_by = c("sex", "ts_cal", "ts_age"),
   merge_dt = pm,
   aggre_by = "my_stratum",
-  aggre_ts_col_nms = "ts_fut",
   estimators = list(
     my_estimator = list(
       est = quote(n_events / n_events_exp_e2),
@@ -775,7 +771,6 @@ stopifnot(
 sdt <- popEpi::surv_lexis(
   lexis = sire,
   breaks = bl,
-  aggre_ts_col_nms = "ts_fut",
   estimators = c("S_ch", "S_lt"),
   conf_methods = list(list(
     g = quote(qnorm(theta)),
@@ -796,7 +791,6 @@ sdt <- popEpi::surv_lexis(
   merge_dt_by = c("sex", "ts_cal", "ts_age"),
   merge_dt = pm,
   aggre_by = NULL,
-  aggre_ts_col_nms = c("ts_fut"),
   subset = NULL,
   estimators = c(
     "h_ch_[0, 1]",
@@ -881,7 +875,6 @@ sdt <- popEpi::surv_lexis(
   merge_dt_by = c("sex", "ts_cal", "ts_age"),
   merge_dt = pm,
   aggre_by = NULL,
-  aggre_ts_col_nms = c("ts_fut"),
   subset = NULL,
   estimators = c(
     "F_ch_['alive', 'dead from cancer']",
@@ -909,7 +902,6 @@ sdt <- popEpi::surv_lexis(
   merge_dt_by = c("sex", "ts_cal", "ts_age"),
   merge_dt = pm,
   aggre_by = NULL,
-  aggre_ts_col_nms = c("ts_fut"),
   subset = NULL,
   estimators = c(
     "F_ch",
@@ -922,4 +914,16 @@ stopifnot(
   max(abs(sdt[["F_ch_[F, T]_est"]] - sdt[["F_ch_est"]])) < 1e-15
 )
 
+# more arguments to popEpi::lexis_split_merge_aggregate_by_stratum
+sdt <- popEpi::surv_lexis(
+  lexis = sire,
+  breaks = bl,
+  split_merge_aggregate_optional_args = list(
+    breaks_collapse_args = list(mandatory_breaks = 0:5)
+  ),
+  estimators = "S_ch"
+)
+stopifnot(
+  1:5 \%in\% sdt[["ts_fut_stop"]]
+)
 }
