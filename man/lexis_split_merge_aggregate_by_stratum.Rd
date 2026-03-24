@@ -16,7 +16,7 @@ lexis_split_merge_aggregate_by_stratum(
   subset = NULL,
   weight_col_nm = NULL,
   split_lexis_column_exprs = NULL,
-  collapse_breaks_arg_list = NULL,
+  breaks_collapse_args = NULL,
   optional_steps = NULL
 )
 }
@@ -118,14 +118,14 @@ See \strong{Details} for more information on when and how these expressions
 are evaluated.
 }}
 
-\item{collapse_breaks_arg_list}{\verb{[NULL, list]} (default \code{NULL})
+\item{breaks_collapse_args}{\verb{[NULL, list]} (default \code{NULL})
 
 Optional, if you supply this argument then
 \verb{[lexis_breaks_collapse_1d]} will be called for each stratum defined
 via \code{aggre_by} separately.
 \itemize{
-\item \code{NULL}: Normal behaviour.
-\item \code{list}: E.g. \code{list(mandatory_breaks = 0:5)}. Causes
+\item \code{NULL}: \verb{[lexis_breaks_collapse_1d]} is not called.
+\item \code{list}: E.g. \code{list(mandatory_breaks = 0:5)}.
 }}
 
 \item{optional_steps}{\verb{[NULL, list]} (default \code{NULL})
@@ -216,17 +216,17 @@ steps are performed.
 \item Run
 \code{optional_steps[["stratum_pre_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
-\item If \code{!is.null(collapse_breaks_arg_list)}, run
+\item If \code{!is.null(breaks_collapse_args)}, run
 \code{popEpi::lexis_breaks_collapse_1d} on the last element of \code{breaks}.
 Arguments \code{lexis} and \code{breaks_1d} are set automatically.
-' @param collapse_breaks_arg_list \verb{[NULL, list]} (default \code{NULL})
+' @param breaks_collapse_args \verb{[NULL, list]} (default \code{NULL})
 '
 ' Optional, if you supply this argument then
 ' \verb{[lexis_breaks_collapse_1d]} will be called for each stratum defined
 ' via \code{aggre_by} separately.
 '
-' - \code{NULL}: Normal behaviour.
-' - \code{list}: E.g. \code{list(mandatory_breaks = 0:5)}. Causes
+' - \code{NULL}: \verb{[lexis_breaks_collapse_1d]} is not called.
+' - \code{list}: E.g. \code{list(mandatory_breaks = 0:5)}.
 \item Run
 \code{popEpi::splitMulti} on the subset of \code{lexis} which contains data from
 the current stratum.

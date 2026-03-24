@@ -433,7 +433,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   subset = NULL,
   weight_col_nm = NULL,
   split_lexis_column_exprs = NULL,
-  collapse_breaks_arg_list = NULL,
+  breaks_collapse_args = NULL,
   optional_steps = NULL
 ) {
   #' @template param_lexis
@@ -637,25 +637,25 @@ lexis_split_merge_aggregate_by_stratum <- function(
         )
       }
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      #   + If `!is.null(collapse_breaks_arg_list)`, run
+      #   + If `!is.null(breaks_collapse_args)`, run
       #     `popEpi::lexis_breaks_collapse_1d` on the last element of `breaks`.
       #     Arguments `lexis` and `breaks_1d` are set automatically.
-      #' @param collapse_breaks_arg_list `[NULL, list]` (default `NULL`)
+      #' @param breaks_collapse_args `[NULL, list]` (default `NULL`)
       #'
       #' Optional, if you supply this argument then
       #' `[lexis_breaks_collapse_1d]` will be called for each stratum defined
       #' via `aggre_by` separately.
       #' 
-      #' - `NULL`: Normal behaviour.
-      #' - `list`: E.g. `list(mandatory_breaks = 0:5)`. Causes 
+      #' - `NULL`: `[lexis_breaks_collapse_1d]` is not called.
+      #' - `list`: E.g. `list(mandatory_breaks = 0:5)`.
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      if (!is.null(collapse_breaks_arg_list)) {
-        collapse_breaks_arg_list <- as.list(collapse_breaks_arg_list)
-        collapse_breaks_arg_list[["lexis"]] <- lexis_stratum_subset
-        collapse_breaks_arg_list[["breaks_1d"]] <- breaks[length(breaks)]
+      if (!is.null(breaks_collapse_args)) {
+        breaks_collapse_args <- as.list(breaks_collapse_args)
+        breaks_collapse_args[["lexis"]] <- lexis_stratum_subset
+        breaks_collapse_args[["breaks_1d"]] <- breaks[length(breaks)]
         breaks[[length(breaks)]] <- call_with_arg_list__(
           popEpi::lexis_breaks_collapse_1d,
-          collapse_breaks_arg_list
+          breaks_collapse_args
         )
       }
 
