@@ -6,6 +6,9 @@ surv_pohar_perme_weight__ <- function(
   method = c("subject subinterval", "survival interval")[1L]
 ) {
   assert_is_arg_lexis(lexis, dt = FALSE)
+  if (nrow(lexis) == 0) {
+    return(double(0))
+  }
   lexis_ts_col_nms <- Epi::timeScales(lexis)
   dt_key_col_nms <- data.table::key(lexis)
   stopifnot(
