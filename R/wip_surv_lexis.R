@@ -68,13 +68,13 @@ lexis_breaks_collapse_1d <- function(
   #' List of breaks with one element. These define the initial intervals which
   #' are subject to being combined. E.g. `list(ts_fut = seq(0, 5, 1 / 12))`.
   assert_is_arg_breaks(breaks_1d, lexis = lexis)
-  stopifnot(length(breaks_1d) == 1, breaks_1d[[1]][1] == 0)
+  stopifnot(breaks_1d[[length(breaks_1d)]][1] == 0)
   #' @param test_expr `[NULL, call]` (default `NULL`)
   #'
   #' This expression is evaluated for every interval. If the test does not pass,
   #' the interval must be aggregated with one of its neighbours.
   stopifnot(
-    inherits(test_expr, c("call", "NULL"))
+    inherits(test_expr, c("call", "name", "{", "NULL"))
   )
   #' @param mandatory_breaks `[NULL, other]` (default `NULL`)
   #'
@@ -85,7 +85,7 @@ lexis_breaks_collapse_1d <- function(
   stopifnot(
     is.null(mandatory_breaks) || is.vector(mandatory_breaks)
   )
-  ts_col_nm <- names(breaks_1d)[1]
+  ts_col_nm <- names(breaks_1d)[length(breaks_1d)]
   if (!is.null(mandatory_breaks)) {
     mandatory_breaks <- methods::as(
       mandatory_breaks,
@@ -93,15 +93,21 @@ lexis_breaks_collapse_1d <- function(
     )
   }
   if (is.null(test_expr)) {
-    test_expr <- quote(sum(lex.dur) == 0)
+    test_expr <- quote(sum(lex.dur))
   }
-  ts_breaks <- breaks_1d[[1]]
+  lexis_dt <- data.table::copy(lexis_to_lexis_dt__(
+    lexis = lexis,
+    select = c(
+      "lex.id", ts_col_nm, "lex.dur", "lex.Cst", "lex.Xst",
+      intersect(all.vars(test_expr), names(lexis))
+    )
+  ))
+  ts_breaks <- breaks_1d[[length(breaks_1d)]]
   out <- rep(NA_integer_, length(ts_breaks))
   out[1L] <- 1L
   out_pos <- 1L
   break_lo_pos <- 1L
   break_hi_pos <- 2L
-  call_env <- parent.frame(1L)
   while (TRUE) {
     if (break_hi_pos > length(ts_breaks)) {
       break
@@ -114,14 +120,38 @@ lexis_breaks_collapse_1d <- function(
       !break_lo %in% mandatory_breaks
     can_combine <- can_combine_next || can_combine_previous
     do_combine <- can_combine && local({
-      work_dt <- surv_interval(
-        lexis = lexis,
-        break_lo = break_lo,
-        break_hi = break_hi,
-        ts_col_nm = ts_col_nm,
-        merge = FALSE
+      data.table::set(
+        x = lexis_dt,
+        i = seq_len(nrow(lexis_dt)), # avoids allocating more memory
+        j = c(ts_col_nm, "lex.dur", "lex.Cst", "lex.Xst"),
+        value = list(
+          lexis[[ts_col_nm]],
+          lexis[["lex.dur"]], lexis[["lex.Cst"]], lexis[["lex.Xst"]]
+        )
       )
-      eval(test_expr, envir = work_dt, enclos = call_env)
+      lexis_crop(
+        lexis = lexis_dt,
+        breaks = structure(list(c(break_lo, break_hi)), names = ts_col_nm)
+      )
+      expr <- substitute(
+        lexis_dt[i = !is.na(lex.dur), j = test_expr],
+        list(test_expr = test_expr)
+      )
+      test_result <- eval(expr)
+      if (
+        !storage.mode(test_result) %in% c("logical", "double", "integer")
+      ) {
+        stop(
+          "Test expression ", deparse1(test_expr), " did not evaluate into ",
+          "(?storage.mode) logical, numeric, nor integer. ",
+          "Instead it evaluated to `storage.mode(result) = ",
+          deparse1(storage.mode(test_result), "`")
+        )
+      }
+      if (storage.mode(test_result) != "logical") {
+        test_result <- test_result > 0
+      }
+      !test_result
     })
 
     if (do_combine) {
