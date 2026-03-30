@@ -124,13 +124,13 @@
 #' @seealso
 #' `[Epi::splitLexis]`, `[Epi::Lexis]`,
 #' `[survival::survSplit]`
-#'
+#' @eval codedoc::pkg_doc_fun("popEpi::splitMulti")
 splitMulti <- function(data,
                        breaks = NULL,
                        ...,
-                       drop=TRUE,
-                       merge=TRUE,
-                       verbose=FALSE) {
+                       drop = TRUE,
+                       merge = TRUE,
+                       verbose = FALSE) {
 
   lex.id <- lex.dur <- NULL ## APPEASE R CMD CHECK
 
@@ -144,10 +144,14 @@ splitMulti <- function(data,
   allScales <- attr_list$time.scales
   splitScales <- names(breaks)
 
+  # @codedoc_comment_block news("popEpi::splitMulti", "2026-03-30", "0.5.0")
+  # Fixed `popEpi::splitMulti` when `merge = FALSE`. Did not include `lex.dur`
+  # previously which caused an error.
+  # @codedoc_comment_block news("popEpi::splitMulti", "2026-03-30", "0.5.0")
   keep_nms <- if (merge) names(data) else {
     intersect(
       names(data),
-      c("lex.id", "lex.Cst", "lex.Xst", allScales)
+      c("lex.id", allScales, "lex.dur", "lex.Cst", "lex.Xst")
     )
   }
   # this is not a copy!

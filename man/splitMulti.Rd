@@ -81,6 +81,13 @@ format, e.g. \code{Date},
 fractional years (see \verb{[Epi::cal.yr]}) and \verb{[get.yrs]},
 or other.
 }
+\section{News for version 0.5.0}{
+
+
+Fixed \code{popEpi::splitMulti} when \code{merge = FALSE}. Did not include \code{lex.dur}
+previously which caused an error.
+}
+
 \examples{
 #### let's prepare data for computing period method survivals
 #### in case there are problems with dates, we first
