@@ -216,7 +216,7 @@ lexis_delay_entry <- function(lexis, ts_col_new_entry, ts_col_nm) {
     ts_col_nm %in% names(lexis),
     ts_col_nm %in% Epi::timeScales(lexis),
     length(ts_col_new_entry) == 1,
-    identical(class(ts_col_new_entry), class(lexis[[ts_col_nm]]))
+    storage.mode(ts_col_new_entry) == storage.mode(lexis[[ts_col_nm]])
   )
   cannot_be_delayed <- lexis[[ts_col_nm]] > ts_col_new_entry |
     (lexis[[ts_col_nm]] + lexis[["lex.dur"]] <= ts_col_new_entry)
