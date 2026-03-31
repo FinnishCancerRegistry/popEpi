@@ -50,7 +50,8 @@ lexis_aggregate_one_stratum__ <- function(
 
   work_dt <- lexis_to_lexis_dt__(lexis_stratum_subset_split)
   # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
-  #    * First collect variables mentioned in `aggre_exprs` using `[all.vars]`.
+  #        + First collect variables mentioned in `aggre_exprs` using
+  #          `[all.vars]`.
   # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
   expr_obj_nms <- unique(unlist(lapply(aggre_exprs, all.vars)))
   lexis_box_id__(lexis = work_dt, box_dt = box_dt)
@@ -65,11 +66,11 @@ lexis_aggregate_one_stratum__ <- function(
     )
 
     # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
-    #    * There is a pre-defined table of expressions that are evaluated
-    #      and added as new columns in the split data if they appear in any
-    #      of the `aggre_exprs`. See below for the table.
+    #        + There is a pre-defined table of expressions that are evaluated
+    #          and added as new columns in the split data if they appear in any
+    #          of the `aggre_exprs`. See below for the table.
     #
-    #    * Table of expressions which create new columns into split data:
+    ##        + Table of expressions which create new columns into split data:
     #
     # ${paste0(knitr::kable(lexis_split_column_expr_table_doc__()), collapse = "\n")}
     # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
@@ -132,11 +133,11 @@ lexis_aggregate_one_stratum__ <- function(
     )
   }
   # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
-  #    * It can happen that e.g. a survival interval has absolutely no data in
-  #      it. Especially in sparse data and with delayed entry. For the
-  #      pre-specified aggregation expressions such as `n_events` we ensure
-  #      that empty time scale boxes have value zero. Your custom aggregation
-  #      expressions will result in `NA` values in empty time scale boxes.
+  #        + It can happen that e.g. a survival interval has absolutely no data in
+  #          it. Especially in sparse data and with delayed entry. For the
+  #          pre-specified aggregation expressions such as `n_events` we ensure
+  #          that empty time scale boxes have value zero. Your custom aggregation
+  #          expressions will result in `NA` values in empty time scale boxes.
   # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
   lexis_aggre_expr_list__ <- get_internal_dataset("lexis_aggre_expr_list__")
   lapply(
@@ -588,6 +589,13 @@ lexis_split_merge_aggregate_by_stratum <- function(
   )
 
   box_dt <- lexis_box_dt__(breaks)
+  stratum_box_dt <- local({
+    stratum_breaks <- breaks
+    stratum_breaks[[length(stratum_breaks)]] <- range(
+      stratum_breaks[[length(stratum_breaks)]]
+    )
+    lexis_box_dt__(stratum_breaks)
+  })
   out_expr <- quote(lexis_dt[
     j = {
       # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
@@ -617,109 +625,144 @@ lexis_split_merge_aggregate_by_stratum <- function(
         lexis = lexis_stratum_subset,
         lexis_ts_col_nms = lexis_ts_col_nms
       )
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      #   + Run
-      #     `optional_steps[["stratum_pre_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
-      #     if that `optional_steps` element exists.
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      if ("stratum_pre_split" %in% names(optional_steps)) {
-        optional_steps[["stratum_pre_split"]](
-          stratum_eval_env = stratum_eval_env,
-          eval_env = eval_env,
-          call_env = call_env
+      out <- lapply(seq_len(nrow(stratum_box_dt)), function(stratum_box_no) {
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        #   + Loop over every box defined by all other time scales except the
+        #     last one. E.g. if
+        #     `breaks = list(ts_cal = c(2001, 2004, 2007), ts_fut = 0:5)`
+        #     then we perform what follows below separately for the boxes
+        #     `]2001, 2004]`, `]2004, 2007]`.
+        #     * Run
+        #       `optional_steps[["stratum_pre_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
+        #       if that `optional_steps` element exists.
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        if ("stratum_pre_split" %in% names(optional_steps)) {
+          optional_steps[["stratum_pre_split"]](
+            stratum_eval_env = stratum_eval_env,
+            eval_env = eval_env,
+            call_env = call_env
+          )
+        }
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        #     * Using a subset `lexis` containing data only for the current
+        #       stratum (e.g. `sex = 0`), run `[splitMulti]` to limit
+        #       the data to the current stratum box also (e.g. `ts_cal` between
+        #       `]2001, 2004]`). This run both drops records in `lexis` outside
+        #       of the box and also crops follow-up to the end of the box.
+        #       This does not split the data yet.
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        stratum_box_breaks <- lapply(names(breaks), function(ts_col_nm) {
+          c(
+            stratum_box_dt[[paste0(ts_col_nm, "_start")]][[stratum_box_no]],
+            stratum_box_dt[[paste0(ts_col_nm, "_stop")]][[stratum_box_no]]
+          )
+        })
+        names(stratum_box_breaks) <- names(breaks)
+        lexis_stratum_subset <- surv_split__(
+          lexis = lexis_stratum_subset,
+          breaks = stratum_box_breaks,
+          merge = TRUE
         )
-      }
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      #   + If `!is.null(breaks_collapse_args)`, run
-      #     `popEpi::lexis_breaks_collapse_1d` on the last element of `breaks`.
-      #     Arguments `lexis` and `breaks_1d` are set automatically.
-      #' @param breaks_collapse_args `[NULL, list]` (default `NULL`)
-      #'
-      #' Optional, if you supply this argument then
-      #' `[lexis_breaks_collapse_1d]` will be called for each stratum defined
-      #' via `aggre_by` separately.
-      #' 
-      #' - `NULL`: `[lexis_breaks_collapse_1d]` is not called.
-      #' - `list`: E.g. `list(mandatory_breaks = 0:5)`.
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      if (!is.null(breaks_collapse_args)) {
-        breaks_collapse_args <- as.list(breaks_collapse_args)
-        breaks_collapse_args[["lexis"]] <- lexis_stratum_subset
-        breaks_collapse_args[["breaks_1d"]] <- breaks[length(breaks)]
-        breaks[[length(breaks)]] <- call_with_arg_list__(
-          popEpi::lexis_breaks_collapse_1d,
-          breaks_collapse_args
-        )
-      }
+        # we have now limited follow-up into the box and the box limits are no
+        # longer needed.
+        stratum_box_breaks <- stratum_box_breaks[length(stratum_box_breaks)]
+        stratum_box_breaks[[1]] <- breaks[[length(breaks)]]
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        #     * If `!is.null(breaks_collapse_args)`, run
+        #       `popEpi::lexis_breaks_collapse_1d` on the last element of
+        #       `breaks`. Arguments `lexis` and `breaks` are set
+        #       automatically. This makes it possible to "collapse" the breaks
+        #       for each stratum and stratum box combination separately.
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        #' @param breaks_collapse_args `[NULL, list]` (default `NULL`)
+        #'
+        #' Optional, if you supply this argument then
+        #' `[lexis_breaks_collapse_1d]` will be called for each stratum defined
+        #' via `aggre_by` separately.
+        #' 
+        #' - `NULL`: `[lexis_breaks_collapse_1d]` is not called.
+        #' - `list`: E.g. `list(mandatory_breaks = 0:5)`.
+        if (!is.null(breaks_collapse_args)) {
+          breaks_collapse_args <- as.list(breaks_collapse_args)
+          breaks_collapse_args[["lexis"]] <- lexis_stratum_subset
+          breaks_collapse_args[["breaks"]] <- stratum_box_breaks
+          stratum_box_breaks[[1]] <- call_with_arg_list__(
+            popEpi::lexis_breaks_collapse_1d,
+            breaks_collapse_args
+          )
+        }
 
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      #   + Run
-      #     `popEpi::splitMulti` on the subset of `lexis` which contains data from
-      #     the current stratum.
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      lexis_stratum_subset_split <- surv_split__(
-        lexis = lexis_stratum_subset,
-        breaks = breaks,
-        merge = TRUE
-      )
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      #   + Run
-      #     `optional_steps[["stratum_post_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
-      #     if that `optional_steps` element exists.
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      if ("stratum_post_split" %in% names(optional_steps)) {
-        optional_steps[["stratum_post_split"]](
-          stratum_eval_env = stratum_eval_env,
-          eval_env = eval_env,
-          call_env = call_env
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        #     * Run `[splitMulti]` for the second time, this time splitting the
+        #       data by the last time scale in `breaks`. Remember that we are
+        #       inside the box defined by the other time scales already.
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        lexis_stratum_subset_split <- surv_split__(
+          lexis = lexis_stratum_subset,
+          breaks = stratum_box_breaks,
+          merge = TRUE
         )
-      }
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      #   + Run
-      #     `lexis_merge` with `merge_dt`, `merge_dt_by`, and
-      #     `merged_optional_args`, if `merge_dt` has been supplied.
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      if (!is.null(merge_dt)) {
-        lexis_merge_arg_list[["lexis"]] <- lexis_stratum_subset_split
-        call_with_arg_list__(lexis_merge, lexis_merge_arg_list)
-      }
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      #   + Run
-      #     `optional_steps[["stratum_post_merge"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
-      #     if that `optional_steps` element exists.
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      if ("stratum_post_merge" %in% names(optional_steps)) {
-        optional_steps[["stratum_post_merge"]](
-          stratum_eval_env = stratum_eval_env,
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        #     * Run
+        #       `optional_steps[["stratum_post_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
+        #       if that `optional_steps` element exists.
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        if ("stratum_post_split" %in% names(optional_steps)) {
+          optional_steps[["stratum_post_split"]](
+            stratum_eval_env = stratum_eval_env,
+            eval_env = eval_env,
+            call_env = call_env
+          )
+        }
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        #     * Run
+        #       `[lexis_merge]` with `merge_dt`, `merge_dt_by`, and
+        #       `merged_optional_args`, if `merge_dt` has been supplied.
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        if (!is.null(merge_dt)) {
+          lexis_merge_arg_list[["lexis"]] <- lexis_stratum_subset_split
+          call_with_arg_list__(lexis_merge, lexis_merge_arg_list)
+        }
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        #     * Run
+        #       `optional_steps[["stratum_post_merge"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
+        #       if that `optional_steps` element exists.
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        if ("stratum_post_merge" %in% names(optional_steps)) {
+          optional_steps[["stratum_post_merge"]](
+            stratum_eval_env = stratum_eval_env,
+            eval_env = eval_env,
+            call_env = call_env
+          )
+        }
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        #      * Evaluate `aggre_exprs` as follows:
+        # @codedoc_insert_comment_block popEpi:::lexis_aggregate_one_stratum__
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        out <- lexis_aggregate_one_stratum__(
+          lexis_stratum_subset_split = lexis_stratum_subset_split,
+          box_dt = lexis_box_dt__(stratum_box_breaks),
+          aggre_exprs = aggre_exprs,
+          split_lexis_column_exprs = split_lexis_column_exprs,
           eval_env = eval_env,
-          call_env = call_env
+          call_env = call_env,
+          stratum_eval_env = stratum_eval_env
         )
-      }
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      #   + Evaluate `aggre_exprs` as follows:
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      out <- lexis_aggregate_one_stratum__(
-        lexis_stratum_subset_split = lexis_stratum_subset_split,
-        box_dt = box_dt,
-        aggre_exprs = aggre_exprs,
-        split_lexis_column_exprs = split_lexis_column_exprs,
-        eval_env = eval_env,
-        call_env = call_env,
-        stratum_eval_env = stratum_eval_env
-      )
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      #   + Run
-      #     `optional_steps[["stratum_post_aggregation"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
-      #     if that `optional_steps` element exists.
-      # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-      if ("stratum_post_aggregation" %in% names(optional_steps)) {
-        optional_steps[["stratum_post_aggregation"]](
-          stratum_eval_env = stratum_eval_env,
-          eval_env = eval_env,
-          call_env = call_env
-        )
-      }
-      out
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        #     * Run
+        #       `optional_steps[["stratum_post_aggregation"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
+        #       if that `optional_steps` element exists.
+        # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+        if ("stratum_post_aggregation" %in% names(optional_steps)) {
+          optional_steps[["stratum_post_aggregation"]](
+            stratum_eval_env = stratum_eval_env,
+            eval_env = eval_env,
+            call_env = call_env
+          )
+        }
+        out[]
+      })
+      data.table::rbindlist(out)
     },
     .SDcols = names(lexis_dt),
     keyby = eval(names(aggre_by))
@@ -762,20 +805,51 @@ lexis_split_merge_aggregate_by_stratum <- function(
       return(out_i)
     }), use.names = TRUE, fill = TRUE)
   }
+
+  lapply(names(breaks), function(ts_col_nm) {
+    start_col_nm <- paste0(ts_col_nm, "_start")
+    stop_col_nm <- paste0(ts_col_nm, "_stop")
+    id_col_nm <- paste0(ts_col_nm, "_id")
+    sub_box_dt <- out[
+      i = !duplicated(out, by = c(start_col_nm, stop_col_nm)),
+      #' @importFrom data.table .SD
+      j = .SD,
+      .SDcols = c(start_col_nm, stop_col_nm)
+    ]
+    data.table::setkeyv(sub_box_dt, c(start_col_nm, stop_col_nm))
+    #' @importFrom data.table := .N
+    sub_box_dt[j = "__id__" := seq_len(.N)]
+    dt_join_assign(
+      x = out,
+      i = sub_box_dt,
+      on = c(start_col_nm, stop_col_nm),
+      x_col_nms = id_col_nm,
+      i_col_nms = "__id__"
+    )
+  })
+  data.table::setkeyv(out, c(names(aggre_by), paste0(names(breaks), "_id")))
+  #' @importFrom data.table := .GRP
+  out[j = "box_id" := .GRP, by = eval(paste0(names(breaks), "_id"))]
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - After every stratum has been processed, set proper `data.table`
   #   attributes on the resulting big table and call `data.table::setkeyv`
-  #   with `cols = c(names(aggre_by), "box_id")`. We store the metadata
-  #   `list(stratum_col_nms, value_col_nms)` into the attribute named
+  #   with `cols = c(names(aggre_by), "box_id", paste0(names(breaks), "_id"))`.
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+  # note that this clears Epi attributes
+  out <- as.list(out)
+  attributes(out) <- attributes(out)["names"]
+  data.table::setDT(out)
+  data.table::setkeyv(
+    x = out,
+    cols = c(names(aggre_by), "box_id", paste0(names(breaks), "_id"))
+  )
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+  # - Store as metadata a list with names `stratum_col_nms`, `ts_col_nms`, and
+  #   `value_col_nms` into the attribute named
   #   `lexis_split_merge_aggregate_by_stratum_meta`, where
   #   `stratum_col_nms = names(aggre_by)`, `ts_col_nms = names(breaks)`, and
   #   `value_col_nms` are the names of the columns resulting from `aggre_exprs`.
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
-  # to clear Epi attributes
-  out <- as.list(out)
-  attributes(out) <- attributes(out)["names"]
-  data.table::setDT(out)
-  data.table::setkeyv(out, c(names(aggre_by), "box_id"))
   data.table::setattr(
     out,
     "lexis_split_merge_aggregate_by_stratum_meta",
@@ -798,11 +872,13 @@ lexis_split_merge_aggregate_by_stratum <- function(
   }
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - Return a `data.table` with stratum columns as specified via
-  #   `aggre_by` and value columns as specified via `aggre_exprs`.
+  #   `aggre_by`, time scale columns specified via `breaks` and value columns
+  #   as specified via `aggre_exprs`.
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # @codedoc_comment_block return(popEpi::lexis_split_merge_aggregate_by_stratum)
   # Returns a `data.table` with stratum columns as specified via
-  # `aggre_by` and value columns as specified via `aggre_exprs`.
+  # `aggre_by`, time scale columns specified via `breaks` and value columns
+  # as specified via `aggre_exprs`.
   # @codedoc_comment_block return(popEpi::lexis_split_merge_aggregate_by_stratum)
   return(out[])
 }

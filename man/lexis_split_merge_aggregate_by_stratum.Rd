@@ -130,7 +130,8 @@ stage of the run. See \strong{Details} for what functions are recognised.
 }
 \value{
 Returns a \code{data.table} with stratum columns as specified via
-\code{aggre_by} and value columns as specified via \code{aggre_exprs}.
+\code{aggre_by}, time scale columns specified via \code{breaks} and value columns
+as specified via \code{aggre_exprs}.
 }
 \description{
 Function(s) which split, merge, and aggregate a \code{Lexis} object in one go.
@@ -204,41 +205,92 @@ if that \code{optional_steps} element exists.
 if that \code{optional_steps} element exists.
 \code{stratum_eval_env} is the environment where the stratum-specific
 steps are performed.
+\item Loop over every box defined by all other time scales except the
+last one. E.g. if
+\code{breaks = list(ts_cal = c(2001, 2004, 2007), ts_fut = 0:5)}
+then we perform what follows below separately for the boxes
+\verb{]2001, 2004]}, \verb{]2004, 2007]}.
+\itemize{
 \item Run
 \code{optional_steps[["stratum_pre_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
+\item Using a subset \code{lexis} containing data only for the current
+stratum (e.g. \code{sex = 0}), run \verb{[splitMulti]} to limit
+the data to the current stratum box also (e.g. \code{ts_cal} between
+\verb{]2001, 2004]}). This run both drops records in \code{lexis} outside
+of the box and also crops follow-up to the end of the box.
+This does not split the data yet.
 \item If \code{!is.null(breaks_collapse_args)}, run
-\code{popEpi::lexis_breaks_collapse_1d} on the last element of \code{breaks}.
-Arguments \code{lexis} and \code{breaks_1d} are set automatically.
-' @param breaks_collapse_args \verb{[NULL, list]} (default \code{NULL})
-'
-' Optional, if you supply this argument then
-' \verb{[lexis_breaks_collapse_1d]} will be called for each stratum defined
-' via \code{aggre_by} separately.
-'
-' - \code{NULL}: \verb{[lexis_breaks_collapse_1d]} is not called.
-' - \code{list}: E.g. \code{list(mandatory_breaks = 0:5)}.
-\item Run
-\code{popEpi::splitMulti} on the subset of \code{lexis} which contains data from
-the current stratum.
+\code{popEpi::lexis_breaks_collapse_1d} on the last element of
+\code{breaks}. Arguments \code{lexis} and \code{breaks} are set
+automatically. This makes it possible to "collapse" the breaks
+for each stratum and stratum box combination separately.
+\item Run \verb{[splitMulti]} for the second time, this time splitting the
+data by the last time scale in \code{breaks}. Remember that we are
+inside the box defined by the other time scales already.
 \item Run
 \code{optional_steps[["stratum_post_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
 \item Run
-\code{lexis_merge} with \code{merge_dt}, \code{merge_dt_by}, and
+\verb{[lexis_merge]} with \code{merge_dt}, \code{merge_dt_by}, and
 \code{merged_optional_args}, if \code{merge_dt} has been supplied.
 \item Run
 \code{optional_steps[["stratum_post_merge"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
 \item Evaluate \code{aggre_exprs} as follows:
-\item Run
-\code{optional_steps[["stratum_post_aggregation"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
-if that \code{optional_steps} element exists.
+\itemize{
+\item First collect variables mentioned in \code{aggre_exprs} using
+\verb{[all.vars]}.
+\item There is a pre-defined table of expressions that are evaluated
+and added as new columns in the split data if they appear in any
+of the \code{aggre_exprs}. See below for the table.
+\item Table of expressions which create new columns into split data:
 }
+}
+}
+}\tabular{lll}{
+   Name \tab Explanation \tab Expression \cr
+   \verb{in_follow_up_at_interval_start} \tab This column indicates (\code{TRUE  / FALSE}) whether a subject is in follow-up at the start of a follow-up time scale interval. It is enough to be within a very small distance of the interval to count as \code{TRUE}. \tab \verb{{
+    ts_fut_floor <- box_dt[[ts_fut_start_col_nm]][box_id]
+    absolute_distance_from_floor <- abs(ts_fut - ts_fut_floor)
+    absolute_distance_from_floor < 1e-10
+}} \cr
+   \verb{entered_late_during_interval} \tab This column indicates (\code{TRUE  / FALSE}) whether a subject entered a follow-up time scale interval late. \code{TRUE} if entered after a small amount of time from the start. E.g. \code{ts_fut = 1.00001}  is a late entry in the interval that starts at \code{ts_fut = 1.0}. \tab \verb{{
+    ts_fut_floor <- box_dt[[ts_fut_start_col_nm]][box_id]
+    distance_from_floor <- (ts_fut - ts_fut_floor)
+    distance_from_floor > 1e-10
+}} \cr
+   \verb{left_early_during_interval} \tab This column indicates (\code{TRUE  / FALSE}) whether a subject left a follow-up time scale interval early. \code{TRUE} if left before a small amount of time from the end. E.g. \code{ts_fut = 1.99999}  is an early leaver in the interval that ends at \code{ts_fut = 2.0}. \tab \verb{{
+    out <- duplicated(lex.id, fromLast = TRUE)
+    out[out] <- lex.Cst[out] == lex.Xst[out]
+    ts_fut_stop <- ts_fut[out] + lex.dur[out]
+    ts_fut_ceiling <- box_dt[[ts_fut_stop_col_nm]][box_id[out]]
+    distance_from_ceiling <- ts_fut_ceiling - ts_fut_stop
+    out[out] <- distance_from_ceiling > 1e-10
+    out
+}} \cr
+   \verb{pp} \tab This is the ""Pohar Perme weight"" which we use to weigh summary statistics such as \code{t_at_risk} needed by our actuarial Pohar Perme estimator. See: Karri Seppä, Timo Hakulinen, Arun Pokhrel, Choosing the net survival method for cancer survival estimation, European Journal of Cancer, Volume 51, Issue 9, 2015, Pages 1123-1129, ISSN 0959-8049, https://doi.org/10.1016/j.ejca.2013.09.019. \tab \verb{{
+    surv_pohar_perme_weight__(lexis = work_dt, ts_fut_breaks = eval_env[['breaks']][[ts_fut_col_nm]], 
+        ts_fut_col_nm = ts_fut_col_nm, hazard_col_nm = 'h_exp')
+}} \cr
+}
+
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{   + It can happen that e.g. a survival interval has absolutely no data in
+     it. Especially in sparse data and with delayed entry. For the
+     pre-specified aggregation expressions such as `n_events` we ensure
+     that empty time scale boxes have value zero. Your custom aggregation
+     expressions will result in `NA` values in empty time scale boxes.
+* Run
+  `optional_steps[["stratum_post_aggregation"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
+  if that `optional_steps` element exists.
+}\if{html}{\out{</div>}}
+\itemize{
 \item After every stratum has been processed, set proper \code{data.table}
 attributes on the resulting big table and call \code{data.table::setkeyv}
-with \code{cols = c(names(aggre_by), "box_id")}. We store the metadata
-\code{list(stratum_col_nms, value_col_nms)} into the attribute named
+with \code{cols = c(names(aggre_by), "box_id", paste0(names(breaks), "_id"))}.
+\item Store as metadata a list with names \code{stratum_col_nms}, \code{ts_col_nms}, and
+\code{value_col_nms} into the attribute named
 \code{lexis_split_merge_aggregate_by_stratum_meta}, where
 \code{stratum_col_nms = names(aggre_by)}, \code{ts_col_nms = names(breaks)}, and
 \code{value_col_nms} are the names of the columns resulting from \code{aggre_exprs}.
@@ -246,7 +298,8 @@ with \code{cols = c(names(aggre_by), "box_id")}. We store the metadata
 \code{optional_steps[["post_aggregation"]](eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
 \item Return a \code{data.table} with stratum columns as specified via
-\code{aggre_by} and value columns as specified via \code{aggre_exprs}.
+\code{aggre_by}, time scale columns specified via \code{breaks} and value columns
+as specified via \code{aggre_exprs}.
 }
 }
 \examples{
