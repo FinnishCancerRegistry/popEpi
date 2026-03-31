@@ -57,7 +57,13 @@ lexis_to_lexis_dt__ <- function(
   attrs <- lapply(attr_nms, attr, x = lexis)
   names(attrs) <- attr_nms
   attrs[["class"]] <- c("Lexis", "data.table", "data.frame")
+  ts_col_nms <- intersect(names(out), Epi::timeScales(lexis))
   for (attr_nm in names(attrs)) {
+    if (attr_nm == "time.scales") {
+      attrs[[attr_nm]] <- ts_col_nms
+    } else if (any(Epi::timeScales(lexis) %in% names(attrs[[attr_nm]]))) {
+      attrs[[attr_nm]] <- attrs[[attr_nm]][ts_col_nms]
+    }
     data.table::setattr(out, attr_nm, attrs[[attr_nm]])
   }
   if (data.table::is.data.table(lexis)) {
