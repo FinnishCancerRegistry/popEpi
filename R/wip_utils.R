@@ -73,7 +73,8 @@ assert_is_arg_by <- function(by, dataset) {
 
 handle_arg_by <- function(
   by,
-  dataset
+  dataset,
+  na_omit = TRUE
 ) {
   # @codedoc_comment_block popEpi:::handle_arg_by
   # @param aggre_by `[data.table, character, list, NULL]` (default `NULL`)
@@ -98,6 +99,9 @@ handle_arg_by <- function(
     dataset <- data.table::setDT(as.list(dataset)[stratum_col_nms])
     nondup <- !duplicated(dataset, by = stratum_col_nms)
     by <- dataset[(nondup), ]
+    if (na_omit) {
+      by <- na.omit(by)
+    }
     data.table::setkeyv(by, stratum_col_nms)
   } else if (inherits(by, "list")) {
     by <- level_space_list_to_level_space_data_table(by)
