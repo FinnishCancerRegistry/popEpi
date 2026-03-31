@@ -549,7 +549,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   }
 
   lexis_ts_col_nms <- intersect(
-    attr(lexis, "time.scales"),
+    Epi::timeScales(lexis),
     c(names(breaks), merge_dt_by)
   )
   lexis_col_nms <- c(

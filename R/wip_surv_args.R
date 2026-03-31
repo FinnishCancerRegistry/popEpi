@@ -498,11 +498,12 @@ handle_arg_select <- function(select, lexis) {
   assert_is_arg_select(select, lexis)
   if (is.null(select)) {
     select <- names(lexis)
-  } else {
-    select <- union(
-      c("lex.id", Epi::timeScales(lexis), "lex.dur", "lex.Cst", "lex.Xst"),
-      select
-    )
   }
+  #  else {
+  # select <- union(
+  #   c("lex.id", Epi::timeScales(lexis), "lex.dur", "lex.Cst", "lex.Xst"),
+  #   select
+  # )
+  # }
   return(select)
 }
