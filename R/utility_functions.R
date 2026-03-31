@@ -1096,10 +1096,3 @@ mget_cols <- function(cols, data) {
 
   setDT(mget(x = cols, envir = as.environment(data), inherits = FALSE))
 }
-
-skip_normally <- function() {
-  requireNamespace("testthat")
-  if (!identical(Sys.getenv("popEpi_run_all_unit_tests"), "true")) {
-    testthat::skip("Unit tests skipped normally")
-  }
-}

@@ -2,7 +2,7 @@ testthat::context("breaks attributes resulting from splitting")
 
 
 testthat::test_that("splitMulti produces intended breaks list", {
-  popEpi:::skip_normally()
+  testthat::skip_on_cran()
   x <- data.table(popEpi::sibr)
   x <- x[dg_date < ex_date & bi_date < dg_date]
 
@@ -36,7 +36,7 @@ testthat::test_that("splitMulti produces intended breaks list", {
 
 
 testthat::test_that("splitLexisDT produces intended breaks list", {
-  popEpi:::skip_normally()
+  testthat::skip_on_cran()
   x <- data.table(popEpi::sibr)[dg_date < ex_date, ]
 
   x <- Lexis(

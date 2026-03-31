@@ -218,7 +218,7 @@ testthat::test_that("data.table subsettin works", {
 
 if (requireNamespace("splines")) {
   testthat::test_that("SIR spline throws errors correctly", {
-    popEpi:::skip_normally()
+    testthat::skip_on_cran()
 
     sp0 <- suppressWarnings(try(sirspline( coh.data = c, coh.obs = 'from0to2', coh.pyrs = 'pyrs',
                                           subset = year %in% 1990:2008,
@@ -254,7 +254,7 @@ if (requireNamespace("splines")) {
 }
 
 testthat::test_that("print accepts a function and subset works", {
-  popEpi:::skip_normally()
+  testthat::skip_on_cran()
   testthat::expect_warning(
     pl1 <- sir( coh.data = c, coh.obs = c('from0to1','from0to2'), coh.pyrs = 'pyrs',
                 subset = year %in% 1990:2008,

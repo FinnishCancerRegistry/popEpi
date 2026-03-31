@@ -80,7 +80,7 @@ testthat::context("popEpi::survtab vs. relsurv::rs.surv")
   # relpois vs. relsurv::rsadd ---------------------------------------------
 
   testthat::test_that("relpois congruent with relsurv::rsadd", {
-    popEpi:::skip_normally()
+    testthat::skip_on_cran()
     popm <- test_relsurv_ratetable__()
     pm <- popEpi::popmort
 
