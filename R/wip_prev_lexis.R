@@ -244,15 +244,17 @@ prev_lexis <- function(
             # @codedoc_comment_block popEpi::prev_lexis
             sdt <- sdt[
               j = {
+                ts_fut_stop_col_nm <- paste0(ts_fut_col_nm, "_stop")
                 n_interpolate <- 1e3L
                 ts_fut_interpolation_breaks <- seq(
                   0.0,
-                  max(.SD[[ts_fut_col_nm]]),
+                  #' @importFrom data.table .SD
+                  max(.SD[[ts_fut_stop_col_nm]]),
                   length.out = n_interpolate
                 )
                 interpolated_estimates <- surv_interpolate(
                   estimates = .SD[[surv_est_col_nm]],
-                  ts_fut_stops = .SD[[ts_fut_col_nm]],
+                  ts_fut_stops = .SD[[ts_fut_stop_col_nm]],
                   ts_fut_stop_value = ts_fut_interpolation_breaks,
                   estimate_start_value = 1.0,
                   method = "linear"
@@ -268,30 +270,48 @@ prev_lexis <- function(
                 )
                 out
               },
-              keyby = names(aggre_by)
+              keyby = eval(intersect(names(aggre_by), names(sdt)))
+              # keyby = eval(intersect(c(
+              #   names(aggre_by),
+              #   unlist(lapply(
+              #     setdiff(ts_col_nms, ts_fut_col_nm),
+              #     function(ts_col_nm) {
+              #       paste0(ts_col_nm, c("_start", "_stop"))
+              #     }
+              #   ))
+              # ), names(sdt)))
             ]
-            ts_col_nms <- names(surv_lexis_arg_list[["breaks"]])
             data.table::set(
               x = sdt,
-              j = ts_col_nms,
-              value = lapply(ts_col_nms, function(ts_col_nm) {
-                x <- paste0(
-                  "]",
-                  round(sdt[[paste0(ts_col_nm, "_start")]], 11L),
-                  ", ",
-                  round(sdt[[paste0(ts_col_nm, "_stop")]], 11L),
-                  "]"
-                )
-                levels <- unique(x)
-                factor(x = x, levels = levels)
-              })
+              j = ts_fut_col_nm,
+              value = data.table::fctr(paste0(
+                "]",
+                round(sdt[[paste0(ts_fut_col_nm, "_start")]], 11L),
+                ", ",
+                round(sdt[[paste0(ts_fut_col_nm, "_stop")]], 11L),
+                "]"
+              ))
+              # j = ts_col_nms,
+              # value = lapply(ts_col_nms, function(ts_col_nm) {
+              #   x <- paste0(
+              #     "]",
+              #     round(sdt[[paste0(ts_col_nm, "_start")]], 11L),
+              #     ", ",
+              #     round(sdt[[paste0(ts_col_nm, "_stop")]], 11L),
+              #     "]"
+              #   )
+              #   levels <- unique(x)
+              #   factor(x = x, levels = levels)
+              # })
             )
             data.table::setnames(
               x = sdt,
               old = intersect(c("S_ch_est", "S_lt_est"), names(sdt))[1],
               new = "S"
             )
-            sdt <- as.list(sdt)[c(names(aggre_by), ts_col_nms, "S")]
+            sdt <- as.list(sdt)[
+              intersect(c(names(aggre_by), ts_fut_col_nm, "S"), names(sdt))
+            ]
             data.table::setDT(sdt)
             sdt[]
           })
