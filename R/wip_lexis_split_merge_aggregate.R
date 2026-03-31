@@ -558,13 +558,13 @@ lexis_split_merge_aggregate_by_stratum <- function(
   lexis_dt <- lexis_to_lexis_dt__(
     lexis = lexis,
     select = intersect(
-      names(lexis),
       c(
         lexis_col_nms,
         names(aggre_by),
         merge_dt_by,
         unlist(lapply(aggre_exprs, all.vars))
-      )
+      ),
+      names(lexis)
     )
   )
   lexis_crop(lexis = lexis_dt, breaks = breaks)
