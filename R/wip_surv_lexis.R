@@ -654,6 +654,10 @@ surv_lexis <- function(
 ) {
   #' @template param_lexis
   assert_is_arg_lexis(lexis, dt = FALSE)
+  assert_is_arg_breaks(breaks = breaks, lexis = lexis)
+  stopifnot(
+    breaks[[length(breaks)]][1] == 0
+  )
   split_merge_aggregate_args <- list(
     lexis = lexis_to_lexis_dt__(lexis),
     breaks = breaks,
