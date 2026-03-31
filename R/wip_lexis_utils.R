@@ -237,7 +237,7 @@ lexis_delay_entry <- function(lexis, ts_col_new_entry, ts_col_nm) {
   return(invisible(lexis))
 }
 
-lexis_crop <- function(lexis, breaks) {
+lexis_crop <- function(lexis, breaks, inplace = FALSE) {
   assert_is_arg_lexis(lexis, dt = FALSE)
   delay_entry <- call_with_arg_list__(
     pmax,
@@ -255,27 +255,31 @@ lexis_crop <- function(lexis, breaks) {
       exit - pmin(exit, cropped_exit)
     })
   )
+  idx <- NULL
+  if (inplace) {
+    idx <- seq_len(nrow(lexis))
+  }
+  for (ts_col_nm__ in Epi::timeScales(lexis)) {
+    data.table::set(
+      x = lexis,
+      i = idx,
+      j = ts_col_nm__,
+      value = lexis[[ts_col_nm__]] + delay_entry
+    )
+  }
   data.table::set(
     x = lexis,
-    j = Epi::timeScales(lexis),
-    value = lapply(Epi::timeScales(lexis), function(ts_col_nm) {
-      lexis[[ts_col_nm]] + delay_entry
-    })
-  )
-  data.table::set(
-    x = lexis,
+    i = idx,
     j = "lex.dur",
     value = lexis[["lex.dur"]] - delay_entry - earlify_exit
   )
   copied_statuses <- FALSE
   na_idx <- which(lexis[["lex.dur"]] < 0)
   if (length(na_idx) > 0) {
-    # this takes copies of the two columns which we modify below. although
-    # now lexis will be modified, if lexis itself is a shallow copy then the
-    # original is not modified.
-    copied_statuses <- TRUE
+    copied_statuses <- is.null(idx)
     data.table::set(
       x = lexis,
+      i = idx,
       j = c("lex.Cst", "lex.Xst"),
       value = list(lexis[["lex.Cst"]], lexis[["lex.Xst"]])
     )
@@ -288,7 +292,7 @@ lexis_crop <- function(lexis, breaks) {
   }
   earlify_exit_idx <- which(earlify_exit > 0)
   if (length(earlify_exit_idx) > 0) {
-    if (!copied_statuses) {
+    if (!inplace && !copied_statuses) {
       data.table::set(
         x = lexis,
         j = c("lex.Cst", "lex.Xst"),

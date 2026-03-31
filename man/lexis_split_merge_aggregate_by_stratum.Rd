@@ -215,10 +215,9 @@ then we perform what follows below separately for the boxes
 \code{optional_steps[["stratum_pre_split"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
 \item Using a subset \code{lexis} containing data only for the current
-stratum (e.g. \code{sex = 0}), run \verb{[splitMulti]} to limit
-the data to the current stratum box also (e.g. \code{ts_cal} between
-\verb{]2001, 2004]}). This run both drops records in \code{lexis} outside
-of the box and also crops follow-up to the end of the box.
+stratum (e.g. \code{sex = 0}), drop data outside the current
+stratum box (e.g. \code{ts_cal} outside of
+\verb{]2001, 2004]}). Also crop follow-up to the end of the box.
 This does not split the data yet.
 \item If \code{!is.null(breaks_collapse_args)}, run
 \code{popEpi::lexis_breaks_collapse_1d} on the last element of

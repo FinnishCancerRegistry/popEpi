@@ -647,10 +647,9 @@ lexis_split_merge_aggregate_by_stratum <- function(
         }
         # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
         #     * Using a subset `lexis` containing data only for the current
-        #       stratum (e.g. `sex = 0`), run `[splitMulti]` to limit
-        #       the data to the current stratum box also (e.g. `ts_cal` between
-        #       `]2001, 2004]`). This run both drops records in `lexis` outside
-        #       of the box and also crops follow-up to the end of the box.
+        #       stratum (e.g. `sex = 0`), drop data outside the current
+        #       stratum box (e.g. `ts_cal` outside of
+        #       `]2001, 2004]`). Also crop follow-up to the end of the box.
         #       This does not split the data yet.
         # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
         stratum_box_breaks <- lapply(names(breaks), function(ts_col_nm) {
@@ -660,10 +659,14 @@ lexis_split_merge_aggregate_by_stratum <- function(
           )
         })
         names(stratum_box_breaks) <- names(breaks)
-        lexis_stratum_subset <- surv_split__(
+        lexis_stratum_subset <- lexis_drop(
+          lexis = lexis_stratum_subset,
+          breaks = stratum_box_breaks
+        )
+        lexis_stratum_subset <- lexis_crop(
           lexis = lexis_stratum_subset,
           breaks = stratum_box_breaks,
-          merge = TRUE
+          inplace = TRUE
         )
         stratum_box_breaks[[split_ts_col_nm]] <- breaks[[split_ts_col_nm]]
         # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
