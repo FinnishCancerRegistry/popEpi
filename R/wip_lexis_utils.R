@@ -176,36 +176,24 @@ lexis_box_id__ <- function(
   assert_is_arg_lexis(lexis, dt = TRUE)
   start_col_nms <- sort(names(box_dt)[grepl("_start$", names(box_dt))])
   split_ts_col_nms <- sub("_start$", "", start_col_nms)
-  merge_dt <- data.table::setDT(as.list(box_dt)[start_col_nms])
+  merge_dt <- data.table::setDT(lapply(split_ts_col_nms, function(ts_col_nm) {
+    ts_start_col_nm <- paste0(ts_col_nm, "_start")
+    ts_stop_col_nm <- paste0(ts_col_nm, "_stop")
+    data.table::fctr(paste0(
+      "]", box_dt[[ts_start_col_nm]], ", ",
+      box_dt[[ts_stop_col_nm]], "]"
+    ))
+  }))
   data.table::setnames(merge_dt, split_ts_col_nms)
   data.table::set(
     x = merge_dt,
     j = "box_id",
     value = box_dt[["box_id"]]
   )
-  breaks <- lapply(split_ts_col_nms, function(ts_col_nm) {
-    union(
-      box_dt[[paste0(ts_col_nm, "_start")]],
-      box_dt[[paste0(ts_col_nm, "_stop")]][nrow(box_dt)]
-    )
-  })
-  names(breaks) <- split_ts_col_nms
   lexis <- lexis_merge(
     lexis = lexis,
     merge_dt = merge_dt,
-    merge_dt_by = split_ts_col_nms,
-    merge_dt_harmonisers = structure(lapply(seq_along(breaks), function(i) {
-      substitute({
-        breaks <- BR
-        idx <- cut( # nolint
-          x = COL + 0.5 * lex.dur,
-          breaks = breaks,
-          right = FALSE,
-          labels = FALSE
-        )
-        breaks[idx]
-      }, list(COL = parse(text = names(breaks)[i])[[1]], BR = breaks[[i]]))
-    }), names = names(breaks))
+    merge_dt_by = split_ts_col_nms
   )
   return(invisible(lexis[]))
 }
