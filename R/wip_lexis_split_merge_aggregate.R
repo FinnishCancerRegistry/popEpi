@@ -589,10 +589,12 @@ lexis_split_merge_aggregate_by_stratum <- function(
   )
 
   box_dt <- lexis_box_dt__(breaks)
+  stratum_ts_col_nms <- names(breaks)[-length(breaks)]
+  split_ts_col_nm <- names(breaks)[length(breaks)]
   stratum_box_dt <- local({
     stratum_breaks <- breaks
-    stratum_breaks[[length(stratum_breaks)]] <- range(
-      stratum_breaks[[length(stratum_breaks)]]
+    stratum_breaks[[split_ts_col_nm]] <- range(
+      stratum_breaks[[split_ts_col_nm]]
     )
     lexis_box_dt__(stratum_breaks)
   })
@@ -663,10 +665,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
           breaks = stratum_box_breaks,
           merge = TRUE
         )
-        # we have now limited follow-up into the box and the box limits are no
-        # longer needed.
-        stratum_box_breaks <- stratum_box_breaks[length(stratum_box_breaks)]
-        stratum_box_breaks[[1]] <- breaks[[length(breaks)]]
+        stratum_box_breaks[[split_ts_col_nm]] <- breaks[[split_ts_col_nm]]
         # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
         #     * If `!is.null(breaks_collapse_args)`, run
         #       `popEpi::lexis_breaks_collapse_1d` on the last element of
@@ -685,8 +684,10 @@ lexis_split_merge_aggregate_by_stratum <- function(
         if (!is.null(breaks_collapse_args)) {
           breaks_collapse_args <- as.list(breaks_collapse_args)
           breaks_collapse_args[["lexis"]] <- lexis_stratum_subset
-          breaks_collapse_args[["breaks"]] <- stratum_box_breaks
-          stratum_box_breaks[[1]] <- call_with_arg_list__(
+          breaks_collapse_args[["breaks"]] <- stratum_box_breaks[
+            split_ts_col_nm
+          ]
+          stratum_box_breaks[[split_ts_col_nm]] <- call_with_arg_list__(
             popEpi::lexis_breaks_collapse_1d,
             breaks_collapse_args
           )
@@ -699,7 +700,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
         # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
         lexis_stratum_subset_split <- surv_split__(
           lexis = lexis_stratum_subset,
-          breaks = stratum_box_breaks,
+          breaks = stratum_box_breaks[split_ts_col_nm],
           merge = TRUE
         )
         # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
