@@ -230,6 +230,15 @@ prev_lexis <- function(
             surv_est_col_nm <- names(sdt)[
               names(sdt) %in% c("S_ch_est", "S_lt_est")
             ]
+            if (anyNA(sdt[[surv_est_col_nm]])) {
+              stop(
+                "The survival estimates produced internally by ",
+                "`popEpi::prev_lexis` had missing values. This occurs when ",
+                "there are no subjects remaining in follow-up --- you will ",
+                "have to either adjust the arguments passed via `merge_dt` or ",
+                "estimate survival yourself in advance."
+              )
+            }
             # @codedoc_comment_block popEpi::prev_lexis
             #   + If `inherits(merge_dt, "list")`, we also interpolate survival
             #     estimates in the table we have just produced so that there
@@ -245,7 +254,7 @@ prev_lexis <- function(
             sdt <- sdt[
               j = {
                 ts_fut_stop_col_nm <- paste0(ts_fut_col_nm, "_stop")
-                n_interpolate <- 1e3L
+                n_interpolate <- 1001L
                 ts_fut_interpolation_breaks <- seq(
                   0.0,
                   #' @importFrom data.table .SD
