@@ -148,6 +148,16 @@ E.g.
 \code{merge_dt = list(aggre_by = NULL, breaks = list(ts_fut = futs))}
 are both passed to \verb{[surv_lexis]} despite what \code{aggre_by} was
 for \code{prev_lexis}.
+\item If \code{inherits(merge_dt, "list")}, we also interpolate survival
+estimates in the table we have just produced so that there
+are always 1000 intervals starting from zero and ending where
+the last survival estimate is available. This is peformed to
+ensure that the survival estimates we merge will be available
+at a sufficient "resolution". For instance, even if the
+survival estimates are for one-year intervals due to sparsity,
+we get a reasonable survival estimate for a subject who was
+censored at 1.01 --- from somewhere close to 1.01 instead from
+2.0.
 \item Merge (for the first time) \code{merge_dt} with the collected
 subjects at the original exit time of each
 subject. This yields the survival probability for each subject
@@ -167,7 +177,8 @@ survival up to \code{t_p} starting from \code{t_e},
 \item Call \verb{[lexis_split_merge_aggregate_by_stratum]} for the second
 time, this time with the subjects collected for extrapolation,
 and sum the number of extrapolated subjects in follow-up into a
-table with the identical stratification as the one created before.
+table with the identical stratification as the one created
+before.
 \item Add column \code{n_prev_eff} as the sum of the number of extrapolated
 subjects and the original \code{n_prev} into the first table we
 created.
