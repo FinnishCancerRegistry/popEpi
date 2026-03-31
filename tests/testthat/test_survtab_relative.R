@@ -8,18 +8,7 @@ testthat::context("popEpi::survtab vs. relsurv::rs.surv")
 
     # male
     pm <- data.table::data.table(popEpi::popmort)
-    pm[, surv := exp(-haz)]
-    pm.m <- cast_simple(pm[sex==0], columns = 'year', rows = 'agegroup',  values='surv')
-    pm.m[,agegroup := NULL]
-    pm.m <- as.matrix(pm.m)
-    # female
-    pm.f <- cast_simple(pm[sex==1], columns = 'year', rows = 'agegroup',  values='surv')
-    pm.f[,agegroup := NULL]
-    pm.f <- as.matrix(pm.f)
-
-    popm <- transrate(pm.m, pm.f, yearlim = c(1951, 2013), int.length = 1)
-
-    pm[, surv := NULL]
+    popm <- test_relsurv_ratetable__()
 
     sire2 <- sire[dg_date < ex_date, ]
     sire2[, Tstop  := as.integer(ex_date - dg_date)]
@@ -92,45 +81,31 @@ testthat::context("popEpi::survtab vs. relsurv::rs.surv")
 
   testthat::test_that("relpois congruent with relsurv::rsadd", {
     popEpi:::skip_normally()
+    popm <- test_relsurv_ratetable__()
+    pm <- popEpi::popmort
 
-
-    library(relsurv)
-
-    # male
-    pm <- data.table(popEpi::popmort)
-    # pm[, surv := 1L]
-    pm[, surv := exp(-haz)]
-    pm.m <- cast_simple(pm[sex==0], columns = 'year', rows = 'agegroup',  values='surv')
-    pm.m[,agegroup := NULL]
-    pm.m <- as.matrix(pm.m)
-    # female
-    pm.f <- cast_simple(pm[sex==1], columns = 'year', rows = 'agegroup',  values='surv')
-    pm.f[,agegroup := NULL]
-    pm.f <- as.matrix(pm.f)
-
-    popm <- transrate(pm.m, pm.f, yearlim = c(1951, 2013), int.length = 1)
-
-    pm[, surv := NULL]
-
-    sire2 <- copy(sire)
+    sire2 <- popEpi::sire[dg_date < ex_date, ]
     sire2[, Tstop  := as.integer(ex_date - dg_date)]
     sire2[, dg_age := as.integer(dg_date - bi_date)]
 
 
     sire2[, agegr := cut(dg_age/365.25, breaks = c(0,45,70,Inf))]
     x <- lexpand(sire2, birth  = bi_date, entry = dg_date, exit = ex_date,
-                status = status %in% 1:2,
-                breaks=list(fot=0:5), pophaz=pm)
+                 status = status %in% 1:2,
+                 breaks=list(fot=0:5), pophaz=pm)
     rp <- relpois(x, formula = lex.Xst%in%1:2 ~ -1+FOT+agegr)
     setDT(x)
     setattr(x, "class", c("Lexis", "data.table", "data.frame"))
     sire2[, sex := 2L]
     sire2[, paste0(c("bi", "dg", "ex"), "_date") := lapply(.SD, as.Date),
           .SDcols = paste0(c("bi", "dg", "ex"), "_date")]
+    sire2[j = "dg_age" := as.double(dg_age)]
 
-    rs <- relsurv::rsadd(Surv(Tstop, event = status %in% 1:2) ~ ratetable(age=dg_age, sex=sex, year=dg_date) + agegr,
-                        int = 0:5,
-                        ratetable = popm, data = sire2, method = "glm.poi")
+    rs <- relsurv::rsadd(
+      Surv(Tstop, event = status %in% 1:2) ~ ratetable(age=dg_age, sex=sex, year=dg_date) + agegr,
+      int = as.double(0:5),
+      ratetable = popm, data = sire2, method = "glm.poi"
+    )
 
 
     testthat::expect_equal(coef(rp)[1:5] ,  coef(rs)[3:7], tolerance = 0.055, scale=1, check.attributes=FALSE)
@@ -146,7 +121,6 @@ testthat::context("popEpi::survtab vs. relsurv::rs.surv")
 
     # male
     pm <- data.table(popEpi::popmort)
-    # pm[, surv := 1L]
     pm[, surv := exp(-haz)]
     pm.m <- cast_simple(pm[sex == 0], columns = 'year', rows = 'agegroup', values = 'surv')
     pm.m[,agegroup := NULL]
