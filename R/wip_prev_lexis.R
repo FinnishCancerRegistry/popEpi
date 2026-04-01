@@ -212,13 +212,20 @@ prev_lexis <- function(
           #     for `prev_lexis`.
           # @codedoc_comment_block popEpi::prev_lexis
           merge_arg_list[["merge_dt"]] <- local({
-            surv_lexis_arg_list <- list(
-              lexis = lexis,
-              subset = subset & lexis[[obs_ts_col_nm]] < obs_tp_i,
-              aggre_by = aggre_by,
-              estimators = "S_ch"
+            surv_lexis_arg_list <- c(
+              list(
+                lexis = lexis,
+                subset = subset & lexis[[obs_ts_col_nm]] < obs_tp_i,
+                estimators = "S_ch"
+              ),
+              merge_dt,
+              list(
+                aggre_by = aggre_by
+              )
             )
-            surv_lexis_arg_list[names(merge_dt)] <- merge_dt
+            surv_lexis_arg_list <- surv_lexis_arg_list[
+              !duplicated(names(surv_lexis_arg_list))
+            ]
             sdt <- call_with_arg_list__(
               popEpi::surv_lexis,
               surv_lexis_arg_list
@@ -227,10 +234,7 @@ prev_lexis <- function(
               names(surv_lexis_arg_list[["breaks"]]),
               1
             )
-            surv_est_col_nm <- names(sdt)[
-              names(sdt) %in% c("S_ch_est", "S_lt_est")
-            ]
-            if (anyNA(sdt[[surv_est_col_nm]])) {
+            if (any(sdt[["t_at_risk"]] == 0.0)) {
               stop(
                 "The survival estimates produced internally by ",
                 "`popEpi::prev_lexis` had missing values. This occurs when ",
@@ -262,7 +266,7 @@ prev_lexis <- function(
                   length.out = n_interpolate
                 )
                 interpolated_estimates <- surv_interpolate(
-                  estimates = .SD[[surv_est_col_nm]],
+                  estimates = .SD[["S_ch_est"]],
                   ts_fut_stops = .SD[[ts_fut_stop_col_nm]],
                   ts_fut_stop_value = ts_fut_interpolation_breaks,
                   estimate_start_value = 1.0,
@@ -275,7 +279,7 @@ prev_lexis <- function(
                 )
                 names(out) <- c(
                   paste0(ts_fut_col_nm, "_", c("start", "stop")),
-                  surv_est_col_nm
+                  "S_ch_est"
                 )
                 out
               },
