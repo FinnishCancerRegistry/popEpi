@@ -286,8 +286,8 @@ of the \code{aggre_exprs}. See below for the table.
 }\if{html}{\out{</div>}}
 \itemize{
 \item After every stratum has been processed, set proper \code{data.table}
-attributes on the resulting big table and call \code{data.table::setkeyv}
-with \code{cols = c(names(aggre_by), "box_id", paste0(names(breaks), "_id"))}.
+attributes on the resulting big table and sort it by the stratifying
+variables.
 \item Store as metadata a list with names \code{stratum_col_nms}, \code{ts_col_nms}, and
 \code{value_col_nms} into the attribute named
 \code{lexis_split_merge_aggregate_by_stratum_meta}, where
