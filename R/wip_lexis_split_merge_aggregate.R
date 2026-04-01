@@ -824,18 +824,15 @@ lexis_split_merge_aggregate_by_stratum <- function(
       names(get_internal_dataset("lexis_aggre_expr_list__")),
       value_col_nms
     )
-    na_col_nms <- setdiff(value_col_nms, zero_col_nms)
     for (vcn in value_col_nms) {
       if (vcn %in% zero_col_nms) {
-        idx <- if (vcn %in% names(out)) which(is.na(out[[vcn]])) else
-          seq_len(nrow(out))
         data.table::set(
           x = out,
-          i = idx,
+          i = if (vcn %in% names(out)) which(is.na(out[[vcn]])) else NULL,
           j = vcn,
           value = 0L
         )
-      } else if (vcn %in% na_col_nms && !vcn %in% names(out)) {
+      } else if (!vcn %in% names(out)) {
         data.table::set(
           x = out,
           j = vcn,
@@ -845,34 +842,10 @@ lexis_split_merge_aggregate_by_stratum <- function(
     }
   })
 
-  lapply(names(breaks), function(ts_col_nm) {
-    start_col_nm <- paste0(ts_col_nm, "_start")
-    stop_col_nm <- paste0(ts_col_nm, "_stop")
-    id_col_nm <- paste0(ts_col_nm, "_id")
-    sub_box_dt <- out[
-      i = !duplicated(out, by = c(start_col_nm, stop_col_nm)),
-      #' @importFrom data.table .SD
-      j = .SD,
-      .SDcols = c(start_col_nm, stop_col_nm)
-    ]
-    data.table::setkeyv(sub_box_dt, c(start_col_nm, stop_col_nm))
-    #' @importFrom data.table := .N
-    sub_box_dt[j = "__id__" := seq_len(.N)]
-    dt_join_assign(
-      x = out,
-      i = sub_box_dt,
-      on = c(start_col_nm, stop_col_nm),
-      x_col_nms = id_col_nm,
-      i_col_nms = "__id__"
-    )
-  })
-  data.table::setkeyv(out, c(names(aggre_by), paste0(names(breaks), "_id")))
-  #' @importFrom data.table := .GRP
-  out[j = "box_id" := .GRP, by = eval(paste0(names(breaks), "_id"))]
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - After every stratum has been processed, set proper `data.table`
-  #   attributes on the resulting big table and call `data.table::setkeyv`
-  #   with `cols = c(names(aggre_by), "box_id", paste0(names(breaks), "_id"))`.
+  #   attributes on the resulting big table and sort it by the stratifying
+  #   variables.
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # note that this clears Epi attributes
   out <- as.list(out)
@@ -880,7 +853,10 @@ lexis_split_merge_aggregate_by_stratum <- function(
   data.table::setDT(out)
   data.table::setkeyv(
     x = out,
-    cols = c(names(aggre_by), "box_id", paste0(names(breaks), "_id"))
+    cols = c(
+      names(aggre_by),
+      paste0(rep(names(breaks), each = 3), c("_start", "_stop", "_id"))
+    )
   )
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - Store as metadata a list with names `stratum_col_nms`, `ts_col_nms`, and
