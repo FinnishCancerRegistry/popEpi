@@ -383,7 +383,15 @@ surv_estimate <- function(
     #'   stratification of output.
     #' - `character`: `dt` is stratified by these columns. `character(0)` is
     #'   also allowed and causes no stratification of output.
-    is.null(stratum_col_nms) || all(stratum_col_nms %in% names(dt))
+    is.null(stratum_col_nms) || all(stratum_col_nms %in% names(dt)),
+
+    !duplicated(
+      x = dt,
+      by = intersect(
+        names(dt),
+        c(stratum_col_nms, names(weight_dt), paste0(ts_fut_col_nm, "_start"))
+      )
+    )
   )
   # attribute can be NULL if `dt` is not the result of this function's call.
   # which we allow for generality.
@@ -547,7 +555,10 @@ surv_estimate <- function(
       "_est$", "_variance", estimate_col_nms
     )
     data.table::setnames(out, standard_error_col_nms, variance_col_nms)
-    da_stratum_col_nms <- c(stratum_col_nms,  "box_id")
+    da_stratum_col_nms <- intersect(
+      names(out),
+      c(stratum_col_nms, "box_id")
+    )
     da_adjust_col_nms <- character(0)
     if (data.table::is.data.table(weight_dt)) {
       da_adjust_col_nms <- setdiff(names(weight_dt), "weight")
@@ -583,22 +594,19 @@ surv_estimate <- function(
     )
     data.table::setnames(sdta, variance_col_nms, standard_error_col_nms)
 
-    ci_col_nms <- names(out)[grepl("(_lo$)|(_hi$)", names(out))]
-    nonsum_col_nms <- c(
-      intersect(aggre_meta[["stratum_col_nms"]], names(sdta)),
-      setdiff(
-        names(out),
-        c(
-          value_col_nms, variance_col_nms, estimate_col_nms, ci_col_nms,
-          aggre_meta[["stratum_col_nms"]]
-        )
-      )
-    )
     # @codedoc_comment_block popEpi::surv_estimate
     # - If direct adjusting was performed, the summary statistics such as
     #   `n_events` are summed over the adjusting strata and will be included
     #   in the output. These are not weighted averages/sums but simple sums.
     # @codedoc_comment_block popEpi::surv_estimate
+    nonsum_col_nms <- setdiff(
+      names(out),
+      c(
+        value_col_nms, estimate_col_nms,
+        standard_error_col_nms, variance_col_nms,
+        names(weight_dt)
+      )
+    )
     if (length(value_col_nms) > 0) {
       sum_dt <- out[
         #' @importFrom data.table .SD
@@ -612,7 +620,7 @@ surv_estimate <- function(
         i = !duplicated(out, by = nonsum_col_nms),
         #' @importFrom data.table .SD
         j = .SD,
-        .SDcols = nonsum_col_nms
+        .SDcols = eval(nonsum_col_nms)
       ]
     }
     add_col_nms <- setdiff(
