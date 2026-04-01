@@ -429,6 +429,23 @@ lexis_aggregate_one_stratum__ <- function(
 #'   agdt[["t_at_risk"]][!agdt[["sex"]] %in% sire[["sex"]]] == 0,
 #'   is.na(agdt[["my_stat"]][!agdt[["sex"]] %in% sire[["sex"]]])
 #' )
+#'
+#' # and this is what happens when no records are in the dataset
+#' agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+#'   lexis = sire,
+#'   subset = rep(FALSE, nrow(sire)),
+#'   aggre_by = data.table::data.table(sex = 0:2),
+#'   breaks = list(ts_fut = 0:5),
+#'   aggre_exprs = list(
+#'     "t_at_risk",
+#'     "my_stat" = quote(sum(lex.dur ^ 2))
+#'   )
+#' )
+#' stopifnot(
+#'   nrow(agdt) == length(0:2) * (length(0:5) - 1),
+#'   agdt[["t_at_risk"]] == 0,
+#'   is.na(agdt[["my_stat"]])
+#' )
 lexis_split_merge_aggregate_by_stratum <- function(
   lexis,
   breaks,
@@ -783,10 +800,6 @@ lexis_split_merge_aggregate_by_stratum <- function(
   }
   out <- eval(out_expr)
   if (data.table::is.data.table(aggre_by) && nrow(aggre_by) > 0) {
-    zero_col_nms <- intersect(
-      names(get_internal_dataset("lexis_aggre_expr_list__")),
-      names(out)
-    )
     out <- data.table::rbindlist(lapply(seq_len(nrow(aggre_by)), function(i) {
       aggre_by_i <- aggre_by[i, ]
       out_i <- out[
@@ -798,17 +811,39 @@ lexis_split_merge_aggregate_by_stratum <- function(
       ]
       if (nrow(out_i) == 0) {
         out_i <- cbind(aggre_by_i, box_dt)
-        if (length(zero_col_nms) > 0) {
-          data.table::set(
-            x = out_i,
-            j = zero_col_nms,
-            value = 0L
-          )
-        }
       }
       return(out_i)
     }), use.names = TRUE, fill = TRUE)
   }
+  local({
+    value_col_nms <- c(
+      names(aggre_exprs),
+      unlist(aggre_exprs[vapply(aggre_exprs, is.character, logical(1L))])
+    )
+    zero_col_nms <- intersect(
+      names(get_internal_dataset("lexis_aggre_expr_list__")),
+      value_col_nms
+    )
+    na_col_nms <- setdiff(value_col_nms, zero_col_nms)
+    for (vcn in value_col_nms) {
+      if (vcn %in% zero_col_nms) {
+        idx <- if (vcn %in% names(out)) which(is.na(out[[vcn]])) else
+          seq_len(nrow(out))
+        data.table::set(
+          x = out,
+          i = idx,
+          j = vcn,
+          value = 0L
+        )
+      } else if (vcn %in% na_col_nms && !vcn %in% names(out)) {
+        data.table::set(
+          x = out,
+          j = vcn,
+          value = NA
+        )
+      }
+    }
+  })
 
   lapply(names(breaks), function(ts_col_nm) {
     start_col_nm <- paste0(ts_col_nm, "_start")

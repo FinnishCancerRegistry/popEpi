@@ -568,6 +568,23 @@ stopifnot(
   agdt[["t_at_risk"]][!agdt[["sex"]] \%in\% sire[["sex"]]] == 0,
   is.na(agdt[["my_stat"]][!agdt[["sex"]] \%in\% sire[["sex"]]])
 )
+
+# and this is what happens when no records are in the dataset
+agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+  lexis = sire,
+  subset = rep(FALSE, nrow(sire)),
+  aggre_by = data.table::data.table(sex = 0:2),
+  breaks = list(ts_fut = 0:5),
+  aggre_exprs = list(
+    "t_at_risk",
+    "my_stat" = quote(sum(lex.dur ^ 2))
+  )
+)
+stopifnot(
+  nrow(agdt) == length(0:2) * (length(0:5) - 1),
+  agdt[["t_at_risk"]] == 0,
+  is.na(agdt[["my_stat"]])
+)
 }
 \seealso{
 Other Lexis_functions: 
