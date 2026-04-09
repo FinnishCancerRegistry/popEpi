@@ -20,7 +20,12 @@ surv_estimate(
   conf_lvls = 0.95
 )
 
-surv_individual_weights(df, standard_weight_dt, observed_weight_dt = NULL)
+surv_individual_weights(
+  df,
+  standard_weight_dt,
+  observed_weight_dt = NULL,
+  collapse_stratum_col_nms = NULL
+)
 
 lexis_breaks_collapse_1d(
   lexis,
@@ -162,6 +167,22 @@ e.g. the same age group twice in a table stratified by age group only.
 allowed.
 }}
 
+\item{collapse_stratum_col_nms}{\verb{[NULL, character]} (default \code{NULL})
+
+Optional names of stratum column names in both \code{df} and
+\code{standard_weight_dt}. If this argument is supplied, strata defined by
+these columns are attempted to be combined with their neighbours in the
+event of a zero in the corresponding \code{observed_weight_dt$weight} value.
+For instance, with \code{collapse_stratum_col_nms = "agegroup"} and the
+first age group having an observed weight of zero, we combine the first
+age group with the second for the purpose of calculating the individual
+weight. See \strong{Details}.
+\itemize{
+\item \code{NULL}: No automatic combination of strata is performed.
+\item \code{character}: Combine neighbouring strata defined by these column names.
+E.g. \code{"agegroup"}.
+}}
+
 \item{lexis}{\verb{[Lexis]} (no default)
 
 A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
@@ -221,7 +242,7 @@ intervals.
 
 \strong{popEpi::surv_individual_weights}
 
-A vector of weights is returned.
+Returns a vector of weights.
 
 \strong{popEpi::surv_lexis}
 
@@ -341,12 +362,95 @@ in each stratum in \code{standard_weight_dt}.
 Scale the standard weights and the observed weights to sum into one
 (they are in separate columns). E.g. one stratum has
 \code{weight_standard = 0.5} and \code{weight_observed = 0.4}.
+\item At this point the weight table might look like this:
+}\tabular{lrr}{
+   ag \tab weight_standard \tab weight_observed \cr
+   (0,15] \tab 0.00000 \tab 0.0000000 \cr
+   (15,20] \tab 0.00164 \tab 0.0000000 \cr
+   (20,25] \tab 0.00215 \tab 0.0004110 \cr
+   (25,30] \tab 0.00416 \tab 0.0030037 \cr
+   (30,35] \tab 0.00842 \tab 0.0092639 \cr
+   (35,40] \tab 0.01874 \tab 0.0174213 \cr
+   (40,45] \tab 0.03489 \tab 0.0317440 \cr
+   (45,50] \tab 0.04906 \tab 0.0641520 \cr
+   (50,55] \tab 0.07094 \tab 0.0962755 \cr
+   (55,60] \tab 0.09641 \tab 0.1094916 \cr
+   (60,65] \tab 0.13359 \tab 0.1531554 \cr
+   (65,70] \tab 0.14234 \tab 0.1582459 \cr
+   (70,75] \tab 0.14766 \tab 0.1212217 \cr
+   (75,80] \tab 0.14131 \tab 0.0954218 \cr
+   (80,85] \tab 0.09347 \tab 0.0718983 \cr
+   (85,Inf] \tab 0.05522 \tab 0.0682939 \cr
+}
+
+\itemize{
+\item If the weight table contains rows where the observed weight is zero and
+the standard weight is not, the individual weights will not work
+properly.
+\itemize{
+\item If \code{is.null(collapse_stratum_col_nms)}, a warning is thrown.
+\item Else we combine strata identified by \code{collapse_stratum_col_nms}
+to ensure there are zero problematic rows in the weight table.
+}
+\item At this point the weight table looks like e.g. (\code{weight_standard} and
+\code{weight_observed} are the same for the 2nd and 3rd rows because they
+were combined --- but we keep the original strata because we need them
+for the join later)
+}\tabular{lrr}{
+   ag \tab weight_standard \tab weight_observed \cr
+   (0,15] \tab 0.00000 \tab 0.0000000 \cr
+   (15,20] \tab 0.00379 \tab 0.0004110 \cr
+   (20,25] \tab 0.00379 \tab 0.0004110 \cr
+   (25,30] \tab 0.00416 \tab 0.0030037 \cr
+   (30,35] \tab 0.00842 \tab 0.0092639 \cr
+   (35,40] \tab 0.01874 \tab 0.0174213 \cr
+   (40,45] \tab 0.03489 \tab 0.0317440 \cr
+   (45,50] \tab 0.04906 \tab 0.0641520 \cr
+   (50,55] \tab 0.07094 \tab 0.0962755 \cr
+   (55,60] \tab 0.09641 \tab 0.1094916 \cr
+   (60,65] \tab 0.13359 \tab 0.1531554 \cr
+   (65,70] \tab 0.14234 \tab 0.1582459 \cr
+   (70,75] \tab 0.14766 \tab 0.1212217 \cr
+   (75,80] \tab 0.14131 \tab 0.0954218 \cr
+   (80,85] \tab 0.09347 \tab 0.0718983 \cr
+   (85,Inf] \tab 0.05522 \tab 0.0682939 \cr
+}
+
+\itemize{
 \item Compute the individual weights as the standard weights divided by the
 observed weights. E.g. one stratum has
-\code{weight_brenner = 0.5 / 0.4 = 1.2}.
+\code{weight_brenner = 0.5 / 0.4 = 1.2}. If either the standard or observed
+weight is zero then set the Brenner weight to zero.
+\item At this point the table looks like e.g. (note: \code{weight_brenner} was made
+larger by our combining the strata in rows 2 and 3. In fact it will
+always be larger when we combine strata because \code{weight_standard} is
+summed and becomes greater but \code{weight_observed} does not become any
+greater. The observations here serve "double duty" and represent all the
+strata in the combination.):
+}\tabular{lrrr}{
+   ag \tab weight_standard \tab weight_observed \tab weight_brenner \cr
+   (0,15] \tab 0.00000 \tab 0.0000000 \tab 0.0000000 \cr
+   (15,20] \tab 0.00379 \tab 0.0004110 \tab 9.2214110 \cr
+   (20,25] \tab 0.00379 \tab 0.0004110 \tab 9.2214110 \cr
+   (25,30] \tab 0.00416 \tab 0.0030037 \tab 1.3849735 \cr
+   (30,35] \tab 0.00842 \tab 0.0092639 \tab 0.9089002 \cr
+   (35,40] \tab 0.01874 \tab 0.0174213 \tab 1.0756964 \cr
+   (40,45] \tab 0.03489 \tab 0.0317440 \tab 1.0991045 \cr
+   (45,50] \tab 0.04906 \tab 0.0641520 \tab 0.7647460 \cr
+   (50,55] \tab 0.07094 \tab 0.0962755 \tab 0.7368441 \cr
+   (55,60] \tab 0.09641 \tab 0.1094916 \tab 0.8805243 \cr
+   (60,65] \tab 0.13359 \tab 0.1531554 \tab 0.8722511 \cr
+   (65,70] \tab 0.14234 \tab 0.1582459 \tab 0.8994864 \cr
+   (70,75] \tab 0.14766 \tab 0.1212217 \tab 1.2180987 \cr
+   (75,80] \tab 0.14131 \tab 0.0954218 \tab 1.4808988 \cr
+   (80,85] \tab 0.09347 \tab 0.0718983 \tab 1.3000304 \cr
+   (85,Inf] \tab 0.05522 \tab 0.0682939 \tab 0.8085640 \cr
+}
+
+\itemize{
 \item Using left-join, produce a vector of length \code{nrow(df)} where each row in
 \code{df} gets an individual weight based on its stratum.
-A vector of weights is returned.
+\item Return a vector of weights.
 }
 
 
@@ -454,6 +558,59 @@ stopifnot(
   c("h_ch_est", "S_ch_est") \%in\% names(sdt)
 )
 
+
+# surv_individual_weights
+# popEpi::surv_lexis
+make_column_icss_ag <- function(age) {
+  cut(
+    age,
+    breaks = c(popEpi::ICSS[["age"]], Inf),
+    right = FALSE
+  )
+}
+
+make_standard_weight_dt <- function() {
+  return(popEpi::ICSS[
+    j = list(
+      weight = as.double(sum(.SD[["ICSS1"]]))
+    ),
+    keyby = list(
+      icss_ag = make_column_icss_ag(popEpi::ICSS[["age"]])
+    )
+  ][])
+}
+
+make_sire <- function() {
+  sire <- popEpi::sire
+  sire <- sire[
+    sire[["dg_date"]] < sire[["ex_date"]] &
+      sire[["ex_date"]] >= as.Date("1999-01-01") &
+      (get.yrs(sire[["ex_date"]]) - get.yrs(sire[["bi_date"]])) < 100
+  ]
+  set.seed(1337)
+  sire[j = "my_stratum" := sample(2L, size = .N, replace = TRUE)]
+  # you can also use popEpi::Lexis_dt
+  sire <- Epi::Lexis(
+    data = sire,
+    entry = list(
+      ts_cal = popEpi::get.yrs(dg_date),
+      ts_age = popEpi::get.yrs(dg_date) - popEpi::get.yrs(bi_date),
+      ts_fut = 0.0
+    ),
+    duration = popEpi::get.yrs(ex_date) - popEpi::get.yrs(dg_date),
+    entry.status = 0L,
+    exit.status = status
+  )
+  sire[["icss_ag"]] <- make_column_icss_ag(sire[["dg_age"]])
+  sire[["individual_weight"]] <- popEpi::surv_individual_weights(
+    df = sire,
+    standard_weight_dt = wdt
+  )
+  return(sire[])
+}
+
+wdt <- make_standard_weight_dt()
+sire <- make_sire()
 
 # popEpi::lexis_breaks_collapse_1d
 lexis <- Epi::Lexis(

@@ -152,6 +152,47 @@ surv_interpolate <- function(
   return(out)
 }
 
+surv_collapse_1d_eval_test_expr__ <- function(
+  test_expr,
+  dt,
+  subset_idx = NULL,
+  call_env = NULL
+) {
+  if (is.null(call_env)) {
+    call_env <- parent.frame(2L)
+  }
+  test_result <- tryCatch(
+    eval(test_expr, dt, call_env),
+    error = function(e) e
+  )
+  dt_expr <- substitute(dt[j = test_expr], list(test_expr = test_expr))
+  if (!is.null(subset_idx)) {
+    dt_expr[["i"]] <- subset_idx
+  }
+  eval_env <- new.env(parent = call_env)
+  eval_env[["dt"]] <- dt
+  test_result <- tryCatch(eval(dt_expr, eval_env), error = function(e) e)
+  if (inherits(test_result, "error")) {
+    stop(
+      "Test expression ", deparse1(test_expr), " resulted in an error: ",
+      test_expr[["message"]]
+    )
+  } else if (
+    !storage.mode(test_result) %in% c("logical", "double", "integer")
+  ) {
+    stop(
+      "Test expression ", deparse1(test_expr), " did not evaluate into ",
+      "(?storage.mode) logical, numeric, nor integer. ",
+      "Instead it evaluated to `storage.mode(result) = ",
+      deparse1(storage.mode(test_result), "`")
+    )
+  } else if (storage.mode(test_result) %in% c("double", "integer")) {
+    test_result <- test_result > 0
+  }
+  test_result[is.na(test_result)] <- FALSE
+  return(any(test_result))
+}
+
 surv_collapse_1d__ <- function(
   dt,
   ts_col_nm,
@@ -185,101 +226,94 @@ surv_collapse_1d__ <- function(
       )
     }
     test_expr <- substitute(
-      col > 0,
+      sum(col),
       list(col = str2lang(test_col_nms[1]))
     )
   }
   ts_start_col_nm <- paste0(ts_col_nm, "_start")
   ts_stop_col_nm <- paste0(ts_col_nm, "_stop")
-  ts_breaks <- c(dt[[ts_start_col_nm]], dt[[ts_stop_col_nm]][nrow(dt)])
-  test_result <- tryCatch(
-    eval(test_expr, dt, parent.frame(1L)),
-    error = function(e) e
-  )
-  if (inherits(test_result, "error")) {
-    return(dt[])
-  }
-  if (
-    !storage.mode(test_result) %in% c("logical", "double", "integer")
-  ) {
-    stop(
-      "Test expression ", deparse1(test_expr), " did not evaluate into ",
-      "(?storage.mode) logical, numeric, nor integer. ",
-      "Instead it evaluated to `storage.mode(result) = ",
-      deparse1(storage.mode(test_result), "`")
-    )
-  }
-  if (storage.mode(test_result) %in% c("double", "integer")) {
-    test_result <- test_result > 0
-  }
-  if (anyNA(test_result)) {
-    browser()
-  }
-  test_result[is.na(test_result)] <- FALSE
-  if (all(test_result)) {
-    return(dt[])
-  }
-  out <- rep(NA_integer_, length(ts_breaks))
-  out[1L] <- 1L
-  out_pos <- 1L
-  ts_fut_id_lo <- 1L
-  ts_fut_id_hi <- 1L
-  while (TRUE) {
-    if (ts_fut_id_hi >= length(ts_breaks)) {
-      break
-    }
-    break_lo <- ts_breaks[ts_fut_id_lo]
-    break_hi <- ts_breaks[ts_fut_id_hi + 1L]
-    can_combine_next <- ts_fut_id_hi + 1L <= length(ts_breaks) &&
-      !break_hi %in% mandatory_breaks
-    can_combine_previous <- ts_fut_id_lo > 1 &&
-      !break_lo %in% mandatory_breaks
-    can_combine <- can_combine_next || can_combine_previous
-    do_combine <- can_combine &&
-      !any(test_result[ts_fut_id_lo:ts_fut_id_hi])
 
+  br_dt <- data.table::setDT(list(
+    br = c(dt[[ts_start_col_nm]], dt[[ts_stop_col_nm]][nrow(dt)])
+  ))
+  data.table::set(
+    x = br_dt,
+    j = "in_mandatory_breaks",
+    value =  br_dt[["br"]] %in% mandatory_breaks
+  )
+  collapsed_grp_ids <- rep(NA_integer_, nrow(dt))
+  collapsed_grp_ids[1L] <- collapsed_grp_id <- 1L
+  interval_id_lo <- 1L
+  interval_id_hi <- 1L
+  while (TRUE) {
+    need_to_combine <- !surv_collapse_1d_eval_test_expr__(
+      test_expr = test_expr,
+      dt = dt,
+      subset_idx = substitute(
+        interval_id_lo:interval_id_hi,
+        list(interval_id_lo = interval_id_lo, interval_id_hi = interval_id_hi)
+      ),
+      call_env = parent.frame(1L)
+    )
+    if (need_to_combine) {
+      can_combine_with_next <- interval_id_hi < nrow(dt) &&
+        !br_dt[["in_mandatory_breaks"]][interval_id_lo]
+      can_combine_with_previous <- interval_id_lo > 1 &&
+        !br_dt[["in_mandatory_breaks"]][interval_id_hi + 1L]
+      can_combine <- can_combine_with_next || can_combine_with_previous
+      # can combine and need to combine
+      do_combine <- can_combine
+    } else {
+      do_combine <- FALSE
+    }
     if (do_combine) {
-      if (can_combine_next) {
-        ts_fut_id_lo <- ts_fut_id_lo
-        ts_fut_id_hi <- ts_fut_id_hi + 1L
-      } else if (can_combine_previous) {
-        ts_fut_id_lo <- out[out_pos - 1L]
-        ts_fut_id_hi <- ts_fut_id_hi
+      # lets collapse with next or previous and try again
+      if (can_combine_with_next) {
+        interval_id_lo <- interval_id_lo
+        interval_id_hi <- interval_id_hi + 1L
+      } else {
+        interval_id_lo <- which(collapsed_grp_ids == collapsed_grp_id - 1L)[1L]
+        interval_id_hi <- interval_id_hi
       }
     } else {
-      if (out_pos > 1 && ts_fut_id_lo == out[out_pos - 1L]) {
-        # combined with previous interval
-        # out_pos <- out_pos # no need to run this...
-      } else {
-        out_pos <- out_pos + 1L
-      }
-      out[out_pos - 1L] <- ts_fut_id_lo
-      out[out_pos] <- ts_fut_id_hi
-      ts_fut_id_lo <- ts_fut_id_hi <- ts_fut_id_hi + 1L
+      # done with this (potentially collapsed) group
+      collapsed_grp_ids[interval_id_lo:interval_id_hi] <- collapsed_grp_id
+      collapsed_grp_id <- collapsed_grp_id + 1L
+      interval_id_lo <- interval_id_hi <- interval_id_hi + 1L
+    }
+    if (interval_id_hi > nrow(dt)) {
+      collapsed_grp_ids[is.na(collapsed_grp_ids)] <- collapsed_grp_id
+      break
     }
   }
-  new_ts_breaks <- ts_breaks[union(out[!is.na(out)], length(ts_breaks))]
+  collapsed_grp_ids <- cumsum(!duplicated(collapsed_grp_ids))
   ts_id_col_nm <- paste0(ts_col_nm, "_id")
+  dt <- data.table::setDT(as.list(dt))
   data.table::set(
     x = dt,
     j = ts_id_col_nm,
-    value = cut(
-      x = dt[[ts_start_col_nm]],
-      breaks = new_ts_breaks,
-      right = FALSE,
-      labels = FALSE
-    )
+    value = collapsed_grp_ids
   )
   ts_id_col_nms <- setdiff(names(dt)[grepl("_id$", names(dt))], "box_id")
   data.table::set(
     x = dt,
-    j = c(ts_start_col_nm, ts_stop_col_nm, "box_id"),
-    value = list(
-      new_ts_breaks[-length(new_ts_breaks)][dt[[ts_id_col_nm]]],
-      new_ts_breaks[-1][dt[[ts_id_col_nm]]],
-      cumsum(!duplicated(dt, by = ts_id_col_nms))
-    )
+    j = "box_id",
+    value = cumsum(!duplicated(dt, by = ts_id_col_nms))
   )
+  data.table::set(
+    x = dt,
+    j = c(ts_start_col_nm, ts_stop_col_nm),
+    value = lapply(c(ts_start_col_nm, ts_stop_col_nm), function(col_nm) {
+      data.table::copy(dt[[col_nm]])
+    })
+  )
+  dt[
+    j = c(ts_start_col_nm, ts_stop_col_nm) := list(
+      .SD[[ts_start_col_nm]][1L],
+      .SD[[ts_stop_col_nm]][.N]
+    ),
+    by = ts_id_col_nm
+  ]
   dt <- dt[
     #' @importFrom data.table .SD
     j = lapply(.SD, sum, na.rm = TRUE),
