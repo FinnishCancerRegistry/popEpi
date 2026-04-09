@@ -4,58 +4,63 @@
 #' )
 #' @examples
 #'
-#' # surv_individual_weights
-#' # popEpi::surv_lexis
+
+#' # popEpi::surv_individual_weights
 #' make_column_icss_ag <- function(age) {
 #'   cut(
 #'     age,
-#'     breaks = c(popEpi::ICSS[["age"]], Inf),
+#'     breaks = c(seq(15, 85, 5), Inf),
 #'     right = FALSE
 #'   )
 #' }
-#'
+#' 
 #' make_standard_weight_dt <- function() {
-#'   return(popEpi::ICSS[
+#'   wdt <- popEpi::ICSS[
 #'     j = list(
 #'       weight = as.double(sum(.SD[["ICSS1"]]))
 #'     ),
 #'     keyby = list(
 #'       icss_ag = make_column_icss_ag(popEpi::ICSS[["age"]])
 #'     )
-#'   ][])
+#'   ][]
+#'   return(wdt[])
 #' }
-#'
-#' make_sire <- function() {
-#'   sire <- popEpi::sire
-#'   sire <- sire[
-#'     sire[["dg_date"]] < sire[["ex_date"]] &
-#'       sire[["ex_date"]] >= as.Date("1999-01-01") &
-#'       (get.yrs(sire[["ex_date"]]) - get.yrs(sire[["bi_date"]])) < 100
-#'   ]
-#'   set.seed(1337)
-#'   sire[j = "my_stratum" := sample(2L, size = .N, replace = TRUE)]
-#'   # you can also use popEpi::Lexis_dt
-#'   sire <- Epi::Lexis(
-#'     data = sire,
-#'     entry = list(
-#'       ts_cal = popEpi::get.yrs(dg_date),
-#'       ts_age = popEpi::get.yrs(dg_date) - popEpi::get.yrs(bi_date),
-#'       ts_fut = 0.0
-#'     ),
-#'     duration = popEpi::get.yrs(ex_date) - popEpi::get.yrs(dg_date),
-#'     entry.status = 0L,
-#'     exit.status = status
-#'   )
-#'   sire[["icss_ag"]] <- make_column_icss_ag(sire[["dg_age"]])
-#'   sire[["individual_weight"]] <- popEpi::surv_individual_weights(
-#'     df = sire,
-#'     standard_weight_dt = wdt
-#'   )
-#'   return(sire[])
-#' }
-#'
+#' 
+#' lexis <- Epi::Lexis(
+#'   entry = list(ts_fut = c(0.0, 0.0)),
+#'   exit = list(ts_fut = c(1.5, 2.5)),
+#'   entry.status = 0L,
+#'   exit.status = 0L
+#' )
+#' lexis[["icss_ag"]] <- make_column_icss_ag(c(50.5, 60.5))
 #' wdt <- make_standard_weight_dt()
-#' sire <- make_sire()
+#' 
+#' # this is what happens when at least one weighting stratum is empty
+#' warn_env <- new.env()
+#' warn_env[["w"]] <- NULL
+#' iw_bad <- suppressWarnings(withCallingHandlers(popEpi::surv_individual_weights(
+#'   df = lexis,
+#'   standard_weight_dt = wdt
+#' ), warning = function(w) warn_env[["w"]] <- w))
+#' stopifnot(
+#'   inherits(warn_env[["w"]], "warning"),
+#'   iw_bad >= 0
+#' )
+#' 
+#' # here is an easy way to handle this problem. note that the weights are
+#' # always larger when we need to aggregate strata --- because the standard
+#' # weight increases but the observed weight remains the same. the same
+#' # observations serve "double duty" now for multiple original strata.
+#' iw <- popEpi::surv_individual_weights(
+#'   df = lexis,
+#'   standard_weight_dt = wdt,
+#'   collapse_stratum_col_nms = "icss_ag"
+#' )
+#' stopifnot(
+#'   length(iw) == nrow(lexis),
+#'   iw >= 0.0,
+#'   iw >= iw_bad
+#' )
 surv_individual_weights <- function(
   df,
   standard_weight_dt,
