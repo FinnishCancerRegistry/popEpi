@@ -365,22 +365,22 @@ Scale the standard weights and the observed weights to sum into one
 \item At this point the weight table might look like this:
 }\tabular{lrr}{
    ag \tab weight_standard \tab weight_observed \cr
-   (0,15] \tab 0.00000 \tab 0.0000000 \cr
-   (15,20] \tab 0.00164 \tab 0.0000000 \cr
-   (20,25] \tab 0.00215 \tab 0.0004110 \cr
-   (25,30] \tab 0.00416 \tab 0.0030037 \cr
-   (30,35] \tab 0.00842 \tab 0.0092639 \cr
-   (35,40] \tab 0.01874 \tab 0.0174213 \cr
-   (40,45] \tab 0.03489 \tab 0.0317440 \cr
-   (45,50] \tab 0.04906 \tab 0.0641520 \cr
-   (50,55] \tab 0.07094 \tab 0.0962755 \cr
-   (55,60] \tab 0.09641 \tab 0.1094916 \cr
-   (60,65] \tab 0.13359 \tab 0.1531554 \cr
-   (65,70] \tab 0.14234 \tab 0.1582459 \cr
-   (70,75] \tab 0.14766 \tab 0.1212217 \cr
-   (75,80] \tab 0.14131 \tab 0.0954218 \cr
-   (80,85] \tab 0.09347 \tab 0.0718983 \cr
-   (85,Inf] \tab 0.05522 \tab 0.0682939 \cr
+   [0,15[ \tab 0.00000 \tab 0.0000000 \cr
+   [15,20[ \tab 0.00164 \tab 0.0000000 \cr
+   [20,25[ \tab 0.00215 \tab 0.0004110 \cr
+   [25,30[ \tab 0.00416 \tab 0.0030037 \cr
+   [30,35[ \tab 0.00842 \tab 0.0092639 \cr
+   [35,40[ \tab 0.01874 \tab 0.0174213 \cr
+   [40,45[ \tab 0.03489 \tab 0.0317440 \cr
+   [45,50[ \tab 0.04906 \tab 0.0641520 \cr
+   [50,55[ \tab 0.07094 \tab 0.0962755 \cr
+   [55,60[ \tab 0.09641 \tab 0.1094916 \cr
+   [60,65[ \tab 0.13359 \tab 0.1531554 \cr
+   [65,70[ \tab 0.14234 \tab 0.1582459 \cr
+   [70,75[ \tab 0.14766 \tab 0.1212217 \cr
+   [75,80[ \tab 0.14131 \tab 0.0954218 \cr
+   [80,85[ \tab 0.09347 \tab 0.0718983 \cr
+   [85,Inf[ \tab 0.05522 \tab 0.0682939 \cr
 }
 
 \itemize{
@@ -398,22 +398,22 @@ were combined --- but we keep the original strata because we need them
 for the join later)
 }\tabular{lrr}{
    ag \tab weight_standard \tab weight_observed \cr
-   (0,15] \tab 0.00000 \tab 0.0000000 \cr
-   (15,20] \tab 0.00379 \tab 0.0004110 \cr
-   (20,25] \tab 0.00379 \tab 0.0004110 \cr
-   (25,30] \tab 0.00416 \tab 0.0030037 \cr
-   (30,35] \tab 0.00842 \tab 0.0092639 \cr
-   (35,40] \tab 0.01874 \tab 0.0174213 \cr
-   (40,45] \tab 0.03489 \tab 0.0317440 \cr
-   (45,50] \tab 0.04906 \tab 0.0641520 \cr
-   (50,55] \tab 0.07094 \tab 0.0962755 \cr
-   (55,60] \tab 0.09641 \tab 0.1094916 \cr
-   (60,65] \tab 0.13359 \tab 0.1531554 \cr
-   (65,70] \tab 0.14234 \tab 0.1582459 \cr
-   (70,75] \tab 0.14766 \tab 0.1212217 \cr
-   (75,80] \tab 0.14131 \tab 0.0954218 \cr
-   (80,85] \tab 0.09347 \tab 0.0718983 \cr
-   (85,Inf] \tab 0.05522 \tab 0.0682939 \cr
+   [0,15[ \tab 0.00000 \tab 0.0000000 \cr
+   [15,20[ \tab 0.00379 \tab 0.0004110 \cr
+   [20,25[ \tab 0.00379 \tab 0.0004110 \cr
+   [25,30[ \tab 0.00416 \tab 0.0030037 \cr
+   [30,35[ \tab 0.00842 \tab 0.0092639 \cr
+   [35,40[ \tab 0.01874 \tab 0.0174213 \cr
+   [40,45[ \tab 0.03489 \tab 0.0317440 \cr
+   [45,50[ \tab 0.04906 \tab 0.0641520 \cr
+   [50,55[ \tab 0.07094 \tab 0.0962755 \cr
+   [55,60[ \tab 0.09641 \tab 0.1094916 \cr
+   [60,65[ \tab 0.13359 \tab 0.1531554 \cr
+   [65,70[ \tab 0.14234 \tab 0.1582459 \cr
+   [70,75[ \tab 0.14766 \tab 0.1212217 \cr
+   [75,80[ \tab 0.14131 \tab 0.0954218 \cr
+   [80,85[ \tab 0.09347 \tab 0.0718983 \cr
+   [85,Inf[ \tab 0.05522 \tab 0.0682939 \cr
 }
 
 \itemize{
@@ -429,22 +429,22 @@ greater. The observations here serve "double duty" and represent all the
 strata in the combination.):
 }\tabular{lrrr}{
    ag \tab weight_standard \tab weight_observed \tab weight_brenner \cr
-   (0,15] \tab 0.00000 \tab 0.0000000 \tab 0.0000000 \cr
-   (15,20] \tab 0.00379 \tab 0.0004110 \tab 9.2214110 \cr
-   (20,25] \tab 0.00379 \tab 0.0004110 \tab 9.2214110 \cr
-   (25,30] \tab 0.00416 \tab 0.0030037 \tab 1.3849735 \cr
-   (30,35] \tab 0.00842 \tab 0.0092639 \tab 0.9089002 \cr
-   (35,40] \tab 0.01874 \tab 0.0174213 \tab 1.0756964 \cr
-   (40,45] \tab 0.03489 \tab 0.0317440 \tab 1.0991045 \cr
-   (45,50] \tab 0.04906 \tab 0.0641520 \tab 0.7647460 \cr
-   (50,55] \tab 0.07094 \tab 0.0962755 \tab 0.7368441 \cr
-   (55,60] \tab 0.09641 \tab 0.1094916 \tab 0.8805243 \cr
-   (60,65] \tab 0.13359 \tab 0.1531554 \tab 0.8722511 \cr
-   (65,70] \tab 0.14234 \tab 0.1582459 \tab 0.8994864 \cr
-   (70,75] \tab 0.14766 \tab 0.1212217 \tab 1.2180987 \cr
-   (75,80] \tab 0.14131 \tab 0.0954218 \tab 1.4808988 \cr
-   (80,85] \tab 0.09347 \tab 0.0718983 \tab 1.3000304 \cr
-   (85,Inf] \tab 0.05522 \tab 0.0682939 \tab 0.8085640 \cr
+   [0,15[ \tab 0.00000 \tab 0.0000000 \tab 0.0000000 \cr
+   [15,20[ \tab 0.00379 \tab 0.0004110 \tab 9.2214110 \cr
+   [20,25[ \tab 0.00379 \tab 0.0004110 \tab 9.2214110 \cr
+   [25,30[ \tab 0.00416 \tab 0.0030037 \tab 1.3849735 \cr
+   [30,35[ \tab 0.00842 \tab 0.0092639 \tab 0.9089002 \cr
+   [35,40[ \tab 0.01874 \tab 0.0174213 \tab 1.0756964 \cr
+   [40,45[ \tab 0.03489 \tab 0.0317440 \tab 1.0991045 \cr
+   [45,50[ \tab 0.04906 \tab 0.0641520 \tab 0.7647460 \cr
+   [50,55[ \tab 0.07094 \tab 0.0962755 \tab 0.7368441 \cr
+   [55,60[ \tab 0.09641 \tab 0.1094916 \tab 0.8805243 \cr
+   [60,65[ \tab 0.13359 \tab 0.1531554 \tab 0.8722511 \cr
+   [65,70[ \tab 0.14234 \tab 0.1582459 \tab 0.8994864 \cr
+   [70,75[ \tab 0.14766 \tab 0.1212217 \tab 1.2180987 \cr
+   [75,80[ \tab 0.14131 \tab 0.0954218 \tab 1.4808988 \cr
+   [80,85[ \tab 0.09347 \tab 0.0718983 \tab 1.3000304 \cr
+   [85,Inf[ \tab 0.05522 \tab 0.0682939 \tab 0.8085640 \cr
 }
 
 \itemize{
