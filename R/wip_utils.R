@@ -104,6 +104,20 @@ handle_arg_by <- function(
     }
     data.table::setkeyv(by, stratum_col_nms)
   } else if (inherits(by, "list")) {
+    dataset <- data.table::setDT(as.list(dataset))
+    by <- lapply(by, function(by_elem) {
+      if (is.character(by_elem)) {
+        nondup <- !duplicated(dataset, by = by_elem)
+        return(dataset[
+          i = (nondup),
+          #' @importFrom data.table .SD
+          j = .SD,
+          .SDcols = by_elem
+        ])
+      } else {
+        by_elem
+      }
+    })
     by <- level_space_list_to_level_space_data_table(by)
   }
   return(by[])
