@@ -55,12 +55,12 @@ assert_is_arg_by <- function(by, dataset) {
       eval(substitute(stopifnot(
         inherits(by[[i]], c("character", "data.table", "NULL"))
       ), list(i = i)))
-      if (is.null(by)) {
+      if (is.null(by[[i]])) {
         return(NULL)
-      } else if (is.character(by)) {
+      } else if (is.character(by[[i]])) {
         return(by)
       } else {
-        return(names(by))
+        return(names(by[[i]]))
       }
     })))
   }
