@@ -58,7 +58,7 @@ assert_is_arg_by <- function(by, dataset) {
       if (is.null(by[[i]])) {
         return(NULL)
       } else if (is.character(by[[i]])) {
-        return(by)
+        return(by[[i]])
       } else {
         return(names(by[[i]]))
       }
