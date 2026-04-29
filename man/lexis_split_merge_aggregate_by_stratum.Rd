@@ -285,7 +285,11 @@ of the \code{aggre_exprs}. See below for the table.
   if that `optional_steps` element exists.
 }\if{html}{\out{</div>}}
 \itemize{
-\item After every stratum has been processed, set proper \code{data.table}
+\item Replace \code{NA} values in value columns starting with \code{t_} or with \code{n_}
+with zeroes. E.g. \code{t_at_risk} will then be zero in intervals with no
+subjects in follow-up. Even a custom expression such as
+\code{t_at_risk_squared} will be handled in this manner.
+\item Set proper \code{data.table}
 attributes on the resulting big table and sort it by the stratifying
 variables.
 \item Store as metadata a list with names \code{stratum_col_nms}, \code{ts_col_nms}, and
@@ -560,13 +564,32 @@ agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
   breaks = list(ts_fut = 0:5),
   aggre_exprs = list(
     "t_at_risk",
-    "my_stat" = quote(sum(lex.dur ^ 2))
+    "my_stat" = quote(sum(lex.dur ^ 2)),
+    "t_at_risk_squaredd" = quote(sum(lex.dur ^ 2))
   )
 )
 stopifnot(
   nrow(agdt) == length(0:2) * (length(0:5) - 1),
   agdt[["t_at_risk"]][!agdt[["sex"]] \%in\% sire[["sex"]]] == 0,
-  is.na(agdt[["my_stat"]][!agdt[["sex"]] \%in\% sire[["sex"]]])
+  is.na(agdt[["my_stat"]][!agdt[["sex"]] \%in\% sire[["sex"]]]),
+  agdt[["t_at_risk_squared"]][!agdt[["sex"]] \%in\% sire[["sex"]]] == 0
+)
+
+# and this is what happens when no records are in the dataset
+agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+  lexis = sire,
+  subset = rep(FALSE, nrow(sire)),
+  aggre_by = data.table::data.table(sex = 0:2),
+  breaks = list(ts_fut = 0:5),
+  aggre_exprs = list(
+    "t_at_risk",
+    "my_stat" = quote(sum(lex.dur ^ 2))
+  )
+)
+stopifnot(
+  nrow(agdt) == length(0:2) * (length(0:5) - 1),
+  agdt[["t_at_risk"]] == 0,
+  is.na(agdt[["my_stat"]])
 )
 
 # and this is what happens when no records are in the dataset
