@@ -758,14 +758,14 @@ surv_lexis <- function(
   #'   `list(breaks_collapse_args = list(mandatory_breaks = 0:5))`.
   #' @param subset
   #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
-  split_merge_aggregate_args <- c(
-    split_merge_aggregate_args,
-    split_merge_aggregate_optional_args
-  )
-  split_merge_aggregate_args <- split_merge_aggregate_args[
-    !duplicated(names(split_merge_aggregate_args))
-  ]
-  surv_estimate_args[["dt"]] <- sdt <- call_with_arg_list__(
+  split_merge_aggregate_args[names(split_merge_aggregate_optional_args)] <-
+    lapply(names(split_merge_aggregate_optional_args), function(arg_nm) {
+      c(
+        split_merge_aggregate_args[[arg_nm]],
+        split_merge_aggregate_optional_args[[arg_nm]]
+      )
+    })
+  surv_estimate_args[["dt"]] <- call_with_arg_list__(
     popEpi::lexis_split_merge_aggregate_by_stratum,
     split_merge_aggregate_args
   )
