@@ -70,7 +70,7 @@ lexis_aggregate_one_stratum__ <- function(
     #          and added as new columns in the split data if they appear in any
     #          of the `aggre_exprs`. See below for the table.
     #
-    ##        + Table of expressions which create new columns into split data:
+    #        + Table of expressions which create new columns into split data:
     #
     # ${paste0(knitr::kable(lexis_split_column_expr_table_doc__()), collapse = "\n")}
     # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
@@ -93,6 +93,9 @@ lexis_aggregate_one_stratum__ <- function(
         j = col_nm,
         value = eval(expr, work_dt, add_expr_eval_env)
       )
+      if (col_nm == "in_follow_up_at_interval_stop") {
+        browser()
+      }
       NULL
     })
     data.table::setDT(work_dt)
@@ -557,6 +560,13 @@ lexis_split_merge_aggregate_by_stratum <- function(
   # @codedoc_insert_comment_block popEpi:::handle_arg_subset
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
   subset <- handle_arg_subset(dataset_nm = "lexis")
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+  # - If `weight_col_nm` was supplied, include in `subset` only records where
+  #   `lexis[[weight_col_nm]] > 0`.
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
+  if (!is.null(weight_col_nm)) {
+    subset <- subset & lexis[[weight_col_nm]] > 0
+  }
 
   eval_env <- environment()
   call_env <- parent.frame(1L)

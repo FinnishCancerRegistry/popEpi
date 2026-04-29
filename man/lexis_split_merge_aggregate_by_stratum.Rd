@@ -187,6 +187,8 @@ use of \verb{ * iw} in the expression if individual weights are not used.
 }
 
 \itemize{
+\item If \code{weight_col_nm} was supplied, include in \code{subset} only records where
+\code{lexis[[weight_col_nm]] > 0}.
 \item Call
 \code{optional_steps[["on_entry"]](eval_env = eval_env, call_env = call_env)}
 if that \code{optional_steps} element exists.
