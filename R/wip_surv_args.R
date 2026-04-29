@@ -187,7 +187,7 @@ assert_is_arg_breaks <- function(breaks, lexis) {
   # @param breaks `[list]` (no default)
   #
   # List of breaks to split `Lexis` data by. Passed to `[splitMulti]`.
-  # E.g. `list(ts_fut = seq(0, 5, 1 / 12), ts_cal = c(2001, 2006))`.
+  # E.g. `list(ts_cal = c(2001, 2006), ts_fut = seq(0, 5, 1 / 12))`.
   # @codedoc_comment_block popEpi:::assert_is_arg_breaks
   stopifnot(
     inherits(breaks, "list"),

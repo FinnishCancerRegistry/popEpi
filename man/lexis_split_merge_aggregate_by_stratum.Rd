@@ -27,7 +27,7 @@ A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
 \item{breaks}{\verb{[list]} (no default)
 
 List of breaks to split \code{Lexis} data by. Passed to \verb{[splitMulti]}.
-E.g. \code{list(ts_fut = seq(0, 5, 1 / 12), ts_cal = c(2001, 2006))}.}
+E.g. \code{list(ts_cal = c(2001, 2006), ts_fut = seq(0, 5, 1 / 12))}.}
 
 \item{aggre_exprs}{\verb{[character, list]} (no default)
 
