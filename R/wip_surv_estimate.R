@@ -566,6 +566,7 @@ surv_estimate <- function(
       .SDcols = value_col_nms,
       keyby = eval(setdiff(names(dt), c(value_col_nms, names(weight_dt))))
     ]
+    estimate_stratum_col_nms <- intersect(estimate_stratum_col_nms, names(out))
   }
   # @codedoc_comment_block popEpi::surv_estimate
   # - Check columns `t_at_risk`, `n_at_risk_eff` for zeroes/NAs if they are in
@@ -653,6 +654,7 @@ surv_estimate <- function(
     da_adjust_col_nms <- character(0)
     if (do_direct_adjusting) {
       da_adjust_col_nms <- setdiff(names(weight_dt), "weight")
+      da_stratum_col_nms <- setdiff(da_stratum_col_nms, da_adjust_col_nms)
     }
     #' @param conf_lvls
     #' Passed one at a time to
