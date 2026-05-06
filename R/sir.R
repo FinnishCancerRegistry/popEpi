@@ -1357,10 +1357,9 @@ sir_exp <- function(x, obs, exp, pyrs=NULL, print = NULL,
 #' @param ... pass arguments to `sir_exp`
 #'
 #'
-#' @describeIn sir_exp
+#' @rdname sir_exp
 #'
 #' @export
-
 sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
 
   ## R CMD CHECK appeasement
@@ -1423,10 +1422,9 @@ sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
 #' @description `sir_ag` solves SMR from a `[aggre]` object
 #' calculated using `[lexpand]`.
 #'
-#' @describeIn sir_exp
+#' @rdname sir_exp
 #'
 #' @export
-
 sir_ag <- function(x, obs = 'from0to1', print = attr(x, 'aggre.meta')$by, exp = 'd.exp', pyrs = 'pyrs', ... ) {
 
   if(!inherits(x, 'aggre')) {
