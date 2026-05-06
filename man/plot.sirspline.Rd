@@ -40,12 +40,12 @@ On top of the frame it's then possible to add a \code{grid},
 \code{abline} or text before plotting the lines (see: \code{sirspline}).
 }
 \seealso{
-Other sir functions: 
-\code{\link{lines.sirspline}()},
-\code{\link{sir}()},
-\code{\link{sir_exp}()},
-\code{\link{sir_ratio}()},
-\code{\link{sirspline}()}
+Other sir functions:
+\code{\link[=lines.sirspline]{lines.sirspline()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sir_exp]{sir_exp()}},
+\code{\link[=sir_ratio]{sir_ratio()}},
+\code{\link[=sirspline]{sirspline()}}
 }
 \author{
 Matti Rantanen

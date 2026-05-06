@@ -147,9 +147,9 @@ xm2[xm2$lex.id == 6L, ]
 \verb{[Epi::splitLexis]}, \verb{[Epi::Lexis]},
 \verb{[survival::survSplit]}
 
-Other splitting functions: 
-\code{\link{lexpand}()},
-\code{\link{splitLexisDT}()}
+Other splitting functions:
+\code{\link[=lexpand]{lexpand()}},
+\code{\link[=splitLexisDT]{splitLexisDT()}}
 }
 \author{
 Joonas Miettinen

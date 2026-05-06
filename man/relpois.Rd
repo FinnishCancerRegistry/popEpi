@@ -108,20 +108,20 @@ Stat Med. 2004 Jan 15;23(1):51-64.
 \seealso{
 \verb{[lexpand]}, \verb{[stats::poisson]}, \verb{[stats::glm]}
 
-Other main functions: 
-\code{\link{Surv}()},
-\code{\link{rate}()},
-\code{\link{relpois_ag}()},
-\code{\link{sir}()},
-\code{\link{sirspline}()},
-\code{\link{survmean}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other main functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=rate]{rate()}},
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sirspline]{sirspline()}},
+\code{\link[=survmean]{survmean()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 
-Other relpois functions: 
+Other relpois functions:
 \code{\link{RPL}},
-\code{\link{relpois_ag}()},
-\code{\link{rpcurve}()}
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=rpcurve]{rpcurve()}}
 }
 \author{
 Joonas Miettinen, Karri Seppa

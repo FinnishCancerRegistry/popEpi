@@ -90,20 +90,20 @@ AIC(rpm, rpm2)
 \seealso{
 \verb{[lexpand]}, \verb{[poisson]}, \verb{[glm]}
 
-Other main functions: 
-\code{\link{Surv}()},
-\code{\link{rate}()},
-\code{\link{relpois}()},
-\code{\link{sir}()},
-\code{\link{sirspline}()},
-\code{\link{survmean}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other main functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=rate]{rate()}},
+\code{\link[=relpois]{relpois()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sirspline]{sirspline()}},
+\code{\link[=survmean]{survmean()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 
-Other relpois functions: 
+Other relpois functions:
 \code{\link{RPL}},
-\code{\link{relpois}()},
-\code{\link{rpcurve}()}
+\code{\link[=relpois]{relpois()}},
+\code{\link[=rpcurve]{rpcurve()}}
 }
 \author{
 Joonas Miettinen, Karri Seppa

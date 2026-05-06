@@ -36,12 +36,12 @@ specific level can be selected using argument
 give different colours for each level.
 }
 \seealso{
-Other sir functions: 
-\code{\link{plot.sirspline}()},
-\code{\link{sir}()},
-\code{\link{sir_exp}()},
-\code{\link{sir_ratio}()},
-\code{\link{sirspline}()}
+Other sir functions:
+\code{\link[=plot.sirspline]{plot.sirspline()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sir_exp]{sir_exp()}},
+\code{\link[=sir_ratio]{sir_ratio()}},
+\code{\link[=sirspline]{sirspline()}}
 }
 \author{
 Matti Rantanen

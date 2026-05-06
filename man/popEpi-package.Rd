@@ -46,6 +46,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Joonas Miettinen \email{joonas.miettinen@cancer.fi} (\href{https://orcid.org/0000-0001-8624-6754}{ORCID})
   \item Matti Rantanen \email{matti.rantanen@statfinn.com}
 }
 

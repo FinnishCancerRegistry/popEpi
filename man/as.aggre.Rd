@@ -69,11 +69,11 @@ df <- as.aggre(df, values = c("pyrs", "obs"), by = "sex", breaks = BL)
 
 }
 \seealso{
-Other aggregation functions: 
-\code{\link{aggre}()},
-\code{\link{lexpand}()},
-\code{\link{setaggre}()},
-\code{\link{summary.aggre}()}
+Other aggregation functions:
+\code{\link[=aggre]{aggre()}},
+\code{\link[=lexpand]{lexpand()}},
+\code{\link[=setaggre]{setaggre()}},
+\code{\link[=summary.aggre]{summary.aggre()}}
 }
 \author{
 Joonas Miettinen

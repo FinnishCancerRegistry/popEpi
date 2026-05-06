@@ -26,7 +26,7 @@ by gender. This is an example of a population hazard table as used in
 \seealso{
 \verb{[pophaz]}
 
-Other popEpi data: 
+Other popEpi data:
 \code{\link{ICSS}},
 \code{\link{meanpop_fi}},
 \code{\link{sibr}},

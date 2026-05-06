@@ -79,12 +79,12 @@ Douglas Altman, 2000. ISBN: 978-0-727-91375-3
 \verb{[sir]}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir functions: 
-\code{\link{lines.sirspline}()},
-\code{\link{plot.sirspline}()},
-\code{\link{sir}()},
-\code{\link{sir_exp}()},
-\code{\link{sirspline}()}
+Other sir functions:
+\code{\link[=lines.sirspline]{lines.sirspline()}},
+\code{\link[=plot.sirspline]{plot.sirspline()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sir_exp]{sir_exp()}},
+\code{\link[=sirspline]{sirspline()}}
 }
 \author{
 Matti Rantanen

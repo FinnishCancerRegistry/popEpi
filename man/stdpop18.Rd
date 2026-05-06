@@ -20,7 +20,7 @@ World, European, and Nordic standard populations by 18 age categories.
 Sums to 100000.
 }
 \seealso{
-Other popEpi data: 
+Other popEpi data:
 \code{\link{ICSS}},
 \code{\link{meanpop_fi}},
 \code{\link{popmort}},
@@ -28,7 +28,7 @@ Other popEpi data:
 \code{\link{sire}},
 \code{\link{stdpop101}}
 
-Other weights: 
+Other weights:
 \code{\link{ICSS}},
 \code{\link{direct_standardization}},
 \code{\link{stdpop101}}

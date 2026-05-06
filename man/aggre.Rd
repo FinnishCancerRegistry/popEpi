@@ -181,11 +181,11 @@ a6 <- aggre(x, by = c("sex", "age", "fot"),
 and \verb{[ltable]} for a \code{data.table} based aggregator. Neither
 are directly applicable to split \code{Lexis} data.
 
-Other aggregation functions: 
-\code{\link{as.aggre}()},
-\code{\link{lexpand}()},
-\code{\link{setaggre}()},
-\code{\link{summary.aggre}()}
+Other aggregation functions:
+\code{\link[=as.aggre]{as.aggre()}},
+\code{\link[=lexpand]{lexpand()}},
+\code{\link[=setaggre]{setaggre()}},
+\code{\link[=summary.aggre]{summary.aggre()}}
 }
 \author{
 Joonas Miettinen

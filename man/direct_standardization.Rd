@@ -142,12 +142,12 @@ Source of 2000 world standard population in 1-year age groups:
 \url{https://seer.cancer.gov/stdpopulations/stdpop.singleages.html}
 }
 \seealso{
-Other weights: 
+Other weights:
 \code{\link{ICSS}},
 \code{\link{stdpop101}},
 \code{\link{stdpop18}}
 
-Other popEpi argument evaluation docs: 
+Other popEpi argument evaluation docs:
 \code{\link{flexible_argument}}
 }
 \author{

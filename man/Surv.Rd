@@ -32,28 +32,28 @@ simply to avoid doing e.g. \code{library(survival)} when \code{Surv} is used in 
 formula evaluated by \code{popEpi}.
 }
 \seealso{
-Other main functions: 
-\code{\link{rate}()},
-\code{\link{relpois}()},
-\code{\link{relpois_ag}()},
-\code{\link{sir}()},
-\code{\link{sirspline}()},
-\code{\link{survmean}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other main functions:
+\code{\link[=rate]{rate()}},
+\code{\link[=relpois]{relpois()}},
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sirspline]{sirspline()}},
+\code{\link[=survmean]{survmean()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 
-Other survtab functions: 
-\code{\link{lines.survtab}()},
-\code{\link{plot.survtab}()},
-\code{\link{print.survtab}()},
-\code{\link{summary.survtab}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other survtab functions:
+\code{\link[=lines.survtab]{lines.survtab()}},
+\code{\link[=plot.survtab]{plot.survtab()}},
+\code{\link[=print.survtab]{print.survtab()}},
+\code{\link[=summary.survtab]{summary.survtab()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 
-Other survmean functions: 
-\code{\link{lines.survmean}()},
-\code{\link{plot.survmean}()},
-\code{\link{survmean}()}
+Other survmean functions:
+\code{\link[=lines.survmean]{lines.survmean()}},
+\code{\link[=plot.survmean]{plot.survmean()}},
+\code{\link[=survmean]{survmean()}}
 }
 \concept{main functions}
 \concept{survmean functions}

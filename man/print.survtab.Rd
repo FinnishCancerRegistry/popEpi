@@ -27,13 +27,13 @@ Print method function for \code{survtab} objects; see
 \verb{[survtab_ag]}.
 }
 \seealso{
-Other survtab functions: 
-\code{\link{Surv}()},
-\code{\link{lines.survtab}()},
-\code{\link{plot.survtab}()},
-\code{\link{summary.survtab}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other survtab functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=lines.survtab]{lines.survtab()}},
+\code{\link[=plot.survtab]{plot.survtab()}},
+\code{\link[=summary.survtab]{summary.survtab()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 }
 \author{
 Joonas Miettinen

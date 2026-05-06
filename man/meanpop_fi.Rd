@@ -22,7 +22,7 @@ Statistics Finland
 Mean population counts in Finland year, sex, and age group.
 }
 \seealso{
-Other popEpi data: 
+Other popEpi data:
 \code{\link{ICSS}},
 \code{\link{popmort}},
 \code{\link{sibr}},

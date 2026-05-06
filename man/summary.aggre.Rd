@@ -26,11 +26,11 @@ Returns a \code{data.table} --- a further aggregated version of \code{object}.
 \verb{[as.aggre]} and \verb{[aggre]}.
 }
 \seealso{
-Other aggregation functions: 
-\code{\link{aggre}()},
-\code{\link{as.aggre}()},
-\code{\link{lexpand}()},
-\code{\link{setaggre}()}
+Other aggregation functions:
+\code{\link[=aggre]{aggre()}},
+\code{\link[=as.aggre]{as.aggre()}},
+\code{\link[=lexpand]{lexpand()}},
+\code{\link[=setaggre]{setaggre()}}
 }
 \author{
 Joonas Miettinen

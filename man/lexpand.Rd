@@ -374,15 +374,15 @@ x <- lexpand(sire, status = status, event = dg_date,
 \seealso{
 \verb{[Epi::Lexis]}, \verb{[popmort]}
 
-Other splitting functions: 
-\code{\link{splitLexisDT}()},
-\code{\link{splitMulti}()}
+Other splitting functions:
+\code{\link[=splitLexisDT]{splitLexisDT()}},
+\code{\link[=splitMulti]{splitMulti()}}
 
-Other aggregation functions: 
-\code{\link{aggre}()},
-\code{\link{as.aggre}()},
-\code{\link{setaggre}()},
-\code{\link{summary.aggre}()}
+Other aggregation functions:
+\code{\link[=aggre]{aggre()}},
+\code{\link[=as.aggre]{as.aggre()}},
+\code{\link[=setaggre]{setaggre()}},
+\code{\link[=summary.aggre]{summary.aggre()}}
 }
 \author{
 Joonas Miettinen

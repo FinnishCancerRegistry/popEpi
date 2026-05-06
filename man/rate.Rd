@@ -103,18 +103,18 @@ r3
 \seealso{
 \verb{[lexpand]}, \verb{[ltable]}
 
-Other main functions: 
-\code{\link{Surv}()},
-\code{\link{relpois}()},
-\code{\link{relpois_ag}()},
-\code{\link{sir}()},
-\code{\link{sirspline}()},
-\code{\link{survmean}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other main functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=relpois]{relpois()}},
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sirspline]{sirspline()}},
+\code{\link[=survmean]{survmean()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 
-Other rate functions: 
-\code{\link{rate_ratio}()}
+Other rate functions:
+\code{\link[=rate_ratio]{rate_ratio()}}
 }
 \author{
 Matti Rantanen, Joonas Miettinen

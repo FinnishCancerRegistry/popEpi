@@ -28,7 +28,7 @@ agegr <- cut(ICSS$age, cut, right = FALSE)
 aggregate(ICSS1~agegr, data = ICSS, FUN = sum)
 }
 \seealso{
-Other popEpi data: 
+Other popEpi data:
 \code{\link{meanpop_fi}},
 \code{\link{popmort}},
 \code{\link{sibr}},
@@ -36,7 +36,7 @@ Other popEpi data:
 \code{\link{stdpop101}},
 \code{\link{stdpop18}}
 
-Other weights: 
+Other weights:
 \code{\link{direct_standardization}},
 \code{\link{stdpop101}},
 \code{\link{stdpop18}}

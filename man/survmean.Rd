@@ -276,20 +276,20 @@ plot(smd)
 
 }
 \seealso{
-Other survmean functions: 
-\code{\link{Surv}()},
-\code{\link{lines.survmean}()},
-\code{\link{plot.survmean}()}
+Other survmean functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=lines.survmean]{lines.survmean()}},
+\code{\link[=plot.survmean]{plot.survmean()}}
 
-Other main functions: 
-\code{\link{Surv}()},
-\code{\link{rate}()},
-\code{\link{relpois}()},
-\code{\link{relpois_ag}()},
-\code{\link{sir}()},
-\code{\link{sirspline}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other main functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=rate]{rate()}},
+\code{\link[=relpois]{relpois()}},
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sirspline]{sirspline()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 }
 \author{
 Joonas Miettinen

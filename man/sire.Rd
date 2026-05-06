@@ -27,7 +27,7 @@ The closing date for the pertinent data was 2012-12-31, meaning status informati
 available only up to that point --- hence the maximum possible \code{ex_date} is \code{2012-12-31}.
 }
 \seealso{
-Other popEpi data: 
+Other popEpi data:
 \code{\link{ICSS}},
 \code{\link{meanpop_fi}},
 \code{\link{popmort}},
@@ -35,7 +35,7 @@ Other popEpi data:
 \code{\link{stdpop101}},
 \code{\link{stdpop18}}
 
-Other survival data: 
+Other survival data:
 \code{\link{sibr}}
 }
 \author{

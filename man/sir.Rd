@@ -185,22 +185,22 @@ se
 \verb{[lexpand]}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir functions: 
-\code{\link{lines.sirspline}()},
-\code{\link{plot.sirspline}()},
-\code{\link{sir_exp}()},
-\code{\link{sir_ratio}()},
-\code{\link{sirspline}()}
+Other sir functions:
+\code{\link[=lines.sirspline]{lines.sirspline()}},
+\code{\link[=plot.sirspline]{plot.sirspline()}},
+\code{\link[=sir_exp]{sir_exp()}},
+\code{\link[=sir_ratio]{sir_ratio()}},
+\code{\link[=sirspline]{sirspline()}}
 
-Other main functions: 
-\code{\link{Surv}()},
-\code{\link{rate}()},
-\code{\link{relpois}()},
-\code{\link{relpois_ag}()},
-\code{\link{sirspline}()},
-\code{\link{survmean}()},
-\code{\link{survtab}()},
-\code{\link{survtab_ag}()}
+Other main functions:
+\code{\link[=Surv]{Surv()}},
+\code{\link[=rate]{rate()}},
+\code{\link[=relpois]{relpois()}},
+\code{\link[=relpois_ag]{relpois_ag()}},
+\code{\link[=sirspline]{sirspline()}},
+\code{\link[=survmean]{survmean()}},
+\code{\link[=survtab]{survtab()}},
+\code{\link[=survtab_ag]{survtab_ag()}}
 }
 \author{
 Matti Rantanen, Joonas Miettinen

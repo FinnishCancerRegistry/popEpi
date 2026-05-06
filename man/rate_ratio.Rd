@@ -63,8 +63,8 @@ rate_ratio(x = c(10, 30000), y = c(20, 40000), SE.method = FALSE)
 \seealso{
 \verb{[rate]}
 
-Other rate functions: 
-\code{\link{rate}()}
+Other rate functions:
+\code{\link[=rate]{rate()}}
 }
 \author{
 Matti Rantanen

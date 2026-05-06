@@ -2,8 +2,6 @@
 % Please edit documentation in R/sir.R
 \name{sir_exp}
 \alias{sir_exp}
-\alias{sir_lex}
-\alias{sir_ag}
 \title{Calculate SMR}
 \usage{
 sir_exp(
@@ -16,17 +14,6 @@ sir_exp(
   test.type = "homogeneity",
   conf.level = 0.95,
   subset = NULL
-)
-
-sir_lex(x, print = NULL, breaks = NULL, ...)
-
-sir_ag(
-  x,
-  obs = "from0to1",
-  print = attr(x, "aggre.meta")$by,
-  exp = "d.exp",
-  pyrs = "pyrs",
-  ...
 )
 }
 \arguments{
@@ -48,10 +35,6 @@ sir_ag(
 \item{conf.level}{Level of type-I error in confidence intervals, default 0.05 is 95\% CI}
 
 \item{subset}{a logical vector for subsetting data}
-
-\item{breaks}{a named list to split age group (age), period (per) or follow-up (fot).}
-
-\item{...}{pass arguments to \code{sir_exp}}
 }
 \value{
 A sir object
@@ -60,12 +43,6 @@ A sir object
 Calculate Standardized Mortality Ratios (SMRs) using
 a single data set that includes
 observed and expected cases and additionally person-years.
-
-\code{sir_lex} solves SMR from an \verb{[Epi::Lexis]} object
-calculated with \verb{[lexpand]}.
-
-\code{sir_ag} solves SMR from a \verb{[aggre]} object
-calculated using \verb{[lexpand]}.
 }
 \details{
 These functions are intended to calculate SMRs from a single data set
@@ -76,13 +53,6 @@ argument \code{pop.haz} of the \verb{[lexpand]}.
 state in \code{lex.Str} as \code{0} and all other as \code{1}. No missing values
 is allowed in observed, pop.haz or person-years.
 }
-\section{Functions}{
-\itemize{
-\item \code{sir_lex()}: 
-
-\item \code{sir_ag()}: 
-
-}}
 \examples{
 
 \donttest{
@@ -108,12 +78,12 @@ sir_lex(x2, breaks = BL, print = 'per')
 \verb{[lexpand]}
 \href{../doc/sir.html}{A SIR calculation vignette}
 
-Other sir functions: 
-\code{\link{lines.sirspline}()},
-\code{\link{plot.sirspline}()},
-\code{\link{sir}()},
-\code{\link{sir_ratio}()},
-\code{\link{sirspline}()}
+Other sir functions:
+\code{\link[=lines.sirspline]{lines.sirspline()}},
+\code{\link[=plot.sirspline]{plot.sirspline()}},
+\code{\link[=sir]{sir()}},
+\code{\link[=sir_ratio]{sir_ratio()}},
+\code{\link[=sirspline]{sirspline()}}
 }
 \author{
 Matti Rantanen
