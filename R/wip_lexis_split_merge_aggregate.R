@@ -93,9 +93,6 @@ lexis_aggregate_one_stratum__ <- function(
         j = col_nm,
         value = eval(expr, work_dt, add_expr_eval_env)
       )
-      if (col_nm == "in_follow_up_at_interval_stop") {
-        browser()
-      }
       NULL
     })
     data.table::setDT(work_dt)

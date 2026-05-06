@@ -111,11 +111,12 @@ the standard errors.
 
 \item{weight_dt}{\verb{[NULL, data.table]} (default \code{NULL})
 
-Weights for direct adjusting.
-See \strong{Details} to understand how the \code{weights} argument is used.
+Weights for direct adjusting or Brenner weighting.
+See \strong{Details} to understand how the \code{weight_dt} argument is used.
 \itemize{
-\item \code{NULL}: No direct adjusting is performed.
-\item \code{data.table}: These weights are used for adjusting.
+\item \code{NULL}: No direct adjusting nor Brenner weighting is performed.
+\item \code{data.table}: Contains weighting strata and either column \code{"weight"} for
+direct adjusting or column \code{"brenner_weight"} for Brenner weighting.
 }
 
 A table of weights must fulfill these requirements:
@@ -309,6 +310,16 @@ Pre-defined estimators with their formulae:
 }
 
 \itemize{
+\item If \code{weight_dt} is a \code{data.table} with column \code{"brenner_weight"}, we
+merge the weights into \code{dt}, multiply all \code{value_col_nms} with the
+respective Brenner weight, and sum \code{value_col_nms} over the adjusting
+strata in \code{weight_dt}. E.g. if \code{dt} is stratified by \code{sex} and \code{ag} and
+\code{weight_dt} contains columns
+\code{ag} and \code{brenner_weight} then the resulting table will have
+weighted sums of \code{value_col_nms} by \code{sex} (and the intervals).
+This approach is the same as assigning weights for each individual before
+splitting and aggregating when the individual weights are based on
+strata only (and not maybe some continuous variable).
 \item Check columns \code{t_at_risk}, \code{n_at_risk_eff} for zeroes/NAs if they are in
 \code{dt}. Intervals with e.g. \code{t_at_risk == 0} have no survival probability
 defined for them which causes \code{NA} values (i.e. zero divided by zero
@@ -557,6 +568,46 @@ sdt <- popEpi::surv_estimate(
 stopifnot(
   c("h_ch_est", "S_ch_est") \%in\% names(sdt)
 )
+
+# one approach to brenner weighting --- effectively the same as assigning
+# a weight for each individual using strata.
+wdt <- data.table::data.table(
+  ag_icss = cut(
+    popEpi::ICSS[["age"]],
+    breaks = c(popEpi::ICSS[["age"]], Inf),
+    right = FALSE
+  ),
+  weight = popEpi::ICSS[["ICSS1"]]
+)
+wdt[j = "weight" := wdt[["weight"]] / sum(wdt[["weight"]])]
+# these are completely made up. actually they should be derived from your
+# dataset.
+owdt <- data.table::data.table(
+  ag_icss = wdt[["ag_icss"]],
+  weight = wdt[["weight"]] ** 2
+)
+owdt[j = "weight" := owdt[["weight"]] / sum(owdt[["weight"]])]
+wdt[j = "weight" := wdt[["weight"]] / owdt[["weight"]]]
+wdt[i = is.na(wdt[["weight"]]), j = "weight" := 0.0]
+data.table::setnames(wdt, "weight", "brenner_weight")
+sdt <- data.table::rbindlist(lapply(wdt[["ag_icss"]], function(ag) {
+  data.table::data.table(
+    ag_icss = ag,
+    box_id = 1:60,
+    ts_fut_start = seq(0, 5 - 1 / 12, 1 / 12),
+    ts_fut_stop = seq(1 / 12, 5, 1 / 12),
+    n_events = rpois(n = 60, lambda = 60:1),
+    t_at_risk = rpois(n = 60, lambda = 300:240)
+  )
+}))
+sdt <- popEpi::surv_estimate(
+  dt = sdt,
+  ts_fut_col_nm = "ts_fut",
+  estimators = "S_ch",
+  weight_dt = wdt,
+  value_col_nms = c("n_events", "t_at_risk")
+)
+stopifnot("S_ch_est" \%in\% names(sdt), !"ag_icss" \%in\% names(sdt))
 
 
 # popEpi::surv_individual_weights

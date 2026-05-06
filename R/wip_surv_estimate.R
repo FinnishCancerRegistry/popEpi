@@ -321,6 +321,46 @@ surv_estimate_expression_table__ <- function() {
 #'   c("h_ch_est", "S_ch_est") %in% names(sdt)
 #' )
 #'
+#' # one approach to brenner weighting --- effectively the same as assigning
+#' # a weight for each individual using strata.
+#' wdt <- data.table::data.table(
+#'   ag_icss = cut(
+#'     popEpi::ICSS[["age"]],
+#'     breaks = c(popEpi::ICSS[["age"]], Inf),
+#'     right = FALSE
+#'   ),
+#'   weight = popEpi::ICSS[["ICSS1"]]
+#' )
+#' wdt[j = "weight" := wdt[["weight"]] / sum(wdt[["weight"]])]
+#' # these are completely made up. actually they should be derived from your
+#' # dataset.
+#' owdt <- data.table::data.table(
+#'   ag_icss = wdt[["ag_icss"]],
+#'   weight = wdt[["weight"]] ** 2
+#' )
+#' owdt[j = "weight" := owdt[["weight"]] / sum(owdt[["weight"]])]
+#' wdt[j = "weight" := wdt[["weight"]] / owdt[["weight"]]]
+#' wdt[i = is.na(wdt[["weight"]]), j = "weight" := 0.0]
+#' data.table::setnames(wdt, "weight", "brenner_weight")
+#' sdt <- data.table::rbindlist(lapply(wdt[["ag_icss"]], function(ag) {
+#'   data.table::data.table(
+#'     ag_icss = ag,
+#'     box_id = 1:60,
+#'     ts_fut_start = seq(0, 5 - 1 / 12, 1 / 12),
+#'     ts_fut_stop = seq(1 / 12, 5, 1 / 12),
+#'     n_events = rpois(n = 60, lambda = 60:1),
+#'     t_at_risk = rpois(n = 60, lambda = 300:240)
+#'   )
+#' }))
+#' sdt <- popEpi::surv_estimate(
+#'   dt = sdt,
+#'   ts_fut_col_nm = "ts_fut",
+#'   estimators = "S_ch",
+#'   weight_dt = wdt,
+#'   value_col_nms = c("n_events", "t_at_risk")
+#' )
+#' stopifnot("S_ch_est" %in% names(sdt), !"ag_icss" %in% names(sdt))
+#'
 surv_estimate <- function(
   dt,
   ts_fut_col_nm,
@@ -434,15 +474,25 @@ surv_estimate <- function(
   # @codedoc_comment_block popEpi::surv_estimate::weight_dt
   # @param weight_dt `[NULL, data.table]` (default `NULL`)
   #
-  # Weights for direct adjusting.
-  # See **Details** to understand how the `weights` argument is used.
+  # Weights for direct adjusting or Brenner weighting.
+  # See **Details** to understand how the `weight_dt` argument is used.
   #
-  # - `NULL`: No direct adjusting is performed.
-  # - `data.table`: These weights are used for adjusting.
+  # - `NULL`: No direct adjusting nor Brenner weighting is performed.
+  # - `data.table`: Contains weighting strata and either column `"weight"` for
+  #   direct adjusting or column `"brenner_weight"` for Brenner weighting.
   #
   # @codedoc_insert_comment_block popEpi:::assert_is_arg_weight_dt
   # @codedoc_comment_block popEpi::surv_estimate::weight_dt
-  assert_is_arg_weight_dt(weight_dt = weight_dt, dt = dt)
+  stopifnot(
+    inherits(weight_dt, c("NULL", "data.table"))
+  )
+  if (data.table::is.data.table(weight_dt)) {
+    stopifnot(
+      "weight" %in% names(weight_dt) || "brenner_weight" %in% names(weight_dt),
+      setdiff(names(weight_dt), c("weight", "brenner_weight")) %in% names(dt),
+      !anyNA(weight_dt)
+    )
+  }
 
   # @codedoc_comment_block popEpi::surv_estimate
   # Compute survival time function estimates. Performs the following steps:
@@ -469,12 +519,53 @@ surv_estimate <- function(
   data.table::setkeyv(out, data.table::key(dt))
 
   estimate_stratum_col_nms <- stratum_col_nms
-  do_direct_adjusting <- data.table::is.data.table(weight_dt)
+  do_direct_adjusting <- data.table::is.data.table(weight_dt) &&
+    "weight" %in% names(weight_dt)
   if (do_direct_adjusting) {
     estimate_stratum_col_nms <- union(
       stratum_col_nms,
       setdiff(names(weight_dt), "weight")
     )
+  }
+  # @codedoc_comment_block popEpi::surv_estimate
+  # - If `weight_dt` is a `data.table` with column `"brenner_weight"`, we
+  #   merge the weights into `dt`, multiply all `value_col_nms` with the
+  #   respective Brenner weight, and sum `value_col_nms` over the adjusting
+  #   strata in `weight_dt`. E.g. if `dt` is stratified by `sex` and `ag` and
+  #   `weight_dt` contains columns
+  #   `ag` and `brenner_weight` then the resulting table will have
+  #   weighted sums of `value_col_nms` by `sex` (and the intervals).
+  #   This approach is the same as assigning weights for each individual before
+  #   splitting and aggregating when the individual weights are based on
+  #   strata only (and not maybe some continuous variable).
+  # @codedoc_comment_block popEpi::surv_estimate
+  do_brenner_weighting <- data.table::is.data.table(weight_dt) &&
+    "brenner_weight" %in% names(weight_dt)
+  if (do_brenner_weighting) {
+    dt_join_assign(
+      x = out,
+      i = weight_dt,
+      on = intersect(names(out), names(weight_dt)),
+      x_col_nms = "__brenner_weight__",
+      i_col_nms = "brenner_weight"
+    )
+    invisible(lapply(value_col_nms, function(value_col_nm) {
+      data.table::set(
+        x = out,
+        j = value_col_nm,
+        value = out[[value_col_nm]] * out[["__brenner_weight__"]]
+      )
+    }))
+    data.table::set(
+      x = out,
+      j = "__brenner_weight__",
+      value = NULL
+    )
+    out <- out[
+      j = lapply(.SD, sum),
+      .SDcols = value_col_nms,
+      keyby = eval(setdiff(names(dt), c(value_col_nms, names(weight_dt))))
+    ]
   }
   # @codedoc_comment_block popEpi::surv_estimate
   # - Check columns `t_at_risk`, `n_at_risk_eff` for zeroes/NAs if they are in
@@ -501,8 +592,8 @@ surv_estimate <- function(
   data.table::set(
     x = out,
     j = "delta_t",
-    value = dt[[paste0(ts_fut_col_nm, "_stop")]] -
-      dt[[paste0(ts_fut_col_nm, "_start")]]
+    value = out[[paste0(ts_fut_col_nm, "_stop")]] -
+      out[[paste0(ts_fut_col_nm, "_start")]]
   )
   for (i in seq_len(nrow(estimator_dt))) {
     user_estimator_name <- estimator_dt[["user_estimator_name"]][i]
@@ -560,7 +651,7 @@ surv_estimate <- function(
       c(stratum_col_nms, "box_id")
     )
     da_adjust_col_nms <- character(0)
-    if (data.table::is.data.table(weight_dt)) {
+    if (do_direct_adjusting) {
       da_adjust_col_nms <- setdiff(names(weight_dt), "weight")
     }
     #' @param conf_lvls

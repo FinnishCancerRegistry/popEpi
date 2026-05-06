@@ -612,8 +612,8 @@ stopifnot(
 )
 }
 \seealso{
-Other Lexis_functions: 
+Other Lexis_functions:
 \code{\link{lexis_funs}},
-\code{\link{lexis_merge}()}
+\code{\link[=lexis_merge]{lexis_merge()}}
 }
 \concept{Lexis_functions}
