@@ -3,6 +3,7 @@
 %   R/wip_surv_individual_weights.R, R/wip_surv_lexis.R
 \name{surv_estimate}
 \alias{surv_estimate}
+\alias{surv_brenner_weight_dt}
 \alias{surv_individual_weights}
 \alias{surv_functions}
 \alias{lexis_breaks_collapse_1d}
@@ -18,6 +19,12 @@ surv_estimate(
   weight_dt = NULL,
   conf_methods = "log",
   conf_lvls = 0.95
+)
+
+surv_brenner_weight_dt(
+  standard_weight_dt,
+  observed_weight_dt = NULL,
+  collapse_stratum_col_nms = NULL
 )
 
 surv_individual_weights(
@@ -134,10 +141,6 @@ allowed.
 \item{conf_lvls}{Passed one at a time to
 \verb{[directadjusting::directly_adjusted_estimates]}.}
 
-\item{df}{\verb{[data.frame, data.table]} (no default)
-
-Dataset containing stratum columns also found in \code{standard_weight_dt}.}
-
 \item{standard_weight_dt}{\verb{[data.table]} (no default)
 
 Table of standardisation weights, e.g. ICSS weights.
@@ -183,6 +186,10 @@ weight. See \strong{Details}.
 \item \code{character}: Combine neighbouring strata defined by these column names.
 E.g. \code{"agegroup"}.
 }}
+
+\item{df}{\verb{[data.frame, data.table]} (no default)
+
+Dataset containing stratum columns also found in \code{standard_weight_dt}.}
 
 \item{lexis}{\verb{[Lexis]} (no default)
 
@@ -347,28 +354,10 @@ intervals.
 }
 
 
-\strong{popEpi::surv_individual_weights}
+\strong{popEpi::surv_brenner_weight_dt}
 
-Produce a vector of weights, one weight for each row in \code{df}.
-These weights have been called individual weights, Brenner weights,
-(Brenner et al 2004, https://doi.org/10.1016/j.ejca.2004.07.007),
-pre-weights, and maybe even others. A beloved child has many names.
-
-The idea of these weights is to weigh the individual contribution of each
-person to the summary statistics from which the survival function estimates
-themselves are produced. They pronounce the influence of under-represented
-data and reduce the influence of over-represented data just as the more
-conventional computation of weighted averages survival function estimates
-does. However, in this individual weighting approach even a single event
-can be included in the summary statistics as e.g. 0.80 or 1.20 events
-for over and under-represented data respectively.
-
-This function makes producing these weights easier. It performs the
-following steps:
+\code{popEpi::surv_brenner_weight_dt} performs the following steps:
 \itemize{
-\item If \code{is.null(observed_weight_dt)}, \code{observed_weight_dt} is computed
-by \code{surv_individual_weights} by simply counting the number of cases
-in each stratum in \code{standard_weight_dt}.
 \item Merge \code{standard_weight_dt} and \code{observed_weight_dt} into one table.
 Scale the standard weights and the observed weights to sum into one
 (they are in separate columns). E.g. one stratum has
@@ -458,7 +447,30 @@ strata in the combination.):
    [85,Inf[ \tab 0.05522 \tab 0.0682939 \tab 0.8085640 \cr
 }
 
+
+\strong{popEpi::surv_individual_weights}
+
+Produce a vector of weights, one weight for each row in \code{df}.
+These weights have been called individual weights, Brenner weights,
+(Brenner et al 2004, https://doi.org/10.1016/j.ejca.2004.07.007),
+pre-weights, and maybe even others. A beloved child has many names.
+
+The idea of these weights is to weigh the individual contribution of each
+person to the summary statistics from which the survival function estimates
+themselves are produced. They pronounce the influence of under-represented
+data and reduce the influence of over-represented data just as the more
+conventional computation of weighted averages survival function estimates
+does. However, in this individual weighting approach even a single event
+can be included in the summary statistics as e.g. 0.80 or 1.20 events
+for over and under-represented data respectively.
+
+This function makes producing these weights easier. It performs the
+following steps:
 \itemize{
+\item If \code{is.null(observed_weight_dt)}, \code{observed_weight_dt} is computed
+by \code{surv_individual_weights} by simply counting the number of cases
+in each stratum in \code{standard_weight_dt}.
+\item Call \code{popEpi::surv_brenner_weight_dt} to form Brenner weights.
 \item Using left-join, produce a vector of length \code{nrow(df)} where each row in
 \code{df} gets an individual weight based on its stratum.
 \item Return a vector of weights.
@@ -684,6 +696,67 @@ stopifnot(
   max(abs(sdt_bw[["S_ch_est"]] - sdt_da[["S_ch_est"]])) < 0.01
 )
 
+
+# popEpi::surv_brenner_weight_dt
+make_column_icss_ag <- function(age) {
+  cut(
+    age,
+    breaks = c(seq(15, 85, 5), Inf),
+    right = FALSE
+  )
+}
+
+make_standard_weight_dt <- function() {
+  wdt <- popEpi::ICSS[
+    j = list(
+      weight = as.double(sum(.SD[["ICSS1"]]))
+    ),
+    keyby = list(
+      icss_ag = make_column_icss_ag(popEpi::ICSS[["age"]])
+    )
+  ][]
+  wdt <- wdt[!is.na(wdt[["icss_ag"]]), ]
+  return(wdt[])
+}
+
+swdt <- make_standard_weight_dt()
+owdt <- data.table::setDT(list(
+  icss_ag = make_column_icss_ag(c(50.5, 60.5))
+))[
+  i = data.table::setDT(list(icss_ag = swdt[["icss_ag"]])),
+  on = "icss_ag",
+  j = list(weight = .N),
+  keyby = .EACHI
+]
+
+# this is what happens when at least one weighting stratum is empty
+warn_env <- new.env()
+warn_env[["w"]] <- NULL
+bwdt_bad <- suppressWarnings(withCallingHandlers(
+  popEpi::surv_brenner_weight_dt(
+    standard_weight_dt = swdt,
+    observed_weight_dt = owdt
+  ),
+  warning = function(w) warn_env[["w"]] <- w
+))
+stopifnot(
+  inherits(warn_env[["w"]], "warning"),
+  bwdt_bad[["weight_brenner"]] >= 0
+)
+
+# here is an easy way to handle this problem. note that the weights are
+# always larger when we need to aggregate strata --- because the standard
+# weight increases but the observed weight remains the same. the same
+# observations serve "double duty" now for multiple original strata.
+bwdt <- popEpi::surv_brenner_weight_dt(
+  standard_weight_dt = swdt,
+  observed_weight_dt = owdt,
+  collapse_stratum_col_nms = "icss_ag"
+)
+stopifnot(
+  nrow(wdt) == nrow(bwdt),
+  bwdt[["weight_brenner"]] > 0
+)
 
 # popEpi::surv_individual_weights
 make_column_icss_ag <- function(age) {
