@@ -508,22 +508,6 @@ surv_estimate <- function(
       )
     )
   )
-  # attribute can be NULL if `dt` is not the result of this function's call.
-  # which we allow for generality.
-  aggre_meta <- as.list(attr(dt, "lexis_split_merge_aggregate_by_stratum_meta"))
-  if (is.null(stratum_col_nms)) {
-    if ("stratum_col_nms" %in% names(aggre_meta)) {
-      stratum_col_nms <- as.character(aggre_meta[["stratum_col_nms"]])
-    }
-  }
-  # if ("t_at_risk" %in% names(dt)) {
-  #   dt <- surv_collapse_1d__(
-  #     dt = dt,
-  #     ts_col_nm = ts_fut_col_nm,
-  #     value_col_nms = aggre_meta[["value_col_nms"]],
-  #     test_expr = quote(sum(t_at_risk))
-  #   )
-  # }
 
   stopifnot(
     #' @param value_col_nms `[NULL, character]` (default `NULL`)
@@ -539,6 +523,8 @@ surv_estimate <- function(
     #'   E.g. `value_col_nms = c("n_events", "t_at_risk")`.
     is.null(value_col_nms) || all(value_col_nms %in% names(dt))
   )
+  # aggre_meta can be empty list()
+  aggre_meta <- as.list(attr(dt, "lexis_split_merge_aggregate_by_stratum_meta"))
   if ("value_col_nms" %in% names(aggre_meta)) {
     value_col_nms <- as.character(aggre_meta[["value_col_nms"]])
   } else if (is.null(value_col_nms)) {
