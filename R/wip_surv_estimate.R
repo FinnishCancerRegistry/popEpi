@@ -323,43 +323,118 @@ surv_estimate_expression_table__ <- function() {
 #'
 #' # one approach to brenner weighting --- effectively the same as assigning
 #' # a weight for each individual using strata.
-#' wdt <- data.table::data.table(
-#'   ag_icss = cut(
-#'     popEpi::ICSS[["age"]],
-#'     breaks = c(popEpi::ICSS[["age"]], Inf),
-#'     right = FALSE
-#'   ),
-#'   weight = popEpi::ICSS[["ICSS1"]]
-#' )
-#' wdt[j = "weight" := wdt[["weight"]] / sum(wdt[["weight"]])]
-#' # these are completely made up. actually they should be derived from your
-#' # dataset.
-#' owdt <- data.table::data.table(
-#'   ag_icss = wdt[["ag_icss"]],
-#'   weight = wdt[["weight"]] ** 2
-#' )
-#' owdt[j = "weight" := owdt[["weight"]] / sum(owdt[["weight"]])]
-#' wdt[j = "weight" := wdt[["weight"]] / owdt[["weight"]]]
-#' wdt[i = is.na(wdt[["weight"]]), j = "weight" := 0.0]
-#' data.table::setnames(wdt, "weight", "brenner_weight")
-#' sdt <- data.table::rbindlist(lapply(wdt[["ag_icss"]], function(ag) {
-#'   data.table::data.table(
-#'     ag_icss = ag,
-#'     box_id = 1:60,
-#'     ts_fut_start = seq(0, 5 - 1 / 12, 1 / 12),
-#'     ts_fut_stop = seq(1 / 12, 5, 1 / 12),
-#'     n_events = rpois(n = 60, lambda = 60:1),
-#'     t_at_risk = rpois(n = 60, lambda = 300:240)
+#' make_column_ag_icss <- function(age) {
+#'   cut(
+#'     age,
+#'     breaks = c(0, 60, 70, 80, Inf),
+#'     right = FALSE,
+#'     labels = c("0-59", "60-69", "70-79", "80+")
 #'   )
-#' }))
-#' sdt <- popEpi::surv_estimate(
+#' }
+#'
+#' make_sire <- function() {
+#'   sire <- popEpi::sire
+#'   sire <- sire[
+#'     sire[["dg_date"]] < sire[["ex_date"]] &
+#'       data.table::between(
+#'         sire[["ex_date"]],
+#'         as.Date("1999-01-01"),
+#'         as.Date("2003-12-31"),
+#'         incbounds = TRUE
+#'       ) &
+#'       (get.yrs(sire[["ex_date"]]) - get.yrs(sire[["bi_date"]])) < 100
+#'   ]
+#'   sire[j = "my_stratum" := sample(2L, size = nrow(sire), replace = TRUE)]
+#'   sire <- sire[
+#'     j = .SD[as.integer(seq(1L, .N, length.out = 50L))],
+#'     keyby = "my_stratum"
+#'   ]
+#'   # you can also use popEpi::Lexis_dt
+#'   sire <- Epi::Lexis(
+#'     entry = list(
+#'       ts_cal = popEpi::get.yrs(dg_date),
+#'       ts_age = popEpi::get.yrs(dg_date) - popEpi::get.yrs(bi_date),
+#'       ts_fut = 0.0
+#'     ),
+#'     duration = popEpi::get.yrs(ex_date) - popEpi::get.yrs(dg_date),
+#'     entry.status = 0L,
+#'     exit.status = status,
+#'     data = sire
+#'   )
+#'   sire[["ag_icss"]] <- make_column_ag_icss(sire[["dg_age"]])
+#'   sire
+#' }
+#'
+#' sire <- make_sire()
+#'
+#' make_weight_dt <- function() {
+#'   wdt <- popEpi::ICSS[
+#'     j = list(
+#'       standard_weight = as.double(sum(.SD[["ICSS1"]]))
+#'     ),
+#'     keyby = list(
+#'       ag_icss = make_column_ag_icss(popEpi::ICSS[["age"]])
+#'     )
+#'   ]
+#'   wdt[
+#'     j = "standard_weight" := wdt[["standard_weight"]] /
+#'       sum(wdt[["standard_weight"]])
+#'   ]
+#'   owdt <- data.table::setDT(as.list(sire))[
+#'     j = list(observed_weight = .N),
+#'     keyby = "ag_icss"
+#'   ]
+#'   owdt[
+#'     j = "observed_weight" := owdt[["observed_weight"]] /
+#'       sum(owdt[["observed_weight"]])
+#'   ]
+#'   wdt[
+#'     j = "observed_weight" := owdt[["observed_weight"]]
+#'   ]
+#'   wdt[
+#'     j = "brenner_weight" := wdt[["standard_weight"]] / owdt[["observed_weight"]]
+#'   ]
+#'   wdt[i = is.na(wdt[["brenner_weight"]]), j = "brenner_weight" := 0.0]
+#'   return(wdt[])
+#' }
+#'
+#' wdt <- make_weight_dt()
+#'
+#' sdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+#'   lexis = sire,
+#'   breaks = list(ts_fut = seq(0, 5, 1 / 12)),
+#'   aggre_exprs = c("t_at_risk", "n_events"),
+#'   aggre_by = "ag_icss"
+#' )
+#'
+#' sdt_bw <- popEpi::surv_estimate(
 #'   dt = sdt,
 #'   ts_fut_col_nm = "ts_fut",
 #'   estimators = "S_ch",
-#'   weight_dt = wdt,
+#'   weight_dt = data.table::data.table(
+#'     ag_icss = wdt[["ag_icss"]],
+#'     brenner_weight = wdt[["brenner_weight"]]
+#'   ),
 #'   value_col_nms = c("n_events", "t_at_risk")
 #' )
-#' stopifnot("S_ch_est" %in% names(sdt), !"ag_icss" %in% names(sdt))
+#' stopifnot("S_ch_est" %in% names(sdt_bw), !"ag_icss" %in% names(sdt_bw))
+#'
+#' # direct adjusting for comparison
+#' sdt_da <- popEpi::surv_estimate(
+#'   dt = sdt,
+#'   ts_fut_col_nm = "ts_fut",
+#'   estimators = "S_ch",
+#'   weight_dt = data.table::data.table(
+#'     ag_icss = wdt[["ag_icss"]],
+#'     weight = wdt[["standard_weight"]]
+#'   ),
+#'   value_col_nms = c("n_events", "t_at_risk")
+#' )
+#' stopifnot("S_ch_est" %in% names(sdt_da), !"ag_icss" %in% names(sdt_da))
+#'
+#' stopifnot(
+#'   max(abs(sdt_bw[["S_ch_est"]] - sdt_da[["S_ch_est"]])) < 0.01
+#' )
 #'
 surv_estimate <- function(
   dt,
