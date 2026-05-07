@@ -498,7 +498,7 @@ surv_estimate <- function(
     #'   stratification of output.
     #' - `character`: `dt` is stratified by these columns. `character(0)` is
     #'   also allowed and causes no stratification of output.
-    is.null(stratum_col_nms) || all(stratum_col_nms %in% names(dt)),
+    length(stratum_col_nms) == 0 || all(stratum_col_nms %in% names(dt)),
 
     !duplicated(
       x = dt,
@@ -639,7 +639,10 @@ surv_estimate <- function(
     out <- out[
       j = lapply(.SD, sum),
       .SDcols = value_col_nms,
-      keyby = eval(setdiff(names(dt), c(value_col_nms, names(weight_dt))))
+      keyby = eval(setdiff(
+        names(dt),
+        c(value_col_nms, setdiff(names(weight_dt), stratum_col_nms)))
+      )
     ]
     estimate_stratum_col_nms <- intersect(estimate_stratum_col_nms, names(out))
   }
@@ -774,6 +777,10 @@ surv_estimate <- function(
         standard_error_col_nms, variance_col_nms,
         names(weight_dt)
       )
+    )
+    nonsum_col_nms <- intersect(
+      names(out),
+      union(nonsum_col_nms, stratum_col_nms)
     )
     if (length(value_col_nms) > 0) {
       sum_dt <- out[
