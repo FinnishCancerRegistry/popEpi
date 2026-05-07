@@ -88,8 +88,9 @@ Value column names in \code{dt}, if any.
 \itemize{
 \item \code{NULL}: If \code{dt} was the result of calling
 \verb{[lexis_split_merge_aggregate_by_stratum]}, then \code{value_col_nms} is
-taken from the attributes of \code{dt}. If not, having this \code{NULL} causes
-no value columns from \code{dt} to be included in the output.
+taken from the attributes of \code{dt}. Else we take \code{double} and \code{integer}
+columns whose names match regex \code{"(^t_)|(^n_)"} as the names of the
+value columns.
 \item \code{character}: One or more names of columns in \code{dt} containing values
 to be included in the output in addition to the estimate etc. columns.
 E.g. \code{value_col_nms = c("n_events", "t_at_risk")}.

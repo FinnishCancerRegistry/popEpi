@@ -516,8 +516,9 @@ surv_estimate <- function(
     #'
     #' - `NULL`: If `dt` was the result of calling
     #'   `[lexis_split_merge_aggregate_by_stratum]`, then `value_col_nms` is
-    #'   taken from the attributes of `dt`. If not, having this `NULL` causes
-    #'   no value columns from `dt` to be included in the output.
+    #'   taken from the attributes of `dt`. Else we take `double` and `integer`
+    #'   columns whose names match regex `"(^t_)|(^n_)"` as the names of the
+    #'   value columns.
     #' - `character`: One or more names of columns in `dt` containing values
     #'   to be included in the output in addition to the estimate etc. columns.
     #'   E.g. `value_col_nms = c("n_events", "t_at_risk")`.
@@ -525,11 +526,16 @@ surv_estimate <- function(
   )
   # aggre_meta can be empty list()
   aggre_meta <- as.list(attr(dt, "lexis_split_merge_aggregate_by_stratum_meta"))
-  if ("value_col_nms" %in% names(aggre_meta)) {
-    value_col_nms <- as.character(aggre_meta[["value_col_nms"]])
-  } else if (is.null(value_col_nms)) {
-    stop("Could not infer argument `value_col_nms`. Please supply it ",
-         "yourself.")
+  if (is.null(value_col_nms)) {
+    if ("value_col_nms" %in% names(aggre_meta)) {
+      value_col_nms <- as.character(aggre_meta[["value_col_nms"]])
+    } else {
+      value_col_nms <- names(dt)[grepl("(^t_)|(^n_)", names(dt))]
+      if (length(value_col_nms) == 0) {
+        stop("Could not infer argument `value_col_nms`. Please supply it ",
+             "yourself.")
+      }
+    }
   }
 
   # @codedoc_comment_block popEpi::surv_estimate::weight_dt
