@@ -3,6 +3,7 @@
 %   R/wip_surv_individual_weights.R, R/wip_surv_lexis.R
 \name{surv_estimate}
 \alias{surv_estimate}
+\alias{surv_collapse_1d}
 \alias{surv_brenner_weight_dt}
 \alias{surv_individual_weights}
 \alias{surv_functions}
@@ -19,6 +20,14 @@ surv_estimate(
   weight_dt = NULL,
   conf_methods = "log",
   conf_lvls = 0.95
+)
+
+surv_collapse_1d(
+  dt,
+  ts_fut_col_nm,
+  value_col_nms,
+  test_expr = NULL,
+  mandatory_breaks = NULL
 )
 
 surv_brenner_weight_dt(
@@ -142,6 +151,18 @@ allowed.
 \item{conf_lvls}{Passed one at a time to
 \verb{[directadjusting::directly_adjusted_estimates]}.}
 
+\item{test_expr}{\verb{[NULL, call]} (default \code{NULL})
+
+This expression is evaluated for every interval. If the test does not pass,
+the interval must be aggregated with one of its neighbours.}
+
+\item{mandatory_breaks}{\verb{[NULL, other]} (default \code{NULL})
+
+These breaks cannot be aggregated over. E.g. with \code{mandatory_breaks = 1.0}
+this function will not attempt to aggregate \verb{]0.9, 1.0]} and \verb{]1.0, 1.1]}
+into \verb{]0.9, 1.1]}, not even if it is the only way to produce intervals
+which all pass \code{test_expr}.}
+
 \item{standard_weight_dt}{\verb{[data.table]} (no default)
 
 Table of standardisation weights, e.g. ICSS weights.
@@ -200,18 +221,6 @@ A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
 
 List of breaks with one element. These define the initial intervals which
 are subject to being combined. E.g. \code{list(ts_fut = seq(0, 5, 1 / 12))}.}
-
-\item{test_expr}{\verb{[NULL, call]} (default \code{NULL})
-
-This expression is evaluated for every interval. If the test does not pass,
-the interval must be aggregated with one of its neighbours.}
-
-\item{mandatory_breaks}{\verb{[NULL, other]} (default \code{NULL})
-
-These breaks cannot be aggregated over. E.g. with \code{mandatory_breaks = 1.0}
-this function will not attempt to aggregate \verb{]0.9, 1.0]} and \verb{]1.0, 1.1]}
-into \verb{]0.9, 1.1]}, not even if it is the only way to produce intervals
-which all pass \code{test_expr}.}
 
 \item{breaks}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
@@ -698,6 +707,28 @@ stopifnot(
 )
 
 
+# popEpi::surv_collapse_1d
+sdt <- data.table::data.table(
+  box_id = 1:3,
+  ts_fut_id = 1:3,
+  ts_fut_start = 0:2,
+  ts_fut_stop = 1:3,
+  t_at_risk = c(1.0, 0.0, 0.5),
+  n_events = 0L
+)
+sdt <- surv_collapse_1d(
+  dt = sdt,
+  ts_fut_col_nm = "ts_fut",
+  value_col_nms = c("t_at_risk", "n_events"),
+  test_expr = quote(t_at_risk > 0.0)
+)
+stopifnot(
+  nrow(sdt) == 2,
+  sdt[["ts_fut_start"]] == c(0.0, 1.0),
+  sdt[["ts_fut_stop"]] == c(1.0, 3.0),
+  sdt[["t_at_risk"]] == c(1.0, 0.5)
+)
+
 # popEpi::surv_brenner_weight_dt
 make_column_icss_ag <- function(age) {
   cut(
@@ -708,7 +739,7 @@ make_column_icss_ag <- function(age) {
 }
 
 make_standard_weight_dt <- function() {
-  wdt <- popEpi::ICSS[
+  swdt <- popEpi::ICSS[
     j = list(
       weight = as.double(sum(.SD[["ICSS1"]]))
     ),
@@ -716,8 +747,8 @@ make_standard_weight_dt <- function() {
       icss_ag = make_column_icss_ag(popEpi::ICSS[["age"]])
     )
   ][]
-  wdt <- wdt[!is.na(wdt[["icss_ag"]]), ]
-  return(wdt[])
+  swdt <- swdt[!is.na(swdt[["icss_ag"]]), ]
+  return(swdt[])
 }
 
 swdt <- make_standard_weight_dt()
@@ -755,7 +786,7 @@ bwdt <- popEpi::surv_brenner_weight_dt(
   collapse_stratum_col_nms = "icss_ag"
 )
 stopifnot(
-  nrow(wdt) == nrow(bwdt),
+  nrow(swdt) == nrow(bwdt),
   bwdt[["weight_brenner"]] > 0
 )
 
@@ -769,7 +800,7 @@ make_column_icss_ag <- function(age) {
 }
 
 make_standard_weight_dt <- function() {
-  wdt <- popEpi::ICSS[
+  swdt <- popEpi::ICSS[
     j = list(
       weight = as.double(sum(.SD[["ICSS1"]]))
     ),
@@ -777,7 +808,7 @@ make_standard_weight_dt <- function() {
       icss_ag = make_column_icss_ag(popEpi::ICSS[["age"]])
     )
   ][]
-  return(wdt[])
+  return(swdt[])
 }
 
 lexis <- Epi::Lexis(
@@ -787,14 +818,14 @@ lexis <- Epi::Lexis(
   exit.status = 0L
 )
 lexis[["icss_ag"]] <- make_column_icss_ag(c(50.5, 60.5))
-wdt <- make_standard_weight_dt()
+swdt <- make_standard_weight_dt()
 
 # this is what happens when at least one weighting stratum is empty
 warn_env <- new.env()
 warn_env[["w"]] <- NULL
 iw_bad <- suppressWarnings(withCallingHandlers(popEpi::surv_individual_weights(
   df = lexis,
-  standard_weight_dt = wdt
+  standard_weight_dt = swdt
 ), warning = function(w) warn_env[["w"]] <- w))
 stopifnot(
   inherits(warn_env[["w"]], "warning"),
@@ -807,7 +838,7 @@ stopifnot(
 # observations serve "double duty" now for multiple original strata.
 iw <- popEpi::surv_individual_weights(
   df = lexis,
-  standard_weight_dt = wdt,
+  standard_weight_dt = swdt,
   collapse_stratum_col_nms = "icss_ag"
 )
 stopifnot(

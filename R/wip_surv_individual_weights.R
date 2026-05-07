@@ -14,7 +14,7 @@
 #' }
 #'
 #' make_standard_weight_dt <- function() {
-#'   wdt <- popEpi::ICSS[
+#'   swdt <- popEpi::ICSS[
 #'     j = list(
 #'       weight = as.double(sum(.SD[["ICSS1"]]))
 #'     ),
@@ -22,8 +22,8 @@
 #'       icss_ag = make_column_icss_ag(popEpi::ICSS[["age"]])
 #'     )
 #'   ][]
-#'   wdt <- wdt[!is.na(wdt[["icss_ag"]]), ]
-#'   return(wdt[])
+#'   swdt <- swdt[!is.na(swdt[["icss_ag"]]), ]
+#'   return(swdt[])
 #' }
 #'
 #' swdt <- make_standard_weight_dt()
@@ -61,7 +61,7 @@
 #'   collapse_stratum_col_nms = "icss_ag"
 #' )
 #' stopifnot(
-#'   nrow(wdt) == nrow(bwdt),
+#'   nrow(swdt) == nrow(bwdt),
 #'   bwdt[["weight_brenner"]] > 0
 #' )
 surv_brenner_weight_dt <- function(
@@ -213,9 +213,9 @@ surv_brenner_weight_dt <- function(
             j = collapse_stratum_col_nms,
             value = NULL
           )
-          collapsed_dt <- surv_collapse_1d__(
+          collapsed_dt <- surv_collapse_1d(
             dt = sub_dt,
-            ts_col_nm = "collapse_stratum",
+            ts_fut_col_nm = "collapse_stratum",
             value_col_nms = c("weight_standard", "weight_observed"),
             test_expr = quote(!(weight_observed == 0 & weight_standard != 0))
           )
@@ -303,7 +303,7 @@ surv_brenner_weight_dt <- function(
 #' }
 #' 
 #' make_standard_weight_dt <- function() {
-#'   wdt <- popEpi::ICSS[
+#'   swdt <- popEpi::ICSS[
 #'     j = list(
 #'       weight = as.double(sum(.SD[["ICSS1"]]))
 #'     ),
@@ -311,7 +311,7 @@ surv_brenner_weight_dt <- function(
 #'       icss_ag = make_column_icss_ag(popEpi::ICSS[["age"]])
 #'     )
 #'   ][]
-#'   return(wdt[])
+#'   return(swdt[])
 #' }
 #' 
 #' lexis <- Epi::Lexis(
@@ -321,14 +321,14 @@ surv_brenner_weight_dt <- function(
 #'   exit.status = 0L
 #' )
 #' lexis[["icss_ag"]] <- make_column_icss_ag(c(50.5, 60.5))
-#' wdt <- make_standard_weight_dt()
+#' swdt <- make_standard_weight_dt()
 #' 
 #' # this is what happens when at least one weighting stratum is empty
 #' warn_env <- new.env()
 #' warn_env[["w"]] <- NULL
 #' iw_bad <- suppressWarnings(withCallingHandlers(popEpi::surv_individual_weights(
 #'   df = lexis,
-#'   standard_weight_dt = wdt
+#'   standard_weight_dt = swdt
 #' ), warning = function(w) warn_env[["w"]] <- w))
 #' stopifnot(
 #'   inherits(warn_env[["w"]], "warning"),
@@ -341,7 +341,7 @@ surv_brenner_weight_dt <- function(
 #' # observations serve "double duty" now for multiple original strata.
 #' iw <- popEpi::surv_individual_weights(
 #'   df = lexis,
-#'   standard_weight_dt = wdt,
+#'   standard_weight_dt = swdt,
 #'   collapse_stratum_col_nms = "icss_ag"
 #' )
 #' stopifnot(
