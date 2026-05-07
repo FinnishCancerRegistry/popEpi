@@ -531,6 +531,10 @@ surv_estimate <- function(
       value_col_nms <- as.character(aggre_meta[["value_col_nms"]])
     } else {
       value_col_nms <- names(dt)[grepl("(^t_)|(^n_)", names(dt))]
+      value_col_nms <- value_col_nms[vapply(
+        as.list(dt)[value_col_nms], inherits, logical(1L),
+        what = c("integer", "numeric")
+      )]
       if (length(value_col_nms) == 0) {
         stop("Could not infer argument `value_col_nms`. Please supply it ",
              "yourself.")
