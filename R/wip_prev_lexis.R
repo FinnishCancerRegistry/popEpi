@@ -161,7 +161,8 @@ prev_lexis <- function(
       )
       agdt_i[]
     })
-    if (!is.null(merge_dt)) {
+    if (!is.null(merge_dt)) {tryCatch({
+      data.table::set(agdt_i, j = "n_prev_eff", value = NA_real_)
       # @codedoc_comment_block popEpi::prev_lexis
       #   + If `!is.null(merge_dt)`,
       #     collect subjects in `lexis` who were censored before the
@@ -462,7 +463,7 @@ prev_lexis <- function(
           )
         })
       }
-    }
+    }, error = function(e) e)}
     ts_fut_col_nm <- names(stratum_breaks)[length(stratum_breaks)]
     ts_fut_start_col_nm <- paste0(ts_fut_col_nm, "_start")
     data.table::set(
