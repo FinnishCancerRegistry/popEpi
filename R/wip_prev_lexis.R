@@ -47,6 +47,20 @@ prev_lexis <- function(
   subset <- handle_arg_subset(dataset_nm = "lexis")
   #' @param aggre_by Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis)
+  if (data.table::is.data.table(aggre_by)) {
+    subset <- subset & local({
+      join_dt <- data.table::setDT(as.list(lexis)[intersect(
+        names(lexis),
+        names(aggre_by)
+      )])
+      wh <- join_dt[
+        i = aggre_by,
+        on = names(aggre_by),
+        which = TRUE
+      ]
+      seq_len(nrow(join_dt)) %in% wh
+    })
+  }
 
   #' @param merge_dt `[NULL, data.table]` (default `NULL`)
   #'

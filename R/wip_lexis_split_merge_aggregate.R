@@ -491,10 +491,30 @@ lexis_split_merge_aggregate_by_stratum <- function(
     dt = lexis,
     mandatory = FALSE
   )
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
+  # @codedoc_insert_comment_block popEpi:::handle_arg_subset
+  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
+  subset <- handle_arg_subset(dataset_nm = "lexis")
+
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::aggre_by
   # @codedoc_insert_comment_block popEpi:::handle_arg_by
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::aggre_by
   aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis)
+  if (data.table::is.data.table(aggre_by)) {
+    subset <- subset & local({
+      join_dt <- data.table::setDT(as.list(lexis)[intersect(
+        names(lexis),
+        names(aggre_by)
+      )])
+      wh <- join_dt[
+        i = aggre_by,
+        on = names(aggre_by),
+        which = TRUE
+      ]
+      seq_len(nrow(join_dt)) %in% wh
+    })
+  }
+
   #' @param aggre_exprs `[character, list]` (no default)
   #'
   #' Defines what is aggregated within every stratum-box
@@ -553,10 +573,6 @@ lexis_split_merge_aggregate_by_stratum <- function(
   stopifnot(
     inherits(optional_steps, c("NULL", "list"))
   )
-  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
-  # @codedoc_insert_comment_block popEpi:::handle_arg_subset
-  # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
-  subset <- handle_arg_subset(dataset_nm = "lexis")
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - If `weight_col_nm` was supplied, include in `subset` only records where
   #   `lexis[[weight_col_nm]] > 0`.
