@@ -94,7 +94,9 @@ handle_arg_by <- function(
   # @codedoc_comment_block popEpi:::handle_arg_by
   stopifnot(is.data.frame(dataset))
   assert_is_arg_by(by, dataset)
-  if (is.character(by)) {
+  if (length(by) == 0) {
+    return(NULL)
+  } else if (is.character(by)) {
     stratum_col_nms <- by
     dataset <- data.table::setDT(as.list(dataset)[stratum_col_nms])
     nondup <- !duplicated(dataset, by = stratum_col_nms)

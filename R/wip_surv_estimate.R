@@ -637,8 +637,8 @@ surv_estimate <- function(
       .SDcols = value_col_nms,
       keyby = eval(setdiff(
         names(dt),
-        c(value_col_nms, setdiff(names(weight_dt), stratum_col_nms)))
-      )
+        c(value_col_nms, setdiff(names(weight_dt), stratum_col_nms))
+      ))
     ]
     estimate_stratum_col_nms <- intersect(estimate_stratum_col_nms, names(out))
   }
@@ -1088,16 +1088,26 @@ surv_lexis_S_exp_e1_ch_mean <- function(
 surv_collapse_1d <- function(
   dt,
   ts_fut_col_nm,
-  value_col_nms,
+  stratum_col_nms = NULL,
+  value_col_nms = NULL,
   test_expr = NULL,
   mandatory_breaks = NULL
 ) {
+  if (is.null(value_col_nms)) {
+    value_col_nms <- names(dt)[grepl("(^t_)|(^n_)", names(dt))]
+    value_col_nms <- value_col_nms[vapply(
+      as.list(dt)[value_col_nms], inherits, logical(1L),
+      what = c("integer", "numeric")
+    )]
+    if (length(value_col_nms) == 0) {
+      stop("Could not infer `value_col_nms`; please supply this argument.")
+    }
+  }
   stopifnot(
     data.table::is.data.table(dt),
     paste0(ts_fut_col_nm, c("_start", "_stop")) %in% names(dt),
-    !duplicated(dt[[paste0(ts_fut_col_nm, "_start")]]),
+    !duplicated(dt, by = c(stratum_col_nms, paste0(ts_fut_col_nm, "_start"))),
     value_col_nms %in% names(dt),
-    data.table::key(dt)[1] == "box_id",
     is.null(test_expr) || is.language(test_expr)
   )
   if (is.null(test_expr)) {
@@ -1122,6 +1132,20 @@ surv_collapse_1d <- function(
       list(col = str2lang(test_col_nms[1]))
     )
   }
+  if (!is.null(stratum_col_nms)) {
+    return(dt[
+      j = surv_collapse_1d(
+        dt = .SD,
+        ts_fut_col_nm = ts_fut_col_nm,
+        stratum_col_nms = NULL,
+        value_col_nms = value_col_nms,
+        test_expr = test_expr,
+        mandatory_breaks = mandatory_breaks
+      ),
+      keyby = eval(stratum_col_nms)
+    ])
+  }
+
   ts_start_col_nm <- paste0(ts_fut_col_nm, "_start")
   ts_stop_col_nm <- paste0(ts_fut_col_nm, "_stop")
 
@@ -1180,7 +1204,7 @@ surv_collapse_1d <- function(
   }
   collapsed_grp_ids <- cumsum(!duplicated(collapsed_grp_ids))
   ts_id_col_nm <- paste0(ts_fut_col_nm, "_id")
-  dt <- data.table::setDT(as.list(dt))
+  dt <- data.table::copy(data.table::setDT(as.list(dt)))
   data.table::set(
     x = dt,
     j = ts_id_col_nm,
@@ -1215,3 +1239,317 @@ surv_collapse_1d <- function(
   return(dt[])
 }
 
+#' @eval codedoc::pkg_doc_fun(
+#'   "popEpi::surv_collapse_1d",
+#'   "surv_functions"
+#' )
+#' @examples
+#'
+#' # popEpi::surv_collapse_strata_list
+#' sdt <- data.table::CJ(
+#'   ag = 1:3,
+#'   box_id = 1:5
+#' )
+#' sdt[
+#'   i = sdt[["ag"]] == 1,
+#'   j = "t_at_risk" := 0.0
+#' ]
+#' sdt[
+#'   i = sdt[["ag"]] == 2,
+#'   j = "t_at_risk" := c(1, 1, 0, 2, 1)
+#' ]
+#' sdt[
+#'   i = sdt[["ag"]] == 3,
+#'   j = "t_at_risk" := c(1, 1, 1, 0, 1)
+#' ]
+#' sdt_collapse_data <- surv_collapse_strata_list(
+#'   dt = sdt,
+#'   stratum_col_nms = "ag",
+#'   collapse_stratum_col_nms = "ag"
+#' )
+#' stopifnot(
+#'   "result" %in% names(sdt_collapse_data),
+#'   inherits(sdt_collapse_data[["result"]][[1]], "list"),
+#'   c("new", "old") %in% names(sdt_collapse_data[["result"]][[1]]),
+#'   sdt_collapse_data[["result"]][[1]][["new"]][["stratum_id"]] == 1L
+#' )
+#' sdt[
+#'   i = sdt[["ag"]] == 1,
+#'   j = "t_at_risk" := 0.5
+#' ]
+#' sdt_collapse_data <- surv_collapse_strata_list(
+#'   dt = sdt,
+#'   stratum_col_nms = "ag",
+#'   collapse_stratum_col_nms = "ag"
+#' )
+#' stopifnot(
+#'   "result" %in% names(sdt_collapse_data),
+#'   inherits(sdt_collapse_data[["result"]][[1]], "list"),
+#'   c("new", "old") %in% names(sdt_collapse_data[["result"]][[1]]),
+#'   identical(
+#'     sdt_collapse_data[["result"]][[1]][["new"]][["stratum_id"]],
+#'     c(rep(1L, 5L), rep(2L, 10L))
+#'   )
+#' )
+#' # popEpi::surv_collapse_strata_1d
+#' sdt_collapsed <- surv_collapse_strata_1d(
+#'   dt = sdt,
+#'   stratum_col_nms = "ag",
+#'   collapse_stratum_col_nm = "ag"
+#' )
+#' stopifnot(
+#'   nrow(sdt_collapsed) == 10,
+#'   names(sdt) %in% names(sdt_collapsed),
+#'   names(sdt_collapsed) %in% names(sdt),
+#'   is.character(sdt_collapsed[["ag"]]),
+#'   identical(unique(sdt_collapsed[["ag"]]), c("1", "2 & 3"))
+#' )
+#'
+surv_collapse_strata_list <- function(
+  dt,
+  stratum_col_nms,
+  collapse_stratum_col_nms,
+  value_col_nms = NULL,
+  test_expr = NULL
+) {
+  stopifnot(
+    data.table::is.data.table(dt),
+    stratum_col_nms %in% names(dt),
+    collapse_stratum_col_nms %in% stratum_col_nms,
+    "box_id" %in% names(dt),
+    !duplicated(
+      x = dt,
+      by = c(stratum_col_nms, "box_id")
+    ),
+    #' @param collapse_stratum_col_nms `[character]` (no default)
+    #'
+    #' Names of stratum columns in `dt` where collapsing (combining) strata
+    #' is allowed to achieve `test_expr` to pass in every stratum.
+    is.character(collapse_stratum_col_nms),
+    collapse_stratum_col_nms %in% names(dt),
+
+    inherits(test_expr, c("call", "NULL"))
+  )
+  if (is.null(value_col_nms)) {
+    value_col_nms <- names(dt)[grepl("(^t_)|(^n_)", names(dt))]
+    value_col_nms <- value_col_nms[vapply(
+      as.list(dt)[value_col_nms], inherits, logical(1L),
+      what = c("integer", "numeric")
+    )]
+    if (length(value_col_nms) == 0) {
+      stop("Could not infer `value_col_nms`; please supply this argument.")
+    }
+  }
+  stopifnot(
+    value_col_nms %in% names(dt),
+    vapply(
+      as.list(dt)[value_col_nms], inherits, logical(1L),
+      what = c("integer", "numeric")
+    )
+  )
+  if (is.null(test_expr)) {
+    test_expr <- quote(min(t_at_risk) > 0)
+  }
+  noncollapse_stratum_col_nms <- setdiff(
+    stratum_col_nms,
+    collapse_stratum_col_nms
+  )
+  if (length(noncollapse_stratum_col_nms) > 0) {
+    return(dt[
+      j = surv_collapse_strata_list(
+        #' @importFrom data.table .SD
+        dt = .SD,
+        stratum_col_nms = collapse_stratum_col_nms,
+        collapse_stratum_col_nms = collapse_stratum_col_nms,
+        value_col_nms = value_col_nms,
+        test_expr = test_expr
+      ),
+      keyby = eval(noncollapse_stratum_col_nms)
+    ])
+  }
+
+  work_dt <- data.table::copy(data.table::setDT(as.list(dt)[
+    c("box_id", value_col_nms)
+  ]))
+  data.table::set(
+    x = work_dt,
+    j = "stratum_id",
+    value = cumsum(!duplicated(dt, by = collapse_stratum_col_nms))
+  )
+  out <- data.table::setDT(list(
+    stratum_id = data.table::copy(work_dt[["stratum_id"]])
+  ))
+  data.table::setcolorder(work_dt, "stratum_id")
+  data.table::setkeyv(work_dt, "stratum_id")
+  tdt_expr <- substitute(
+    work_dt[
+      j = list(test_result = test_expr),
+      keyby = "stratum_id"
+    ],
+    list(test_expr = test_expr)
+  )
+  tdt <- eval(tdt_expr)
+  stratum_id <- 1L
+  performed_aggregation <- !all(tdt[["test_result"]])
+  while (
+    nrow(tdt) > 1 &&
+      stratum_id <= max(tdt[["stratum_id"]]) &&
+      !all(tdt[["test_result"]])
+  ) {
+    if (!tdt[["test_result"]][stratum_id]) {
+      if (stratum_id < max(tdt[["stratum_id"]])) {
+        data.table::set(
+          x = work_dt,
+          i = which(work_dt[["stratum_id"]] == stratum_id + 1L),
+          j = "stratum_id",
+          value = stratum_id
+        )
+        data.table::set(
+          x = out,
+          i = which(out[["stratum_id"]] == stratum_id + 1L),
+          j = "stratum_id",
+          value = stratum_id
+        )
+      } else {
+        data.table::set(
+          x = work_dt,
+          i = which(work_dt[["stratum_id"]] == stratum_id - 1L),
+          j = "stratum_id",
+          value = stratum_id
+        )
+        data.table::set(
+          x = out,
+          i = which(out[["stratum_id"]] == stratum_id - 1L),
+          j = "stratum_id",
+          value = stratum_id
+        )
+      }
+      data.table::set(
+        x = work_dt,
+        j = "stratum_id",
+        value = cumsum(!duplicated(work_dt[["stratum_id"]]))
+      )
+      data.table::set(
+        x = out,
+        j = "stratum_id",
+        value = cumsum(!duplicated(out[["stratum_id"]]))
+      )
+      work_dt <- work_dt[
+        j = lapply(.SD, sum),
+        .SDcols = value_col_nms,
+        keyby = c("stratum_id", "box_id")
+      ]
+      tdt <- eval(tdt_expr)
+    } else {
+      stratum_id <- stratum_id + 1L
+    }
+  }
+  out <- data.table::data.table(
+    result = list(list(
+      old = data.table::setDT(as.list(dt)[collapse_stratum_col_nms])[],
+      new = out[],
+      performed_aggregation = performed_aggregation,
+      value_col_nms = value_col_nms,
+      collapse_stratum_col_nms = collapse_stratum_col_nms
+    ))
+  )
+  return(out[])
+}
+
+#' @eval codedoc::pkg_doc_fun(
+#'   "popEpi::surv_collapse_strata_1d",
+#'   "surv_functions"
+#' )
+surv_collapse_strata_1d <- function(
+  dt,
+  stratum_col_nms,
+  collapse_stratum_col_nm,
+  value_col_nms = NULL,
+  test_expr = quote(min(t_at_risk) > 0)
+) {
+  #' @param collapse_stratum_col_nm `[character]`
+  #'
+  #' As the `collapse_stratum_col_nms` argument of
+  #' `popEpi::surv_collapse_strata_list` --- and passed to it, as that argument
+  #' --- but must be of length one.
+  stopifnot(
+    length(collapse_stratum_col_nm) == 1,
+    is.character(collapse_stratum_col_nm),
+    collapse_stratum_col_nm %in% names(dt)
+  )
+  noncollapse_stratum_col_nms <- setdiff(
+    stratum_col_nms,
+    collapse_stratum_col_nm
+  )
+  if (length(noncollapse_stratum_col_nms) > 0) {
+    dt <- data.table::setDT(as.list(dt))
+    data.table::set(
+      x = dt,
+      j = collapse_stratum_col_nm,
+      value = as.character(dt[[collapse_stratum_col_nm]])
+    )
+    out <- dt[
+      j = surv_collapse_strata_1d(
+        dt = .SD,
+        stratum_col_nms = collapse_stratum_col_nm,
+        collapse_stratum_col_nm = collapse_stratum_col_nm,
+        value_col_nms = value_col_nms,
+        test_expr = test_expr
+      ),
+      keyby = eval(noncollapse_stratum_col_nms)
+    ]
+    data.table::setcolorder(out, names(dt))
+    data.table::setkeyv(out, data.table::key(dt))
+    return(out[])
+  }
+  expr <- match.call()
+  expr[[1L]] <- quote(surv_collapse_strata_list)
+  names(expr)[names(expr) == "collapse_stratum_col_nm"] <-
+    "collapse_stratum_col_nms"
+  cl <- eval(expr, parent.frame(1L))[["result"]][[1L]]
+  if (!cl[["performed_aggregation"]]) {
+    return(dt[])
+  }
+  join_dt <- data.table::data.table(
+    old = cl[["old"]][[collapse_stratum_col_nm]],
+    new = cl[["new"]][["stratum_id"]]
+  )
+  join_dt <- unique(join_dt, by = names(join_dt))
+  data.table::set(
+    x = join_dt,
+    j = "new",
+    value = as.character(join_dt[["new"]])
+  )
+  join_dt[
+    #' @importFrom data.table := .SD
+    j = "new" := paste0(.SD[["old"]], collapse = " & "),
+    .SDcols = "old",
+    by = "new"
+  ]
+  out <- data.table::copy(
+    data.table::setDT(as.list(dt)[collapse_stratum_col_nm])
+  )
+  data.table::set(
+    x = out,
+    j = setdiff(names(dt), names(out)),
+    value = as.list(dt)[setdiff(names(dt), names(out))]
+  )
+  data.table::set(
+    x = out,
+    j = collapse_stratum_col_nm,
+    value = as.character(factor(
+      x = out[[collapse_stratum_col_nm]],
+      levels = join_dt[["old"]],
+      labels = join_dt[["new"]]
+    ))
+  )
+  out <- out[
+    #' @importFrom data.table .SD
+    j = lapply(.SD, sum),
+    .SDcols = cl[["value_col_nms"]],
+    keyby = eval(setdiff(names(out), cl[["value_col_nms"]]))
+  ]
+  data.table::setcolorder(out, names(dt))
+  data.table::setkeyv(out, data.table::key(dt))
+  return(out[])
+}

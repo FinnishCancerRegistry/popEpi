@@ -4,6 +4,8 @@
 \name{surv_estimate}
 \alias{surv_estimate}
 \alias{surv_collapse_1d}
+\alias{surv_collapse_strata_list}
+\alias{surv_collapse_strata_1d}
 \alias{surv_brenner_weight_dt}
 \alias{surv_individual_weights}
 \alias{surv_functions}
@@ -25,9 +27,26 @@ surv_estimate(
 surv_collapse_1d(
   dt,
   ts_fut_col_nm,
-  value_col_nms,
+  stratum_col_nms = NULL,
+  value_col_nms = NULL,
   test_expr = NULL,
   mandatory_breaks = NULL
+)
+
+surv_collapse_strata_list(
+  dt,
+  stratum_col_nms,
+  collapse_stratum_col_nms,
+  value_col_nms = NULL,
+  test_expr = NULL
+)
+
+surv_collapse_strata_1d(
+  dt,
+  stratum_col_nms,
+  collapse_stratum_col_nm,
+  value_col_nms = NULL,
+  test_expr = quote(min(t_at_risk) > 0)
 )
 
 surv_brenner_weight_dt(
@@ -163,6 +182,28 @@ this function will not attempt to aggregate \verb{]0.9, 1.0]} and \verb{]1.0, 1.
 into \verb{]0.9, 1.1]}, not even if it is the only way to produce intervals
 which all pass \code{test_expr}.}
 
+\item{collapse_stratum_col_nms}{\verb{[NULL, character]} (default \code{NULL})
+
+Optional names of stratum column names in both \code{df} and
+\code{standard_weight_dt}. If this argument is supplied, strata defined by
+these columns are attempted to be combined with their neighbours in the
+event of a zero in the corresponding \code{observed_weight_dt$weight} value.
+For instance, with \code{collapse_stratum_col_nms = "agegroup"} and the
+first age group having an observed weight of zero, we combine the first
+age group with the second for the purpose of calculating the individual
+weight. See \strong{Details}.
+\itemize{
+\item \code{NULL}: No automatic combination of strata is performed.
+\item \code{character}: Combine neighbouring strata defined by these column names.
+E.g. \code{"agegroup"}.
+}}
+
+\item{collapse_stratum_col_nm}{\verb{[character]}
+
+As the \code{collapse_stratum_col_nms} argument of
+\code{popEpi::surv_collapse_strata_list} --- and passed to it, as that argument
+--- but must be of length one.}
+
 \item{standard_weight_dt}{\verb{[data.table]} (no default)
 
 Table of standardisation weights, e.g. ICSS weights.
@@ -191,22 +232,6 @@ A table of weights must fulfill these requirements:
 e.g. the same age group twice in a table stratified by age group only.
 \item Has column \code{"weight"}. All values must be >= 0. No missing values are
 allowed.
-}}
-
-\item{collapse_stratum_col_nms}{\verb{[NULL, character]} (default \code{NULL})
-
-Optional names of stratum column names in both \code{df} and
-\code{standard_weight_dt}. If this argument is supplied, strata defined by
-these columns are attempted to be combined with their neighbours in the
-event of a zero in the corresponding \code{observed_weight_dt$weight} value.
-For instance, with \code{collapse_stratum_col_nms = "agegroup"} and the
-first age group having an observed weight of zero, we combine the first
-age group with the second for the purpose of calculating the individual
-weight. See \strong{Details}.
-\itemize{
-\item \code{NULL}: No automatic combination of strata is performed.
-\item \code{character}: Combine neighbouring strata defined by these column names.
-E.g. \code{"agegroup"}.
 }}
 
 \item{df}{\verb{[data.frame, data.table]} (no default)
@@ -728,6 +753,67 @@ stopifnot(
   sdt[["ts_fut_stop"]] == c(1.0, 3.0),
   sdt[["t_at_risk"]] == c(1.0, 0.5)
 )
+
+# popEpi::surv_collapse_strata_list
+sdt <- data.table::CJ(
+  ag = 1:3,
+  box_id = 1:5
+)
+sdt[
+  i = sdt[["ag"]] == 1,
+  j = "t_at_risk" := 0.0
+]
+sdt[
+  i = sdt[["ag"]] == 2,
+  j = "t_at_risk" := c(1, 1, 0, 2, 1)
+]
+sdt[
+  i = sdt[["ag"]] == 3,
+  j = "t_at_risk" := c(1, 1, 1, 0, 1)
+]
+sdt_collapse_data <- surv_collapse_strata_list(
+  dt = sdt,
+  stratum_col_nms = "ag",
+  collapse_stratum_col_nms = "ag"
+)
+stopifnot(
+  "result" \%in\% names(sdt_collapse_data),
+  inherits(sdt_collapse_data[["result"]][[1]], "list"),
+  c("new", "old") \%in\% names(sdt_collapse_data[["result"]][[1]]),
+  sdt_collapse_data[["result"]][[1]][["new"]][["stratum_id"]] == 1L
+)
+sdt[
+  i = sdt[["ag"]] == 1,
+  j = "t_at_risk" := 0.5
+]
+sdt_collapse_data <- surv_collapse_strata_list(
+  dt = sdt,
+  stratum_col_nms = "ag",
+  collapse_stratum_col_nms = "ag"
+)
+stopifnot(
+  "result" \%in\% names(sdt_collapse_data),
+  inherits(sdt_collapse_data[["result"]][[1]], "list"),
+  c("new", "old") \%in\% names(sdt_collapse_data[["result"]][[1]]),
+  identical(
+    sdt_collapse_data[["result"]][[1]][["new"]][["stratum_id"]],
+    c(rep(1L, 5L), rep(2L, 10L))
+  )
+)
+# popEpi::surv_collapse_strata_1d
+sdt_collapsed <- surv_collapse_strata_1d(
+  dt = sdt,
+  stratum_col_nms = "ag",
+  collapse_stratum_col_nm = "ag"
+)
+stopifnot(
+  nrow(sdt_collapsed) == 10,
+  names(sdt) \%in\% names(sdt_collapsed),
+  names(sdt_collapsed) \%in\% names(sdt),
+  is.character(sdt_collapsed[["ag"]]),
+  identical(unique(sdt_collapsed[["ag"]]), c("1", "2 & 3"))
+)
+
 
 # popEpi::surv_brenner_weight_dt
 make_column_icss_ag <- function(age) {
