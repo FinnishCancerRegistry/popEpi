@@ -249,12 +249,15 @@ prev_lexis <- function(
               1
             )
             if (any(sdt[["t_at_risk"]] == 0.0)) {
-              stop(
+              warning(
                 "The survival estimates produced internally by ",
                 "`popEpi::prev_lexis` had missing values. This occurs when ",
-                "there are no subjects remaining in follow-up --- you will ",
-                "have to either adjust the arguments passed via `merge_dt` or ",
-                "estimate survival yourself in advance."
+                "there are no subjects remaining in follow-up --- an error ",
+                "will be produced if such missing values are attempted to ",
+                "be used in the computation of n_prev_eff. In such a case ",
+                "you will have to adjust the settings of how these internal ",
+                "survival estimates are produced or to produce survival ",
+                "estimates yourself."
               )
             }
             # @codedoc_comment_block popEpi::prev_lexis
