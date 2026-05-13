@@ -771,7 +771,7 @@ sdt[
   i = sdt[["ag"]] == 3,
   j = "t_at_risk" := c(1, 1, 1, 0, 1)
 ]
-sdt_collapse_data <- surv_collapse_strata_list(
+sdt_collapse_data <- popEpi::surv_collapse_strata_list(
   dt = sdt,
   stratum_col_nms = "ag",
   collapse_stratum_col_nms = "ag"
@@ -786,7 +786,7 @@ sdt[
   i = sdt[["ag"]] == 1,
   j = "t_at_risk" := 0.5
 ]
-sdt_collapse_data <- surv_collapse_strata_list(
+sdt_collapse_data <- popEpi::surv_collapse_strata_list(
   dt = sdt,
   stratum_col_nms = "ag",
   collapse_stratum_col_nms = "ag"
@@ -801,7 +801,7 @@ stopifnot(
   )
 )
 # popEpi::surv_collapse_strata_1d
-sdt_collapsed <- surv_collapse_strata_1d(
+sdt_collapsed <- popEpi::surv_collapse_strata_1d(
   dt = sdt,
   stratum_col_nms = "ag",
   collapse_stratum_col_nm = "ag"
