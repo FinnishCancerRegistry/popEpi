@@ -1489,7 +1489,7 @@ surv_collapse_strata_1d <- function(
       value = as.character(dt[[collapse_stratum_col_nm]])
     )
     out <- dt[
-      j = surv_collapse_strata_1d(
+      j = popEpi::surv_collapse_strata_1d(
         dt = .SD,
         stratum_col_nms = collapse_stratum_col_nm,
         collapse_stratum_col_nm = collapse_stratum_col_nm,
@@ -1503,7 +1503,7 @@ surv_collapse_strata_1d <- function(
     return(out[])
   }
   expr <- match.call()
-  expr[[1L]] <- quote(surv_collapse_strata_list)
+  expr[[1L]] <- quote(popEpi::surv_collapse_strata_list)
   names(expr)[names(expr) == "collapse_stratum_col_nm"] <-
     "collapse_stratum_col_nms"
   cl <- eval(expr, parent.frame(1L))[["result"]][[1L]]
