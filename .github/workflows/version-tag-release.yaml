@@ -1,7 +1,9 @@
 name: Release-R-Package
 
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
@@ -51,8 +53,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: manual-release-${{ github.run_number }}
-          name: Manual Release ${{ github.run_number }}
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           files: |
             *.zip
             *.tar.gz
