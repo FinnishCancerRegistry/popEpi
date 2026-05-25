@@ -1,53 +1,57 @@
-on:
-  push:
-    tags:
-      - 'v*'
-  workflow_dispatch
+name: Windows Binary Release
 
-name: Release-Windows-Binary
+on:
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build-windows-binary:
+  build-and-release:
     runs-on: windows-latest
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: r-lib/actions/setup-r@v2
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
         with:
           r-version: 'release'
 
-      - uses: r-lib/actions/setup-pandoc@v2
+      - name: Setup Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::devtools
           needs: build
-
-      - name: Build Windows binary
-        shell: pwsh
-        run: |
-          R CMD INSTALL --build .
-
-      - name: List files
-        shell: pwsh
-        run: |
-          Get-ChildItem
 
       - name: Build source package
         shell: pwsh
         run: |
           R CMD build .
 
+      - name: Build Windows binary
+        shell: pwsh
+        run: |
+          $tarball = Get-ChildItem *.tar.gz | Select-Object -First 1
+          R CMD INSTALL --build $tarball
+
+      - name: Show built files
+        shell: pwsh
+        run: |
+          Get-ChildItem
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: manual-release-${{ github.run_number }}
+          name: Manual Release ${{ github.run_number }}
           files: |
             *.zip
             *.tar.gz
