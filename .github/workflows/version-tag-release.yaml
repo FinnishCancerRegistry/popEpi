@@ -14,3 +14,5 @@ on:
 jobs:
   release:
     uses: FinnishCancerRegistry/github-actions/.github/workflows/version-tag-release.yaml@master
+    with:
+      tag: ${{ github.event.inputs.tag || github.ref_name }}
