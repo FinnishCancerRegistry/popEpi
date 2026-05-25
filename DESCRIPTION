@@ -26,11 +26,11 @@ Depends:
     R (>= 3.5)
 Imports: 
     data.table (>= 1.10.4),
-    Epi (>= 2.0),
-    splines,
-    survival,
     directadjusting (>= 0.6.0),
-    methods
+    Epi (>= 2.0),
+    methods,
+    splines,
+    survival
 Suggests:
     knitr,
     mstate,
@@ -41,8 +41,8 @@ Suggests:
 VignetteBuilder: 
     knitr
 ByteCompile: true
+Config/roxygen2/version: 8.0.0
 Encoding: UTF-8
 Language: en-GB
 LazyData: true
 Roxygen: list(markdown = TRUE)
-Config/roxygen2/version: 8.0.0
