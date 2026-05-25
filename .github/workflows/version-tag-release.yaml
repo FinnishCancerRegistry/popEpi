@@ -28,19 +28,20 @@ jobs:
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::devtools
+          extra-packages: |
+            any::devtools
+            any::pkgbuild
           needs: check
 
       - name: Build source package
         shell: pwsh
         run: |
-          R CMD build .
+          Rscript -e "pkgbuild::build(path = '.')"
 
       - name: Build Windows binary
         shell: pwsh
         run: |
-          $tarball = Get-ChildItem *.tar.gz | Select-Object -First 1
-          R CMD INSTALL --build $tarball
+          Rscript -e "pkgbuild::build(binary = TRUE, path = '.')"
 
       - name: Show built files
         shell: pwsh
