@@ -13,4 +13,4 @@ on:
 
 jobs:
   release:
-    uses: FinnishCancerRegistry/github-actions/version-tag-release.yaml@master
+    uses: FinnishCancerRegistry/github-actions/.github/workflows/version-tag-release.yaml@master
