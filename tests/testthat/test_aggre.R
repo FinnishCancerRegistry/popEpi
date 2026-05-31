@@ -44,7 +44,7 @@ testthat::test_that("aggre and lexpand produce the same results", {
   if (!is.data.table(x)) setDF2DT(x)
 
   e <- quote(list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
-  v <- c("gender", "sex", "sex", "surv.int", "per", "agegr")
+  v <- c("gender", "sex", "surv.int", "per", "agegr")
 
   forceLexisDT(x, breaks = BL, allScales = c("fot", "per", "age"))
   x2 <- aggre(x, by = e, verbose = FALSE)
