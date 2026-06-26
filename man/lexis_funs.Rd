@@ -170,9 +170,4 @@ stopifnot(
 )
 
 }
-\seealso{
-Other Lexis_functions:
-\code{\link[=lexis_merge]{lexis_merge()}},
-\code{\link[=lexis_split_merge_aggregate_by_stratum]{lexis_split_merge_aggregate_by_stratum()}}
-}
 \concept{Lexis_functions}
