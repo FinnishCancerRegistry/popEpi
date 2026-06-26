@@ -28,4 +28,14 @@
 #' by most functions internally in both cases.
 #'
 #' @keywords internal
+#' @eval update_news_md()
 "_PACKAGE"
+
+update_news_md <- function() {
+  codedoc::codedoc_news_for_R_package()
+  lines <- c(
+    readLines("NEWS.md"),
+    readLines("NEWS_OLD.md")
+  )
+  writeLines(lines, "NEWS.md")
+}
