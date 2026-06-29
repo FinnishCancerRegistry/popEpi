@@ -1,15 +1,17 @@
-## funs ------------------------------------------------------------------------
-du <- new.env()
-source("dev/utils.R", local = du)
-
 ## winbuilder ------------------------------------------------------------------
-du$run_r_cmd_check_on_winbuilder()
+devtools::build(binary = FALSE, path = "dev/")
+message("Upload the created source file to this address on every R version it ",
+        "allows: https://win-builder.r-project.org/. ",
+        "Press enter when you have done that.")
+readline(": ")
 
 ## rhub ------------------------------------------------------------------------
-du$run_r_cmd_check_on_rhub()
+message("Browse to https://github.com/FinnishCancerRegistry/popEpi/actions",
+        "and run the action 'R-hub'. Press enter when you have done that.")
+readline(": ")
 
-## check that other CRAN packages are not broken -------------------------------
-message("go to the repo's github page, tab 'actions', run action ",
-        "'Reverse dependency check'")
-
-# if everything looks OK, remember to add to cran-comments.md.
+## cran-comments.md ------------------------------------------------------------
+message("Update cran-comments.md. Press enter when you have done that.")
+readline(": ")
+system2("git", c("add", "cran-comments.md"))
+system2("git", c("commit", "--m", "'docs: update cran-comments.md'"))
