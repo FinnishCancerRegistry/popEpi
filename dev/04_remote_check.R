@@ -11,7 +11,9 @@ message("Browse to https://github.com/FinnishCancerRegistry/popEpi/actions",
 readline(": ")
 
 ## cran-comments.md ------------------------------------------------------------
-message("Update cran-comments.md. Press enter when you have done that.")
+message("After winbuilder has e-mailed its passing checks and rhub checks ",
+        "have passed, update cran-comments.md. Press enter when you have done ",
+        "that.")
 readline(": ")
 system2("git", c("add", "cran-comments.md"))
-system2("git", c("commit", "--m", "'docs: update cran-comments.md'"))
+system2("git", c("commit", "--m", "\"docs: update cran-comments.md\""))
