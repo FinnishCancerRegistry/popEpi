@@ -28,3 +28,4 @@
 ^lastMiKTeXException$
 ^\.radian_history$
 ^sandbox.*\.R$
+^NEWS_OLD\.md$
