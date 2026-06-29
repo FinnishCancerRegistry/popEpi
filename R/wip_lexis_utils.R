@@ -387,7 +387,7 @@ lexis_drop <- function(
   if (data.table::is.data.table(lexis)) {
     out <- lexis[
       i = (subset),
-      #' @importFrom data.table .SD
+      #§ @importFrom data.table .SD
       j = .SD,
       .SDcols = select
     ]

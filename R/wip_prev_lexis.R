@@ -1,13 +1,13 @@
-#' @title Prevalence
-#' @description
-#' Function(s) to compute prevalence statistics.
-#' @name prev_functions
+#§ @title Prevalence
+#§ @description
+#§ Function(s) to compute prevalence statistics.
+#§ @name prev_functions
 NULL
 
-#' @eval codedoc::pkg_doc_fun(
-#'   "popEpi::prev_lexis",
-#'   "prev_functions"
-#' )
+#§ @eval codedoc::pkg_doc_fun(
+#§   "popEpi::prev_lexis",
+#§   "prev_functions"
+#§ )
 prev_lexis <- function(
   lexis,
   observation_time_points,
@@ -17,26 +17,26 @@ prev_lexis <- function(
   merge_dt = NULL,
   merge_optional_args = NULL
 ) {
-  #' @template param_lexis
+  #§ @template param_lexis
   assert_is_arg_lexis(lexis, dt = FALSE)
-  #' @param observation_time_points `[list]` (no default)
+  #§ @param observation_time_points `[list]` (no default)
   #'
-  #' Prevalence observation time points.
-  #' The `list` can have only one element, but multiple time points can be
-  #' supplied, e.g. `list(ts_cal = c(2009.999, 2010.999))`.
-  #' The output of this function will have these observation time points as
-  #' a column with the same name as the time scale.
+  #§ Prevalence observation time points.
+  #§ The `list` can have only one element, but multiple time points can be
+  #§ supplied, e.g. `list(ts_cal = c(2009.999, 2010.999))`.
+  #§ The output of this function will have these observation time points as
+  #§ a column with the same name as the time scale.
   assert_is_arg_breaks(observation_time_points, lexis)
   stopifnot(length(observation_time_points) == 1)
-  #' @param stratum_breaks `[list]` (no default)
+  #§ @param stratum_breaks `[list]` (no default)
   #'
-  #' Breaks to split `lexis` by. These are passed to `[splitMulti]`. These
-  #' breaks create new strata in the output using the time scales in
-  #' `lexis`. The last time scale used here is assumed to be the follow-up time
-  #' time scale.
-  #' E.g. `list(ts_age = seq(0, 100, 10), ts_fut = c(0, 1, 5, Inf))`
-  #' to stratify output by age interval and time since entry interval at a
-  #' given observation point.
+  #§ Breaks to split `lexis` by. These are passed to `[splitMulti]`. These
+  #§ breaks create new strata in the output using the time scales in
+  #§ `lexis`. The last time scale used here is assumed to be the follow-up time
+  #§ time scale.
+  #§ E.g. `list(ts_age = seq(0, 100, 10), ts_fut = c(0, 1, 5, Inf))`
+  #§ to stratify output by age interval and time since entry interval at a
+  #§ given observation point.
   assert_is_arg_breaks(stratum_breaks, lexis)
   stopifnot(
     stratum_breaks[[length(stratum_breaks)]][1] == 0
@@ -45,7 +45,7 @@ prev_lexis <- function(
   # @codedoc_insert_comment_block popEpi:::handle_arg_subset
   # @codedoc_comment_block popEpi::prev_lexis::subset
   subset <- handle_arg_subset(dataset_nm = "lexis")
-  #' @param aggre_by Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+  #§ @param aggre_by Passed to `[lexis_split_merge_aggregate_by_stratum]`.
   aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis)
   if (data.table::is.data.table(aggre_by)) {
     subset <- subset & local({
@@ -62,23 +62,23 @@ prev_lexis <- function(
     })
   }
 
-  #' @param merge_dt `[NULL, data.table]` (default `NULL`)
+  #§ @param merge_dt `[NULL, data.table]` (default `NULL`)
   #'
-  #' Table containing survival estimates applicable to `lexis`.
-  #' These survival
-  #' estimates are used in the "projection" of prevalence in those
-  #' observations
-  #' which have been lost to follow-up. See **Details** for how this
-  #' works and
-  #' what you need to have.
+  #§ Table containing survival estimates applicable to `lexis`.
+  #§ These survival
+  #§ estimates are used in the "projection" of prevalence in those
+  #§ observations
+  #§ which have been lost to follow-up. See **Details** for how this
+  #§ works and
+  #§ what you need to have.
   #'
-  #' - `NULL`: No projection is performed.
-  #' - `data.table`: Must contain stratum columns also found in `lexis` and
-  #'   exactly one value column named `S`. This table is passed
-  #'   to `[lexis_merge]` and should conform to its requirements. E.g.
-  #'   `data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))`.
-  #' - `list`: We produce a table of survival estimates on the fly and
-  #'   these are arguments passed to `[surv_lexis]`. See **Details**.
+  #§ - `NULL`: No projection is performed.
+  #§ - `data.table`: Must contain stratum columns also found in `lexis` and
+  #§   exactly one value column named `S`. This table is passed
+  #§   to `[lexis_merge]` and should conform to its requirements. E.g.
+  #§   `data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))`.
+  #§ - `list`: We produce a table of survival estimates on the fly and
+  #§   these are arguments passed to `[surv_lexis]`. See **Details**.
   stopifnot(
     inherits(merge_dt, c("list", "data.table", "NULL"))
   )
@@ -279,7 +279,7 @@ prev_lexis <- function(
                 n_interpolate <- 1001L
                 ts_fut_interpolation_breaks <- seq(
                   0.0,
-                  #' @importFrom data.table .SD
+                  #§ @importFrom data.table .SD
                   max(.SD[[ts_fut_stop_col_nm]]),
                   length.out = n_interpolate
                 )
@@ -352,10 +352,10 @@ prev_lexis <- function(
           )
         }
         local({
-          #' @param merge_optional_args `[NULL, list]` (default `NULL`)
+          #§ @param merge_optional_args `[NULL, list]` (default `NULL`)
           #'
-          #' Each element passed to `[lexis_merge]`.
-          #' E.g. `list(merge_dt_harmonisers = my_harmonisers)`.
+          #§ Each element passed to `[lexis_merge]`.
+          #§ E.g. `list(merge_dt_harmonisers = my_harmonisers)`.
           # @codedoc_comment_block popEpi::prev_lexis
           #   + Merge (for the first time) `merge_dt` with the collected
           #     subjects at the original exit time of each

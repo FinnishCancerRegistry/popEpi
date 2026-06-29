@@ -1,69 +1,69 @@
-#' @eval codedoc::pkg_doc_fun(
-#'   "popEpi::surv_brenner_weight_dt",
-#'   "surv_functions"
-#' )
-#' @examples
+#§ @eval codedoc::pkg_doc_fun(
+#§   "popEpi::surv_brenner_weight_dt",
+#§   "surv_functions"
+#§ )
+#§ @examples
 #'
-#' # popEpi::surv_brenner_weight_dt
-#' make_column_icss_ag <- function(age) {
-#'   cut(
-#'     age,
-#'     breaks = c(seq(15, 85, 5), Inf),
-#'     right = FALSE
-#'   )
-#' }
+#§ # popEpi::surv_brenner_weight_dt
+#§ make_column_icss_ag <- function(age) {
+#§   cut(
+#§     age,
+#§     breaks = c(seq(15, 85, 5), Inf),
+#§     right = FALSE
+#§   )
+#§ }
 #'
-#' make_standard_weight_dt <- function() {
-#'   swdt <- popEpi::ICSS[
-#'     j = list(
-#'       weight = as.double(sum(.SD[["ICSS1"]]))
-#'     ),
-#'     keyby = list(
-#'       icss_ag = make_column_icss_ag(popEpi::ICSS[["age"]])
-#'     )
-#'   ][]
-#'   swdt <- swdt[!is.na(swdt[["icss_ag"]]), ]
-#'   return(swdt[])
-#' }
+#§ make_standard_weight_dt <- function() {
+#§   swdt <- popEpi::ICSS[
+#§     j = list(
+#§       weight = as.double(sum(.SD[["ICSS1"]]))
+#§     ),
+#§     keyby = list(
+#§       icss_ag = make_column_icss_ag(popEpi::ICSS[["age"]])
+#§     )
+#§   ][]
+#§   swdt <- swdt[!is.na(swdt[["icss_ag"]]), ]
+#§   return(swdt[])
+#§ }
 #'
-#' swdt <- make_standard_weight_dt()
-#' owdt <- data.table::setDT(list(
-#'   icss_ag = make_column_icss_ag(c(50.5, 60.5))
-#' ))[
-#'   i = data.table::setDT(list(icss_ag = swdt[["icss_ag"]])),
-#'   on = "icss_ag",
-#'   j = list(weight = .N),
-#'   keyby = .EACHI
-#' ]
+#§ swdt <- make_standard_weight_dt()
+#§ owdt <- data.table::setDT(list(
+#§   icss_ag = make_column_icss_ag(c(50.5, 60.5))
+#§ ))[
+#§   i = data.table::setDT(list(icss_ag = swdt[["icss_ag"]])),
+#§   on = "icss_ag",
+#§   j = list(weight = .N),
+#§   keyby = .EACHI
+#§ ]
 #'
-#' # this is what happens when at least one weighting stratum is empty
-#' warn_env <- new.env()
-#' warn_env[["w"]] <- NULL
-#' bwdt_bad <- suppressWarnings(withCallingHandlers(
-#'   popEpi::surv_brenner_weight_dt(
-#'     standard_weight_dt = swdt,
-#'     observed_weight_dt = owdt
-#'   ),
-#'   warning = function(w) warn_env[["w"]] <- w
-#' ))
-#' stopifnot(
-#'   inherits(warn_env[["w"]], "warning"),
-#'   bwdt_bad[["weight_brenner"]] >= 0
-#' )
+#§ # this is what happens when at least one weighting stratum is empty
+#§ warn_env <- new.env()
+#§ warn_env[["w"]] <- NULL
+#§ bwdt_bad <- suppressWarnings(withCallingHandlers(
+#§   popEpi::surv_brenner_weight_dt(
+#§     standard_weight_dt = swdt,
+#§     observed_weight_dt = owdt
+#§   ),
+#§   warning = function(w) warn_env[["w"]] <- w
+#§ ))
+#§ stopifnot(
+#§   inherits(warn_env[["w"]], "warning"),
+#§   bwdt_bad[["weight_brenner"]] >= 0
+#§ )
 #'
-#' # here is an easy way to handle this problem. note that the weights are
-#' # always larger when we need to aggregate strata --- because the standard
-#' # weight increases but the observed weight remains the same. the same
-#' # observations serve "double duty" now for multiple original strata.
-#' bwdt <- popEpi::surv_brenner_weight_dt(
-#'   standard_weight_dt = swdt,
-#'   observed_weight_dt = owdt,
-#'   collapse_stratum_col_nms = "icss_ag"
-#' )
-#' stopifnot(
-#'   nrow(swdt) == nrow(bwdt),
-#'   bwdt[["weight_brenner"]] > 0
-#' )
+#§ # here is an easy way to handle this problem. note that the weights are
+#§ # always larger when we need to aggregate strata --- because the standard
+#§ # weight increases but the observed weight remains the same. the same
+#§ # observations serve "double duty" now for multiple original strata.
+#§ bwdt <- popEpi::surv_brenner_weight_dt(
+#§   standard_weight_dt = swdt,
+#§   observed_weight_dt = owdt,
+#§   collapse_stratum_col_nms = "icss_ag"
+#§ )
+#§ stopifnot(
+#§   nrow(swdt) == nrow(bwdt),
+#§   bwdt[["weight_brenner"]] > 0
+#§ )
 surv_brenner_weight_dt <- function(
   standard_weight_dt,
   observed_weight_dt = NULL,
@@ -109,7 +109,7 @@ surv_brenner_weight_dt <- function(
   )
   weight_dt[
     i = is.na(weight_dt[["weight_observed"]]),
-    #' @importFrom data.table :=
+    #§ @importFrom data.table :=
     j = "weight_observed" := 0L
   ]
   data.table::set(
@@ -123,20 +123,20 @@ surv_brenner_weight_dt <- function(
     weight_dt[["weight_observed"]] == 0 & weight_dt[["weight_standard"]] != 0
   )
   if (length(bad_row_nos) > 0) {
-    #' @param collapse_stratum_col_nms `[NULL, character]` (default `NULL`)
+    #§ @param collapse_stratum_col_nms `[NULL, character]` (default `NULL`)
     #'
-    #' Optional names of stratum column names in both `df` and
-    #' `standard_weight_dt`. If this argument is supplied, strata defined by
-    #' these columns are attempted to be combined with their neighbours in the
-    #' event of a zero in the corresponding `observed_weight_dt$weight` value.
-    #' For instance, with `collapse_stratum_col_nms = "agegroup"` and the
-    #' first age group having an observed weight of zero, we combine the first
-    #' age group with the second for the purpose of calculating the individual
-    #' weight. See **Details**.
+    #§ Optional names of stratum column names in both `df` and
+    #§ `standard_weight_dt`. If this argument is supplied, strata defined by
+    #§ these columns are attempted to be combined with their neighbours in the
+    #§ event of a zero in the corresponding `observed_weight_dt$weight` value.
+    #§ For instance, with `collapse_stratum_col_nms = "agegroup"` and the
+    #§ first age group having an observed weight of zero, we combine the first
+    #§ age group with the second for the purpose of calculating the individual
+    #§ weight. See **Details**.
     #'
-    #' - `NULL`: No automatic combination of strata is performed.
-    #' - `character`: Combine neighbouring strata defined by these column names.
-    #'   E.g. `"agegroup"`.
+    #§ - `NULL`: No automatic combination of strata is performed.
+    #§ - `character`: Combine neighbouring strata defined by these column names.
+    #§   E.g. `"agegroup"`.
     if (length(collapse_stratum_col_nms) == 0) {
     # @codedoc_comment_block popEpi::surv_brenner_weight_dt
     # - If the weight table contains rows where the observed weight is zero and
@@ -192,14 +192,14 @@ surv_brenner_weight_dt <- function(
         collapse_stratum_col_nms
       )
       weight_dt[
-        #' @importFrom data.table := .SD
+        #§ @importFrom data.table := .SD
         j = c("weight_standard", "weight_observed") := {
           sub_dt <- data.table::setDT(as.list(.SD)[
             c(collapse_stratum_col_nms,
               "weight_standard", "weight_observed")
           ])
           sub_dt[
-            #' @importFrom data.table := .GRP
+            #§ @importFrom data.table := .GRP
             j = "collapse_stratum_start" := .GRP,
             by = eval(collapse_stratum_col_nms)
           ]
@@ -234,7 +234,7 @@ surv_brenner_weight_dt <- function(
           )
           collapsed_dt[
             i = sub_dt[["__collapsed_stratum_id__"]],
-            #' @importFrom data.table .SD
+            #§ @importFrom data.table .SD
             j = .SD,
             .SDcols = c("weight_standard", "weight_observed")
           ]
@@ -287,77 +287,77 @@ surv_brenner_weight_dt <- function(
   return(weight_dt[])
 }
 
-#' @eval codedoc::pkg_doc_fun(
-#'   "popEpi::surv_individual_weights",
-#'   "surv_functions"
-#' )
-#' @examples
+#§ @eval codedoc::pkg_doc_fun(
+#§   "popEpi::surv_individual_weights",
+#§   "surv_functions"
+#§ )
+#§ @examples
 #'
-#' # popEpi::surv_individual_weights
-#' make_column_icss_ag <- function(age) {
-#'   cut(
-#'     age,
-#'     breaks = c(seq(15, 85, 5), Inf),
-#'     right = FALSE
-#'   )
-#' }
-#' 
-#' make_standard_weight_dt <- function() {
-#'   swdt <- popEpi::ICSS[
-#'     j = list(
-#'       weight = as.double(sum(.SD[["ICSS1"]]))
-#'     ),
-#'     keyby = list(
-#'       icss_ag = make_column_icss_ag(popEpi::ICSS[["age"]])
-#'     )
-#'   ][]
-#'   return(swdt[])
-#' }
-#' 
-#' lexis <- Epi::Lexis(
-#'   entry = list(ts_fut = c(0.0, 0.0)),
-#'   exit = list(ts_fut = c(1.5, 2.5)),
-#'   entry.status = 0L,
-#'   exit.status = 0L
-#' )
-#' lexis[["icss_ag"]] <- make_column_icss_ag(c(50.5, 60.5))
-#' swdt <- make_standard_weight_dt()
-#' 
-#' # this is what happens when at least one weighting stratum is empty
-#' warn_env <- new.env()
-#' warn_env[["w"]] <- NULL
-#' iw_bad <- suppressWarnings(withCallingHandlers(popEpi::surv_individual_weights(
-#'   df = lexis,
-#'   standard_weight_dt = swdt
-#' ), warning = function(w) warn_env[["w"]] <- w))
-#' stopifnot(
-#'   inherits(warn_env[["w"]], "warning"),
-#'   iw_bad >= 0
-#' )
-#' 
-#' # here is an easy way to handle this problem. note that the weights are
-#' # always larger when we need to aggregate strata --- because the standard
-#' # weight increases but the observed weight remains the same. the same
-#' # observations serve "double duty" now for multiple original strata.
-#' iw <- popEpi::surv_individual_weights(
-#'   df = lexis,
-#'   standard_weight_dt = swdt,
-#'   collapse_stratum_col_nms = "icss_ag"
-#' )
-#' stopifnot(
-#'   length(iw) == nrow(lexis),
-#'   iw >= 0.0,
-#'   iw >= iw_bad
-#' )
+#§ # popEpi::surv_individual_weights
+#§ make_column_icss_ag <- function(age) {
+#§   cut(
+#§     age,
+#§     breaks = c(seq(15, 85, 5), Inf),
+#§     right = FALSE
+#§   )
+#§ }
+#§ 
+#§ make_standard_weight_dt <- function() {
+#§   swdt <- popEpi::ICSS[
+#§     j = list(
+#§       weight = as.double(sum(.SD[["ICSS1"]]))
+#§     ),
+#§     keyby = list(
+#§       icss_ag = make_column_icss_ag(popEpi::ICSS[["age"]])
+#§     )
+#§   ][]
+#§   return(swdt[])
+#§ }
+#§ 
+#§ lexis <- Epi::Lexis(
+#§   entry = list(ts_fut = c(0.0, 0.0)),
+#§   exit = list(ts_fut = c(1.5, 2.5)),
+#§   entry.status = 0L,
+#§   exit.status = 0L
+#§ )
+#§ lexis[["icss_ag"]] <- make_column_icss_ag(c(50.5, 60.5))
+#§ swdt <- make_standard_weight_dt()
+#§ 
+#§ # this is what happens when at least one weighting stratum is empty
+#§ warn_env <- new.env()
+#§ warn_env[["w"]] <- NULL
+#§ iw_bad <- suppressWarnings(withCallingHandlers(popEpi::surv_individual_weights(
+#§   df = lexis,
+#§   standard_weight_dt = swdt
+#§ ), warning = function(w) warn_env[["w"]] <- w))
+#§ stopifnot(
+#§   inherits(warn_env[["w"]], "warning"),
+#§   iw_bad >= 0
+#§ )
+#§ 
+#§ # here is an easy way to handle this problem. note that the weights are
+#§ # always larger when we need to aggregate strata --- because the standard
+#§ # weight increases but the observed weight remains the same. the same
+#§ # observations serve "double duty" now for multiple original strata.
+#§ iw <- popEpi::surv_individual_weights(
+#§   df = lexis,
+#§   standard_weight_dt = swdt,
+#§   collapse_stratum_col_nms = "icss_ag"
+#§ )
+#§ stopifnot(
+#§   length(iw) == nrow(lexis),
+#§   iw >= 0.0,
+#§   iw >= iw_bad
+#§ )
 surv_individual_weights <- function(
   df,
   standard_weight_dt,
   observed_weight_dt = NULL,
   collapse_stratum_col_nms = NULL
 ) {
-  #' @param df `[data.frame, data.table]` (no default)
+  #§ @param df `[data.frame, data.table]` (no default)
   #'
-  #' Dataset containing stratum columns also found in `standard_weight_dt`.
+  #§ Dataset containing stratum columns also found in `standard_weight_dt`.
   stopifnot(
     is.data.frame(df),
     is.null(collapse_stratum_col_nms) || (
@@ -420,9 +420,9 @@ surv_individual_weights <- function(
     observed_weight_dt <- dt[
       i = standard_weight_dt,
       on = stratum_col_nms,
-      #' @importFrom data.table .N
+      #§ @importFrom data.table .N
       j = list(weight = .N),
-      #' @importFrom data.table .EACHI
+      #§ @importFrom data.table .EACHI
       keyby = .EACHI
     ]
   }

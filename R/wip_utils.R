@@ -112,7 +112,7 @@ handle_arg_by <- function(
         nondup <- !duplicated(dataset, by = by_elem)
         return(dataset[
           i = (nondup),
-          #' @importFrom data.table .SD
+          #§ @importFrom data.table .SD
           j = .SD,
           .SDcols = by_elem
         ])

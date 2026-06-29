@@ -48,7 +48,7 @@ surv_pohar_perme_weight__ <- function(
       value = work_dt[["expected_hazard"]] * work_dt[["lex.dur"]]
     )
     work_dt[
-      #' @importFrom data.table := .SD
+      #§ @importFrom data.table := .SD
       j = "H*(t_{i,j,k})" := lapply(.SD, cumsum),
       .SDcols = "H*(t_{i,j,k})",
       by = "lex.id"
@@ -120,7 +120,7 @@ surv_pohar_perme_weight__ <- function(
       value = work_dt[["lex.dur"]] * work_dt[["expected_hazard"]]
     )
     work_dt <- work_dt[
-      #' @importFrom data.table .SD
+      #§ @importFrom data.table .SD
       j = lapply(.SD, sum),
       .SDcols = c("h*_{i,j}", "lex.dur"),
       by = c("lex.id", "survival_interval_id")
@@ -141,7 +141,7 @@ surv_pohar_perme_weight__ <- function(
         {
           rep(
             lexis[[ts_fut_col_nm]][!duplicated(lexis, by = "lex.id")],
-            #' @importFrom data.table .N
+            #§ @importFrom data.table .N
             times = work_dt[j = list(n = .N), by = "lex.id"][["n"]]
           )
         },
@@ -173,7 +173,7 @@ surv_pohar_perme_weight__ <- function(
       value = work_dt[["h*_{i,j}"]] * work_dt[["l_{i,j}"]]
     )
     work_dt[
-      #' @importFrom data.table := .SD
+      #§ @importFrom data.table := .SD
       j = "H*(t_{i,j})" := lapply(.SD, cumsum),
       .SDcols = "H*(t_{i,j})",
       by = "lex.id"
@@ -217,7 +217,7 @@ surv_pohar_perme_weight__ <- function(
     work_dt <- work_dt[
       i = join_dt,
       on = c("lex.id", "survival_interval_id"),
-      #' @importFrom data.table .SD
+      #§ @importFrom data.table .SD
       j = .SD,
       .SDcols = "pp_weight"
     ]
@@ -253,188 +253,188 @@ surv_estimate_expression_table__ <- function() {
   return(out[])
 }
 
-#' @eval codedoc::pkg_doc_fun(
-#'   "popEpi::surv_estimate",
-#'   "surv_functions"
-#' )
-#' @examples
+#§ @eval codedoc::pkg_doc_fun(
+#§   "popEpi::surv_estimate",
+#§   "surv_functions"
+#§ )
+#§ @examples
 #'
-#' # popEpi::surv_estimate
-#' dt <- data.table::data.table(
-#'   box_id = 1:60,
-#'   ts_fut_start = seq(0, 5 - 1 / 12, 1 / 12),
-#'   ts_fut_stop = seq(1 / 12, 5, 1 / 12),
-#'   n_events = rpois(n = 60, lambda = 60:1),
-#'   t_at_risk = rpois(n = 60, lambda = 300:240)
-#' )
-#' data.table::set(
-#'   x = dt,
-#'   j = "my_h_ch",
-#'   value = dt[["n_events"]] / dt[["t_at_risk"]]
-#' )
-#' sdt <- popEpi::surv_estimate(
-#'   dt = dt,
-#'   ts_fut_col_nm = "ts_fut",
-#'   value_col_nms = c("n_events", "t_at_risk"),
-#'   estimators = c("h_ch", "S_ch"),
-#'   conf_methods = "log-log"
-#' )
-#' stopifnot(
-#'   c("h_ch_est", "S_ch_est") %in% names(sdt),
-#'   dt[["my_h_ch"]] == sdt[["h_ch_est"]]
-#' )
-#' sdt <- popEpi::surv_estimate(
-#'   dt = dt,
-#'   ts_fut_col_nm = "ts_fut",
-#'   value_col_nms = c("n_events", "t_at_risk"),
-#'   estimators = list(
-#'     "h_ch",
-#'     my_surv = list(
-#'       est = quote(
-#'         exp(-cumsum((ts_fut_stop - ts_fut_start) * h_ch_est))
-#'       ),
-#'       se = quote(rep(0.0, length(ts_fut_start)))
-#'     )
-#'   ),
-#'   conf_methods = c("log", "none")
-#' )
-#' stopifnot(
-#'   c("h_ch_est", "my_surv_est") %in% names(sdt)
-#' )
-#' sdt <- popEpi::surv_estimate(
-#'   dt = dt,
-#'   ts_fut_col_nm = "ts_fut",
-#'   value_col_nms = c("n_events", "t_at_risk"),
-#'   estimators = list(
-#'     "h_ch",
-#'     "S_ch"
-#'   ),
-#'   conf_methods = list(
-#'     "log",
-#'     list(
-#'       g = quote(stats::qnorm(p = theta)),
-#'       g_inv = quote(stats::pnorm(q = g))
-#'     )
-#'   )
-#' )
-#' stopifnot(
-#'   c("h_ch_est", "S_ch_est") %in% names(sdt)
-#' )
+#§ # popEpi::surv_estimate
+#§ dt <- data.table::data.table(
+#§   box_id = 1:60,
+#§   ts_fut_start = seq(0, 5 - 1 / 12, 1 / 12),
+#§   ts_fut_stop = seq(1 / 12, 5, 1 / 12),
+#§   n_events = rpois(n = 60, lambda = 60:1),
+#§   t_at_risk = rpois(n = 60, lambda = 300:240)
+#§ )
+#§ data.table::set(
+#§   x = dt,
+#§   j = "my_h_ch",
+#§   value = dt[["n_events"]] / dt[["t_at_risk"]]
+#§ )
+#§ sdt <- popEpi::surv_estimate(
+#§   dt = dt,
+#§   ts_fut_col_nm = "ts_fut",
+#§   value_col_nms = c("n_events", "t_at_risk"),
+#§   estimators = c("h_ch", "S_ch"),
+#§   conf_methods = "log-log"
+#§ )
+#§ stopifnot(
+#§   c("h_ch_est", "S_ch_est") %in% names(sdt),
+#§   dt[["my_h_ch"]] == sdt[["h_ch_est"]]
+#§ )
+#§ sdt <- popEpi::surv_estimate(
+#§   dt = dt,
+#§   ts_fut_col_nm = "ts_fut",
+#§   value_col_nms = c("n_events", "t_at_risk"),
+#§   estimators = list(
+#§     "h_ch",
+#§     my_surv = list(
+#§       est = quote(
+#§         exp(-cumsum((ts_fut_stop - ts_fut_start) * h_ch_est))
+#§       ),
+#§       se = quote(rep(0.0, length(ts_fut_start)))
+#§     )
+#§   ),
+#§   conf_methods = c("log", "none")
+#§ )
+#§ stopifnot(
+#§   c("h_ch_est", "my_surv_est") %in% names(sdt)
+#§ )
+#§ sdt <- popEpi::surv_estimate(
+#§   dt = dt,
+#§   ts_fut_col_nm = "ts_fut",
+#§   value_col_nms = c("n_events", "t_at_risk"),
+#§   estimators = list(
+#§     "h_ch",
+#§     "S_ch"
+#§   ),
+#§   conf_methods = list(
+#§     "log",
+#§     list(
+#§       g = quote(stats::qnorm(p = theta)),
+#§       g_inv = quote(stats::pnorm(q = g))
+#§     )
+#§   )
+#§ )
+#§ stopifnot(
+#§   c("h_ch_est", "S_ch_est") %in% names(sdt)
+#§ )
 #'
-#' # one approach to brenner weighting --- effectively the same as assigning
-#' # a weight for each individual using strata.
-#' make_column_ag_icss <- function(age) {
-#'   cut(
-#'     age,
-#'     breaks = c(0, 60, 70, 80, Inf),
-#'     right = FALSE,
-#'     labels = c("0-59", "60-69", "70-79", "80+")
-#'   )
-#' }
+#§ # one approach to brenner weighting --- effectively the same as assigning
+#§ # a weight for each individual using strata.
+#§ make_column_ag_icss <- function(age) {
+#§   cut(
+#§     age,
+#§     breaks = c(0, 60, 70, 80, Inf),
+#§     right = FALSE,
+#§     labels = c("0-59", "60-69", "70-79", "80+")
+#§   )
+#§ }
 #'
-#' make_sire <- function() {
-#'   sire <- popEpi::sire
-#'   sire <- sire[
-#'     sire[["dg_date"]] < sire[["ex_date"]] &
-#'       data.table::between(
-#'         sire[["ex_date"]],
-#'         as.Date("1999-01-01"),
-#'         as.Date("2003-12-31"),
-#'         incbounds = TRUE
-#'       ) &
-#'       (get.yrs(sire[["ex_date"]]) - get.yrs(sire[["bi_date"]])) < 100
-#'   ]
-#'   sire[j = "my_stratum" := sample(2L, size = nrow(sire), replace = TRUE)]
-#'   sire <- sire[
-#'     j = .SD[as.integer(seq(1L, .N, length.out = 50L))],
-#'     keyby = "my_stratum"
-#'   ]
-#'   # you can also use popEpi::Lexis_dt
-#'   sire <- Epi::Lexis(
-#'     entry = list(
-#'       ts_cal = popEpi::get.yrs(dg_date),
-#'       ts_age = popEpi::get.yrs(dg_date) - popEpi::get.yrs(bi_date),
-#'       ts_fut = 0.0
-#'     ),
-#'     duration = popEpi::get.yrs(ex_date) - popEpi::get.yrs(dg_date),
-#'     entry.status = 0L,
-#'     exit.status = status,
-#'     data = sire
-#'   )
-#'   sire[["ag_icss"]] <- make_column_ag_icss(sire[["dg_age"]])
-#'   sire
-#' }
+#§ make_sire <- function() {
+#§   sire <- popEpi::sire
+#§   sire <- sire[
+#§     sire[["dg_date"]] < sire[["ex_date"]] &
+#§       data.table::between(
+#§         sire[["ex_date"]],
+#§         as.Date("1999-01-01"),
+#§         as.Date("2003-12-31"),
+#§         incbounds = TRUE
+#§       ) &
+#§       (get.yrs(sire[["ex_date"]]) - get.yrs(sire[["bi_date"]])) < 100
+#§   ]
+#§   sire[j = "my_stratum" := sample(2L, size = nrow(sire), replace = TRUE)]
+#§   sire <- sire[
+#§     j = .SD[as.integer(seq(1L, .N, length.out = 50L))],
+#§     keyby = "my_stratum"
+#§   ]
+#§   # you can also use popEpi::Lexis_dt
+#§   sire <- Epi::Lexis(
+#§     entry = list(
+#§       ts_cal = popEpi::get.yrs(dg_date),
+#§       ts_age = popEpi::get.yrs(dg_date) - popEpi::get.yrs(bi_date),
+#§       ts_fut = 0.0
+#§     ),
+#§     duration = popEpi::get.yrs(ex_date) - popEpi::get.yrs(dg_date),
+#§     entry.status = 0L,
+#§     exit.status = status,
+#§     data = sire
+#§   )
+#§   sire[["ag_icss"]] <- make_column_ag_icss(sire[["dg_age"]])
+#§   sire
+#§ }
 #'
-#' sire <- make_sire()
+#§ sire <- make_sire()
 #'
-#' make_weight_dt <- function() {
-#'   wdt <- popEpi::ICSS[
-#'     j = list(
-#'       standard_weight = as.double(sum(.SD[["ICSS1"]]))
-#'     ),
-#'     keyby = list(
-#'       ag_icss = make_column_ag_icss(popEpi::ICSS[["age"]])
-#'     )
-#'   ]
-#'   wdt[
-#'     j = "standard_weight" := wdt[["standard_weight"]] /
-#'       sum(wdt[["standard_weight"]])
-#'   ]
-#'   owdt <- data.table::setDT(as.list(sire))[
-#'     j = list(observed_weight = .N),
-#'     keyby = "ag_icss"
-#'   ]
-#'   owdt[
-#'     j = "observed_weight" := owdt[["observed_weight"]] /
-#'       sum(owdt[["observed_weight"]])
-#'   ]
-#'   wdt[
-#'     j = "observed_weight" := owdt[["observed_weight"]]
-#'   ]
-#'   wdt[
-#'     j = "brenner_weight" := wdt[["standard_weight"]] / owdt[["observed_weight"]]
-#'   ]
-#'   wdt[i = is.na(wdt[["brenner_weight"]]), j = "brenner_weight" := 0.0]
-#'   return(wdt[])
-#' }
+#§ make_weight_dt <- function() {
+#§   wdt <- popEpi::ICSS[
+#§     j = list(
+#§       standard_weight = as.double(sum(.SD[["ICSS1"]]))
+#§     ),
+#§     keyby = list(
+#§       ag_icss = make_column_ag_icss(popEpi::ICSS[["age"]])
+#§     )
+#§   ]
+#§   wdt[
+#§     j = "standard_weight" := wdt[["standard_weight"]] /
+#§       sum(wdt[["standard_weight"]])
+#§   ]
+#§   owdt <- data.table::setDT(as.list(sire))[
+#§     j = list(observed_weight = .N),
+#§     keyby = "ag_icss"
+#§   ]
+#§   owdt[
+#§     j = "observed_weight" := owdt[["observed_weight"]] /
+#§       sum(owdt[["observed_weight"]])
+#§   ]
+#§   wdt[
+#§     j = "observed_weight" := owdt[["observed_weight"]]
+#§   ]
+#§   wdt[
+#§     j = "brenner_weight" := wdt[["standard_weight"]] / owdt[["observed_weight"]]
+#§   ]
+#§   wdt[i = is.na(wdt[["brenner_weight"]]), j = "brenner_weight" := 0.0]
+#§   return(wdt[])
+#§ }
 #'
-#' wdt <- make_weight_dt()
+#§ wdt <- make_weight_dt()
 #'
-#' sdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
-#'   lexis = sire,
-#'   breaks = list(ts_fut = seq(0, 5, 1 / 12)),
-#'   aggre_exprs = c("t_at_risk", "n_events"),
-#'   aggre_by = "ag_icss"
-#' )
+#§ sdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
+#§   lexis = sire,
+#§   breaks = list(ts_fut = seq(0, 5, 1 / 12)),
+#§   aggre_exprs = c("t_at_risk", "n_events"),
+#§   aggre_by = "ag_icss"
+#§ )
 #'
-#' sdt_bw <- popEpi::surv_estimate(
-#'   dt = sdt,
-#'   ts_fut_col_nm = "ts_fut",
-#'   estimators = "S_ch",
-#'   weight_dt = data.table::data.table(
-#'     ag_icss = wdt[["ag_icss"]],
-#'     brenner_weight = wdt[["brenner_weight"]]
-#'   ),
-#'   value_col_nms = c("n_events", "t_at_risk")
-#' )
-#' stopifnot("S_ch_est" %in% names(sdt_bw), !"ag_icss" %in% names(sdt_bw))
+#§ sdt_bw <- popEpi::surv_estimate(
+#§   dt = sdt,
+#§   ts_fut_col_nm = "ts_fut",
+#§   estimators = "S_ch",
+#§   weight_dt = data.table::data.table(
+#§     ag_icss = wdt[["ag_icss"]],
+#§     brenner_weight = wdt[["brenner_weight"]]
+#§   ),
+#§   value_col_nms = c("n_events", "t_at_risk")
+#§ )
+#§ stopifnot("S_ch_est" %in% names(sdt_bw), !"ag_icss" %in% names(sdt_bw))
 #'
-#' # direct adjusting for comparison
-#' sdt_da <- popEpi::surv_estimate(
-#'   dt = sdt,
-#'   ts_fut_col_nm = "ts_fut",
-#'   estimators = "S_ch",
-#'   weight_dt = data.table::data.table(
-#'     ag_icss = wdt[["ag_icss"]],
-#'     weight = wdt[["standard_weight"]]
-#'   ),
-#'   value_col_nms = c("n_events", "t_at_risk")
-#' )
-#' stopifnot("S_ch_est" %in% names(sdt_da), !"ag_icss" %in% names(sdt_da))
+#§ # direct adjusting for comparison
+#§ sdt_da <- popEpi::surv_estimate(
+#§   dt = sdt,
+#§   ts_fut_col_nm = "ts_fut",
+#§   estimators = "S_ch",
+#§   weight_dt = data.table::data.table(
+#§     ag_icss = wdt[["ag_icss"]],
+#§     weight = wdt[["standard_weight"]]
+#§   ),
+#§   value_col_nms = c("n_events", "t_at_risk")
+#§ )
+#§ stopifnot("S_ch_est" %in% names(sdt_da), !"ag_icss" %in% names(sdt_da))
 #'
-#' stopifnot(
-#'   max(abs(sdt_bw[["S_ch_est"]] - sdt_da[["S_ch_est"]])) < 0.01
-#' )
+#§ stopifnot(
+#§   max(abs(sdt_bw[["S_ch_est"]] - sdt_da[["S_ch_est"]])) < 0.01
+#§ )
 #'
 surv_estimate <- function(
   dt,
@@ -450,22 +450,22 @@ surv_estimate <- function(
   # New function `surv_estimate` for estimating arbitrary survival time
   # functions using aggregated data.
   # @codedoc_comment_block news("popEpi::surv_estimate", "2026-02-03", "0.5.0")
-  #' @param dt `[data.table]` (no default)
+  #§ @param dt `[data.table]` (no default)
   #'
-  #' Dataset containing aggregate statistics
-  #' which can be used to compute survival function estimates. Must also have
-  #' column `box_id`, a running number like the one produced by
-  #' `[lexis_split_merge_aggregate_by_stratum]`.
+  #§ Dataset containing aggregate statistics
+  #§ which can be used to compute survival function estimates. Must also have
+  #§ column `box_id`, a running number like the one produced by
+  #§ `[lexis_split_merge_aggregate_by_stratum]`.
   assert_is_arg_dt(dt, lexis = FALSE)
   stopifnot(
     "box_id" %in% names(dt),
 
-    #' @param ts_fut_col_nm `[character]` (no default)
+    #§ @param ts_fut_col_nm `[character]` (no default)
     #'
-    #' Name of time scale column over which survival estimates will be computed.
-    #' E.g. `"ts_fut"`. `dt` must contain columns named
-    #' `paste0(ts_fut_col_nm, "_", c("start", "stop"))`, e.g.
-    #' `c("ts_fut_start", "ts_fut_stop")`.
+    #§ Name of time scale column over which survival estimates will be computed.
+    #§ E.g. `"ts_fut"`. `dt` must contain columns named
+    #§ `paste0(ts_fut_col_nm, "_", c("start", "stop"))`, e.g.
+    #§ `c("ts_fut_start", "ts_fut_stop")`.
     length(ts_fut_col_nm) == 1,
     paste0(ts_fut_col_nm, "_", c("start", "stop")) %in% names(dt),
 
@@ -488,16 +488,16 @@ surv_estimate <- function(
   call_env <- parent.frame(1L)
 
   stopifnot(
-    #' @param stratum_col_nms `[NULL, character]` (default `NULL`)
+    #§ @param stratum_col_nms `[NULL, character]` (default `NULL`)
     #'
-    #' Stratum column names in `dt`, if any.
+    #§ Stratum column names in `dt`, if any.
     #'
-    #' - `NULL`: If `dt` was the result of calling
-    #'   `[lexis_split_merge_aggregate_by_stratum]`, then `stratum_col_nms` is
-    #'   taken from the attributes of `dt`. If not, this causes no
-    #'   stratification of output.
-    #' - `character`: `dt` is stratified by these columns. `character(0)` is
-    #'   also allowed and causes no stratification of output.
+    #§ - `NULL`: If `dt` was the result of calling
+    #§   `[lexis_split_merge_aggregate_by_stratum]`, then `stratum_col_nms` is
+    #§   taken from the attributes of `dt`. If not, this causes no
+    #§   stratification of output.
+    #§ - `character`: `dt` is stratified by these columns. `character(0)` is
+    #§   also allowed and causes no stratification of output.
     length(stratum_col_nms) == 0 || all(stratum_col_nms %in% names(dt)),
 
     !duplicated(
@@ -510,18 +510,18 @@ surv_estimate <- function(
   )
 
   stopifnot(
-    #' @param value_col_nms `[NULL, character]` (default `NULL`)
+    #§ @param value_col_nms `[NULL, character]` (default `NULL`)
     #'
-    #' Value column names in `dt`, if any.
+    #§ Value column names in `dt`, if any.
     #'
-    #' - `NULL`: If `dt` was the result of calling
-    #'   `[lexis_split_merge_aggregate_by_stratum]`, then `value_col_nms` is
-    #'   taken from the attributes of `dt`. Else we take `double` and `integer`
-    #'   columns whose names match regex `"(^t_)|(^n_)"` as the names of the
-    #'   value columns.
-    #' - `character`: One or more names of columns in `dt` containing values
-    #'   to be included in the output in addition to the estimate etc. columns.
-    #'   E.g. `value_col_nms = c("n_events", "t_at_risk")`.
+    #§ - `NULL`: If `dt` was the result of calling
+    #§   `[lexis_split_merge_aggregate_by_stratum]`, then `value_col_nms` is
+    #§   taken from the attributes of `dt`. Else we take `double` and `integer`
+    #§   columns whose names match regex `"(^t_)|(^n_)"` as the names of the
+    #§   value columns.
+    #§ - `character`: One or more names of columns in `dt` containing values
+    #§   to be included in the output in addition to the estimate etc. columns.
+    #§   E.g. `value_col_nms = c("n_events", "t_at_risk")`.
     is.null(value_col_nms) || all(value_col_nms %in% names(dt))
   )
   # aggre_meta can be empty list()
@@ -692,7 +692,7 @@ surv_estimate <- function(
       # @codedoc_comment_block popEpi::surv_estimate::estimators
       add_col_nm <- sprintf("%s_%s", user_estimator_name, element_name)
       out[
-        #' @importFrom data.table := .SD
+        #§ @importFrom data.table := .SD
         j = (add_col_nm) := eval(
           estimator_dt[["expression_set"]][[i]][[element_name]],
           envir = .SD,
@@ -730,12 +730,12 @@ surv_estimate <- function(
       da_adjust_col_nms <- setdiff(names(weight_dt), "weight")
       da_stratum_col_nms <- setdiff(da_stratum_col_nms, da_adjust_col_nms)
     }
-    #' @param conf_lvls
-    #' Passed one at a time to
-    #' `[directadjusting::directly_adjusted_estimates]`.
-    #' @param conf_methods
-    #' Passed one at a time to
-    #' `[directadjusting::directly_adjusted_estimates]`.
+    #§ @param conf_lvls
+    #§ Passed one at a time to
+    #§ `[directadjusting::directly_adjusted_estimates]`.
+    #§ @param conf_methods
+    #§ Passed one at a time to
+    #§ `[directadjusting::directly_adjusted_estimates]`.
     # @codedoc_comment_block popEpi::surv_estimate
     # - Call
     #   `[directadjusting::directly_adjusted_estimates]`.
@@ -780,16 +780,16 @@ surv_estimate <- function(
     )
     if (length(value_col_nms) > 0) {
       sum_dt <- out[
-        #' @importFrom data.table .SD
+        #§ @importFrom data.table .SD
         j = lapply(.SD, sum),
         .SDcols = value_col_nms,
-        #' @importFrom data.table .EACHI
+        #§ @importFrom data.table .EACHI
         keyby = eval(nonsum_col_nms)
       ]
     } else {
       sum_dt <- out[
         i = !duplicated(out, by = nonsum_col_nms),
-        #' @importFrom data.table .SD
+        #§ @importFrom data.table .SD
         j = .SD,
         .SDcols = eval(nonsum_col_nms)
       ]
@@ -981,7 +981,7 @@ surv_lexis_S_exp_e1_ch_mean <- function(
         # interval,i.e. H(t_i|t_{i-1}), per subject & interval
         data.table::setkeyv(e1dt, c("lex.id", "box_id"))
         e1dt[
-          #' @importFrom data.table := .SD
+          #§ @importFrom data.table := .SD
           j = "e1" := lapply(.SD, cumsum),
           .SDcols = "e1",
           by = "lex.id"
@@ -1031,7 +1031,7 @@ surv_lexis_S_exp_e1_ch_mean <- function(
   # )
   # data.table::setkeyv(e1dt, c("lex.id", "box_id"))
   # e1dt[
-  #   #' @importFrom data.table := .SD
+  #   #§ @importFrom data.table := .SD
   #   j = "e1" := lapply(.SD, cumsum),
   #   .SDcols = "e1",
   #   by = "lex.id"
@@ -1049,7 +1049,7 @@ surv_lexis_S_exp_e1_ch_mean <- function(
   #   value = e1dt[["e1"]] * e1dt[["w"]]
   # )
   # e1dt <- e1dt[
-  #   #' @importFrom data.table .SD
+  #   #§ @importFrom data.table .SD
   #   j = lapply(.SD, sum),
   #   .SDcols = "e1",
   #   keyby = "box_id"
@@ -1058,33 +1058,33 @@ surv_lexis_S_exp_e1_ch_mean <- function(
   # return(e1dt[["e1"]])
 }
 
-#' @eval codedoc::pkg_doc_fun(
-#'   "popEpi::surv_collapse_1d",
-#'   "surv_functions"
-#' )
-#' @examples
+#§ @eval codedoc::pkg_doc_fun(
+#§   "popEpi::surv_collapse_1d",
+#§   "surv_functions"
+#§ )
+#§ @examples
 #'
-#' # popEpi::surv_collapse_1d
-#' sdt <- data.table::data.table(
-#'   box_id = 1:3,
-#'   ts_fut_id = 1:3,
-#'   ts_fut_start = 0:2,
-#'   ts_fut_stop = 1:3,
-#'   t_at_risk = c(1.0, 0.0, 0.5),
-#'   n_events = 0L
-#' )
-#' sdt <- surv_collapse_1d(
-#'   dt = sdt,
-#'   ts_fut_col_nm = "ts_fut",
-#'   value_col_nms = c("t_at_risk", "n_events"),
-#'   test_expr = quote(t_at_risk > 0.0)
-#' )
-#' stopifnot(
-#'   nrow(sdt) == 2,
-#'   sdt[["ts_fut_start"]] == c(0.0, 1.0),
-#'   sdt[["ts_fut_stop"]] == c(1.0, 3.0),
-#'   sdt[["t_at_risk"]] == c(1.0, 0.5)
-#' )
+#§ # popEpi::surv_collapse_1d
+#§ sdt <- data.table::data.table(
+#§   box_id = 1:3,
+#§   ts_fut_id = 1:3,
+#§   ts_fut_start = 0:2,
+#§   ts_fut_stop = 1:3,
+#§   t_at_risk = c(1.0, 0.0, 0.5),
+#§   n_events = 0L
+#§ )
+#§ sdt <- surv_collapse_1d(
+#§   dt = sdt,
+#§   ts_fut_col_nm = "ts_fut",
+#§   value_col_nms = c("t_at_risk", "n_events"),
+#§   test_expr = quote(t_at_risk > 0.0)
+#§ )
+#§ stopifnot(
+#§   nrow(sdt) == 2,
+#§   sdt[["ts_fut_start"]] == c(0.0, 1.0),
+#§   sdt[["ts_fut_stop"]] == c(1.0, 3.0),
+#§   sdt[["t_at_risk"]] == c(1.0, 0.5)
+#§ )
 surv_collapse_1d <- function(
   dt,
   ts_fut_col_nm,
@@ -1231,7 +1231,7 @@ surv_collapse_1d <- function(
     by = ts_id_col_nm
   ]
   dt <- dt[
-    #' @importFrom data.table .SD
+    #§ @importFrom data.table .SD
     j = lapply(.SD, sum, na.rm = TRUE),
     .SDcols = value_col_nms,
     keyby = setdiff(names(dt), value_col_nms)
@@ -1239,71 +1239,71 @@ surv_collapse_1d <- function(
   return(dt[])
 }
 
-#' @eval codedoc::pkg_doc_fun(
-#'   "popEpi::surv_collapse_strata_list",
-#'   "surv_functions"
-#' )
-#' @examples
+#§ @eval codedoc::pkg_doc_fun(
+#§   "popEpi::surv_collapse_strata_list",
+#§   "surv_functions"
+#§ )
+#§ @examples
 #'
-#' # popEpi::surv_collapse_strata_list
-#' sdt <- data.table::CJ(
-#'   ag = 1:3,
-#'   box_id = 1:5
-#' )
-#' sdt[
-#'   i = sdt[["ag"]] == 1,
-#'   j = "t_at_risk" := 0.0
-#' ]
-#' sdt[
-#'   i = sdt[["ag"]] == 2,
-#'   j = "t_at_risk" := c(1, 1, 0, 2, 1)
-#' ]
-#' sdt[
-#'   i = sdt[["ag"]] == 3,
-#'   j = "t_at_risk" := c(1, 1, 1, 0, 1)
-#' ]
-#' sdt_collapse_data <- popEpi::surv_collapse_strata_list(
-#'   dt = sdt,
-#'   stratum_col_nms = "ag",
-#'   collapse_stratum_col_nms = "ag"
-#' )
-#' stopifnot(
-#'   "result" %in% names(sdt_collapse_data),
-#'   inherits(sdt_collapse_data[["result"]][[1]], "list"),
-#'   c("new", "old") %in% names(sdt_collapse_data[["result"]][[1]]),
-#'   sdt_collapse_data[["result"]][[1]][["new"]][["stratum_id"]] == 1L
-#' )
-#' sdt[
-#'   i = sdt[["ag"]] == 1,
-#'   j = "t_at_risk" := 0.5
-#' ]
-#' sdt_collapse_data <- popEpi::surv_collapse_strata_list(
-#'   dt = sdt,
-#'   stratum_col_nms = "ag",
-#'   collapse_stratum_col_nms = "ag"
-#' )
-#' stopifnot(
-#'   "result" %in% names(sdt_collapse_data),
-#'   inherits(sdt_collapse_data[["result"]][[1]], "list"),
-#'   c("new", "old") %in% names(sdt_collapse_data[["result"]][[1]]),
-#'   identical(
-#'     sdt_collapse_data[["result"]][[1]][["new"]][["stratum_id"]],
-#'     c(rep(1L, 5L), rep(2L, 10L))
-#'   )
-#' )
-#' # popEpi::surv_collapse_strata_1d
-#' sdt_collapsed <- popEpi::surv_collapse_strata_1d(
-#'   dt = sdt,
-#'   stratum_col_nms = "ag",
-#'   collapse_stratum_col_nm = "ag"
-#' )
-#' stopifnot(
-#'   nrow(sdt_collapsed) == 10,
-#'   names(sdt) %in% names(sdt_collapsed),
-#'   names(sdt_collapsed) %in% names(sdt),
-#'   is.character(sdt_collapsed[["ag"]]),
-#'   identical(unique(sdt_collapsed[["ag"]]), c("1", "2 & 3"))
-#' )
+#§ # popEpi::surv_collapse_strata_list
+#§ sdt <- data.table::CJ(
+#§   ag = 1:3,
+#§   box_id = 1:5
+#§ )
+#§ sdt[
+#§   i = sdt[["ag"]] == 1,
+#§   j = "t_at_risk" := 0.0
+#§ ]
+#§ sdt[
+#§   i = sdt[["ag"]] == 2,
+#§   j = "t_at_risk" := c(1, 1, 0, 2, 1)
+#§ ]
+#§ sdt[
+#§   i = sdt[["ag"]] == 3,
+#§   j = "t_at_risk" := c(1, 1, 1, 0, 1)
+#§ ]
+#§ sdt_collapse_data <- popEpi::surv_collapse_strata_list(
+#§   dt = sdt,
+#§   stratum_col_nms = "ag",
+#§   collapse_stratum_col_nms = "ag"
+#§ )
+#§ stopifnot(
+#§   "result" %in% names(sdt_collapse_data),
+#§   inherits(sdt_collapse_data[["result"]][[1]], "list"),
+#§   c("new", "old") %in% names(sdt_collapse_data[["result"]][[1]]),
+#§   sdt_collapse_data[["result"]][[1]][["new"]][["stratum_id"]] == 1L
+#§ )
+#§ sdt[
+#§   i = sdt[["ag"]] == 1,
+#§   j = "t_at_risk" := 0.5
+#§ ]
+#§ sdt_collapse_data <- popEpi::surv_collapse_strata_list(
+#§   dt = sdt,
+#§   stratum_col_nms = "ag",
+#§   collapse_stratum_col_nms = "ag"
+#§ )
+#§ stopifnot(
+#§   "result" %in% names(sdt_collapse_data),
+#§   inherits(sdt_collapse_data[["result"]][[1]], "list"),
+#§   c("new", "old") %in% names(sdt_collapse_data[["result"]][[1]]),
+#§   identical(
+#§     sdt_collapse_data[["result"]][[1]][["new"]][["stratum_id"]],
+#§     c(rep(1L, 5L), rep(2L, 10L))
+#§   )
+#§ )
+#§ # popEpi::surv_collapse_strata_1d
+#§ sdt_collapsed <- popEpi::surv_collapse_strata_1d(
+#§   dt = sdt,
+#§   stratum_col_nms = "ag",
+#§   collapse_stratum_col_nm = "ag"
+#§ )
+#§ stopifnot(
+#§   nrow(sdt_collapsed) == 10,
+#§   names(sdt) %in% names(sdt_collapsed),
+#§   names(sdt_collapsed) %in% names(sdt),
+#§   is.character(sdt_collapsed[["ag"]]),
+#§   identical(unique(sdt_collapsed[["ag"]]), c("1", "2 & 3"))
+#§ )
 #'
 surv_collapse_strata_list <- function(
   dt,
@@ -1321,10 +1321,10 @@ surv_collapse_strata_list <- function(
       x = dt,
       by = c(stratum_col_nms, "box_id")
     ),
-    #' @param collapse_stratum_col_nms `[character]` (no default)
+    #§ @param collapse_stratum_col_nms `[character]` (no default)
     #'
-    #' Names of stratum columns in `dt` where collapsing (combining) strata
-    #' is allowed to achieve `test_expr` to pass in every stratum.
+    #§ Names of stratum columns in `dt` where collapsing (combining) strata
+    #§ is allowed to achieve `test_expr` to pass in every stratum.
     is.character(collapse_stratum_col_nms),
     collapse_stratum_col_nms %in% names(dt),
 
@@ -1357,7 +1357,7 @@ surv_collapse_strata_list <- function(
   if (length(noncollapse_stratum_col_nms) > 0) {
     return(dt[
       j = popEpi::surv_collapse_strata_list(
-        #' @importFrom data.table .SD
+        #§ @importFrom data.table .SD
         dt = .SD,
         stratum_col_nms = collapse_stratum_col_nms,
         collapse_stratum_col_nms = collapse_stratum_col_nms,
@@ -1456,10 +1456,10 @@ surv_collapse_strata_list <- function(
   return(out[])
 }
 
-#' @eval codedoc::pkg_doc_fun(
-#'   "popEpi::surv_collapse_strata_1d",
-#'   "surv_functions"
-#' )
+#§ @eval codedoc::pkg_doc_fun(
+#§   "popEpi::surv_collapse_strata_1d",
+#§   "surv_functions"
+#§ )
 surv_collapse_strata_1d <- function(
   dt,
   stratum_col_nms,
@@ -1467,11 +1467,11 @@ surv_collapse_strata_1d <- function(
   value_col_nms = NULL,
   test_expr = quote(min(t_at_risk) > 0)
 ) {
-  #' @param collapse_stratum_col_nm `[character]`
+  #§ @param collapse_stratum_col_nm `[character]`
   #'
-  #' As the `collapse_stratum_col_nms` argument of
-  #' `popEpi::surv_collapse_strata_list` --- and passed to it, as that argument
-  #' --- but must be of length one.
+  #§ As the `collapse_stratum_col_nms` argument of
+  #§ `popEpi::surv_collapse_strata_list` --- and passed to it, as that argument
+  #§ --- but must be of length one.
   stopifnot(
     length(collapse_stratum_col_nm) == 1,
     is.character(collapse_stratum_col_nm),
@@ -1521,7 +1521,7 @@ surv_collapse_strata_1d <- function(
     value = as.character(join_dt[["new"]])
   )
   join_dt[
-    #' @importFrom data.table := .SD
+    #§ @importFrom data.table := .SD
     j = "new" := paste0(.SD[["old"]], collapse = " & "),
     .SDcols = "old",
     by = "new"
@@ -1544,7 +1544,7 @@ surv_collapse_strata_1d <- function(
     ))
   )
   out <- out[
-    #' @importFrom data.table .SD
+    #§ @importFrom data.table .SD
     j = lapply(.SD, sum),
     .SDcols = cl[["value_col_nms"]],
     keyby = eval(setdiff(names(out), cl[["value_col_nms"]]))
