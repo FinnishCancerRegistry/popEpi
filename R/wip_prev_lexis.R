@@ -94,7 +94,7 @@ prev_lexis <- function(
   } else if (inherits(merge_dt, "list")) {
     stopifnot(
       data.table::uniqueN(names(merge_dt)) == length(merge_dt),
-      names(merge_dt) %in% names(formals(popEpi::surv_lexis))
+      names(merge_dt) %in% names(formals(surv_lexis))
     )
   }
   # @codedoc_comment_block popEpi::prev_lexis
@@ -134,7 +134,7 @@ prev_lexis <- function(
           methods::as(1e-6, storage.mode(lexis_dt_obs_tp[["lex.dur"]]))
         }
       )
-      agdt_i <- popEpi::lexis_split_merge_aggregate_by_stratum(
+      agdt_i <- lexis_split_merge_aggregate_by_stratum(
         lexis = lexis_dt_obs_tp,
         subset = subset & could_delay_entry,
         breaks = stratum_breaks,
@@ -242,7 +242,7 @@ prev_lexis <- function(
               !duplicated(names(surv_lexis_arg_list))
             ]
             sdt <- call_with_arg_list__(
-              popEpi::surv_lexis,
+              surv_lexis,
               surv_lexis_arg_list
             )
             ts_fut_col_nm <- utils::tail(
@@ -252,7 +252,7 @@ prev_lexis <- function(
             if (any(sdt[["t_at_risk"]] == 0.0)) {
               warning(
                 "The survival estimates produced internally by ",
-                "`popEpi::prev_lexis` had missing values. This occurs when ",
+                "`prev_lexis` had missing values. This occurs when ",
                 "there are no subjects remaining in follow-up --- an error ",
                 "will be produced if such missing values are attempted to ",
                 "be used in the computation of n_prev_eff. In such a case ",
@@ -365,7 +365,7 @@ prev_lexis <- function(
           # @codedoc_comment_block popEpi::prev_lexis
           merge_arg_list[["lexis"]] <- lexis_dt_extrapolate
           merge_arg_list[["lex_dur_multiplier"]] <- 1L
-          call_with_arg_list__(popEpi::lexis_merge, merge_arg_list)
+          call_with_arg_list__(lexis_merge, merge_arg_list)
           data.table::setnames(
             x = lexis_dt_extrapolate,
             old = "S",
@@ -402,7 +402,7 @@ prev_lexis <- function(
           #     observation time point.
           # @codedoc_comment_block popEpi::prev_lexis
           merge_arg_list[["lex_dur_multiplier"]] <- 0L
-          call_with_arg_list__(popEpi::lexis_merge, merge_arg_list)
+          call_with_arg_list__(lexis_merge, merge_arg_list)
           data.table::setnames(
             x = lexis_dt_extrapolate,
             old = "S",
@@ -434,7 +434,7 @@ prev_lexis <- function(
           # - here we currently have e.g. ts_cal = 2023.99, ts_age = 129.49,
           #   ts_fut = 40.37. now we just have to tabulate by the amount of time
           #   from the diagnosis, i.e. by ts_fut (and by age attained).
-          agdt_add <- popEpi::lexis_split_merge_aggregate_by_stratum(
+          agdt_add <- lexis_split_merge_aggregate_by_stratum(
             lexis = lexis_dt_extrapolate,
             breaks = stratum_breaks,
             aggre_exprs = list(

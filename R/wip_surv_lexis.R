@@ -766,7 +766,7 @@ surv_lexis <- function(
       )
     })
   surv_estimate_args[["dt"]] <- call_with_arg_list__(
-    popEpi::lexis_split_merge_aggregate_by_stratum,
+    lexis_split_merge_aggregate_by_stratum,
     split_merge_aggregate_args
   )
 
@@ -786,7 +786,7 @@ surv_lexis <- function(
   # - Call `surv_estimate`.
   # @codedoc_comment_block popEpi::surv_lexis
   sdt <- call_with_arg_list__(
-    popEpi::surv_estimate,
+    surv_estimate,
     surv_estimate_args
   )
 

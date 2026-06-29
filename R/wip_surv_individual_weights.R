@@ -153,7 +153,7 @@ surv_brenner_weight_dt <- function(
         "arising from this, aggregate neighbouring strata where possible, ",
         "e.g. use larger age groups. You may use the argument ",
         "`collapse_stratum_col_nms` to make ",
-        "`popEpi::surv_brenner_weight_dt` do that for you."
+        "`surv_brenner_weight_dt` do that for you."
       )
     } else {
       # @codedoc_comment_block popEpi::surv_brenner_weight_dt

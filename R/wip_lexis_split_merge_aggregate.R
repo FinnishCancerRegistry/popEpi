@@ -639,7 +639,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   #§ E.g. `list(merge_dt_harmonisers = my_harmonisers)`.
   stopifnot(
     inherits(merge_optional_args, c("NULL", "list")),
-    names(merge_optional_args) %in% names(formals(popEpi::lexis_merge))
+    names(merge_optional_args) %in% names(formals(lexis_merge))
   )
   lexis_merge_arg_list <- as.list(merge_optional_args)
   lexis_merge_arg_list[c("merge_dt", "merge_dt_by")] <- list(
@@ -749,7 +749,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
             split_ts_col_nm
           ]
           stratum_box_breaks[[split_ts_col_nm]] <- call_with_arg_list__(
-            popEpi::lexis_breaks_collapse_1d,
+            lexis_breaks_collapse_1d,
             breaks_collapse_args
           )
         }
