@@ -8,7 +8,8 @@ message(
 readline(": ")
 
 ## rhub ------------------------------------------------------------------------
-# if this does not work, see rhub::rhub_doctor
+# if this does not work, see rhub::rhub_doctor.
+# I found that only the "classic" PAT works.
 rhub::rhub_check(platforms = c("linux", "windows", "macos"))
 message("The above triggered checks on Github's servers. See the actions page ",
         "of the repository to see the results. ",
