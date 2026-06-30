@@ -18,6 +18,11 @@ git_exe_cmd <- function(args, system2.arg.list = NULL) {
   status <- do.call(system2, arg_list, quote = TRUE)
   stdout <- tryCatch(readLines(stdout_file_path), error = function(e) e)
   stderr <- tryCatch(readLines(stderr_file_path), error = function(e) e)
+  if (!identical(status, 0L)) {
+    stop("Got nonzero status ", status, "; stdout: ",
+         paste0(stdout, collapse = " "),
+         "; stderr: ", paste0(stderr, collapse = " "))
+  }
   return(list(status = status, stdout = stdout, stderr = stderr))
 }
 
@@ -27,9 +32,9 @@ git_commit_if_changes_made <- function(
 ) {
   stopifnot(
     is.character(message),
-    !is.na(message),
-    length(message) == 1
+    !is.na(message)
   )
+  message <- paste0(message, collapse = "\n")
   s1 <- git_exe_cmd("status")
   stopifnot(
     any(grepl("nothing to commit, working tree clean", s1[["stdout"]]))
@@ -37,7 +42,8 @@ git_commit_if_changes_made <- function(
   out <- expr # lazy eval triggered
   s2 <- git_exe_cmd("status")
   if (!identical(s1, s2)) {
-    git_exe_cmd(c("commit", paste0(message, collapse = " ")))
+    git_exe_cmd(c("add", "-A"))
+    git_exe_cmd(c("commit", "-m", paste0("\"", message, "\"")))
   }
   return(out)
 }
