@@ -1,4 +1,3 @@
-
 #' @title Split case-level observations
 #' @author Joonas Miettinen
 #' @description Given subject-level data, data is split
@@ -332,52 +331,85 @@
 #' @seealso
 #' `[Epi::Lexis]`, `[popmort]`
 #' @export
-lexpand <- function(data,
-                    birth=NULL, entry=NULL, exit=NULL, event=NULL,
-                    status = status != 0,
-                    entry.status = NULL,
-                    breaks = list(fot=c(0,Inf)),
-                    id = NULL,
-                    overlapping = TRUE,
-                    aggre = NULL,
-                    aggre.type = c("unique", "cartesian"),
-                    drop=TRUE,
-                    pophaz = NULL, pp = TRUE,
-                    subset = NULL,
-                    merge=TRUE, verbose = FALSE,
-                    ...) {
+lexpand <- function(
+  data,
+  birth = NULL,
+  entry = NULL,
+  exit = NULL,
+  event = NULL,
+  status = status != 0,
+  entry.status = NULL,
+  breaks = list(fot = c(0, Inf)),
+  id = NULL,
+  overlapping = TRUE,
+  aggre = NULL,
+  aggre.type = c("unique", "cartesian"),
+  drop = TRUE,
+  pophaz = NULL,
+  pp = TRUE,
+  subset = NULL,
+  merge = TRUE,
+  verbose = FALSE,
+  ...
+) {
   start_time <- proc.time()
 
   TF <- environment()
   PF <- parent.frame(1L)
 
   ## data checks
-  if ( missing(data) || nrow(data) == 0) stop("no data found")
+  if (missing(data) || nrow(data) == 0) {
+    stop("no data found")
+  }
 
-  if (!is.data.frame(data)) stop("data must be a data.frame or data.table")
+  if (!is.data.frame(data)) {
+    stop("data must be a data.frame or data.table")
+  }
 
   ## to instate global variables to appease R CMD CHECK
   .EACHI <- lex.status <- lexpand.id <- lex.exit <- lex.birth <-
     lex.entry <- lex.event <- temp.id <- cd <- fot <- age <- per <-
-    lex.id <- lex.multi <- pop.haz <- lex.Cst <- lex.Xst <- lex.dur <- NULL
-
+      lex.id <- lex.multi <- pop.haz <- lex.Cst <- lex.Xst <- lex.dur <- NULL
 
   ## test conflicting variable names -------------------------------------------
-  added_vars <- c("fot", "per", "age", "lex.id", "lex.dur", "lex.Xst", "lex.Cst")
-  if (!is.null(pophaz)) added_vars <- if (pp) c(added_vars, "pp", "pop.haz") else c(added_vars, "pop.haz")
+  added_vars <- c(
+    "fot",
+    "per",
+    "age",
+    "lex.id",
+    "lex.dur",
+    "lex.Xst",
+    "lex.Cst"
+  )
+  if (!is.null(pophaz)) {
+    added_vars <- if (pp) {
+      c(added_vars, "pp", "pop.haz")
+    } else {
+      c(added_vars, "pop.haz")
+    }
+  }
   conflicted_vars <- intersect(added_vars, names(data))
 
   if (merge && length(conflicted_vars) > 0) {
     conflicted_vars <- paste0("'", conflicted_vars, "'", collapse = ", ")
-    warning("'data' already had variable(s) named ", conflicted_vars, " which lexpand will create, and you have merge = TRUE; this may result in unexpected problems. Rename the variable(s)?")
+    warning(
+      "'data' already had variable(s) named ",
+      conflicted_vars,
+      " which lexpand will create, and you have merge = TRUE; this may result in unexpected problems. Rename the variable(s)?"
+    )
   }
   rm(added_vars, conflicted_vars)
 
   ## test aggre type -----------------------------------------------------------
-  aggre.type <- match.arg(aggre.type[1L], c("cartesian", "non-empty", "unique", "cross-product", "full"))
+  aggre.type <- match.arg(
+    aggre.type[1L],
+    c("cartesian", "non-empty", "unique", "cross-product", "full")
+  )
   if (aggre.type == "cross-product") {
     aggre.type <- "cartesian"
-    warning("aggre.type value 'cross-product' deprecated and renamed to 'cartesian'; please use that in the future")
+    warning(
+      "aggre.type value 'cross-product' deprecated and renamed to 'cartesian'; please use that in the future"
+    )
   }
 
   ## subsetting-----------------------------------------------------------------
@@ -393,17 +425,34 @@ lexpand <- function(data,
   lc <- lc[-1] ## first always "list"
 
   wh <- which(lc != "NULL")
-  lex_vars <- c("lex.birth","lex.entry","lex.exit","lex.event", "lex.status", "lex.entry.status", "lexpand.id")[wh]
-  if (any(!c("lex.birth", "lex.entry", "lex.exit", "lex.status") %in% lex_vars)) stop("birth, entry, exit and status are mandatory")
+  lex_vars <- c(
+    "lex.birth",
+    "lex.entry",
+    "lex.exit",
+    "lex.event",
+    "lex.status",
+    "lex.entry.status",
+    "lexpand.id"
+  )[wh]
+  if (
+    any(!c("lex.birth", "lex.entry", "lex.exit", "lex.status") %in% lex_vars)
+  ) {
+    stop("birth, entry, exit and status are mandatory")
+  }
 
   l <- eval(l, envir = data[subset, ], enclos = PF)
   l[-wh] <- NULL
 
-
   ## vars can be given as character strings of variable names
-  isChar  <- sapply(l, is.character, simplify = TRUE)
+  isChar <- sapply(l, is.character, simplify = TRUE)
   if (any(isChar)) {
-    isShort <- sapply(l, function(x) {length(x) == 1L}, simplify = TRUE)
+    isShort <- sapply(
+      l,
+      function(x) {
+        length(x) == 1L
+      },
+      simplify = TRUE
+    )
     whOneChar <- which(isShort & isChar)
 
     whBadChar <- NULL
@@ -413,39 +462,53 @@ lexpand <- function(data,
     }
 
     if (length(whBadChar) > 0) {
-
       badChar <- l[whBadChar]
       badChar <- paste0(badChar[1:min(length(badChar), 5L)], collapse = ", ")
-      stop("Variables given as a character of length one are interpreted as variable names in data,
+      stop(
+        "Variables given as a character of length one are interpreted as variable names in data,
            but some given characters were not found in data;
            check names or input as factor/Date;
-           first five bad names: ", badChar)
+           first five bad names: ",
+        badChar
+      )
     }
 
-    l[whOneChar] <- lapply(l[whOneChar], function(x) {data[subset, ][[x]]})
+    l[whOneChar] <- lapply(l[whOneChar], function(x) {
+      data[subset, ][[x]]
+    })
   }
-
 
   l <- as.data.table(l)
   setnames(l, names(l), lex_vars)
 
-
   rm(lex_vars)
-  if (!all(c("lex.birth","lex.entry","lex.exit","lex.status") %in% names(l))) {
-    stop("birth, entry, exit and status are mandatory, but at least one was misspecified/NULL")
+  if (
+    !all(c("lex.birth", "lex.entry", "lex.exit", "lex.status") %in% names(l))
+  ) {
+    stop(
+      "birth, entry, exit and status are mandatory, but at least one was misspecified/NULL"
+    )
   }
 
-  if (is.logical(l$lex.status)) l[, lex.status := as.integer(lex.status)]
-  if (is.null(l$lexpand.id)) l[, lexpand.id  := 1:.N]
+  if (is.logical(l$lex.status)) {
+    l[, lex.status := as.integer(lex.status)]
+  }
+  if (is.null(l$lexpand.id)) {
+    l[, lexpand.id := 1:.N]
+  }
 
   ## checks for merging style --------------------------------------------------
   if (!is.null(pophaz)) {
-    all_names_present(pophaz, c("agegroup","year","haz"))
-    othMergeVars <- setdiff(names(pophaz), c("agegroup","year","haz"))
+    all_names_present(pophaz, c("agegroup", "year", "haz"))
+    othMergeVars <- setdiff(names(pophaz), c("agegroup", "year", "haz"))
     badOthMergeVars <- setdiff(othMergeVars, names(data))
     if (length(badOthMergeVars) > 0) {
       badOthMergeVars <- paste0("'", badOthMergeVars, "'", collapse = ", ")
-      stop("Following variables exist in pophaz but do not exist in data: ", badOthMergeVars, ". Make sure data and pophaz contain variables with the same names that you intend to merge by.")
+      stop(
+        "Following variables exist in pophaz but do not exist in data: ",
+        badOthMergeVars,
+        ". Make sure data and pophaz contain variables with the same names that you intend to merge by."
+      )
     }
   }
 
@@ -461,49 +524,68 @@ lexpand <- function(data,
   ## it is possible to choose pp = "actual" as well, though, if you know
   ## about it.
   comp_pp <- FALSE
-  if (is.logical(pp) && pp) pp <- "delta"
+  if (is.logical(pp) && pp) {
+    pp <- "delta"
+  }
 
   if (!is.null(pp) && is.character(pp)) {
     pp <- match.arg(pp, c("delta", "actual"))
     comp_pp <- TRUE
   }
-  if (comp_pp && "pp" %in% names(data)) stop("variable named 'pp' in data; this is a reserved name for pohar-perme weights, please rename / remove the variable in data")
+  if (comp_pp && "pp" %in% names(data)) {
+    stop(
+      "variable named 'pp' in data; this is a reserved name for pohar-perme weights, please rename / remove the variable in data"
+    )
+  }
 
   ## ensure given breaks make any sense ----------------------------------------
 
   bl <- list(...)
   lna <- names(bl)
-  bad_lna <- setdiff(lna, c("fot","per","age"))
+  bad_lna <- setdiff(lna, c("fot", "per", "age"))
   if (length(bad_lna) > 0) {
     bad_lna <- paste0("'", bad_lna, "'", collapse = ", ")
-    stop("only arguments named 'fot', 'per' or 'age' currently allowed to be passed via '...'; did you mistype an argument? bad args: ", bad_lna)
+    stop(
+      "only arguments named 'fot', 'per' or 'age' currently allowed to be passed via '...'; did you mistype an argument? bad args: ",
+      bad_lna
+    )
   }
-  lna <- intersect(names(bl), c("fot","per","age"))
+  lna <- intersect(names(bl), c("fot", "per", "age"))
   if (length(lna) > 0) {
     bl <- bl[lna]
-    if (!is.null(breaks)) breaks[lna] <- NULL
+    if (!is.null(breaks)) {
+      breaks[lna] <- NULL
+    }
     breaks <- c(breaks, bl)
   }
   rm(bl, lna)
 
   brna <- names(breaks)
   if (length(brna) != length(breaks)) {
-    stop("all elements in breaks list must be named, e.g. list(fot = 0:5, age=c(0,45,65,Inf))")
+    stop(
+      "all elements in breaks list must be named, e.g. list(fot = 0:5, age=c(0,45,65,Inf))"
+    )
   }
 
-  brna <- intersect(brna, c("fot","per","age"))
+  brna <- intersect(brna, c("fot", "per", "age"))
   if (length(brna) == 0) {
-    breaks$fot <- c(0,Inf)
+    breaks$fot <- c(0, Inf)
   }
 
   if ("age" %in% brna && is.character(breaks$age)) {
     schemeNames <- c("18of5", "20of5", "101of1")
-    if (!breaks$age %in% schemeNames) stop("You supplied '", breaks$age, "' as breaks for the age scale, but allowed character strings are: ", paste0("'", schemeNames, "'", collapse = ","))
+    if (!breaks$age %in% schemeNames) {
+      stop(
+        "You supplied '",
+        breaks$age,
+        "' as breaks for the age scale, but allowed character strings are: ",
+        paste0("'", schemeNames, "'", collapse = ",")
+      )
+    }
     brSchemes <- list(c(seq(0, 85, 5)), c(seq(0, 95, 5), Inf), c(0:100, Inf))
     names(brSchemes) <- paste0("age_", schemeNames)
-    breaks$age <- brSchemes[paste0("age_",breaks$age)]
+    breaks$age <- brSchemes[paste0("age_", breaks$age)]
   }
-
 
   if (any(sapply(breaks, length) == 1L)) {
     stop("any given non-null vector of breaks must have more than one break!")
@@ -530,11 +612,20 @@ lexpand <- function(data,
   breaks <- lapply(breaks, char2date)
   breaks <- lapply(breaks, date2yrs)
 
-  time_vars <- intersect(names(l), c("lex.birth", "lex.entry", "lex.exit","lex.event"))
-  l[, (time_vars) := lapply(.SD, date2yrs) , .SDcols = time_vars]
+  time_vars <- intersect(
+    names(l),
+    c("lex.birth", "lex.entry", "lex.exit", "lex.event")
+  )
+  l[, (time_vars) := lapply(.SD, date2yrs), .SDcols = time_vars]
 
-  if (verbose) cat("given birth, entry, exit, status etc. variables after coercion to numeric \n")
-  if (verbose) print(l)
+  if (verbose) {
+    cat(
+      "given birth, entry, exit, status etc. variables after coercion to numeric \n"
+    )
+  }
+  if (verbose) {
+    print(l)
+  }
 
   # check data consistency for overlapping = FALSE -----------------------------
   ## not allowed: for any one unique subject to be true for
@@ -543,25 +634,31 @@ lexpand <- function(data,
   ## * same entry values
   if (!overlapping) {
     if ("lex.event" %in% names(l)) {
-      if (all(is.na(l$lex.event))) stop("ALL 'event' values are NA; if this is as intended, please use event = NULL instead")
+      if (all(is.na(l$lex.event))) {
+        stop(
+          "ALL 'event' values are NA; if this is as intended, please use event = NULL instead"
+        )
+      }
 
       if (any(duplicated(l, by = c("lexpand.id", "lex.event")))) {
-        stop("subject(s) defined by lex.id had several rows where 'event' time had the same value, which is not supported with overlapping = FALSE; perhaps separate them by one day?")
+        stop(
+          "subject(s) defined by lex.id had several rows where 'event' time had the same value, which is not supported with overlapping = FALSE; perhaps separate them by one day?"
+        )
       }
       if (any(l[!is.na(lex.event), lex.entry == lex.event])) {
-        stop("some rows have simultaneous 'entry' and 'event', which is not supported with overlapping = FALSE; perhaps separate them by one day?")
+        stop(
+          "some rows have simultaneous 'entry' and 'event', which is not supported with overlapping = FALSE; perhaps separate them by one day?"
+        )
       }
     } else if (any(duplicated(l, by = c("lexpand.id", "lex.exit")))) {
-      stop("subject(s) defined by lex.id had several rows where 'exit' time had the same value, which is not supported without 'event' defined; use 'event' or perhaps separate them by one day?")
+      stop(
+        "subject(s) defined by lex.id had several rows where 'exit' time had the same value, which is not supported without 'event' defined; use 'event' or perhaps separate them by one day?"
+      )
     }
-
-
   }
 
-
   # dropping unuseful records --------------------------------------------------
-  test_times <- function(condition, msg, old_subset=l_subset, DT=l) {
-
+  test_times <- function(condition, msg, old_subset = l_subset, DT = l) {
     condition <- substitute(condition)
     condition <- eval(condition, envir = DT, enclos = parent.frame(1L))
 
@@ -570,11 +667,15 @@ lexpand <- function(data,
     new_n <- sum(new_subset)
 
     if (new_n == 0L) {
-      stop("dropping rows where ", msg, " resulted in zero rows left. likely problem: misdefined time variables")
+      stop(
+        "dropping rows where ",
+        msg,
+        " resulted in zero rows left. likely problem: misdefined time variables"
+      )
     }
 
     if (new_n < old_n) {
-      message(paste0("dropped ", old_n-new_n, " rows where ", msg))
+      message(paste0("dropped ", old_n - new_n, " rows where ", msg))
     }
     return(new_subset)
   }
@@ -586,25 +687,40 @@ lexpand <- function(data,
   l_subset <- test_times(is.na(lex.exit), "exit values are missing")
 
   if (!is.null(breaks$per)) {
-    l_subset <- test_times(lex.exit < min(breaks$per), "subjects left follow-up before earliest per breaks value")
+    l_subset <- test_times(
+      lex.exit < min(breaks$per),
+      "subjects left follow-up before earliest per breaks value"
+    )
   }
   if (!is.null(breaks$age)) {
-    l_subset <- test_times(lex.exit - lex.birth < min(breaks$age), "subjects left follow-up before lowest age breaks value")
+    l_subset <- test_times(
+      lex.exit - lex.birth < min(breaks$age),
+      "subjects left follow-up before lowest age breaks value"
+    )
   }
   if (!is.null(breaks$fot)) {
-    l_subset <- test_times(lex.exit - lex.entry < min(breaks$fot), "subjects left follow-up before lowest fot breaks value")
+    l_subset <- test_times(
+      lex.exit - lex.entry < min(breaks$fot),
+      "subjects left follow-up before lowest fot breaks value"
+    )
   }
   l_subset <- test_times(lex.birth >= lex.exit, "birth >= exit")
   l_subset <- test_times(lex.entry == lex.exit, "entry == exit")
-  l_subset <- test_times(lex.entry >  lex.exit, "entry >  exit")
-  l_subset <- test_times(lex.birth >  lex.entry, "birth > entry")
+  l_subset <- test_times(lex.entry > lex.exit, "entry >  exit")
+  l_subset <- test_times(lex.birth > lex.entry, "birth > entry")
   if (!is.null(l$lex.event)) {
     l_subset <- test_times(lex.event > lex.exit, "event > exit")
     l_subset <- test_times(lex.event < lex.entry, "event < entry")
   }
   l <- l[l_subset]
 
-  if (verbose) cat("Time taken by checks, prepping and test: ", timetaken(start_time), "\n")
+  if (verbose) {
+    cat(
+      "Time taken by checks, prepping and test: ",
+      timetaken(start_time),
+      "\n"
+    )
+  }
 
   # Lexis coercion -------------------------------------------------------------
 
@@ -614,7 +730,7 @@ lexpand <- function(data,
     setnames(l, "lex.entry.status", "lex.Cst")
   } else {
     if (is.factor(l$lex.Xst)) {
-      l[, lex.Cst := factor(levels(lex.Xst)[1L], levels=levels(lex.Xst))]
+      l[, lex.Cst := factor(levels(lex.Xst)[1L], levels = levels(lex.Xst))]
     } else if (is.double(l$lex.Xst)) {
       l[, lex.Cst := 0]
     } else if (is.integer(l$lex.Xst)) {
@@ -622,7 +738,6 @@ lexpand <- function(data,
     } else {
       l[, lex.Cst := sort(unique(lex.Xst))[1L]]
     }
-
   }
 
   # ensure common labels for factors etc.
@@ -632,7 +747,7 @@ lexpand <- function(data,
   l[, lex.dur := lex.exit - lex.entry]
   l[, fot := 0]
   setnames(l, "lex.entry", "per")
-  l[, age := per-lex.birth]
+  l[, age := per - lex.birth]
   setnames(l, "lexpand.id", "lex.id")
 
   ## for merging data with l later
@@ -648,23 +763,37 @@ lexpand <- function(data,
   #     l <- intelliDrop(x = l, breaks = breaks, dropNegDur = TRUE)
   #   }
 
-
-  setcolsnull(l, colorder=TRUE, soft=TRUE,
-              keep = c("lex.id","fot","per","age",
-                       "lex.dur", "lex.Cst", "lex.Xst", "lex.event", "temp.id"))
+  setcolsnull(
+    l,
+    colorder = TRUE,
+    soft = TRUE,
+    keep = c(
+      "lex.id",
+      "fot",
+      "per",
+      "age",
+      "lex.dur",
+      "lex.Cst",
+      "lex.Xst",
+      "lex.event",
+      "temp.id"
+    )
+  )
   setattr(l, "class", c("Lexis", "data.table", "data.frame"))
-  setattr(l, "time.scales", c("fot","per","age"))
-  setattr(l, "time.since", c("","",""))
+  setattr(l, "time.scales", c("fot", "per", "age"))
+  setattr(l, "time.since", c("", "", ""))
 
-  if (verbose) cat("data just after Lexis coercion: \n")
-  if (verbose) print(l)
+  if (verbose) {
+    cat("data just after Lexis coercion: \n")
+  }
+  if (verbose) {
+    print(l)
+  }
 
   # event not at exit time -----------------------------------------------------
 
   if ("lex.event" %in% names(l)) {
-
     if (!overlapping) {
-
       ## using lex.event time, ensure coherence of lex.Cst & lex.Xst
       ## before cutLexis()
       tmpFE <- makeTempVarName(l, pre = "fot_end_")
@@ -675,22 +804,35 @@ lexpand <- function(data,
       l[!is.na(get(tmpLX)), lex.Cst := get(tmpLX)]
       l[, c(tmpFE, tmpLX) := NULL]
       rm(tmpFE, tmpLX)
-
     }
 
-    if (verbose) cutt <- proc.time()
+    if (verbose) {
+      cutt <- proc.time()
+    }
     setDF(l)
     setattr(l, "class", c("Lexis", "data.frame"))
-    l <- Epi::cutLexis(l, cut = l$lex.event, timescale = "per", new.state = l$lex.Xst, precursor.states = unique(l$lex.Cst))
+    l <- Epi::cutLexis(
+      l,
+      cut = l$lex.event,
+      timescale = "per",
+      new.state = l$lex.Xst,
+      precursor.states = unique(l$lex.Cst)
+    )
     setDT(l)
     setattr(l, "class", c("Lexis", "data.table", "data.frame"))
-    if (verbose) cat("Time taken by cutLexis when defining event time points: ", timetaken(cutt), "\n")
+    if (verbose) {
+      cat(
+        "Time taken by cutLexis when defining event time points: ",
+        timetaken(cutt),
+        "\n"
+      )
+    }
 
-    if (verbose) cat("Data just after using cutLexis: \n")
+    if (verbose) {
+      cat("Data just after using cutLexis: \n")
+    }
     if (verbose) print(l[])
-
   }
-
 
   # overlapping timelines? -----------------------------------------------------
 
@@ -712,7 +854,7 @@ lexpand <- function(data,
     tmpLE <- intersect(names(l), "lex.event")
     LEval <- if (length(tmpLE) == 0) NULL else -1
 
-    setorderv(l, c("lex.id", tmpFE, tmpLE, "fot"), c(1,1,LEval,1))
+    setorderv(l, c("lex.id", tmpFE, tmpLE, "fot"), c(1, 1, LEval, 1))
     l <- unique(l, by = c("lex.id", tmpFE))
 
     ## end points are kept but starting points are "rolled"
@@ -726,27 +868,39 @@ lexpand <- function(data,
     # setorderv(l, c("lex.id", tmpLE, tmpFE), c(1, LEval, 1))
     setkeyv(l, c("lex.id", tmpLE, tmpFE))
 
-    if (verbose) cat("data just before fixing overlapping time lines \n")
-    if (verbose) print(l)
+    if (verbose) {
+      cat("data just before fixing overlapping time lines \n")
+    }
+    if (verbose) {
+      print(l)
+    }
     l[, lex.dur := get(tmpFE) - c(min(fot), get(tmpFE)[-.N]), by = lex.id]
     l[, fot := get(tmpFE) - lex.dur]
-    cumDur <- l[,  list(age = min(age), per = min(per), cd = c(0, cumsum(lex.dur)[-.N])), by = lex.id]
-    cumDur[, age := age+cd]
-    cumDur[, per := per+cd]
+    cumDur <- l[,
+      list(age = min(age), per = min(per), cd = c(0, cumsum(lex.dur)[-.N])),
+      by = lex.id
+    ]
+    cumDur[, age := age + cd]
+    cumDur[, per := per + cd]
     l[, age := cumDur$age]
     l[, per := cumDur$per]
-    l[, (tmpFE) := NULL]; rm(cumDur)
-
+    l[, (tmpFE) := NULL]
+    rm(cumDur)
 
     ## if event used, first row up to event, second row from first event to etc...
   }
 
   setcolsnull(l, "lex.event", soft = TRUE) ## note: lex.event needed in overlapping procedures
 
-  if (verbose) cat("time and status variables before splitting: \n")
-  if (verbose) print(l)
-  if ("id" %in% ls()) rm("id")
-
+  if (verbose) {
+    cat("time and status variables before splitting: \n")
+  }
+  if (verbose) {
+    print(l)
+  }
+  if ("id" %in% ls()) {
+    rm("id")
+  }
 
   # splitting ------------------------------------------------------------------
 
@@ -757,15 +911,27 @@ lexpand <- function(data,
     drop_after <- TRUE
   }
 
-  forceLexisDT(l, breaks = list(fot = NULL, per = NULL, age = NULL),
-               allScales = c("fot", "per", "age"))
-  if (verbose) splittime <- proc.time()
-  l <- splitMulti(l,  breaks = breaks,
-                  drop = drop, verbose=FALSE, merge = TRUE)
+  forceLexisDT(
+    l,
+    breaks = list(fot = NULL, per = NULL, age = NULL),
+    allScales = c("fot", "per", "age")
+  )
+  if (verbose) {
+    splittime <- proc.time()
+  }
+  l <- splitMulti(
+    l,
+    breaks = breaks,
+    drop = drop,
+    verbose = FALSE,
+    merge = TRUE
+  )
   setDT(l)
   setkey(l, lex.id, fot)
   l[, lex.multi := 1:.N, by = lex.id]
-  if (verbose) cat("Time taken by splitting:", timetaken(splittime), "\n")
+  if (verbose) {
+    cat("Time taken by splitting:", timetaken(splittime), "\n")
+  }
 
   # merging other variables from data ------------------------------------------
 
@@ -780,7 +946,16 @@ lexpand <- function(data,
     rm(temp, idt)
     setcolsnull(l, "temp.id")
 
-    lex_vars <- c("lex.id","lex.multi","fot","per","age", "lex.dur", "lex.Cst", "lex.Xst")
+    lex_vars <- c(
+      "lex.id",
+      "lex.multi",
+      "fot",
+      "per",
+      "age",
+      "lex.dur",
+      "lex.Cst",
+      "lex.Xst"
+    )
     setcolorder(l, c(lex_vars, setdiff(names(l), lex_vars)))
   }
   rm(data, subset, l_subset)
@@ -789,46 +964,82 @@ lexpand <- function(data,
   ## NOTE: aggre evaled here using small data subset to check that all needed
   ## variables are found, etc.
   aggSub <- substitute(aggre)
-  agTest <- evalPopArg(arg = aggSub, data = l[1:min(10L, .N), ],
-                       enclos = PF, recursive = TRUE, DT = TRUE)
+  agTest <- evalPopArg(
+    arg = aggSub,
+    data = l[1:min(10L, .N), ],
+    enclos = PF,
+    recursive = TRUE,
+    DT = TRUE
+  )
   agTy <- attr(agTest, "arg.type")
-  if (is.null(agTy)) agTy <- "NULL"
+  if (is.null(agTy)) {
+    agTy <- "NULL"
+  }
   aggSub <- attr(agTest, "quoted.arg")
   agVars <- attr(agTest, "all.vars")
   rm(aggre)
 
   # merging pophaz and pp-weighting --------------------------------------------
   if (!is.null(pophaz)) {
-
     pophaztime <- proc.time()
 
-    if (any(c("haz", "pop.haz") %in% names(l))) stop("case data had variable(s) named 'haz' / 'pop.haz', which are reserved for lexpand's internal use. rename/remove them please.")
+    if (any(c("haz", "pop.haz") %in% names(l))) {
+      stop(
+        "case data had variable(s) named 'haz' / 'pop.haz', which are reserved for lexpand's internal use. rename/remove them please."
+      )
+    }
     # merge surv.int information -----------------------------------------------
     NULL_FOT <- FALSE
     if (is.null(breaks$fot)) {
-      breaks$fot <- l[, c(0, max(fot+lex.dur))]
+      breaks$fot <- l[, c(0, max(fot + lex.dur))]
       NULL_FOT <- TRUE
     }
 
     breaks$fot <- sort(unique(breaks$fot))
     # handle pophaz data -------------------------------------------------------
 
-    if (!"haz" %in% names(pophaz)) stop("no 'haz' variable in pophaz; please rename you hazard variable to 'haz'")
+    if (!"haz" %in% names(pophaz)) {
+      stop(
+        "no 'haz' variable in pophaz; please rename you hazard variable to 'haz'"
+      )
+    }
     yBy <- xBy <- setdiff(names(pophaz), c("haz"))
-    if (c("year") %in% yBy) xBy[yBy == "year"] <- "per"
-    if (c("agegroup") %in% yBy) xBy[yBy == "agegroup"] <- "age"
+    if (c("year") %in% yBy) {
+      xBy[yBy == "year"] <- "per"
+    }
+    if (c("agegroup") %in% yBy) {
+      xBy[yBy == "agegroup"] <- "age"
+    }
     yByOth <- setdiff(yBy, c("year", "agegroup"))
 
-    if (any(!yByOth %in% names(l)))
-      stop("Following variable names not common between pophaz and data: ", paste0("'", yByOth[!yByOth %in% names(l)], "'", collapse = ", "))
+    if (any(!yByOth %in% names(l))) {
+      stop(
+        "Following variable names not common between pophaz and data: ",
+        paste0("'", yByOth[!yByOth %in% names(l)], "'", collapse = ", ")
+      )
+    }
 
-    l <- cutLowMerge(x = l, y = pophaz, by.x = xBy, by.y = yBy, all.x = TRUE,
-                     all.y = FALSE, mid.scales = c("per", "age"), old.nums = TRUE)
+    l <- cutLowMerge(
+      x = l,
+      y = pophaz,
+      by.x = xBy,
+      by.y = yBy,
+      all.x = TRUE,
+      all.y = FALSE,
+      mid.scales = c("per", "age"),
+      old.nums = TRUE
+    )
     setnames(l, "haz", "pop.haz")
 
     ## check if l's merging time variables were within pophaz's limits ---------
     nNA <- l[is.na(pop.haz), .N]
-    if (nNA > 0) message("WARNING: after merging pophaz, ", nNA, " rows in split data have NA hazard values!")
+    if (nNA > 0) {
+      message(
+        "WARNING: after merging pophaz, ",
+        nNA,
+        " rows in split data have NA hazard values!"
+      )
+    }
 
     names(yBy) <- xBy
     names(xBy) <- yBy
@@ -839,28 +1050,62 @@ lexpand <- function(data,
       mid <- l[, get(k) + lex.dur]
       nLo <- sum(mid < kLo - .Machine$double.eps^0.5)
       nHi <- sum(mid > kHi - .Machine$double.eps^0.5)
-      if (nLo > 0) message("WARNING: ", nLo, " rows in split data have NA values due to their mid-points residing below the minimum value of '", yVar, "' in pophaz!")
-      if (nHi > 0) message("NOTE: ", nHi, " rows in split data had values of '", k, "' higher than max of pophaz's '", yVar, "'; the hazard values at '", yVar, "' == ", kHi, " were used for these")
+      if (nLo > 0) {
+        message(
+          "WARNING: ",
+          nLo,
+          " rows in split data have NA values due to their mid-points residing below the minimum value of '",
+          yVar,
+          "' in pophaz!"
+        )
+      }
+      if (nHi > 0) {
+        message(
+          "NOTE: ",
+          nHi,
+          " rows in split data had values of '",
+          k,
+          "' higher than max of pophaz's '",
+          yVar,
+          "'; the hazard values at '",
+          yVar,
+          "' == ",
+          kHi,
+          " were used for these"
+        )
+      }
     }
     rm(mid)
     for (k in yByOth) {
       levsNotOth <- setdiff(unique(l[[k]]), unique(pophaz[[k]]))
-      if (length(levsNotOth) > 0) message("WARNING: following levels (first five) of variable '", k, "' not in pophaz but exist in split data: ", paste0("'",levsNotOth[1:5],"'", collapse = ", "))
+      if (length(levsNotOth) > 0) {
+        message(
+          "WARNING: following levels (first five) of variable '",
+          k,
+          "' not in pophaz but exist in split data: ",
+          paste0("'", levsNotOth[1:5], "'", collapse = ", ")
+        )
+      }
     }
-
 
     # pohar-perme weighting ----------------------------------------------------
     if (comp_pp) {
       setkeyv(l, c("lex.id", "fot"))
-      comp_pp_weights(l, surv.scale = "fot", breaks = breaks$fot, haz = "pop.haz",
-                      style = "delta", verbose = verbose)
+      comp_pp_weights(
+        l,
+        surv.scale = "fot",
+        breaks = breaks$fot,
+        haz = "pop.haz",
+        style = "delta",
+        verbose = verbose
+      )
     }
     merge_msg <- "Time taken by merging pophaz"
-    if (comp_pp) merge_msg <- paste0(merge_msg, " and computing pp")
+    if (comp_pp) {
+      merge_msg <- paste0(merge_msg, " and computing pp")
+    }
     merge_msg <- paste0(merge_msg, ": ")
     if (verbose) cat(paste0(merge_msg, timetaken(pophaztime), "\n"))
-
-
   }
 
   # dropping after merging -----------------------------------------------------
@@ -868,74 +1113,110 @@ lexpand <- function(data,
     l <- intelliDrop(x = l, breaks = breaks)
   }
 
-  if (verbose) cat("Number of rows after splitting: ", nrow(l),"\n")
-
+  if (verbose) {
+    cat("Number of rows after splitting: ", nrow(l), "\n")
+  }
 
   # aggregating if appropriate -------------------------------------------------
   if (agTy != "NULL") {
-
-    setcolsnull(l, keep = c("lex.id","lex.dur", "fot", "per", "age", "lex.Cst", "lex.Xst", agVars, "pop.haz", "pp"))
+    setcolsnull(
+      l,
+      keep = c(
+        "lex.id",
+        "lex.dur",
+        "fot",
+        "per",
+        "age",
+        "lex.Cst",
+        "lex.Xst",
+        agVars,
+        "pop.haz",
+        "pp"
+      )
+    )
 
     sumVars <- NULL
     if ("pop.haz" %in% names(l)) {
-      if ("d.exp" %in% names(l)) stop("data had variable named 'd.exp' by which to aggregate, which would be overwritten due to aggregating expected numbers of cases (you have supplied pophaz AND are aggregating); please rename / remove it first.")
-      l[, c("d.exp") := pop.haz*lex.dur ]
+      if ("d.exp" %in% names(l)) {
+        stop(
+          "data had variable named 'd.exp' by which to aggregate, which would be overwritten due to aggregating expected numbers of cases (you have supplied pophaz AND are aggregating); please rename / remove it first."
+        )
+      }
+      l[, c("d.exp") := pop.haz * lex.dur]
       sumVars <- c(sumVars, "d.exp")
     }
     if ("pop.haz" %in% names(l) && comp_pp && "pp" %in% names(l)) {
       forceLexisDT(l, breaks = breaks, allScales = c("fot", "per", "age"))
-      ppFigs <- comp_pp_weighted_figures(lex = l, haz = "pop.haz", pp = "pp", event.ind = NULL)
+      ppFigs <- comp_pp_weighted_figures(
+        lex = l,
+        haz = "pop.haz",
+        pp = "pp",
+        event.ind = NULL
+      )
       bad_pp_vars <- intersect(names(ppFigs), names(l))
       if (length(bad_pp_vars) > 0L) {
-        bad_pp_vars <- paste0("'",bad_pp_vars, "'", collapse = ", ")
-        stop("Data had variable(s) named ", bad_pp_vars, ", by which to aggregate, which would be overwritten due to aggregating expected numbers of cases (you have supplied pophaz AND are aggregating); please rename / remove them first")
+        bad_pp_vars <- paste0("'", bad_pp_vars, "'", collapse = ", ")
+        stop(
+          "Data had variable(s) named ",
+          bad_pp_vars,
+          ", by which to aggregate, which would be overwritten due to aggregating expected numbers of cases (you have supplied pophaz AND are aggregating); please rename / remove them first"
+        )
       }
       l[, names(ppFigs) := ppFigs]
       sumVars <- c(sumVars, names(ppFigs))
       rm(ppFigs)
-
     }
 
-    if (verbose) cat("Starting aggregation of split data... \n")
+    if (verbose) {
+      cat("Starting aggregation of split data... \n")
+    }
     setDT(l)
     forceLexisDT(l, allScales = c("fot", "per", "age"), breaks = breaks)
-    l <- try(aggre(lex = l, by = aggSub, type = aggre.type, verbose = verbose, sum.values = sumVars))
-    if (inherits(l, "try-error")) stop("Something went wrong when calling aggre() within lexpand(). Usual suspect: bad 'by' argument. Error message from aggre():
-                                       ", paste0(l[[1]]))
-    if (verbose) cat("Aggregation done. \n")
+    l <- try(aggre(
+      lex = l,
+      by = aggSub,
+      type = aggre.type,
+      verbose = verbose,
+      sum.values = sumVars
+    ))
+    if (inherits(l, "try-error")) {
+      stop(
+        "Something went wrong when calling aggre() within lexpand(). Usual suspect: bad 'by' argument. Error message from aggre():
+                                       ",
+        paste0(l[[1]])
+      )
+    }
+    if (verbose) {
+      cat("Aggregation done. \n")
+    }
 
     if (!return_DT() && is.data.table(l)) setDFpe(l)
-
   } else {
-
-
     # last touch-up --------------------------------------------------------------
     ## sometimes problems with releasing memory
     gc()
 
-    breaks <- lapply(c("fot","per","age"), function(ts_nm) {
+    breaks <- lapply(c("fot", "per", "age"), function(ts_nm) {
       breaks[[ts_nm]]
     })
-    names(breaks) <- c("fot","per","age")
+    names(breaks) <- c("fot", "per", "age")
 
     ## handle attributes
     setkeyv(l, c("lex.id", "lex.multi"))
     set(l, j = "lex.multi", value = NULL)
-    setattr(l, "time.scales", c("fot","per","age"))
-    setattr(l, "time.since", c("","",""))
+    setattr(l, "time.scales", c("fot", "per", "age"))
+    setattr(l, "time.since", c("", "", ""))
     setattr(l, "breaks", breaks)
-    setattr(l, "class", c("Lexis","data.table","data.frame"))
+    setattr(l, "class", c("Lexis", "data.table", "data.frame"))
     if (!return_DT() && is.data.table(l)) setDFpe(l)
-
-
-
   }
 
-  if (verbose) cat("Time taken by lexpand(): ", timetaken(start_time), "\n")
+  if (verbose) {
+    cat("Time taken by lexpand(): ", timetaken(start_time), "\n")
+  }
 
   return(l[])
 }
 
 
 utils::globalVariables(c('.EACHI', "dg_date", "ex_date", "bi_date"))
-

@@ -1,6 +1,3 @@
-
-
-
 # sire - simulated survival data ------------------------------------------
 
 #' sire - a simulated cohort of Finnish female rectal cancer patients
@@ -58,8 +55,6 @@ NULL
 NULL
 
 
-
-
 # International standard weights ------------------------------------------
 #' Age standardisation weights from the ICSS scheme.
 #'
@@ -110,8 +105,6 @@ NULL
 NULL
 
 
-
-
 # stdpop18 ------------------------------------------------------------------
 
 #' Standard populations from 2000: world, Europe and Nordic.
@@ -152,9 +145,6 @@ NULL
 NULL
 
 
-
-
-
 # meanpop_fi -------------------------------------------------------------------
 #' Mean population counts in Finland year, sex, and age group.
 #'
@@ -172,4 +162,3 @@ NULL
 #' @name meanpop_fi
 #' @family popEpi data
 NULL
-

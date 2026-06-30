@@ -1,4 +1,3 @@
-
 #' @title Set `aggre` attributes to an object by modifying in place
 #' @author Joonas Miettinen
 #' @description Coerces an R object to an `aggre` object, identifying
@@ -44,8 +43,12 @@ setaggre <- function(x, values = NULL, by = NULL, breaks = NULL) {
   ## survtab for aggregated data will need this attribute to work.
   all_names_present(x, c(values, by))
 
-  if (!length(by) && length(values)) by <- setdiff(names(x), values)
-  if (length(by) && !length(values)) values <- setdiff(names(x), by)
+  if (!length(by) && length(values)) {
+    by <- setdiff(names(x), values)
+  }
+  if (length(by) && !length(values)) {
+    values <- setdiff(names(x), by)
+  }
 
   if (!inherits(x, "aggre")) {
     cl <- class(x)
@@ -53,10 +56,9 @@ setaggre <- function(x, values = NULL, by = NULL, breaks = NULL) {
     wh <- min(wh)
 
     ## yes, from zero: in case only one class
-    cl <- c(cl[0:(wh-1)], "aggre", cl[wh:length(cl)])
+    cl <- c(cl[0:(wh - 1)], "aggre", cl[wh:length(cl)])
     setattr(x, "class", cl)
   }
-
 
   setattr(x, "aggre.meta", list(values = values, by = by, breaks = breaks))
   setattr(x, "breaks", breaks)
@@ -100,7 +102,13 @@ as.aggre <- function(x, values = NULL, by = NULL, breaks = NULL, ...) {
 
 #' @describeIn as.aggre Coerces a `data.frame` to an `aggre` object
 #' @export
-as.aggre.data.frame <- function(x, values = NULL, by = NULL, breaks = NULL, ...) {
+as.aggre.data.frame <- function(
+  x,
+  values = NULL,
+  by = NULL,
+  breaks = NULL,
+  ...
+) {
   x <- copy(x)
   setaggre(x, values = values, by = by, breaks = breaks, ...)
   setattr(x, "class", c("aggre", "data.frame"))
@@ -109,7 +117,13 @@ as.aggre.data.frame <- function(x, values = NULL, by = NULL, breaks = NULL, ...)
 
 #' @describeIn as.aggre Coerces a `data.table` to an `aggre` object
 #' @export
-as.aggre.data.table <- function(x, values = NULL, by = NULL, breaks = NULL, ...) {
+as.aggre.data.table <- function(
+  x,
+  values = NULL,
+  by = NULL,
+  breaks = NULL,
+  ...
+) {
   x <- copy(x)
   setaggre(x, values = values, by = by, breaks = breaks, ...)
   setattr(x, "class", c("aggre", "data.table", "data.frame"))
@@ -120,10 +134,11 @@ as.aggre.data.table <- function(x, values = NULL, by = NULL, breaks = NULL, ...)
 #' if no class-specific method found)
 #' @export
 as.aggre.default <- function(x, ...) {
-  stop(gettextf("cannot coerce class \"%s\" to 'aggre'", deparse(class(x))),
-       domain = NA)
+  stop(
+    gettextf("cannot coerce class \"%s\" to 'aggre'", deparse(class(x))),
+    domain = NA
+  )
 }
-
 
 
 #' @title Aggregation of split `Lexis` data
@@ -292,8 +307,14 @@ as.aggre.default <- function(x, ...) {
 #'              sum.values = c("d.exp", "d.exp.pp"))
 #' ## or equivalently e.g. sum.values = list(expCases = d.exp, expCases.p = d.exp.pp).
 #' @export
-aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL, subset = NULL, verbose = FALSE) {
-
+aggre <- function(
+  lex,
+  by = NULL,
+  type = c("unique", "full"),
+  sum.values = NULL,
+  subset = NULL,
+  verbose = FALSE
+) {
   allTime <- proc.time()
 
   lex.Cst <- lex.Xst <- lex.id <- at.risk <- NULL ## APPEASE R CMD CHECK
@@ -302,10 +323,16 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   TF <- environment()
 
   type <- match.arg(type[1], c("non-empty", "unique", "full", "cartesian"))
-  if (type == "cartesian") type <- "full"
-  if (type == "non-empty") type <- "unique"
+  if (type == "cartesian") {
+    type <- "full"
+  }
+  if (type == "non-empty") {
+    type <- "unique"
+  }
 
-  if (verbose) cat("Aggregation type: '", type, "' \n", sep = "")
+  if (verbose) {
+    cat("Aggregation type: '", type, "' \n", sep = "")
+  }
 
   checkLexisData(lex)
 
@@ -313,9 +340,11 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   checkBreaksList(lex, breaks)
 
   allScales <- copy(attr(lex, "time.scales"))
-  if (length(allScales) == 0 ) {
-    stop("could not determine names of time scales; ",
-         "is the data a Lexis object?")
+  if (length(allScales) == 0) {
+    stop(
+      "could not determine names of time scales; ",
+      "is the data a Lexis object?"
+    )
   }
 
   ## subset --------------------------------------------------------------------
@@ -324,8 +353,13 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
 
   ## check sum.values ----------------------------------------------------------
   sumSub <- substitute(sum.values)
-  sum.values <- evalPopArg(lex[1:min(nrow(lex), 20L), ], arg = sumSub,
-                     enclos = PF, recursive = TRUE, DT = TRUE)
+  sum.values <- evalPopArg(
+    lex[1:min(nrow(lex), 20L), ],
+    arg = sumSub,
+    enclos = PF,
+    recursive = TRUE,
+    DT = TRUE
+  )
   sumType <- attr(sum.values, "arg.type")
   sumVars <- attr(sum.values, "all.vars")
   sumSub <- attr(sum.values, "quoted.arg")
@@ -337,23 +371,33 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   badSum <- names(sum.values)[!sapply(sum.values, is.numeric)]
   if (length(badSum) > 0L) {
     badSum <- paste0("'", badSum, "'", collapse = ", ")
-    stop("Following variables resulting from evaluating supplied sum.values ",
-         "argument are not numeric and cannot be summed: ", badSum,
-         ". Evaluated sum.values: ", deparse(sumSub))
+    stop(
+      "Following variables resulting from evaluating supplied sum.values ",
+      "argument are not numeric and cannot be summed: ",
+      badSum,
+      ". Evaluated sum.values: ",
+      deparse(sumSub)
+    )
   }
-
 
   ## by argument type -------------------------------------------------------
   ## NOTE: need to eval by AFTER cutting time scales!
 
   ags <- substitute(by)
-  if (verbose) cat("Used by argument:", paste0(deparse(ags)),"\n")
+  if (verbose) {
+    cat("Used by argument:", paste0(deparse(ags)), "\n")
+  }
 
   ## NOTE: with recursive = TRUE, evalPopArg digs deep enough to find
   ## the actual expression (substituted only once) and returns that and other
   ## things in attributes. Useful if arg substituted multiple times.
-  by <- evalPopArg(data = lex[1:min(nrow(lex), 20),],
-                      arg = ags, DT = TRUE, enclos = PF, recursive = TRUE)
+  by <- evalPopArg(
+    data = lex[1:min(nrow(lex), 20), ],
+    arg = ags,
+    DT = TRUE,
+    enclos = PF,
+    recursive = TRUE
+  )
   ags <- attr(by, "quoted.arg")
   av <- attr(by, "all.vars")
   argType <- attr(by, "arg.type")
@@ -364,18 +408,26 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
     argType <- "NULL"
     type <- "unique"
   }
-  if (verbose) cat("Type of by argument:", argType, "\n")
+  if (verbose) {
+    cat("Type of by argument:", argType, "\n")
+  }
 
   ## take copy of lex ----------------------------------------------------------
   ## if lex is a data.table, this function gets really complicated.
   ## if copy is taken only of necessary vars, it should be fine.
-  keepVars <- unique(c("lex.id", allScales, "lex.dur",
-                       "lex.Cst", "lex.Xst", av, sumVars))
+  keepVars <- unique(c(
+    "lex.id",
+    allScales,
+    "lex.dur",
+    "lex.Cst",
+    "lex.Xst",
+    av,
+    sumVars
+  ))
   lex.orig <- lex
   lex <- subsetDTorDF(lex, subset = subset, select = keepVars)
   lex <- data.table(lex)
   forceLexisDT(lex, breaks = breaks, allScales = allScales, key = FALSE)
-
 
   ## ensure no observations outside breaks limits are left in
   lex <- intelliDrop(lex, breaks = breaks)
@@ -383,13 +435,20 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   setkeyv(lex, c("lex.id", allScales[1]))
   setcolsnull(lex, delete = setdiff(allScales, names(breaks)))
 
-
   ## cut time scales for aggregating if needed ---------------------------------
   aggScales <- intersect(av, allScales)
   if (any(!aggScales %in% names(breaks))) {
-    aggScales <- paste0("'", setdiff(aggScales, names(breaks)), "'", collapse = ", ")
-    stop("Requested aggregating by time scale(s) by which data ",
-         "has not been split: ", aggScales)
+    aggScales <- paste0(
+      "'",
+      setdiff(aggScales, names(breaks)),
+      "'",
+      collapse = ", "
+    )
+    stop(
+      "Requested aggregating by time scale(s) by which data ",
+      "has not been split: ",
+      aggScales
+    )
   }
 
   ## before cutting, find out which rows count towards "at.risk" figure:
@@ -399,18 +458,21 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   set(lex, j = tmpAtRisk, value = TRUE)
   survScale <- NULL
 
-
   if (length(aggScales) > 0) {
     cutTime <- proc.time()
     ## "at.risk" counts subjects at risk in the beginning of the survival
     ## time scale interval.
     survScale <- aggScales[length(aggScales)]
-    lex[, c(tmpAtRisk) := lex[[survScale]] %in% breaks[[survScale]] ]
+    lex[, c(tmpAtRisk) := lex[[survScale]] %in% breaks[[survScale]]]
     catAggScales <- paste0("'", aggScales, "'", collapse = ", ")
     if (verbose) {
-      cat("Following time scales mentioned in by argument and will be",
-          "categorized into intervals (defined by breaks in object",
-          "attributes) for aggregation:", catAggScales, "\n")
+      cat(
+        "Following time scales mentioned in by argument and will be",
+        "categorized into intervals (defined by breaks in object",
+        "attributes) for aggregation:",
+        catAggScales,
+        "\n"
+      )
     }
 
     ## NEW METHOD: use a copy of lex and just modify in place.
@@ -419,36 +481,59 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
       set(lex, j = sc, value = cutLow(lex[[sc]], breaks = breaks[[sc]]))
     }
 
-    if (verbose) cat("Time taken by cut()'ting time scales: ", timetaken(cutTime), "\n")
+    if (verbose) {
+      cat("Time taken by cut()'ting time scales: ", timetaken(cutTime), "\n")
+    }
   }
 
   othVars <- setdiff(av, aggScales)
   if (verbose && length(othVars) > 0) {
     catOthVars <- paste0("'", othVars, "'", collapse = ", ")
-    cat("Detected the following non-time-scale variables to be utilized in aggregating:", catOthVars, "\n")
+    cat(
+      "Detected the following non-time-scale variables to be utilized in aggregating:",
+      catOthVars,
+      "\n"
+    )
   }
 
   ## eval by -------------------------------------------------------------------
   ## NOTE: needed to eval by AFTER cutting time scales!
-  by <- evalPopArg(data = lex, arg = ags, DT = TRUE, enclos = PF, recursive = TRUE)
+  by <- evalPopArg(
+    data = lex,
+    arg = ags,
+    DT = TRUE,
+    enclos = PF,
+    recursive = TRUE
+  )
   byNames <- names(by)
 
   ## computing pyrs ------------------------------------------------------------
   ## final step in determining at.risk:
   ## a lex.id is at.risk only once per by-level
   pyrsTime <- proc.time()
-  vdt <- data.table(pyrs = lex$lex.dur, at.risk = lex[[tmpAtRisk]],
-                    lex.id = lex$lex.id)
-  pyrs <- vdt[, .(pyrs = sum(pyrs),
-                  at.risk = sum(!duplicated(lex.id) & at.risk)),
-              keyby = by]
+  vdt <- data.table(
+    pyrs = lex$lex.dur,
+    at.risk = lex[[tmpAtRisk]],
+    lex.id = lex$lex.id
+  )
+  pyrs <- vdt[,
+    .(pyrs = sum(pyrs), at.risk = sum(!duplicated(lex.id) & at.risk)),
+    keyby = by
+  ]
   setDT(pyrs)
 
   rm(vdt)
   sumNames <- NULL
   if (sumType != "NULL") {
     if (sumType == "character") {
-      sumNames <- evalPopArg(lex, sumSub, n = 1L, DT = FALSE, recursive = TRUE, enclos = PF)
+      sumNames <- evalPopArg(
+        lex,
+        sumSub,
+        n = 1L,
+        DT = FALSE,
+        recursive = TRUE,
+        enclos = PF
+      )
       sum.values <- lex[, lapply(.SD, sum), keyby = by, .SDcols = c(sumNames)]
     } else {
       sum.values <- evalPopArg(lex, sumSub, n = 1L, enclos = PF)
@@ -465,8 +550,9 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
     rm(sum.values)
   }
 
-
-  if (verbose) cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
+  if (verbose) {
+    cat("Time taken by aggregating pyrs: ", timetaken(pyrsTime), "\n")
+  }
 
   valVars <- setdiff(names(pyrs), byNames) ## includes pyrs and anything created by sum
 
@@ -477,10 +563,14 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   lexPyrs <- sum(lex.orig$lex.dur[subset])
   pyrsDiff <- aggPyrs - lexPyrs
   if (!isTRUE(all.equal(aggPyrs, lexPyrs, scale = NULL))) {
-    warning("Found discrepancy of ", abs(round(pyrsDiff, 4)), " ",
-            "in total aggregated pyrs compared to ",
-            "sum(lex$lex.dur); compare results by hand and make sure ",
-            "settings are right \n")
+    warning(
+      "Found discrepancy of ",
+      abs(round(pyrsDiff, 4)),
+      " ",
+      "in total aggregated pyrs compared to ",
+      "sum(lex$lex.dur); compare results by hand and make sure ",
+      "settings are right \n"
+    )
   }
   rm(subset, aggPyrs, lexPyrs)
 
@@ -497,18 +587,30 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
       whScaleUsed <- varsUsingScales
     } else if (argType != "NULL") {
       ## note: ags a substitute()'d list at this point always if not char
-      whScaleUsed <- lapply(ags[-1], function(x) intersect(all.vars(x), aggScales))
+      whScaleUsed <- lapply(ags[-1], function(x) {
+        intersect(all.vars(x), aggScales)
+      })
       ## only one time scale should be used in a variable!
       oneScaleTest <- any(sapply(whScaleUsed, function(x) length(x) > 1L))
-      if (oneScaleTest) stop("Only one Lexis time scale can be used in any one variable in by argument!")
-      varsUsingScales <- byNames[sapply(whScaleUsed, function (x) length(x) == 1L)]
+      if (oneScaleTest) {
+        stop(
+          "Only one Lexis time scale can be used in any one variable in by argument!"
+        )
+      }
+      varsUsingScales <- byNames[sapply(whScaleUsed, function(x) {
+        length(x) == 1L
+      })]
       whScaleUsed <- unlist(whScaleUsed)
     }
 
-    ceejay <- lapply(by, function(x) if (is.factor(x)) levels(x) else sort(unique(x)))
+    ceejay <- lapply(by, function(x) {
+      if (is.factor(x)) levels(x) else sort(unique(x))
+    })
     if (length(aggScales) > 0) {
       ## which variables in ceejay used the Lexis time scales from lex?
-      ceejay[varsUsingScales] <- lapply(breaks[whScaleUsed], function(x) x[-length(x)])
+      ceejay[varsUsingScales] <- lapply(breaks[whScaleUsed], function(x) {
+        x[-length(x)]
+      })
     }
 
     ceejay <- do.call(CJ, ceejay)
@@ -518,24 +620,26 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
     pyrs <- pyrs[ceejay]
     rm(ceejay)
 
-    if (verbose) cat("Time taken by making aggregated data large in the cartesian product sense: ", timetaken(carTime), "\n")
+    if (verbose) {
+      cat(
+        "Time taken by making aggregated data large in the cartesian product sense: ",
+        timetaken(carTime),
+        "\n"
+      )
+    }
   }
-
 
   ## computing events ----------------------------------------------------------
 
   transTime <- proc.time()
 
   if (is.null(by) || (is.data.table(by) && nrow(by) == 0L)) {
-
     by <- quote(list(lex.Cst, lex.Xst))
-
   } else {
     for (var in c("lex.Cst", "lex.Xst")) {
       set(by, j = var, value = lex[[var]])
     }
   }
-
 
   ## NOTE: this will ensure correct detection of censorings:
   ## observations cut short by e.g. period window's edge
@@ -544,17 +648,22 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
   ## used in by). If no time scale mentioned in by, then all endings
   ## of observations are either censorings or events.
   detBr <- breaks[survScale]
-  if (!length(survScale)) detBr <- NULL
+  if (!length(survScale)) {
+    detBr <- NULL
+  }
   hasEvent <- detectEvents(lex, breaks = detBr, by = "lex.id") %in% 1:2
   ## is language if user supplied by = NULL
-  if (!is.language(by)) by <- by[hasEvent]
+  if (!is.language(by)) {
+    by <- by[hasEvent]
+  }
 
   trans <- lex[hasEvent, list(obs = .N), keyby = by]
 
   rm(by, lex)
 
-
-  if (verbose) cat("Time taken by aggregating events: ", timetaken(transTime), "\n")
+  if (verbose) {
+    cat("Time taken by aggregating events: ", timetaken(transTime), "\n")
+  }
 
   ## casting & merging ---------------------------------------------------------
 
@@ -579,32 +688,49 @@ aggre <- function(lex, by = NULL, type = c("unique", "full"), sum.values = NULL,
 
   trans <- cast_simple(trans, rows = byNames, columns = tmpTr, values = "obs")
 
-  setkeyv(trans, NULL); setkeyv(pyrs, NULL) ## dcast.data.table seems to keep key but row order may be funky; this avoids a warning
-  setkeyv(trans, byNames); setkeyv(pyrs, byNames)
-  trans <- trans[pyrs]; rm(pyrs)
+  setkeyv(trans, NULL)
+  setkeyv(pyrs, NULL) ## dcast.data.table seems to keep key but row order may be funky; this avoids a warning
+  setkeyv(trans, byNames)
+  setkeyv(pyrs, byNames)
+  trans <- trans[pyrs]
+  rm(pyrs)
 
   trans[, c(tmpDum) := NULL]
   byNames <- setdiff(byNames, tmpDum)
   setcolorder(trans, c(byNames, valVars))
 
-  if (verbose) cat("Time taken by merging pyrs & transitions: ", timetaken(mergeTime), "\n")
-
-  if (length(valVars) > 0L) {
-    trans[, c(valVars) := lapply(.SD, function(x) {
-      x[is.na(x)] <- 0
-      x
-    }), .SDcols = c(valVars)]
+  if (verbose) {
+    cat(
+      "Time taken by merging pyrs & transitions: ",
+      timetaken(mergeTime),
+      "\n"
+    )
   }
 
+  if (length(valVars) > 0L) {
+    trans[,
+      c(valVars) := lapply(.SD, function(x) {
+        x[is.na(x)] <- 0
+        x
+      }),
+      .SDcols = c(valVars)
+    ]
+  }
 
   ## final touch ---------------------------------------------------------------
   trans <- data.table(trans)
-  setaggre(trans, values = c("pyrs", "at.risk", transitions, sumNames),
-           by = byNames, breaks = breaks)
-  if (!return_DT()) setDFpe(trans)
-  if (verbose) cat("Time taken by aggre(): ", timetaken(allTime), "\n")
-
-
+  setaggre(
+    trans,
+    values = c("pyrs", "at.risk", transitions, sumNames),
+    by = byNames,
+    breaks = breaks
+  )
+  if (!return_DT()) {
+    setDFpe(trans)
+  }
+  if (verbose) {
+    cat("Time taken by aggre(): ", timetaken(allTime), "\n")
+  }
 
   trans[]
 }

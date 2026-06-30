@@ -1,5 +1,3 @@
-
-
 #' @title Fractional Years
 #' @author Joonas Miettinen
 #' @description Using Date objects, calculates given
@@ -89,7 +87,7 @@ as.yrs.Date <- function(x, year.length = "approx", ...) {
   }
   d <- yday(x)
 
-  yrs <- y + (d - 1L)/yl
+  yrs <- y + (d - 1L) / yl
   setattr(yrs, "year.length", year.length)
   setattr(yrs, "class", c("yrs", "numeric"))
   yrs
@@ -97,12 +95,9 @@ as.yrs.Date <- function(x, year.length = "approx", ...) {
 
 #' @export
 as.yrs.default <- function(x, year.length = "approx", ...) {
-
   x <- as.Date(x, ...)
   as.yrs(x, year.length = year.length)
-
 }
-
 
 
 #' @title Coerce Fractional Year Values to Date Values
@@ -134,11 +129,12 @@ as.yrs.default <- function(x, year.length = "approx", ...) {
 #' A vector of `Date` values based on the input fractional years.
 #' @export
 as.Date.yrs <- function(x, ...) {
-
   yl <- attr(x, "year.length")
   if (is.null(yl)) {
-    warning("x did not contain meta information about year length used ",
-            "when forming the yrs object. Assuming 'approx'.")
+    warning(
+      "x did not contain meta information about year length used ",
+      "when forming the yrs object. Assuming 'approx'."
+    )
     yl <- "approx"
   }
 
@@ -148,10 +144,8 @@ as.Date.yrs <- function(x, ...) {
   if (yl == "actual") {
     mu <- ifelse(is_leap_year(y), rep(365L, length(x)), rep(364L, length(x)))
   }
-  x <- x + 1L/mu
-  yd <- as.integer((x-y)*mu)
+  x <- x + 1L / mu
+  yd <- as.integer((x - y) * mu)
   d <- as.Date(paste0(y, "-01-01")) + yd
   d
 }
-
-

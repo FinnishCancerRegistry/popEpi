@@ -193,13 +193,13 @@ surv_pohar_perme_weight__ <- function(
         #     This yields `H*(m_{i,j})`.
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         `H*(m_{i,j})` <- work_dt[["H*(t_{i,j})"]]
-          - work_dt[["h*_{i,j}"]] * work_dt[["l_{i,j}"]] / 2
+        -work_dt[["h*_{i,j}"]] * work_dt[["l_{i,j}"]] / 2
         # `w_{i,j}` = 1 / exp(-`H*(m_{i,j})`) = exp(`H*(m_{i,j})`)
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
         #   + Then the Pohar Perme weight is simply
         #     `w_{i,j} = 1 / e^{-H*(m_{i,j}))} = e^H*(m_{i,j})`.
         # @codedoc_comment_block basicepistats:::surv_pohar_perme_weight__
-        `w_{i,j}` <-  exp(`H*(m_{i,j})`)
+        `w_{i,j}` <- exp(`H*(m_{i,j})`)
         `w_{i,j}`
       }
     )
@@ -228,8 +228,13 @@ surv_pohar_perme_weight__ <- function(
 surv_estimate_expr__ <- function(type) {
   surv_estimate_expr_list__ <- get_internal_dataset("surv_estimate_expr_list__")
   if (!type %in% names(surv_estimate_expr_list__)) {
-    stop("Unidentified estimator name: ", deparse1(type), ". Known ",
-         "estimators: ", deparse1(names(surv_estimate_expr_list__)))
+    stop(
+      "Unidentified estimator name: ",
+      deparse1(type),
+      ". Known ",
+      "estimators: ",
+      deparse1(names(surv_estimate_expr_list__))
+    )
   }
   out <- surv_estimate_expr_list__[type]
   return(out)
@@ -532,12 +537,16 @@ surv_estimate <- function(
     } else {
       value_col_nms <- names(dt)[grepl("(^t_)|(^n_)", names(dt))]
       value_col_nms <- value_col_nms[vapply(
-        as.list(dt)[value_col_nms], inherits, logical(1L),
+        as.list(dt)[value_col_nms],
+        inherits,
+        logical(1L),
         what = c("integer", "numeric")
       )]
       if (length(value_col_nms) == 0) {
-        stop("Could not infer argument `value_col_nms`. Please supply it ",
-             "yourself.")
+        stop(
+          "Could not infer argument `value_col_nms`. Please supply it ",
+          "yourself."
+        )
       }
     }
   }
@@ -652,11 +661,18 @@ surv_estimate <- function(
   lapply(intersect(names(dt), c("t_at_risk", "n_at_risk_eff")), function(nm) {
     is_bad <- dt[[nm]] %in% c(NA, 0L)
     if (any(is_bad)) {
-      warning(simpleWarning(paste0(
-        "There were ", sum(is_bad), " intervals in `dt` where `dt$", nm, "` ",
-        "was zero/NA. No survival probability can be estimated for such ",
-        "intervals."
-      ), call = surv_estimate_call))
+      warning(simpleWarning(
+        paste0(
+          "There were ",
+          sum(is_bad),
+          " intervals in `dt` where `dt$",
+          nm,
+          "` ",
+          "was zero/NA. No survival probability can be estimated for such ",
+          "intervals."
+        ),
+        call = surv_estimate_call
+      ))
     }
   })
 
@@ -705,20 +721,24 @@ surv_estimate <- function(
 
   out <- local({
     estimate_col_nms <- paste0(
-      estimator_dt[["user_estimator_name"]], "_est"
+      estimator_dt[["user_estimator_name"]],
+      "_est"
     )
     standard_error_col_nms <- paste0(
-      estimator_dt[["user_estimator_name"]], "_se"
+      estimator_dt[["user_estimator_name"]],
+      "_se"
     )
     data.table::set(
       out,
       j = standard_error_col_nms,
       value = lapply(standard_error_col_nms, function(secn) {
-        out[[secn]] ^ 2
+        out[[secn]]^2
       })
     )
     variance_col_nms <- sub(
-      "_est$", "_variance", estimate_col_nms
+      "_est$",
+      "_variance",
+      estimate_col_nms
     )
     data.table::setnames(out, standard_error_col_nms, variance_col_nms)
     da_stratum_col_nms <- intersect(
@@ -769,8 +789,10 @@ surv_estimate <- function(
     nonsum_col_nms <- setdiff(
       names(out),
       c(
-        value_col_nms, estimate_col_nms,
-        standard_error_col_nms, variance_col_nms,
+        value_col_nms,
+        estimate_col_nms,
+        standard_error_col_nms,
+        variance_col_nms,
         names(weight_dt)
       )
     )
@@ -1096,7 +1118,9 @@ surv_collapse_1d <- function(
   if (is.null(value_col_nms)) {
     value_col_nms <- names(dt)[grepl("(^t_)|(^n_)", names(dt))]
     value_col_nms <- value_col_nms[vapply(
-      as.list(dt)[value_col_nms], inherits, logical(1L),
+      as.list(dt)[value_col_nms],
+      inherits,
+      logical(1L),
       what = c("integer", "numeric")
     )]
     if (length(value_col_nms) == 0) {
@@ -1155,7 +1179,7 @@ surv_collapse_1d <- function(
   data.table::set(
     x = br_dt,
     j = "in_mandatory_breaks",
-    value =  br_dt[["br"]] %in% mandatory_breaks
+    value = br_dt[["br"]] %in% mandatory_breaks
   )
   collapsed_grp_ids <- rep(NA_integer_, nrow(dt))
   collapsed_grp_ids[1L] <- collapsed_grp_id <- 1L
@@ -1333,7 +1357,9 @@ surv_collapse_strata_list <- function(
   if (is.null(value_col_nms)) {
     value_col_nms <- names(dt)[grepl("(^t_)|(^n_)", names(dt))]
     value_col_nms <- value_col_nms[vapply(
-      as.list(dt)[value_col_nms], inherits, logical(1L),
+      as.list(dt)[value_col_nms],
+      inherits,
+      logical(1L),
       what = c("integer", "numeric")
     )]
     if (length(value_col_nms) == 0) {
@@ -1343,7 +1369,9 @@ surv_collapse_strata_list <- function(
   stopifnot(
     value_col_nms %in% names(dt),
     vapply(
-      as.list(dt)[value_col_nms], inherits, logical(1L),
+      as.list(dt)[value_col_nms],
+      inherits,
+      logical(1L),
       what = c("integer", "numeric")
     )
   )

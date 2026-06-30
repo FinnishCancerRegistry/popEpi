@@ -1,4 +1,3 @@
-
 assert_is_arg_merge <- function(
   merge,
   dt
@@ -28,8 +27,7 @@ assert_is_arg_dt <- function(dt, lexis = FALSE) {
   stopifnot(
     data.table::is.data.table(dt)
   )
-  if (lexis) {
-  }
+  if (lexis) {}
 }
 
 assert_is_arg_lexis <- function(lexis, dt) {
@@ -45,14 +43,20 @@ assert_is_arg_lexis <- function(lexis, dt) {
     "lex.dur" %in% names(lexis)
   )
   for (attr_nm in lexis_attr_nms__()) {
-    eval(substitute(stopifnot(
-      attr_nm %in% names(attributes(lexis))
-    ), list(attr_nm = attr_nm)))
+    eval(substitute(
+      stopifnot(
+        attr_nm %in% names(attributes(lexis))
+      ),
+      list(attr_nm = attr_nm)
+    ))
   }
   for (ts_col_nm in Epi::timeScales(lexis)) {
-    eval(substitute(stopifnot(
-      storage.mode(lexis[[ts_col_nm]]) == storage.mode(lexis[["lex.dur"]])
-    ), list(ts_col_nm = ts_col_nm)))
+    eval(substitute(
+      stopifnot(
+        storage.mode(lexis[[ts_col_nm]]) == storage.mode(lexis[["lex.dur"]])
+      ),
+      list(ts_col_nm = ts_col_nm)
+    ))
   }
   if (nrow(lexis) == 0) {
     return(invisible(NULL))
@@ -137,9 +141,12 @@ assert_is_arg_weight_dt <- function(
   # - Has column `"weight"`. All values must be >= 0. No missing values are
   #   allowed.
   # @codedoc_comment_block popEpi:::assert_is_arg_weight_dt
-  eval(substitute(stopifnot(
-    inherits(weight_dt, allowed)
-  ), list(allowed = allowed)))
+  eval(substitute(
+    stopifnot(
+      inherits(weight_dt, allowed)
+    ),
+    list(allowed = allowed)
+  ))
   if (data.table::is.data.table(weight_dt)) {
     stopifnot(
       ncol(weight_dt) >= 2,
@@ -194,10 +201,13 @@ assert_is_arg_breaks <- function(breaks, lexis) {
     names(breaks) %in% Epi::timeScales(lexis)
   )
   for (ts_col_nm in names(breaks)) {
-    eval(substitute(stopifnot(
-      storage.mode(breaks[[ts_col_nm]]) %in%
-        c("integer", storage.mode(lexis[[ts_col_nm]]))
-    ), list(ts_col_nm = ts_col_nm)))
+    eval(substitute(
+      stopifnot(
+        storage.mode(breaks[[ts_col_nm]]) %in%
+          c("integer", storage.mode(lexis[[ts_col_nm]]))
+      ),
+      list(ts_col_nm = ts_col_nm)
+    ))
   }
 }
 
@@ -207,26 +217,35 @@ assert_is_arg_aggre_exprs <- function(aggre_exprs) {
   )
   lexis_aggre_expr_list__ <- get_internal_dataset("lexis_aggre_expr_list__")
   for (i in seq_along(aggre_exprs)) {
-    eval(substitute(stopifnot(
-      is.character(aggre_exprs[[i]]) || is.language(aggre_exprs[[i]])
-    ), list(i = i)))
+    eval(substitute(
+      stopifnot(
+        is.character(aggre_exprs[[i]]) || is.language(aggre_exprs[[i]])
+      ),
+      list(i = i)
+    ))
     if (is.character(aggre_exprs[[i]])) {
       if (
         !aggre_exprs[[i]] %in% names(lexis_aggre_expr_list__) &&
           !grepl("\\[.+, *.+\\]", aggre_exprs[[i]])
       ) {
         stop(
-          "`aggre_exprs[[", i, "]] = ", deparse1(aggre_exprs[[i]]),
+          "`aggre_exprs[[",
+          i,
+          "]] = ",
+          deparse1(aggre_exprs[[i]]),
           "` was not identified as the ",
           "name of an aggregation expression. Known names: ",
           deparse1(names(lexis_aggre_expr_list__))
         )
       }
     } else {
-      eval(substitute(stopifnot(
-        !is.null(names(aggre_exprs)),
-        names(aggre_exprs)[i] != ""
-      ), list(i = i)))
+      eval(substitute(
+        stopifnot(
+          !is.null(names(aggre_exprs)),
+          names(aggre_exprs)[i] != ""
+        ),
+        list(i = i)
+      ))
     }
   }
 }
@@ -297,7 +316,8 @@ handle_arg_aggre_exprs <- function(
       lexis_aggre_expr_list__ <- get_internal_dataset("lexis_aggre_expr_list__")
       if (!general_var_nm %in% names(lexis_aggre_expr_list__)) {
         stop(
-          deparse1(user_var_nm), " not recognised as the name of one of the ",
+          deparse1(user_var_nm),
+          " not recognised as the name of one of the ",
           "pre-defined aggregation expressions."
         )
       }
@@ -357,11 +377,14 @@ assert_is_arg_box_dt <- function(
   )
   if (!is.null(ts_col_nms)) {
     for (ts_col_nm in ts_col_nms) {
-      eval(substitute(stopifnot(
-        paste0(ts_col_nm, "_id") %in% names(box_dt),
-        paste0(ts_col_nm, "_start") %in% names(box_dt),
-        paste0(ts_col_nm, "_stop") %in% names(box_dt)
-      ), list(ts_col_nm = ts_col_nm)))
+      eval(substitute(
+        stopifnot(
+          paste0(ts_col_nm, "_id") %in% names(box_dt),
+          paste0(ts_col_nm, "_start") %in% names(box_dt),
+          paste0(ts_col_nm, "_stop") %in% names(box_dt)
+        ),
+        list(ts_col_nm = ts_col_nm)
+      ))
     }
   }
 }
@@ -392,23 +415,30 @@ handle_arg_estimators <- function(estimators, dt) {
   if (inherits(estimators, "list")) {
     for (i in seq_along(estimators)) {
       if (!is.character(estimators[[i]])) {
-        eval(substitute(stopifnot(
-          c("est", "se") %in% names(estimators[[i]]),
-          is.language(estimators[[i]][["est"]]),
-          is.language(estimators[[i]][["se"]])
-        ), list(i = i)))
+        eval(substitute(
+          stopifnot(
+            c("est", "se") %in% names(estimators[[i]]),
+            is.language(estimators[[i]][["est"]]),
+            is.language(estimators[[i]][["se"]])
+          ),
+          list(i = i)
+        ))
       }
     }
   }
   estimator_dt <- data.table::setDF(data.table::setDT(list(
     estimator = as.list(estimators),
-    user_estimator_name = vapply(seq_along(estimators), function(i) {
-      if (is.character(estimators[[i]])) {
-        estimators[[i]]
-      } else {
-        names(estimators)[i]
-      }
-    }, character(1L))
+    user_estimator_name = vapply(
+      seq_along(estimators),
+      function(i) {
+        if (is.character(estimators[[i]])) {
+          estimators[[i]]
+        } else {
+          names(estimators)[i]
+        }
+      },
+      character(1L)
+    )
   )))
   estimator_dt[["transition_string"]] <- regex_extract_first__(
     "\\[.+, *.+\\]",
@@ -439,19 +469,22 @@ handle_arg_estimators <- function(estimators, dt) {
       )
     )
   )
-  estimator_dt[["expression_set"]] <- unlist(lapply(
-    seq_len(nrow(estimator_dt)),
-    function(i) {
-      if (is.character(estimator_dt[["estimator"]][[i]])) {
-        out <- surv_estimate_expr__(
-          estimator_dt[["general_estimator_name"]][[i]]
-        )
-      } else {
-        out <- estimator_dt[["estimator"]][i]
+  estimator_dt[["expression_set"]] <- unlist(
+    lapply(
+      seq_len(nrow(estimator_dt)),
+      function(i) {
+        if (is.character(estimator_dt[["estimator"]][[i]])) {
+          out <- surv_estimate_expr__(
+            estimator_dt[["general_estimator_name"]][[i]]
+          )
+        } else {
+          out <- estimator_dt[["estimator"]][i]
+        }
+        out
       }
-      out
-    }
-  ), recursive = FALSE)
+    ),
+    recursive = FALSE
+  )
   estimator_dt[["expression_set"]] <- data.table::fifelse(
     is.na(estimator_dt[["state_from"]]),
     estimator_dt[["expression_set"]],
@@ -480,9 +513,13 @@ assert_is_arg_split_lexis_column_exprs <- function(split_lexis_column_exprs) {
   if (inherits(split_lexis_column_exprs, "list")) {
     for (i in seq_along(split_lexis_column_exprs)) {
       if (!is.language(split_lexis_column_exprs[[i]])) {
-        stop("`split_lexis_column_exprs[[", i, "]]` was not an R expression ",
-             "but instead had class(es) ",
-             deparse1(class(split_lexis_column_exprs[[i]])))
+        stop(
+          "`split_lexis_column_exprs[[",
+          i,
+          "]]` was not an R expression ",
+          "but instead had class(es) ",
+          deparse1(class(split_lexis_column_exprs[[i]]))
+        )
       }
     }
   }

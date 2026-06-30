@@ -159,32 +159,30 @@
 #' @import data.table
 #' @import stats
 
-
-
-
-sir <- function( coh.data,
-                 coh.obs,
-                 coh.pyrs,
-                 ref.data = NULL,
-                 ref.obs = NULL,
-                 ref.pyrs = NULL, ref.rate = NULL,
-                 subset = NULL,
-                 print = NULL,
-                 adjust = NULL,
-                 mstate = NULL,
-                 test.type = 'homogeneity',
-                 conf.type = 'profile',
-                 conf.level = 0.95,
-                 EAR = FALSE){
-
+sir <- function(
+  coh.data,
+  coh.obs,
+  coh.pyrs,
+  ref.data = NULL,
+  ref.obs = NULL,
+  ref.pyrs = NULL,
+  ref.rate = NULL,
+  subset = NULL,
+  print = NULL,
+  adjust = NULL,
+  mstate = NULL,
+  test.type = 'homogeneity',
+  conf.type = 'profile',
+  conf.level = 0.95,
+  EAR = FALSE
+) {
   coh.data <- data.table(coh.data)
 
   ## subsetting---------------------------------------------------------------
   ## no copy taken of data!
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = coh.data, substiset = subset)
-  coh.data <- coh.data[subset,]
-
+  coh.data <- coh.data[subset, ]
 
   # print list --------------------------------------------------------------
 
@@ -192,11 +190,11 @@ sir <- function( coh.data,
   # coh.data <- data_list(data = coh.data, arg.list = substitute(print), env = env1)
 
   mstate <- as.character(substitute(mstate))
-  if(length(mstate) == 0) {
+  if (length(mstate) == 0) {
     mstate <- NULL
   }
-  if(!is.null(mstate)) {
-    coh.data[,(mstate) := 0L]
+  if (!is.null(mstate)) {
+    coh.data[, (mstate) := 0L]
   }
 
   # evalPopArg
@@ -218,43 +216,53 @@ sir <- function( coh.data,
 
   # collect data
   coh.data <- cbind(c.obs, c.pyr)
-  if(!is.null(print))  coh.data <- cbind(coh.data, c.pri)
-  if(!is.null(adjust)) coh.data <- cbind(coh.data, c.adj)
+  if (!is.null(print)) {
+    coh.data <- cbind(coh.data, c.pri)
+  }
+  if (!is.null(adjust)) {
+    coh.data <- cbind(coh.data, c.adj)
+  }
 
-  if( !is.null(ref.data) ){
+  if (!is.null(ref.data)) {
     ref.obs <- as.character(substitute(ref.obs))
     ref.pyrs <- as.character(substitute(ref.pyrs))
     ref.rate <- as.character(substitute(ref.rate))
 
-    if (length(ref.obs) == 0) ref.obs <- NULL
-    if (length(ref.pyrs) == 0) ref.pyrs <- NULL
+    if (length(ref.obs) == 0) {
+      ref.obs <- NULL
+    }
+    if (length(ref.pyrs) == 0) {
+      ref.pyrs <- NULL
+    }
     if (length(ref.rate) == 0) ref.rate <- NULL
   }
 
-
   # print(coh.data)
 
-  st <- sir_table( coh.data = coh.data,
-                   coh.obs = coh.obs,
-                   coh.pyrs = coh.pyrs,
-                   ref.data = ref.data,
-                   ref.obs = ref.obs,
-                   ref.pyrs = ref.pyrs,
-                   ref.rate = ref.rate,
-                   print = print,
-                   adjust = adjust,
-                   mstate = mstate)
+  st <- sir_table(
+    coh.data = coh.data,
+    coh.obs = coh.obs,
+    coh.pyrs = coh.pyrs,
+    ref.data = ref.data,
+    ref.obs = ref.obs,
+    ref.pyrs = ref.pyrs,
+    ref.rate = ref.rate,
+    print = print,
+    adjust = adjust,
+    mstate = mstate
+  )
 
-  results <- sir_est( table = st,
-                      print = print,
-                      adjust = adjust,
-                      conf.type = conf.type,
-                      test.type = test.type,
-                      conf.level = conf.level,
-                      EAR = EAR)
+  results <- sir_est(
+    table = st,
+    print = print,
+    adjust = adjust,
+    conf.type = conf.type,
+    test.type = test.type,
+    conf.level = conf.level,
+    EAR = EAR
+  )
 
   ## final touch ---------------------------------------------------------------
-
 
   #setDT(data)
   if (!return_DT()) {
@@ -266,14 +274,20 @@ sir <- function( coh.data,
   }
 
   data <- copy(results[[2]])
-  setattr(data, name = 'sir.meta', value = list(adjust = adjust,
-                                                print = print,
-                                                call = match.call(),
-                                                lrt.test= results$'lrt.test',
-                                                conf.type = results$'conf.type',
-                                                conf.level = conf.level,
-                                                lrt.test.type = results$'test.type',
-                                                pooled.sir = results[[1]]))
+  setattr(
+    data,
+    name = 'sir.meta',
+    value = list(
+      adjust = adjust,
+      print = print,
+      call = match.call(),
+      lrt.test = results$'lrt.test',
+      conf.type = results$'conf.type',
+      conf.level = conf.level,
+      lrt.test.type = results$'test.type',
+      pooled.sir = results[[1]]
+    )
+  )
   setattr(data, "class", c("sir", "data.table", "data.frame"))
   return(data)
 }
@@ -392,41 +406,46 @@ sir <- function( coh.data,
 #' ## for examples see: vignette('sir')
 #' }
 
-sirspline <- function( coh.data,
-                       coh.obs,
-                       coh.pyrs,
-                       ref.data = NULL,
-                       ref.obs = NULL,
-                       ref.pyrs = NULL,
-                       ref.rate = NULL,
-                       subset = NULL,
-                       print = NULL,
-                       adjust = NULL,
-                       mstate = NULL,
-                       spline,
-                       knots = NULL,
-                       reference.points = NULL,
-                       dependent.splines = TRUE){
-
+sirspline <- function(
+  coh.data,
+  coh.obs,
+  coh.pyrs,
+  ref.data = NULL,
+  ref.obs = NULL,
+  ref.pyrs = NULL,
+  ref.rate = NULL,
+  subset = NULL,
+  print = NULL,
+  adjust = NULL,
+  mstate = NULL,
+  spline,
+  knots = NULL,
+  reference.points = NULL,
+  dependent.splines = TRUE
+) {
   coh.data <- data.table(coh.data)
 
   ## subsetting-----------------------------------------------------------------
   ## no copy taken of data!
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = coh.data, substiset = subset)
-  coh.data <- coh.data[subset,]
+  coh.data <- coh.data[subset, ]
 
   # print list --------------------------------------------------------------
 
   env1 <- environment()
-  coh.data <- data_list(data = coh.data, arg.list = substitute(print), env = env1)
+  coh.data <- data_list(
+    data = coh.data,
+    arg.list = substitute(print),
+    env = env1
+  )
 
   mstate <- as.character(substitute(mstate))
-  if(length(mstate) == 0) {
+  if (length(mstate) == 0) {
     mstate <- NULL
   }
-  if(!is.null(mstate)) {
-    coh.data[,(mstate) := 0L]
+  if (!is.null(mstate)) {
+    coh.data[, (mstate) := 0L]
   }
 
   # evalPopArg
@@ -453,72 +472,83 @@ sirspline <- function( coh.data,
 
   # collect data
   coh.data <- cbind(c.obs, c.pyr, c.spl)
-  if(!is.null(print))  {
-    coh.data <- cbind(coh.data, c.pri[, print[!print %in% spline], with=FALSE])
+  if (!is.null(print)) {
+    coh.data <- cbind(
+      coh.data,
+      c.pri[, print[!print %in% spline], with = FALSE]
+    )
   }
-  if(!is.null(adjust)) {
-    coh.data <- cbind(coh.data, c.adj[, adjust[!adjust %in% spline], with=FALSE])
+  if (!is.null(adjust)) {
+    coh.data <- cbind(
+      coh.data,
+      c.adj[, adjust[!adjust %in% spline], with = FALSE]
+    )
   }
 
-  if( !is.null(ref.data) ){
+  if (!is.null(ref.data)) {
     ref.obs <- as.character(substitute(ref.obs))
     ref.pyrs <- as.character(substitute(ref.pyrs))
     ref.rate <- as.character(substitute(ref.rate))
 
-    if (length(ref.obs) == 0) ref.obs <- NULL
-    if (length(ref.pyrs) == 0) ref.pyrs <- NULL
+    if (length(ref.obs) == 0) {
+      ref.obs <- NULL
+    }
+    if (length(ref.pyrs) == 0) {
+      ref.pyrs <- NULL
+    }
     if (length(ref.rate) == 0) ref.rate <- NULL
   }
 
-  st <- sir_table( coh.data = coh.data,
-                   coh.obs = coh.obs,
-                   coh.pyrs = coh.pyrs,
-                   ref.data = ref.data,
-                   ref.obs = ref.obs,
-                   ref.pyrs = ref.pyrs, ref.rate = ref.rate,
-                   print = print,
-                   adjust = adjust,
-                   mstate = mstate,
-                   spline = spline)
+  st <- sir_table(
+    coh.data = coh.data,
+    coh.obs = coh.obs,
+    coh.pyrs = coh.pyrs,
+    ref.data = ref.data,
+    ref.obs = ref.obs,
+    ref.pyrs = ref.pyrs,
+    ref.rate = ref.rate,
+    print = print,
+    adjust = adjust,
+    mstate = mstate,
+    spline = spline
+  )
 
-  results <- sir_spline( table = st,
-                         print = print,
-                         adjust = adjust,
-                         spline = spline,
-                         knots = knots,
-                         reference.points = reference.points,
-                         dependent.splines = dependent.splines)
+  results <- sir_spline(
+    table = st,
+    print = print,
+    adjust = adjust,
+    spline = spline,
+    knots = knots,
+    reference.points = reference.points,
+    dependent.splines = dependent.splines
+  )
 
   setclass(results, c('sirspline', 'pe', class(results)))
   return(results)
 }
 
 
-
-
-
-
 # Input: two data.table:s
 # output: one data.table including rates
 #' @import stats
 #' @import data.table
-sir_table <- function( coh.data,
-                       coh.obs,
-                       coh.pyrs,
-                       ref.data = NULL,
-                       ref.obs = NULL,
-                       ref.pyrs = NULL,
-                       ref.rate = NULL,
-                       print = NULL,
-                       adjust = NULL,
-                       spline = NULL,
-                       mstate = NULL) {
-
-
+sir_table <- function(
+  coh.data,
+  coh.obs,
+  coh.pyrs,
+  ref.data = NULL,
+  ref.obs = NULL,
+  ref.pyrs = NULL,
+  ref.rate = NULL,
+  print = NULL,
+  adjust = NULL,
+  spline = NULL,
+  mstate = NULL
+) {
   # initial checks -------------------------------------------------
 
-  if(is.null(ref.data)) {
-    if(is.null(print)){
+  if (is.null(ref.data)) {
+    if (is.null(print)) {
       stop('Both ref.data and print cannot be NULL.')
     }
     ref.data <- data.table(coh.data)
@@ -529,56 +559,72 @@ sir_table <- function( coh.data,
   coh.data <- data.table(coh.data)
   ref.data <- data.table(ref.data)
 
-  vl <- unique( c(coh.pyrs, coh.obs, adjust, print) )
-  if( !is.null(mstate) )  {
-    vl <- vl[which( vl != mstate )]
+  vl <- unique(c(coh.pyrs, coh.obs, adjust, print))
+  if (!is.null(mstate)) {
+    vl <- vl[which(vl != mstate)]
   }
-  all_names_present(coh.data, vl )
+  all_names_present(coh.data, vl)
 
-  if ( !is.null(ref.pyrs) & !is.null(ref.obs) ) {
+  if (!is.null(ref.pyrs) & !is.null(ref.obs)) {
     all_names_present(ref.data, c(ref.pyrs, ref.obs, adjust))
   }
 
   # Melt lexpand data -------------------------------------------------------
 
-  if( length(coh.obs) > 1 ) {
-    if( is.null(mstate) ){
+  if (length(coh.obs) > 1) {
+    if (is.null(mstate)) {
       stop('coh.obs length is > 1. Set variable name for mstate.')
     }
-    if( !mstate %in% names(ref.data) ){
+    if (!mstate %in% names(ref.data)) {
       warning('mstate variable name does not match names in ref.data.')
     }
 
     aggre <- unique(c(adjust, print, spline, coh.pyrs))
     aggre <- aggre[which(aggre != mstate)]
 
-    coh.data <- melt( data = coh.data, id.vars = aggre, measure.vars = coh.obs,
-                      value.name = 'coh.observations',
-                      variable.name = mstate, variable.factor = FALSE)
+    coh.data <- melt(
+      data = coh.data,
+      id.vars = aggre,
+      measure.vars = coh.obs,
+      value.name = 'coh.observations',
+      variable.name = mstate,
+      variable.factor = FALSE
+    )
     coh.obs <- 'coh.observations'
 
     # parse Y name form string 'formXtoY'
     q <- quote(
-      robust_values(substr(get(mstate),
-                           start = regexpr( pattern = 'to', text = get(mstate) ) + 2,
-                           stop  = nchar(x = get(mstate) )))
-      )
-    coh.data[,(mstate) := eval(q) ]
+      robust_values(substr(
+        get(mstate),
+        start = regexpr(pattern = 'to', text = get(mstate)) + 2,
+        stop = nchar(x = get(mstate))
+      ))
+    )
+    coh.data[, (mstate) := eval(q)]
 
-    if( !(mstate %in% adjust)) {
-      warning('Consider including mstate variable also in adjust. See help(sir) for details.')
+    if (!(mstate %in% adjust)) {
+      warning(
+        'Consider including mstate variable also in adjust. See help(sir) for details.'
+      )
     }
   }
 
   # prepare data steps, reduce dimensions -----------------------------------
 
-  setnames(coh.data, c(coh.obs, coh.pyrs), c('coh.observations','coh.personyears'))
+  setnames(
+    coh.data,
+    c(coh.obs, coh.pyrs),
+    c('coh.observations', 'coh.personyears')
+  )
 
-
-  coh.data <- expr.by.cj(data = coh.data,
-                         by.vars = unique( sort(c(adjust, print, spline)) ),
-                         expr = list(coh.observations = sum(coh.observations),
-                                     coh.personyears  = sum(coh.personyears)))
+  coh.data <- expr.by.cj(
+    data = coh.data,
+    by.vars = unique(sort(c(adjust, print, spline))),
+    expr = list(
+      coh.observations = sum(coh.observations),
+      coh.personyears = sum(coh.personyears)
+    )
+  )
   #coh.data <- na2zero(coh.data)
   #coh.data <- na.omit(coh.data)
 
@@ -587,122 +633,167 @@ sir_table <- function( coh.data,
   coh.data <- na.omit(coh.data)
 
   # rates
-  if( !is.null(ref.rate) ){
+  if (!is.null(ref.rate)) {
     setnames(ref.data, ref.rate, 'ref.rate')
-    ref.data <- expr.by.cj(data = ref.data, by.vars = c(adjust),
-                           expr = list(ref.rate = mean(ref.rate)))
+    ref.data <- expr.by.cj(
+      data = ref.data,
+      by.vars = c(adjust),
+      expr = list(ref.rate = mean(ref.rate))
+    )
   } else {
-    setnames(ref.data, c(ref.obs, ref.pyrs), c('ref.obs','ref.pyrs'))
-    ref.data <- expr.by.cj(data = ref.data, by.vars = c(adjust),
-                           expr = list(ref.obs = sum(ref.obs),
-                                       ref.pyrs= sum(ref.pyrs)))
-    ref.data[, ref.rate := ref.obs / ref.pyrs ]
+    setnames(ref.data, c(ref.obs, ref.pyrs), c('ref.obs', 'ref.pyrs'))
+    ref.data <- expr.by.cj(
+      data = ref.data,
+      by.vars = c(adjust),
+      expr = list(ref.obs = sum(ref.obs), ref.pyrs = sum(ref.pyrs))
+    )
+    ref.data[, ref.rate := ref.obs / ref.pyrs]
   }
 
   # Merge
-  sir.table <- merge(coh.data, ref.data, by=c(adjust), all.x=TRUE)
+  sir.table <- merge(coh.data, ref.data, by = c(adjust), all.x = TRUE)
   sir.table[, expected := ref.rate * coh.personyears]
   sir.table <- na2zero(sir.table)
 
-  if ( !is.null(print) | !is.null(spline)){
-    sir.table <- sir.table[ ,list(observed = sum(coh.observations),
-                                  expected = sum(expected),
-                                  pyrs = sum(coh.personyears)),
-                           by = c(unique(c(print, spline)))]
+  if (!is.null(print) | !is.null(spline)) {
+    sir.table <- sir.table[,
+      list(
+        observed = sum(coh.observations),
+        expected = sum(expected),
+        pyrs = sum(coh.personyears)
+      ),
+      by = c(unique(c(print, spline)))
+    ]
     setkeyv(sir.table, c(print, spline))
-  }
-  else {
-    sir.table <- sir.table[ ,list(observed = sum(coh.observations),
-                                  expected = sum(expected),
-                                  pyrs = sum(coh.personyears))]
+  } else {
+    sir.table <- sir.table[, list(
+      observed = sum(coh.observations),
+      expected = sum(expected),
+      pyrs = sum(coh.personyears)
+    )]
   }
   return(sir.table)
 }
 
 
-
-
 # Input: sir.table
 # Output: list of data.tables and values
-sir_est <- function( table,
-                     print = NULL,
-                     adjust = NULL,
-                     EAR = FALSE,
-                     test.type = 'homogeneity',
-                     conf.level = 0.95,
-                     conf.type = 'profile') {
+sir_est <- function(
+  table,
+  print = NULL,
+  adjust = NULL,
+  EAR = FALSE,
+  test.type = 'homogeneity',
+  conf.level = 0.95,
+  conf.type = 'profile'
+) {
   pyrs <- NULL ## APPEASE R CMD CHECK
   setDT(table)
 
-  if(!is.numeric(conf.level) | conf.level > 1) {
+  if (!is.numeric(conf.level) | conf.level > 1) {
     stop('Confidence level must be a numeric value between 0-1')
   }
   # function to SIR p-value
   chi.p <- function(o, e) {
-    pchisq( ( (abs(o - e) - 0.5)^2)/e, df=1, lower.tail=FALSE)
+    pchisq(((abs(o - e) - 0.5)^2) / e, df = 1, lower.tail = FALSE)
   }
 
   # total sir
-  combined <- data.table(table)[,list(observed = sum(observed),
-                             expected = sum(expected),
-                             pyrs = sum(pyrs))]
-  combined[ ,':='(sir = observed/expected,
-                  sir.lo = poisson.ci(observed, expected, conf.level=conf.level)[,4],
-                  sir.hi = poisson.ci(observed, expected, conf.level=conf.level)[,5],
-                  p_value  = chi.p(observed, expected))]
+  combined <- data.table(table)[, list(
+    observed = sum(observed),
+    expected = sum(expected),
+    pyrs = sum(pyrs)
+  )]
+  combined[, ':='(
+    sir = observed / expected,
+    sir.lo = poisson.ci(observed, expected, conf.level = conf.level)[, 4],
+    sir.hi = poisson.ci(observed, expected, conf.level = conf.level)[, 5],
+    p_value = chi.p(observed, expected)
+  )]
 
   # Poisson regression ------------------------------------------------------
 
   # write model formula
   fa <- a <- NULL
   sir.formula <- paste('observed ~ 1')
-  if(!is.null(print)){
+  if (!is.null(print)) {
     fa <- rev(print) #  fa <- print
 
     # drop variables with only one value
     u <- c(t(table[, lapply(.SD, uniqueN), .SDcols = fa]))
-    if (length(u[u==1]) > 0){
-      message('Variable "', paste(fa[which(u==1)], collapse = '","'),'" (has only one level) removed from model.')
-      fa <- fa[-which(u==1)]
+    if (length(u[u == 1]) > 0) {
+      message(
+        'Variable "',
+        paste(fa[which(u == 1)], collapse = '","'),
+        '" (has only one level) removed from model.'
+      )
+      fa <- fa[-which(u == 1)]
     }
-    if(length(fa)>0){
+    if (length(fa) > 0) {
       # model formula
-      a <- paste0('as.factor(',paste( fa, collapse = '):as.factor('),')')
+      a <- paste0('as.factor(', paste(fa, collapse = '):as.factor('), ')')
       sir.formula <- paste('observed ~ 0 +', a)
     }
   }
   # fit model if possible -----------------------------------------------------
 
-  fit <- tryCatch(do.call("glm", list(formula = terms(as.formula(sir.formula), keep.order = FALSE),
-                                      offset = log(table[,expected]),
-                                      data = table, family = poisson(log))),
-                  error=function(f) NULL )
+  fit <- tryCatch(
+    do.call(
+      "glm",
+      list(
+        formula = terms(as.formula(sir.formula), keep.order = FALSE),
+        offset = log(table[, expected]),
+        data = table,
+        family = poisson(log)
+      )
+    ),
+    error = function(f) NULL
+  )
 
-  if(!is.null(fit)) eg <- expand.grid(fit$xlevels) # for further testing
-
+  if (!is.null(fit)) {
+    eg <- expand.grid(fit$xlevels)
+  } # for further testing
 
   # LRT test (homogeneity or trend) --------------------------------------------
 
-  test.type <- match.arg(test.type, c('homogeneity','trend'))
+  test.type <- match.arg(test.type, c('homogeneity', 'trend'))
 
   lrt_sig <- NULL
-  if( sir.formula != 'observed ~ 1' & !is.null(fit) ) {
-    if (test.type == 'homogeneity') covariates <- a
-    if (test.type == 'trend') covariates <- paste(print, collapse=' + ')
+  if (sir.formula != 'observed ~ 1' & !is.null(fit)) {
+    if (test.type == 'homogeneity') {
+      covariates <- a
+    }
+    if (test.type == 'trend') {
+      covariates <- paste(print, collapse = ' + ')
+    }
 
     fit_full <- tryCatch(
-      do.call("glm", list(formula = terms(as.formula( paste0('observed ~ 1 + ', a) )),
-                          offset = log(table[,expected]),
-                          data = table, family=poisson(log))),
-      error=function(f) NULL )
+      do.call(
+        "glm",
+        list(
+          formula = terms(as.formula(paste0('observed ~ 1 + ', a))),
+          offset = log(table[, expected]),
+          data = table,
+          family = poisson(log)
+        )
+      ),
+      error = function(f) NULL
+    )
 
     fit_null <- tryCatch(
-      do.call("glm", list(formula = terms(as.formula('observed ~ 1') ),
-                          offset = log(table[,expected]),
-                          data = table, family=poisson(log))),
-      error=function(f) NULL )
+      do.call(
+        "glm",
+        list(
+          formula = terms(as.formula('observed ~ 1')),
+          offset = log(table[, expected]),
+          data = table,
+          family = poisson(log)
+        )
+      ),
+      error = function(f) NULL
+    )
 
-    if (!is.null(fit_full)){
+    if (!is.null(fit_full)) {
       lrt <- anova(fit_full, fit_null, test = 'Chisq')
       lrt_sig <- lrt[['Pr(>Chi)']][2]
     }
@@ -710,38 +801,43 @@ sir_est <- function( table,
 
   # confidence intervals ----------------------------------------------------
 
-  conf.type <- match.arg(conf.type, c('wald','profile','univariate'))
+  conf.type <- match.arg(conf.type, c('wald', 'profile', 'univariate'))
   ci.info <- NULL
   ci <- NULL
 
-  if (is.null(fit) & conf.type %in% c('wald','profile')) {
+  if (is.null(fit) & conf.type %in% c('wald', 'profile')) {
     conf.type <- 'univariate'
     ci.info <- 'Model fitting failed. Univariate confidence intervals selected.'
-    if(any(table$expected == 0)) {
+    if (any(table$expected == 0)) {
       ci.info <- paste(ci.info, '(zero values in expected)')
     }
   }
 
   if (conf.type == 'profile') {
-
     confint_glm <- function(object, parm, level = 0.95, trace = FALSE, ...) {
       pnames <- names(coef(object))
       if (missing(parm)) {
         parm <- seq_along(pnames)
-      }
-      else if (is.character(parm)) {
+      } else if (is.character(parm)) {
         parm <- match(parm, pnames, nomatch = 0L)
       }
-      object <- profile(object, which = parm, alpha = (1 - level)/4,  trace = trace)
+      object <- profile(
+        object,
+        which = parm,
+        alpha = (1 - level) / 4,
+        trace = trace
+      )
       confint(object, parm = parm, level = level, trace = trace, ...)
     }
 
-    ci <- suppressMessages( suppressWarnings(
-      tryCatch(exp(confint_glm(fit, level=conf.level)), error=function(e) NULL )
+    ci <- suppressMessages(suppressWarnings(
+      tryCatch(exp(confint_glm(fit, level = conf.level)), error = function(e) {
+        NULL
+      })
     ))
-    if(!is.null(ci)) {
+    if (!is.null(ci)) {
       ci <- as.data.table(ci)
-      if (is.null(print) | length(fa)==0) ci <- data.table(t(ci)) # transpose if only one row
+      if (is.null(print) | length(fa) == 0) ci <- data.table(t(ci)) # transpose if only one row
     } else {
       conf.type <- 'wald'
       ci.info <- 'Could not solve profile-likelihood. Wald confidence intervals selected.'
@@ -749,34 +845,40 @@ sir_est <- function( table,
   }
 
   if (conf.type == 'wald') {
-    ci <- data.table( exp(confint.default(fit)) )
+    ci <- data.table(exp(confint.default(fit)))
   }
 
-  if(conf.type == 'univariate') {
-    ci <- data.table(poisson.ci(table$observed, table$expected, conf.level = conf.level))[,.(lower, upper)]
+  if (conf.type == 'univariate') {
+    ci <- data.table(poisson.ci(
+      table$observed,
+      table$expected,
+      conf.level = conf.level
+    ))[, .(lower, upper)]
     pv <- chi.p(table$observed, table$expected)
   } else {
     pv <- as.vector(summary(fit)$coef[, "Pr(>|z|)"])
   }
-  if(!is.null(ci.info)) message(ci.info)
+  if (!is.null(ci.info)) {
+    message(ci.info)
+  }
 
   # collect results -----------------------------------------------------
 
-  setnames(ci, 1:2, c('sir.lo','sir.hi'))
+  setnames(ci, 1:2, c('sir.lo', 'sir.hi'))
 
-  table[, ':=' ( sir = observed/expected,
-              sir.lo = ci[, sir.lo],
-              sir.hi = ci[, sir.hi],
-              p_value = round(pv,5))]
-
+  table[, ':='(
+    sir = observed / expected,
+    sir.lo = ci[, sir.lo],
+    sir.hi = ci[, sir.hi],
+    p_value = round(pv, 5)
+  )]
 
   # Round results -----------------------------------------------------------
 
-  cols1 <- c('sir','sir.lo','sir.hi','expected','pyrs')
+  cols1 <- c('sir', 'sir.lo', 'sir.hi', 'expected', 'pyrs')
 
-  table[,(cols1) := lapply(.SD, round, digits=4), .SDcols=cols1]
-  combined[,(cols1) := lapply(.SD, round, digits=4), .SDcols=cols1]
-
+  table[, (cols1) := lapply(.SD, round, digits = 4), .SDcols = cols1]
+  combined[, (cols1) := lapply(.SD, round, digits = 4), .SDcols = cols1]
 
   # tests -----------------------------------
 
@@ -787,33 +889,36 @@ sir_est <- function( table,
     warning('CIs might be incorrect')
   }
 
-  if(!is.null(fit) & length(fa)>0) {
+  if (!is.null(fit) & length(fa) > 0) {
     # pseudo test if the modelled confidence intervals are merged correctly:
-    t1 <- copy(table)[,lapply(.SD, factor),.SDcols = fa]
-    if(any(t1 != data.table(eg))) {
-      message('CIs levels might not match. Contact the package maintainer and use univariate CIs.')
+    t1 <- copy(table)[, lapply(.SD, factor), .SDcols = fa]
+    if (any(t1 != data.table(eg))) {
+      message(
+        'CIs levels might not match. Contact the package maintainer and use univariate CIs.'
+      )
     }
   }
 
   # EAR -----------------------------------------------------------------
   if (EAR) {
-    table[,EAR := round((observed - expected)/pyrs * 1000, 3)]
+    table[, EAR := round((observed - expected) / pyrs * 1000, 3)]
   }
 
-
-  results <- list(total = combined,
-                  table = table,
-                  adjusted = adjust,
-                  lrt.test = lrt_sig,
-                  test.type = test.type,
-                  conf.type = conf.type,
-                  ci.info = ci.info)
+  results <- list(
+    total = combined,
+    table = table,
+    adjusted = adjust,
+    lrt.test = lrt_sig,
+    test.type = test.type,
+    conf.type = conf.type,
+    ci.info = ci.info
+  )
   return(results)
 }
 
 
 #' @export
-getCall.sir <- function (x, ...) {
+getCall.sir <- function(x, ...) {
   attributes(x)$sir.meta$call
 }
 
@@ -823,84 +928,108 @@ getCall.sir <- function (x, ...) {
 #' @import splines
 #' @import data.table
 #' @import stats
-sir_spline <- function(  table,
-                         print = NULL,
-                         adjust = NULL,
-                         spline,
-                         knots = NULL,
-                         reference.points = NULL,
-                         dependent.splines = TRUE){
+sir_spline <- function(
+  table,
+  print = NULL,
+  adjust = NULL,
+  spline,
+  knots = NULL,
+  reference.points = NULL,
+  dependent.splines = TRUE
+) {
   knts <-
     spline.seq.A <-
-    spline.seq.B <-
-    spline.seq.C <-
-    spline.est.A <-
-    spline.est.B <-
-    spline.est.C <- NULL
+      spline.seq.B <-
+        spline.seq.C <-
+          spline.est.A <-
+            spline.est.B <-
+              spline.est.C <- NULL
 
-  if (!is.null(knots) & length(knots) != length(spline) ) {
+  if (!is.null(knots) & length(knots) != length(spline)) {
     stop('Arguments spline and knots has to be same length.')
   }
-
 
   # Spline functions -------------------------------------------------------
 
   # function to get spline seq
-  spline.seq <- function(data, spline.var=NULL) {
+  spline.seq <- function(data, spline.var = NULL) {
     # palauttaa jotaina
-    if(is.na(spline.var)) {
+    if (is.na(spline.var)) {
       return(NULL)
     }
-    spline.seq <- seq( min( data[,get(spline.var)] ),
-                       max( data[,get(spline.var)] ), length.out = 100)
+    spline.seq <- seq(
+      min(data[, get(spline.var)]),
+      max(data[, get(spline.var)]),
+      length.out = 100
+    )
     return(spline.seq)
   }
 
   # function to search optimal number of knots by AIC
-  spline.knots <- function(data, knots = NULL, spline.vars = NULL){
+  spline.knots <- function(data, knots = NULL, spline.vars = NULL) {
     # search optimal number of knots
-    if( is.null(knots) ) {
+    if (is.null(knots)) {
       knts <- list()
       for (jj in 1:length(spline.vars)) {
         # reduce data to fit model
-        data0 <- data[,list(observed=sum(observed), expected = sum(expected)), by = eval(spline.vars[jj])]
+        data0 <- data[,
+          list(observed = sum(observed), expected = sum(expected)),
+          by = eval(spline.vars[jj])
+        ]
         data0 <- data0[expected > 0]
-        spline.fit <- glm(observed ~ 1, offset=log(expected), family=poisson(log), data = data0)
+        spline.fit <- glm(
+          observed ~ 1,
+          offset = log(expected),
+          family = poisson(log),
+          data = data0
+        )
         aic0 <- summary(spline.fit)[['aic']]
         limit <- 20
         ii <- 2
-        while(  ii < limit ){
+        while (ii < limit) {
           tmp.knots <- ii
-          knts[jj] <- list( data0[ ,quantile( rep(get(spline.vars[jj]),observed), probs = seq(0,100,length.out = tmp.knots)/100)] )
-          spline.fit <- glm(observed ~ Ns(get(spline.vars[jj]), knots = knts[[jj]]), offset=log(expected), family=poisson(log), data=data0)
+          knts[jj] <- list(data0[, quantile(
+            rep(get(spline.vars[jj]), observed),
+            probs = seq(0, 100, length.out = tmp.knots) / 100
+          )])
+          spline.fit <- glm(
+            observed ~ Ns(get(spline.vars[jj]), knots = knts[[jj]]),
+            offset = log(expected),
+            family = poisson(log),
+            data = data0
+          )
           aic0 <- c(aic0, summary(spline.fit)[['aic']])
           ii <- ii + 1
         }
         tmp.knots <- which(aic0 == min(aic0))[1]
-        if(tmp.knots == 1) {
+        if (tmp.knots == 1) {
           message(paste0('Null model better than spline in ', jj))
           tmp.knots <- 2
         }
-        knts[jj] <- list(data0[ ,quantile( rep(get(spline.vars[jj]),observed), probs = seq(0,100,length.out = tmp.knots)/100)])
+        knts[jj] <- list(data0[, quantile(
+          rep(get(spline.vars[jj]), observed),
+          probs = seq(0, 100, length.out = tmp.knots) / 100
+        )])
         rm(tmp.knots)
       }
       knots <- unlist(lapply(knts, length))
-    }
-    else {
+    } else {
       # knot predefined
-      if( is.list(knots) ){
+      if (is.list(knots)) {
         knts <- knots
         knots <- unlist(lapply(knots, length))
-      }
-      # knot number predefined
-      else {
-        if( any(knots < 2) ) {
+      } else {
+        # knot number predefined
+        if (any(knots < 2)) {
           message('Min knots number set to 2.')
           knots[knots < 2] <- 2
         }
         knts <- list()
-        for(i in 1:length(knots)) {
-          knts[i] <- list( data[ ,quantile( rep(get(spline.vars[i]), observed), probs = seq(0,100,length.out = knots[i])/100)])
+        for (i in 1:length(knots)) {
+          knts[i] <- list(data[, quantile(
+            rep(get(spline.vars[i]), observed),
+            probs = seq(0, 100, length.out = knots[i]) / 100
+          )])
         }
       }
     }
@@ -909,36 +1038,45 @@ sir_spline <- function(  table,
   }
 
   # function to estimate 2-3 dim splines in same model
-  spline.estimates.dep <- function(sir.spline = sir.spline,
-                                   spline.seq.A = spline.seq.A,
-                                   spline.seq.B = spline.seq.B,
-                                   spline.seq.C = spline.seq.C,
-                                   reference.points = reference.points,
-                                   knts = knts
-  ){
-
-    if( all(!is.null(reference.points), (length(reference.points) + 1) != length(spline)) ){
+  spline.estimates.dep <- function(
+    sir.spline = sir.spline,
+    spline.seq.A = spline.seq.A,
+    spline.seq.B = spline.seq.B,
+    spline.seq.C = spline.seq.C,
+    reference.points = reference.points,
+    knts = knts
+  ) {
+    if (
+      all(
+        !is.null(reference.points),
+        (length(reference.points) + 1) != length(spline)
+      )
+    ) {
       stop('Parameter reference.points length should be length of spline - 1.')
     }
 
-
     form <- 'Ns(get(spline[[1]]), kn=knts[[1]])'
-    nsA <- Ns( spline.seq.A, knots = knts[[1]])
-    if ( length(spline) >= 2) {
+    nsA <- Ns(spline.seq.A, knots = knts[[1]])
+    if (length(spline) >= 2) {
       form <- paste0(form, ' + Ns(get(spline[[2]]), kn=knts[[2]])')
-      nsB <- Ns( spline.seq.B, knots = knts[[2]])
+      nsB <- Ns(spline.seq.B, knots = knts[[2]])
     }
-    if ( length(spline) == 3) {
+    if (length(spline) == 3) {
       form <- paste0(form, ' + Ns(get(spline[[3]]), kn=knts[[3]])')
-      nsC <- Ns( spline.seq.C, knots = knts[[3]])
+      nsC <- Ns(spline.seq.C, knots = knts[[3]])
     }
 
     form <- paste0('observed ~ ', form)
-    spline.fit <- do.call("glm", list(formula = as.formula(form),
-                                      offset = log(sir.spline[expected > 0,expected]),
-                                      family = poisson,
-                                      data = sir.spline[expected>0]))
-    if( any( ci.exp(spline.fit)[,1] == 1) ){
+    spline.fit <- do.call(
+      "glm",
+      list(
+        formula = as.formula(form),
+        offset = log(sir.spline[expected > 0, expected]),
+        family = poisson,
+        data = sir.spline[expected > 0]
+      )
+    )
+    if (any(ci.exp(spline.fit)[, 1] == 1)) {
       message("NA's in spline estimates.")
     }
 
@@ -946,87 +1084,102 @@ sir_spline <- function(  table,
 
     rf.C <- rf.B <- NA
     # set assigned reference points or get minimum values
-    if( !is.null(reference.points) ) {
+    if (!is.null(reference.points)) {
       rf.B <- reference.points[1]
       rf.C <- reference.points[2]
-    }
-    else {
-      rf.B <- min( sir.spline[,get(spline[2])] )
-      if(!is.na(spline[3])) {
-        rf.C <- min( sir.spline[,get(spline[3])] )
+    } else {
+      rf.B <- min(sir.spline[, get(spline[2])])
+      if (!is.na(spline[3])) {
+        rf.C <- min(sir.spline[, get(spline[3])])
       }
     }
 
-    if( !is.na(rf.B) )  {
-      B <- Ns( rep(rf.B, 100), knots = knts[[2]])
-      if( findInterval(rf.B, range(sir.spline[,get(spline[2])])) != 1 ) {
-        message("WARNING: reference point 2 doesn't fall into spline variable interval")
+    if (!is.na(rf.B)) {
+      B <- Ns(rep(rf.B, 100), knots = knts[[2]])
+      if (findInterval(rf.B, range(sir.spline[, get(spline[2])])) != 1) {
+        message(
+          "WARNING: reference point 2 doesn't fall into spline variable interval"
+        )
       }
     }
 
-    if( !is.na(rf.C) ){
-      C <- Ns( rep(rf.C, 100), knots = knts[[3]])
-      if( findInterval(rf.C, range(sir.spline[,get(spline[3])])) != 1) {
-        message("WARNING: reference point 3 doesn't fall into spline variable interval")
+    if (!is.na(rf.C)) {
+      C <- Ns(rep(rf.C, 100), knots = knts[[3]])
+      if (findInterval(rf.C, range(sir.spline[, get(spline[3])])) != 1) {
+        message(
+          "WARNING: reference point 3 doesn't fall into spline variable interval"
+        )
       }
     }
 
     # make subset of model parameters
-    if( !is.null(knts[2]) ) {
-      sub.B <- which( grepl('spline[[2]]', names(spline.fit$coefficients),fixed = TRUE) )
+    if (!is.null(knts[2])) {
+      sub.B <- which(grepl(
+        'spline[[2]]',
+        names(spline.fit$coefficients),
+        fixed = TRUE
+      ))
     }
-    if( !is.null(knts[3]) ) {
-      sub.C <- which( grepl('spline[[3]]', names(spline.fit$coefficients),fixed = TRUE) )
+    if (!is.null(knts[3])) {
+      sub.C <- which(grepl(
+        'spline[[3]]',
+        names(spline.fit$coefficients),
+        fixed = TRUE
+      ))
     }
-    if ( length(spline) == 2) {
+    if (length(spline) == 2) {
       spline.est.A <- ci.exp(spline.fit, ctr.mat = cbind(1, nsA, nsB))
       spline.est.B <- ci.exp(spline.fit, subset = sub.B, ctr.mat = nsB - B)
       spline.est.C <- NULL
     }
-    if ( length(spline) == 3) {
+    if (length(spline) == 3) {
       spline.est.A <- ci.exp(spline.fit, ctr.mat = cbind(1, nsA, nsB, nsC))
-      spline.est.B <- ci.exp(spline.fit, subset= sub.B, ctr.mat = nsB - B)
-      spline.est.C <- ci.exp(spline.fit, subset= sub.C, ctr.mat = nsC - C)
+      spline.est.B <- ci.exp(spline.fit, subset = sub.B, ctr.mat = nsB - B)
+      spline.est.C <- ci.exp(spline.fit, subset = sub.C, ctr.mat = nsC - C)
     }
-    list(a = spline.est.A,
-         b = spline.est.B,
-         c = spline.est.C)
+    list(a = spline.est.A, b = spline.est.B, c = spline.est.C)
   }
 
   # function to estimate independet splines
   spline.estimates.uni <- function(data, spline.var, spline.seq, knots, knum) {
-    if(is.na(spline.var)) return(NULL)
+    if (is.na(spline.var)) {
+      return(NULL)
+    }
     knots <- knots[[knum]]
-    data <- data[,list(observed=sum(observed), expected = sum(expected)), by = eval(spline.var)][expected > 0]
-    spline.uni <- glm(observed ~ Ns(get(spline.var), knots = knots), offset=log(expected), family=poisson(log), data = data)
-    nsx <- Ns( spline.seq, knots = knots)
+    data <- data[,
+      list(observed = sum(observed), expected = sum(expected)),
+      by = eval(spline.var)
+    ][expected > 0]
+    spline.uni <- glm(
+      observed ~ Ns(get(spline.var), knots = knots),
+      offset = log(expected),
+      family = poisson(log),
+      data = data
+    )
+    nsx <- Ns(spline.seq, knots = knots)
     spline.est <- ci.exp(spline.uni, ctr.mat = cbind(1, nsx))
     spline.est
   }
-
-
 
   # Poisson regression Splines -------------------------------------------------
 
   sir.spline <- data.table(table)
 
   # convert spline variables to numeric
-  temp.fun <- function(x){
+  temp.fun <- function(x) {
     as.numeric(as.character(x))
   }
   sir.spline[, (spline) := lapply(.SD, temp.fun), .SDcols = spline]
 
-
-
   # set knots
-  knts <- spline.knots(data=sir.spline, knots = knots, spline.vars = spline)
+  knts <- spline.knots(data = sir.spline, knots = knots, spline.vars = spline)
 
   # set sequences
-  spline.seq.A <- spline.seq(data=sir.spline, spline.var=spline[1])
-  spline.seq.B <- spline.seq(data=sir.spline, spline.var=spline[2])
-  spline.seq.C <- spline.seq(data=sir.spline, spline.var=spline[3])
+  spline.seq.A <- spline.seq(data = sir.spline, spline.var = spline[1])
+  spline.seq.B <- spline.seq(data = sir.spline, spline.var = spline[2])
+  spline.seq.C <- spline.seq(data = sir.spline, spline.var = spline[3])
 
-  if( length(spline) == 1 ) {
+  if (length(spline) == 1) {
     dependent.splines <- FALSE
   }
 
@@ -1034,13 +1187,12 @@ sir_spline <- function(  table,
   print <- print[1]
 
   # loop for each level of print:
-  if( !is.null(print) ) {
-    prnt.levels <- sir.spline[,unique( get(print) )]
-    sir.spline[,(print) := factor(get(print))]
-  }
-  else {
+  if (!is.null(print)) {
+    prnt.levels <- sir.spline[, unique(get(print))]
+    sir.spline[, (print) := factor(get(print))]
+  } else {
     print <- 'temp'
-    sir.spline[,temp := 1]
+    sir.spline[, temp := 1]
     prnt.levels <- 1
   }
 
@@ -1048,31 +1200,49 @@ sir_spline <- function(  table,
   spline.est.B <- NULL
   spline.est.C <- NULL
 
-  for(i in prnt.levels){
-    if( dependent.splines ) {
-      out <- spline.estimates.dep(sir.spline = sir.spline[get(print) == i],
-                                  spline.seq.A = spline.seq.A,
-                                  spline.seq.B = spline.seq.B,
-                                  spline.seq.C = spline.seq.C,
-                                  reference.points = reference.points,
-                                  knts = knts)
+  for (i in prnt.levels) {
+    if (dependent.splines) {
+      out <- spline.estimates.dep(
+        sir.spline = sir.spline[get(print) == i],
+        spline.seq.A = spline.seq.A,
+        spline.seq.B = spline.seq.B,
+        spline.seq.C = spline.seq.C,
+        reference.points = reference.points,
+        knts = knts
+      )
       est.A <- out[['a']]
       est.B <- out[['b']]
       est.C <- out[['c']]
-    }
-    else{
-      est.A <- spline.estimates.uni(data = sir.spline[get(print) == i], spline.var = spline[1], spline.seq = spline.seq.A, knots = knts, knum = 1)
-      est.B <- spline.estimates.uni(data = sir.spline[get(print) == i], spline.var = spline[2], spline.seq = spline.seq.B, knots = knts, knum = 2)
-      est.C <- spline.estimates.uni(data = sir.spline[get(print) == i], spline.var = spline[3], spline.seq = spline.seq.C, knots = knts, knum = 3)
+    } else {
+      est.A <- spline.estimates.uni(
+        data = sir.spline[get(print) == i],
+        spline.var = spline[1],
+        spline.seq = spline.seq.A,
+        knots = knts,
+        knum = 1
+      )
+      est.B <- spline.estimates.uni(
+        data = sir.spline[get(print) == i],
+        spline.var = spline[2],
+        spline.seq = spline.seq.B,
+        knots = knts,
+        knum = 2
+      )
+      est.C <- spline.estimates.uni(
+        data = sir.spline[get(print) == i],
+        spline.var = spline[3],
+        spline.seq = spline.seq.C,
+        knots = knts,
+        knum = 3
+      )
     }
 
-    add_i <- function(est.x, i){
-      if(is.null(est.x)) {
+    add_i <- function(est.x, i) {
+      if (is.null(est.x)) {
         return(NULL)
       }
       cbind(i, data.frame(est.x))
     }
-
 
     est.A <- add_i(est.A, i)
     est.B <- add_i(est.B, i)
@@ -1086,73 +1256,122 @@ sir_spline <- function(  table,
   # get p-value and anova-table
   anovas <- NULL
   p <- NULL
-  if(dependent.splines) {
+  if (dependent.splines) {
     form.a <- 'Ns(get(spline[[1]]), kn=knts[[1]]) + Ns(get(spline[[2]]), kn=knts[[2]])'
     form.b <- 'get(print):Ns(get(spline[[1]]), kn=knts[[1]]) + get(print):Ns(get(spline[[2]]), kn=knts[[2]])'
-    if ( length(spline) == 3) {
+    if (length(spline) == 3) {
       form.a <- paste0(form.a, ' + Ns(get(spline[[3]]), kn=knts[[3]])')
-      form.b <- paste0(form.b, ' + get(print):Ns(get(spline[[3]]), kn=knts[[3]])')
+      form.b <- paste0(
+        form.b,
+        ' + get(print):Ns(get(spline[[3]]), kn=knts[[3]])'
+      )
     }
 
-    fit.fun <- function( form.string ){
-      do.call("glm", list(formula = as.formula( form.string ),
-                          offset = log(sir.spline[expected > 0,expected]),
-                          family = poisson,
-                          data = sir.spline[expected>0]))
+    fit.fun <- function(form.string) {
+      do.call(
+        "glm",
+        list(
+          formula = as.formula(form.string),
+          offset = log(sir.spline[expected > 0, expected]),
+          family = poisson,
+          data = sir.spline[expected > 0]
+        )
+      )
     }
 
-    fit.1 <- fit.fun( paste0('observed ~ ', form.a) )
-    fit.2 <- fit.fun( paste0('observed ~ ', 'get(print)+', form.a))
-    fit.3 <- fit.fun( paste0('observed ~ ', form.b))
-    fit.4 <- fit.fun( paste0('observed ~ ', 'get(print)+', form.b) )
+    fit.1 <- fit.fun(paste0('observed ~ ', form.a))
+    fit.2 <- fit.fun(paste0('observed ~ ', 'get(print)+', form.a))
+    fit.3 <- fit.fun(paste0('observed ~ ', form.b))
+    fit.4 <- fit.fun(paste0('observed ~ ', 'get(print)+', form.b))
 
-    global.p<- anova(fit.4, fit.1, test='LRT')
-    level.p <- anova(fit.2, fit.1, test='LRT')
+    global.p <- anova(fit.4, fit.1, test = 'LRT')
+    level.p <- anova(fit.2, fit.1, test = 'LRT')
     #shape.p <- anova(fit.4, fit.3, test='LRT')
 
     anovas <- list(global.p = global.p, level.p = level.p)
     p <- rbind(global.p[['Pr(>Chi)']][2], level.p[['Pr(>Chi)']][2]) # , shape.p,
-  }
-  else {
-    lrt.uni <- function(data=sir.spline, spline.var=spline[1], print=print, knots=knts, knum = 1) {
-      if (is.na(spline.var)) return (NULL)
+  } else {
+    lrt.uni <- function(
+      data = sir.spline,
+      spline.var = spline[1],
+      print = print,
+      knots = knts,
+      knum = 1
+    ) {
+      if (is.na(spline.var)) {
+        return(NULL)
+      }
       data <- data.table(data)
       knots <- knots[[knum]]
-      fit0 <- glm(observed ~ get(print)+Ns(get(spline.var), knots = knots), offset=log(expected), family=poisson(log), data = data[expected>0])
-      fit1 <- glm(observed ~ Ns(get(spline.var), knots = knots), offset=log(expected), family=poisson(log), data = data[expected>0])
-      fit2 <- glm(observed ~ get(print)*Ns(get(spline.var), knots = knots), offset=log(expected), family=poisson(log), data = data[expected>0])
-      anova(fit2,fit1,fit0, test='Chisq') # [['Pr(>Chi)']][2]
+      fit0 <- glm(
+        observed ~ get(print) + Ns(get(spline.var), knots = knots),
+        offset = log(expected),
+        family = poisson(log),
+        data = data[expected > 0]
+      )
+      fit1 <- glm(
+        observed ~ Ns(get(spline.var), knots = knots),
+        offset = log(expected),
+        family = poisson(log),
+        data = data[expected > 0]
+      )
+      fit2 <- glm(
+        observed ~ get(print) * Ns(get(spline.var), knots = knots),
+        offset = log(expected),
+        family = poisson(log),
+        data = data[expected > 0]
+      )
+      anova(fit2, fit1, fit0, test = 'Chisq') # [['Pr(>Chi)']][2]
     }
 
-    var1.p <- lrt.uni(spline.var = spline[1], print=print, knots=knts, knum = 1)
-    var2.p <- lrt.uni(spline.var = spline[2], print=print, knots=knts, knum = 2)
-    var3.p <- lrt.uni(spline.var = spline[3], print=print, knots=knts, knum = 3)
+    var1.p <- lrt.uni(
+      spline.var = spline[1],
+      print = print,
+      knots = knts,
+      knum = 1
+    )
+    var2.p <- lrt.uni(
+      spline.var = spline[2],
+      print = print,
+      knots = knts,
+      knum = 2
+    )
+    var3.p <- lrt.uni(
+      spline.var = spline[3],
+      print = print,
+      knots = knts,
+      knum = 3
+    )
 
-    p <- list(spline.a = var1.p[['Pr(>Chi)']][2],
-              spline.b = var2.p[['Pr(>Chi)']][2],
-              spline.c = var3.p[['Pr(>Chi)']][2])
+    p <- list(
+      spline.a = var1.p[['Pr(>Chi)']][2],
+      spline.b = var2.p[['Pr(>Chi)']][2],
+      spline.c = var3.p[['Pr(>Chi)']][2]
+    )
     anovas <- list(spline.a = var1.p, spline.b = var2.p, spline.c = var3.p)
   }
 
-  output <- list( spline.est.A = spline.est.A,
-                  spline.est.B = spline.est.B,
-                  spline.est.C = spline.est.C,
-                  spline.seq.A = spline.seq.A,
-                  spline.seq.B = spline.seq.B,
-                  spline.seq.C = spline.seq.C,
-                  adjust = adjust,
-                  print = print,
-                  spline = spline,
-                  anovas = anovas,
-                  knots = knts,
-                  spline.dependent = dependent.splines,
-                  p.values = p)
+  output <- list(
+    spline.est.A = spline.est.A,
+    spline.est.B = spline.est.B,
+    spline.est.C = spline.est.C,
+    spline.seq.A = spline.seq.A,
+    spline.seq.B = spline.seq.B,
+    spline.seq.C = spline.seq.C,
+    adjust = adjust,
+    print = print,
+    spline = spline,
+    anovas = anovas,
+    knots = knts,
+    spline.dependent = dependent.splines,
+    p.values = p
+  )
   output
 }
 
 # input data and argument list. replaces print in upper environment with name a vector.
-data_list <- function( data, arg.list, env ) {
-  if(missing(env)){
+data_list <- function(data, arg.list, env) {
+  if (missing(env)) {
     arg.list <- substitute(arg.list)
     env <- parent.frame()
   }
@@ -1160,10 +1379,10 @@ data_list <- function( data, arg.list, env ) {
 
   l <- eval(arg.list, envir = d, enclos = parent.frame())
 
-  if( is.list( l ) ) {
+  if (is.list(l)) {
     n <- intersect(names(l), names(d))
-    if(length(n)>0){
-      d[,(n) := NULL]
+    if (length(n) > 0) {
+      d[, (n) := NULL]
     }
     #     if(is.null(names(l))) {
     #       v <- 1:length(l)
@@ -1172,7 +1391,7 @@ data_list <- function( data, arg.list, env ) {
     l <- as.data.table(l)
     l <- data.table(l)
     assign('print', colnames(l), envir = env) # set names to parent environment
-    if( ncol(d) > 0) {
+    if (ncol(d) > 0) {
       l <- data.table(d, l)
     }
     return(l)
@@ -1185,9 +1404,9 @@ data_list <- function( data, arg.list, env ) {
 coef.sir <- function(object, ...) {
   factors <- attr(object, 'sir.meta')$print
 
-  q <- paste("paste(",paste(factors,collapse=","),", sep = ':')")
-  q <- parse(text=q)
-  n <- object[,eval(q)]
+  q <- paste("paste(", paste(factors, collapse = ","), ", sep = ':')")
+  q <- parse(text = q)
+  n <- object[, eval(q)]
 
   res <- object$sir
   attr(res, 'names') <- n
@@ -1196,30 +1415,38 @@ coef.sir <- function(object, ...) {
 }
 
 
-
-
 #' @export
-confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile',
-                        test.type = 'homogeneity', ...) {
-
+confint.sir <- function(
+  object,
+  parm,
+  level = 0.95,
+  conf.type = 'profile',
+  test.type = 'homogeneity',
+  ...
+) {
   meta <- attr(object, 'sir.meta')
   object <- copy(object)
-  object <- sir_est(table = object,
-                    print = meta$print,
-                    adjust = NULL,
-                    conf.type = conf.type,
-                    test.type = test.type,
-                    conf.level = level,
-                    EAR = FALSE)
+  object <- sir_est(
+    table = object,
+    print = meta$print,
+    adjust = NULL,
+    conf.type = conf.type,
+    test.type = test.type,
+    conf.level = level,
+    EAR = FALSE
+  )
   object <- object$table
-  q <- paste("paste(",paste(meta$print,collapse=","),", sep = ':')")
-  q <- parse(text=q)
-  n <- object[,eval(q)]
+  q <- paste("paste(", paste(meta$print, collapse = ","), ", sep = ':')")
+  q <- parse(text = q)
+  n <- object[, eval(q)]
 
   res <- cbind(object$sir.lo, object$sir.hi)
 
   rownames(res) <- n
-  colnames(res) <- paste( c( (1-level)/2*100, (1 - (1-level)/2)*100), '%')
+  colnames(res) <- paste(
+    c((1 - level) / 2 * 100, (1 - (1 - level) / 2) * 100),
+    '%'
+  )
 
   res
 }
@@ -1279,20 +1506,26 @@ confint.sir <- function(object, parm, level = 0.95, conf.type = 'profile',
 #' @import data.table
 #' @import stats
 #' @export
-sir_exp <- function(x, obs, exp, pyrs=NULL, print = NULL,
-                    conf.type = 'profile', test.type = 'homogeneity',
-                    conf.level = 0.95, subset = NULL) {
-
+sir_exp <- function(
+  x,
+  obs,
+  exp,
+  pyrs = NULL,
+  print = NULL,
+  conf.type = 'profile',
+  test.type = 'homogeneity',
+  conf.level = 0.95,
+  subset = NULL
+) {
   # subsetting
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = x, substiset = subset)
-  x <- x[subset,]
+  x <- x[subset, ]
 
   # evalPopArg
   obs <- substitute(obs)
   c.obs <- evalPopArg(data = x, arg = obs)
   obs <- names(c.obs)
-
 
   print <- substitute(print)
   c.pri <- evalPopArg(data = x, arg = print)
@@ -1304,26 +1537,42 @@ sir_exp <- function(x, obs, exp, pyrs=NULL, print = NULL,
 
   pyrs <- substitute(pyrs)
   c.pyr <- evalPopArg(data = x, arg = pyrs)
-  if(is.null(c.pyr)) c.pyr <- data.table(pyrs=0)
+  if (is.null(c.pyr)) {
+    c.pyr <- data.table(pyrs = 0)
+  }
   pyrs <- names(c.pyr)
 
   # collect data
   x <- cbind(c.obs, c.pyr, c.exp)
-  if(any(is.na(x))) stop('Missing values in expected cases.')
-  if(!is.null(print))  x<- cbind(x, c.pri)
+  if (any(is.na(x))) {
+    stop('Missing values in expected cases.')
+  }
+  if (!is.null(print)) {
+    x <- cbind(x, c.pri)
+  }
 
-  express <- paste0('list(observed = sum(', obs, '), expected = sum(',exp,'), pyrs = sum(', pyrs,'))')
+  express <- paste0(
+    'list(observed = sum(',
+    obs,
+    '), expected = sum(',
+    exp,
+    '), pyrs = sum(',
+    pyrs,
+    '))'
+  )
   # aggregate
   es <- parse(text = express)
   y <- x[, eval(es), keyby = print] # keyby is must
 
-  results <- sir_est( table = y,
-                      print = print,
-                      adjust = NULL,
-                      conf.type = conf.type,
-                      test.type = test.type,
-                      conf.level = conf.level,
-                      EAR = FALSE)
+  results <- sir_est(
+    table = y,
+    print = print,
+    adjust = NULL,
+    conf.type = conf.type,
+    test.type = test.type,
+    conf.level = conf.level,
+    EAR = FALSE
+  )
 
   if (!return_DT()) {
     for (i in 1:2) {
@@ -1334,18 +1583,23 @@ sir_exp <- function(x, obs, exp, pyrs=NULL, print = NULL,
   }
 
   data <- copy(results[[2]])
-  setattr(data, name = 'sir.meta', value = list(adjust = NULL,
-                                                print = print,
-                                                call = match.call(),
-                                                lrt.test= results$'lrt.test',
-                                                conf.type = results$'conf.type',
-                                                conf.level = conf.level,
-                                                lrt.test.type = results$'test.type',
-                                                pooled.sir = results[[1]]))
+  setattr(
+    data,
+    name = 'sir.meta',
+    value = list(
+      adjust = NULL,
+      print = print,
+      call = match.call(),
+      lrt.test = results$'lrt.test',
+      conf.type = results$'conf.type',
+      conf.level = conf.level,
+      lrt.test.type = results$'test.type',
+      pooled.sir = results[[1]]
+    )
+  )
   setattr(data, "class", c("sir", "data.table", "data.frame"))
   return(data)
 }
-
 
 
 #' Calculate SMRs from a split Lexis object
@@ -1360,24 +1614,25 @@ sir_exp <- function(x, obs, exp, pyrs=NULL, print = NULL,
 #' @rdname sir_exp
 #'
 #' @export
-sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
-
+sir_lex <- function(x, print = NULL, breaks = NULL, ...) {
   ## R CMD CHECK appeasement
   lex.dur <- NULL
 
-  if(!inherits(x, 'Lexis')) {
+  if (!inherits(x, 'Lexis')) {
     stop('x has to be a Lexis object (see lexpand or Lexis)')
   }
-  if(!"pop.haz" %in% names(x)) {
+  if (!"pop.haz" %in% names(x)) {
     stop("Variable pop.haz not found in the data.")
   }
 
-
   # reformat date breaks
-  if(!is.null(breaks)) {
+  if (!is.null(breaks)) {
     breaks <- lapply(breaks, function(x) {
-      if(is.character(x)) c(cal.yr(as.Date(x)))
-      else x
+      if (is.character(x)) {
+        c(cal.yr(as.Date(x)))
+      } else {
+        x
+      }
     })
   }
 
@@ -1395,22 +1650,31 @@ sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
   set(x, j = "lex.Cst", value = 0L)
   set(x, j = "lex.Xst", value = ifelse(col == first_value, 0L, 1L))
 
-  if(!is.null(breaks)) {
+  if (!is.null(breaks)) {
     x <- splitMulti(x, breaks = breaks)
   }
 
   a <- copy(attr(x, "time.scales"))
   a <- a[!vapply(get_breaks(x), is.null, logical(1))]
-  x[, d.exp := pop.haz*lex.dur]
+  x[, d.exp := pop.haz * lex.dur]
 
   TF <- environment()
 
-  if(any(is.na(x[,d.exp]))) stop('Missing values in either pop.haz or lex.dur.')
+  if (any(is.na(x[, d.exp]))) {
+    stop('Missing values in either pop.haz or lex.dur.')
+  }
   x <- aggre(x, by = TF$a, sum.values = 'd.exp')
-  if(!'from0to1' %in% names(x)) {
+  if (!'from0to1' %in% names(x)) {
     stop('Could not find any transitions between states in lexis')
   }
-  x <- sir_exp(x = x, obs = 'from0to1', print = print, exp = 'd.exp', pyrs = 'pyrs', ...)
+  x <- sir_exp(
+    x = x,
+    obs = 'from0to1',
+    print = print,
+    exp = 'd.exp',
+    pyrs = 'pyrs',
+    ...
+  )
   # override the match.call from sir_exp
   attr(x, 'sir.meta')$call <- match.call()
   return(x)
@@ -1425,22 +1689,46 @@ sir_lex <- function(x, print = NULL, breaks = NULL, ... ) {
 #' @rdname sir_exp
 #'
 #' @export
-sir_ag <- function(x, obs = 'from0to1', print = attr(x, 'aggre.meta')$by, exp = 'd.exp', pyrs = 'pyrs', ... ) {
-
-  if(!inherits(x, 'aggre')) {
+sir_ag <- function(
+  x,
+  obs = 'from0to1',
+  print = attr(x, 'aggre.meta')$by,
+  exp = 'd.exp',
+  pyrs = 'pyrs',
+  ...
+) {
+  if (!inherits(x, 'aggre')) {
     stop('x should be an aggre object (see lexpand or sir_lex)')
   }
   obs <- substitute(obs)
   print <- substitute(print)
 
   x <- copy(x)
-  x <- sir_exp(x = x, obs = obs, print = print, exp = 'd.exp', pyrs = 'pyrs', ...) # original
+  x <- sir_exp(
+    x = x,
+    obs = obs,
+    print = print,
+    exp = 'd.exp',
+    pyrs = 'pyrs',
+    ...
+  ) # original
   attr(x, 'sir.meta')$call <- match.call() # override the call from sir_exp
   x
 }
 
 
-
-utils::globalVariables(c('observed','expected','p_adj','p_value','temp','coh.observations','coh.personyears',
-                  'd.exp', 'lower', 'pop.haz', 'sir.hi','sir.lo','upper'))
-
+utils::globalVariables(c(
+  'observed',
+  'expected',
+  'p_adj',
+  'p_value',
+  'temp',
+  'coh.observations',
+  'coh.personyears',
+  'd.exp',
+  'lower',
+  'pop.haz',
+  'sir.hi',
+  'sir.lo',
+  'upper'
+))

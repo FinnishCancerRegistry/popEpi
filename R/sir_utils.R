@@ -62,54 +62,72 @@
 #' @import data.table
 #' @import stats
 
-
-sir_ratio <- function(x, y, digits = 3, alternative = 'two.sided',
-                      conf.level = 0.95, type = 'exact') {
+sir_ratio <- function(
+  x,
+  y,
+  digits = 3,
+  alternative = 'two.sided',
+  conf.level = 0.95,
+  type = 'exact'
+) {
   # prepare input values: x
   # Tests are located in test_sir script.
-  if(inherits(x = x, what = 'sir')){
+  if (inherits(x = x, what = 'sir')) {
     O1 <- sum(x$observed)
     E1 <- sum(x$expected)
-  }
-  else if(is.vector(x) && length(x) == 2) {
+  } else if (is.vector(x) && length(x) == 2) {
     O1 <- x[1]
     E1 <- x[2]
-  }
-  else{
+  } else {
     stop('Input x is not correct: x is neighter a vector of 2 nor sir-object')
   }
   # prepare y:
-  if(inherits(y,'sir')){
+  if (inherits(y, 'sir')) {
     O2 <- sum(y$observed)
     E2 <- sum(y$expected)
-  }
-  else if(is.vector(y) && length(y) == 2) {
+  } else if (is.vector(y) && length(y) == 2) {
     O2 <- y[1]
     E2 <- y[2]
-  }
-  else{
+  } else {
     stop('Input y is not correct: y is neighter a vector of 2 nor sir-object')
   }
 
   type <- match.arg(type, c('asymptotic', 'exact'), several.ok = FALSE)
-  alternative <- match.arg(alternative, c('two.sided','less', 'greater'), several.ok = FALSE)
+  alternative <- match.arg(
+    alternative,
+    c('two.sided', 'less', 'greater'),
+    several.ok = FALSE
+  )
   # conf.level
 
-  p <- O1/(O1+O2)
-  if(type == 'asymptotic') {
-    alpha <- (1 - conf.level)/2
-    Ex <- p + c(-qnorm(1-alpha),qnorm(1-alpha)) * sqrt((1/(O1+O2))*p*(1-p))
-    if( alternative != 'two.sided') {
+  p <- O1 / (O1 + O2)
+  if (type == 'asymptotic') {
+    alpha <- (1 - conf.level) / 2
+    Ex <- p +
+      c(-qnorm(1 - alpha), qnorm(1 - alpha)) *
+        sqrt((1 / (O1 + O2)) * p * (1 - p))
+    if (alternative != 'two.sided') {
       message('Test changed to two.sided when asymptotic.')
       alternative <- 'two.sided'
     }
   }
-  if(type == 'exact') {
-    Ex <- binom.test(c(O1,O2), p = 0.5, alternative = alternative, conf.level = conf.level)$conf.int
+  if (type == 'exact') {
+    Ex <- binom.test(
+      c(O1, O2),
+      p = 0.5,
+      alternative = alternative,
+      conf.level = conf.level
+    )$conf.int
   }
-  B = Ex/(1-Ex)
+  B = Ex / (1 - Ex)
 
-  res <- round(c(sir_ratio = (O1/E1)/(O2/E2), lower=(B*(E2/E1))[1], upper = (B*(E2/E1))[2]), digits = digits)
+  res <- round(
+    c(
+      sir_ratio = (O1 / E1) / (O2 / E2),
+      lower = (B * (E2 / E1))[1],
+      upper = (B * (E2 / E1))[2]
+    ),
+    digits = digits
+  )
   return(res)
 }
-

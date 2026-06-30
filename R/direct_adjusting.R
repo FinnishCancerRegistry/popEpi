@@ -1,6 +1,3 @@
-
-
-
 #' @title Direct Adjusting in \pkg{popEpi} Using Weights
 #' @author Joonas Miettinen
 #' @name direct_standardization
@@ -144,12 +141,3 @@
 #' \url{https://seer.cancer.gov/stdpopulations/stdpop.singleages.html}
 
 NULL
-
-
-
-
-
-
-
-
-

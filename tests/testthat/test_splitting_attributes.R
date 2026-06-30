@@ -1,11 +1,7 @@
 testthat::context("Attributes of data split by popEpi funs")
 
 
-
-
-
 testthat::test_that("popEpi splitters produce correct attributes", {
-
   library("Epi")
   library("data.table")
 
@@ -17,10 +13,11 @@ testthat::test_that("popEpi splitters produce correct attributes", {
 
   sire <- Lexis(
     data = sire[dg_date < ex_date],
-    entry = list(fot=0, per=dg_yrs, age=dg_age),
-    exit = list(per=ex_yrs),
+    entry = list(fot = 0, per = dg_yrs, age = dg_age),
+    exit = list(per = ex_yrs),
     merge = TRUE,
-    exit.status = 1L, entry.status = 0L
+    exit.status = 1L,
+    entry.status = 0L
   )
   BL <- list(age = c(0, 50), fot = c(0, 5))
   sm_1 <- splitMulti(sire, breaks = BL["fot"], drop = TRUE)
@@ -31,9 +28,14 @@ testthat::test_that("popEpi splitters produce correct attributes", {
   sl <- splitLexisDT(sire, breaks = BL$fot, timeScale = "fot", drop = TRUE)
   sl <- splitLexisDT(sl, breaks = BL$age, timeScale = "age", drop = TRUE)
 
-  lp <- lexpand(data.table(sire)[, .(bi_yrs, dg_yrs, ex_yrs, status)],
-                birth = bi_yrs, entry = dg_yrs, exit = ex_yrs, status = status,
-                breaks = BL)
+  lp <- lexpand(
+    data.table(sire)[, .(bi_yrs, dg_yrs, ex_yrs, status)],
+    birth = bi_yrs,
+    entry = dg_yrs,
+    exit = ex_yrs,
+    status = status,
+    breaks = BL
+  )
 
   lapply(list(sm_1, sm_2, sl, lp), function(lex) {
     testthat::expect_identical(
@@ -45,11 +47,7 @@ testthat::test_that("popEpi splitters produce correct attributes", {
       c("fot", "per", "age")
     )
   })
-
 })
-
-
-
 
 
 testthat::test_that("popEpi splitters retain time.since attribute", {
@@ -58,31 +56,36 @@ testthat::test_that("popEpi splitters retain time.since attribute", {
   library("data.table")
 
   data("DMlate", package = "Epi")
-  dml <- Lexis( entry = list(Per=dodm, Age=dodm-dobth, DMdur=0 ),
-                exit = list(Per=dox),
-                exit.status = factor(!is.na(dodth),labels=c("DM","Dead")),
-                data = DMlate[runif(nrow(DMlate))<0.1,] )
+  dml <- Lexis(
+    entry = list(Per = dodm, Age = dodm - dobth, DMdur = 0),
+    exit = list(Per = dox),
+    exit.status = factor(!is.na(dodth), labels = c("DM", "Dead")),
+    data = DMlate[runif(nrow(DMlate)) < 0.1, ]
+  )
   # Split follow-up at insulin, introduce a new timescale,
   # and split non-precursor states
-  dmi <- cutLexis( dml, cut = dml$doins,
-                   pre = "DM",
-                   new.state = "Ins",
-                   new.scale = "t.Ins",
-                   split.states = TRUE )
+  dmi <- cutLexis(
+    dml,
+    cut = dml$doins,
+    pre = "DM",
+    new.state = "Ins",
+    new.scale = "t.Ins",
+    split.states = TRUE
+  )
 
   # Split the follow in 1-year intervals for modelling
-  Si <- splitLexis( dmi, 0:30/2, "DMdur" )
+  Si <- splitLexis(dmi, 0:30 / 2, "DMdur")
 
-
-  sldt <- splitLexisDT(dmi, breaks = 0:30/2, timeScale = "DMdur")
-  sm <- splitMulti(dmi, breaks = list(DMdur = 0:30/2))
+  sldt <- splitLexisDT(dmi, breaks = 0:30 / 2, timeScale = "DMdur")
+  sm <- splitMulti(dmi, breaks = list(DMdur = 0:30 / 2))
 
   lex_attr_nms <- lexis_attr_nms__()
   testthat::expect_identical(
-    attributes(Si)[lex_attr_nms], attributes(sm)[lex_attr_nms]
+    attributes(Si)[lex_attr_nms],
+    attributes(sm)[lex_attr_nms]
   )
   testthat::expect_identical(
-    attributes(Si)[lex_attr_nms], attributes(sldt)[lex_attr_nms]
+    attributes(Si)[lex_attr_nms],
+    attributes(sldt)[lex_attr_nms]
   )
-
 })

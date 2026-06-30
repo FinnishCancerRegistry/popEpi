@@ -9,19 +9,22 @@ testthat::test_that("splitMulti produces intended breaks list", {
   x <- Lexis(
     data = x,
     entry = list(
-      per = get.yrs(dg_date), fot = 0.0,
-      age = get.yrs(dg_date)-get.yrs(bi_date)
+      per = get.yrs(dg_date),
+      fot = 0.0,
+      age = get.yrs(dg_date) - get.yrs(bi_date)
     ),
     exit = list(
       per = get.yrs(ex_date)
-    ), entry.status = 0L, exit.status = 1L
+    ),
+    entry.status = 0L,
+    exit.status = 1L
   )
   forceLexisDT(x, breaks = get_breaks(x), allScales = timeScales(x))
 
-  BL <- list(fot = 2:8, per = 1990:2000, age = seq(0,100, 10))
+  BL <- list(fot = 2:8, per = 1990:2000, age = seq(0, 100, 10))
   xx <- splitMulti(x, breaks = BL, drop = TRUE)
 
-  BL2 <- list(fot = 4:7, per = 1991:1999, age = seq(50,70, 10))
+  BL2 <- list(fot = 4:7, per = 1991:1999, age = seq(50, 70, 10))
   xxx <- splitMulti(xx, breaks = BL, drop = TRUE)
 
   testthat::expect_equal(breaks(xx, "fot"), BL$fot)
@@ -34,7 +37,6 @@ testthat::test_that("splitMulti produces intended breaks list", {
 })
 
 
-
 testthat::test_that("splitLexisDT produces intended breaks list", {
   testthat::skip_on_cran()
   x <- data.table(popEpi::sibr)[dg_date < ex_date, ]
@@ -42,12 +44,15 @@ testthat::test_that("splitLexisDT produces intended breaks list", {
   x <- Lexis(
     data = x,
     entry = list(
-      per = get.yrs(dg_date), fot = 0.0,
-      age = get.yrs(dg_date)-get.yrs(bi_date)
+      per = get.yrs(dg_date),
+      fot = 0.0,
+      age = get.yrs(dg_date) - get.yrs(bi_date)
     ),
     exit = list(
       per = get.yrs(ex_date)
-    ), entry.status = 0L, exit.status = 1L
+    ),
+    entry.status = 0L,
+    exit.status = 1L
   )
   forceLexisDT(x, breaks = get_breaks(x), allScales = timeScales(x))
 
@@ -59,7 +64,6 @@ testthat::test_that("splitLexisDT produces intended breaks list", {
 
   testthat::expect_equal(breaks(xx, "fot"), br)
   testthat::expect_equal(breaks(xxx, "fot"), unique(br, br2))
-
 
   br <- 0:8
   xx <- splitLexisDT(x, breaks = br, timeScale = "fot", drop = FALSE)
@@ -74,7 +78,3 @@ testthat::test_that("splitLexisDT produces intended breaks list", {
   testthat::expect_equal(breaks(xxx, "fot"), unique(c(br, br2)))
   testthat::expect_equal(breaks(xxxx, "fot"), sort(unique(c(br, br3))))
 })
-
-
-
-

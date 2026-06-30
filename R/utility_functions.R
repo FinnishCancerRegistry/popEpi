@@ -1,5 +1,3 @@
-
-
 #' @title Cast `data.table`/`data.frame` from long format to wide format
 #' @author Matti Rantanen, Joonas Miettinen
 #'
@@ -40,12 +38,22 @@
 #' cast_simple(tab, columns='dg_y', rows="ex_y", values="obs")
 #'
 
+cast_simple <- function(
+  data = NULL,
+  columns = NULL,
+  rows = NULL,
+  values = NULL
+) {
+  if (!is.data.frame(data)) {
+    stop("data needs be a data.frame or data.table")
+  }
+  if (is.null(data) || nrow(data) == 0L) {
+    stop("data NULL or has no rows")
+  }
 
-cast_simple <- function(data=NULL, columns=NULL, rows=NULL, values=NULL) {
-  if (!is.data.frame(data)) stop("data needs be a data.frame or data.table")
-  if (is.null(data) || nrow(data) == 0L) stop("data NULL or has no rows")
-
-  if (is.null(columns)) stop("columns cannot be NULL")
+  if (is.null(columns)) {
+    stop("columns cannot be NULL")
+  }
 
   msg <- paste0("Missing 'columns' variables: %%VARS%%")
   all_names_present(data, columns, msg = msg)
@@ -56,41 +64,66 @@ cast_simple <- function(data=NULL, columns=NULL, rows=NULL, values=NULL) {
 
   ## allow rows = NULL
   rowsNULL <- FALSE
-  if (is.null(rows)) rowsNULL <- TRUE
-  if (rowsNULL) rows <- "1"
+  if (is.null(rows)) {
+    rowsNULL <- TRUE
+  }
+  if (rowsNULL) {
+    rows <- "1"
+  }
 
   ## sometimes rows names appear to be like expressions, e.g. 'factor(V1)'
   ## (and this function only uses string-column-names, so that's fine.)
   actualRows <- rows
   if (length(rows) > 1L || rows != "1") {
-    rows <- makeTempVarName(names = c(names(data), columns),
-                            pre = paste0("RN", 1:length(rows)))
+    rows <- makeTempVarName(
+      names = c(names(data), columns),
+      pre = paste0("RN", 1:length(rows))
+    )
     on.exit(setnames(data, rows, actualRows), add = TRUE)
     setnames(data, actualRows, rows)
   }
   ## same for cols
   actualCols <- columns
-  columns <- makeTempVarName(names = c(names(data), rows),
-                             pre = paste0("CN", 1:length(columns)))
+  columns <- makeTempVarName(
+    names = c(names(data), rows),
+    pre = paste0("CN", 1:length(columns))
+  )
   on.exit(setnames(data, columns, actualCols), add = TRUE)
   setnames(data, actualCols, columns)
 
-  form <- paste0(paste0(rows, collapse = " + "), " ~ ",
-                 paste0(columns, collapse = " + "))
+  form <- paste0(
+    paste0(rows, collapse = " + "),
+    " ~ ",
+    paste0(columns, collapse = " + ")
+  )
   form <- as.formula(form)
 
   ## note: dcast probably usually finds the methods for data.frame / data.table,
   ## but this method is more certain
   if (is.data.table(data)) {
-    d <- dcast.data.table(data, formula = form, value.var=values,
-                          drop=FALSE, fun.aggregate=sum)[]
+    d <- dcast.data.table(
+      data,
+      formula = form,
+      value.var = values,
+      drop = FALSE,
+      fun.aggregate = sum
+    )[]
   } else {
-    d <- dcast(data, formula = form, value.var = values,
-               drop = FALSE, fun.aggregate = sum)[]
+    d <- dcast(
+      data,
+      formula = form,
+      value.var = values,
+      drop = FALSE,
+      fun.aggregate = sum
+    )[]
   }
-  if (rowsNULL) set(d, j = names(d)[1L], value = NULL)
+  if (rowsNULL) {
+    set(d, j = names(d)[1L], value = NULL)
+  }
   wh_rows <- which(rows %in% names(d))
-  if (sum(wh_rows, na.rm = TRUE)) setnames(d, rows[wh_rows], actualRows[wh_rows])
+  if (sum(wh_rows, na.rm = TRUE)) {
+    setnames(d, rows[wh_rows], actualRows[wh_rows])
+  }
 
   d
 }
@@ -112,11 +145,15 @@ cast_simple <- function(data=NULL, columns=NULL, rows=NULL, values=NULL) {
 #' @return
 #' A copy of `DT` where `NA` values have been replaced with zero.
 na2zero = function(DT, vars = NULL) {
-  if (!data.table::is.data.table(DT)) stop("DT must be a data.table")
+  if (!data.table::is.data.table(DT)) {
+    stop("DT must be a data.table")
+  }
   DT <- data.table::copy(DT)
 
   navars <- vars
-  if (is.null(navars)) navars <- names(DT)
+  if (is.null(navars)) {
+    navars <- names(DT)
+  }
   all_names_present(DT, navars)
   for (k in navars) {
     DT[is.na(get(k)), (k) := 0]
@@ -158,8 +195,6 @@ fac2num <- function(x) {
 }
 
 
-
-
 #' @title Detect leap years
 #' @author Joonas Miettinen
 #' @description Given a vector or column of year values (numeric or integer), `[is_leap_year]` returns a vector of equal length
@@ -180,11 +215,17 @@ fac2num <- function(x) {
 #' A `logical` vector where `TRUE` indicates a leap year.
 is_leap_year <- function(years) {
   if (!is.numeric(years)) {
-    stop("years must be a numeric vector, preferably integer for speed. Use e.g. as.integer().")
+    stop(
+      "years must be a numeric vector, preferably integer for speed. Use e.g. as.integer()."
+    )
   }
 
   years <- try2int(years)
-  if (!is.integer(years)) stop("years could not be coerced to integer; don't use fractional years such as 2000.1234 but integers such as 2000")
+  if (!is.integer(years)) {
+    stop(
+      "years could not be coerced to integer; don't use fractional years such as 2000.1234 but integers such as 2000"
+    )
+  }
 
   # divisible by four
   isLeap <- years %% 4L == 0L
@@ -193,7 +234,6 @@ is_leap_year <- function(years) {
   # unless divisible by 400 also
   isLeap <- isLeap | years %% 400L == 0L
   isLeap
-
 }
 #' @title Test if object is a `Date` object
 #' @description Test whether `obj` inherits one of `Date` or `IDate`.
@@ -257,13 +297,17 @@ robust_values <- function(num.values, force = FALSE, messages = TRUE) {
   nas <- dt[is.na(num.values), .N]
 
   suppressWarnings(
-    dt[,a := fac2num(factor(num.values))]
+    dt[, a := fac2num(factor(num.values))]
   )
   dt[, a := try2int(a)]
   nas2 <- dt[is.na(a), .N]
 
   if (!force & nas2 > nas) {
-    if (messages) warning("since force = FALSE and NAs were created, returning original values")
+    if (messages) {
+      warning(
+        "since force = FALSE and NAs were created, returning original values"
+      )
+    }
     return(dt$num.values)
   }
   if (force) {
@@ -273,10 +317,7 @@ robust_values <- function(num.values, force = FALSE, messages = TRUE) {
     return(dt$a)
   }
 
-
   return(dt$a)
-
-
 }
 
 #' @title Check if all names are present in given data
@@ -298,28 +339,48 @@ robust_values <- function(num.values, force = FALSE, messages = TRUE) {
 #' `TRUE` if all `var.names` are in `data`, else `FALSE`,
 
 all_names_present <- function(data, var.names, stops = TRUE, msg = NULL) {
-
   if (!is.null(var.names) && !is.character(var.names)) {
-    stop("Argument 'var.names' must be NULL or a character vector of ",
-         "variable names.")
+    stop(
+      "Argument 'var.names' must be NULL or a character vector of ",
+      "variable names."
+    )
   }
   if (length(var.names) && any(is.na(var.names))) {
-    stop("There are ", sum(is.na(var.names)), " missing values in argument ",
-         "'var.names'. Please only supply non-NA values.")
+    stop(
+      "There are ",
+      sum(is.na(var.names)),
+      " missing values in argument ",
+      "'var.names'. Please only supply non-NA values."
+    )
   }
 
   badNames <- setdiff(var.names, names(data))
-  if (length(badNames) == 0L) return(TRUE)
+  if (length(badNames) == 0L) {
+    return(TRUE)
+  }
 
   badNames <- paste0("'", badNames, "'", collapse = ", ")
 
-  if (is.null(msg)) msg <- paste0("Cannot proceed - following given variable name(s) not present in dataset '",
-                                  deparse(substitute(data)), "': ", badNames)
-  if (!is.character(msg) || length(msg) > 1L) stop("Argument 'msg' must be a character string vector of length one.") else
+  if (is.null(msg)) {
+    msg <- paste0(
+      "Cannot proceed - following given variable name(s) not present in dataset '",
+      deparse(substitute(data)),
+      "': ",
+      badNames
+    )
+  }
+  if (!is.character(msg) || length(msg) > 1L) {
+    stop("Argument 'msg' must be a character string vector of length one.")
+  } else {
     msg <- gsub(pattern = "%%VARS%%", replacement = badNames, x = msg)
-  if (!is.logical(stops) || length(stops) > 1L) stop("Argument 'stops' must be either TRUE or FALSE.")
+  }
+  if (!is.logical(stops) || length(stops) > 1L) {
+    stop("Argument 'stops' must be either TRUE or FALSE.")
+  }
 
-  if (stops) stop(msg)
+  if (stops) {
+    stop(msg)
+  }
 
   return(FALSE)
 }
@@ -336,9 +397,9 @@ all_names_present <- function(data, var.names, stops = TRUE, msg = NULL) {
 
 lower_bound <- function(cut) {
   cut <- as.character(cut)
-  ind <- gregexpr(pattern=',',cut)
+  ind <- gregexpr(pattern = ',', cut)
   ind <- as.numeric(ind) - 1
-  t.sub <- as.numeric(substr(cut,2, ind))
+  t.sub <- as.numeric(substr(cut, 2, ind))
   return(t.sub)
 }
 
@@ -360,30 +421,33 @@ lower_bound <- function(cut) {
 #' @examples
 #' cut_bound("[1900, 1910)") ## "1900-1909"
 
-cut_bound <- function(t, factor=TRUE) {
+cut_bound <- function(t, factor = TRUE) {
   if (!factor) {
     t <- as.character(t)
-    ind <- gregexpr(pattern=',',t)
+    ind <- gregexpr(pattern = ',', t)
     ind <- as.numeric(ind) - 1
-    t <- as.numeric(substr(t,2, ind))
+    t <- as.numeric(substr(t, 2, ind))
     return(t)
   }
   if (factor) {
     t <- as.character(t)
-    t <- gsub(',', '-' , substr(t, 2, nchar(t) - 1) )
-    ind <-as.numeric( gregexpr(pattern='-',t) )
-    if (any(as.numeric( substr(t,1,ind-1) ) +1 == as.numeric( substr(t,ind+1,nchar(t))) ) ) {
-      t <- substr(t,1,ind-1)
+    t <- gsub(',', '-', substr(t, 2, nchar(t) - 1))
+    ind <- as.numeric(gregexpr(pattern = '-', t))
+    if (
+      any(
+        as.numeric(substr(t, 1, ind - 1)) + 1 ==
+          as.numeric(substr(t, ind + 1, nchar(t)))
+      )
+    ) {
+      t <- substr(t, 1, ind - 1)
       return(t)
     }
     t
-    a <- substr(t, ind+1, nchar(t))
-    t <- sub(a, as.character(as.numeric(a)-1), t)
+    a <- substr(t, ind + 1, nchar(t))
+    t <- sub(a, as.character(as.numeric(a) - 1), t)
     return(t)
   }
 }
-
-
 
 
 #' @title Set the class of an object (convenience function for
@@ -397,14 +461,14 @@ cut_bound <- function(t, factor=TRUE) {
 #' @param add.place `"first"` or `"last"`; adds `cl`
 #' to the front or to the back of the `obj`'s class vector
 #' @author Joonas Miettinen
-setclass <- function(obj, cl, add=FALSE, add.place="first") {
-  match.arg(add.place, c("first","last"))
+setclass <- function(obj, cl, add = FALSE, add.place = "first") {
+  match.arg(add.place, c("first", "last"))
   cl <- as.character(cl)
 
   if (add) {
     old_classes <- attr(obj, "class")
 
-    if (add.place=="first") {
+    if (add.place == "first") {
       setattr(obj, "class", c(cl, old_classes))
     } else {
       setattr(obj, "class", c(old_classes, cl))
@@ -413,8 +477,6 @@ setclass <- function(obj, cl, add=FALSE, add.place="first") {
     setattr(obj, "class", cl)
   }
 }
-
-
 
 
 #' @title Attempt coercion to integer
@@ -433,25 +495,35 @@ setclass <- function(obj, cl, add=FALSE, add.place="first") {
 #' vector.
 #' @source \href{https://stackoverflow.com/questions/3476782/how-to-check-if-the-number-is-integer}{Stackoverflow thread}
 try2int <- function(obj, tol = .Machine$double.eps^0.5) {
-  if (!is.numeric(obj)) stop("obj needs to be integer or double (numeric)")
-  if (is.integer(obj)) return(obj)
+  if (!is.numeric(obj)) {
+    stop("obj needs to be integer or double (numeric)")
+  }
+  if (is.integer(obj)) {
+    return(obj)
+  }
 
   test <- FALSE
 
-  bad <- if (length(na.omit(obj)) == 0) TRUE else
+  bad <- if (length(na.omit(obj)) == 0) {
+    TRUE
+  } else {
     min(obj, na.rm = TRUE) == -Inf || max(obj, na.rm = TRUE) == Inf
+  }
   if (bad) {
     return(obj)
   } else {
     test <- max(abs(obj) %% 1, na.rm = TRUE) < tol
   }
 
-  if (is.na(test) || is.null(test)) test <- FALSE
+  if (is.na(test) || is.null(test)) {
+    test <- FALSE
+  }
 
-  if (test) return(as.integer(obj))
+  if (test) {
+    return(as.integer(obj))
+  }
 
   return(obj)
-
 }
 
 
@@ -484,20 +556,21 @@ poisson.ci <- function(x, pt = 1, conf.level = 0.95) {
   pt2 <- xc[, 3]
   results <- matrix(NA, nrow(xc), 6)
   f1 <- function(x, ans, alpha = alp) {
-    ppois(x, ans) - alpha/2
+    ppois(x, ans) - alpha / 2
   }
-  f2 <- function(x, ans, alpha = alp) 1 - ppois(x, ans) + dpois(x, ans) - alpha/2
+  f2 <- function(x, ans, alpha = alp) {
+    1 - ppois(x, ans) + dpois(x, ans) - alpha / 2
+  }
   for (i in 1:nrow(xc)) {
     alp <- 1 - xc[i, 2]
     interval <- c(0, xc[i, 1] * 5 + 4)
-    uci <- uniroot(f1, interval = interval, x = xc[i, 1])$root/pt2[i]
+    uci <- uniroot(f1, interval = interval, x = xc[i, 1])$root / pt2[i]
     if (xc[i, 1] == 0) {
       lci <- 0
+    } else {
+      lci <- uniroot(f2, interval = interval, x = xc[i, 1])$root / pt2[i]
     }
-    else {
-      lci <- uniroot(f2, interval = interval, x = xc[i,1])$root/pt2[i]
-    }
-    results[i, ] <- c(xc[i, 1], pt2[i], xc[i, 1]/pt2[i], lci, uci, xc[i, 2])
+    results[i, ] <- c(xc[i, 1], pt2[i], xc[i, 1] / pt2[i], lci, uci, xc[i, 2])
   }
   coln <- c("x", "pt", "rate", "lower", "upper", "conf.level")
   colnames(results) <- coln
@@ -525,8 +598,16 @@ poisson.ci <- function(x, pt = 1, conf.level = 0.95) {
 #' @return
 #' Always returns `NULL` invisibly.
 #' This function is called for its side effects.
-setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TRUE) {
-  if (!is.data.table(DT)) stop("not a data.table")
+setcolsnull <- function(
+  DT = NULL,
+  delete = NULL,
+  keep = NULL,
+  colorder = FALSE,
+  soft = TRUE
+) {
+  if (!is.data.table(DT)) {
+    stop("not a data.table")
+  }
   if (!soft) {
     all_names_present(DT, keep, msg = "Expected")
     all_names_present(DT, delete)
@@ -546,7 +627,6 @@ setcolsnull <- function(DT=NULL, delete=NULL, keep=NULL, colorder=FALSE, soft=TR
 }
 
 
-
 temp_var_names <- function(n = 1L, avoid = NULL, length = 10L) {
   ## INTENTION: make temporary variable names that don't exist in
   ## char vector "avoid", e.g. avoid = names(data).
@@ -556,7 +636,9 @@ temp_var_names <- function(n = 1L, avoid = NULL, length = 10L) {
   if (length < 1L || !is.integer(length)) {
     stop("length must an integer > 0")
   }
-  if (!is.null(avoid)) avoid <- as.character(avoid)
+  if (!is.null(avoid)) {
+    avoid <- as.character(avoid)
+  }
 
   pool <- c(0:9, letters, LETTERS)
 
@@ -574,25 +656,37 @@ temp_var_names <- function(n = 1L, avoid = NULL, length = 10L) {
     tick <- tick + 1L
   }
   if (tick >= 100L) {
-    stop("ran randomization 100 times and could not create unique temporary",
-         " names. Perhaps increase length?")
+    stop(
+      "ran randomization 100 times and could not create unique temporary",
+      " names. Perhaps increase length?"
+    )
   }
   unlist(l)
 }
 
 #' @import stats
-makeTempVarName <- function(data=NULL, names=NULL,
-                            pre=NULL, post=NULL, length = 10L) {
+makeTempVarName <- function(
+  data = NULL,
+  names = NULL,
+  pre = NULL,
+  post = NULL,
+  length = 10L
+) {
   DN <- NULL
   DN <- c(DN, names(data))
   DN <- c(DN, names)
   DN <- unique(DN)
 
   if (length(pre) != length(post) && length(post) > 0L && length(pre) > 0L) {
-    stop("Lengths of arguments 'pre' and 'post' differ (", length(pre), " vs. ",
-         length(post), "). (Tried to create temporary variables, so this is ",
-         "most likely an internal error and the pkg maintainer should be ",
-         "complained to.)")
+    stop(
+      "Lengths of arguments 'pre' and 'post' differ (",
+      length(pre),
+      " vs. ",
+      length(post),
+      "). (Tried to create temporary variables, so this is ",
+      "most likely an internal error and the pkg maintainer should be ",
+      "complained to.)"
+    )
   }
   useN <- max(length(pre), length(post), 1L)
   useL <- length
@@ -605,11 +699,13 @@ makeTempVarName <- function(data=NULL, names=NULL,
 setDFpe <- function(x) {
   ## intended to only be used to set data.table to data.frame in place
   ## when option("popEpi.datatable") == FALSE
-  if (!is.data.table(x)) stop("only accepts data.table as input")
+  if (!is.data.table(x)) {
+    stop("only accepts data.table as input")
+  }
 
   cl <- class(x)
   wh <- which(cl == "data.table")
-  cl = c(cl[1:(wh-1)], cl[(wh+1):length(cl)])
+  cl = c(cl[1:(wh - 1)], cl[(wh + 1):length(cl)])
   setattr(x, "class", cl)
 
   setattr(x, "sorted", NULL)
@@ -617,15 +713,23 @@ setDFpe <- function(x) {
 }
 
 
-
-evalLogicalSubset <- function(data, substiset, n = 2, enclos = parent.frame(n)) {
+evalLogicalSubset <- function(
+  data,
+  substiset,
+  n = 2,
+  enclos = parent.frame(n)
+) {
   ## NOTE: subset MUST be substitute()'d before using this function!
   ## we allow substiset to be a logical condition only
   ## ALWAYS returns a logical vector of length nrow(data)
 
   substiset <- eval(substiset, envir = data, enclos = enclos)
   if (!is.null(substiset)) {
-    if (!is.logical(substiset)) stop("Expression to subset by must be a logical condition, e.g. var1 == 0, var1 %in% 1:2, var1 > 0, etc.")
+    if (!is.logical(substiset)) {
+      stop(
+        "Expression to subset by must be a logical condition, e.g. var1 == 0, var1 %in% 1:2, var1 > 0, etc."
+      )
+    }
     substiset <- substiset & !is.na(substiset)
     if (sum(substiset) == 0) stop("zero rows in data after subset")
   } else {
@@ -664,9 +768,10 @@ subsetDTorDF <- function(data, subset = NULL, select = NULL) {
 }
 
 
-
 setDT2DF <- function(x) {
-  if (!is.data.table(x)) stop("only accepts data.table as input")
+  if (!is.data.table(x)) {
+    stop("only accepts data.table as input")
+  }
 
   cl <- class(x)
   cl <- setdiff(cl, "data.table")
@@ -677,11 +782,13 @@ setDT2DF <- function(x) {
 }
 
 setDF2DT <- function(x) {
-  if (!is.data.frame(x) || is.data.table(x)) stop("only accepts data.frame as input")
+  if (!is.data.frame(x) || is.data.table(x)) {
+    stop("only accepts data.frame as input")
+  }
 
   cl <- class(x)
   whDF <- which(cl == "data.frame")
-  cl <- c(cl[1:(whDF-1)], "data.table", "data.frame", cl[whDF:length(cl)])
+  cl <- c(cl[1:(whDF - 1)], "data.table", "data.frame", cl[whDF:length(cl)])
 
   setattr(x, "class", cl)
   alloc.col(x)
@@ -690,22 +797,24 @@ setDF2DT <- function(x) {
 }
 
 
-
-
-p.round <- function(p, dec=3) {
-  th <- eval( parse(text=paste0('1E-', dec ) ))
-  if( is.null(p)) return( '= NA')
-  if( is.na(p))   return( '= NA')
-  if( p < th ){
-    p <- paste0('< ', th  )
+p.round <- function(p, dec = 3) {
+  th <- eval(parse(text = paste0('1E-', dec)))
+  if (is.null(p)) {
+    return('= NA')
+  }
+  if (is.na(p)) {
+    return('= NA')
+  }
+  if (p < th) {
+    p <- paste0('< ', th)
   } else {
-    p <- paste0('= ', round(p, dec) )
+    p <- paste0('= ', round(p, dec))
   }
   p
 }
 
 
-cutLow <- function(x, breaks, tol =  .Machine$double.eps^0.5) {
+cutLow <- function(x, breaks, tol = .Machine$double.eps^0.5) {
   ## a cut function that returns the lower bounds of the cut intervals (as numeric) as levels
 
   breaks <- sort(breaks)
@@ -715,15 +824,19 @@ cutLow <- function(x, breaks, tol =  .Machine$double.eps^0.5) {
 }
 
 
-
-
 setcols <- function(x, j, value) {
   ## intention: add new columns to DT via modifying in place, and to DF
   ## via DF$var <- value; both conserve memory (don't take copy of whole data)
 
-  if (!is.data.frame(x)) stop("x must be a data.frame")
-  if (!is.list(value)) stop("value must be a list of values (columns to add)")
-  if (missing(j)) j <- names(value)
+  if (!is.data.frame(x)) {
+    stop("x must be a data.frame")
+  }
+  if (!is.list(value)) {
+    stop("value must be a list of values (columns to add)")
+  }
+  if (missing(j)) {
+    j <- names(value)
+  }
 
   if (!is.data.table(x)) {
     x[j] <- value
@@ -734,9 +847,18 @@ setcols <- function(x, j, value) {
 }
 
 
-
-
-cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.y = all, all = FALSE, mid.scales = c("per", "age"), old.nums = TRUE) {
+cutLowMerge <- function(
+  x,
+  y,
+  by.x = by,
+  by.y = by,
+  by = NULL,
+  all.x = all,
+  all.y = all,
+  all = FALSE,
+  mid.scales = c("per", "age"),
+  old.nums = TRUE
+) {
   ## INTENTION: merges y to x by by.x & by.y after cutLow()'ing appropriate
   ## variables in x so that y's values match with x's values
   ## requirements;
@@ -758,22 +880,27 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
   if ((is.null(by.x) && !is.null(by.y)) || (!is.null(by.x) && is.null(by.y))) {
     stop("one but not both of by.x / by.y is NULL")
   }
-  if (!is.null(by)) by.x <- by.y <- by
+  if (!is.null(by)) {
+    by.x <- by.y <- by
+  }
 
-  if (length(by.x) != length(by.y)) stop("lengths differ for by.y & by.x")
+  if (length(by.x) != length(by.y)) {
+    stop("lengths differ for by.y & by.x")
+  }
   all_names_present(x, by.x)
   all_names_present(y, by.y)
   names(by.x) <- by.y
   names(by.y) <- by.x
 
-  if (length(mid.scales)>0) all_names_present(x, c("lex.dur", mid.scales))
+  if (length(mid.scales) > 0) {
+    all_names_present(x, c("lex.dur", mid.scales))
+  }
 
   whScale <- by.x %in% mid.scales
   xScales <- by.x[whScale]
   yScales <- by.y[whScale]
 
   if (length(yScales) > 0) {
-
     oldVals <- copy(with(x, mget(xScales)))
     on.exit(set(x, j = xScales, value = oldVals))
     setattr(oldVals, "names", yScales)
@@ -782,31 +909,46 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
       xVar <- xScales[yVar]
       xBr <- sort(unique(y[[yVar]]))
       xBr <- unique(c(xBr, Inf))
-      set(x, j = xVar, value = cutLow(x[[xVar]] + x$lex.dur*0.5, breaks = xBr))
+      set(
+        x,
+        j = xVar,
+        value = cutLow(x[[xVar]] + x$lex.dur * 0.5, breaks = xBr)
+      )
     }
-
   }
 
   ## ensure x retains order (no copy taken of it)
   xKey <- key(x)
   if (length(xKey) == 0) {
     xKey <- makeTempVarName(x, pre = "sort_")
-    on.exit(if ("x" %in% ls()) setcolsnull(x, delete = xKey, soft = TRUE), add = TRUE)
-    on.exit(if ("z" %in% ls()) setcolsnull(z, delete = xKey, soft = TRUE), add = TRUE)
+    on.exit(
+      if ("x" %in% ls()) setcolsnull(x, delete = xKey, soft = TRUE),
+      add = TRUE
+    )
+    on.exit(
+      if ("z" %in% ls()) setcolsnull(z, delete = xKey, soft = TRUE),
+      add = TRUE
+    )
     x[, (xKey) := 1:.N]
   }
 
   if (any(duplicated(y, by = by.y))) {
-    stop("y is duplicated by the inferred/supplied by.y variables (",
-         paste0("'", by.y, "'", collapse = ", "), "). ",
-         "First ensure this is not so before proceeding.")
+    stop(
+      "y is duplicated by the inferred/supplied by.y variables (",
+      paste0("'", by.y, "'", collapse = ", "),
+      "). ",
+      "First ensure this is not so before proceeding."
+    )
   }
 
   ## avoid e.g. using merge.Lexis when x inherits Lexis
   xClass <- class(x)
-  on.exit({
-    setattr(x, "class", xClass)
-    }, add = TRUE)
+  on.exit(
+    {
+      setattr(x, "class", xClass)
+    },
+    add = TRUE
+  )
   setattr(x, "class", c("data.table", "data.frame"))
 
   ## return old numeric values of variables that were cutLow()'d
@@ -814,19 +956,28 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
   if (old.nums && length(xScales)) {
     tmpXScales <- makeTempVarName(names = c(names(x), names(y)), pre = xScales)
     set(x, j = tmpXScales, value = oldVals)
-    on.exit({
-      xOrder <- setdiff(names(x), tmpXScales)
-      setcolsnull(x, delete = xScales, soft = TRUE)
-      setnames(x, tmpXScales, xScales)
-      setcolorder(x, xOrder)
-
-    }, add = TRUE)
+    on.exit(
+      {
+        xOrder <- setdiff(names(x), tmpXScales)
+        setcolsnull(x, delete = xScales, soft = TRUE)
+        setnames(x, tmpXScales, xScales)
+        setcolorder(x, xOrder)
+      },
+      add = TRUE
+    )
   }
 
   ## merge
-  z <- merge(x, y, by.x = by.x, by.y = by.y,
-             all.x = all.x, all.y = all.y, all = all,
-             sort = FALSE)
+  z <- merge(
+    x,
+    y,
+    by.x = by.x,
+    by.y = by.y,
+    all.x = all.x,
+    all.y = all.y,
+    all = all,
+    sort = FALSE
+  )
 
   setDT(z)
   if (old.nums && length(xScales)) {
@@ -838,9 +989,10 @@ cutLowMerge <- function(x, y, by.x = by, by.y = by, by = NULL, all.x = all, all.
   zOrder <- intersect(names(x), names(z))
   zOrder <- c(zOrder, setdiff(names(z), names(x)))
   setcolorder(z, zOrder)
-  if (length(xKey) > 0) setkeyv(z, xKey)
+  if (length(xKey) > 0) {
+    setkeyv(z, xKey)
+  }
   z[]
-
 }
 
 
@@ -851,30 +1003,36 @@ getOrigin <- function(x) {
   if (inherits(x, c("Date", "IDate"))) {
     as.Date("1970-01-01")
   } else {
-    stop("class '", class(x), "' not supported; usage of Date recommended - see ?as.Date")
+    stop(
+      "class '",
+      class(x),
+      "' not supported; usage of Date recommended - see ?as.Date"
+    )
   }
 }
 
 promptYN <- function(q) {
-
   rl <- readline(prompt = paste0(q, " (Y/N) ::: "))
   y <- c("y", "Y")
-  n <- c( "n", "N")
-  if (!rl %in% c(y,n)) {
-    cat("Answer must be one of the following (without ticks):", paste0("'",c(y, n),"'", collapse = ", "))
+  n <- c("n", "N")
+  if (!rl %in% c(y, n)) {
+    cat(
+      "Answer must be one of the following (without ticks):",
+      paste0("'", c(y, n), "'", collapse = ", ")
+    )
     promptYN(q = q)
   }
 
   if (rl %in% y) TRUE else FALSE
-
 }
 
 
-
 oneWhitespace <- function(x) {
-  if (!is.character(x)) stop("x not a character")
+  if (!is.character(x)) {
+    stop("x not a character")
+  }
   x <- paste0(x, collapse = " ")
-  while(sum(grep(pattern = "  ", x = x))) {
+  while (sum(grep(pattern = "  ", x = x))) {
     x <- gsub(pattern = "  ", replacement = " ", x = x)
   }
   x
@@ -882,11 +1040,14 @@ oneWhitespace <- function(x) {
 
 
 aliased_cols <- function(data, cols) {
-
-  if (missing(cols)) cols <- names(data)
+  if (missing(cols)) {
+    cols <- names(data)
+  }
   all_names_present(data, cols)
 
-  if (length(cols) < 2L) return(invisible())
+  if (length(cols) < 2L) {
+    return(invisible())
+  }
 
   x <- with(data, mget(cols))
   x <- lapply(x, duplicated)
@@ -898,55 +1059,57 @@ aliased_cols <- function(data, cols) {
   tick <- 0L
   aliased <- FALSE
   while (!aliased && length(sub_cols) > 1L && tick <= length(cols)) {
-
     currVar <- sub_cols[1L]
     sub_cols <- setdiff(sub_cols, currVar)
-    tl[[currVar]] <- unlist(lapply(x[sub_cols], function(j) identical(x[[currVar]], j)))
+    tl[[currVar]] <- unlist(lapply(x[sub_cols], function(j) {
+      identical(x[[currVar]], j)
+    }))
     aliased <- sum(tl[[currVar]])
 
     tick <- tick + 1L
   }
 
-  if (tick == length(cols)) warning("while loop went over the number of columns argument cols")
+  if (tick == length(cols)) {
+    warning("while loop went over the number of columns argument cols")
+  }
 
   ## result: list of logical vectors indicating if a column is aliased
   ## with other columns
   tl[vapply(tl, function(j) sum(j) == 0L, logical(1))] <- NULL
 
-  if (length(tl) == 0L) return(invisible())
+  if (length(tl) == 0L) {
+    return(invisible())
+  }
 
   ## take first vector for reporting
   var <- names(tl)[1L]
   aliases <- names(tl[[1L]])[tl[[1]]]
   aliases <- paste0("'", aliases, "'", collapse = ", ")
-  stop("Variable '", var, "' is aliased with following variable(s): ", aliases, ".")
+  stop(
+    "Variable '",
+    var,
+    "' is aliased with following variable(s): ",
+    aliases,
+    "."
+  )
 
   invisible()
 }
 
 
-
-
-
-
-
 return_DT <- function() {
-
   x <- getOption("popEpi.datatable")
   if (!is.null(x) && !is.logical(x)) {
-    stop("the option 'popEpi.datatable' must be either NULL or a logical ",
-         "value (TRUE / FALSE).")
+    stop(
+      "the option 'popEpi.datatable' must be either NULL or a logical ",
+      "value (TRUE / FALSE)."
+    )
   }
   if (is.null(x) || isTRUE(x)) {
     return(TRUE)
   }
   return(FALSE)
-
 }
-
-
-
-
 
 
 get_breaks <- function(x) {
@@ -955,21 +1118,17 @@ get_breaks <- function(x) {
 
 #' @export
 get_breaks.survtab <- function(x) {
-
   ss <- attributes(x)$survtab.meta$surv.scale
   sb <- attributes(x)$survtab.meta$surv.breaks
 
   l <- list(sb)
   names(l) <- ss
   as.list(l)
-
 }
 
 #' @export
 get_breaks.aggre <- function(x) {
-
   as.list(attributes(x)$aggre.meta$breaks)
-
 }
 
 #' @export
@@ -991,27 +1150,29 @@ select_breaks <- function(data, ...) {
 select_breaks.default <- function(data, ts, br = NULL, ...) {
   br <- do_select_breaks(data = data, ts = ts, br = br)
   if (is.null(br)) {
-    stop("Data did not contain breaks and no breaks were supplied ",
-         "by hand.")
+    stop("Data did not contain breaks and no breaks were supplied ", "by hand.")
   }
   br
 }
 
 #' @export
 select_breaks.aggre <- function(data, ts, br = NULL, ...) {
-
-
   br <- do_select_breaks(data = data, ts = ts, br = br)
 
-  select_breaks_subcheck(br, get_breaks(data)[[ts]],
-                         "Manually supplied breaks were not a ",
-                         "subset of the breaks in aggre data. ",
-                         "Data has breaks as a result of being split and ",
-                         "aggregated; see ?as.aggre and ?aggre")
+  select_breaks_subcheck(
+    br,
+    get_breaks(data)[[ts]],
+    "Manually supplied breaks were not a ",
+    "subset of the breaks in aggre data. ",
+    "Data has breaks as a result of being split and ",
+    "aggregated; see ?as.aggre and ?aggre"
+  )
 
   if (is.null(br)) {
-    stop("aggre object did not contain breaks and no breaks were supplied ",
-         "by hand.")
+    stop(
+      "aggre object did not contain breaks and no breaks were supplied ",
+      "by hand."
+    )
   }
 
   br
@@ -1019,20 +1180,24 @@ select_breaks.aggre <- function(data, ts, br = NULL, ...) {
 
 #' @export
 select_breaks.Lexis <- function(data, ts, br = NULL, ...) {
-
   checkLexisData(data)
 
   br <- do_select_breaks(data = data, ts = ts, br = br)
 
-  select_breaks_subcheck(br, get_breaks(data)[[ts]],
-                         "Manually supplied breaks were not a ",
-                         "subset of the breaks in Lexis data. ",
-                         "Data has breaks as a result of being a split Lexis ",
-                         "object; see ?Lexis and e.g. ?splitMulti")
+  select_breaks_subcheck(
+    br,
+    get_breaks(data)[[ts]],
+    "Manually supplied breaks were not a ",
+    "subset of the breaks in Lexis data. ",
+    "Data has breaks as a result of being a split Lexis ",
+    "object; see ?Lexis and e.g. ?splitMulti"
+  )
 
   if (is.null(br)) {
-    stop("Lexis object did not contain breaks and no breaks were supplied ",
-         "by hand.")
+    stop(
+      "Lexis object did not contain breaks and no breaks were supplied ",
+      "by hand."
+    )
   }
   bl <- list(br)
   names(bl) <- ts
@@ -1066,14 +1231,12 @@ do_select_breaks <- function(data, ts, br = NULL) {
   bl <- list(br)
   names(dbl) <- names(bl) <- "TS"
 
-
-
-  if (is.null(br)) br <- dbr
+  if (is.null(br)) {
+    br <- dbr
+  }
 
   br
 }
-
-
 
 
 breaks_in_data <- function(br, ts, data) {
@@ -1083,15 +1246,15 @@ breaks_in_data <- function(br, ts, data) {
   u <- unique(data[[ts]])
 
   br <- sort(unique(br))
-  if (length(br)<2) stop("There must be at least two breaks to form intervals")
+  if (length(br) < 2) {
+    stop("There must be at least two breaks to form intervals")
+  }
 
   br <- if (max(br) <= max(u)) br else br[-length(br)]
   all(br %in% u)
-
 }
 
 mget_cols <- function(cols, data) {
-
   stopifnot(all(cols %in% names(data)))
 
   setDT(mget(x = cols, envir = as.environment(data), inherits = FALSE))

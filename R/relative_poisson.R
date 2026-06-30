@@ -99,58 +99,81 @@
 #' Stat Med. 2004 Jan 15;23(1):51-64.
 #' \doi{10.1002/sim.1597}
 
-
-relpois <- function(data,
-                    formula,
-                    fot.breaks = NULL, subset = NULL, check=TRUE, ...) {
+relpois <- function(
+  data,
+  formula,
+  fot.breaks = NULL,
+  subset = NULL,
+  check = TRUE,
+  ...
+) {
   ## R CMD CHECK appeasement
   lex.dur <- NULL
 
   ## prep arguments ------------------------------------------------------------
-  excess_cases <- fot <- pop.haz <-  NULL ## appease R CMD CHECK
+  excess_cases <- fot <- pop.haz <- NULL ## appease R CMD CHECK
 
   ## somehow the class of the data is being altered by this function
   oldClass <- class(data)
 
-  if (missing(formula) || !inherits(formula, "formula")) stop("formula not defined")
+  if (missing(formula) || !inherits(formula, "formula")) {
+    stop("formula not defined")
+  }
 
   form_vars <- all.vars(formula)
   dataname <- as.name(deparse(substitute(data)))
 
   if (!inherits(data, "Lexis")) {
-    stop("data is not a Lexis object; data must be a result of splitting or using Lexis")
+    stop(
+      "data is not a Lexis object; data must be a result of splitting or using Lexis"
+    )
   }
 
   if ("FOT" %in% names(data)) {
-    stop("FOT is a reserved name but you have a variable with that name in data; rename/delete it first")
+    stop(
+      "FOT is a reserved name but you have a variable with that name in data; rename/delete it first"
+    )
   }
 
   # wasDF <- FALSE
   if (!is.data.table(data)) {
     data <- copy(data)
     setDT(data)
-    message("Took a copy of your data because it was a data.frame and not a data.table. This may take up a lot of memory.")
-    message("It is recommended to convert your data to data.table before using this function using as.data.table or setDT")
+    message(
+      "Took a copy of your data because it was a data.frame and not a data.table. This may take up a lot of memory."
+    )
+    message(
+      "It is recommended to convert your data to data.table before using this function using as.data.table or setDT"
+    )
   }
 
-  req_vars <- unique(c("lex.id", "fot", "lex.dur", "pop.haz", setdiff(form_vars, "FOT")))
+  req_vars <- unique(c(
+    "lex.id",
+    "fot",
+    "lex.dur",
+    "pop.haz",
+    setdiff(form_vars, "FOT")
+  ))
   all_names_present(data, req_vars)
 
   surv.breaks <- attr(data, "breaks")$fot
   if (is.null(surv.breaks)) {
-    stop("did not find any breaks information in data attributes named 'fot';
+    stop(
+      "did not find any breaks information in data attributes named 'fot';
             probable reason: split data was edited after splitting - ",
-         "don't do that")
+      "don't do that"
+    )
   } else {
     if (!is.null(fot.breaks)) {
       if (any(!fot.breaks %in% surv.breaks)) {
-        stop("fot.breaks must be a subset of the breaks for 'fot' used in splitting;
-           type attr(data, 'breaks')$fot to see the breaks you used in splitting")
+        stop(
+          "fot.breaks must be a subset of the breaks for 'fot' used in splitting;
+           type attr(data, 'breaks')$fot to see the breaks you used in splitting"
+        )
       } else {
         surv.breaks <- fot.breaks
       }
     }
-
   }
 
   ## prep & subset data --------------------------------------------------------
@@ -161,19 +184,21 @@ relpois <- function(data,
     stop("some pop.haz are NA")
   }
 
-  on.exit({
-    setcolsnull(data, c("FOT", tmpdexp), soft = TRUE)
-  }, add = TRUE)
+  on.exit(
+    {
+      setcolsnull(data, c("FOT", tmpdexp), soft = TRUE)
+    },
+    add = TRUE
+  )
 
-  if ("FOT" %in% form_vars)  {
+  if ("FOT" %in% form_vars) {
     data[, "FOT" := cut(fot, breaks = surv.breaks, right = FALSE)]
     # set(data, j = "FOT", value = cut(data$fot, breaks = surv.breaks, right=FALSE))
     subset <- subset & !is.na(data$FOT)
   }
   tmpdexp <- makeTempVarName(data, pre = "TEMP_d.exp_")
-  data[, c(tmpdexp) := pop.haz*lex.dur]
+  data[, c(tmpdexp) := pop.haz * lex.dur]
   # set(data, j = tmpdexp, value = data$pop.haz * data$lex.dur)
-
 
   if (check) {
     ## test for negative excess cases in factor variable combinations ------------
@@ -182,39 +207,47 @@ relpois <- function(data,
 
     fac_vars <- colnames(attr(terms.formula(formula), "factors"))
 
-    fac_list <- paste0(fac_vars, collapse=", ")
+    fac_list <- paste0(fac_vars, collapse = ", ")
     fac_list <- paste0("list(", fac_list, ")")
-    fac_list <- parse(text=fac_list)
+    fac_list <- parse(text = fac_list)
 
-    wh_fac <- as.data.table(data)[subset, unlist(lapply(eval(fac_list), is.factor))]
+    wh_fac <- as.data.table(data)[
+      subset,
+      unlist(lapply(eval(fac_list), is.factor))
+    ]
     fac_vars <- fac_vars[wh_fac]
 
-    if (length(fac_vars) == 0) fac_vars <- NULL
-    fac_list <- paste0(fac_vars, collapse=", ")
+    if (length(fac_vars) == 0) {
+      fac_vars <- NULL
+    }
+    fac_list <- paste0(fac_vars, collapse = ", ")
     fac_list <- paste0("list(", fac_list, ")")
-    fac_list <- parse(text=fac_list)
-
+    fac_list <- parse(text = fac_list)
 
     ## test negativity of excess cases
     LHS <- as.character(formula)
     LHS <- LHS[2]
     LHS <- parse(text = LHS)
 
-    excas <- as.data.table(data)[subset, list(excess_cases = sum(eval(LHS)-get(tmpdexp))), keyby=eval(fac_list)]
+    excas <- as.data.table(data)[
+      subset,
+      list(excess_cases = sum(eval(LHS) - get(tmpdexp))),
+      keyby = eval(fac_list)
+    ]
     setnames(excas, 1:ncol(excas), c(fac_vars, "excess_cases"))
-
 
     if (any(is.na(excas$excess_cases))) {
       stop("some excess cases were NA; is pop.haz available for all records?")
     }
     excas <- excas[excess_cases <= 0]
-    if (any(excas$excess_cases<=0)) {
+    if (any(excas$excess_cases <= 0)) {
       print(excas)
-      warning("negative excess cases found in some combinations of factor variables;
-           see printed table and try e.g. wider FOT intervals")
+      warning(
+        "negative excess cases found in some combinations of factor variables;
+           see printed table and try e.g. wider FOT intervals"
+      )
     }
   }
-
 
   ## custom poisson family -----------------------------------------------------
   RPL <- copy(poisson())
@@ -222,24 +255,29 @@ relpois <- function(data,
   RPL$linkfun <- function(mu, d.exp = data[[tmpdexp]][subset]) log(mu - d.exp)
   RPL$linkinv <- function(eta, d.exp = data[[tmpdexp]][subset]) d.exp + exp(eta)
 
-
-  RPL$initialize <- substitute( {
-    if (any(y < 0)) stop(paste("Negative values not allowed for",
-                               "the Poisson family"))
-    n <- rep.int(1, nobs)
-    mustart <- pmax(y, d.exp) + 0.1
-  }, list(d.exp = data[[tmpdexp]][subset]) )
-
-
+  RPL$initialize <- substitute(
+    {
+      if (any(y < 0)) {
+        stop(paste("Negative values not allowed for", "the Poisson family"))
+      }
+      n <- rep.int(1, nobs)
+      mustart <- pmax(y, d.exp) + 0.1
+    },
+    list(d.exp = data[[tmpdexp]][subset])
+  )
 
   ## glm call ------------------------------------------------------------------
   ## update() won't work
   ## anova() works
 
-
-  ml <- glm(formula = formula, data=data[subset,], offset=log(lex.dur),
-            #             subset = subset, ## Error in xj[i] : invalid subscript type 'closure'
-            family = RPL, ...)
+  ml <- glm(
+    formula = formula,
+    data = data[subset, ],
+    offset = log(lex.dur),
+    #             subset = subset, ## Error in xj[i] : invalid subscript type 'closure'
+    family = RPL,
+    ...
+  )
 
   ## final touches -------------------------------------------------------------
   ml$d.exp <- data[subset, ][[tmpdexp]]
@@ -251,10 +289,8 @@ relpois <- function(data,
 
   setattr(data, "class", oldClass) ## see beginning of function
 
-
   ml
 }
-
 
 
 #' @title Excess hazard Poisson model
@@ -325,35 +361,51 @@ relpois <- function(data,
 #' ## to work as intended.
 #' @export
 
-relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subset = NULL, piecewise = TRUE, check = TRUE, ...) {
-
+relpois_ag <- function(
+  formula,
+  data,
+  d.exp,
+  offset = NULL,
+  breaks = NULL,
+  subset = NULL,
+  piecewise = TRUE,
+  check = TRUE,
+  ...
+) {
   TF <- environment()
   PF <- parent.frame(1L)
   original_formula <- formula
 
   if (!inherits(data, "aggre")) {
-    stop("data is not an aggre object. Please aggregate your data first using ",
-         "e.g. lexpand(). If your data is pre-aggregated, use as.aggre() to ",
-         "mark it as such.")
+    stop(
+      "data is not an aggre object. Please aggregate your data first using ",
+      "e.g. lexpand(). If your data is pre-aggregated, use as.aggre() to ",
+      "mark it as such."
+    )
   }
 
   formula <- evalRecursive(formula, env = TF, enc = PF)$arg
-  if (missing(formula) || !inherits(formula, "formula")) stop("formula not defined")
-
-
-
+  if (missing(formula) || !inherits(formula, "formula")) {
+    stop("formula not defined")
+  }
 
   ## detect survival time scale ------------------------------------------------
   oldBreaks <- copy(attr(data, "breaks"))
   allScales <- names(oldBreaks)
   if (is.null(oldBreaks)) {
-    stop("data does not have breaks information. Is it a result of using ",
-         "aggre() or as.aggre()?")
+    stop(
+      "data does not have breaks information. Is it a result of using ",
+      "aggre() or as.aggre()?"
+    )
   }
   survScale <- intersect(all.vars(formula), allScales)
   if (length(survScale) > 1L) {
-    stop("Found several used time scales in formula, which is not supported ",
-         "(found ", paste0("'", survScale, "'", collapse = ", "), ")")
+    stop(
+      "Found several used time scales in formula, which is not supported ",
+      "(found ",
+      paste0("'", survScale, "'", collapse = ", "),
+      ")"
+    )
   }
 
   ## check supplied breaks -----------------------------------------------------
@@ -364,9 +416,11 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
 
   if (!is.null(breaks)) {
     if (!all_breaks_in(breaks, oldBreaks)) {
-      stop("Supplied breaks must be subset of the breaks used in splitting/",
-           "aggregating data. See the latter using e.g. ",
-           "attributes(x)$aggre.meta$breaks where x is your aggregated data.")
+      stop(
+        "Supplied breaks must be subset of the breaks used in splitting/",
+        "aggregating data. See the latter using e.g. ",
+        "attributes(x)$aggre.meta$breaks where x is your aggregated data."
+      )
     }
   }
 
@@ -391,10 +445,11 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
   ## handle breaks -------------------------------------------------------------
   if (!is.null(breaks)) {
     if (!piecewise) {
-      stop("Supplied breaks but piecewise = FALSE. Please select piecewise = ",
-           "TRUE if you want piecewise estimates defined by the breaks.")
+      stop(
+        "Supplied breaks but piecewise = FALSE. Please select piecewise = ",
+        "TRUE if you want piecewise estimates defined by the breaks."
+      )
     }
-
   }
 
   cutBreaks <- breaks
@@ -403,34 +458,51 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
   cutBreaks[sapply(cutBreaks, length) < 2L] <- NULL
 
   if (piecewise && length(cutBreaks)) {
-
     for (sc in names(cutBreaks)) {
-      set(x, j = sc, value = cut(x[[sc]], breaks = cutBreaks[[sc]],
-                                 right = FALSE, labels = FALSE))
+      set(
+        x,
+        j = sc,
+        value = cut(
+          x[[sc]],
+          breaks = cutBreaks[[sc]],
+          right = FALSE,
+          labels = FALSE
+        )
+      )
 
       pieces <- round(cutBreaks[[sc]], 2L)
       pieces <- paste0("[", pieces[-length(pieces)], ", ", pieces[-1L], ")")
       set(x, j = sc, value = pieces[x[[sc]]])
     }
-
   }
 
   ## eval value args -----------------------------------------------------------
-  d.exp <- evalPopArg(x, sub_d.exp, enclos = PF,
-                      DT = TRUE, recursive = TRUE)
-  if (is.null(d.exp)) stop("argument d.exp was not supplied")
+  d.exp <- evalPopArg(x, sub_d.exp, enclos = PF, DT = TRUE, recursive = TRUE)
+  if (is.null(d.exp)) {
+    stop("argument d.exp was not supplied")
+  }
   d.exp <- rowSums(d.exp)
-  if (length(d.exp) == nrow(data)) d.exp <- d.exp[subset]
+  if (length(d.exp) == nrow(data)) {
+    d.exp <- d.exp[subset]
+  }
 
-  offset <- evalPopArg(x, sub_offset, enclos = PF,
-                       DT = TRUE, recursive = TRUE)
-  if (!is.null(offset)) offset <- rowSums(offset)
-  if (length(offset) == nrow(data)) offset <- offset[subset]
+  offset <- evalPopArg(x, sub_offset, enclos = PF, DT = TRUE, recursive = TRUE)
+  if (!is.null(offset)) {
+    offset <- rowSums(offset)
+  }
+  if (length(offset) == nrow(data)) {
+    offset <- offset[subset]
+  }
 
   ## check excess cases --------------------------------------------------------
   d <- eval(formula[[2]], envir = x, enclos = PF)
-  check_excess_cases(d = d, d.exp = d.exp, data = x,
-                     formula = formula, enclos = PF)
+  check_excess_cases(
+    d = d,
+    d.exp = d.exp,
+    data = x,
+    formula = formula,
+    enclos = PF
+  )
 
   ## custom poisson family -----------------------------------------------------
   RPL <- copy(poisson())
@@ -442,17 +514,27 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
     d.exp + exp(eta)
   }
 
-  RPL$initialize <- substitute( {
-    if (any(y < 0)) stop(paste("Negative values not allowed for",
-                               "the Poisson family"))
-    n <- rep.int(1, nobs)
-    mustart <- pmax(y, d.exp) + 0.1
-  }, list(d.exp = TF$d.exp) )
+  RPL$initialize <- substitute(
+    {
+      if (any(y < 0)) {
+        stop(paste("Negative values not allowed for", "the Poisson family"))
+      }
+      n <- rep.int(1, nobs)
+      mustart <- pmax(y, d.exp) + 0.1
+    },
+    list(d.exp = TF$d.exp)
+  )
 
   ## glm call ------------------------------------------------------------------
 
   ## NOTE: parent.frame(3L) to find this (this function's) environment
-  ml <- glm(formula = formula, data=x, offset = parent.frame(3L)$offset, family = RPL, ...)
+  ml <- glm(
+    formula = formula,
+    data = x,
+    offset = parent.frame(3L)$offset,
+    family = RPL,
+    ...
+  )
 
   ## final touches -------------------------------------------------------------
 
@@ -463,11 +545,13 @@ relpois_ag <- function(formula, data, d.exp, offset = NULL, breaks = NULL, subse
 }
 
 
-
-
-
-
-check_excess_cases <- function(d, d.exp, formula, data, enclos = parent.frame(1)) {
+check_excess_cases <- function(
+  d,
+  d.exp,
+  formula,
+  data,
+  enclos = parent.frame(1)
+) {
   # @title Check Excess Counts for a Relative Poisson Model
   # @description Checks that the excess counts by strata all exceed 0.
   # @param d a vector of observed counts of cases
@@ -483,8 +567,12 @@ check_excess_cases <- function(d, d.exp, formula, data, enclos = parent.frame(1)
   d.exc <- NULL
 
   by <- RHS2DT(formula, data = data, enclos = enclos)
-  if (!length(by)) by <- list()
-  facVars <- names(by)[sapply(by, function(col) is.factor(col) || is.character(col))]
+  if (!length(by)) {
+    by <- list()
+  }
+  facVars <- names(by)[sapply(by, function(col) {
+    is.factor(col) || is.character(col)
+  })]
 
   d <- substitute(d)
   d <- eval(d, envir = data, enclos = PF)
@@ -507,63 +595,66 @@ check_excess_cases <- function(d, d.exp, formula, data, enclos = parent.frame(1)
     setnames(tab, 1, bycol)
     if (nrow(tab)) {
       on.exit(print(tab))
-      stop("There are negative excess cases in the data calculated separately ",
-           "by the factor-like variables ",
-           paste0("'", facVars, "'", collapse = ", "), ". The model is not ",
-           "estimable with negative excess cases in strata. ",
-           "Infracting levels:")
+      stop(
+        "There are negative excess cases in the data calculated separately ",
+        "by the factor-like variables ",
+        paste0("'", facVars, "'", collapse = ", "),
+        ". The model is not ",
+        "estimable with negative excess cases in strata. ",
+        "Infracting levels:"
+      )
     }
-
   }
 
   if (!length(by)) {
     tab <- dt[, lapply(.SD, sum)]
     if (tab$d.exc <= 0L) {
-      stop("The marginal sum of excess cases is negative; the model cannot ",
-           "be fitted. ")
+      stop(
+        "The marginal sum of excess cases is negative; the model cannot ",
+        "be fitted. "
+      )
     }
   }
-
-
-
 
   invisible(NULL)
 }
 
 
-
-
-
-
-relpois_lex <- function(formula,
-                        data,
-                        pophaz = NULL,
-                        breaks = NULL,
-                        subset = NULL,
-                        check = TRUE,
-                        ...) {
+relpois_lex <- function(
+  formula,
+  data,
+  pophaz = NULL,
+  breaks = NULL,
+  subset = NULL,
+  check = TRUE,
+  ...
+) {
   PF <- parent.frame(1)
   TF <- environment()
 
   form <- agVars <- NULL
 
-
   ## checks --------------------------------------------------------------------
 
   checkLexisData(data)
   checkPophaz(lex = data, ph = pophaz)
-  if (!is.null(breaks)) checkBreaksList(breaks)
+  if (!is.null(breaks)) {
+    checkBreaksList(breaks)
+  }
 
   oldBreaks <- copy(attr(data, "breaks"))
   allScales <- copy(attr(data, "time.scales"))
-
 
   ## detect which time scale used ----------------------------------------------
 
   survScale <- intersect(all.vars(formula), allScales)
   if (length(survScale) > 1L) {
-    stop("Found several used time scales in formula, which is not supported ",
-         "(found ", paste0("'", survScale, "'", collapse = ", "), ")")
+    stop(
+      "Found several used time scales in formula, which is not supported ",
+      "(found ",
+      paste0("'", survScale, "'", collapse = ", "),
+      ")"
+    )
   }
   ## subset --------------------------------------------------------------------
 
@@ -579,7 +670,9 @@ relpois_lex <- function(formula,
     breaks <- list(breaks)
     names(breaks) <- survScale
   }
-  if (!is.null(breaks)) x <- splitMulti(x, breaks = breaks, drop = TRUE)
+  if (!is.null(breaks)) {
+    x <- splitMulti(x, breaks = breaks, drop = TRUE)
+  }
   newBreaks <- copy(attr(x, "breaks"))
 
   ## merge in pophaz -----------------------------------------------------------
@@ -587,8 +680,15 @@ relpois_lex <- function(formula,
   ph <- data.table(pophaz)
   phVars <- setdiff(names(ph), "haz")
   setnames(ph, "haz", haz)
-  x <- cutLowMerge(x, pophaz, by = phVars, all.x = TRUE, all.y = FALSE,
-                   old.nums = TRUE, mid.scales = intersect(allScales, phVars))
+  x <- cutLowMerge(
+    x,
+    pophaz,
+    by = phVars,
+    all.x = TRUE,
+    all.y = FALSE,
+    old.nums = TRUE,
+    mid.scales = intersect(allScales, phVars)
+  )
 
   # expected cases
   d.exp <- makeTempVarName(x, pre = "d.exp_")
@@ -613,4 +713,3 @@ relpois_lex <- function(formula,
 
   rp
 }
-

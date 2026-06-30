@@ -84,22 +84,22 @@
 #' @family main functions
 #' @family rate functions
 
-rate <- function( data,
-                  obs = NULL,
-                  pyrs = NULL,
-                  print = NULL,
-                  adjust = NULL,
-                  weights = NULL,
-                  subset = NULL
+rate <- function(
+  data,
+  obs = NULL,
+  pyrs = NULL,
+  print = NULL,
+  adjust = NULL,
+  weights = NULL,
+  subset = NULL
 ) {
-
   PF <- parent.frame(1L)
   TF <- environment()
 
   ## subsetting -----------------------------------------------------------
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = data, substiset = subset, enclos = PF)
-  data <- data[subset,]
+  data <- data[subset, ]
   setDT(data)
 
   # evalPopArg
@@ -126,8 +126,10 @@ rate <- function( data,
   prNames <- tmpPrNames <- NULL
   if (length(inc.pri)) {
     prNames <- copy(names(inc.pri))
-    tmpPrNames <- makeTempVarName(data = data,
-                                  pre = paste0("print", seq_along(prNames)))
+    tmpPrNames <- makeTempVarName(
+      data = data,
+      pre = paste0("print", seq_along(prNames))
+    )
     setnames(inc.pri, prNames, tmpPrNames)
   }
 
@@ -136,16 +138,21 @@ rate <- function( data,
   adNames <- tmpAdNames <- NULL
   if (length(inc.adj)) {
     adNames <- copy(names(inc.adj))
-    tmpAdNames <- makeTempVarName(data = data,
-                                  pre = paste0("adjust", seq_along(adNames)))
+    tmpAdNames <- makeTempVarName(
+      data = data,
+      pre = paste0("adjust", seq_along(adNames))
+    )
     setnames(inc.adj, adNames, tmpAdNames)
   }
 
   ## collect data --------------------------------------------------------------
   data <- cbind(inc.obs, inc.pyr)
-  if (!is.null(prNames)) data <- cbind(data, inc.pri)
-  if (!is.null(adNames)) data <- cbind(data, inc.adj)
-
+  if (!is.null(prNames)) {
+    data <- cbind(data, inc.pri)
+  }
+  if (!is.null(adNames)) {
+    data <- cbind(data, inc.adj)
+  }
 
   ## handle weights ------------------------------------------------------------
   weights <- substitute(weights)
@@ -168,33 +175,46 @@ rate <- function( data,
 
   ## form table with weights ---------------------------------------------------
   NA.msg <- "Data contains %%NA_COUNT%% NA values."
-  data <- makeWeightsDT(data,
-                        values = list(tmpObsNames, tmpPyrNames),
-                        print = tmpPrNames,
-                        adjust = tmpAdNames,
-                        weights = weights,
-                        internal.weights.values = tmpPyrNames,
-                        NA.text = NA.msg)
+  data <- makeWeightsDT(
+    data,
+    values = list(tmpObsNames, tmpPyrNames),
+    print = tmpPrNames,
+    adjust = tmpAdNames,
+    weights = weights,
+    internal.weights.values = tmpPyrNames,
+    NA.text = NA.msg
+  )
 
   ## estimate standardized rates -----------------------------------------------
-  data <- rate_est(data = data,
-                   obs = tmpObsNames,
-                   pyrs = tmpPyrNames,
-                   print = tmpPrNames,
-                   weights = "weights")
+  data <- rate_est(
+    data = data,
+    obs = tmpObsNames,
+    pyrs = tmpPyrNames,
+    print = tmpPrNames,
+    weights = "weights"
+  )
 
   ## final touch ---------------------------------------------------------------
   setDT(data)
   setattr(data, "class", c("rate", "data.table", "data.frame"))
-  setattr(data, name = 'rate.meta', value = list(obs = obsNames,
-                                                 pyrs = pyrNames,
-                                                 weights = weights,
-                                                 adjust = adNames,
-                                                 print = prNames,
-                                                 call = match.call(),
-                                                 NAs = NA))
-  setnames(data, c(tmpObsNames, tmpPyrNames, tmpPrNames),
-           c(obsNames, pyrNames, prNames))
+  setattr(
+    data,
+    name = 'rate.meta',
+    value = list(
+      obs = obsNames,
+      pyrs = pyrNames,
+      weights = weights,
+      adjust = adNames,
+      print = prNames,
+      call = match.call(),
+      NAs = NA
+    )
+  )
+  setnames(
+    data,
+    c(tmpObsNames, tmpPyrNames, tmpPrNames),
+    c(obsNames, pyrNames, prNames)
+  )
 
   # data.frame output option
   if (!return_DT()) {
@@ -205,84 +225,95 @@ rate <- function( data,
 }
 
 #' @export
-getCall.rate <- function (x, ...) {
+getCall.rate <- function(x, ...) {
   attributes(x)$rate.meta$call
 }
 
 stdr.weights <- function(wp = 'world00_1') {
-
   ## This one returns the standard population
   ## output: data.table with colnames: agegroup, reference
   ## standard populations are from datasets: stdpop18 and stdpop101
-  allow.pop <- c("world_1966_18of5",
-                 "europe_1976_18of5",
-                 "nordic_2000_18of5",
-                 "world_2000_18of5",
-                 "world_2000_20of5",
-                 "world_2000_101of1")
+  allow.pop <- c(
+    "world_1966_18of5",
+    "europe_1976_18of5",
+    "nordic_2000_18of5",
+    "world_2000_18of5",
+    "world_2000_20of5",
+    "world_2000_101of1"
+  )
   wp <- match.arg(wp, allow.pop)
 
   if (length(wp) > 1) {
     stop('Standard population name is not a scalar (length != 1).')
-
   } else if (wp %in% allow.pop[1:3]) {
-
     # get standard pop
     sr <- data.table(popEpi::stdpop18)
-    setnames(sr, 1:4, c("agegroup",allow.pop[1:3]))
+    setnames(sr, 1:4, c("agegroup", allow.pop[1:3]))
     sr[, agegroup := 1:18]
     sr[, setdiff(allow.pop[1:3], wp) := NULL]
 
     setnames(sr, wp, 'reference')
-
   } else if (wp %in% allow.pop[4:6]) {
-
     sr <- data.table(popEpi::stdpop101)
     if (wp == "world_2000_18of5") {
-      sr[,agegroup := cut(agegroup, breaks=c(0:17*5,Inf), right=FALSE, labels=FALSE)]
-      sr <- sr[,list(world_std = sum(world_std)), by="agegroup"]
+      sr[,
+        agegroup := cut(
+          agegroup,
+          breaks = c(0:17 * 5, Inf),
+          right = FALSE,
+          labels = FALSE
+        )
+      ]
+      sr <- sr[, list(world_std = sum(world_std)), by = "agegroup"]
     }
     if (wp == 'world_2000_20of5') {
-      sr[,agegroup := cut(agegroup, breaks=c(0:19*5,Inf), right=FALSE, labels=FALSE)]
-      sr <- sr[,list(world_std = sum(world_std)), by="agegroup"]
-    }
-    else {
-      sr <- sr[,list(world_std = sum(world_std)), by="agegroup"]
+      sr[,
+        agegroup := cut(
+          agegroup,
+          breaks = c(0:19 * 5, Inf),
+          right = FALSE,
+          labels = FALSE
+        )
+      ]
+      sr <- sr[, list(world_std = sum(world_std)), by = "agegroup"]
+    } else {
+      sr <- sr[, list(world_std = sum(world_std)), by = "agegroup"]
     }
     setnames(sr, "world_std", "reference")
-  }
-  else {
+  } else {
     stop("Invalid standard population name.")
   }
   sr[]
 }
-utils::globalVariables(c('stdpop18','stdpop101','agegroup','world_std'))
+utils::globalVariables(c('stdpop18', 'stdpop101', 'agegroup', 'world_std'))
 
 
-rate_est <- function(data = data,
-                     obs = 'obs',
-                     pyrs = 'pyrs',
-                     print = NULL,
-                     weights = NULL
+rate_est <- function(
+  data = data,
+  obs = 'obs',
+  pyrs = 'pyrs',
+  print = NULL,
+  weights = NULL
 ) {
   ## This one estimates the rates and calculates CI's and SE's.
 
-  badVars <- paste0("Internal error: missing following variable names in ",
-                    "working data: %%VARS%%. Complain to the pkg maintainer ",
-                    "if you see this.")
+  badVars <- paste0(
+    "Internal error: missing following variable names in ",
+    "working data: %%VARS%%. Complain to the pkg maintainer ",
+    "if you see this."
+  )
   all_names_present(data, c(obs, pyrs, print), msg = badVars)
 
   data <- data.table(data)
-  if ( is.null(weights) |  !weights %in% colnames(data)) {
+  if (is.null(weights) | !weights %in% colnames(data)) {
     weights <- NULL
   }
 
   if (all(!is.null(weights), !is.null(obs), !is.null(pyrs))) {
     # rate.adj
 
-    f2 <- function(list) list[[1]]/list[[2]]*list[[3]]
-    funx <- function(n,d,w,fun)  eval(parse(text=fun))
-
+    f2 <- function(list) list[[1]] / list[[2]] * list[[3]]
+    funx <- function(n, d, w, fun) eval(parse(text = fun))
 
     # variance rate.adj for each strata A
     fun1 <- '(._d_/._n_^2) * ._w_^2'
@@ -294,54 +325,74 @@ rate_est <- function(data = data,
       fun <- gsub(pattern = "._w_", replacement = w, x = fun)
       parse(text = fun)
     }
-    eval.me1 <- make_fun(d = obs, n = pyrs, w=weights, fun = fun1)
-    eval.me2 <- make_fun(d = obs, n = pyrs, w=weights, fun = fun2)
+    eval.me1 <- make_fun(d = obs, n = pyrs, w = weights, fun = fun1)
+    eval.me2 <- make_fun(d = obs, n = pyrs, w = weights, fun = fun2)
     data[, var.temp := eval(eval.me1)]
     data[, lam.temp := eval(eval.me2)]
     # add std weighted rates and variances
     #data[, ':='(var.temp = funx(d=get(obs), n=get(pyrs), w=get(weights), fun = fun1),
     #            lam.temp = funx(d=get(obs), n=get(pyrs), w=get(weights), fun = fun2)) ]
-    data[, rate.adj := f2(.SD), .SDcols= c(obs, pyrs, weights)]
+    data[, rate.adj := f2(.SD), .SDcols = c(obs, pyrs, weights)]
 
     # aggregate data
-    ie <- paste0('list(', obs, '=sum(',obs,',na.rm=TRUE), ', pyrs, '=sum(',pyrs,',na.rm=TRUE),',
-                 'rate.adj=sum(rate.adj,na.rm=TRUE),' ,'lam.temp=sum(lam.temp,na.rm=TRUE), var.temp=sum(var.temp,na.rm=TRUE))')
+    ie <- paste0(
+      'list(',
+      obs,
+      '=sum(',
+      obs,
+      ',na.rm=TRUE), ',
+      pyrs,
+      '=sum(',
+      pyrs,
+      ',na.rm=TRUE),',
+      'rate.adj=sum(rate.adj,na.rm=TRUE),',
+      'lam.temp=sum(lam.temp,na.rm=TRUE), var.temp=sum(var.temp,na.rm=TRUE))'
+    )
     l <- parse(text = ie)
 
-    data <- data[, eval(l), by=print]
+    data <- data[, eval(l), by = print]
     # rate.adj: S.E.
-    data[, SE.log.rate.adj := sqrt((1/lam.temp)^2 * var.temp) ] # log-rate
+    data[, SE.log.rate.adj := sqrt((1 / lam.temp)^2 * var.temp)] # log-rate
     data[, SE.rate.adj := sqrt(var.temp)]
     # rate.adj: CI
-    data[, ':='(rate.adj.lo = exp( log(rate.adj) - SE.log.rate.adj*1.96 ),
-                rate.adj.hi = exp( log(rate.adj) + SE.log.rate.adj*1.96 )) ]
-    data[,c('lam.temp','var.temp','SE.log.rate.adj') := NULL]
-  }
-
-  else {
-    ie <- paste0('list(', obs, '=sum(',obs,'), ', pyrs, '=sum(',pyrs,'))')
+    data[, ':='(
+      rate.adj.lo = exp(log(rate.adj) - SE.log.rate.adj * 1.96),
+      rate.adj.hi = exp(log(rate.adj) + SE.log.rate.adj * 1.96)
+    )]
+    data[, c('lam.temp', 'var.temp', 'SE.log.rate.adj') := NULL]
+  } else {
+    ie <- paste0('list(', obs, '=sum(', obs, '), ', pyrs, '=sum(', pyrs, '))')
     l <- parse(text = ie)
-    data <- data[, eval(l), by=print]
+    data <- data[, eval(l), by = print]
   }
   # rate
-  ia <- paste0('rate := ',obs,'/', pyrs)
+  ia <- paste0('rate := ', obs, '/', pyrs)
   k <- parse(text = ia)
   data[, eval(k), by = print]
 
   # var(rate)
-  var_r <- paste0('SE.rate := sqrt(',obs,'/(',pyrs,'*',pyrs,'))')
+  var_r <- paste0('SE.rate := sqrt(', obs, '/(', pyrs, '*', pyrs, '))')
   k <- parse(text = var_r)
   data[, eval(k), by = print]
 
   # var(log(rate)) and CI
-  eval.me3 <- paste('exp(sqrt(1/',obs,'))')
+  eval.me3 <- paste('exp(sqrt(1/', obs, '))')
   eval.me3 <- parse(text = eval.me3)
   data[, SE.log.rate := eval(eval.me3)]
-  data[, ':='(rate.lo = exp(log(rate)-log(SE.log.rate)*1.96),
-              rate.hi = exp(log(rate)+log(SE.log.rate)*1.96)) ]
+  data[, ':='(
+    rate.lo = exp(log(rate) - log(SE.log.rate) * 1.96),
+    rate.hi = exp(log(rate) + log(SE.log.rate) * 1.96)
+  )]
   data[, SE.log.rate := NULL]
   return(data[])
 }
 
-utils::globalVariables(c('var.temp','lam.temp','rate.adj','SE.rate.adj','SE.rate','SE.log.rate','SE.log.rate.adj'))
-
+utils::globalVariables(c(
+  'var.temp',
+  'lam.temp',
+  'rate.adj',
+  'SE.rate.adj',
+  'SE.rate',
+  'SE.log.rate',
+  'SE.log.rate.adj'
+))

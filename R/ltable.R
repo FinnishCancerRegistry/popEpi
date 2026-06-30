@@ -118,14 +118,15 @@
 #' expr.by.cj(sr, "agegroup", lapply(.SD, mean),
 #'            subset = dg_age < 70, .SDcols = c("dg_age", "status"))
 
-ltable <- function(data,
-                   by.vars = NULL,
-                   expr = list(obs = .N),
-                   subset = NULL,
-                   use.levels = TRUE,
-                   na.rm = FALSE,
-                   robust = TRUE) {
-
+ltable <- function(
+  data,
+  by.vars = NULL,
+  expr = list(obs = .N),
+  subset = NULL,
+  use.levels = TRUE,
+  na.rm = FALSE,
+  robust = TRUE
+) {
   PF <- parent.frame()
   TF <- environment()
 
@@ -136,14 +137,15 @@ ltable <- function(data,
   subset <- evalLogicalSubset(data, subset, enclos = PF)
 
   ## create table --------------------------------------------------------------
-  res <- expr.by.cj(data = data,
-                    by.vars = by.vars,
-                    expr = e,
-                    subset = subset,
-                    use.levels = use.levels,
-                    na.rm = na.rm,
-                    robust = robust)
-
+  res <- expr.by.cj(
+    data = data,
+    by.vars = by.vars,
+    expr = e,
+    subset = subset,
+    use.levels = use.levels,
+    na.rm = na.rm,
+    robust = robust
+  )
 
   ## final touch ---------------------------------------------------------------
 
@@ -151,10 +153,7 @@ ltable <- function(data,
     setDFpe(res)
   }
   res
-
 }
-
-
 
 
 #' @describeIn ltable Somewhat more streamlined `ltable` with
@@ -162,20 +161,20 @@ ltable <- function(data,
 #' of data.
 #' @export expr.by.cj
 
-expr.by.cj <- function(data,
-                       by.vars = NULL,
-                       expr = list(obs = .N),
-                       subset = NULL,
-                       use.levels = FALSE,
-                       na.rm = FALSE,
-                       robust = FALSE,
-                       .SDcols = NULL,
-                       enclos = parent.frame(1L),
-                       ...) {
-
+expr.by.cj <- function(
+  data,
+  by.vars = NULL,
+  expr = list(obs = .N),
+  subset = NULL,
+  use.levels = FALSE,
+  na.rm = FALSE,
+  robust = FALSE,
+  .SDcols = NULL,
+  enclos = parent.frame(1L),
+  ...
+) {
   PF <- enclos
   TF <- environment()
-
 
   ## checks --------------------------------------------------------------------
   if (!is.data.frame(data)) {
@@ -192,7 +191,7 @@ expr.by.cj <- function(data,
   stopifnot(is.character(.SDcols) || is.null(.SDcols))
   all_names_present(data, .SDcols)
 
-  tab <- data.table(data[1:min(10, nrow(data)),])
+  tab <- data.table(data[1:min(10, nrow(data)), ])
   e <- substitute(expr)
   e <- tab[, evalRecursive(e, env = .SD, enc = PF)$argSub]
 
@@ -230,26 +229,30 @@ expr.by.cj <- function(data,
   }
   cj <- lapply(as.list(tab)[by.vars], lev_fun)
   cj <- do.call(CJ, c(cj, unique = FALSE, sorted = FALSE))
-  if (na.rm) cj <- na.omit(cj)
+  if (na.rm) {
+    cj <- na.omit(cj)
+  }
 
   ## eval expression -----------------------------------------------------------
   tabe <- "tab[subset][cj, eval(e),
                        on = by.vars,
                        by = .EACHI, ..."
   tabe <- if (is.null(.SDcols)) tabe else paste0(tabe, ", .SDcols = .SDcols")
-  tabe <- paste0(tabe ,"]")
+  tabe <- paste0(tabe, "]")
   res <- eval(parse(text = tabe))
 
   setcolsnull(res, delete = tmpDum, soft = TRUE)
   by.vars <- setdiff(by.vars, tmpDum)
 
   ## final touch ---------------------------------------------------------------
-  if (length(res)) setcolorder(res, c(by.vars, setdiff(names(res), by.vars)))
-  if (length(by.vars)) setkeyv(res, by.vars)
+  if (length(res)) {
+    setcolorder(res, c(by.vars, setdiff(names(res), by.vars)))
+  }
+  if (length(by.vars)) {
+    setkeyv(res, by.vars)
+  }
   if (!return_DT()) {
     setDFpe(res)
   }
   res
-
 }
-

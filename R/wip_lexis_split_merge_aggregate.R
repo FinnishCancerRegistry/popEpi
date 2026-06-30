@@ -501,18 +501,19 @@ lexis_split_merge_aggregate_by_stratum <- function(
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::aggre_by
   aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis)
   if (data.table::is.data.table(aggre_by)) {
-    subset <- subset & local({
-      join_dt <- data.table::setDT(as.list(lexis)[intersect(
-        names(lexis),
-        names(aggre_by)
-      )])
-      wh <- join_dt[
-        i = aggre_by,
-        on = names(aggre_by),
-        which = TRUE
-      ]
-      seq_len(nrow(join_dt)) %in% wh
-    })
+    subset <- subset &
+      local({
+        join_dt <- data.table::setDT(as.list(lexis)[intersect(
+          names(lexis),
+          names(aggre_by)
+        )])
+        wh <- join_dt[
+          i = aggre_by,
+          on = names(aggre_by),
+          which = TRUE
+        ]
+        seq_len(nrow(join_dt)) %in% wh
+      })
   }
 
   #§ @param aggre_exprs `[character, list]` (no default)
@@ -612,7 +613,11 @@ lexis_split_merge_aggregate_by_stratum <- function(
     c(names(breaks), merge_dt_by)
   )
   lexis_col_nms <- c(
-    "lex.id", lexis_ts_col_nms, "lex.dur", "lex.Cst", "lex.Xst"
+    "lex.id",
+    lexis_ts_col_nms,
+    "lex.dur",
+    "lex.Cst",
+    "lex.Xst"
   )
   lexis_dt <- lexis_to_lexis_dt__(
     lexis = lexis,
@@ -739,7 +744,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
         #§ Optional, if you supply this argument then
         #§ `[lexis_breaks_collapse_1d]` will be called for each stratum defined
         #§ via `aggre_by` separately.
-        #§ 
+        #§
         #§ - `NULL`: `[lexis_breaks_collapse_1d]` is not called.
         #§ - `list`: E.g. `list(mandatory_breaks = 0:5)`.
         if (!is.null(breaks_collapse_args)) {
@@ -841,20 +846,24 @@ lexis_split_merge_aggregate_by_stratum <- function(
   }
   out <- eval(out_expr)
   if (data.table::is.data.table(aggre_by) && nrow(aggre_by) > 0) {
-    out <- data.table::rbindlist(lapply(seq_len(nrow(aggre_by)), function(i) {
-      aggre_by_i <- aggre_by[i, ]
-      out_i <- out[
-        i = aggre_by_i,
-        on = names(aggre_by_i),
-        #§ @importFrom data.table .SD
-        j = .SD,
-        nomatch = 0L
-      ]
-      if (nrow(out_i) == 0) {
-        out_i <- cbind(aggre_by_i, box_dt)
-      }
-      return(out_i)
-    }), use.names = TRUE, fill = TRUE)
+    out <- data.table::rbindlist(
+      lapply(seq_len(nrow(aggre_by)), function(i) {
+        aggre_by_i <- aggre_by[i, ]
+        out_i <- out[
+          i = aggre_by_i,
+          on = names(aggre_by_i),
+          #§ @importFrom data.table .SD
+          j = .SD,
+          nomatch = 0L
+        ]
+        if (nrow(out_i) == 0) {
+          out_i <- cbind(aggre_by_i, box_dt)
+        }
+        return(out_i)
+      }),
+      use.names = TRUE,
+      fill = TRUE
+    )
   }
   local({
     # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum

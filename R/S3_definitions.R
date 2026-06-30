@@ -1,44 +1,63 @@
-
-
 #' @export
 print.sir <- function(x, subset = NULL, ...) {
-
   at <- attributes(x)$sir.meta
   PF <- parent.frame(1L)
   subset <- evalLogicalSubset(x, substitute(subset), enclos = PF)
   x <- x[subset, ]
   setDT(x)
 
-  t1 <- paste0("SIR (adjusted by ", paste(at$adjust, collapse = ', '),')',
-               ' with ', at$conf.level*100, '% ', 'confidence intervals (', at$conf.type,')')
-
+  t1 <- paste0(
+    "SIR (adjusted by ",
+    paste(at$adjust, collapse = ', '),
+    ')',
+    ' with ',
+    at$conf.level * 100,
+    '% ',
+    'confidence intervals (',
+    at$conf.type,
+    ')'
+  )
 
   # cat
-  t3 <- paste0(' Total sir: ', round(at$pooled.sir$sir,2),' (',
-               round(at$pooled.sir$sir.lo,2),'-', round(at$pooled.sir$sir.hi, 2),')\n',
-               ' Total observed: ', at$pooled.sir$observed, '\n',
-               ' Total expected: ', round(at$pooled.sir$expected,2), '\n',
-               ' Total person-years: ', round(at$pooled.sir$pyrs))
+  t3 <- paste0(
+    ' Total sir: ',
+    round(at$pooled.sir$sir, 2),
+    ' (',
+    round(at$pooled.sir$sir.lo, 2),
+    '-',
+    round(at$pooled.sir$sir.hi, 2),
+    ')\n',
+    ' Total observed: ',
+    at$pooled.sir$observed,
+    '\n',
+    ' Total expected: ',
+    round(at$pooled.sir$expected, 2),
+    '\n',
+    ' Total person-years: ',
+    round(at$pooled.sir$pyrs)
+  )
 
-  rv <- intersect(names(x), c('sir','sir.lo','sir.hi','observed','expected','pyrs'))
+  rv <- intersect(
+    names(x),
+    c('sir', 'sir.lo', 'sir.hi', 'observed', 'expected', 'pyrs')
+  )
   if (length(rv)) {
-    x[, (rv) := lapply(.SD, round, digits = 2L),  .SDcols = rv]
+    x[, (rv) := lapply(.SD, round, digits = 2L), .SDcols = rv]
   }
 
   rv <- intersect(names(x), c('p_value'))
   if (length(rv)) {
-    x[, (rv) := lapply(.SD, round, digits = 4),  .SDcols = rv]
+    x[, (rv) := lapply(.SD, round, digits = 4), .SDcols = rv]
   }
 
-
-  if(is.null(at$lrt.test)) {
+  if (is.null(at$lrt.test)) {
     d <- paste("Could not test", at$lrt.test.type)
   } else {
-    if(at$lrt.test.type == 'homogeneity') {
-      d <- paste("Test for homogeneity: p", p.round( c(at$lrt.test)))
+    if (at$lrt.test.type == 'homogeneity') {
+      d <- paste("Test for homogeneity: p", p.round(c(at$lrt.test)))
     }
-    if(at$lrt.test.type == 'trend') {
-      d <- paste("Test for trend: p", p.round( c(at$lrt.test)))
+    if (at$lrt.test.type == 'trend') {
+      d <- paste("Test for trend: p", p.round(c(at$lrt.test)))
     }
   }
   #b <- round(c(ta$total$sir, ta$total$sir.lo, ta$total$sir.hi), 2)
@@ -49,11 +68,11 @@ print.sir <- function(x, subset = NULL, ...) {
   #     fill=TRUE)
 
   cat(t1, '\n')
-  if(x[,.N] > 1) {
+  if (x[, .N] > 1) {
     cat(d, '\n')
   }
-  cat(fill=TRUE)
-  cat(t3, '\n', fill=TRUE)
+  cat(fill = TRUE)
+  cat(t3, '\n', fill = TRUE)
 
   print(data.table(x), ...)
   return(invisible())
@@ -73,27 +92,28 @@ print.sir <- function(x, subset = NULL, ...) {
 #' @import grDevices
 #' @export
 print.sirspline <- function(x, ...) {
-  if ( x$spline.dependent ) {
-    if( any( !is.na(x$p.values))) {
-      cat( 'global p-value:', p.round(x$p.values[1]),'\n' )
-      cat( 'level p-value:', p.round(x$p.values[2]) , fill= TRUE)
+  if (x$spline.dependent) {
+    if (any(!is.na(x$p.values))) {
+      cat('global p-value:', p.round(x$p.values[1]), '\n')
+      cat('level p-value:', p.round(x$p.values[2]), fill = TRUE)
     } else {
-      cat( 'No models compared.', fill= TRUE)
+      cat('No models compared.', fill = TRUE)
     }
     cat('---', '\n')
-    cat('Colour codes:', '\n', fill=TRUE)
+    cat('Colour codes:', '\n', fill = TRUE)
   } else {
-
-    for(i in 1:length(x$p.values)) {
-      cat( x$spline[i] ,': p ', p.round( x$p.values[[i]] ), '\n', sep = '')
+    for (i in 1:length(x$p.values)) {
+      cat(x$spline[i], ': p ', p.round(x$p.values[[i]]), '\n', sep = '')
     }
-    cat(fill=TRUE)
-
+    cat(fill = TRUE)
   }
   # Print colour codes:
-  cols <- unique(x$spline.est.A[,1])
+  cols <- unique(x$spline.est.A[, 1])
   col.length <- length(cols)
-  print( data.frame(levels = cols, colour = palette()[1:col.length]), include.rownames = FALSE)
+  print(
+    data.frame(levels = cols, colour = palette()[1:col.length]),
+    include.rownames = FALSE
+  )
 
   # Print p-values
   return(invisible())
@@ -156,38 +176,46 @@ print.sirspline <- function(x, ...) {
 #' This function is called for its side effects.
 #' @export
 
-plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main,
-                     eps=0.2, abline = TRUE, log = FALSE, left.margin, ...) {
-
+plot.sir <- function(
+  x,
+  conf.int = TRUE,
+  ylab,
+  xlab,
+  xlim,
+  main,
+  eps = 0.2,
+  abline = TRUE,
+  log = FALSE,
+  left.margin,
+  ...
+) {
   a <- data.table(x)
   at <- attributes(x)$sir.meta
   level_names <- at$print
 
-  if(is.null(level_names)) {
+  if (is.null(level_names)) {
     levels <- 'Crude'
     level_names <- levels
-  }
-  else {
-    q <- paste0('paste(', paste(level_names, collapse=', '),', sep = ":")' )
+  } else {
+    q <- paste0('paste(', paste(level_names, collapse = ', '), ', sep = ":")')
     q <- parse(text = q)
     levels <- a[, eval(q)]
   }
 
   # predefined parameters
-  if( missing(main) ){
+  if (missing(main)) {
     main <- NA
   }
-  if( missing(xlab) ){
+  if (missing(xlab)) {
     xlab <- 'SIR'
   }
-  if( missing(ylab) ){
+  if (missing(ylab)) {
     ylab <- NA
   }
-  if( missing(xlim) ) {
-    xlimit <- c(min(a$sir.lo[a$sir.lo <Inf]), max(a$sir.hi[a$sir.hi <Inf]))
-    xlimit <- xlimit + diff(xlimit)*c(-.3,.3)
-  }
-  else {
+  if (missing(xlim)) {
+    xlimit <- c(min(a$sir.lo[a$sir.lo < Inf]), max(a$sir.hi[a$sir.hi < Inf]))
+    xlimit <- xlimit + diff(xlimit) * c(-.3, .3)
+  } else {
     xlimit <- xlim
   }
 
@@ -195,34 +223,42 @@ plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main,
   old_mar <- par("mar")
   on.exit(par(mar = old_mar))
   new.margin <- old_mar
-  if(missing(left.margin)) {
-    new.margin[2] <- 4.1 + sqrt( max(nchar(as.character(level_names))) )*2
-  }
-  else {
+  if (missing(left.margin)) {
+    new.margin[2] <- 4.1 + sqrt(max(nchar(as.character(level_names)))) * 2
+  } else {
     new.margin[2] <- left.margin
   }
   par(mar = new.margin)
 
   # plot frame, estimates and CI (optional abline)
   logarithm <- ''
-  if(log){
+  if (log) {
     logarithm <- 'x'
-    if(xlimit[1]==0) xlimit[1] <- xlimit[1] + 0.01
+    if (xlimit[1] == 0) xlimit[1] <- xlimit[1] + 0.01
   }
   y.axis.levels <- 1:length(levels)
-  plot(c(xlimit), c(min(y.axis.levels)-0.5, max(y.axis.levels)+0.5),
-       type='n', yaxt = 'n', xlab=xlab, ylab=ylab, log=logarithm, main = main, ...)
-  axis(side = 2, at = y.axis.levels, labels = levels, las=1)
+  plot(
+    c(xlimit),
+    c(min(y.axis.levels) - 0.5, max(y.axis.levels) + 0.5),
+    type = 'n',
+    yaxt = 'n',
+    xlab = xlab,
+    ylab = ylab,
+    log = logarithm,
+    main = main,
+    ...
+  )
+  axis(side = 2, at = y.axis.levels, labels = levels, las = 1)
 
-  if(abline) {
-    abline(v=1, col = 'darkgray')
+  if (abline) {
+    abline(v = 1, col = 'darkgray')
   }
 
-  points(a$sir, factor(y.axis.levels, labels=levels), ...)
-  if(conf.int) {
-    segments(a$sir.lo, y.axis.levels , a$sir.hi, y.axis.levels, ...)
-    segments(a$sir.lo, y.axis.levels - eps, a$sir.lo, y.axis.levels +eps, ... )
-    segments(a$sir.hi, y.axis.levels - eps, a$sir.hi, y.axis.levels +eps, ... )
+  points(a$sir, factor(y.axis.levels, labels = levels), ...)
+  if (conf.int) {
+    segments(a$sir.lo, y.axis.levels, a$sir.hi, y.axis.levels, ...)
+    segments(a$sir.lo, y.axis.levels - eps, a$sir.lo, y.axis.levels + eps, ...)
+    segments(a$sir.hi, y.axis.levels - eps, a$sir.hi, y.axis.levels + eps, ...)
   }
 
   return(invisible(NULL))
@@ -259,50 +295,68 @@ plot.sir <- function(x, conf.int = TRUE, ylab, xlab, xlim, main,
 #' Always returns `NULL` invisibly.
 #' This function is called for its side effects.
 #' @family sir functions
-plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, ylab, xlab,  ...) {
-
+plot.sirspline <- function(
+  x,
+  conf.int = TRUE,
+  abline = TRUE,
+  log = FALSE,
+  type,
+  ylab,
+  xlab,
+  ...
+) {
   #print(list(...))
 
   ## premilinary checks
-  if (is.null(x$spline.seq.A)) stop('No splines found.')
+  if (is.null(x$spline.seq.A)) {
+    stop('No splines found.')
+  }
 
   ## prepare dimension and par
-  plotdim <- as.numeric(c( !is.null( x$spline.seq.A ),
-                           !is.null( x$spline.seq.B ),
-                           !is.null( x$spline.seq.C ) ))
+  plotdim <- as.numeric(c(
+    !is.null(x$spline.seq.A),
+    !is.null(x$spline.seq.B),
+    !is.null(x$spline.seq.C)
+  ))
 
-  if(sum(plotdim) > 1) {
+  if (sum(plotdim) > 1) {
     old_mfrow <- par("mfrow")
     on.exit(par(mfrow = old_mfrow))
-    new_mfrow <- c(1,sum(plotdim))
+    new_mfrow <- c(1, sum(plotdim))
     par(mfrow = new_mfrow)
     type <- 'l'
   }
 
   ## set labels
-  if ( missing(xlab) ) {
+  if (missing(xlab)) {
     xlab <- x$spline
   }
 
-  if ( missing(ylab) ) {
-    ylab <- rep('SIR',sum(plotdim))
-    if(log){
+  if (missing(ylab)) {
+    ylab <- rep('SIR', sum(plotdim))
+    if (log) {
       ylab <- rep('log(SIR)', sum(plotdim))
     }
-    if(x$spline.dependent & sum(plotdim) > 1) {
+    if (x$spline.dependent & sum(plotdim) > 1) {
       ylab <- c(ylab[1], paste(ylab[2:sum(plotdim)], 'ratio'))
     }
-  }
-  else{
-    if( length(ylab) < sum(plotdim))
+  } else {
+    if (length(ylab) < sum(plotdim)) {
       ylab <- rep(ylab, sum(plotdim))
-    if(length(ylab) > sum(plotdim)) {
-      warning('set ylabs in a vector length of num of plots (',sum(plotdim),')')
+    }
+    if (length(ylab) > sum(plotdim)) {
+      warning(
+        'set ylabs in a vector length of num of plots (',
+        sum(plotdim),
+        ')'
+      )
     }
   }
 
   ## set scale
-  if(!is.logical(log)) stop('log should be a logical value.')
+  if (!is.logical(log)) {
+    stop('log should be a logical value.')
+  }
   log.bin <- ifelse(log, 'y', '')
 
   ## remove infinite values
@@ -313,12 +367,23 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
   spl <- c('spline.seq.A', 'spline.seq.B', 'spline.seq.C')[1:sum(plotdim)]
   est <- gsub("seq", "est", spl)
 
-  for (i in 1:sum(plotdim)) {  # age, per, fot,
+  for (i in 1:sum(plotdim)) {
+    # age, per, fot,
     # empty plot
     max_x <- range(x[[spl[i]]])
-    max_y <- range( x[[est[i]]][, 2:4] )
-    plot(max_x, max_y, type = 'n', ylab = ylab[i], xlab = xlab[i], log = log.bin, ...)
-    if(abline) abline(h = 1)
+    max_y <- range(x[[est[i]]][, 2:4])
+    plot(
+      max_x,
+      max_y,
+      type = 'n',
+      ylab = ylab[i],
+      xlab = xlab[i],
+      log = log.bin,
+      ...
+    )
+    if (abline) {
+      abline(h = 1)
+    }
 
     # plot lines
     if (missing(type) || type != 'n') {
@@ -327,7 +392,6 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
   }
   return(invisible(NULL))
 }
-
 
 
 #' @title lines method for sirspline-object
@@ -360,26 +424,34 @@ plot.sirspline <- function(x, conf.int=TRUE, abline = TRUE, log = FALSE, type, y
 #' Always returns `NULL` invisibly.
 #' This function is called for its side effects.
 
-lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline, ... ){
+lines.sirspline <- function(
+  x,
+  conf.int = TRUE,
+  print.levels = NA,
+  select.spline,
+  ...
+) {
   ## input: sirspline object, with only one spline var (spline.est.A)
   ## input: print levels can be > 1.
 
   ## subset splines
-  if( length(x$spline) > 1 ) {
-    if ( missing(select.spline) ) {
-      stop(paste('select what spline to plot in select.spline:', paste(x$spline, collapse = ', ')))
-    }
-    else {
-      if(is.numeric(select.spline)) {
+  if (length(x$spline) > 1) {
+    if (missing(select.spline)) {
+      stop(paste(
+        'select what spline to plot in select.spline:',
+        paste(x$spline, collapse = ', ')
+      ))
+    } else {
+      if (is.numeric(select.spline)) {
         k <- select.spline
-      }
-      else {
+      } else {
         k <- which(x$spline == select.spline)
       }
-      if(length(k) == 0 | length(x$spline) < k) stop('select.spline name/number is incorrect')
+      if (length(k) == 0 | length(x$spline) < k) {
+        stop('select.spline name/number is incorrect')
+      }
     }
-  }
-  else {
+  } else {
     k <- 1
   }
 
@@ -390,26 +462,27 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
   # x[[h]] <- rm_inf(est=h)
 
   # get print levels
-  if(missing(print.levels)) {
+  if (missing(print.levels)) {
     print.levels <- NA
   }
-  pl <- unique(x$spline.est.A[,1])
-  if(any( is.null(print.levels), is.na(print.levels))) {
+  pl <- unique(x$spline.est.A[, 1])
+  if (any(is.null(print.levels), is.na(print.levels))) {
     print.levels <- pl
   }
-  pl <- pl[ pl %in% print.levels]
+  pl <- pl[pl %in% print.levels]
 
   ## get conf.int
-  if( !is.logical(conf.int) ) stop('conf.int is not logical')
-  n <- c(2,4)[c(!conf.int, conf.int)]
-
+  if (!is.logical(conf.int)) {
+    stop('conf.int is not logical')
+  }
+  n <- c(2, 4)[c(!conf.int, conf.int)]
 
   ## draw lines
-  for( l in pl ){
+  for (l in pl) {
     # loop through print.levels
     index <- which(x$spline.est.A$i == l)
 
-    for(m in 2:n) {
+    for (m in 2:n) {
       # loop through estiamte and confidence intervals
       lines(x = x[[spl]], y = x[[est]][index, m], ...)
     }
@@ -431,7 +504,6 @@ lines.sirspline <- function(x, conf.int = TRUE, print.levels = NA, select.spline
 #' Always returns `NULL` invisibly.
 #' This function is called for its side effects.
 print.rate <- function(x, subset = NULL, ...) {
-
   ra <- attributes(x)$rate.meta
   PF <- parent.frame(1L)
   TF <- environment()
@@ -440,27 +512,25 @@ print.rate <- function(x, subset = NULL, ...) {
 
   # pre texts:
   cat('\n')
-  if(!is.null(ra$adjust)){
-    if(is.character(ra$weights)) {
+  if (!is.null(ra$adjust)) {
+    if (is.character(ra$weights)) {
       a <- paste(ra$weights, collapse = ',')
     }
-    if(all(is.numeric(ra$weights))) {
+    if (all(is.numeric(ra$weights))) {
       a <- length(ra$weights)
     }
-    if(is.list(ra$weights)) {
+    if (is.list(ra$weights)) {
       a <- sapply(ra$weights, length)
     }
 
-    b <- paste(ra$adjust,a, collapse = ', ', sep = '; ')
-    cat('Adjusted rates (', b,') ', sep = '')
-  }
-  else{
+    b <- paste(ra$adjust, a, collapse = ', ', sep = '; ')
+    cat('Adjusted rates (', b, ') ', sep = '')
+  } else {
     cat('Crude rates ')
   }
-  cat('and', '95%', 'confidence intervals:', fill=TRUE)
+  cat('and', '95%', 'confidence intervals:', fill = TRUE)
   cat('\n')
   # table itself
-
 
   setDT(x)
   print(x, ...)
@@ -490,58 +560,60 @@ print.rate <- function(x, subset = NULL, ...) {
 #' Always returns `NULL` invisibly.
 #' This function is called for its side effects.
 plot.rate <- function(x, conf.int = TRUE, eps = 0.2, left.margin, xlim, ...) {
-
   ra <- attributes(x)$rate.meta
   varcol <- ra$print
 
-  if(is.null(varcol)) {
+  if (is.null(varcol)) {
     lvl.name <- 'Crude'
-  }
-  else {
-    pp <- paste0('paste(', paste(varcol, collapse=','),',sep = ":")')
-    q <- parse(text=pp)
-    lvl.name <- x[,eval(q)]
+  } else {
+    pp <- paste0('paste(', paste(varcol, collapse = ','), ',sep = ":")')
+    q <- parse(text = pp)
+    lvl.name <- x[, eval(q)]
   }
   lvls <- 1:length(lvl.name)
 
   # WHICH RATE:
-  if('rate.adj' %in% names(x)) {
+  if ('rate.adj' %in% names(x)) {
     r <- x$rate.adj
     hi <- x$rate.adj.hi
     lo <- x$rate.adj.lo
-  }
-  else {
+  } else {
     r <- x$rate
     hi <- x$rate.hi
     lo <- x$rate.lo
   }
   # X-AXIS LIMITs
-  if(missing(xlim)) {
-    t <- range(na.omit(c(lo , r, hi)))
-    t0 <- (t[2]-t[1])/4
-    xlimit <- c(pmax(t[1]-t0, 0), t[2] + t0)
-  }
-  else {
+  if (missing(xlim)) {
+    t <- range(na.omit(c(lo, r, hi)))
+    t0 <- (t[2] - t[1]) / 4
+    xlimit <- c(pmax(t[1] - t0, 0), t[2] + t0)
+  } else {
     xlimit <- xlim
   }
 
   # MARGINS
   old_mar <- par("mar")
   on.exit(par(mar = old_mar))
-  if(missing(left.margin)) {
-   new.margin <- par("mar")
-   new.margin[2] <- 4.1 + sqrt( max(nchar(as.character(lvl.name))) )*2
-  }
-  else {
-   new.margin[2] <- left.margin
+  if (missing(left.margin)) {
+    new.margin <- par("mar")
+    new.margin[2] <- 4.1 + sqrt(max(nchar(as.character(lvl.name)))) * 2
+  } else {
+    new.margin[2] <- left.margin
   }
   par(mar = new.margin)
 
-  plot(c(xlimit), c(min(lvls)-0.5, max(lvls)+0.5), type='n', yaxt = 'n', ylab = '', xlab='')
+  plot(
+    c(xlimit),
+    c(min(lvls) - 0.5, max(lvls) + 0.5),
+    type = 'n',
+    yaxt = 'n',
+    ylab = '',
+    xlab = ''
+  )
   axis(side = 2, at = lvls, labels = lvl.name, las = 1)
   points(r, lvls, ...)
 
-  if(conf.int) {
+  if (conf.int) {
     segments(lo, lvls, hi, lvls, ...)
     segments(lo, lvls - eps, lo, lvls + eps, ...)
     segments(hi, lvls - eps, hi, lvls + eps, ...)
@@ -594,15 +666,22 @@ preface_survtab.print <- function(x) {
   cat("\n")
   cat("Call: \n", oneWhitespace(deparse(at$call)), "\n")
   cat("\n")
-  cat("Type arguments: \n surv.type:", as.character(arg$surv.type),
-      "--- surv.method:", as.character(arg$surv.method))
-  if (as.character(arg$surv.type) == "surv.rel")
+  cat(
+    "Type arguments: \n surv.type:",
+    as.character(arg$surv.type),
+    "--- surv.method:",
+    as.character(arg$surv.method)
+  )
+  if (as.character(arg$surv.type) == "surv.rel") {
     cat(" --- relsurv.method:", as.character(arg$relsurv.method))
+  }
   cat("\n \n")
-  cat("Confidence interval arguments: \n level:",
-      as.character(arg$conf.level*100), "%")
-  cat(" --- transformation:",
-      as.character(arg$conf.type))
+  cat(
+    "Confidence interval arguments: \n level:",
+    as.character(arg$conf.level * 100),
+    "%"
+  )
+  cat(" --- transformation:", as.character(arg$conf.type))
   cat("\n \n")
   cat("Totals:")
   totCat <- paste0("\n person-time:", round(sum(x$pyrs)))
@@ -642,7 +721,6 @@ preface_survtab.print <- function(x) {
 #' Always returns `NULL` invisibly.
 #' This function is called for its side effects.
 print.aggre <- function(x, subset = NULL, ...) {
-
   PF <- parent.frame(1L)
   TF <- environment()
   sa <- attributes(x)$aggre.meta
@@ -671,7 +749,6 @@ print.aggre <- function(x, subset = NULL, ...) {
 #' @return
 #' Returns a `data.table` --- a further aggregated version of `object`.
 summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
-
   PF <- parent.frame(1L)
   TF <- environment()
   x <- object
@@ -711,7 +788,6 @@ summary.aggre <- function(object, by = NULL, subset = NULL, ...) {
 #' Always returns `NULL` invisibly.
 #' This function is called for its side effects.
 print.survtab <- function(x, subset = NULL, ...) {
-
   Tstart <- Tstop <- NULL ## APPEASE R CMD CHECK
 
   PF <- parent.frame(1L)
@@ -731,11 +807,16 @@ print.survtab <- function(x, subset = NULL, ...) {
   }
 
   pv <- as.character(sa$print.vars)
-  if (length(pv) == 0L) pv <- NULL
+  if (length(pv) == 0L) {
+    pv <- NULL
+  }
 
   magicMedian <- function(x) {
-    if (length(x) %% 2L == 0L) median(x[-1L], na.rm = TRUE) else
+    if (length(x) %% 2L == 0L) {
+      median(x[-1L], na.rm = TRUE)
+    } else {
       median(x, na.rm = TRUE)
+    }
   }
 
   ## to avoid e.g. 'factor(V1, 1:2)' going bonkers
@@ -745,7 +826,10 @@ print.survtab <- function(x, subset = NULL, ...) {
     setnames(x, pv_orig, pv)
   }
 
-  medmax <- x[, list(Tstop = c(magicMedian(c(min(Tstart),Tstop)), max(Tstop))), keyby = eval(pv)]
+  medmax <- x[,
+    list(Tstop = c(magicMedian(c(min(Tstart), Tstop)), max(Tstop))),
+    keyby = eval(pv)
+  ]
 
   setkeyv(medmax, c(pv, "Tstop"))
   setkeyv(x, c(pv, "Tstop"))
@@ -753,7 +837,7 @@ print.survtab <- function(x, subset = NULL, ...) {
 
   rv <- intersect(names(x), c(sa$est.vars, sa$CI.vars, sa$misc.vars))
   if (length(rv)) {
-    x[, (rv) := lapply(.SD, round, digits = 4L),  .SDcols = rv]
+    x[, (rv) := lapply(.SD, round, digits = 4L), .SDcols = rv]
   }
 
   sv <- intersect(names(x), sa$SE.vars)
@@ -761,9 +845,10 @@ print.survtab <- function(x, subset = NULL, ...) {
     x[, c(sv) := lapply(.SD, signif, digits = 4L), .SDcols = sv]
   }
 
-
   setcolsnull(x, keep = c(pv, "Tstop", sa$surv.vars), colorder = TRUE)
-  if (length(pv)) setnames(x, pv, pv_orig)
+  if (length(pv)) {
+    setnames(x, pv, pv_orig)
+  }
   print(data.table(x), ...)
   return(invisible(NULL))
 }
@@ -843,7 +928,6 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' @export
 #' @family survtab functions
 summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
-
   PF <- parent.frame(1L)
   at <- copy(attr(object, "survtab.meta"))
   subr <- copy(at$surv.breaks)
@@ -869,20 +953,23 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
   if (!is.null(q)) {
     bn <- setdiff(names(q), at$est.vars)
     if (length(bn) > 0L) {
-      stop("No survival time function estimates named ",
-           paste0("'", bn, "'", collapse = ", "),
-           " found in supplied survtab object. Available ",
-           "survival time function estimates: ",
-           paste0("'", at$est.vars, "'", collapse = ", "))
+      stop(
+        "No survival time function estimates named ",
+        paste0("'", bn, "'", collapse = ", "),
+        " found in supplied survtab object. Available ",
+        "survival time function estimates: ",
+        paste0("'", at$est.vars, "'", collapse = ", ")
+      )
     }
 
     lapply(q, function(x) {
       if (min(x <= 0L) || max(x >= 1L)) {
-        stop("Quantiles must be expressed as numbers between 0 and 1, ",
-             "e.g. surv.obs = 0.5.")
+        stop(
+          "Quantiles must be expressed as numbers between 0 and 1, ",
+          "e.g. surv.obs = 0.5."
+        )
       }
     })
-
 
     m <- x[, .SD[1, ], keyby = eval(pv)][, c(pv, "Tstop"), with = FALSE]
     setDF(m)
@@ -893,7 +980,9 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
     m <- lapply(seq_along(q), function(i) {
       m <- merge(m, q[[i]])
       setnames(m, "y", rollVars[i])
-      if (length(pv)) setorderv(m, pv)
+      if (length(pv)) {
+        setorderv(m, pv)
+      }
       m[, c(pv, rollVars[i]), drop = FALSE]
     })
     names(m) <- names(q)
@@ -901,24 +990,26 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
     l <- vector("list", length(q))
     names(l) <- names(q)
     for (k in names(q)) {
-
       l[[k]] <- setDT(x[m[[k]], on = names(m[[k]]), roll = 1L])
-
     }
     l <- rbindlist(l)
     set(l, j = rollVars, value = NULL)
-    if (length(pv)) setkeyv(l, pv)
+    if (length(pv)) {
+      setkeyv(l, pv)
+    }
     x <- l
   }
 
   ## time point detection ------------------------------------------------------
 
   if (!is.null(t)) {
-
     tcutv <- makeTempVarName(x, pre = "cut_time_")
 
-    set(x, j = tcutv, value = cut(x$Tstop, breaks = subr, right = TRUE,
-                                  include.lowest = FALSE))
+    set(
+      x,
+      j = tcutv,
+      value = cut(x$Tstop, breaks = subr, right = TRUE, include.lowest = FALSE)
+    )
     cutt <- cut(t, breaks = subr, right = TRUE, include.lowest = FALSE)
 
     l <- list(cutt)
@@ -935,11 +1026,14 @@ summary.survtab <- function(object, t = NULL, subset = NULL, q = NULL, ...) {
     if (length(pv)) setkeyv(x, pv)
   }
 
-
   ## final touches -------------------------------------------------------------
-  if (length(pv) > 0L) setnames(x, pv, pv_orig)
+  if (length(pv) > 0L) {
+    setnames(x, pv, pv_orig)
+  }
 
-  if (!return_DT()) setDFpe(x)
+  if (!return_DT()) {
+    setDFpe(x)
+  }
 
   x
 }
@@ -1007,26 +1101,31 @@ subset.rate <- function(x, ...) {
 }
 
 
-
-
-
-prep_plot_survtab <- function(x,
-                              y = NULL,
-                              subset = NULL,
-                              conf.int = TRUE,
-                              enclos = parent.frame(1L),
-                              ...) {
-
+prep_plot_survtab <- function(
+  x,
+  y = NULL,
+  subset = NULL,
+  conf.int = TRUE,
+  enclos = parent.frame(1L),
+  ...
+) {
   ## subsetting ----------------------------------------------------------------
-  subset <- evalLogicalSubset(data = x, substiset = substitute(subset),
-                              enclos = environment())
+  subset <- evalLogicalSubset(
+    data = x,
+    substiset = substitute(subset),
+    enclos = environment()
+  )
 
   attrs <- attributes(x)
 
-  if (!inherits(x, "survtab")) stop("x is not a survtab object")
+  if (!inherits(x, "survtab")) {
+    stop("x is not a survtab object")
+  }
   if (is.null(attrs$survtab.meta)) {
-    stop("Missing meta information (attributes) in survtab object; ",
-         "have you tampered with it after estimation?")
+    stop(
+      "Missing meta information (attributes) in survtab object; ",
+      "have you tampered with it after estimation?"
+    )
   }
   strata.vars <- attrs$survtab.meta$print.vars
   x <- copy(x)
@@ -1034,67 +1133,89 @@ prep_plot_survtab <- function(x,
   x <- x[subset, ]
 
   ## detect survival variables in data -----------------------------------------
-  surv_vars <- c("surv.obs","CIF.rel","CIF_","r.e2","r.pp")
+  surv_vars <- c("surv.obs", "CIF.rel", "CIF_", "r.e2", "r.pp")
   wh <- NULL
   for (k in surv_vars) {
     wh <- c(wh, which(substr(names(x), 1, nchar(k)) == k))
   }
   surv_vars <- names(x)[wh]
-  surv_vars <- surv_vars[!substr(surv_vars, nchar(surv_vars)-1, nchar(surv_vars)) %in% c("hi","lo")]
+  surv_vars <- surv_vars[
+    !substr(surv_vars, nchar(surv_vars) - 1, nchar(surv_vars)) %in%
+      c("hi", "lo")
+  ]
   if (length(surv_vars) == 0) {
-    stop("x does not appear to have any survival variables; ",
-         "did you tamper with it after estimation?")
+    stop(
+      "x does not appear to have any survival variables; ",
+      "did you tamper with it after estimation?"
+    )
   }
-
 
   ## getting y -----------------------------------------------------------------
   if (!is.null(y)) {
     if (!is.character(y)) {
-      stop("please supply y as a character string indicating ",
-           "the name of a variable in x")
+      stop(
+        "please supply y as a character string indicating ",
+        "the name of a variable in x"
+      )
     }
-    if (length(y) > 1) stop("y must be of length 1 or NULL")
+    if (length(y) > 1) {
+      stop("y must be of length 1 or NULL")
+    }
     if (!all_names_present(x, y, stops = FALSE)) {
-      stop("Given survival variable in argument 'y' ",
-           "not present in survtab object ('", y, "')")
+      stop(
+        "Given survival variable in argument 'y' ",
+        "not present in survtab object ('",
+        y,
+        "')"
+      )
     }
   } else {
     y <- surv_vars[length(surv_vars)]
-    if (length(surv_vars) > 1L) message("y was NULL; chose ", y, " automatically")
+    if (length(surv_vars) > 1L) {
+      message("y was NULL; chose ", y, " automatically")
+    }
   }
   rm(surv_vars)
 
   if (substr(y, 1, 3) == "CIF" && conf.int) {
-    stop("No confidence intervals currently supported for CIFs. ",
-         "Hopefully they will be added in a future version; ",
-         "meanwhile use conf.int = FALSE when plotting CIFs.")
+    stop(
+      "No confidence intervals currently supported for CIFs. ",
+      "Hopefully they will be added in a future version; ",
+      "meanwhile use conf.int = FALSE when plotting CIFs."
+    )
   }
-
 
   ## confidence intervals ------------------------------------------------------
   y.lo <- y.hi <- y.ci <- NULL
   if (conf.int) {
-
     y.lo <- paste0(y, ".lo")
     y.hi <- paste0(y, ".hi")
     y.ci <- c(y.lo, y.hi)
 
     badCIvars <- setdiff(y.ci, names(x))
     if (sum(length(badCIvars))) {
-      stop("conf.int = TRUE, but missing confidence interval ",
-           "variables in data for y = '", y, "' (could not detect ",
-           "variables named", paste0("'", badCIvars, "'", collapse = ", ") ,")")
+      stop(
+        "conf.int = TRUE, but missing confidence interval ",
+        "variables in data for y = '",
+        y,
+        "' (could not detect ",
+        "variables named",
+        paste0("'", badCIvars, "'", collapse = ", "),
+        ")"
+      )
     }
-
   }
 
-  list(x = x, y = y, y.ci = y.ci, y.lo = y.lo, y.hi = y.hi,
-       strata = strata.vars, attrs = attrs)
-
+  list(
+    x = x,
+    y = y,
+    y.ci = y.ci,
+    y.lo = y.lo,
+    y.hi = y.hi,
+    strata = strata.vars,
+    attrs = attrs
+  )
 }
-
-
-
 
 
 #' `plot` method for survtab objects
@@ -1141,16 +1262,30 @@ prep_plot_survtab <- function(x,
 #' @return
 #' Always returns `NULL` invisibly.
 #' This function is called for its side effects.
-plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=NULL, ylab = NULL, xlab = NULL, ...) {
-
+plot.survtab <- function(
+  x,
+  y = NULL,
+  subset = NULL,
+  conf.int = TRUE,
+  col = NULL,
+  lty = NULL,
+  ylab = NULL,
+  xlab = NULL,
+  ...
+) {
   Tstop <- delta <- NULL ## APPEASE R CMD CHECK
   ## prep ----------------------------------------------------------------------
   PF <- parent.frame(1L)
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = x, subset, enclos = PF)
 
-  l <- prep_plot_survtab(x = x, y = y, subset = subset,
-                         conf.int = conf.int, enclos = PF)
+  l <- prep_plot_survtab(
+    x = x,
+    y = y,
+    subset = subset,
+    conf.int = conf.int,
+    enclos = PF
+  )
   x <- l$x
   y <- l$y
   y.ci <- l$y.ci
@@ -1161,7 +1296,7 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 
   min_y <- do.call("min", c(mget(c(y, y.lo), as.environment(x)), na.rm = TRUE))
   min_y <- max(min_y, 0)
-  max_y <- max(x[[y]], na.rm=TRUE)
+  max_y <- max(x[[y]], na.rm = TRUE)
 
   if (substr(y, 1, 3) == "CIF") {
     min_y <- 0.0
@@ -1170,27 +1305,45 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
   }
 
   max_x <- max(x[, Tstop])
-  min_x <- min(x[, Tstop-delta])
+  min_x <- min(x[, Tstop - delta])
 
   if (is.null(ylab)) {
     ylab <- "Observed survival"
-    if (substr(y[1], 1,4) %in% c("r.e2", "r.pp")) ylab <- "Net survival"
-    if (substr(y[1], 1,4) == "CIF_") ylab <- "Absolute risk"
-    if (substr(y[1], 1,6) == "CIF.rel") ylab <- "Absolute risk"
+    if (substr(y[1], 1, 4) %in% c("r.e2", "r.pp")) {
+      ylab <- "Net survival"
+    }
+    if (substr(y[1], 1, 4) == "CIF_") {
+      ylab <- "Absolute risk"
+    }
+    if (substr(y[1], 1, 6) == "CIF.rel") ylab <- "Absolute risk"
   }
-  if (is.null(xlab)) xlab <- "Time from entry"
+  if (is.null(xlab)) {
+    xlab <- "Time from entry"
+  }
 
   ## attributes insurance to pass to lines.survtab
   setattr(x, "survtab.meta", l$attrs$survtab.meta)
   setattr(x, "class", c("survtab", "data.table", "data.frame"))
 
   ## plotting ------------------------------------------------------------------
-  plot(I(c(min_y,max_y))~I(c(min_x,max_x)), data=x, type="n",
-       xlab = xlab, ylab = ylab, ...)
+  plot(
+    I(c(min_y, max_y)) ~ I(c(min_x, max_x)),
+    data = x,
+    type = "n",
+    xlab = xlab,
+    ylab = ylab,
+    ...
+  )
 
-
-  lines.survtab(x, subset = NULL, y = y, conf.int=conf.int,
-                col=col, lty=lty, ...)
+  lines.survtab(
+    x,
+    subset = NULL,
+    y = y,
+    conf.int = conf.int,
+    col = col,
+    lty = lty,
+    ...
+  )
 
   return(invisible(NULL))
 }
@@ -1239,8 +1392,15 @@ plot.survtab <- function(x, y = NULL, subset=NULL, conf.int=TRUE, col=NULL,lty=N
 #' @return
 #' Always returns `NULL` invisibly.
 #' This function is called for its side effects.
-lines.survtab <- function(x, y = NULL, subset = NULL,
-                          conf.int = TRUE, col=NULL, lty=NULL, ...) {
+lines.survtab <- function(
+  x,
+  y = NULL,
+  subset = NULL,
+  conf.int = TRUE,
+  col = NULL,
+  lty = NULL,
+  ...
+) {
   Tstop <- NULL ## APPEASE R CMD CHECK
   ## prep ----------------------------------------------------------------------
   PF <- parent.frame(1L)
@@ -1249,9 +1409,13 @@ lines.survtab <- function(x, y = NULL, subset = NULL,
   subset <- substitute(subset)
   subset <- evalLogicalSubset(data = x, subset, enclos = PF)
 
-
-  l <- prep_plot_survtab(x = x, y = y, subset = subset,
-                         conf.int = conf.int, enclos = environment())
+  l <- prep_plot_survtab(
+    x = x,
+    y = y,
+    subset = subset,
+    conf.int = conf.int,
+    enclos = environment()
+  )
   x <- l$x
   y <- l$y
   y.ci <- l$y.ci
@@ -1259,34 +1423,42 @@ lines.survtab <- function(x, y = NULL, subset = NULL,
   y.hi <- l$y.hi
   strata <- l$strata ## character vector of var names
 
-
   ## impute first values (time = 0, surv = 1 / cif = 0) ------------------------
 
   is_CIF <- if (substr(y, 1, 3) == "CIF") TRUE else FALSE
   setkeyv(x, c(strata, "Tstop"))
   first <- x[1, ]
-  if (length(strata)) first <- unique(x, by = strata)
+  if (length(strata)) {
+    first <- unique(x, by = strata)
+  }
   first[, c(y) := ifelse(is_CIF, 0, 1)]
   first$Tstop <- min(global_breaks)
 
-  if (length(y.ci) > 0) first[, (y.ci) := get(y) ]
-  x <- rbindlist(list(first, x[, ]), use.names = TRUE)
+  if (length(y.ci) > 0) {
+    first[, (y.ci) := get(y)]
+  }
+  x <- rbindlist(list(first, x[,]), use.names = TRUE)
   setkeyv(x, c(strata, "Tstop"))
 
   ## plotting ------------------------------------------------------------------
 
   if (is.null(lty)) {
-    lty <- list(c(1,2,2))
+    lty <- list(c(1, 2, 2))
     if (!length(y.ci)) lty <- list(1)
   }
 
-  lines_by(x = "Tstop", y = c(y, y.ci),
-           strata.vars = strata,
-           data = x, col = col, lty = lty, ...)
+  lines_by(
+    x = "Tstop",
+    y = c(y, y.ci),
+    strata.vars = strata,
+    data = x,
+    col = col,
+    lty = lty,
+    ...
+  )
 
   return(invisible(NULL))
 }
-
 
 
 lines_by <- function(x, y, strata.vars = NULL, data, col, lty, ...) {
@@ -1313,7 +1485,7 @@ lines_by <- function(x, y, strata.vars = NULL, data, col, lty, ...) {
   stopifnot(is.character(x) && length(x) == 1L)
   stopifnot(is.character(y) && length(y) > 0L)
   stopifnot(is.character(strata.vars) || is.null(strata.vars))
-  all_names_present(data, c(x,y,strata.vars))
+  all_names_present(data, c(x, y, strata.vars))
 
   d <- mget(c(strata.vars, y, x), envir = as.environment(data))
   setDT(d)
@@ -1334,47 +1506,59 @@ lines_by <- function(x, y, strata.vars = NULL, data, col, lty, ...) {
     tab
   })
 
-
   ## figure out colours and ltys
   for (objname in c("col", "lty")) {
     obj <- TF[[objname]]
 
-    if (missing(obj) || !length(obj)) obj <- 1
+    if (missing(obj) || !length(obj)) {
+      obj <- 1
+    }
     if (!length(obj) %in% c(1, length(l))) {
-      stop("Argument ", objname, " is not of length 1 or ",
-           "of length equal to total number of strata (",
-           length(l), ").")
+      stop(
+        "Argument ",
+        objname,
+        " is not of length 1 or ",
+        "of length equal to total number of strata (",
+        length(l),
+        ")."
+      )
     }
 
     ol <- unlist(lapply(obj, length))
     if (length(y) > 1 && is.list(obj) && !all(ol %in% c(1, length(y)))) {
-      stop("Argument y is of length > 1, and you passed ",
-           objname, " as a list of values, but at least one element is not ",
-           "of length 1 or length(y).")
+      stop(
+        "Argument y is of length > 1, and you passed ",
+        objname,
+        " as a list of values, but at least one element is not ",
+        "of length 1 or length(y)."
+      )
     }
 
     ## NOTE: rep works for vector and list just the same
-    if (length(obj) == 1) obj <- rep(obj, length(l))
+    if (length(obj) == 1) {
+      obj <- rep(obj, length(l))
+    }
     obj <- as.list(obj)
 
     assign(x = objname, value = obj)
   }
 
   lapply(seq_along(l), function(i) {
-
     tab <- l[[i]]
     cols <- col[[i]]
     ltys <- lty[[i]]
 
-    matlines(x = tab[[x]], y = tab[, y, with = FALSE],
-             col = cols, lty = ltys, ...)
-
+    matlines(
+      x = tab[[x]],
+      y = tab[, y, with = FALSE],
+      col = cols,
+      lty = ltys,
+      ...
+    )
   })
 
   invisible(NULL)
 }
-
-
 
 
 #' @title Graphically Inspect Curves Used in Mean Survival Computation
@@ -1406,21 +1590,29 @@ plot.survmean <- function(x, ...) {
   at <- attr(x, "survmean.meta")
   curves <- at$curves
   if (is.null(curves)) {
-    stop("no curves information in x; sometimes lost if x ",
-         "altered after using survmean")
+    stop(
+      "no curves information in x; sometimes lost if x ",
+      "altered after using survmean"
+    )
   }
 
   by.vars <- at$tprint
   by.vars <- c(by.vars, at$tadjust)
   by.vars <- intersect(by.vars, names(curves))
-  if (!length(by.vars)) by.vars <- NULL
+  if (!length(by.vars)) {
+    by.vars <- NULL
+  }
 
-  plot(curves$surv ~ curves$Tstop, type="n",
-       xlab = "Time from entry", ylab = "Survival")
+  plot(
+    curves$surv ~ curves$Tstop,
+    type = "n",
+    xlab = "Time from entry",
+    ylab = "Survival"
+  )
   lines.survmean(x, ...)
 
   subr <- at$breaks[[at$survScale]]
-  abline(v = max(subr), lty=2, col="grey")
+  abline(v = max(subr), lty = 2, col = "grey")
 
   if (length(by.vars)) {
     ## add legend denoting colors
@@ -1455,33 +1647,48 @@ plot.survmean <- function(x, ...) {
 lines.survmean <- function(x, ...) {
   at <- copy(attr(x, "survmean.meta"))
   curves <- at$curves
-  if (is.null(curves)) stop("no curves information in x; usually lost if x altered after using survmean")
+  if (is.null(curves)) {
+    stop(
+      "no curves information in x; usually lost if x altered after using survmean"
+    )
+  }
 
   by.vars <- at$tprint
   by.vars <- c(by.vars, at$tadjust)
   by.vars <- c("survmean_type", by.vars)
   by.vars <- intersect(by.vars, names(curves))
-  if (!length(by.vars)) by.vars <- NULL
+  if (!length(by.vars)) {
+    by.vars <- NULL
+  }
 
   curves <- data.table(curves)
   setkeyv(curves, c(by.vars, "Tstop"))
 
-  type_levs <- length(levels(interaction(curves[, c(by.vars), with=FALSE])))/2L
+  type_levs <- length(levels(interaction(curves[, c(by.vars), with = FALSE]))) /
+    2L
   other_levs <- 1L
   if (length(by.vars) > 1) {
-    other_levs <- length(levels(interaction(curves[, setdiff(by.vars, "survmean_type"), with=FALSE])))
+    other_levs <- length(levels(interaction(curves[,
+      setdiff(by.vars, "survmean_type"),
+      with = FALSE
+    ])))
   }
 
-  curves <- cast_simple(curves, columns = by.vars, rows = "Tstop", values = "surv")
-  matlines(x=curves$Tstop, y=curves[, setdiff(names(curves), "Tstop"), with=FALSE],
-           lty = rep(1:2, each=type_levs), col = 1:other_levs, ...)
+  curves <- cast_simple(
+    curves,
+    columns = by.vars,
+    rows = "Tstop",
+    values = "surv"
+  )
+  matlines(
+    x = curves$Tstop,
+    y = curves[, setdiff(names(curves), "Tstop"), with = FALSE],
+    lty = rep(1:2, each = type_levs),
+    col = 1:other_levs,
+    ...
+  )
   return(invisible(NULL))
 }
-
-
-
-
-
 
 
 #' @export
@@ -1496,9 +1703,6 @@ formula.survtab <- function(x, ...) {
 }
 
 
-
-
-
 #' @export
 getCall.survmean <- function(x, ...) {
   attributes(x)$survmean.meta$call
@@ -1509,6 +1713,3 @@ getCall.survmean <- function(x, ...) {
 formula.survmean <- function(x, ...) {
   attr(x, "survmean.meta")$formula
 }
-
-
-

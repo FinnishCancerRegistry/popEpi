@@ -5,9 +5,11 @@ lexis_dt_set__ <- function(lexis, lexis_ts_col_nms = NULL) {
     return(lexis[])
   }
   if (is.null(lexis_ts_col_nms)) {
-    stop("Internal error: internal function lexis_dt_set__ ",
-         "cannot automatically determine lexis_ts_col_nms. Please ",
-         "complain to the maintainer if you see this.")
+    stop(
+      "Internal error: internal function lexis_dt_set__ ",
+      "cannot automatically determine lexis_ts_col_nms. Please ",
+      "complain to the maintainer if you see this."
+    )
   }
   stopifnot(
     is.data.frame(lexis),
@@ -79,9 +81,11 @@ lexis_dt__ <- function(lexis, lexis_ts_col_nms = NULL) {
     return(lexis_to_lexis_dt__(lexis)[])
   }
   if (is.null(lexis_ts_col_nms)) {
-    stop("Internal error: internal function lexis_dt__ ",
-         "cannot automatically determine lexis_ts_col_nms. Please ",
-         "complain to the maintainer if you see this.")
+    stop(
+      "Internal error: internal function lexis_dt__ ",
+      "cannot automatically determine lexis_ts_col_nms. Please ",
+      "complain to the maintainer if you see this."
+    )
   }
   out <- data.table::setDT(as.list(lexis))
   lexis_dt_set__(out, lexis_ts_col_nms = lexis_ts_col_nms)
@@ -100,7 +104,11 @@ surv_split__ <- function(
   }
   lexis_ts_col_nms <- Epi::timeScales(lexis)
   lexis_col_nms <- c(
-    "lex.id", lexis_ts_col_nms, "lex.dur", "lex.Cst", "lex.Xst"
+    "lex.id",
+    lexis_ts_col_nms,
+    "lex.dur",
+    "lex.Cst",
+    "lex.Xst"
   )
   if (isTRUE(merge)) {
     merge <- setdiff(names(lexis), lexis_col_nms)
@@ -164,7 +172,8 @@ lexis_box_dt__ <- function(
   data.table::setcolorder(
     box_dt,
     c(
-      "box_id", id_col_nms,
+      "box_id",
+      id_col_nms,
       paste0(
         rep(split_ts_col_nms, each = 2L),
         rep(c("_start", "_stop"), times = length(split_ts_col_nms))
@@ -186,8 +195,11 @@ lexis_box_id__ <- function(
     ts_start_col_nm <- paste0(ts_col_nm, "_start")
     ts_stop_col_nm <- paste0(ts_col_nm, "_stop")
     data.table::fctr(paste0(
-      "]", box_dt[[ts_start_col_nm]], ", ",
-      box_dt[[ts_stop_col_nm]], "]"
+      "]",
+      box_dt[[ts_start_col_nm]],
+      ", ",
+      box_dt[[ts_stop_col_nm]],
+      "]"
     ))
   }))
   data.table::setnames(merge_dt, split_ts_col_nms)

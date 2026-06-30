@@ -54,14 +54,16 @@ NULL
 #'   Epi::timeScales(lex) %in% c("fot", "per", "age")
 #' )
 #'
-Lexis_fpa <- function(data,
-                      birth = NULL,
-                      entry = NULL,
-                      exit = NULL,
-                      entry.status = NULL,
-                      exit.status = NULL,
-                      subset = NULL,
-                      ...) {
+Lexis_fpa <- function(
+  data,
+  birth = NULL,
+  entry = NULL,
+  exit = NULL,
+  entry.status = NULL,
+  exit.status = NULL,
+  subset = NULL,
+  ...
+) {
   # @codedoc_comment_block popEpi::Lexis_fpa
   # `popEpi::Lexis_fpa` collects data from its inputs to to call `[Epi::Lexis]`.
   # This is a convenience function for making a `Lexis` object with the
@@ -70,18 +72,25 @@ Lexis_fpa <- function(data,
   TF <- environment()
   PF <- parent.frame(1L)
 
-  checkVars <- c("fot", "per", "age",
-                 paste0("lex.", c("dur", "Xst", "Cst", "id")))
+  checkVars <- c(
+    "fot",
+    "per",
+    "age",
+    paste0("lex.", c("dur", "Xst", "Cst", "id"))
+  )
   checkVars <- intersect(names(data), checkVars)
   if (length(checkVars)) {
-    stop("Following variable name(s) reserved but exist in data: ",
-         paste0(checkVars, collapse = ", "))
+    stop(
+      "Following variable name(s) reserved but exist in data: ",
+      paste0(checkVars, collapse = ", ")
+    )
   }
-
 
   sb <- substitute(subset)
   subset <- evalLogicalSubset(data, sb, enclos = PF)
-  if (all(subset)) subset <- NULL
+  if (all(subset)) {
+    subset <- NULL
+  }
   x <- subsetDTorDF(data = data, subset = subset)
   setDT(x)
 
@@ -101,8 +110,10 @@ Lexis_fpa <- function(data,
 
   missVars <- setdiff(c("birth", "entry", "exit"), names(l))
   if (length(missVars)) {
-    stop("Following mandatory arguments were NULL: ",
-         paste0(missVars, collapse = ", "))
+    stop(
+      "Following mandatory arguments were NULL: ",
+      paste0(missVars, collapse = ", ")
+    )
   }
 
   fot <- l$entry - l$entry
@@ -113,8 +124,13 @@ Lexis_fpa <- function(data,
   en <- list(fot = fot, per = per, age = age)
   ex <- list(per = per_exit)
 
-  al <- list(entry = en, exit = ex, entry.status = l$entry.status,
-             exit.status = l$exit.status, data = x)
+  al <- list(
+    entry = en,
+    exit = ex,
+    entry.status = l$entry.status,
+    exit.status = l$exit.status,
+    data = x
+  )
   al[sapply(al, is.null)] <- NULL
 
   # @codedoc_comment_block return(popEpi::Lexis_fpa)

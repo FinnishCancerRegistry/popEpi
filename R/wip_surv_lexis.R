@@ -98,7 +98,11 @@ lexis_breaks_collapse_1d <- function(
   lexis_dt <- data.table::copy(lexis_to_lexis_dt__(
     lexis = lexis,
     select = c(
-      "lex.id", ts_col_nm, "lex.dur", "lex.Cst", "lex.Xst",
+      "lex.id",
+      ts_col_nm,
+      "lex.dur",
+      "lex.Cst",
+      "lex.Xst",
       intersect(all.vars(test_expr), names(lexis))
     )
   ))
@@ -119,40 +123,43 @@ lexis_breaks_collapse_1d <- function(
     can_combine_previous <- break_lo_pos > 1 &&
       !break_lo %in% mandatory_breaks
     can_combine <- can_combine_next || can_combine_previous
-    do_combine <- can_combine && local({
-      data.table::set(
-        x = lexis_dt,
-        i = seq_len(nrow(lexis_dt)), # avoids allocating more memory
-        j = c(ts_col_nm, "lex.dur", "lex.Cst", "lex.Xst"),
-        value = list(
-          lexis[[ts_col_nm]],
-          lexis[["lex.dur"]], lexis[["lex.Cst"]], lexis[["lex.Xst"]]
+    do_combine <- can_combine &&
+      local({
+        data.table::set(
+          x = lexis_dt,
+          i = seq_len(nrow(lexis_dt)), # avoids allocating more memory
+          j = c(ts_col_nm, "lex.dur", "lex.Cst", "lex.Xst"),
+          value = list(
+            lexis[[ts_col_nm]],
+            lexis[["lex.dur"]],
+            lexis[["lex.Cst"]],
+            lexis[["lex.Xst"]]
+          )
         )
-      )
-      lexis_crop(
-        lexis = lexis_dt,
-        breaks = structure(list(c(break_lo, break_hi)), names = ts_col_nm)
-      )
-      expr <- substitute(
-        lexis_dt[i = !is.na(lex.dur), j = test_expr],
-        list(test_expr = test_expr)
-      )
-      test_result <- eval(expr)
-      if (
-        !storage.mode(test_result) %in% c("logical", "double", "integer")
-      ) {
-        stop(
-          "Test expression ", deparse1(test_expr), " did not evaluate into ",
-          "(?storage.mode) logical, numeric, nor integer. ",
-          "Instead it evaluated to `storage.mode(result) = ",
-          deparse1(storage.mode(test_result), "`")
+        lexis_crop(
+          lexis = lexis_dt,
+          breaks = structure(list(c(break_lo, break_hi)), names = ts_col_nm)
         )
-      }
-      if (storage.mode(test_result) != "logical") {
-        test_result <- test_result > 0
-      }
-      !test_result
-    })
+        expr <- substitute(
+          lexis_dt[i = !is.na(lex.dur), j = test_expr],
+          list(test_expr = test_expr)
+        )
+        test_result <- eval(expr)
+        if (!storage.mode(test_result) %in% c("logical", "double", "integer")) {
+          stop(
+            "Test expression ",
+            deparse1(test_expr),
+            " did not evaluate into ",
+            "(?storage.mode) logical, numeric, nor integer. ",
+            "Instead it evaluated to `storage.mode(result) = ",
+            deparse1(storage.mode(test_result), "`")
+          )
+        }
+        if (storage.mode(test_result) != "logical") {
+          test_result <- test_result > 0
+        }
+        !test_result
+      })
 
     if (do_combine) {
       if (can_combine_next) {

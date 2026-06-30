@@ -99,7 +99,8 @@ surv_interval <- function(
       "lex.id",
       attr(lexis, "time.scales"),
       "lex.dur",
-      "lex.Cst", "lex.Xst",
+      "lex.Cst",
+      "lex.Xst",
       merge
     )
   )
@@ -139,12 +140,9 @@ surv_interpolate <- function(
   # interpolation.
   out <- switch(
     method,
-    "linear" = (1 - w) * estimate_start_value + 
-      w * conditional_stop_estimate,
-    "geometric_mean" = conditional_stop_estimate ^ w,
-    "hazard" = exp(-(
-      -log(conditional_stop_estimate) * w
-    ))
+    "linear" = (1 - w) * estimate_start_value + w * conditional_stop_estimate,
+    "geometric_mean" = conditional_stop_estimate^w,
+    "hazard" = exp(-(-log(conditional_stop_estimate) * w))
   )
   # then we un-conditionalise it
   out <- out * interval_start_estimate
@@ -174,14 +172,18 @@ surv_collapse_1d_eval_test_expr__ <- function(
   test_result <- tryCatch(eval(dt_expr, eval_env), error = function(e) e)
   if (inherits(test_result, "error")) {
     stop(
-      "Test expression ", deparse1(test_expr), " resulted in an error: ",
+      "Test expression ",
+      deparse1(test_expr),
+      " resulted in an error: ",
       test_expr[["message"]]
     )
   } else if (
     !storage.mode(test_result) %in% c("logical", "double", "integer")
   ) {
     stop(
-      "Test expression ", deparse1(test_expr), " did not evaluate into ",
+      "Test expression ",
+      deparse1(test_expr),
+      " did not evaluate into ",
       "(?storage.mode) logical, numeric, nor integer. ",
       "Instead it evaluated to `storage.mode(result) = ",
       deparse1(storage.mode(test_result), "`")

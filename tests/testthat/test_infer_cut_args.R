@@ -15,7 +15,7 @@ testthat::test_that("infer_cut_args__ works", {
       factor(c("]-2,-1]", "]-1,5]"))
     )[c("breaks", "right")],
     list(
-      breaks =  c(-2, -1, 5),
+      breaks = c(-2, -1, 5),
       right = TRUE
     )
   )

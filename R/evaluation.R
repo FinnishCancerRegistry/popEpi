@@ -5,7 +5,7 @@ evalPopArg <- function(
   DT = TRUE,
   enclos = NULL,
   recursive = TRUE,
-  types = c("NULL","character", "list", "expression"),
+  types = c("NULL", "character", "list", "expression"),
   naming = c("DT", "model")
 ) {
   ## arg: an unevaluated AND substitute()'d argument within a function, which may be
@@ -34,12 +34,18 @@ evalPopArg <- function(
   naming <- match.arg(naming[1L], c("DT", "model"))
 
   ## types: allowed popArg types of arguments.
-  types <- match.arg(types, c("NULL","character", "list", "expression", "formula"), several.ok = TRUE)
+  types <- match.arg(
+    types,
+    c("NULL", "character", "list", "expression", "formula"),
+    several.ok = TRUE
+  )
 
   if (!is.null(enclos) && !is.environment(enclos)) {
     stop("enclos must be NULL or an environment")
   }
-  if (!is.environment(enclos)) enclos <- parent.frame(n + 1L)
+  if (!is.environment(enclos)) {
+    enclos <- parent.frame(n + 1L)
+  }
 
   ## used data may change if expression uses dollar operator, hence
   ## arg should not be evaluated within data but only its surroundings.
@@ -53,7 +59,9 @@ evalPopArg <- function(
   }
   e <- eval(arg, envir = use_data, enclos = use_enc)
   if (is.language(e) && !inherits(e, "formula")) {
-    if (!recursive) stop("arg is of type language after evaluating, and recursive = FALSE")
+    if (!recursive) {
+      stop("arg is of type language after evaluating, and recursive = FALSE")
+    }
 
     tick <- 1L
     while (is.language(e) && !inherits(e, "formula") && tick < 100L) {
@@ -67,27 +75,40 @@ evalPopArg <- function(
       e <- eval(arg, envir = use_data, enclos = use_enc)
       tick <- tick + 1L
     }
-    if (tick == 100L) stop("arg was of type language even after 100 evaluations. Something went wrong here...")
-
-
-
+    if (tick == 100L) {
+      stop(
+        "arg was of type language even after 100 evaluations. Something went wrong here..."
+      )
+    }
   }
   argType <- "NULL"
-  if (is.list(e)) argType <- "list" else
-    if (is.character(e)) argType <- "character" else
-      if (mode(e) == "numeric" || is.vector(e) || is.factor(e)) argType <- "expression" else
-        if (inherits(e, "formula")) argType <- "formula"
+  if (is.list(e)) {
+    argType <- "list"
+  } else if (is.character(e)) {
+    argType <- "character"
+  } else if (mode(e) == "numeric" || is.vector(e) || is.factor(e)) {
+    argType <- "expression"
+  } else if (inherits(e, "formula")) {
+    argType <- "formula"
+  }
 
   if (!argType %in% types) {
     stop(
       "popArg type of evaluated arg not one of the allowed types ",
-      "(set via argument types). Detected type: '", deparse(argType),
-      "'. Allowed types: ", deparse(types))
+      "(set via argument types). Detected type: '",
+      deparse(argType),
+      "'. Allowed types: ",
+      deparse(types)
+    )
   }
-  if (argType == "NULL") return(NULL)
+  if (argType == "NULL") {
+    return(NULL)
+  }
 
   av <- all.vars(arg)
-  if (argType == "character") av <- e
+  if (argType == "character") {
+    av <- e
+  }
 
   ## byNames: names of columns resulting from aggre argument, by which
   ## pyrs and such are aggregated. same functionality
@@ -106,7 +127,9 @@ evalPopArg <- function(
 
   badNames <- c("$", ":")
 
-  byNames[byNames %in% badNames] <- paste0("BV", seq_len(length(byNames)))[byNames %in% badNames]
+  byNames[byNames %in% badNames] <- paste0("BV", seq_len(length(byNames)))[
+    byNames %in% badNames
+  ]
 
   if (argType == "formula") {
     arg <- e
@@ -114,7 +137,6 @@ evalPopArg <- function(
     use_enc <- enclos
     e <- RHS2DT(formula = e, data = use_data, enclos = use_enc)
     if (ncol(e) == 0L || nrow(e) == 0L) e <- data.table() ## e.g. y ~ 1
-
   } else if (is.character(e)) {
     all_names_present(data, e)
     if (DT) {
@@ -123,17 +145,23 @@ evalPopArg <- function(
       l <- lapply(e, function(x) data[[x]])
       setattr(l, "names", e)
       setDT(l)
-      e <- l; rm(l)
+      e <- l
+      rm(l)
     }
   } else if (is.list(e)) {
     ## note: fully unnamed list has NULL names()
     ## partially named list has some "" names
     ne <- names(e)
 
-    if (DT && any(sapply(e, is.null))) stop("at least one object in list arg is NULL; cannot form data.table with such list")
+    if (DT && any(sapply(e, is.null))) {
+      stop(
+        "at least one object in list arg is NULL; cannot form data.table with such list"
+      )
+    }
 
-    if (is.null(ne)) ne <- rep("", length(e))
-
+    if (is.null(ne)) {
+      ne <- rep("", length(e))
+    }
 
     wh_bad <- which(ne == "")
     if (length(wh_bad) > 0) {
@@ -166,7 +194,9 @@ evalPopArg <- function(
     setattr(e, "all.vars", av)
     setattr(e, "quoted.arg", arg)
     setattr(e, "arg.type", argType)
-    if (naming == "model" && ncol(e) > 0L) setnames(e, seq_len(ncol(e)), popArg2ModelNames(arg, type = argType))
+    if (naming == "model" && ncol(e) > 0L) {
+      setnames(e, seq_len(ncol(e)), popArg2ModelNames(arg, type = argType))
+    }
   }
   e
 }
@@ -192,29 +222,53 @@ popArgType <- function(
 
   a <- deparse(arg)
   a <- paste0(a, collapse = "") ## lists may somehow produce length > 1 here
-  if (substr(a, 1, 5) == "list(") return("list")
-  if (a == "NULL") return("NULL")
+  if (substr(a, 1, 5) == "list(") {
+    return("list")
+  }
+  if (a == "NULL") {
+    return("NULL")
+  }
   ## detection of character arguments is not easy and should not be considered
   ## fool proof since user may pass e.g. a vector of character strings as a
   ## symbol, which can only really be interpreted as an expression
-  if (sum(grep('\\"', a)) && length(setdiff(af, "c")) == 0) return("character")
+  if (sum(grep('\\"', a)) && length(setdiff(af, "c")) == 0) {
+    return("character")
+  }
 
   if (is.data.frame(data)) {
-    if (is.symbol(arg) && a %in% names(data)) return("expression")
-    if (length(av) == 1L && av %in% names(data)) return("expression")
-    e <- eval(arg, envir = data[seq_len(min(nrow(data), 20L)), ],
-              enclos = if (is.environment(enclos)) enclos else parent.frame(n + 1L))
-    if (inherits(e, "formula")) return("formula")
-    if (is.null(e)) return("NULL")
-    if (is.list(e)) return("list")
-    if (is.character(e) && all(e %in% names(data))) return("character")
-    if (is.vector(e) || is.factor(e)) return("expression")
+    if (is.symbol(arg) && a %in% names(data)) {
+      return("expression")
+    }
+    if (length(av) == 1L && av %in% names(data)) {
+      return("expression")
+    }
+    e <- eval(
+      arg,
+      envir = data[seq_len(min(nrow(data), 20L)), ],
+      enclos = if (is.environment(enclos)) enclos else parent.frame(n + 1L)
+    )
+    if (inherits(e, "formula")) {
+      return("formula")
+    }
+    if (is.null(e)) {
+      return("NULL")
+    }
+    if (is.list(e)) {
+      return("list")
+    }
+    if (is.character(e) && all(e %in% names(data))) {
+      return("character")
+    }
+    if (is.vector(e) || is.factor(e)) {
+      return("expression")
+    }
 
-    if (recursive && is.language(e)) return(popArgType(e, data = data, n = n + 1L, enclos = enclos))
+    if (recursive && is.language(e)) {
+      return(popArgType(e, data = data, n = n + 1L, enclos = enclos))
+    }
   }
 
   "expression"
-
 }
 popArg2ModelNames <- function(arg, type) {
   ## INTENTION: given a quoted/substituted expression,
@@ -224,37 +278,57 @@ popArg2ModelNames <- function(arg, type) {
   ## the names of expressions used within formula
 
   ## some exceptions
-  if (is.data.frame(arg)) return(names(arg))
-  if (is.character(arg)) return(arg)
+  if (is.data.frame(arg)) {
+    return(names(arg))
+  }
+  if (is.character(arg)) {
+    return(arg)
+  }
 
-  type <- match.arg(type[1L], c("NULL", "character", "list", "expression", "formula"))
+  type <- match.arg(
+    type[1L],
+    c("NULL", "character", "list", "expression", "formula")
+  )
 
   lang <- NULL
   lang <- try(is.language(arg) || inherits(arg, "formula"), silent = TRUE)
 
-
-  if (inherits(lang, "try-error") || !lang) stop("arg must be a quoted or substituted expression or a formula. Error message: ", lang, ". type of arg: ", typeof(arg), ". Class: ", class(arg), ". Mode: ", mode(arg), ".")
+  if (inherits(lang, "try-error") || !lang) {
+    stop(
+      "arg must be a quoted or substituted expression or a formula. Error message: ",
+      lang,
+      ". type of arg: ",
+      typeof(arg),
+      ". Class: ",
+      class(arg),
+      ". Mode: ",
+      mode(arg),
+      "."
+    )
+  }
 
   d <- oneWhitespace(paste0(deparse(arg)))
 
-  if (type == "expression") return(d) else
-    if (type == "NULL") return(NULL) else
-      if (type == "character") return(eval(arg)) else
-        if (type == "list") {
-          d <- substr(d, 6, nchar(d)-1L) ## removes "list(" and ")"
-          d <- strsplit(d, ", ")
-          return(unlist(d))
-        } else if (type == "formula") {
-          arg <- eval(arg)
-          d <- names(RHS2list(arg))
-          if (length(d) == 0L) return(NULL) ## e.g. y ~ 1
-          return(d)
-        }
+  if (type == "expression") {
+    return(d)
+  } else if (type == "NULL") {
+    return(NULL)
+  } else if (type == "character") {
+    return(eval(arg))
+  } else if (type == "list") {
+    d <- substr(d, 6, nchar(d) - 1L) ## removes "list(" and ")"
+    d <- strsplit(d, ", ")
+    return(unlist(d))
+  } else if (type == "formula") {
+    arg <- eval(arg)
+    d <- names(RHS2list(arg))
+    if (length(d) == 0L) {
+      return(NULL)
+    } ## e.g. y ~ 1
+    return(d)
+  }
   stop("could not determine deparsed-expression-names")
 }
-
-
-
 
 
 uses_dollar <- function(q, data.names) {
@@ -298,31 +372,31 @@ uses_dollar <- function(q, data.names) {
 }
 
 
-
-
 `%.:%` <- function(x, y) {
   ## INTENTION: hacking formula calls using `:`
   ## which is apparently normally evaluated in C... (in model.matrix.default)
   ## USAGE: e.g. c(1,2) %.:% c(3,4) = c(3, 8)
   ## (instead of getting warning)
   if (length(x) > 1L && length(y) > 1L && is.numeric(x) && is.numeric(y)) {
-    return(x*y)
-  } else if (length(x) == 1L && length(y) == 1L && is.numeric(x) && is.numeric(y)) {
+    return(x * y)
+  } else if (
+    length(x) == 1L && length(y) == 1L && is.numeric(x) && is.numeric(y)
+  ) {
     return(x:y)
   }
   as.factor(x):as.factor(y)
-
 }
 
 
-
-RHS2list <- function(formula, handle.adjust=TRUE) {
+RHS2list <- function(formula, handle.adjust = TRUE) {
   ## INTENTION: turns the right-hand side of a formula
   ## into a list of substituted expressions;
   ## each element in list is an expressions separated
   ## by a '+' in the formula. needs to be eval()'d,
   ## preferably using the appropriate data set.
-  if (!inherits(formula, "formula")) stop("not a formula")
+  if (!inherits(formula, "formula")) {
+    stop("not a formula")
+  }
 
   ## no response
   formula <- formula[c(1, length(formula))]
@@ -332,7 +406,9 @@ RHS2list <- function(formula, handle.adjust=TRUE) {
 
   ## handle adjusting variables (e.g. adjust(V1, V2) -> c("V1", "V2"))
   adj <- tl[substr(tl, 1, 7) == "adjust("]
-  if (length(adj) == 0L) adj <- NULL
+  if (length(adj) == 0L) {
+    adj <- NULL
+  }
   if (handle.adjust && !is.null(adj)) {
     tl <- setdiff(tl, adj)
     adj <- unlist(lapply(adj, function(stri) {
@@ -356,7 +432,9 @@ RHS2list <- function(formula, handle.adjust=TRUE) {
 }
 
 uses_colon <- function(e) {
-  if (is.character(e)) e <- parse(text = e)[[1]]
+  if (is.character(e)) {
+    e <- parse(text = e)[[1]]
+  }
   stopifnot(is.call(e) || is.name(e))
   stopifnot(!inherits(e, "formula"))
 
@@ -371,7 +449,9 @@ replace_colon <- function(e) {
   stopifnot(is.call(e) || is.name(e))
   stopifnot(!inherits(e, "formula"))
 
-  if (!uses_colon(e)) return(e)
+  if (!uses_colon(e)) {
+    return(e)
+  }
 
   l <- as.list(e)
   l[[1]] <- parse(text = "popEpi:::`%.:%`")[[1]]
@@ -380,20 +460,21 @@ replace_colon <- function(e) {
 
 RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   l <- RHS2list(formula)
-  if (length(l) == 0L) return(data.table())
+  if (length(l) == 0L) {
+    return(data.table())
+  }
   adj <- attr(l, "adjust")
 
   ## foolproofing in case data contains column named e.g. "a:b" and that is
   ## intended to be used
   dana <- names(data)
-  dana <- gsub(x=dana, pattern=" %.:% ", replacement = ":")
-  dana <- gsub(x=dana, pattern="%.:%", replacement = ":")
-
+  dana <- gsub(x = dana, pattern = " %.:% ", replacement = ":")
+  dana <- gsub(x = dana, pattern = "%.:%", replacement = ":")
 
   ld <- lapply(l, deparse)
   ld <- lapply(ld, function(ch) {
-    ch <- gsub(x=ch, pattern=" %.:% ", replacement = ":")
-    ch <- gsub(x=ch, pattern="%.:%", replacement = ":")
+    ch <- gsub(x = ch, pattern = " %.:% ", replacement = ":")
+    ch <- gsub(x = ch, pattern = "%.:%", replacement = ":")
     int <- if (ch %in% dana) which(dana %in% ch) else ch
     if (is.integer(int)) data[[names(data)[int]]] else NULL
   })
@@ -403,11 +484,14 @@ RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   ## foolproofs use of function %.:% by explicit referral, i.e. :::
   ## (this avoids scoping problem)
   l <- lapply(l, function(elem) {
-    if (!is.call(elem)) return(elem)
-    if (!uses_colon(elem)) return(elem)
+    if (!is.call(elem)) {
+      return(elem)
+    }
+    if (!uses_colon(elem)) {
+      return(elem)
+    }
 
     replace_colon(elem)
-
   })
 
   l <- lapply(l, function(elem) {
@@ -418,9 +502,6 @@ RHS2DT <- function(formula, data = data.frame(), enclos = parent.frame(1L)) {
   setattr(l, "adjust", adj)
   l
 }
-
-
-
 
 
 Surv2DT <- function(Surv) {
@@ -434,14 +515,16 @@ Surv2DT <- function(Surv) {
 
   statNA <- sum(is.na(dt$status))
   if (statNA) {
-    stop("Some status indicators (", statNA  ," values in total) were NA. ",
-         "Usual suspects: original status variable ",
-         "has NA values, or you have numeric status variable with more than ",
-         "two levels and you did not assign e.g. type = 'mstate' (e.g. ",
-         "Surv(time = c(1,1,1), event = c(0,1,2), type = 'mstate') works).")
-
+    stop(
+      "Some status indicators (",
+      statNA,
+      " values in total) were NA. ",
+      "Usual suspects: original status variable ",
+      "has NA values, or you have numeric status variable with more than ",
+      "two levels and you did not assign e.g. type = 'mstate' (e.g. ",
+      "Surv(time = c(1,1,1), event = c(0,1,2), type = 'mstate') works)."
+    )
   }
-
 
   setattr(dt, "type", type)
 
@@ -449,7 +532,8 @@ Surv2DT <- function(Surv) {
   lapply(label_sources, function(lbl_src) {
     if (identical(sa$inputAttributes[[lbl_src]]$class, "factor")) {
       set(
-        dt, j = "status",
+        dt,
+        j = "status",
         value = factor(dt$status, labels = sa$inputAttributes[[lbl_src]]$levels)
       )
     }
@@ -460,11 +544,13 @@ Surv2DT <- function(Surv) {
 }
 
 
-
-
-
-evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2L), subset = NULL, Surv.response = TRUE) {
-
+evalPopFormula <- function(
+  formula,
+  data = data.frame(),
+  enclos = parent.frame(2L),
+  subset = NULL,
+  Surv.response = TRUE
+) {
   ## INTENTION: given a formula object, returns a DT where each column
   ## is an evaluated expression from formula (separated by  + )
 
@@ -479,42 +565,51 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
 
   ## subset if needed ----------------------------------------------------------
   if (!is.null(subset) && !is.logical(subset)) {
-    stop("subset must be NULL or a logical vector and not an expression at ",
-         "this point. If you see this, complain to the package maintainer.")
+    stop(
+      "subset must be NULL or a logical vector and not an expression at ",
+      "this point. If you see this, complain to the package maintainer."
+    )
   }
   if (!is.null(subset)) {
     keepVars <- c(all.vars(formula), "lex.Xst")
     data <- subsetDTorDF(data, subset = subset, select = keepVars)
   }
 
-
   ## formula -------------------------------------------------------------------
   if (!inherits(formula, "formula")) {
     stop("formula is not of class 'formula'; supply it as e.g. y ~ x")
   }
   if (length(formula) < 3L) {
-    stop("formula appears to be one-sided, which is not supported; ",
-         "supply it as e.g. y ~ x")
+    stop(
+      "formula appears to be one-sided, which is not supported; ",
+      "supply it as e.g. y ~ x"
+    )
   }
 
   ## response
   y <- eval(formula[[2L]], envir = data, enclos = enclos)
   if (inherits(y, "Surv") && !either && !Surv.response) {
-    stop("Response is a result of using Surv(), which is not allowed in ",
-         "this context.")
+    stop(
+      "Response is a result of using Surv(), which is not allowed in ",
+      "this context."
+    )
   }
 
   if (!inherits(y, "Surv") && !either && Surv.response) {
-    stop("The response of the formula must be a Surv object; ",
-         "see ?Surv (in package survival).")
+    stop(
+      "The response of the formula must be a Surv object; ",
+      "see ?Surv (in package survival)."
+    )
   }
 
   if (inherits(y, "Surv")) {
     y <- Surv2DT(y)
     setcolsnull(y, keep = c("time", "start", "status"), colorder = TRUE)
     if (!any(c("time", "start") %in% names(y))) {
-      stop("You must supply function Surv a value to the 'time' ",
-           "argument. See ?Surv")
+      stop(
+        "You must supply function Surv a value to the 'time' ",
+        "argument. See ?Surv"
+      )
     }
     setnames(y, names(y), c("time", "status")[seq_len(ncol(y))])
   } else {
@@ -523,17 +618,17 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
     if (either && inherits(data, "Lexis")) {
       ## we assume the unmodified lex.Xst to be a useful status variable.
       if (!"lex.Xst" %in% names(data)) {
-        stop("Supplied a formula without using Surv(), and data was a Lexis ",
-             "object, so assumed you intended to use 'lex.Xst' in data as the ",
-             "status variable in this context, but that column was missing ",
-             "from data.")
+        stop(
+          "Supplied a formula without using Surv(), and data was a Lexis ",
+          "object, so assumed you intended to use 'lex.Xst' in data as the ",
+          "status variable in this context, but that column was missing ",
+          "from data."
+        )
       }
       setnames(y, 1, "time")
       y[, "status"] <- data$lex.Xst
-
     }
   }
-
 
   ## RHS
   l <- RHS2DT(formula, data = data, enclos = enclos)
@@ -554,8 +649,12 @@ evalPopFormula <- function(formula, data = data.frame(), enclos = parent.frame(2
 evalRecursive <- function(arg, env, enc, max.n = 100L) {
   ## INTENTION: digs out actual evaluatable value and expression
 
-  if (missing(env)) env <- environment()
-  if (missing(enc)) enc <- parent.frame(1L)
+  if (missing(env)) {
+    env <- environment()
+  }
+  if (missing(enc)) {
+    enc <- parent.frame(1L)
+  }
 
   if (is.data.frame(env)) {
     na <- names(env)
@@ -563,14 +662,16 @@ evalRecursive <- function(arg, env, enc, max.n = 100L) {
 
     env <- data.frame(env)
     setattr(env, "names", na)
-
   }
   argSub <- arg
 
   tick <- 1L
-  while (!inherits(arg, "try-error") && is.language(arg) &&
-         !inherits(arg, "formula") && tick < max.n) {
-
+  while (
+    !inherits(arg, "try-error") &&
+      is.language(arg) &&
+      !inherits(arg, "formula") &&
+      tick < max.n
+  ) {
     argSub <- arg
     arg <- try(eval(argSub, envir = env, enclos = enc), silent = TRUE)
 
@@ -578,56 +679,81 @@ evalRecursive <- function(arg, env, enc, max.n = 100L) {
   }
 
   if (tick == max.n) {
-    stop("evaluated expression ", max.n,
-         " times and still could not find underlying expression")
+    stop(
+      "evaluated expression ",
+      max.n,
+      " times and still could not find underlying expression"
+    )
   }
-  if (!is.language(argSub)) argSub <- substitute(arg)
+  if (!is.language(argSub)) {
+    argSub <- substitute(arg)
+  }
   list(arg = arg, argSub = argSub, all.vars = all.vars(argSub))
 }
 
 
-usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(),
-                          enclos, Surv.response = TRUE) {
+usePopFormula <- function(
+  form = NULL,
+  adjust = NULL,
+  data = data.frame(),
+  enclos,
+  Surv.response = TRUE
+) {
   ## INTENTION: evaluates form and combines with adjust appropriately
   ## returns a list of the elements dug out from the formula and adjust
   ## arguments.
   # formSub <- substitute(form)
   al <- evalRecursive(arg = form, env = data, enc = enclos)
 
-  if (!inherits(al$arg, "formula")) stop("'form' is not a formula object")
+  if (!inherits(al$arg, "formula")) {
+    stop("'form' is not a formula object")
+  }
 
-  dt <- evalPopFormula(formula = al$arg, data = data, enclos = enclos,
-                       Surv.response = Surv.response)
+  dt <- evalPopFormula(
+    formula = al$arg,
+    data = data,
+    enclos = enclos,
+    Surv.response = Surv.response
+  )
   adNames <- attr(dt, "adjust.names")
   prNames <- attr(dt, "print.names")
   suNames <- attr(dt, "Surv.names")
 
-  adjust <- evalPopArg(data, adjust, DT = TRUE, recursive = TRUE,
-                       enclos = new.env(), naming = "model",
-                       types = c("NULL", "character", "list", "expression"))
+  adjust <- evalPopArg(
+    data,
+    adjust,
+    DT = TRUE,
+    recursive = TRUE,
+    enclos = new.env(),
+    naming = "model",
+    types = c("NULL", "character", "list", "expression")
+  )
 
   if (is.data.frame(adjust) && (nrow(adjust) == 0L || ncol(adjust) == 0L)) {
     stop("adjust evaluated to an empty data.frame")
   }
   if (!is.null(adjust) && ncol(adjust) > 0L && length(adNames) > 0L) {
-    stop("Cannot both use argument 'adjust' AND use an adjust() term within ",
-         "the formula argument. Please only use one.")
+    stop(
+      "Cannot both use argument 'adjust' AND use an adjust() term within ",
+      "the formula argument. Please only use one."
+    )
   }
   if (is.null(adjust) && length(adNames) > 0L) {
     adjust <- dt[, .SD, .SDcols = c(adNames)]
   }
 
-
   print <- NULL
-  if (length(prNames > 0L)) print <- dt[, .SD, .SDcols = eval(prNames)]
+  if (length(prNames > 0L)) {
+    print <- dt[, .SD, .SDcols = eval(prNames)]
+  }
 
-  list(y = dt[, .SD, .SDcols = c(suNames)],
-       print = print,
-       adjust = adjust, formula = al$arg)
+  list(
+    y = dt[, .SD, .SDcols = c(suNames)],
+    print = print,
+    adjust = adjust,
+    formula = al$arg
+  )
 }
-
-
-
 
 
 #' @title Adjust Estimates by Categorical Variables
@@ -642,22 +768,24 @@ usePopFormula <- function(form = NULL, adjust = NULL, data = data.frame(),
 #' y ~ x + adjust(z)
 #' @export
 adjust <- function(...) {
-
   call <- sys.call(1L)
   call <- as.list(call)[1L]
 
   if (deparse(call) %in% c("adjust", "list(adjust)")) {
-    stop("Function adjust() only intended to be used within the formulas of ",
-         "certain functions of package popEpi. See e.g. ?survtab_ag for usage.")
+    stop(
+      "Function adjust() only intended to be used within the formulas of ",
+      "certain functions of package popEpi. See e.g. ?survtab_ag for usage."
+    )
   }
 
   mc <- as.list(match.call())[-1L]
-  if (is.list(mc) && length(mc) == 1) mc <- mc[[1]]
+  if (is.list(mc) && length(mc) == 1) {
+    mc <- mc[[1]]
+  }
   mc
 }
 
 parse_adjust_formula <- function(f) {
-
   env <- environment(f)
   t <- attr(terms(f), "term.labels")
 
@@ -665,14 +793,21 @@ parse_adjust_formula <- function(f) {
 
   a <- t[l]
 
-  if (!any(l)) return(f)
+  if (!any(l)) {
+    return(f)
+  }
 
   f <- deparse(f)
   f <- paste0(f, collapse = "")
   f <- oneWhitespace(f)
 
   for (k in seq_along(a)) {
-    f <- sub(x = f, pattern = paste0(" + ", a[k]), replacement = "", fixed = TRUE)
+    f <- sub(
+      x = f,
+      pattern = paste0(" + ", a[k]),
+      replacement = "",
+      fixed = TRUE
+    )
   }
 
   a <- lapply(a, function(stri) {
@@ -683,10 +818,8 @@ parse_adjust_formula <- function(f) {
   a <- unlist(a, recursive = FALSE)
 
   a <- sapply(a, function(e) {
-
     e <- substitute(adjust(e), list(e = e))
     deparse(e)
-
   })
 
   f <- paste0(f, " + ", paste0(a, collapse = " + "))
@@ -704,7 +837,9 @@ dt_robust_by <- function(e, by.var.nms) {
   )
 
   le <- paste0("list(", paste0("`", by.var.nms, "`", collapse = ", "), ")")
-  if (!length(by.var.nms)) le <- "NULL"
+  if (!length(by.var.nms)) {
+    le <- "NULL"
+  }
 
   e <- gsub(x = e, pattern = "%%BY_VAR_NMS%%", fixed = TRUE, replacement = le)
   eval(parse(text = e), envir = parent.frame(1L))

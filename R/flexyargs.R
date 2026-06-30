@@ -1,6 +1,3 @@
-
-
-
 #' @title Flexible Variable Usage in \pkg{popEpi} Functions
 #' @author Joonas Miettinen
 #' @name flexible_argument
@@ -155,12 +152,3 @@
 #'                  surv.method = "hazard")
 
 NULL
-
-
-
-
-
-
-
-
-

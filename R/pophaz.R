@@ -1,6 +1,3 @@
-
-
-
 #' @title Expected / Population Hazard Data Sets Usage in \pkg{popEpi}
 #' @author Joonas Miettinen
 #' @name pophaz
@@ -59,12 +56,3 @@
 #'
 
 NULL
-
-
-
-
-
-
-
-
-

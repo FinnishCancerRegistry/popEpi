@@ -1,10 +1,12 @@
 utils::globalVariables(c("tab", "SE.A", "pp.table"))
 
-comp.st.surv <- function(surv.var = "p", surv.expr = "1-d/(n.eff-n.cens/2)",
-                         SE.expr = "sqrt(p*(1-p)/(n.eff))", cumu = TRUE) {
-
+comp.st.surv <- function(
+  surv.var = "p",
+  surv.expr = "1-d/(n.eff-n.cens/2)",
+  SE.expr = "sqrt(p*(1-p)/(n.eff))",
+  cumu = TRUE
+) {
   function(surv.table = tab, surv.by.vars = NULL) {
-
     tabname <- deparse(substitute(surv.table))
     #     tabname <- "surv.table"
     by.expr <- NULL
@@ -13,8 +15,8 @@ comp.st.surv <- function(surv.var = "p", surv.expr = "1-d/(n.eff-n.cens/2)",
       by.expr <- paste0(", by = c( ", surv.by.vars, " )")
     }
 
-    surv.expr <-  paste0(surv.var, " := ", surv.expr)
-    tab.surv.expr <- paste0(tabname, "[, ", surv.expr,  by.expr, "]")
+    surv.expr <- paste0(surv.var, " := ", surv.expr)
+    tab.surv.expr <- paste0(tabname, "[, ", surv.expr, by.expr, "]")
     #   surv.expr <- parse(text=surv.expr)
     #   surv.var <- parse(text=surv.var)
     SE.var <- paste0("SE.", surv.var)
@@ -22,117 +24,146 @@ comp.st.surv <- function(surv.var = "p", surv.expr = "1-d/(n.eff-n.cens/2)",
     tab.SE.expr <- paste0(tabname, "[, ", SE.expr, ", ", by.expr, "]")
     #   SE.expr <- parse(text=SE.expr)
     #   SE.var <- parse(text=SE.var)
-    cumuexpr <- paste0(tabname, "[, ", surv.var, " := cumprod(", surv.var, ")", by.expr, "]" )
-
+    cumuexpr <- paste0(
+      tabname,
+      "[, ",
+      surv.var,
+      " := cumprod(",
+      surv.var,
+      ")",
+      by.expr,
+      "]"
+    )
 
     ## parent.frame(2): two steps upstream in environments
-    pe <- function(obj, ..., env=parent.frame(2)) {
-      eval(parse(text=obj), ..., envir=env)
+    pe <- function(obj, ..., env = parent.frame(2)) {
+      eval(parse(text = obj), ..., envir = env)
     }
 
     pe(tab.surv.expr)
 
-
-    if (cumu) pe(cumuexpr)
+    if (cumu) {
+      pe(cumuexpr)
+    }
 
     ## standard error
     pe(tab.SE.expr)
 
     ## zero survival leads to zero SE
-    minexpr <- paste0(tabname, "[",surv.var, "== 0, ", SE.var, " := 0]")
+    minexpr <- paste0(tabname, "[", surv.var, "== 0, ", SE.var, " := 0]")
     pe(minexpr)
   }
 }
 
 
-comp.st.surv.obs.lif <- comp.st.surv(surv.var=  "surv.obs",
-                                     surv.expr= "1-d/n.eff",
-                                     SE.expr=   "surv.obs*sqrt(  cumsum(  d/(n.eff*(n.eff-d))  )  )", ## old : sqrt(p*(1-p)/(n.eff))"
-                                     cumu = TRUE)
+comp.st.surv.obs.lif <- comp.st.surv(
+  surv.var = "surv.obs",
+  surv.expr = "1-d/n.eff",
+  SE.expr = "surv.obs*sqrt(  cumsum(  d/(n.eff*(n.eff-d))  )  )", ## old : sqrt(p*(1-p)/(n.eff))"
+  cumu = TRUE
+)
 
-comp.st.surv.obs.haz <- comp.st.surv(surv.var=  "surv.obs",
-                                     surv.expr= "exp(-delta*d/pyrs)",
-                                     SE.expr=   "surv.obs*sqrt(  cumsum(  delta^2*d/pyrs^2  )  )", ## old: sqrt(p*(1-p)/(n.eff))
-                                     cumu = TRUE)
+comp.st.surv.obs.haz <- comp.st.surv(
+  surv.var = "surv.obs",
+  surv.expr = "exp(-delta*d/pyrs)",
+  SE.expr = "surv.obs*sqrt(  cumsum(  delta^2*d/pyrs^2  )  )", ## old: sqrt(p*(1-p)/(n.eff))
+  cumu = TRUE
+)
 
 
-comp.st.r.e2.haz <- comp.st.surv(surv.var = "r.e2",
-                                 surv.expr = "exp(-delta*(d-d.exp)/pyrs)",
-                                 SE.expr = "SE.surv.obs/surv.exp",
-                                 cumu=TRUE)
+comp.st.r.e2.haz <- comp.st.surv(
+  surv.var = "r.e2",
+  surv.expr = "exp(-delta*(d-d.exp)/pyrs)",
+  SE.expr = "SE.surv.obs/surv.exp",
+  cumu = TRUE
+)
 
-comp.st.r.e2.lif <- comp.st.surv(surv.var = "r.e2",
-                                 surv.expr = "1-(d-d.exp)/(n.eff)",
-                                 SE.expr = "SE.surv.obs/surv.exp",
-                                 cumu=TRUE)
+comp.st.r.e2.lif <- comp.st.surv(
+  surv.var = "r.e2",
+  surv.expr = "1-(d-d.exp)/(n.eff)",
+  SE.expr = "SE.surv.obs/surv.exp",
+  cumu = TRUE
+)
 
-comp.st.r.pp.haz <- comp.st.surv(surv.var = "r.pp",
-                                 surv.expr= "exp(-delta*(d.pp - d.exp.pp)/pyrs.pp)",
-                                 SE.expr = "r.pp*sqrt(  cumsum(  delta^2*( d.pp.2)/ pyrs.pp^2  )  )",
-                                 cumu=TRUE)
+comp.st.r.pp.haz <- comp.st.surv(
+  surv.var = "r.pp",
+  surv.expr = "exp(-delta*(d.pp - d.exp.pp)/pyrs.pp)",
+  SE.expr = "r.pp*sqrt(  cumsum(  delta^2*( d.pp.2)/ pyrs.pp^2  )  )",
+  cumu = TRUE
+)
 
-comp.st.r.pp.lif <- comp.st.surv(surv.var = "r.pp",
-                                 surv.expr = "1-(d.pp-d.exp.pp)/(n.eff.pp)",
-                                 SE.expr = "r.pp*sqrt(  cumsum(  d.pp.2/(n.eff^2)  )  )",
-                                 cumu=TRUE)
+comp.st.r.pp.lif <- comp.st.surv(
+  surv.var = "r.pp",
+  surv.expr = "1-(d.pp-d.exp.pp)/(n.eff.pp)",
+  SE.expr = "r.pp*sqrt(  cumsum(  d.pp.2/(n.eff^2)  )  )",
+  cumu = TRUE
+)
 
 
 ## this function will calculate confidence intervals
 ## for obs & rel & net survivals
 #' @import stats
-comp.st.conf.ints <- function(tab = pp.table, al=0.05, surv="r.pp", transform ="log-log") {
-  zlo <- as.character(qnorm(al/2))
-  zhi <- as.character(qnorm(1-al/2))
-  SE.surv <- paste0("SE.",surv)
+comp.st.conf.ints <- function(
+  tab = pp.table,
+  al = 0.05,
+  surv = "r.pp",
+  transform = "log-log"
+) {
+  zlo <- as.character(qnorm(al / 2))
+  zhi <- as.character(qnorm(1 - al / 2))
+  SE.surv <- paste0("SE.", surv)
   surv.hi <- paste0(surv, ".hi")
   surv.lo <- paste0(surv, ".lo")
 
-  tmp_se <- makeTempVarName(names = names(tab), pre = "delta_method_SE_", length = 15L)
+  tmp_se <- makeTempVarName(
+    names = names(tab),
+    pre = "delta_method_SE_",
+    length = 15L
+  )
 
   pe <- function(...) {
-    eval(parse(text=paste0(...)), envir=tab)
+    eval(parse(text = paste0(...)), envir = tab)
   }
 
-  if (transform =="plain") {
+  if (transform == "plain") {
     ## assume S(t)~N(mu, sigma)
 
-    ex <- paste0(surv,  " ", zlo, "*", SE.surv)
-    tab[, (surv.lo)  := pe(ex)]
+    ex <- paste0(surv, " ", zlo, "*", SE.surv)
+    tab[, (surv.lo) := pe(ex)]
     ex <- paste0(surv, " +", zhi, "*", SE.surv)
-    tab[, (surv.hi)  := pe(ex)]
-
-  } else if (transform =="log-log") {
+    tab[, (surv.hi) := pe(ex)]
+  } else if (transform == "log-log") {
     ## assume log(H(t))~N(mu, sigma)
     ## -> delta method SE: sqrt( SE^2 * (1/(log(SURV)*SURV))^2 )
 
-    ex <- paste0(SE.surv,"/(abs(log(",surv,"))*",surv,")")
-    tab[,  (tmp_se) := pe(ex)]
+    ex <- paste0(SE.surv, "/(abs(log(", surv, "))*", surv, ")")
+    tab[, (tmp_se) := pe(ex)]
 
-    ex <- paste0(surv, "^exp(", zhi, "*", tmp_se,")")
-    tab[, (surv.lo)  := pe(ex)]
-    ex <- paste0(surv, "^exp(", zlo, "*", tmp_se,")")
-    tab[, (surv.hi)  := pe(ex)]
-
-  } else if (transform =="log") {
+    ex <- paste0(surv, "^exp(", zhi, "*", tmp_se, ")")
+    tab[, (surv.lo) := pe(ex)]
+    ex <- paste0(surv, "^exp(", zlo, "*", tmp_se, ")")
+    tab[, (surv.hi) := pe(ex)]
+  } else if (transform == "log") {
     ## assume log(S(t))~N(mu, sigma)
     ## -> delta method SE: SE/SURV
 
-    ex <- paste0(SE.surv,"/",surv)
-    tab[,  (tmp_se) := pe(ex)]
+    ex <- paste0(SE.surv, "/", surv)
+    tab[, (tmp_se) := pe(ex)]
 
-    ex <- paste0(surv, "*exp(", zlo, "*", tmp_se,")")
-    tab[, (surv.lo)  := pe(ex)]
-    ex <- paste0(surv, "*exp(", zhi, "*", tmp_se,")")
-    tab[, (surv.hi)  := pe(ex)]
+    ex <- paste0(surv, "*exp(", zlo, "*", tmp_se, ")")
+    tab[, (surv.lo) := pe(ex)]
+    ex <- paste0(surv, "*exp(", zhi, "*", tmp_se, ")")
+    tab[, (surv.hi) := pe(ex)]
   }
-  if (tmp_se %in% names(tab)) tab[, (tmp_se) := NULL]
+  if (tmp_se %in% names(tab)) {
+    tab[, (tmp_se) := NULL]
+  }
 
   ## zero SE means zero uncertainty means lo=hi=estimate
   tab[tab[[SE.surv]] == 0, c(surv.lo, surv.hi) := .SD, .SDcols = surv]
 
   tab[]
 }
-
 
 
 # x <- Lexis(data=sire[1,], entry = list(fot=0, per=get.yrs(dg_date), age=dg_age),
@@ -144,7 +175,14 @@ comp.st.conf.ints <- function(tab = pp.table, al=0.05, surv="r.pp", transform ="
 #                  mid.scales = c("per", "age"), all.x = TRUE, all.y = FALSE)
 # comp_pp_weights(x, surv.scale = "fot", breaks = seq(0, 5, 1/12), haz = "haz", style = "delta")
 
-comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz", style = "delta", verbose = FALSE) {
+comp_pp_weights <- function(
+  lex,
+  surv.scale = "fot",
+  breaks = NULL,
+  haz = "haz",
+  style = "delta",
+  verbose = FALSE
+) {
   ppTime <- proc.time()
   ## input: a split Lexis object (data.table) and the time scale to compute
   ## pp weights over; lex must also contain 'haz', the population
@@ -154,15 +192,21 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
   lex.dur <- lex.id <- pp <- NULL ## APPEASE R CMD CHECK
 
   style <- match.arg(style, c("delta", "actual"))
-  if (!is.data.table(lex)) stop("lex must be a data.table")
+  if (!is.data.table(lex)) {
+    stop("lex must be a data.table")
+  }
 
   all_names_present(lex, c(haz, surv.scale, "lex.id", "lex.dur"))
 
-  if ("pp" %in% names(lex)) stop("Variable named 'pp' existed in data when attempting to compute pohar-perme weights; 'pp' is reserved so you should delete or rename that variable")
+  if ("pp" %in% names(lex)) {
+    stop(
+      "Variable named 'pp' existed in data when attempting to compute pohar-perme weights; 'pp' is reserved so you should delete or rename that variable"
+    )
+  }
 
-
-  if (!identical(key(lex), c("lex.id", surv.scale))) stop("lex must be a data.table keyed by lex.id and the survival time scale")
-
+  if (!identical(key(lex), c("lex.id", surv.scale))) {
+    stop("lex must be a data.table keyed by lex.id and the survival time scale")
+  }
 
   breaks <- sort(unique(breaks)) - .Machine$double.eps^0.5
 
@@ -173,7 +217,21 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
   tmpSIstart <- makeTempVarName(data = lex, pre = "surv.int.start_")
   tmpSIstop <- makeTempVarName(data = lex, pre = "surv.int.stop_")
   tmpSIlength <- makeTempVarName(data = lex, pre = "surv.int.length_")
-  on.exit(setcolsnull(lex, delete = c(tmpSI, tmpSIstart, tmpSIstop, tmpSIlength, tmpPS, tmpPCS, tmpPCSM)), add = TRUE)
+  on.exit(
+    setcolsnull(
+      lex,
+      delete = c(
+        tmpSI,
+        tmpSIstart,
+        tmpSIstop,
+        tmpSIlength,
+        tmpPS,
+        tmpPCS,
+        tmpPCSM
+      )
+    ),
+    add = TRUE
+  )
 
   set(lex, j = tmpSI, value = cut(lex[[surv.scale]], breaks, labels = FALSE))
   set(lex, j = tmpSIstop, value = breaks[-1][lex[[tmpSI]]])
@@ -185,15 +243,26 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
   tmpPCSM <- makeTempVarName(data = lex, pre = "pop.cumsurv.mid_")
 
   ## conditional survs
-  if (verbose) condSurvTime <- proc.time()
+  if (verbose) {
+    condSurvTime <- proc.time()
+  }
 
-  set(lex, j = tmpPS, value = exp(-lex[[haz]]*lex$lex.dur))
+  set(lex, j = tmpPS, value = exp(-lex[[haz]] * lex$lex.dur))
   ## till end of each interval...
-  lex[, c(tmpPCS) := list(exp(-cumsum(.SD[[1L]]*lex.dur))),
-      by = lex.id, .SDcols = c(haz, "lex.dur")]
+  lex[,
+    c(tmpPCS) := list(exp(-cumsum(.SD[[1L]] * lex.dur))),
+    by = lex.id,
+    .SDcols = c(haz, "lex.dur")
+  ]
   ## till start of each interval
   set(lex, j = tmpPCS, value = lex[[tmpPCS]] / lex[[tmpPS]])
-  if (verbose) cat("Time taken by computing expected survivals up to start of each interval for each lex.id: ", timetaken(condSurvTime), "\n")
+  if (verbose) {
+    cat(
+      "Time taken by computing expected survivals up to start of each interval for each lex.id: ",
+      timetaken(condSurvTime),
+      "\n"
+    )
+  }
 
   ## pohar-perme weighting by expected cumulative survival. approximation:
   ## cumulative survival up to either middle of remaining surv.int (not individual-specific)
@@ -203,7 +272,9 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
     set(lex, j = tmpPCSM, value = lex[[tmpPCS]] * (lex[[tmpPS]])^0.5)
   }
   if (style == "delta") {
-    if (verbose) deltaTime <- proc.time()
+    if (verbose) {
+      deltaTime <- proc.time()
+    }
 
     setkeyv(lex, c("lex.id", tmpSI))
     ## expected survival up to middle of remaining time in surv.int
@@ -214,18 +285,24 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
     last_in_surv.int <- !duplicated(lex, fromLast = TRUE, by = key(lex))
     only_in_surv.int <- first_in_surv.int & last_in_surv.int
 
-    lex[only_in_surv.int, c(tmpPCSM) := .SD[[1L]] * exp(.SD[[2L]] * (.SD[[3L]] - .SD[[4L]])/2L),
-        .SDcols = c(tmpPCS, haz, tmpSIstop, surv.scale)]
+    lex[
+      only_in_surv.int,
+      c(tmpPCSM) := .SD[[1L]] * exp(.SD[[2L]] * (.SD[[3L]] - .SD[[4L]]) / 2L),
+      .SDcols = c(tmpPCS, haz, tmpSIstop, surv.scale)
+    ]
 
     ## more complicated with many records in a surv.int per lex.id
     if (any(!only_in_surv.int)) {
-
       tmpSImid <- makeTempVarName(lex, pre = "surv.int.mid_")
       dist <- makeTempVarName(lex, pre = "dist_")
       on.exit(setcolsnull(lex, delete = c(dist, tmpSImid)), add = TRUE)
 
       ## middle point of survival interval
-      set(lex, j = tmpSImid, value = (lex[[tmpSIstop]] - lex[[tmpSIstart]])/2L)
+      set(
+        lex,
+        j = tmpSImid,
+        value = (lex[[tmpSIstop]] - lex[[tmpSIstart]]) / 2L
+      )
 
       ## distance from remaining surv.int mid-point starting from start of
       ## record; or at most lex.dur; for integration
@@ -235,38 +312,74 @@ comp_pp_weights <- function(lex, surv.scale = "fot", breaks = NULL, haz = "haz",
 
       ## some lex.id are censored / die before mid of surv.int; last record
       ## must reach its fot.dist at least up to the mid (or be zero due to above)
-      lex[last_in_surv.int, c(dist) := pmax((.SD[[1L]] - .SD[[2L]])/2L, 0),
-          .SDcols = c(tmpSIstop, surv.scale)]
+      lex[
+        last_in_surv.int,
+        c(dist) := pmax((.SD[[1L]] - .SD[[2L]]) / 2L, 0),
+        .SDcols = c(tmpSIstop, surv.scale)
+      ]
 
       byTime <- proc.time()
 
       ## from start of first in surv.int till mid point
       ## step by step for efficiency...
-      lex[!only_in_surv.int, c(tmpPCSM) := .SD[[1L]] * .SD[[2L]], .SDcols = c(haz, dist)]
-      lex[!only_in_surv.int, c(tmpPCSM) := lapply(.SD, sum),
-          .SDcols = c(tmpPCSM), by = c("lex.id", tmpSI)]
-      lex[!only_in_surv.int, c(tmpPCS) := .SD[1L],
-          by = c("lex.id", tmpSI), .SDcols = c(tmpPCS)]
-      lex[!only_in_surv.int, c(tmpPCSM) := .SD[[1L]] * exp(-.SD[[2L]]),
-          .SDcols = c(tmpPCS, tmpPCSM)]
+      lex[
+        !only_in_surv.int,
+        c(tmpPCSM) := .SD[[1L]] * .SD[[2L]],
+        .SDcols = c(haz, dist)
+      ]
+      lex[
+        !only_in_surv.int,
+        c(tmpPCSM) := lapply(.SD, sum),
+        .SDcols = c(tmpPCSM),
+        by = c("lex.id", tmpSI)
+      ]
+      lex[
+        !only_in_surv.int,
+        c(tmpPCS) := .SD[1L],
+        by = c("lex.id", tmpSI),
+        .SDcols = c(tmpPCS)
+      ]
+      lex[
+        !only_in_surv.int,
+        c(tmpPCSM) := .SD[[1L]] * exp(-.SD[[2L]]),
+        .SDcols = c(tmpPCS, tmpPCSM)
+      ]
 
       ## todo: alternate faster method for integration!
       setcolsnull(lex, delete = c(dist))
-      if (verbose) cat("Time taken by extra computation due to style 'delta': ", timetaken(deltaTime), "\n")
+      if (verbose) {
+        cat(
+          "Time taken by extra computation due to style 'delta': ",
+          timetaken(deltaTime),
+          "\n"
+        )
+      }
     }
 
     rm(first_in_surv.int, last_in_surv.int, only_in_surv.int)
-    if (verbose) cat("Time taken by computation of Pohar-Perme weights: ", timetaken(ppTime), "\n")
+    if (verbose) {
+      cat(
+        "Time taken by computation of Pohar-Perme weights: ",
+        timetaken(ppTime),
+        "\n"
+      )
+    }
   }
 
   setkeyv(lex, c("lex.id", surv.scale))
 
-  lex[, pp := 1/.SD, .SDcols = tmpPCSM]
+  lex[, pp := 1 / .SD, .SDcols = tmpPCSM]
 
   invisible(lex[])
 }
 
-comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NULL, by = "lex.id") {
+comp_pp_weighted_figures <- function(
+  lex,
+  haz = "haz",
+  pp = "pp",
+  event.ind = NULL,
+  by = "lex.id"
+) {
   ## PURPOSE: given a split Lexis object with a column of pre-computed
   ## pohar-perme weights, computes pp-weighted:
   ## * person-time (lex.dur*pp)
@@ -282,7 +395,9 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
   lex.Cst <- lex.Xst <- NULL
 
   checkLexisData(lex, check.breaks = TRUE)
-  if (!is.data.table(lex)) stop("lex must be a data.table")
+  if (!is.data.table(lex)) {
+    stop("lex must be a data.table")
+  }
 
   all_names_present(lex, c(pp, haz, event.ind, by))
 
@@ -293,7 +408,11 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
   if (is.null(event.ind)) {
     event.ind <- makeTempVarName(lex, pre = "event_indicator_")
     on.exit(setcolsnull(lex, delete = event.ind, soft = TRUE), add = TRUE)
-    set(lex, j = event.ind, value = detectEvents(lex, breaks = attr(lex, "breaks"), by = by))
+    set(
+      lex,
+      j = event.ind,
+      value = detectEvents(lex, breaks = attr(lex, "breaks"), by = by)
+    )
     all_names_present(lex, event.ind)
   }
   ## data.table is probably faster in this than simply using vectors
@@ -306,13 +425,12 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
   events <- paste0("from", evtab$lex.Cst, "to", evtab$lex.Xst)
   ppVars <- c(paste0(events, ".pp"), "ptime.pp", "d.exp.pp")
 
-
-#   ## build table to join with lex to limit to rows with events -----------------
-#   ## non-event-rows have zero valued pp-weighted event counts, naturally
-#   set(evtab, j = event.ind, value = NULL)
-#   evtab <- rbindlist(list(evtab, evtab))
-#   set(evtab, j = event.ind, value = rep(1:2, each = nrow(evtab)/2L))
-#   setkeyv(evtab, c("lex.Cst", "lex.Xst", event.ind))
+  #   ## build table to join with lex to limit to rows with events -----------------
+  #   ## non-event-rows have zero valued pp-weighted event counts, naturally
+  #   set(evtab, j = event.ind, value = NULL)
+  #   evtab <- rbindlist(list(evtab, evtab))
+  #   set(evtab, j = event.ind, value = rep(1:2, each = nrow(evtab)/2L))
+  #   setkeyv(evtab, c("lex.Cst", "lex.Xst", event.ind))
 
   ## pp-weighted events --------------------------------------------------------
   ## NOTE: a pp-weighted event is simply the pp weight where the event occurs
@@ -320,9 +438,16 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
 
   evN <- length(events)
   evdt <- data.table(rn = rep(1:nrow(lex), times = evN))
-  set(evdt, j = "eventType", value = factor(rep(1:evN, each = nrow(lex)), levels = 1:evN, labels = events))
-  set(evdt, j = "pp", value = rep(lex[[pp]],length.out=nrow(evdt)))
-
+  set(
+    evdt,
+    j = "eventType",
+    value = factor(
+      rep(1:evN, each = nrow(lex)),
+      levels = 1:evN,
+      labels = events
+    )
+  )
+  set(evdt, j = "pp", value = rep(lex[[pp]], length.out = nrow(evdt)))
 
   ## need to still determine which rows are not their eventType's events -------
 
@@ -331,11 +456,20 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
   set(lex, j = rnVar, value = 1:nrow(lex))
 
   ## row numbers in lex by event type
-  rowNums <- lex[haveEvents][evtab, .(rowNum = .SD[[e$rnVar]]), by = .EACHI, on = c("lex.Cst", "lex.Xst"), .SDcols = rnVar]
+  rowNums <- lex[haveEvents][
+    evtab,
+    .(rowNum = .SD[[e$rnVar]]),
+    by = .EACHI,
+    on = c("lex.Cst", "lex.Xst"),
+    .SDcols = rnVar
+  ]
   ## multiply to accommodate expanded evdt data
 
   rowNum <- NULL ## appease R CMD CHECK
-  rowNums[, rowNum := rowNum+(.GRP-1L)*nrow(lex), by = list(lex.Cst, lex.Xst)]
+  rowNums[,
+    rowNum := rowNum + (.GRP - 1L) * nrow(lex),
+    by = list(lex.Cst, lex.Xst)
+  ]
   noEvents <- setdiff(1:nrow(evdt), rowNums$rowNum)
 
   set(evdt, i = noEvents, j = "pp", value = 0)
@@ -354,22 +488,28 @@ comp_pp_weighted_figures <- function(lex, haz = "haz", pp = "pp", event.ind = NU
 
   ## pp-weighted at-risk indicators --------------------------------------------
   ## these will be n.pp at the aggregate level.
-  set(evdt, j = "at.risk.pp", value = lex[[pp]]*1L)
+  set(evdt, j = "at.risk.pp", value = lex[[pp]] * 1L)
 
   ## events multiplied with pp-weight again ------------------------------------
   ## (i.e. event times pp squared)
 
-  set(evdt, j = paste0(events, ".pp.2"),
-      value = evdt[, .SD, .SDcols = paste0(events, ".pp")]*lex[[pp]])
+  set(
+    evdt,
+    j = paste0(events, ".pp.2"),
+    value = evdt[, .SD, .SDcols = paste0(events, ".pp")] * lex[[pp]]
+  )
 
   return(evdt[])
-
 }
 
 
-
-test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs", show.by = NULL) {
-
+test_empty_surv_ints <- function(
+  x,
+  by = NULL,
+  sum.over = NULL,
+  test.var = "pyrs",
+  show.by = NULL
+) {
   x <- copy(x)
   oc <- class(x)
   setDT(x)
@@ -377,22 +517,42 @@ test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs
 
   surv.int <- NULL ## APPEASE R CMD CHECK
 
-  all_names_present(x, by, msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer.")
-  all_names_present(x, sum.over, msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer.")
-  all_names_present(x, test.var, msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer.")
+  all_names_present(
+    x,
+    by,
+    msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer."
+  )
+  all_names_present(
+    x,
+    sum.over,
+    msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer."
+  )
+  all_names_present(
+    x,
+    test.var,
+    msg = "Missing variable(s) %%VARS%% from data when inspected for empty survival intervals. If you see this, send a message to the package maintainer."
+  )
 
-  if (any(!sum.over %in% by)) stop("sum.over must be a subset of by.")
-  if (length(show.by) == 0L) show.by <- by
+  if (any(!sum.over %in% by)) {
+    stop("sum.over must be a subset of by.")
+  }
+  if (length(show.by) == 0L) {
+    show.by <- by
+  }
   if (length(by) != length(show.by)) {
-    stop("Internal error: length(sum.over) != length(show.sum.over). ",
-         "If you see this, complain to the package maintainer.")
+    stop(
+      "Internal error: length(sum.over) != length(show.sum.over). ",
+      "If you see this, complain to the package maintainer."
+    )
   }
 
   wh_sum.to <- !by %in% sum.over
   sum.to <- by[wh_sum.to]
   show.sum.to <- show.by[wh_sum.to]
 
-  if (length(sum.to) == 0L) sum.to <- show.sum.to <- NULL
+  if (length(sum.to) == 0L) {
+    sum.to <- show.sum.to <- NULL
+  }
 
   tmpTV <- makeTempVarName(x, pre = "testValues_")
   tmpDiff <- makeTempVarName(x, pre = "diff_")
@@ -418,22 +578,35 @@ test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs
     msg <- paste0("The total person-time was zero in some survival intervals")
 
     if (!is.null(sum.to)) {
-      msg <- paste0(msg, ", when summed to the variable(s) ",
-                    paste0("'", show.sum.to, "'", collapse = ", "),
-                    " (i.e. over all other variables, if any)")
+      msg <- paste0(
+        msg,
+        ", when summed to the variable(s) ",
+        paste0("'", show.sum.to, "'", collapse = ", "),
+        " (i.e. over all other variables, if any)"
+      )
     } else {
-      msg <- paste0(msg, " summed to the margins (over any stratifying ",
-                    "/ adjusting variables)")
+      msg <- paste0(
+        msg,
+        " summed to the margins (over any stratifying ",
+        "/ adjusting variables)"
+      )
     }
 
-    msg <- paste0(msg, " _non-consecutively_, i.e. some intervals after an ",
-                  "empty interval had person-time in them. ",
-                  "Keeping all survival ",
-                  "intervals with some estimates as NA for inspection.")
+    msg <- paste0(
+      msg,
+      " _non-consecutively_, i.e. some intervals after an ",
+      "empty interval had person-time in them. ",
+      "Keeping all survival ",
+      "intervals with some estimates as NA for inspection."
+    )
     message(msg)
   } else {
     ## we leave out intervals that are empty consecutively (e.g. all from 5-10)
-    x[, c(tmpTV) := lapply(.SD, sum), by=c(sum.to, "surv.int"), .SDcols = test.var]
+    x[,
+      c(tmpTV) := lapply(.SD, sum),
+      by = c(sum.to, "surv.int"),
+      .SDcols = test.var
+    ]
     x <- x[x[[tmpTV]] > 0L]
     setcolsnull(x, tmpTV)
   }
@@ -442,9 +615,16 @@ test_empty_surv_ints <- function(x, by = NULL, sum.over = NULL, test.var = "pyrs
 }
 
 
-
-
-comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immortal = TRUE, verbose = FALSE) {
+comp_e1 <- function(
+  x,
+  breaks,
+  pophaz,
+  survScale,
+  by = NULL,
+  id = "lex.id",
+  immortal = TRUE,
+  verbose = FALSE
+) {
   ## INTENTION: given a Lexis data set x,
   ## computes Ederer I expected survival curves till end of follow-up
   ## by 'by' unless individual = TRUE.
@@ -459,9 +639,11 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   setnames(ph, "haz", tmpHaz)
   checkPophaz(x, ph, haz.name = tmpHaz)
 
-  byErr <- paste0("Internal error (probably): work data did not have ",
-                  "variable(s) %%VARS%%. If your supplied data has them, ",
-                  "complain to the package maintainer.")
+  byErr <- paste0(
+    "Internal error (probably): work data did not have ",
+    "variable(s) %%VARS%%. If your supplied data has them, ",
+    "complain to the package maintainer."
+  )
   all_names_present(x, c(by, id, survScale), msg = byErr)
 
   if (length(id) != 1L) {
@@ -472,12 +654,24 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   oldBreaks <- attr(x, "breaks")
   allScales <- attr(x, "time.scales")
   if (!survScale %in% allScales) {
-    stop("survScale '", survScale, "' not a time scale in the Lexis object. ",
-         "(Possibly internal error - ensure you have that time scale in data. ",
-         "If not, complain to the package maintainer.")
+    stop(
+      "survScale '",
+      survScale,
+      "' not a time scale in the Lexis object. ",
+      "(Possibly internal error - ensure you have that time scale in data. ",
+      "If not, complain to the package maintainer."
+    )
   }
-  keepVars <- c(allScales, "lex.dur", "lex.id", "lex.Cst",
-                "lex.Xst", by, id, setdiff(names(ph), tmpHaz))
+  keepVars <- c(
+    allScales,
+    "lex.dur",
+    "lex.id",
+    "lex.Cst",
+    "lex.Xst",
+    by,
+    id,
+    setdiff(names(ph), tmpHaz)
+  )
   keepVars <- unique(keepVars)
   y <- subsetDTorDF(x, select = keepVars)
   y <- setDT(copy(y))
@@ -503,28 +697,48 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
 
   y <- splitMulti(y, breaks = breaks, drop = FALSE, merge = TRUE)
 
-  if (verbose) cat("Time taken by splitting: ", timetaken(pt), ".\n", sep = "")
+  if (verbose) {
+    cat("Time taken by splitting: ", timetaken(pt), ".\n", sep = "")
+  }
 
   ## merge pop haz -------------------------------------------------------------
   pt <- proc.time()
   mergeVars <- intersect(names(y), names(ph))
   mergeScales <- intersect(allScales, mergeVars)
-  if (length(mergeScales) == 0L) mergeScales <- NULL
+  if (length(mergeScales) == 0L) {
+    mergeScales <- NULL
+  }
   mergeCats <- setdiff(mergeVars, mergeScales)
-  if (length(mergeCats) == 0L) mergeCats <- NULL
+  if (length(mergeCats) == 0L) {
+    mergeCats <- NULL
+  }
 
-  y <- cutLowMerge(y, ph, by = mergeVars,
-                   mid.scales = mergeScales, old.nums = TRUE,
-                   all.x = TRUE, all.y = FALSE)
+  y <- cutLowMerge(
+    y,
+    ph,
+    by = mergeVars,
+    mid.scales = mergeScales,
+    old.nums = TRUE,
+    all.x = TRUE,
+    all.y = FALSE
+  )
   setDT(y)
-  if (verbose) cat("Time taken by merging pophaz: ", timetaken(pt), ".\n", sep = "")
+  if (verbose) {
+    cat("Time taken by merging pophaz: ", timetaken(pt), ".\n", sep = "")
+  }
 
   ## ederer I computation ------------------------------------------------------
   ## prep temp surv.int var
   tmpSI <- makeTempVarName(x, pre = "surv_int_")
   setkeyv(y, c(by, id, allScales[1L]))
-  y[, c(tmpSI) := cut(y[[survScale]], breaks[[survScale]],
-                      right=FALSE,labels=FALSE)]
+  y[,
+    c(tmpSI) := cut(
+      y[[survScale]],
+      breaks[[survScale]],
+      right = FALSE,
+      labels = FALSE
+    )
+  ]
   setkeyv(y, c(by, tmpSI))
 
   ## EDERER I: integral of the weighted average expected hazard,
@@ -535,9 +749,12 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   ##    This sums over multiple rows a subject may have within one
   ##    survival interval due to splitting by multiple time scales.
   pt <- proc.time()
-  set(y, j = tmpHaz, value = y[[tmpHaz]]*y$lex.dur)
-  y <- y[, lapply(.SD, sum), keyby = eval(unique(c(by, id, tmpSI))),
-         .SDcols = c(tmpHaz)]
+  set(y, j = tmpHaz, value = y[[tmpHaz]] * y$lex.dur)
+  y <- y[,
+    lapply(.SD, sum),
+    keyby = eval(unique(c(by, id, tmpSI))),
+    .SDcols = c(tmpHaz)
+  ]
   setnames(y, ncol(y), tmpHaz)
 
   ## reverse temp names - need to be able to refer to haz without temp var
@@ -553,29 +770,39 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   }
   setnames(y, id, tmpID)
   setnames(y, tmpHaz, "haz")
-  if (verbose) cat("Time taken by 1): ", timetaken(pt), ".\n", sep = "")
+  if (verbose) {
+    cat("Time taken by 1): ", timetaken(pt), ".\n", sep = "")
+  }
 
   ## 2) expected cum.haz. over intervals t_1 -> t_i by id...
   ##   (no cumulative exp.surv yet)
   pt <- proc.time()
   y[, surv.exp := cumsum(haz), by = eval(tmpID)]
 
-  if (verbose) cat("Time taken by 2): ", timetaken(pt), ".\n", sep = "")
+  if (verbose) {
+    cat("Time taken by 2): ", timetaken(pt), ".\n", sep = "")
+  }
   ## 3) cumulative surv.exp till end of interval t_i by id...
   pt <- proc.time()
   y[, surv.exp := exp(-surv.exp)]
 
-  if (verbose) cat("Time taken by 3): ", timetaken(pt), ".\n", sep = "")
+  if (verbose) {
+    cat("Time taken by 3): ", timetaken(pt), ".\n", sep = "")
+  }
 
   ## 4) The Ederer I expected (marginal) survivals for intervals t_i
   pt <- proc.time()
   y <- y[, .(surv.exp = mean(surv.exp)), by = eval(c(tmpBy, tmpSI))]
-  if (verbose) cat("Time taken by 4): ", timetaken(pt), ".\n", sep = "")
+  if (verbose) {
+    cat("Time taken by 4): ", timetaken(pt), ".\n", sep = "")
+  }
 
   if ("surv.exp" %in% by) {
     by[by == "surv.exp"] <- makeTempVarName(y, pre = "surv.exp")
   }
-  if (length(by)) setnames(y, tmpBy, by)
+  if (length(by)) {
+    setnames(y, tmpBy, by)
+  }
 
   setcolorder(y, c(by, tmpSI, "surv.exp"))
   setkeyv(y, c(by, tmpSI))
@@ -584,15 +811,11 @@ comp_e1 <- function(x, breaks, pophaz, survScale, by = NULL, id = "lex.id", immo
   br <- br[-1]
   y[, c(survScale) := br[y[[survScale]]]]
 
-
   y[]
 }
 
 
-
-
 detectSurvivalTimeScale <- function(lex, values) {
-
   checkLexisData(lex)
 
   allScales <- attr(lex, "time.scales")
@@ -608,32 +831,35 @@ detectSurvivalTimeScale <- function(lex, values) {
   if (sum(whSurvScale) == 0L) {
     whSurvScale <- lapply(allScVals, function(col) {
       isTRUE({
-        all.equal(col, values, scale = 1L,
-                  check.attributes = FALSE,
-                  tolerance = .Machine$double.eps ^ 0.5)
+        all.equal(
+          col,
+          values,
+          scale = 1L,
+          check.attributes = FALSE,
+          tolerance = .Machine$double.eps^0.5
+        )
       })
     })
     whSurvScale <- unlist(whSurvScale)
   }
   if (sum(whSurvScale) == 0L) {
-
     dt <- as.data.table(allScVals)
     dt <- cbind(dt, data.table(testValues = values))
     on.exit(print(dt))
 
-    stop("Could not determine which time scale was used. The formula MUST ",
-         "include the time scale used within a Surv() call (or a Surv object),",
-         " e.g. Surv(FUT, lex.Xst) ~ sex. Note that the 'time' argument is ",
-         "effectively (and exceptionally) used here to denote the times at ",
-         "the beginning of follow-up to identify the time scale existing in ",
-         "the supplied data to use. If you are sure you are mentioning a ",
-         "time scale in the formula in this manner, complain to the ",
-         "package maintainer. The table printed below contains the time ",
-         "scales tested against and the values that were supplied as the last ",
-         "column.")
+    stop(
+      "Could not determine which time scale was used. The formula MUST ",
+      "include the time scale used within a Surv() call (or a Surv object),",
+      " e.g. Surv(FUT, lex.Xst) ~ sex. Note that the 'time' argument is ",
+      "effectively (and exceptionally) used here to denote the times at ",
+      "the beginning of follow-up to identify the time scale existing in ",
+      "the supplied data to use. If you are sure you are mentioning a ",
+      "time scale in the formula in this manner, complain to the ",
+      "package maintainer. The table printed below contains the time ",
+      "scales tested against and the values that were supplied as the last ",
+      "column."
+    )
   }
   survScale <- allScales[whSurvScale]
   survScale
-
 }
-

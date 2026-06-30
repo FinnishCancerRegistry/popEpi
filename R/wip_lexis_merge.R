@@ -33,9 +33,13 @@ lexis_merge_make_harmoniser__ <- function(
     cut_arg_list <- infer_cut_args__(col)
     if (is.null(cut_arg_list)) {
       stop(
-        "merge_dt$", col_nm, " was of class factor, ",
+        "merge_dt$",
+        col_nm,
+        " was of class factor, ",
         "but could infer how it can be created using on split lexis ",
-        "data. Either ensure that merge_dt$", col_nm, " has levels such ",
+        "data. Either ensure that merge_dt$",
+        col_nm,
+        " has levels such ",
         "as `\"[2000,2001[\"`, `\"[60, 61[\"` etc or supply argument ",
         "`merge_dt_harmonisers`."
       )
@@ -61,7 +65,9 @@ lexis_merge_make_harmoniser__ <- function(
     #     harmoniser.
     # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__
     stop(
-      "Column merge_dt$", col_nm, " was not of class ",
+      "Column merge_dt$",
+      col_nm,
+      " was not of class ",
       "integer, numeric, or factor, so we ",
       "could not infer a harmoniser for it. ",
       "Please supply one yourself via `merge_dt_harmonisers`."
@@ -102,13 +108,17 @@ lexis_merge_make_harmoniser__ <- function(
     # your `merge_dt`. But in practice this does not improve much and can be
     # computationally costly.
     # @codedoc_comment_block popEpi:::lexis_merge_make_harmoniser__::lex_dur_multiplier
-    cut_x = if (lex_dur_multiplier != 0L) substitute(
-      col + lex.dur * lex_dur_multiplier,
-      list(
-        col = parse(text = col_nm)[[1]],
-        lex_dur_multiplier = lex_dur_multiplier
+    cut_x = if (lex_dur_multiplier != 0L) {
+      substitute(
+        col + lex.dur * lex_dur_multiplier,
+        list(
+          col = parse(text = col_nm)[[1]],
+          lex_dur_multiplier = lex_dur_multiplier
+        )
       )
-    ) else parse(text = col_nm)[[1]],
+    } else {
+      parse(text = col_nm)[[1]]
+    },
     return_expr = if (is_num) quote(cut_breaks[out]) else quote(out), # nolint
     lex_dur_multiplier = lex_dur_multiplier
   )
@@ -137,7 +147,8 @@ lexis_merge_make_harmoniser__ <- function(
     {
       cut_breaks <- breaks # nolint
       cut_labels <- labels # nolint
-      out <- cut( # nolint
+      out <- cut(
+        # nolint
         x = cut_x, # nolint
         breaks = cut_breaks,
         right = right, # nolint
@@ -506,9 +517,13 @@ lexis_merge <- function(
     if (any(is_missing)) {
       print(data.table::setDT(lexis[is_missing, ]))
       print(data.table::setDT(join_dt[is_missing, ]))
-      stop("Merging `merge_dt` into split (subset of) `lexis` produced NA ",
-           "values in column `lexis$", merge_value_col_nm, "`. ",
-           "See the `lexis` and its harmonised form printed above.")
+      stop(
+        "Merging `merge_dt` into split (subset of) `lexis` produced NA ",
+        "values in column `lexis$",
+        merge_value_col_nm,
+        "`. ",
+        "See the `lexis` and its harmonised form printed above."
+      )
     }
   }
   # @codedoc_comment_block popEpi::lexis_merge

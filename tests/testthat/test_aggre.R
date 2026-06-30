@@ -1,11 +1,16 @@
 testthat::context("aggre")
 
 testthat::test_that("aggre leaves original data untouched", {
-
-  x <- sire[1:100,]
-  BL <- list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014))
-  x <- lexpand(x, birth = bi_date, entry = dg_date, exit = ex_date,
-               status = status %in% 1:2, breaks=BL)
+  x <- sire[1:100, ]
+  BL <- list(fot = seq(0, 20, 1 / 12), age = c(0:100, Inf), per = c(1960:2014))
+  x <- lexpand(
+    x,
+    birth = bi_date,
+    entry = dg_date,
+    exit = ex_date,
+    status = status %in% 1:2,
+    breaks = BL
+  )
 
   ## scramble order
   set.seed(1L)
@@ -17,44 +22,97 @@ testthat::test_that("aggre leaves original data untouched", {
 
   xor <- copy(x)
 
-  ag1 <- aggre(x, by = list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
+  ag1 <- aggre(
+    x,
+    by = list(
+      gender = factor(sex, 1, "f"),
+      sex,
+      surv.int = fot,
+      per,
+      agegr = age
+    )
+  )
 
   testthat::expect_identical(x, xor)
 })
 
 testthat::test_that("aggre works with by = NULL", {
+  sr <- popEpi::sire[dg_date < ex_date, ][1:1000, ]
 
-  sr <- popEpi::sire[dg_date < ex_date,][1:1000,]
-
-  BL <- list(fot= seq(0,20,1), age= c(0:100, Inf), per= c(1960:2014))
-  x <- lexpand(sr, birth  = bi_date, entry = dg_date, exit = ex_date,
-               status = status %in% 1:2, breaks=BL)
+  BL <- list(fot = seq(0, 20, 1), age = c(0:100, Inf), per = c(1960:2014))
+  x <- lexpand(
+    sr,
+    birth = bi_date,
+    entry = dg_date,
+    exit = ex_date,
+    status = status %in% 1:2,
+    breaks = BL
+  )
 
   ag1 <- aggre(x, by = NULL)
   testthat::expect_equal(as.numeric(ag1), c(9539.1903286174274, 1000, 373, 627))
-
 })
 
 testthat::test_that("aggre and lexpand produce the same results", {
-  sr <- popEpi::sire[dg_date < ex_date,][1:1000,]
+  sr <- popEpi::sire[dg_date < ex_date, ][1:1000, ]
 
-  BL <- list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014))
-  x <- lexpand(sr, birth  = bi_date, entry = dg_date, exit = ex_date,
-               status = status %in% 1:2, breaks=BL)
-  if (!is.data.table(x)) setDF2DT(x)
+  BL <- list(fot = seq(0, 20, 1 / 12), age = c(0:100, Inf), per = c(1960:2014))
+  x <- lexpand(
+    sr,
+    birth = bi_date,
+    entry = dg_date,
+    exit = ex_date,
+    status = status %in% 1:2,
+    breaks = BL
+  )
+  if (!is.data.table(x)) {
+    setDF2DT(x)
+  }
 
-  e <- quote(list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
+  e <- quote(list(
+    gender = factor(sex, 1, "f"),
+    sex,
+    surv.int = fot,
+    per,
+    agegr = age
+  ))
   v <- c("gender", "sex", "surv.int", "per", "agegr")
 
   forceLexisDT(x, breaks = BL, allScales = c("fot", "per", "age"))
   x2 <- aggre(x, by = e, verbose = FALSE)
   x3 <- aggre(x, by = e, type = "full", verbose = FALSE)
-  x4 <- lexpand(sr, birth  = bi_date, entry = dg_date, exit = ex_date,
-                status = status %in% 1:2, aggre.type = "non-empty",
-                breaks=BL, aggre = list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
-  x5 <- lexpand(sr, birth  = bi_date, entry = dg_date, exit = ex_date,
-                status = status %in% 1:2, aggre.type = "cartesian",
-                breaks=BL, aggre = list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
+  x4 <- lexpand(
+    sr,
+    birth = bi_date,
+    entry = dg_date,
+    exit = ex_date,
+    status = status %in% 1:2,
+    aggre.type = "non-empty",
+    breaks = BL,
+    aggre = list(
+      gender = factor(sex, 1, "f"),
+      sex,
+      surv.int = fot,
+      per,
+      agegr = age
+    )
+  )
+  x5 <- lexpand(
+    sr,
+    birth = bi_date,
+    entry = dg_date,
+    exit = ex_date,
+    status = status %in% 1:2,
+    aggre.type = "cartesian",
+    breaks = BL,
+    aggre = list(
+      gender = factor(sex, 1, "f"),
+      sex,
+      surv.int = fot,
+      per,
+      agegr = age
+    )
+  )
 
   x[, fot := popEpi:::cutLow(fot, BL$fot)]
   x[, age := popEpi:::cutLow(age, BL$age)]
@@ -63,10 +121,18 @@ testthat::test_that("aggre and lexpand produce the same results", {
   x <- x[, list(pyrs = sum(lex.dur), obs = sum(lex.Xst)), keyby = e]
   x <- x[pyrs > 0 & !is.na(pyrs)]
 
-  if (!is.data.table(x2)) setDF2DT(x2)
-  if (!is.data.table(x3)) setDF2DT(x3)
-  if (!is.data.table(x4)) setDF2DT(x4)
-  if (!is.data.table(x5)) setDF2DT(x5)
+  if (!is.data.table(x2)) {
+    setDF2DT(x2)
+  }
+  if (!is.data.table(x3)) {
+    setDF2DT(x3)
+  }
+  if (!is.data.table(x4)) {
+    setDF2DT(x4)
+  }
+  if (!is.data.table(x5)) {
+    setDF2DT(x5)
+  }
 
   setkeyv(x, v)
   setkeyv(x2, v)
@@ -95,11 +161,15 @@ testthat::test_that("aggre and lexpand produce the same results", {
 
 testthat::test_that("aggre()'s by argument works flexibly", {
   library(Epi)
-  BL <- list(fot = 0:5, per = c(1995,2015))
+  BL <- list(fot = 0:5, per = c(1995, 2015))
   for (cond in c(FALSE, TRUE)) {
-    x <- Lexis(data = sire[dg_date < ex_date,][1:500, ], entry = list(fot = 0, age = dg_age, per = get.yrs(dg_date)),
-               exit = list(per = get.yrs(ex_date)), exit.status = status,
-               entry.status = 0)
+    x <- Lexis(
+      data = sire[dg_date < ex_date, ][1:500, ],
+      entry = list(fot = 0, age = dg_age, per = get.yrs(dg_date)),
+      exit = list(per = get.yrs(ex_date)),
+      exit.status = status,
+      entry.status = 0
+    )
     x <- splitMulti(x, breaks = BL)
     setDF(x)
     setattr(x, "class", c("Lexis", "data.frame"))
@@ -109,7 +179,11 @@ testthat::test_that("aggre()'s by argument works flexibly", {
       alloc.col(x)
     }
 
-    a <- aggre(x, by = list(agegr = cut(dg_age, 2), sex, fot, per = per), type = "unique")
+    a <- aggre(
+      x,
+      by = list(agegr = cut(dg_age, 2), sex, fot, per = per),
+      type = "unique"
+    )
     b <- aggre(x, by = c("agegr", "sex", "fot", "per"), type = "unique")
 
     testthat::expect_equal(a, b)
@@ -119,23 +193,25 @@ testthat::test_that("aggre()'s by argument works flexibly", {
     attr(a, "aggre.meta")$by <- "agegr"
     b <- aggre(x, by = c("agegr"), type = "unique")
     c <- aggre(x, by = list(agegr = cut(dg_age, 2)), type = "unique")
-    d<- aggre(x, by = agegr, type = "unique")
+    d <- aggre(x, by = agegr, type = "unique")
 
     testthat::expect_equal(a, b)
     testthat::expect_equal(b, c)
     testthat::expect_equal(c, d)
   }
-
-
 })
 
 testthat::test_that("subset argument works properly", {
-
-
-  x <- sire[dg_date < ex_date, ][1:1000,]
-  BL <- list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014))
-  x <- lexpand(x, birth = bi_date, entry = dg_date, exit = ex_date,
-               status = status %in% 1:2, breaks=BL)
+  x <- sire[dg_date < ex_date, ][1:1000, ]
+  BL <- list(fot = seq(0, 20, 1 / 12), age = c(0:100, Inf), per = c(1960:2014))
+  x <- lexpand(
+    x,
+    birth = bi_date,
+    entry = dg_date,
+    exit = ex_date,
+    status = status %in% 1:2,
+    breaks = BL
+  )
   # setDT2DF(x)
   x2 <- x[x$dg_age <= 55L, ]
 
@@ -144,7 +220,13 @@ testthat::test_that("subset argument works properly", {
   forceLexisDT(x, breaks = BL, allScales = c("fot", "per", "age"), key = FALSE)
   forceLexisDT(x2, breaks = BL, allScales = c("fot", "per", "age"), key = FALSE)
 
-  ag <- quote(list(gender = factor(sex, 1, "f"), sex, surv.int = fot, per, agegr = age))
+  ag <- quote(list(
+    gender = factor(sex, 1, "f"),
+    sex,
+    surv.int = fot,
+    per,
+    agegr = age
+  ))
   ag1 <- aggre(x, by = ag, subset = dg_age <= 55L)
   ag2 <- aggre(x2, by = ag)
 
@@ -153,20 +235,22 @@ testthat::test_that("subset argument works properly", {
 
   testthat::expect_identical(ag1, ag2)
   testthat::expect_identical(ag3, ag4)
-
 })
 
 
 testthat::test_that("at.risk column works as intended", {
   ## normal case - no late entry. Just lots of breaks.
   testthat::skip_on_cran()
-  x <- sire[dg_date < ex_date, ][1:1000,]
-  BL <- list(fot= seq(0,20,1/12), age= c(0:100, Inf), per= c(1960:2014))
+  x <- sire[dg_date < ex_date, ][1:1000, ]
+  BL <- list(fot = seq(0, 20, 1 / 12), age = c(0:100, Inf), per = c(1960:2014))
 
-  x <- Lexis(data = x,
-             entry = list(fot = 0, age = dg_age, per = get.yrs(dg_date)),
-             exit = list(per = get.yrs(ex_date)), exit.status = status,
-             entry.status = 0)
+  x <- Lexis(
+    data = x,
+    entry = list(fot = 0, age = dg_age, per = get.yrs(dg_date)),
+    exit = list(per = get.yrs(ex_date)),
+    exit.status = status,
+    entry.status = 0
+  )
 
   x <- splitMulti(x, breaks = BL, drop = TRUE)
 
@@ -180,19 +264,22 @@ testthat::test_that("at.risk column works as intended", {
   testthat::expect_equal(ag$ndiff, ag$events)
 
   ## compare at.risk with manually computed at.risk and events
-  x[, evented := detectEvents(x, breaks = attr(x, "breaks"), by = "lex.id") != 0L]
+  x[,
+    evented := detectEvents(x, breaks = attr(x, "breaks"), by = "lex.id") != 0L
+  ]
   x[, normalEntry := fot %in% BL$fot]
   x[, cutFot := cutLow(fot, BL$fot)]
-  byDT <- CJ(sex = 1,
-             cutFot = BL$fot[-length(BL$fot)])
-  n.start <- x[byDT, .(sum(normalEntry & !duplicated(lex.id)),
-                       sum(evented)), by = .EACHI,
-               on = names(byDT)]
+  byDT <- CJ(sex = 1, cutFot = BL$fot[-length(BL$fot)])
+  n.start <- x[
+    byDT,
+    .(sum(normalEntry & !duplicated(lex.id)), sum(evented)),
+    by = .EACHI,
+    on = names(byDT)
+  ]
   n.start[is.na(ag$ndiff), V2 := NA]
   testthat::expect_equal(ag$at.risk, n.start$V1)
   testthat::expect_equal(ag$ndiff, n.start$V2)
 })
-
 
 
 testthat::test_that("at.risk column works as intended, Vol. 2", {
@@ -200,13 +287,15 @@ testthat::test_that("at.risk column works as intended, Vol. 2", {
   ## period analysis case - some observations are late entry.
   data(sire)
 
-  BL <- list(fot=seq(0, 5, by = 1/12),
-             per = c(2008,2013))
+  BL <- list(fot = seq(0, 5, by = 1 / 12), per = c(2008, 2013))
 
-  x <- Lexis(data = sire[dg_date < ex_date,],
-             entry = list(fot = 0, age = dg_age, per = get.yrs(dg_date)),
-             exit = list(per = get.yrs(ex_date)), exit.status = status,
-             entry.status = 0)
+  x <- Lexis(
+    data = sire[dg_date < ex_date, ],
+    entry = list(fot = 0, age = dg_age, per = get.yrs(dg_date)),
+    exit = list(per = get.yrs(ex_date)),
+    exit.status = status,
+    entry.status = 0
+  )
 
   x <- splitMulti(x, breaks = BL, drop = TRUE)
 
@@ -218,11 +307,17 @@ testthat::test_that("at.risk column works as intended, Vol. 2", {
   x[, normalEntry := fot %in% BL$fot]
   x[, cutPer := cutLow(per, BL$per)]
   x[, cutFot := cutLow(fot, BL$fot)]
-  byDT <- CJ(sex = 1, cutPer = BL$per[-length(BL$per)],
-             cutFot = BL$fot[-length(BL$fot)])
-  n.start <- x[byDT, sum(normalEntry & !duplicated(lex.id)), by = .EACHI,
-               on = names(byDT)]
+  byDT <- CJ(
+    sex = 1,
+    cutPer = BL$per[-length(BL$per)],
+    cutFot = BL$fot[-length(BL$fot)]
+  )
+  n.start <- x[
+    byDT,
+    sum(normalEntry & !duplicated(lex.id)),
+    by = .EACHI,
+    on = names(byDT)
+  ]
 
   testthat::expect_equal(a$at.risk, n.start$V1)
 })
-

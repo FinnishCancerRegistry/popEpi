@@ -91,8 +91,10 @@ infer_cut_args__ <- function(x) {
     })
   )
   data.table::setkeyv(out, c("lo", "hi"))
-  is_integer_range <- is.integer(out[["lo"]]) && is.integer(out[["hi"]]) &
-    out[["is_left_inclusive"]] & out[["is_right_inclusive"]] &
+  is_integer_range <- is.integer(out[["lo"]]) &&
+    is.integer(out[["hi"]]) &
+    out[["is_left_inclusive"]] &
+    out[["is_right_inclusive"]] &
     grepl("-", out[["sep"]])
   if (all(is_integer_range)) {
     cut_arg_list <- list(

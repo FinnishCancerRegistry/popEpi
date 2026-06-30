@@ -52,9 +52,12 @@ assert_is_arg_by <- function(by, dataset) {
     stratum_col_nms <- names(by)
   } else if (inherits(by, "list")) {
     stratum_col_nms <- unique(unlist(lapply(seq_along(by), function(i) {
-      eval(substitute(stopifnot(
-        inherits(by[[i]], c("character", "data.table", "NULL"))
-      ), list(i = i)))
+      eval(substitute(
+        stopifnot(
+          inherits(by[[i]], c("character", "data.table", "NULL"))
+        ),
+        list(i = i)
+      ))
       if (is.null(by[[i]])) {
         return(NULL)
       } else if (is.character(by[[i]])) {
@@ -128,7 +131,7 @@ handle_arg_by <- function(
 handle_arg_subset <- function(
   arg_subset_nm = "subset",
   dataset_nm = "dt",
-  output_type = c("logical", "integer",  "as-is")[1],
+  output_type = c("logical", "integer", "as-is")[1],
   eval_env = NULL,
   calling_env = NULL
 ) {
@@ -154,7 +157,7 @@ handle_arg_subset <- function(
 
     is.character(output_type),
     length(output_type) == 1,
-    output_type %in% c("logical", "integer",  "as-is")
+    output_type %in% c("logical", "integer", "as-is")
   )
   subset_expr <- local({
     subset_arg_string <- arg_subset_nm # e.g. "my_subset"
@@ -194,9 +197,14 @@ handle_arg_subset <- function(
     enclos = calling_env
   )
   if (!inherits(subset_value, c("NULL", "data.table", "integer", "logical"))) {
-    stop("Subsetting argument `", arg_subset_nm, "` did not evaluate to ",
-         "an object of class NULL, data.table, integer, nor logical. Instead ",
-         "it had class(es) ", deparse1(class(subset_value)))
+    stop(
+      "Subsetting argument `",
+      arg_subset_nm,
+      "` did not evaluate to ",
+      "an object of class NULL, data.table, integer, nor logical. Instead ",
+      "it had class(es) ",
+      deparse1(class(subset_value))
+    )
   }
   if (output_type == "as-is") {
     return(subset_value)

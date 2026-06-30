@@ -10,7 +10,8 @@ dt_join_assign <- function(
     inherits(i, "data.table"),
     is.character(on),
     is.character(x_col_nms),
-    is.character(i_col_nms), i_col_nms %in% names(i)
+    is.character(i_col_nms),
+    i_col_nms %in% names(i)
   )
   expr <- substitute(
     x[
@@ -21,11 +22,13 @@ dt_join_assign <- function(
     list(
       on = on,
       j_lhs = x_col_nms,
-      j_rhs = parse(text = paste0(
-        "list(",
-        paste0("i.", i_col_nms, collapse = ", "),
-        ")"
-      ))[[1]]
+      j_rhs = parse(
+        text = paste0(
+          "list(",
+          paste0("i.", i_col_nms, collapse = ", "),
+          ")"
+        )
+      )[[1]]
     )
   )
   eval(expr)

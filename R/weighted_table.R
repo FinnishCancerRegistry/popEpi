@@ -123,14 +123,21 @@
 #                     adjust = NULL, values = vs,
 #                     weights = list(agegr = "nordic_2000_18of5", sex=c(1,1)),
 #                     enclos = NULL)
-makeWeightsDT <- function(data, values = NULL,
-                          print = NULL, adjust = NULL,
-                          formula = NULL, Surv.response = TRUE,
-                          by.other = NULL, custom.levels = NULL,
-                          custom.levels.cut.low = NULL, weights = NULL,
-                          internal.weights.values = NULL,
-                          enclos = NULL, NA.text = NULL) {
-
+makeWeightsDT <- function(
+  data,
+  values = NULL,
+  print = NULL,
+  adjust = NULL,
+  formula = NULL,
+  Surv.response = TRUE,
+  by.other = NULL,
+  custom.levels = NULL,
+  custom.levels.cut.low = NULL,
+  weights = NULL,
+  internal.weights.values = NULL,
+  enclos = NULL,
+  NA.text = NULL
+) {
   # environmentalism -----------------------------------------------------------
   TF <- environment()
   PF <- parent.frame(1L)
@@ -141,21 +148,24 @@ makeWeightsDT <- function(data, values = NULL,
   enclos <- eval(enclos, envir = TF)
 
   if (!is.environment(enclos)) {
-    stop("Argument 'enclos' is not an environment. (Probably internal error, ",
-         "meaning you should complain to the package maintainer if you are not",
-         "doing something silly.)")
+    stop(
+      "Argument 'enclos' is not an environment. (Probably internal error, ",
+      "meaning you should complain to the package maintainer if you are not",
+      "doing something silly.)"
+    )
   }
 
   THIS_CALL <- match.call()
 
   ## dataism -------------------------------------------------------------------
-  if (!is.data.frame(data)) stop("data must be a data.frame")
+  if (!is.data.frame(data)) {
+    stop("data must be a data.frame")
+  }
   ## tmpDum for convenience. will be deleted in the end. (if no tabulating vars)
   origData <- data
   tmpDum <- makeTempVarName(origData, pre = "dummy_")
   data <- data.table(rep(1L, nrow(origData)))
   setnames(data, 1, tmpDum)
-
 
   # formula: vars to print and adjust by ---------------------------------------
 
@@ -163,18 +173,23 @@ makeWeightsDT <- function(data, values = NULL,
   adjust <- evalPopArg(data = origData, arg = adSub, DT = TRUE, enclos = enclos)
 
   if (!is.null(formula)) {
-
-    foList <- usePopFormula(formula, adjust = adjust,
-                            data = origData, enclos = enclos,
-                            Surv.response = Surv.response)
+    foList <- usePopFormula(
+      formula,
+      adjust = adjust,
+      data = origData,
+      enclos = enclos,
+      Surv.response = Surv.response
+    )
     print <- foList$print
     adjust <- foList$adjust
   } else {
-
     prSub <- substitute(print)
-    print <- evalPopArg(data = origData, arg = prSub, DT = TRUE, enclos = enclos)
-
-
+    print <- evalPopArg(
+      data = origData,
+      arg = prSub,
+      DT = TRUE,
+      enclos = enclos
+    )
   }
 
   if (length(weights) && length(adjust)) {
@@ -204,7 +219,6 @@ makeWeightsDT <- function(data, values = NULL,
   }
 
   if (!length(adVars)) {
-
     if (!is.null(weights)) {
       message("NOTE: Weights ignored since no adjusting variables given")
     }
@@ -213,9 +227,13 @@ makeWeightsDT <- function(data, values = NULL,
   }
 
   # variables to sum -----------------------------------------------------------
-  if (!is.list(values)) stop("Argument 'values' must be a list ",
-                             "(internal error: complain to the package",
-                             "maintainer if you see this)")
+  if (!is.list(values)) {
+    stop(
+      "Argument 'values' must be a list ",
+      "(internal error: complain to the package",
+      "maintainer if you see this)"
+    )
+  }
   values <- lapply(values, function(x) {
     evalPopArg(data = origData, arg = x, DT = TRUE, enclos = enclos)
   })
@@ -225,9 +243,14 @@ makeWeightsDT <- function(data, values = NULL,
   values <- values[[1L]]
   vaVars <- NULL
   if (nrow(values) != nrow(data)) {
-    stop("mismatch in numers of rows in data (", nrow(data),
-         ") and 'values' (", nrow(values), "). If you see this message, ",
-         "complain to the package maintainer.")
+    stop(
+      "mismatch in numers of rows in data (",
+      nrow(data),
+      ") and 'values' (",
+      nrow(values),
+      "). If you see this message, ",
+      "complain to the package maintainer."
+    )
   }
 
   if (length(values) > 0) {
@@ -240,33 +263,56 @@ makeWeightsDT <- function(data, values = NULL,
 
   # additionally, values to compute internal weights by: -----------------------
   iwVar <- NULL
-  if (is.character(weights) &&
-      pmatch(weights, c("internal", "cohort"), nomatch = 0L)) {
+  if (
+    is.character(weights) &&
+      pmatch(weights, c("internal", "cohort"), nomatch = 0L)
+  ) {
     iw <- substitute(internal.weights.values)
-    iw <- evalPopArg(data = origData, iw, DT = TRUE,
-                     enclos = PF, recursive = TRUE,
-                     types = c("character", "expression", "list", "NULL"))
+    iw <- evalPopArg(
+      data = origData,
+      iw,
+      DT = TRUE,
+      enclos = PF,
+      recursive = TRUE,
+      types = c("character", "expression", "list", "NULL")
+    )
 
-    if (length(iw) > 1L) stop("Argument 'internal.weights.values' ",
-                              "must produce only one column.")
-    if (length(iw) == 1L && is.character(weights) &&
-        pmatch(weights, c("internal", "cohort"), nomatch = 0L)) {
-      iwVar <- makeTempVarName(names=c(names(data), names(origData)), pre = "iw_")
+    if (length(iw) > 1L) {
+      stop(
+        "Argument 'internal.weights.values' ",
+        "must produce only one column."
+      )
+    }
+    if (
+      length(iw) == 1L &&
+        is.character(weights) &&
+        pmatch(weights, c("internal", "cohort"), nomatch = 0L)
+    ) {
+      iwVar <- makeTempVarName(
+        names = c(names(data), names(origData)),
+        pre = "iw_"
+      )
       data[, c(iwVar) := TF$iw]
     }
 
     if (length(iwVar) == 0L) {
-      stop("Requested computing internal weights, but no values to compute ",
-           "internals weights with were supplied (internal error: If you see ",
-           "this, complain to the package maintainer).")
+      stop(
+        "Requested computing internal weights, but no values to compute ",
+        "internals weights with were supplied (internal error: If you see ",
+        "this, complain to the package maintainer)."
+      )
     }
     rm(iw)
   }
 
-
   # other category vars to keep ------------------------------------------------
   boSub <- by.other
-  by.other <- evalPopArg(data = origData, arg = boSub, DT = TRUE, enclos = enclos)
+  by.other <- evalPopArg(
+    data = origData,
+    arg = boSub,
+    DT = TRUE,
+    enclos = enclos
+  )
   boVars <- NULL
   if (length(by.other) > 0) {
     boVars <- names(by.other)
@@ -282,25 +328,35 @@ makeWeightsDT <- function(data, values = NULL,
   dupCols <- unique(dupCols[duplicated(dupCols)])
   if (length(dupCols) > 0L) {
     dupCols <- paste0("'", dupCols, "'", collapse = ", ")
-    stop("Following column names duplicated (columns created by arguments ",
-         "print, adjust, etc.): ", dupCols, ". If you see this, please ensure ",
-         "you are not passing e.g. the same column to both for adjusting ",
-         "and stratification (printing).")
+    stop(
+      "Following column names duplicated (columns created by arguments ",
+      "print, adjust, etc.): ",
+      dupCols,
+      ". If you see this, please ensure ",
+      "you are not passing e.g. the same column to both for adjusting ",
+      "and stratification (printing)."
+    )
   }
 
   # check for NA values --------------------------------------------------------
   ## NOTE: NA values of print/by.other are OK. values/adjust are NOT.
 
-    NAs <- data[, lapply(.SD, function(x) is.na(x)), .SDcols = c(vaVars, iwVar, adVars)]
-    NAs <- rowSums(NAs) > 0L
-    if (sum(NAs)) {
-      if (!is.null(NA.text)) {
-        NA.text <- gsub(x = NA.text, pattern = "%%NA_COUNT%%",
-                        replacement = sum(NAs))
-        warning(NA.text)
-      }
-      data <- data[!NAs]
+  NAs <- data[,
+    lapply(.SD, function(x) is.na(x)),
+    .SDcols = c(vaVars, iwVar, adVars)
+  ]
+  NAs <- rowSums(NAs) > 0L
+  if (sum(NAs)) {
+    if (!is.null(NA.text)) {
+      NA.text <- gsub(
+        x = NA.text,
+        pattern = "%%NA_COUNT%%",
+        replacement = sum(NAs)
+      )
+      warning(NA.text)
     }
+    data <- data[!NAs]
+  }
 
   # inflate data ---------------------------------------------------------------
   ## on the other hand we aggregate data to levels of print, adjust and
@@ -314,28 +370,33 @@ makeWeightsDT <- function(data, values = NULL,
   ## have each level of e.g. fot repeated!
 
   sortedLevs <- function(x) {
-    if (!is.factor(x)) return(sort(unique(x)))
+    if (!is.factor(x)) {
+      return(sort(unique(x)))
+    }
 
     factor(levels(x), levels(x), levels(x))
   }
   cj <- list()
-  cj <- lapply(data[, .SD, .SDcols =  c(prVars, adVars, boVars)], sortedLevs)
+  cj <- lapply(data[, .SD, .SDcols = c(prVars, adVars, boVars)], sortedLevs)
 
   ## e.g. if data only has fot = seq(0, 4, 1/12), but want to display table
   ## with fot = seq(0, 5, 1/12). Very important sometimes for handy usage
   ## of weights.
-  if (length(custom.levels) > 0) cj[names(custom.levels)] <- custom.levels
-
+  if (length(custom.levels) > 0) {
+    cj[names(custom.levels)] <- custom.levels
+  }
 
   ## SPECIAL: if e.g. a survival time scale with breaks seq(0, 5, 1/12)
   ## is to be "compressed" to breaks 0:5, and the latter breaks were passed
   ## via custom.levels, the following ensures e.g. intervals between 0 and 1
   ## are aggregated to the same row in what follows after.
   if (!is.null(custom.levels.cut.low)) {
-    cl_msg <- paste0("Internal error: tried to cut() variables in  ",
-                     "internally used work data that did not exist. ",
-                     "If you see this, complain to the ",
-                     "package maintainer. Bad variables: %%VARS%%.")
+    cl_msg <- paste0(
+      "Internal error: tried to cut() variables in  ",
+      "internally used work data that did not exist. ",
+      "If you see this, complain to the ",
+      "package maintainer. Bad variables: %%VARS%%."
+    )
     all_names_present(data, custom.levels.cut.low, msg = cl_msg)
     all_names_present(cj, custom.levels.cut.low, msg = cl_msg)
 
@@ -345,8 +406,10 @@ makeWeightsDT <- function(data, values = NULL,
 
     ## NOTE: if used cutlow(), then assume passed values via custom.levels
     ## also contained the roof of the values which should not be repeated.
-    cj[custom.levels.cut.low] <- lapply(cj[custom.levels.cut.low],
-                                        function(elem) elem[-length(elem)])
+    cj[custom.levels.cut.low] <- lapply(
+      cj[custom.levels.cut.low],
+      function(elem) elem[-length(elem)]
+    )
   }
 
   ## form data.table to merge by - the merge will inflate the data.
@@ -361,28 +424,27 @@ makeWeightsDT <- function(data, values = NULL,
   }
 
   setcolsnull(data, tmpDum)
-  prVars <- setdiff(prVars, tmpDum); if (length(prVars) == 0) prVars <- NULL
+  prVars <- setdiff(prVars, tmpDum)
+  if (length(prVars) == 0) {
+    prVars <- NULL
+  }
 
   ## merge in weights ----------------------------------------------------------
 
   if (!is.null(weights)) {
-
     if (is.list(weights) && !is.data.frame(weights)) {
       ## in case one of the elements is a standardization scheme string,
       ## such as "world_x_y".
       whChar <- which(unlist(lapply(weights, is.character)))
       if (sum(whChar)) {
-
         weights[whChar] <- lapply(weights[whChar], function(string) {
           ## expected to return data.frame with 1) age groups 2) weights
           ## as columns.
           stdr.weights(string)[[2]]
         })
-
       }
 
       ## now list only contains numeric weights i hope.
-
     }
 
     ## NOTE: adjust used here to contain levels of adjust arguments only
@@ -392,25 +454,26 @@ makeWeightsDT <- function(data, values = NULL,
     }
 
     if (is.character(weights)) {
-
       if (pmatch(weights, c("internal", "cohort"), nomatch = 0L)) {
-
-
-        all_names_present(data, iwVar,
-                          msg = paste0(
-                            "Internal error: expected to have variable ",
-                            "%%VARS%% in working data but didn't. Complain ",
-                            "to the pkg maintainer if you see this."
-                          ))
+        all_names_present(
+          data,
+          iwVar,
+          msg = paste0(
+            "Internal error: expected to have variable ",
+            "%%VARS%% in working data but didn't. Complain ",
+            "to the pkg maintainer if you see this."
+          )
+        )
 
         weights <- lapply(seq_along(adjust), function(i) {
           cn <- names(adjust)[i]
           le <- unique(adjust[[i]])
           le <- structure(list(le), names = cn)
-          data[le, lapply(.SD, sum), .SDcols = iwVar, by = .EACHI, on = cn][[iwVar]]
+          data[le, lapply(.SD, sum), .SDcols = iwVar, by = .EACHI, on = cn][[
+            iwVar
+          ]]
         })
         names(weights) <- names(adjust)
-
 
         setcolsnull(data, iwVar)
         setkeyv(data, c(prVars, adVars, boVars))
@@ -419,7 +482,6 @@ makeWeightsDT <- function(data, values = NULL,
         ## as columns.
         weights <- stdr.weights(weights)
         weights <- weights[[2]]
-
       }
     }
 
@@ -433,8 +495,14 @@ makeWeightsDT <- function(data, values = NULL,
       weVars <- names(weights)
       weights <- weights[names(adjust)]
 
-      adjust <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), adjust)
-      weights <- do.call(function(...) CJ(..., unique = FALSE, sorted = FALSE), weights)
+      adjust <- do.call(
+        function(...) CJ(..., unique = FALSE, sorted = FALSE),
+        adjust
+      )
+      weights <- do.call(
+        function(...) CJ(..., unique = FALSE, sorted = FALSE),
+        weights
+      )
 
       weVars <- paste0(weVars, ".w")
       setnames(weights, adVars, weVars)
@@ -449,14 +517,15 @@ makeWeightsDT <- function(data, values = NULL,
       ## NOTE: weights will be repeated for each level of print,
       ## and for each level of print the weights must sum to one for things
       ## to work.
-      weights[, "weights" := weights/sum(weights)]
-
+      weights[, "weights" := weights / sum(weights)]
     }
 
     if (!is.data.frame(weights)) {
-      stop("Something went wrong: 'weights' was not collated into a ",
-           "data.frame to merge with data. ",
-           "Blame the package maintainer please!")
+      stop(
+        "Something went wrong: 'weights' was not collated into a ",
+        "data.frame to merge with data. ",
+        "Blame the package maintainer please!"
+      )
     }
     ## at this points weights is a data.frame.
     weights <- data.table(weights)
@@ -468,14 +537,18 @@ makeWeightsDT <- function(data, values = NULL,
     ## in data (or it has more sometimes).
     wm <- lapply(adVars, function(chStr) {
       col <- weights[[chStr]]
-      if (is.factor(col)) return(levels(col))
+      if (is.factor(col)) {
+        return(levels(col))
+      }
       sort(unique(col))
-      })
+    })
     names(wm) <- adVars
     if (length(prVars)) {
       wm[prVars] <- lapply(prVars, function(chStr) {
         col <- data[[chStr]]
-        if (is.factor(col)) return(levels(col))
+        if (is.factor(col)) {
+          return(levels(col))
+        }
         sort(unique(col))
       })
     }
@@ -493,18 +566,25 @@ makeWeightsDT <- function(data, values = NULL,
     if (any(is.na(data$weights))) {
       ## should not be any NAs since we checked for level congruence
       ## in checkWeights
-      stop("Internal error: some weights were NA after merging to working ",
-           "data. Complain to the package maintainer if you see this.")
+      stop(
+        "Internal error: some weights were NA after merging to working ",
+        "data. Complain to the package maintainer if you see this."
+      )
     }
-
-
   }
 
-  setattr(data, "makeWeightsDT", list(prVars = prVars, adVars = adVars,
-                                      boVars = boVars, vaVars = vaVars,
-                                      NAs = NAs))
+  setattr(
+    data,
+    "makeWeightsDT",
+    list(
+      prVars = prVars,
+      adVars = adVars,
+      boVars = boVars,
+      vaVars = vaVars,
+      NAs = NAs
+    )
+  )
   return(data[])
-
 }
 
 checkCharWeights <- function(w) {
@@ -522,22 +602,38 @@ checkWeights <- function(weights, adjust) {
   ## INTENTION: given a list/DF/vector/string specifying weights
   ## and a data.frame/list of the adjusting variables,
   ## checks they are congruent and complains if not.
-  allowed_classes <- c("list","data.frame","integer","numeric","character",
-                       "NULL")
+  allowed_classes <- c(
+    "list",
+    "data.frame",
+    "integer",
+    "numeric",
+    "character",
+    "NULL"
+  )
   if (!any(class(weights) %in% allowed_classes)) {
-    stop("weights must be either a list, a data.frame, a numeric variable, ",
-         "or a character string specifing the weighting scheme to use. ",
-         "See ?direct_standardization for more information.")
+    stop(
+      "weights must be either a list, a data.frame, a numeric variable, ",
+      "or a character string specifing the weighting scheme to use. ",
+      "See ?direct_standardization for more information."
+    )
   }
 
-  if (is.list(weights) && !is.data.frame(weights) &&
-      length(adjust) != length(weights)) {
-    stop("Mismatch in numbers of variables (NOT necessarily in the numbers of ",
-         "levels/values within the variables) in adjust (", length(adjust),
-         " variables) and weights (", length(weights)," variables); ",
-         "make sure each given weights vector has a corresponding ",
-         "variable in adjust and vice versa. ",
-         "See ?direct_standardization for more information.")
+  if (
+    is.list(weights) &&
+      !is.data.frame(weights) &&
+      length(adjust) != length(weights)
+  ) {
+    stop(
+      "Mismatch in numbers of variables (NOT necessarily in the numbers of ",
+      "levels/values within the variables) in adjust (",
+      length(adjust),
+      " variables) and weights (",
+      length(weights),
+      " variables); ",
+      "make sure each given weights vector has a corresponding ",
+      "variable in adjust and vice versa. ",
+      "See ?direct_standardization for more information."
+    )
   }
 
   if (is.list(weights)) {
@@ -546,12 +642,14 @@ checkWeights <- function(weights, adjust) {
       lapply(weights[isChar], checkCharWeights)
       weights[isChar] <- lapply(weights[isChar], function(string) {
         if (pmatch(string, c("cohort", "internal"), nomatch = 0L)) {
-          stop("List of weights had 'cohort' or 'internal' as at least one ",
-               "element, which is currently not supported. ",
-               "See ?direct_standardization for more information.")
+          stop(
+            "List of weights had 'cohort' or 'internal' as at least one ",
+            "element, which is currently not supported. ",
+            "See ?direct_standardization for more information."
+          )
         }
         stdr.weights(string)[[2]]
-        })
+      })
     }
   }
 
@@ -567,9 +665,11 @@ checkWeights <- function(weights, adjust) {
 
   if (is.numeric(weights)) {
     if (length(adjust) != 1L) {
-      stop("Weights is a numeric vector of weights, ",
-           "but there are more or less than one adjusting variable. ",
-           "See ?direct_standardization for more information.")
+      stop(
+        "Weights is a numeric vector of weights, ",
+        "but there are more or less than one adjusting variable. ",
+        "See ?direct_standardization for more information."
+      )
     }
     weights <- list(weights)
     names(weights) <- names(adjust)
@@ -580,8 +680,10 @@ checkWeights <- function(weights, adjust) {
   weVars <- names(weights)
   if (is.data.frame(weights)) {
     if (!"weights" %in% weVars) {
-      stop("data.frame of weights did not have column named 'weights'. ",
-           "see ?direct_standardization for more information.")
+      stop(
+        "data.frame of weights did not have column named 'weights'. ",
+        "see ?direct_standardization for more information."
+      )
     }
     weVars <- setdiff(weVars, "weights")
   }
@@ -589,19 +691,22 @@ checkWeights <- function(weights, adjust) {
   badAdVars <- setdiff(adVars, weVars)
   badWeVars <- setdiff(weVars, adVars)
   if (length(badAdVars) > 0) {
-    stop("Mismatch in names of variables in adjust and weights; ",
-         "following adjust variables not mentioned in weights: ",
-         paste0("'", badAdVars, "'", collapse = ", "))
+    stop(
+      "Mismatch in names of variables in adjust and weights; ",
+      "following adjust variables not mentioned in weights: ",
+      paste0("'", badAdVars, "'", collapse = ", ")
+    )
   }
 
   if (length(badWeVars) > 0) {
-    stop("Mismatch in names of variables in adjust and weights; ",
-         "following weights variables not mentioned in adjust: ",
-         paste0("'", badWeVars, "'", collapse = ", "))
+    stop(
+      "Mismatch in names of variables in adjust and weights; ",
+      "following weights variables not mentioned in adjust: ",
+      paste0("'", badWeVars, "'", collapse = ", ")
+    )
   }
 
   if (is.data.frame(weights)) {
-
     levDiff <- lapply(names(adjust), function(var) {
       !all(adjust[[var]] %in% weights[[var]])
     })
@@ -611,15 +716,19 @@ checkWeights <- function(weights, adjust) {
       badVar <- names(adjust)[1]
       badLevs <- setdiff(adjust[[badVar]], weights[[badVar]])
       badLevs <- paste0("'", badLevs, "'", collapse = ", ")
-      stop("Missing levels in weights data.frame in variable '", badVar, "': ",
-           badLevs, ". These levels were found to exist in the corresponding ",
-           "adjusting variable. ",
-           "Usual suspects: adjusting variable is a factor and you ",
-           "only supplied weights for unique values in your data ",
-           "as opposed to the levels of the factor, which may contain levels ",
-           "that no row has. Try table(yourdata$yourvariable).")
+      stop(
+        "Missing levels in weights data.frame in variable '",
+        badVar,
+        "': ",
+        badLevs,
+        ". These levels were found to exist in the corresponding ",
+        "adjusting variable. ",
+        "Usual suspects: adjusting variable is a factor and you ",
+        "only supplied weights for unique values in your data ",
+        "as opposed to the levels of the factor, which may contain levels ",
+        "that no row has. Try table(yourdata$yourvariable)."
+      )
     }
-
   } else {
     weights <- as.list(weights)
     weights <- weights[adVars]
@@ -638,24 +747,19 @@ checkWeights <- function(weights, adjust) {
     badLen <- names(adjust)[weLen != adLen]
 
     if (length(badLen) > 0) {
-      stop("Mismatch in numbers of levels/unique values in adjusting variables ",
-           "and lengths of corresponding weights vectors. ",
-           "Names of mismatching variables: ",
-           paste0("'", badLen, "'", collapse = ", "), ". There were ",
-           weLen[weLen != adLen], " weights and ", adLen[weLen != adLen],
-           " adjusting variable levels.")
+      stop(
+        "Mismatch in numbers of levels/unique values in adjusting variables ",
+        "and lengths of corresponding weights vectors. ",
+        "Names of mismatching variables: ",
+        paste0("'", badLen, "'", collapse = ", "),
+        ". There were ",
+        weLen[weLen != adLen],
+        " weights and ",
+        adLen[weLen != adLen],
+        " adjusting variable levels."
+      )
     }
   }
 
-
-
   invisible()
 }
-
-
-
-
-
-
-
-

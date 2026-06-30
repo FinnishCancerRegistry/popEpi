@@ -1,8 +1,3 @@
-
-
-
-
-
 #' @template survival_doc_template
 #' @param formula a `formula`; e.g. `fot ~ sex`,
 #' where `fot` is the time scale over which you wish to estimate a
@@ -112,14 +107,21 @@
 #'               breaks = list(FUT = seq(0, 5, 1/12)*365.25))
 #' }
 #' @export
-survtab <- function(formula, data, adjust = NULL, breaks = NULL,
-                    pophaz = NULL, weights = NULL, surv.type = "surv.rel",
-                    surv.method = "hazard", relsurv.method = "e2",
-                    subset = NULL,
-                    conf.level = 0.95,
-                    conf.type = "log-log",
-                    verbose = FALSE) {
-
+survtab <- function(
+  formula,
+  data,
+  adjust = NULL,
+  breaks = NULL,
+  pophaz = NULL,
+  weights = NULL,
+  surv.type = "surv.rel",
+  surv.method = "hazard",
+  relsurv.method = "e2",
+  subset = NULL,
+  conf.level = 0.95,
+  conf.type = "log-log",
+  verbose = FALSE
+) {
   TF <- environment()
   PF <- parent.frame()
   this_call <- match.call()
@@ -130,7 +132,9 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
 
   ## checks --------------------------------------------------------------------
 
-  if (missing(formula)) stop("Formula not defined!")
+  if (missing(formula)) {
+    stop("Formula not defined!")
+  }
 
   checkLexisData(data)
 
@@ -142,11 +146,15 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   checkBreaksList(data, breaks = oldBreaks)
   testOldBreaks <- setdiff(oldBreaks, list(NULL))
   if (is.null(breaks) && !length(testOldBreaks)) {
-    stop("No breaks supplied via argument 'breaks', and data has not been ",
-         "split in advance. Please supply a list of breaks ",
-         "to argument 'breaks'")
+    stop(
+      "No breaks supplied via argument 'breaks', and data has not been ",
+      "split in advance. Please supply a list of breaks ",
+      "to argument 'breaks'"
+    )
   }
-  if (is.null(breaks)) breaks <- oldBreaks
+  if (is.null(breaks)) {
+    breaks <- oldBreaks
+  }
   checkBreaksList(data, breaks = breaks)
   ## match break types to time scale types
   ## (don't try to match time scales to breaks)
@@ -157,13 +165,17 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
 
   comp_pp <- FALSE
   drop <- TRUE
-  if (surv.type == "surv.rel" && relsurv.method == "pp") comp_pp <- TRUE
-  if (comp_pp) drop <- FALSE
-
+  if (surv.type == "surv.rel" && relsurv.method == "pp") {
+    comp_pp <- TRUE
+  }
+  if (comp_pp) {
+    drop <- FALSE
+  }
 
   ## data & subset -------------------------------------------------------------
   subset <- evalLogicalSubset(data, substitute(subset))
-  x <- data[subset, ]; rm(subset)
+  x <- data[subset, ]
+  rm(subset)
   setDT(x)
   forceLexisDT(x, breaks = NULL, allScales = allScales, key = TRUE)
 
@@ -182,31 +194,42 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   formula <- evalRecursive(formula, env = TF, enc = PF)$arg
   foVars <- all.vars(formula)
 
-  if (!inherits(formula,"formula")) {
-    stop("Argument 'formula' is not a formula object. Usage: e.g. ",
-         "Surv(fot, lex.Xst %in% 1:2) ~ sex")
+  if (!inherits(formula, "formula")) {
+    stop(
+      "Argument 'formula' is not a formula object. Usage: e.g. ",
+      "Surv(fot, lex.Xst %in% 1:2) ~ sex"
+    )
   }
   if (length(formula) != 3L) {
-    stop("Argument 'formula'must be two-sided. Usage: e.g. ",
-         "Surv(fot, lex.Xst %in% 1:2) ~ sex")
+    stop(
+      "Argument 'formula'must be two-sided. Usage: e.g. ",
+      "Surv(fot, lex.Xst %in% 1:2) ~ sex"
+    )
   }
   ## eval print & adjust -------------------------------------------------------
   ## this adjust passed to resulting data's attributes at the end
   adSub <- substitute(adjust)
-  adjust <- evalPopArg(data = x, arg = adSub,
-                       enclos = PF, DT = TRUE,
-                       recursive = TRUE)
+  adjust <- evalPopArg(
+    data = x,
+    arg = adSub,
+    enclos = PF,
+    DT = TRUE,
+    recursive = TRUE
+  )
 
-  l <- usePopFormula(form = formula, adjust = adjust, data = x, enclos = PF,
-                     Surv.response = "either")
+  l <- usePopFormula(
+    form = formula,
+    adjust = adjust,
+    data = x,
+    enclos = PF,
+    Surv.response = "either"
+  )
   prVars <- names(l$print)
   adVars <- names(l$adjust)
-
 
   ## check weights makes sense with respect to adjust --------------------------
   if (length(adVars) > 0L && !is.null(weights)) {
     checkWeights(weights, adjust = l$adjust)
-
   }
 
   ## check pophaz --------------------------------------------------------------
@@ -218,16 +241,24 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
 
   ## only keep necessary variables ---------------------------------------------
 
-  setcolsnull(x, keep = c("lex.id", "lex.dur", allScales,
-                          "lex.Cst", "lex.Xst", pophazVars))
-  if (length(prVars)) x[, c(prVars)] <- l$print
-  if (length(adVars)) x[, c(adVars)] <- l$adjust
-
+  setcolsnull(
+    x,
+    keep = c("lex.id", "lex.dur", allScales, "lex.Cst", "lex.Xst", pophazVars)
+  )
+  if (length(prVars)) {
+    x[, c(prVars)] <- l$print
+  }
+  if (length(adVars)) {
+    x[, c(adVars)] <- l$adjust
+  }
 
   ## simplify event and censoring indicators -----------------------------------
   cens.values <- event.values <- NULL
-  all.values <- if (is.factor(l$y$status)) levels(l$y$status) else
+  all.values <- if (is.factor(l$y$status)) {
+    levels(l$y$status)
+  } else {
     sort(unique(l$y$status))
+  }
   cens.values <- all.values[1L]
   event.values <- setdiff(all.values, cens.values)
 
@@ -235,10 +266,12 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
     ## this should apply to situations where status coded 0/1
     ## and both 0/1 present or only 1 present
     if (all(unique(l$y$status) %in% 0L)) {
-      stop("All status values were zero, i.e. all obs were censored. ",
-           "Check that you passed the correct status variable or --- if this ",
-           "was intended --- code the status variable to 0/1 so that 1 ",
-           "corresponds to the event taking place and 0 not.")
+      stop(
+        "All status values were zero, i.e. all obs were censored. ",
+        "Check that you passed the correct status variable or --- if this ",
+        "was intended --- code the status variable to 0/1 so that 1 ",
+        "corresponds to the event taking place and 0 not."
+      )
     }
     cens.values <- 0L
     event.values <- 1L
@@ -255,15 +288,19 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
 
     x[, lex.Cst := NULL]
     x[, lex.Cst := 0L]
-    setcolorder(x, c(intersect(names(data), names(x)),
-                     setdiff(names(x), names(data))))
+    setcolorder(
+      x,
+      c(intersect(names(data), names(x)), setdiff(names(x), names(data)))
+    )
 
     x[, lex.Xst := as.integer(lex.Xst %in% TF$event.values)]
     cens.values <- 0L
     event.values <- 1L
     if (x[, sum(lex.Xst)] == 0L) {
-      stop("There are no events in the data. Ensure that the event argument ",
-           "used in Surv() makes sense.")
+      stop(
+        "There are no events in the data. Ensure that the event argument ",
+        "used in Surv() makes sense."
+      )
     }
   }
 
@@ -271,10 +308,9 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
 
   survScale <- detectSurvivalTimeScale(lex = x, values = l$y$time)
 
-
   ## crop data to speed up computations ----------------------------------------
   cropBreaks <- breaks
-  if (surv.type == "surv.rel" && relsurv.method == "pp")  {
+  if (surv.type == "surv.rel" && relsurv.method == "pp") {
     ## pp-weights have to be computed from entry to follow-up till roof of breaks;
     ## can only crop along the survival time scale
     cropBreaks <- breaks[1L]
@@ -283,8 +319,12 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
     cropBreaks[[1L]] <- cb
   }
 
-
-  intelliCrop(x = x, breaks = cropBreaks, allScales = allScales, cropStatuses = TRUE)
+  intelliCrop(
+    x = x,
+    breaks = cropBreaks,
+    allScales = allScales,
+    cropStatuses = TRUE
+  )
   x <- intelliDrop(x, breaks = cropBreaks, dropNegDur = TRUE, check = TRUE)
   setDT(x)
   forceLexisDT(x, breaks = oldBreaks, allScales = allScales, key = TRUE)
@@ -298,21 +338,31 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   setDT(x)
   forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
   if (verbose) {
-    message("* popEpi::survtab: Time taken by splitting Lexis data: ",
-            timetaken(splitTime), "\n")
+    message(
+      "* popEpi::survtab: Time taken by splitting Lexis data: ",
+      timetaken(splitTime),
+      "\n"
+    )
   }
 
   ## pophaz merge --------------------------------------------------------------
   if (!is.null(pophaz)) {
     hazTime <- proc.time()
     haz <- NULL ## appease R CMD CHECK
-    x <- cutLowMerge(x, pophaz, by = pophazVars,
-                     mid.scales = intersect(pophazVars, allScales))
+    x <- cutLowMerge(
+      x,
+      pophaz,
+      by = pophazVars,
+      mid.scales = intersect(pophazVars, allScales)
+    )
     setDT(x)
-    forceLexisDT(x, breaks = breaks, allScales =allScales, key = TRUE)
+    forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
     if (verbose) {
-      message("* popEpi::survtab: Time taken by merging population hazards ",
-              "with split Lexis data: ", timetaken(hazTime))
+      message(
+        "* popEpi::survtab: Time taken by merging population hazards ",
+        "with split Lexis data: ",
+        timetaken(hazTime)
+      )
     }
   }
 
@@ -323,18 +373,30 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   if (comp_pp) {
     ppTime <- proc.time()
     setkeyv(x, c("lex.id", survScale))
-    comp_pp_weights(x, surv.scale = survScale,
-                    breaks = breaks[[survScale]], haz = "haz",
-                    style = "delta", verbose = FALSE)
+    comp_pp_weights(
+      x,
+      surv.scale = survScale,
+      breaks = breaks[[survScale]],
+      haz = "haz",
+      style = "delta",
+      verbose = FALSE
+    )
     setDT(x)
     forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
 
     if (verbose) {
-      message("* popEpi::survtab: computed Pohar Perme weights; ",
-              data.table::timetaken(ppTime))
+      message(
+        "* popEpi::survtab: computed Pohar Perme weights; ",
+        data.table::timetaken(ppTime)
+      )
     }
 
-    intelliCrop(x = x, breaks = breaks, allScales = allScales, cropStatuses = TRUE)
+    intelliCrop(
+      x = x,
+      breaks = breaks,
+      allScales = allScales,
+      cropStatuses = TRUE
+    )
     x <- intelliDrop(x, breaks = breaks, dropNegDur = TRUE, check = TRUE)
     forceLexisDT(x, breaks = breaks, allScales = allScales, key = TRUE)
 
@@ -350,13 +412,16 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
     d.exp.pp <- ppNames[substr(ppNames, 1, 8) == "d.exp.pp"]
     ptime.pp <- ppNames[substr(ppNames, 1, 8) == "ptime.pp"]
     n.cens.pp <- ppNames[substr(ppNames, 1, 11) == "from0to0.pp"]
-    n.cens.pp <- n.cens.pp[substr(n.cens.pp, 1,13) != "from0to0.pp.2"]
-    at.risk.pp <-  ppNames[substr(ppNames, 1, 10) == "at.risk.pp"]
-    d.exp.pp <-  ppNames[substr(ppNames, 1, 8) == "d.exp.pp"]
+    n.cens.pp <- n.cens.pp[substr(n.cens.pp, 1, 13) != "from0to0.pp.2"]
+    at.risk.pp <- ppNames[substr(ppNames, 1, 10) == "at.risk.pp"]
+    d.exp.pp <- ppNames[substr(ppNames, 1, 8) == "d.exp.pp"]
 
     if (verbose) {
-      message("* popEpi::survtab: computed Pohar Perme weighted counts and ",
-              "person-times; ", data.table::timetaken(ppTime))
+      message(
+        "* popEpi::survtab: computed Pohar Perme weighted counts and ",
+        "person-times; ",
+        data.table::timetaken(ppTime)
+      )
     }
   }
 
@@ -378,8 +443,12 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   if (verbose) {
     message("* popEpi::survtab: calling popEpi::aggre")
   }
-  x <- aggre(x, by = aggreVars, verbose = verbose,
-             sum.values = c(d.exp, ppNames))
+  x <- aggre(
+    x,
+    by = aggreVars,
+    verbose = verbose,
+    sum.values = c(d.exp, ppNames)
+  )
   if (verbose) {
     message("* popEpi::survtab: finished aggre call successfully")
   }
@@ -387,8 +456,10 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   setattr(x, "class", c("aggre", "data.table", "data.frame"))
 
   if (verbose) {
-    message("* popEpi::survtab: done aggregating split Lexis data; ",
-            data.table::timetaken(aggreTime))
+    message(
+      "* popEpi::survtab: done aggregating split Lexis data; ",
+      data.table::timetaken(aggreTime)
+    )
   }
 
   ## neater column names -------------------------------------------------------
@@ -403,16 +474,17 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   whEC <- which(evCols %in% names(x))
 
   if (sum(whEC)) {
-    setnames(x, evCols[whEC],
-             as.character(c(cens.values, event.values)[whEC]))
+    setnames(x, evCols[whEC], as.character(c(cens.values, event.values)[whEC]))
   }
 
   ## survtab_ag ----------------------------------------------------------------
   dn <- intersect(event.values, names(x))
   if (length(dn) == 0L) {
-    stop("Internal error: no event variables in work data. Complain to the ",
-         "package maintainer if you see this - unless there are no events ",
-         "in the data?")
+    stop(
+      "Internal error: no event variables in work data. Complain to the ",
+      "package maintainer if you see this - unless there are no events ",
+      "in the data?"
+    )
   }
   n.cens <- intersect(cens.values, names(x))
 
@@ -424,27 +496,35 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
   if (verbose) {
     message("* popEpi::survtab: calling popEpi::survtab_ag")
   }
-  st <- survtab_ag(data = x,
-                   formula = TF$form,
-                   adjust = TF$adVars,
+  st <- survtab_ag(
+    data = x,
+    formula = TF$form,
+    adjust = TF$adVars,
 
-                   weights = TF$weights,
+    weights = TF$weights,
 
-                   d = TF$dn, pyrs = "pyrs", n = "at.risk",
-                   d.exp = TF$d.exp, n.cens = TF$n.cens,
+    d = TF$dn,
+    pyrs = "pyrs",
+    n = "at.risk",
+    d.exp = TF$d.exp,
+    n.cens = TF$n.cens,
 
-                   n.pp = TF$at.risk.pp,
-                   d.pp = TF$d.pp, d.exp.pp = TF$d.exp.pp, d.pp.2 = TF$d.pp.2,
-                   n.cens.pp = TF$n.cens.pp, pyrs.pp = TF$ptime.pp,
+    n.pp = TF$at.risk.pp,
+    d.pp = TF$d.pp,
+    d.exp.pp = TF$d.exp.pp,
+    d.pp.2 = TF$d.pp.2,
+    n.cens.pp = TF$n.cens.pp,
+    pyrs.pp = TF$ptime.pp,
 
-                   surv.type = surv.type,
-                   surv.method = surv.method,
-                   relsurv.method = relsurv.method,
+    surv.type = surv.type,
+    surv.method = surv.method,
+    relsurv.method = relsurv.method,
 
-                   conf.type = conf.type,
-                   conf.level = conf.level,
+    conf.type = conf.type,
+    conf.level = conf.level,
 
-                   verbose = verbose)
+    verbose = verbose
+  )
   if (verbose) {
     message("* popEpi::survtab: successfully called popEpi::survtab_ag")
   }
@@ -496,7 +576,6 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
 #                   weights = list(sex = c(0.5, 0.5), agegr = c(0.2,0.4,0.4)),
 #                   breaks = list(FUT = seq(0,5,1/12)))
 
-
 # ag <- lexpand(sire, birth = "bi_date", entry = "dg_date", exit = "ex_date",
 #               status = status %in% 1:2, pophaz = popmort, pp = TRUE,
 #               fot = seq(0, 5, 1/12))
@@ -508,7 +587,12 @@ survtab <- function(formula, data, adjust = NULL, breaks = NULL,
 #                   relsurv.method = "pp",
 #                   #weights = list(sex = c(0.5, 0.5), agegr = c(0.2,0.4,0.4)),
 #                   breaks = list(fot = seq(0,5,1/12)))
-detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id") {
+detectEvents <- function(
+  x,
+  breaks,
+  tol = .Machine$double.eps^0.5,
+  by = "lex.id"
+) {
   ## INTENTION: given a Lexis object, determines which rows
   ## have an event (a transition or end-point) within the window
   ## determined by breaks (a list of breaks as supplied to e.g. splitMulti).
@@ -525,9 +609,15 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
   ##    has multiple rows, of which this is not an event)
   ## 1: transition within breaks
   ## 2: original end-point within breaks and no transition occured (i.e. censoring)
-  if (!is.data.table(x)) stop("x must be a data.table; if you see this, send the package maintainer an email")
+  if (!is.data.table(x)) {
+    stop(
+      "x must be a data.table; if you see this, send the package maintainer an email"
+    )
+  }
   # checkLexisData(x)
-  if (!inherits(x, "Lexis")) stop("data not a Lexis object")
+  if (!inherits(x, "Lexis")) {
+    stop("data not a Lexis object")
+  }
   if (!is.null(breaks)) {
     checkBreaksList(x, breaks)
     breaks[unlist(lapply(breaks, length)) == 0L] <- NULL
@@ -543,20 +633,25 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
     on.exit(if (tmp$order %in% names(x)) setorderv(x, tmp$order), add = TRUE)
     on.exit(setcolsnull(x, tmp$order, soft = TRUE), add = TRUE)
     set(x, j = tmp$order, value = 1:nrow(x))
-  } else on.exit(setkeyv(x, oldKey), add = TRUE)
-
+  } else {
+    on.exit(setkeyv(x, oldKey), add = TRUE)
+  }
 
   setkeyv(x, c(by, names(breaks)[1L]))
   setkeyv(x, by)
   ## rows that actually can be events: transitions and last rows by subject
   whTr <- x[, lex.Cst != lex.Xst]
-  whLa <- !duplicated(x, fromLast = TRUE, by=key(x))
+  whLa <- !duplicated(x, fromLast = TRUE, by = key(x))
   whEv <- whTr | whLa
 
   if (!is.null(breaks)) {
-
     splitScales <- names(breaks)
-    if (any(!splitScales %in% names(x))) stop("Following time scales missing from data that data was split by: ", paste0("'", setdiff(splitScales, names(x)), "'", collapse = ", "))
+    if (any(!splitScales %in% names(x))) {
+      stop(
+        "Following time scales missing from data that data was split by: ",
+        paste0("'", setdiff(splitScales, names(x)), "'", collapse = ", ")
+      )
+    }
 
     brmax <- lapply(breaks, max)
     brmin <- lapply(breaks, min)
@@ -567,9 +662,12 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
       tol_sc <- if (is.double(z)) tol else 0L
 
       ## NOTE: if max of orig values within breaks window, then all may be events
-      if (!(max(z) + tol_sc < brmax[[sc]])) whEv[whEv] <- z < brmax[[sc]] - tol_sc
-      if (!(min(z) - tol_sc > brmin[[sc]])) whEv[whEv] <- z > brmin[[sc]] + tol_sc
-
+      if (!(max(z) + tol_sc < brmax[[sc]])) {
+        whEv[whEv] <- z < brmax[[sc]] - tol_sc
+      }
+      if (!(min(z) - tol_sc > brmin[[sc]])) {
+        whEv[whEv] <- z > brmin[[sc]] + tol_sc
+      }
     }
     ## whEv now indicates rows that may be events AND which reside within breaks window.
   }
@@ -589,24 +687,19 @@ detectEvents <- function(x, breaks, tol = .Machine$double.eps^0.5, by = "lex.id"
     setkeyv(x, NULL)
     setorderv(x, tmp$order)
     set(x, j = tmp$order, value = NULL)
-  } else setkeyv(x, oldKey)
-
+  } else {
+    setkeyv(x, oldKey)
+  }
 
   evInd <- x[[tmp$ind]]
   set(x, j = tmp$ind, value = NULL)
   on.exit(expr = {}, add = FALSE) ## removes on.exit expressions from earlier
 
-
-  if (!identical(oldKey, key(x))) stop("keys do not match at function end; send an email to package maintainer if you see this")
+  if (!identical(oldKey, key(x))) {
+    stop(
+      "keys do not match at function end; send an email to package maintainer if you see this"
+    )
+  }
 
   evInd
 }
-
-
-
-
-
-
-
-
-

@@ -105,9 +105,9 @@ test_make_sire__ <- function() {
   # ]
 
   # sire[, "rs_dur"  := as.integer(sire$ex_date - sire$dg_date)]
-  sire[, "rs_ts_age"  := as.integer(sire$dg_date - sire$bi_date)]
-  sire[, "rs_ts_cal"  := as.integer(sire$dg_date)]
-  sire[, "rs_sex"  := as.integer(sire$sex + 1L)]
+  sire[, "rs_ts_age" := as.integer(sire$dg_date - sire$bi_date)]
+  sire[, "rs_ts_cal" := as.integer(sire$dg_date)]
+  sire[, "rs_sex" := as.integer(sire$sex + 1L)]
   return(sire[])
 }
 
@@ -143,7 +143,7 @@ test_survexp_dt__ <- function(data, stratum_col_nms = NULL, t) {
     j = {
       rs_ts_age <- rs_sex <- rs_ts_cal <- NULL # for R CMD CHECK
       fit <- survival::survexp(
-        formula = ~ 1,
+        formula = ~1,
         data = .SD,
         ratetable = rt,
         method = "ederer",
@@ -168,20 +168,27 @@ test_relsurv_ratetable__ <- function() {
   pm[, "surv" := exp(-pm$haz)]
   pm_m <- cast_simple(
     pm[pm$sex == 0],
-    columns = 'year', rows = 'agegroup',  values='surv'
+    columns = 'year',
+    rows = 'agegroup',
+    values = 'surv'
   )
   pm_m[, "agegroup" := NULL]
   pm_m <- as.matrix(pm_m)
   # female
   pm_f <- cast_simple(
     pm[pm$sex == 1],
-    columns = 'year', rows = 'agegroup',  values='surv'
+    columns = 'year',
+    rows = 'agegroup',
+    values = 'surv'
   )
   pm_f[, "agegroup" := NULL]
   pm_f <- as.matrix(pm_f)
 
   rt <- relsurv::transrate(
-    pm_m, pm_f, yearlim = c(1951, 2013), int.length = 1
+    pm_m,
+    pm_f,
+    yearlim = c(1951, 2013),
+    int.length = 1
   )
   data.table::setattr(
     rt,
@@ -192,7 +199,10 @@ test_relsurv_ratetable__ <- function() {
 }
 
 test_relsurv_dt__ <- function(
-  data, stratum_col_nms = NULL, t, ...
+  data,
+  stratum_col_nms = NULL,
+  t,
+  ...
 ) {
   requireNamespace("relsurv")
   rt <- test_relsurv_ratetable__()

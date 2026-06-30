@@ -138,12 +138,12 @@ surv_brenner_weight_dt <- function(
     #§ - `character`: Combine neighbouring strata defined by these column names.
     #§   E.g. `"agegroup"`.
     if (length(collapse_stratum_col_nms) == 0) {
-    # @codedoc_comment_block popEpi::surv_brenner_weight_dt
-    # - If the weight table contains rows where the observed weight is zero and
-    #   the standard weight is not, the individual weights will not work
-    #   properly.
-    #   + If `is.null(collapse_stratum_col_nms)`, a warning is thrown.
-    # @codedoc_comment_block popEpi::surv_brenner_weight_dt
+      # @codedoc_comment_block popEpi::surv_brenner_weight_dt
+      # - If the weight table contains rows where the observed weight is zero and
+      #   the standard weight is not, the individual weights will not work
+      #   properly.
+      #   + If `is.null(collapse_stratum_col_nms)`, a warning is thrown.
+      # @codedoc_comment_block popEpi::surv_brenner_weight_dt
       warning(
         "Individual weights will be wrong to some extent because there ",
         "are one or more strata where the observed weight is zero but ",
@@ -195,8 +195,7 @@ surv_brenner_weight_dt <- function(
         #§ @importFrom data.table := .SD
         j = c("weight_standard", "weight_observed") := {
           sub_dt <- data.table::setDT(as.list(.SD)[
-            c(collapse_stratum_col_nms,
-              "weight_standard", "weight_observed")
+            c(collapse_stratum_col_nms, "weight_standard", "weight_observed")
           ])
           sub_dt[
             #§ @importFrom data.table := .GRP
@@ -301,7 +300,7 @@ surv_brenner_weight_dt <- function(
 #§     right = FALSE
 #§   )
 #§ }
-#§ 
+#§
 #§ make_standard_weight_dt <- function() {
 #§   swdt <- popEpi::ICSS[
 #§     j = list(
@@ -313,7 +312,7 @@ surv_brenner_weight_dt <- function(
 #§   ][]
 #§   return(swdt[])
 #§ }
-#§ 
+#§
 #§ lexis <- Epi::Lexis(
 #§   entry = list(ts_fut = c(0.0, 0.0)),
 #§   exit = list(ts_fut = c(1.5, 2.5)),
@@ -322,7 +321,7 @@ surv_brenner_weight_dt <- function(
 #§ )
 #§ lexis[["icss_ag"]] <- make_column_icss_ag(c(50.5, 60.5))
 #§ swdt <- make_standard_weight_dt()
-#§ 
+#§
 #§ # this is what happens when at least one weighting stratum is empty
 #§ warn_env <- new.env()
 #§ warn_env[["w"]] <- NULL
@@ -334,7 +333,7 @@ surv_brenner_weight_dt <- function(
 #§   inherits(warn_env[["w"]], "warning"),
 #§   iw_bad >= 0
 #§ )
-#§ 
+#§
 #§ # here is an easy way to handle this problem. note that the weights are
 #§ # always larger when we need to aggregate strata --- because the standard
 #§ # weight increases but the observed weight remains the same. the same
@@ -360,10 +359,9 @@ surv_individual_weights <- function(
   #§ Dataset containing stratum columns also found in `standard_weight_dt`.
   stopifnot(
     is.data.frame(df),
-    is.null(collapse_stratum_col_nms) || (
-      all(collapse_stratum_col_nms %in% names(df)) &&
-        all(collapse_stratum_col_nms %in% names(standard_weight_dt))
-    )
+    is.null(collapse_stratum_col_nms) ||
+      (all(collapse_stratum_col_nms %in% names(df)) &&
+        all(collapse_stratum_col_nms %in% names(standard_weight_dt)))
   )
   # @codedoc_comment_block popEpi::surv_individual_weights::standard_weight_dt
   # @param standard_weight_dt `[data.table]` (no default)

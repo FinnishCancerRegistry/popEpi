@@ -1,5 +1,3 @@
-
-
 #' @title Confidence intervals for the rate ratios
 #' @author Matti Rantanen
 #' @description Calculate rate ratio with confidence intervals for rate objects or observations and person-years.
@@ -58,8 +56,8 @@
 #' @import data.table
 #' @import stats
 rate_ratio <- function(x, y, crude = FALSE, SE.method = TRUE) {
-  if( inherits(x, 'rate') | inherits(y, 'rate') ) {
-    if(!crude & (!'rate.adj' %in% names(x) | !'rate.adj' %in% names(y))) {
+  if (inherits(x, 'rate') | inherits(y, 'rate')) {
+    if (!crude & (!'rate.adj' %in% names(x) | !'rate.adj' %in% names(y))) {
       crude <- TRUE
       message('Crude rates used')
     }
@@ -68,68 +66,71 @@ rate_ratio <- function(x, y, crude = FALSE, SE.method = TRUE) {
   x <- prep.rate.input(x, crude = crude, SE = SE.method)
   y <- prep.rate.input(y, crude = crude, SE = SE.method)
 
-  if(SE.method) {
-    ratio <- x[[1]]/y[[1]]
+  if (SE.method) {
+    ratio <- x[[1]] / y[[1]]
 
     # delta method for variance
-    v0 <-  (1/x[[1]])^2*x[[2]]^2 + (1/y[[1]])^2*y[[2]]^2
+    v0 <- (1 / x[[1]])^2 * x[[2]]^2 + (1 / y[[1]])^2 * y[[2]]^2
 
-
-    lo <- ratio - v0*1.96 #exp(log(ratio)-log(v0)*1.96)
-    hi <- ratio + v0*1.96 #exp(log(ratio)+log(v0)*1.96)
+    lo <- ratio - v0 * 1.96 #exp(log(ratio)-log(v0)*1.96)
+    hi <- ratio + v0 * 1.96 #exp(log(ratio)+log(v0)*1.96)
     out <- round(data.frame(rate_ratio = ratio, lower = lo, upper = hi), 3)
-  }
-  else {
+  } else {
     # x and y vector of two:, pyrs
     pt <- list()
     out <- data.frame()
     j <- 1
-    for(j in 1:length(x[[1]])) {
-      pt[[j]] <- poisson.test(x = c(x[[1]][j], y[[1]][j]), T = c(x[[2]][j],y[[2]][j]))
-      out <- rbind(out, round(data.frame(rate_ratio = pt[[j]]$estimate,
-                                         lower = pt[[j]]$conf.int[1],
-                                         upper = pt[[j]]$conf.int[2]),3) )
+    for (j in 1:length(x[[1]])) {
+      pt[[j]] <- poisson.test(
+        x = c(x[[1]][j], y[[1]][j]),
+        T = c(x[[2]][j], y[[2]][j])
+      )
+      out <- rbind(
+        out,
+        round(
+          data.frame(
+            rate_ratio = pt[[j]]$estimate,
+            lower = pt[[j]]$conf.int[1],
+            upper = pt[[j]]$conf.int[2]
+          ),
+          3
+        )
+      )
     }
   }
-  if(any(out<0)) {
-    warning('Negative estimate or confidence intervals. Tip: set SE.method to FALSE when using observations and person-years.')
+  if (any(out < 0)) {
+    warning(
+      'Negative estimate or confidence intervals. Tip: set SE.method to FALSE when using observations and person-years.'
+    )
   }
   return(out)
 }
 
 
-
 prep.rate.input <- function(z, crude, SE) {
   # this one modulates input to rate_ratio function
-  if(is.vector(z) && length(z) == 2) {
+  if (is.vector(z) && length(z) == 2) {
     # z is obs and pyrs OR rate and SE
     return(list(z[1], z[2]))
-  }
-  else if(inherits(z,'rate')){
-    if(!SE) { # obs and pyrs
+  } else if (inherits(z, 'rate')) {
+    if (!SE) {
+      # obs and pyrs
       att <- attributes(z)
       setDT(z)
       a <- z[, get(att$rate.meta$obs)]
       b <- z[, get(att$rate.meta$pyrs)]
-    }
-    else {
-      if(crude) {
-        a <- z[,rate]
-        b <- z[,SE.rate]
-      }
-      else {
+    } else {
+      if (crude) {
+        a <- z[, rate]
+        b <- z[, SE.rate]
+      } else {
         # z is a rate object
-        a <- z[,rate.adj]
-        b <- z[,SE.rate.adj]
+        a <- z[, rate.adj]
+        b <- z[, SE.rate.adj]
       }
     }
-  }
-  else{
+  } else {
     stop('Input is not correct: its neighter a vector of two nor a rate object')
   }
-  return(list(a,b))
+  return(list(a, b))
 }
-
-
-
-

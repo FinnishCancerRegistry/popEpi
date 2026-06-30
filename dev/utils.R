@@ -10,18 +10,26 @@ ask_yn <- function(...) {
 git_exe_cmd <- function(args, system2.arg.list = NULL) {
   stdout_file_path <- tempfile()
   stderr_file_path <- tempfile()
-  override_arg_list <- list(command = "git", args = args,
-                            stdout = stdout_file_path,
-                            stderr = stderr_file_path)
+  override_arg_list <- list(
+    command = "git",
+    args = args,
+    stdout = stdout_file_path,
+    stderr = stderr_file_path
+  )
   arg_list <- as.list(system2.arg.list)
   arg_list[names(override_arg_list)] <- override_arg_list
   status <- do.call(system2, arg_list, quote = TRUE)
   stdout <- tryCatch(readLines(stdout_file_path), error = function(e) e)
   stderr <- tryCatch(readLines(stderr_file_path), error = function(e) e)
   if (!identical(status, 0L)) {
-    stop("Got nonzero status ", status, "; stdout: ",
-         paste0(stdout, collapse = " "),
-         "; stderr: ", paste0(stderr, collapse = " "))
+    stop(
+      "Got nonzero status ",
+      status,
+      "; stdout: ",
+      paste0(stdout, collapse = " "),
+      "; stderr: ",
+      paste0(stderr, collapse = " ")
+    )
   }
   return(list(status = status, stdout = stdout, stderr = stderr))
 }

@@ -58,11 +58,10 @@
 #'
 
 rpcurve <- function(object) {
-
   ## appease R CMD CHECK
   Tstart <- FOT <- uni_id <- uni_n <- uni_w <-
     lo <- hi <- lex.Xst <- est <- fot <- pop.haz <- delta <-
-    Tstop <- Tstar <- lex.id <- fot <- lex.multi <- pyrs <- NULL
+      Tstop <- Tstar <- lex.id <- fot <- lex.multi <- pyrs <- NULL
 
   ## sanity checks -------------------------------------------------------------
   if (!inherits(object, "relpois")) {
@@ -73,13 +72,12 @@ rpcurve <- function(object) {
     stop("No FOT variable in model formula; see Details in ?rpcurve")
   }
 
-
   ## collate surv.ints, breaks, deltas -----------------------------------------
   fot_levels <- as.factor(sort(as.character(unique(object$model$FOT))))
   fb <- sort(object$fot.breaks)
   fb <- data.table(Tstart = fb[-length(fb)], Tstop = fb[-1])
   fb[, FOT := fot_levels]
-  fb[, delta := Tstop-Tstart]
+  fb[, delta := Tstop - Tstart]
   n_ints <- nrow(fb)
 
   ## model data / model matrix construction ------------------------------------
@@ -97,18 +95,27 @@ rpcurve <- function(object) {
 
   setcolsnull(modmat, keep = c(all.vars(object$formula)))
   setcolsnull(modmat, "FOT")
-  modmat <- cbind(fb[, list(FOT=FOT, lex.dur = delta)], modmat)
+  modmat <- cbind(fb[, list(FOT = FOT, lex.dur = delta)], modmat)
   modmat[, "lex.Xst_factor" := factor(levels(as.factor(lex.Xst))[1])]
   modmat[, "lex.Xst" := NULL]
   data.table::setnames(modmat, "lex.Xst_factor", "lex.Xst")
   modmat[, "order" := 1:.N]
 
   ## unique sets of covariates only
-  umodmat <- unique(modmat, by = setdiff(names(modmat), c("lex.dur","lex.Xst","order")))
-  umodmat[, uni_id := rep(1:(nrow(umodmat)/n_ints), each=n_ints)]
+  umodmat <- unique(
+    modmat,
+    by = setdiff(names(modmat), c("lex.dur", "lex.Xst", "order"))
+  )
+  umodmat[, uni_id := rep(1:(nrow(umodmat) / n_ints), each = n_ints)]
 
-  setkeyv(umodmat, setdiff(names(modmat), c("lex.dur","lex.Xst","order","uni_id")))
-  setkeyv(modmat, setdiff(names(modmat), c("lex.dur","lex.Xst","order","uni_id")))
+  setkeyv(
+    umodmat,
+    setdiff(names(modmat), c("lex.dur", "lex.Xst", "order", "uni_id"))
+  )
+  setkeyv(
+    modmat,
+    setdiff(names(modmat), c("lex.dur", "lex.Xst", "order", "uni_id"))
+  )
 
   uni_n <- umodmat[modmat, list(uni_n = .N / n_ints), by = "uni_id"][["uni_n"]]
   uni_n <- rep(uni_n, times = nrow(umodmat) / length(uni_n))
@@ -118,12 +125,11 @@ rpcurve <- function(object) {
   mean_weights <- umodmat$uni_n
   IDs <- umodmat$uni_id
 
-  setcolsnull(umodmat, delete=c("order","uni_id","uni_n"))
+  setcolsnull(umodmat, delete = c("order", "uni_id", "uni_n"))
 
-  modmat <- stats::model.matrix(object, data=umodmat)
+  modmat <- stats::model.matrix(object, data = umodmat)
   mmattrs <- attributes(modmat)
   mmattrs$dimnames <- mmattrs$dim <- NULL
-
 
   ## (unique covariate) subject-specific curve fits ----------------------------
   l <- split(data.table(modmat), IDs)
@@ -135,10 +141,11 @@ rpcurve <- function(object) {
   l <- lapply(l, attrsetter)
 
   epicumgetter <- function(x, ...) {
-    Epi::ci.cum(ctr.mat = x, ..., alpha = 1-0.95, Exp = TRUE, ci.Exp = TRUE)
+    Epi::ci.cum(ctr.mat = x, ..., alpha = 1 - 0.95, Exp = TRUE, ci.Exp = TRUE)
   }
 
-  tab <- lapply(l, epicumgetter, obj=object, intl = fb$delta); rm(l)
+  tab <- lapply(l, epicumgetter, obj = object, intl = fb$delta)
+  rm(l)
 
   ## collate & compute relative survivals --------------------------------------
   tab <- lapply(tab, as.data.table)
@@ -147,21 +154,25 @@ rpcurve <- function(object) {
   fot_values <- rep(fot_levels, times = nrow(tab) / length(fot_levels))
   data.table::set(tab, j = "FOT", value = fot_values)
   tab[, "uni_id" := IDs]
-  tab[, "uni_w"  := mean_weights]
+  tab[, "uni_w" := mean_weights]
   Haz2RS <- function(x) {
-    sum(exp(-x)*tab$uni_w)/n_matrows
+    sum(exp(-x) * tab$uni_w) / n_matrows
   }
-  tab <- tab[, lapply(list(est=est,lo=lo,hi=hi), `-`)]
-  tab <- tab[, lapply(list(est=est,lo=lo,hi=hi), exp)]
-  tab[, `:=`(est=est*mean_weights,lo=lo*mean_weights,hi=hi*mean_weights)]
+  tab <- tab[, lapply(list(est = est, lo = lo, hi = hi), `-`)]
+  tab <- tab[, lapply(list(est = est, lo = lo, hi = hi), exp)]
+  tab[, `:=`(
+    est = est * mean_weights,
+    lo = lo * mean_weights,
+    hi = hi * mean_weights
+  )]
   data.table::set(tab, j = "FOT", value = fot_values)
-  tab <- tab[, lapply(list(est=est, lo=lo, hi=hi), sum), by = "FOT"]
+  tab <- tab[, lapply(list(est = est, lo = lo, hi = hi), sum), by = "FOT"]
   tab <- tab[
-    j = lapply(list(est=est, lo=lo, hi=hi), function(x) {
+    j = lapply(list(est = est, lo = lo, hi = hi), function(x) {
       x / (n_matrows / n_ints)
     }),
     by = "FOT"
-    ]
+  ]
 
   setkeyv(tab, "FOT")
   setkeyv(fb, "FOT")
@@ -172,7 +183,9 @@ rpcurve <- function(object) {
   setcolsnull(tab, c("lo", "hi"))
 
   setattr(tab, "class", c("data.table", "data.frame"))
-  if (!return_DT()) setDFpe(tab)
+  if (!return_DT()) {
+    setDFpe(tab)
+  }
   tab[]
 }
 
@@ -187,4 +200,3 @@ RPL <- data.table::copy(stats::poisson())
 RPL$link <- "glm relative survival model with Poisson error"
 RPL$linkfun <- function(mu, d.exp) log(mu - d.exp)
 RPL$linkinv <- function(eta, d.exp) d.exp + exp(eta)
-

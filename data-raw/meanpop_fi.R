@@ -15,15 +15,16 @@ read_meanpop_fi <- function() {
   )
   data.table::setDT(mp)
 
-  mp[, "Sex" := as.integer(factor(Sex, c("Males", "Females")))-1L]
+  mp[, "Sex" := as.integer(factor(Sex, c("Males", "Females"))) - 1L]
   mp[, "Age" := as.integer(gsub(Age, pattern = "\\D", replacement = ""))]
   mp[, "Year" := as.integer(Year)]
   data.table::setkeyv(mp, c("Sex", "Year", "Age"))
   data.table::setcolorder(mp, c("Sex", "Year", "Age"))
   v <- "Population 31 Dec"
   mp[
-    j = "meanpop" :=
-      (.SD[[v]] + data.table::shift(.SD[[v]], n = 1L, type = "lag")) / 2,
+    j = "meanpop" := (.SD[[v]] +
+      data.table::shift(.SD[[v]], n = 1L, type = "lag")) /
+      2,
     by = c("Sex", "Age")
   ]
   mp <- mp[!is.na(meanpop), .SD, .SDcols = c("Sex", "Year", "Age", "meanpop")]

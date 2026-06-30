@@ -6,33 +6,47 @@ testthat::test_that("survmean() agrees with old results", {
   testthat::skip_on_cran()
 
   sr <- data.table(popEpi::sire)[dg_date < ex_date, ]
-  sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
+  sr$agegr <- cut(sr$dg_age, c(0, 45, 60, Inf), right = FALSE)
 
-  x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
-             exit = list(CAL = get.yrs(ex_date)),
-             data = sr,
-             exit.status = factor(status, levels = 0:2,
-                                  labels = c("alive", "canD", "othD")),
-             entry.status = factor(0, levels = 0:2,
-                                   labels = c("alive", "canD", "othD")),
-             merge = TRUE)
+  x <- Lexis(
+    entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+    exit = list(CAL = get.yrs(ex_date)),
+    data = sr,
+    exit.status = factor(
+      status,
+      levels = 0:2,
+      labels = c("alive", "canD", "othD")
+    ),
+    entry.status = factor(0, levels = 0:2, labels = c("alive", "canD", "othD")),
+    merge = TRUE
+  )
 
   ## observed survival
   pm <- data.table(popEpi::popmort)
   names(pm) <- c("sex", "CAL", "AGE", "haz")
-  sm <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ agegr,
-                 pophaz = pm, data = x,
-                 breaks = list(FUT = seq(0, 10, 1/12)),
-                 e1.breaks = list(FUT = c(seq(0, 10, 1/12), 11:100)))
+  sm <- survmean(
+    Surv(time = FUT, event = lex.Xst != "alive") ~ agegr,
+    pophaz = pm,
+    data = x,
+    breaks = list(FUT = seq(0, 10, 1 / 12)),
+    e1.breaks = list(FUT = c(seq(0, 10, 1 / 12), 11:100))
+  )
 
   ## values to test against computed on 2016-03-04;
   ## git ref: 5077677
-  testthat::expect_equal(sm$est, c(33.951439, 21.611419,  7.604318), tol = 0.005, scale = 1)
-  testthat::expect_equal(sm$exp, c(45.25686, 31.22712, 13.06725), tol = 0.005, scale = 1)
-
-
+  testthat::expect_equal(
+    sm$est,
+    c(33.951439, 21.611419, 7.604318),
+    tol = 0.005,
+    scale = 1
+  )
+  testthat::expect_equal(
+    sm$exp,
+    c(45.25686, 31.22712, 13.06725),
+    tol = 0.005,
+    scale = 1
+  )
 })
-
 
 
 # test_that("survmean() agrees with results computed using pkg survival", {
@@ -71,131 +85,148 @@ testthat::test_that("survmean() agrees with old results", {
 #                tolerance = 0.001)
 # })
 
-
 testthat::test_that("survmean expected survival curve corresponds to full Ederer I", {
   testthat::skip_on_cran()
 
   sr <- data.table(sire)[dg_date < ex_date, ]
-  sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
+  sr$agegr <- cut(sr$dg_age, c(0, 45, 60, Inf), right = FALSE)
 
-  x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
-             exit = list(CAL = get.yrs(ex_date)),
-             data = sr,
-             exit.status = factor(status, levels = 0:2,
-                                  labels = c("alive", "canD", "othD")),
-             entry.status = factor(0, levels = 0:2,
-                                   labels = c("alive", "canD", "othD")),
-             merge = TRUE)
+  x <- Lexis(
+    entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+    exit = list(CAL = get.yrs(ex_date)),
+    data = sr,
+    exit.status = factor(
+      status,
+      levels = 0:2,
+      labels = c("alive", "canD", "othD")
+    ),
+    entry.status = factor(0, levels = 0:2, labels = c("alive", "canD", "othD")),
+    merge = TRUE
+  )
 
   pm <- copy(popEpi::popmort)
   names(pm) <- c("sex", "CAL", "AGE", "haz")
 
-  BL <- list(FUT = seq(0, 10, 1/12))
-  eBL <- list(FUT = c(BL$FUT, seq(11,110,1/2)))
-  sm <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
-                 pophaz = pm, data = x,
-                 breaks = BL,
-                 e1.breaks = eBL)
+  BL <- list(FUT = seq(0, 10, 1 / 12))
+  eBL <- list(FUT = c(BL$FUT, seq(11, 110, 1 / 2)))
+  sm <- survmean(
+    Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
+    pophaz = pm,
+    data = x,
+    breaks = BL,
+    e1.breaks = eBL
+  )
 
   ## pure Ederer I curve
   setDT(x)
   x[, lex.dur := 110]
   setattr(x, "class", c("Lexis", "data.table", "data.frame"))
-  e1 <- comp_e1(x = x, breaks = eBL,
-                pophaz = pm, survScale = "FUT")
+  e1 <- comp_e1(x = x, breaks = eBL, pophaz = pm, survScale = "FUT")
   setkeyv(e1, "FUT")
   e1[, "delta" := diff(eBL$FUT)]
-  e1[, "l1" := c(1,surv.exp[-.N])]
-  sm.e1 <- e1[, sum((l1+surv.exp)/2L*delta)]
-
+  e1[, "l1" := c(1, surv.exp[-.N])]
+  sm.e1 <- e1[, sum((l1 + surv.exp) / 2L * delta)]
 
   testthat::expect_equal(sm$exp, sm.e1, tol = 0.0005, scale = 1)
-
 })
 
 testthat::test_that("survmean period method is useful", {
   testthat::skip_on_cran()
 
   sr <- data.table(popEpi::sire)[dg_date < ex_date, ]
-  sr$agegr <- cut(sr$dg_age, c(0,45,60,Inf), right=FALSE)
+  sr$agegr <- cut(sr$dg_age, c(0, 45, 60, Inf), right = FALSE)
 
-  x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
-             exit = list(CAL = get.yrs(ex_date)),
-             data = sr,
-             exit.status = factor(status, levels = 0:2,
-                                  labels = c("alive", "canD", "othD")),
-             entry.status = factor(0, levels = 0:2,
-                                   labels = c("alive", "canD", "othD")),
-             merge = TRUE)
+  x <- Lexis(
+    entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+    exit = list(CAL = get.yrs(ex_date)),
+    data = sr,
+    exit.status = factor(
+      status,
+      levels = 0:2,
+      labels = c("alive", "canD", "othD")
+    ),
+    entry.status = factor(0, levels = 0:2, labels = c("alive", "canD", "othD")),
+    merge = TRUE
+  )
 
   pm <- data.table(popEpi::popmort)
   names(pm) <- c("sex", "CAL", "AGE", "haz")
 
-  BL <- list(FUT = seq(0, 10, 1/12))
-  eBL <- list(FUT = c(BL$FUT, seq(max(BL$FUT),110,1/2)))
+  BL <- list(FUT = seq(0, 10, 1 / 12))
+  eBL <- list(FUT = c(BL$FUT, seq(max(BL$FUT), 110, 1 / 2)))
   eBL$FUT <- sort(unique(eBL$FUT))
-  sm <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
-                 subset = dg_date >= "1998-01-01" & dg_date < "2003-01-01",
-                 pophaz = pm, data = x,
-                 r = 1,
-                 breaks = BL,
-                 e1.breaks = eBL)
+  sm <- survmean(
+    Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
+    subset = dg_date >= "1998-01-01" & dg_date < "2003-01-01",
+    pophaz = pm,
+    data = x,
+    r = 1,
+    breaks = BL,
+    e1.breaks = eBL
+  )
 
-
-  BL <- list(FUT = seq(0, 5, 1/12), CAL = c(1998,2003))
-  eBL <- list(FUT = c(BL$FUT, seq(max(BL$FUT), 10, 1/12), seq(10,110,1/2)))
+  BL <- list(FUT = seq(0, 5, 1 / 12), CAL = c(1998, 2003))
+  eBL <- list(
+    FUT = c(BL$FUT, seq(max(BL$FUT), 10, 1 / 12), seq(10, 110, 1 / 2))
+  )
   eBL$FUT <- sort(unique(eBL$FUT))
-  smp <- survmean(Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
-                  pophaz = pm, data = x,
-                  breaks = BL,
-                  r = 1,
-                  e1.breaks = eBL)
-
-
+  smp <- survmean(
+    Surv(time = FUT, event = lex.Xst != "alive") ~ 1,
+    pophaz = pm,
+    data = x,
+    breaks = BL,
+    r = 1,
+    e1.breaks = eBL
+  )
 
   testthat::expect_equal(sm$obs, smp$obs)
   testthat::expect_equal(sm$exp, smp$exp)
   testthat::expect_equal(smp$est, 10.01542, tol = 0.0005, scale = 1)
   testthat::expect_equal(sm$est, 10.0216, tol = 0.0005, scale = 1)
-
 })
-
 
 
 testthat::test_that("Dates and frac. yrs produce congruent results", {
   testthat::skip_on_cran()
 
   x <- data.table(popEpi::sire)
-  x <- x[dg_date<ex_date]
+  x <- x[dg_date < ex_date]
 
   ## phony group variable
   set.seed(1L)
   x$group <- rbinom(nrow(x), 1, 0.5)
 
-
   ## yrs
-  xy <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
-              exit = list(CAL = get.yrs(ex_date)),
-              data = x,
-              exit.status = factor(status, levels = 0:2,
-                                   labels = c("alive", "canD", "othD")),
-              entry.status = factor(0, levels = 0:2,
-                                    labels = c("alive", "canD", "othD")),
-              merge = TRUE)
+  xy <- Lexis(
+    entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+    exit = list(CAL = get.yrs(ex_date)),
+    data = x,
+    exit.status = factor(
+      status,
+      levels = 0:2,
+      labels = c("alive", "canD", "othD")
+    ),
+    entry.status = factor(0, levels = 0:2, labels = c("alive", "canD", "othD")),
+    merge = TRUE
+  )
 
   ## dates
-  xd <- Lexis(entry = list(FUT = 0L, AGE = dg_date-bi_date, CAL = dg_date),
-              exit = list(CAL = ex_date),
-              data = x,
-              exit.status = factor(status, levels = 0:2,
-                                   labels = c("alive", "canD", "othD")),
-              entry.status = factor(0, levels = 0:2,
-                                    labels = c("alive", "canD", "othD")),
-              merge = TRUE)
+  xd <- Lexis(
+    entry = list(FUT = 0L, AGE = dg_date - bi_date, CAL = dg_date),
+    exit = list(CAL = ex_date),
+    data = x,
+    exit.status = factor(
+      status,
+      levels = 0:2,
+      labels = c("alive", "canD", "othD")
+    ),
+    entry.status = factor(0, levels = 0:2, labels = c("alive", "canD", "othD")),
+    merge = TRUE
+  )
   yd <- 365.242199
-  BLy <- list(FUT = seq(0, 9, 1/4))
+  BLy <- list(FUT = seq(0, 9, 1 / 4))
   BLd <- lapply(BLy, function(el) el * yd)
-  eBLy <- list(FUT = c(seq(0, 9, 1/4), 9.5, 10:75))
+  eBLy <- list(FUT = c(seq(0, 9, 1 / 4), 9.5, 10:75))
   eBLd <- lapply(eBLy, function(el) el * yd)
 
   pmy <- data.table(popEpi::popmort)
@@ -204,25 +235,35 @@ testthat::test_that("Dates and frac. yrs produce congruent results", {
   pmd <- data.table(pmy)
   pmd[, CAL := as.Date(paste0(CAL, "-01-01"))]
   pmd[, AGE := AGE * yd]
-  pmd[, haz := haz/yd]
+  pmd[, haz := haz / yd]
 
   #### hazard method
   ## observed survival & Ederer II
 
-  sty <- survmean(Surv(FUT, lex.Xst) ~ group, data = xy,
-                  surv.method = "hazard",
-                  e1.breaks = eBLy,
-                  breaks = BLy, pophaz = pmy)
+  sty <- survmean(
+    Surv(FUT, lex.Xst) ~ group,
+    data = xy,
+    surv.method = "hazard",
+    e1.breaks = eBLy,
+    breaks = BLy,
+    pophaz = pmy
+  )
 
-  std <- survmean(Surv(FUT, lex.Xst) ~ group, data = xd,
-                  surv.method = "hazard",
-                  e1.breaks = eBLd,
-                  breaks = BLd, pophaz = pmd)
+  std <- survmean(
+    Surv(FUT, lex.Xst) ~ group,
+    data = xd,
+    surv.method = "hazard",
+    e1.breaks = eBLd,
+    breaks = BLd,
+    pophaz = pmd
+  )
   cuy <- data.table(attributes(sty)$survmean.meta$curves)
   cud <- data.table(attributes(std)$survmean.meta$curves)
 
-  std[, c("est", "exp", "YPLL") := lapply(.SD, function(col) col/yd),
-      .SDcols = c("est", "exp", "YPLL")]
+  std[,
+    c("est", "exp", "YPLL") := lapply(.SD, function(col) col / yd),
+    .SDcols = c("est", "exp", "YPLL")
+  ]
 
   testthat::expect_equal(sty$est, std$est, scale = 1L, tolerance = 0.0005)
   testthat::expect_equal(sty$exp, std$exp, scale = 1L, tolerance = 0.001)
@@ -233,48 +274,57 @@ testthat::test_that("Dates and frac. yrs produce congruent results", {
   #### lifetable method
   ## observed survival & Ederer II
 
-  sty <- survmean(Surv(FUT, lex.Xst) ~ group, data = xy,
-                  surv.method = "lifetable",
-                  e1.breaks = eBLy,
-                  breaks = BLy, pophaz = pmy)
+  sty <- survmean(
+    Surv(FUT, lex.Xst) ~ group,
+    data = xy,
+    surv.method = "lifetable",
+    e1.breaks = eBLy,
+    breaks = BLy,
+    pophaz = pmy
+  )
 
-  std <- survmean(Surv(FUT, lex.Xst) ~ group, data = xd,
-                  surv.method = "lifetable",
-                  e1.breaks = eBLd,
-                  breaks = BLd, pophaz = pmd)
+  std <- survmean(
+    Surv(FUT, lex.Xst) ~ group,
+    data = xd,
+    surv.method = "lifetable",
+    e1.breaks = eBLd,
+    breaks = BLd,
+    pophaz = pmd
+  )
   cuy <- data.table(attributes(sty)$survmean.meta$curves)
   cud <- data.table(attributes(std)$survmean.meta$curves)
 
-  std[, c("est", "exp", "YPLL") := lapply(.SD, function(col) col/yd),
-      .SDcols = c("est", "exp", "YPLL")]
+  std[,
+    c("est", "exp", "YPLL") := lapply(.SD, function(col) col / yd),
+    .SDcols = c("est", "exp", "YPLL")
+  ]
 
   testthat::expect_equal(sty$est, std$est, scale = 1L, tolerance = 0.0005)
   testthat::expect_equal(sty$exp, std$exp, scale = 1L, tolerance = 0.001)
   testthat::expect_equal(sty$obs, std$obs)
 
   testthat::expect_equal(cuy$surv, cud$surv, scale = 1L, tolerance = 0.00005)
-
-
 })
 
 
-
-
 testthat::test_that("updating works for survmean objects", {
-
   testthat::skip_on_cran()
 
   set.seed(1)
   sr <- setDT(popEpi::sire[sample(1:.N, 100), ])
 
-  x <- Lexis(entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
-             exit = list(CAL = get.yrs(ex_date)),
-             data = sr,
-             exit.status = factor(status, levels = 0:2,
-                                  labels = c("alive", "canD", "othD")),
-             entry.status = factor(0, levels = 0:2,
-                                   labels = c("alive", "canD", "othD")),
-             merge = TRUE)
+  x <- Lexis(
+    entry = list(FUT = 0, AGE = dg_age, CAL = get.yrs(dg_date)),
+    exit = list(CAL = get.yrs(ex_date)),
+    data = sr,
+    exit.status = factor(
+      status,
+      levels = 0:2,
+      labels = c("alive", "canD", "othD")
+    ),
+    entry.status = factor(0, levels = 0:2, labels = c("alive", "canD", "othD")),
+    merge = TRUE
+  )
 
   pm <- data.table(popEpi::popmort)
   names(pm) <- c("sex", "CAL", "AGE", "haz")
@@ -282,20 +332,17 @@ testthat::test_that("updating works for survmean objects", {
   BL <- list(FUT = 1:10)
   fo <- Surv(time = FUT, event = lex.Xst != "alive") ~ 1
   e <- quote(
-    survmean(formula = fo, data = x, breaks = BL,pophaz = pm)
+    survmean(formula = fo, data = x, breaks = BL, pophaz = pm)
   )
   sm <- eval(e)
 
-  fo <- update(fo, ~.+sex)
+  fo <- update(fo, ~ . + sex)
   sm2 <- eval(e)
 
-  sm3 <- update(sm, .~ + sex)
+  sm3 <- update(sm, . ~ +sex)
 
   testthat::expect_equal(data.frame(sm2), data.frame(sm3))
   testthat::expect_equal(formula(sm2), fo)
   testthat::expect_equal(formula(sm3), fo)
   testthat::expect_equal(getCall(sm2), e)
-
 })
-
-
