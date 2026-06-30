@@ -30,7 +30,8 @@ usethis::use_data(
   lexis_split_column_expr_list__,
   lexis_aggre_expr_table__,
   lexis_aggre_expr_list__,
-  internal = TRUE, overwrite = TRUE
+  internal = TRUE,
+  overwrite = TRUE
 )
 system2("git", c("add", "--all"))
 system2("git", c("commit", "-m", "\"feat: run dev/01_data.r\""))
