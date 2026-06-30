@@ -8,10 +8,11 @@ message(
 readline(": ")
 
 ## rhub ------------------------------------------------------------------------
-message(
-  "Browse to https://github.com/FinnishCancerRegistry/popEpi/actions",
-  "and run the action 'R-hub'. Press enter when you have done that."
-)
+# if this does not work, see rhub::rhub_doctor
+rhub::rhub_check(platforms = c("linux", "windows", "macos"))
+message("The above triggered checks on Github's servers. See the actions page ",
+        "of the repository to see the results. ",
+        "Press enter to confirm that you understand.")
 readline(": ")
 
 ## cran-comments.md ------------------------------------------------------------
