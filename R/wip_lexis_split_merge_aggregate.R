@@ -852,7 +852,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
         out_i <- out[
           i = aggre_by_i,
           on = names(aggre_by_i),
-          #§ @importFrom data.table .SD
+          #' @importFrom data.table .SD
           j = .SD,
           nomatch = 0L
         ]
@@ -896,14 +896,14 @@ lexis_split_merge_aggregate_by_stratum <- function(
     # and that leads to e.g. ts_cal_id being the same for every period.
     lapply(names(breaks), function(ts_col_nm) {
       out[
-        #§ @importFrom data.table := .GRP
+        #' @importFrom data.table := .GRP
         j = (paste0(ts_col_nm, "_id")) := .GRP,
         by = eval(paste0(ts_col_nm, "_", c("start", "stop")))
       ]
       NULL
     })
     out[
-      #§ @importFrom data.table := .GRP
+      #' @importFrom data.table := .GRP
       j = "box_id" := .GRP,
       by = eval(paste0(names(breaks), "_id"))
     ]

@@ -109,7 +109,7 @@ surv_brenner_weight_dt <- function(
   )
   weight_dt[
     i = is.na(weight_dt[["weight_observed"]]),
-    #§ @importFrom data.table :=
+    #' @importFrom data.table :=
     j = "weight_observed" := 0L
   ]
   data.table::set(
@@ -192,13 +192,13 @@ surv_brenner_weight_dt <- function(
         collapse_stratum_col_nms
       )
       weight_dt[
-        #§ @importFrom data.table := .SD
+        #' @importFrom data.table := .SD
         j = c("weight_standard", "weight_observed") := {
           sub_dt <- data.table::setDT(as.list(.SD)[
             c(collapse_stratum_col_nms, "weight_standard", "weight_observed")
           ])
           sub_dt[
-            #§ @importFrom data.table := .GRP
+            #' @importFrom data.table := .GRP
             j = "collapse_stratum_start" := .GRP,
             by = eval(collapse_stratum_col_nms)
           ]
@@ -233,7 +233,7 @@ surv_brenner_weight_dt <- function(
           )
           collapsed_dt[
             i = sub_dt[["__collapsed_stratum_id__"]],
-            #§ @importFrom data.table .SD
+            #' @importFrom data.table .SD
             j = .SD,
             .SDcols = c("weight_standard", "weight_observed")
           ]
@@ -418,9 +418,9 @@ surv_individual_weights <- function(
     observed_weight_dt <- dt[
       i = standard_weight_dt,
       on = stratum_col_nms,
-      #§ @importFrom data.table .N
+      #' @importFrom data.table .N
       j = list(weight = .N),
-      #§ @importFrom data.table .EACHI
+      #' @importFrom data.table .EACHI
       keyby = .EACHI
     ]
   }

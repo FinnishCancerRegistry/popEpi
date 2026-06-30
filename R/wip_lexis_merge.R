@@ -475,7 +475,7 @@ lexis_merge <- function(
   join_result <- merge_dt[
     i = join_dt,
     on = names(join_dt),
-    #§ @importFrom data.table .SD
+    #' @importFrom data.table .SD
     j = .SD,
     .SDcols = merge_value_col_nms
   ]

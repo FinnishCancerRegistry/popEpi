@@ -288,7 +288,7 @@ prev_lexis <- function(
                     n_interpolate <- 1001L
                     ts_fut_interpolation_breaks <- seq(
                       0.0,
-                      #§ @importFrom data.table .SD
+                      #' @importFrom data.table .SD
                       max(.SD[[ts_fut_stop_col_nm]]),
                       length.out = n_interpolate
                     )

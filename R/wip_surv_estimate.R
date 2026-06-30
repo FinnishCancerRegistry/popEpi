@@ -48,7 +48,7 @@ surv_pohar_perme_weight__ <- function(
       value = work_dt[["expected_hazard"]] * work_dt[["lex.dur"]]
     )
     work_dt[
-      #§ @importFrom data.table := .SD
+      #' @importFrom data.table := .SD
       j = "H*(t_{i,j,k})" := lapply(.SD, cumsum),
       .SDcols = "H*(t_{i,j,k})",
       by = "lex.id"
@@ -120,7 +120,7 @@ surv_pohar_perme_weight__ <- function(
       value = work_dt[["lex.dur"]] * work_dt[["expected_hazard"]]
     )
     work_dt <- work_dt[
-      #§ @importFrom data.table .SD
+      #' @importFrom data.table .SD
       j = lapply(.SD, sum),
       .SDcols = c("h*_{i,j}", "lex.dur"),
       by = c("lex.id", "survival_interval_id")
@@ -141,7 +141,7 @@ surv_pohar_perme_weight__ <- function(
         {
           rep(
             lexis[[ts_fut_col_nm]][!duplicated(lexis, by = "lex.id")],
-            #§ @importFrom data.table .N
+            #' @importFrom data.table .N
             times = work_dt[j = list(n = .N), by = "lex.id"][["n"]]
           )
         },
@@ -173,7 +173,7 @@ surv_pohar_perme_weight__ <- function(
       value = work_dt[["h*_{i,j}"]] * work_dt[["l_{i,j}"]]
     )
     work_dt[
-      #§ @importFrom data.table := .SD
+      #' @importFrom data.table := .SD
       j = "H*(t_{i,j})" := lapply(.SD, cumsum),
       .SDcols = "H*(t_{i,j})",
       by = "lex.id"
@@ -217,7 +217,7 @@ surv_pohar_perme_weight__ <- function(
     work_dt <- work_dt[
       i = join_dt,
       on = c("lex.id", "survival_interval_id"),
-      #§ @importFrom data.table .SD
+      #' @importFrom data.table .SD
       j = .SD,
       .SDcols = "pp_weight"
     ]
@@ -704,7 +704,7 @@ surv_estimate <- function(
       # @codedoc_comment_block popEpi::surv_estimate::estimators
       add_col_nm <- sprintf("%s_%s", user_estimator_name, element_name)
       out[
-        #§ @importFrom data.table := .SD
+        #' @importFrom data.table := .SD
         j = (add_col_nm) := eval(
           estimator_dt[["expression_set"]][[i]][[element_name]],
           envir = .SD,
@@ -798,16 +798,16 @@ surv_estimate <- function(
     )
     if (length(value_col_nms) > 0) {
       sum_dt <- out[
-        #§ @importFrom data.table .SD
+        #' @importFrom data.table .SD
         j = lapply(.SD, sum),
         .SDcols = value_col_nms,
-        #§ @importFrom data.table .EACHI
+        #' @importFrom data.table .EACHI
         keyby = eval(nonsum_col_nms)
       ]
     } else {
       sum_dt <- out[
         i = !duplicated(out, by = nonsum_col_nms),
-        #§ @importFrom data.table .SD
+        #' @importFrom data.table .SD
         j = .SD,
         .SDcols = eval(nonsum_col_nms)
       ]
@@ -999,7 +999,7 @@ surv_lexis_S_exp_e1_ch_mean <- function(
         # interval,i.e. H(t_i|t_{i-1}), per subject & interval
         data.table::setkeyv(e1dt, c("lex.id", "box_id"))
         e1dt[
-          #§ @importFrom data.table := .SD
+          #' @importFrom data.table := .SD
           j = "e1" := lapply(.SD, cumsum),
           .SDcols = "e1",
           by = "lex.id"
@@ -1049,7 +1049,7 @@ surv_lexis_S_exp_e1_ch_mean <- function(
   # )
   # data.table::setkeyv(e1dt, c("lex.id", "box_id"))
   # e1dt[
-  #   #§ @importFrom data.table := .SD
+  #   #' @importFrom data.table := .SD
   #   j = "e1" := lapply(.SD, cumsum),
   #   .SDcols = "e1",
   #   by = "lex.id"
@@ -1067,7 +1067,7 @@ surv_lexis_S_exp_e1_ch_mean <- function(
   #   value = e1dt[["e1"]] * e1dt[["w"]]
   # )
   # e1dt <- e1dt[
-  #   #§ @importFrom data.table .SD
+  #   #' @importFrom data.table .SD
   #   j = lapply(.SD, sum),
   #   .SDcols = "e1",
   #   keyby = "box_id"
@@ -1251,7 +1251,7 @@ surv_collapse_1d <- function(
     by = ts_id_col_nm
   ]
   dt <- dt[
-    #§ @importFrom data.table .SD
+    #' @importFrom data.table .SD
     j = lapply(.SD, sum, na.rm = TRUE),
     .SDcols = value_col_nms,
     keyby = setdiff(names(dt), value_col_nms)
@@ -1381,7 +1381,7 @@ surv_collapse_strata_list <- function(
   if (length(noncollapse_stratum_col_nms) > 0) {
     return(dt[
       j = surv_collapse_strata_list(
-        #§ @importFrom data.table .SD
+        #' @importFrom data.table .SD
         dt = .SD,
         stratum_col_nms = collapse_stratum_col_nms,
         collapse_stratum_col_nms = collapse_stratum_col_nms,
@@ -1545,7 +1545,7 @@ surv_collapse_strata_1d <- function(
     value = as.character(join_dt[["new"]])
   )
   join_dt[
-    #§ @importFrom data.table := .SD
+    #' @importFrom data.table := .SD
     j = "new" := paste0(.SD[["old"]], collapse = " & "),
     .SDcols = "old",
     by = "new"
@@ -1568,7 +1568,7 @@ surv_collapse_strata_1d <- function(
     ))
   )
   out <- out[
-    #§ @importFrom data.table .SD
+    #' @importFrom data.table .SD
     j = lapply(.SD, sum),
     .SDcols = cl[["value_col_nms"]],
     keyby = eval(setdiff(names(out), cl[["value_col_nms"]]))
