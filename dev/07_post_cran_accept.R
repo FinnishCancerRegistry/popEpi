@@ -11,3 +11,5 @@ du$git_exe_cmd(c("checkout", git_ref))
 du$git_exe_cmd(c("tag", sprintf("v%s", cran_version)))
 du$git_exe_cmd(c("checkout", "master"))
 du$git_exe_cmd(c("push", "--tags", "--force"))
+
+message("Bump the development version & git commit. Press enter to confirm.")
