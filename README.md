@@ -86,7 +86,7 @@ One can make use of the `sir` function to estimate indirectly
 standardised incidence or mortality ratios (SIRs/SMRs). The data can be
 aggregated by `lexpand` or by other means. While `sir` is simple and
 flexible in itself, one may also use `sirspline` to fit spline functions
-for the effect of e.g. age as a continuous variable on SIRs.
+for the effect of e.g. age as a continuous variable on SIRs.
 
 ``` r
 data(popmort)

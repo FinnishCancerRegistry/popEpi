@@ -22,7 +22,7 @@ Removed support for `date` objects. Use base R `Date` objects or
 
 ## News for version 0.4.10
 
--   No changes for user — “Suggests” packages now used conditionally in
+-   No changes for user --- Suggests packages now used conditionally in
     vignettes/tests/examples as per Writing R Extensions.
 
 ## News for version 0.4.9
@@ -34,8 +34,8 @@ Removed support for `date` objects. Use base R `Date` objects or
 ## News for version 0.4.8
 
 -   small internal fixes due to upcoming new package survival release
--   popEpi now includes a wrapper for survival::Surv, so you don’t need
-    to do library(“survival”) when using Surv() in formulae (e.g. in
+-   popEpi now includes a wrapper for survival::Surv, so you don't need
+    to do library("survival") when using Surv() in formulae (e.g. in
     survtab)
 
 ## News for version 0.4.7
@@ -54,7 +54,7 @@ Removed support for `date` objects. Use base R `Date` objects or
 ## News for version 0.4.4
 
 -   splitLexisDT/splitMulti bug fix: splitting along multiple time
-    scales *sometimes* produced duplicate transitions (e.g. alive -\>
+    scales *sometimes* produced duplicate transitions (e.g. alive -\>
     dead in the last two rows). see
     <https://github.com/FinnishCancerRegistry/popEpi/issues/138> for
     details.
@@ -73,7 +73,7 @@ Removed support for `date` objects. Use base R `Date` objects or
 ## News for version 0.4.2
 
 -   **`survtab()` bug fix: standard errors were mis-specified for
-    adjusted curves, e.g. age-adjusted Ederer II estimates. This
+    adjusted curves, e.g. age-adjusted Ederer II estimates. This
     resulted in too wide confidence intervals! SEE HERE FOR EXAMPLE:
     [#135](https://github.com/FinnishCancerRegistry/popEpi/issues/135)**.
     The standard errors and confidence intervals of non-adjusted curves
@@ -102,7 +102,7 @@ Removed support for `date` objects. Use base R `Date` objects or
 -   removed previously deprecated shift.var (#35)
 -   popEpi no longer depends on package data.table but imports it - this
     means the user will have to do library(data.table) separately to
-    make data.table’s functions become usable. Formerly popEpi
+    make data.table's functions become usable. Formerly popEpi
     effectively did library(data.table) when you did library(popEpi).
 -   summary.survtab: args t and q behaviour changed
 -   survtab: internal weights now based on counts of subjects in
@@ -189,7 +189,7 @@ st <- survtab(Surv(FUT, event = lex.Xst) ~ cancer + adjust(agegr),
 
 ### Rates
 
-The new `rate` function enables easy calculation of e.g. standardized
+The new `rate` function enables easy calculation of e.g. standardized
 incidence rates:
 
 ``` r

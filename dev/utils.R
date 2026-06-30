@@ -1,3 +1,12 @@
+ask_yn <- function(...) {
+  message(..., " [y/n]")
+  a <- "x"
+  while (!a %in% c("y", "n")) {
+    a <- tolower(readline(": "))
+  }
+  return(a == "y")
+}
+
 git_exe_cmd <- function(args, system2.arg.list = NULL) {
   stdout_file_path <- tempfile()
   stderr_file_path <- tempfile()
