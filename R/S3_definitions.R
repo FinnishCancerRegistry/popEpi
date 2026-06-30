@@ -166,6 +166,11 @@ print.sirspline <- function(x, ...) {
 #'
 #'
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' \donttest{
 #' # Plot SIR estimates
 #'# plot(sir.by.gender, col = c(4,2), log=FALSE, eps=0.2, lty=1, lwd=2, pch=19,
@@ -892,6 +897,11 @@ print.survtab <- function(x, subset = NULL, ...) {
 #' \doi{10.1016/B978-0-12-801238-3.02745-8}
 #'
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' library(Epi)
 #'
@@ -1241,6 +1251,11 @@ prep_plot_survtab <- function(
 #' @param ... additional arguments passed on to `plot` and
 #' `lines.survtab`; e.g. `ylim` can be defined this way
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' data(sire)
 #' data(sibr)
 #' si <- rbind(sire, sibr)
@@ -1371,6 +1386,11 @@ plot.survtab <- function(
 #' @param ... additional arguments passed on to to a `matlines` call;
 #' e.g. `lwd` can be defined this way
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' data(sire)
 #' data(sibr)
 #' si <- rbind(sire, sibr)

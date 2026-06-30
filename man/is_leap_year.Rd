@@ -17,6 +17,11 @@ Given a vector or column of year values (numeric or integer), \verb{[is_leap_yea
 of logical indicators, i.e. a vector where corresponding leap years have value TRUE, and FALSE otherwise.
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN requirement at submission to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 ## can be used to assign new columns easily, e.g. a dummy indicator column
 df <- data.frame(yrs=c(1900,1904,2005,1995))
 df$lyd <- as.integer(is_leap_year(df$yrs))

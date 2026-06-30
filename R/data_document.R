@@ -76,6 +76,11 @@ NULL
 #' @family popEpi data
 #' @family weights
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' ## aggregate weights to a subset of age groups
 #' data(ICSS)
 #' cut <- c(0, 30, 50, 70, Inf)

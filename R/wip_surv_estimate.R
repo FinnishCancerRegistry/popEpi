@@ -451,10 +451,6 @@ surv_estimate <- function(
   conf_methods = "log",
   conf_lvls = 0.95
 ) {
-  # @codedoc_comment_block news("popEpi::surv_estimate", "2026-02-03", "0.5.0")
-  # New function `surv_estimate` for estimating arbitrary survival time
-  # functions using aggregated data.
-  # @codedoc_comment_block news("popEpi::surv_estimate", "2026-02-03", "0.5.0")
   #§ @param dt `[data.table]` (no default)
   #'
   #§ Dataset containing aggregate statistics

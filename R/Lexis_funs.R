@@ -22,6 +22,11 @@ NULL
 #' and arguments to `[Epi::Lexis]`
 #' @param ... arguments passed to `[Epi::Lexis]`
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' # popEpi::Lexis_fpa
 #' data("sire", package = "popEpi")
@@ -161,6 +166,11 @@ Lexis_fpa <- function(
 
 #' @eval codedoc::pkg_doc_fun("popEpi::Lexis_dt", "lexis_funs")
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' # popEpi::Lexis_dt
 #' lex_1 <- popEpi::Lexis_dt(

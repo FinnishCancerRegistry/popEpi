@@ -109,6 +109,11 @@
 #'
 #'
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' ## see more examples with explanations in vignette("survtab_examples")
 #'
 #' #### survtab_ag usage

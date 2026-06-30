@@ -25,6 +25,11 @@
 #' This function is called for its side effects.
 #' @export setaggre
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' df <- data.frame(sex = rep(c("male", "female"), each = 5),
 #'                  obs = rpois(10, rep(7,5, each=5)),
 #'                  pyrs = rpois(10, lambda = 10000))
@@ -76,6 +81,11 @@ setaggre <- function(x, values = NULL, by = NULL, breaks = NULL) {
 #'
 #'
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' library("data.table")
 #' df <- data.frame(sex = rep(c("male", "female"), each = 5),
 #'                  obs = rpois(10, rep(7,5, each=5)),
@@ -264,6 +274,11 @@ as.aggre.default <- function(x, ...) {
 #'
 #'
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' ## form a Lexis object
 #' library(Epi)

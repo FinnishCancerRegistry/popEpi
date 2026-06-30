@@ -134,6 +134,11 @@
 
 #'
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' data(popmort)
 #' data(sire)
 #' c <- lexpand( sire, status = status, birth = bi_date, exit = ex_date, entry = dg_date,
@@ -402,7 +407,12 @@ sir <- function(
 #' @import splines
 #' @import stats
 #'
-#' @examples \donttest{
+#' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L) \donttest{
 #' ## for examples see: vignette('sir')
 #' }
 
@@ -1484,6 +1494,11 @@ confint.sir <- function(
 #' @return A sir object
 #'
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' \donttest{
 #' BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))

@@ -48,6 +48,11 @@ Note that dates are effectively converted to fractional years at
 \code{get.yrs("2000-01-02") = 2000 + 1/365.242199}.
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN requirement at submission to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 data("sire")
 sire$dg_yrs <- get.yrs(sire$dg_date)

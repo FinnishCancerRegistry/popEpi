@@ -44,6 +44,11 @@
 #' A numeric vector of fractional years.
 #'
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' data("sire")
 #' sire$dg_yrs <- get.yrs(sire$dg_date)
@@ -111,6 +116,11 @@ as.yrs.default <- function(x, year.length = "approx", ...) {
 #' to `Date` will not be perfect there. With `year.length = "actual"`
 #' the original values are perfectly retrieved.
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' data("sire", package = "popEpi")
 #'
 #' ## approximate year lengths: here 20 % have an extra day added

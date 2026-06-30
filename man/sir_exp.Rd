@@ -77,6 +77,11 @@ state in \code{lex.Str} as \code{0} and all other as \code{1}. No missing values
 is allowed in observed, pop.haz or person-years.
 }
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN requirement at submission to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 \donttest{
 BL <- list(fot = 0:5, per = c("2003-01-01","2008-01-01", "2013-01-01"))

@@ -51,6 +51,11 @@ if no class-specific method found)
 
 }}
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN requirement at submission to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 library("data.table")
 df <- data.frame(sex = rep(c("male", "female"), each = 5),
                  obs = rpois(10, rep(7,5, each=5)),

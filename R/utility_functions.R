@@ -29,6 +29,11 @@
 #' A `data.table` just like `[data.table::dcast]`.
 #'
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' library("data.table")
 #' ## e.g. silly counts from a long-format table to a wide format
 #' test <- data.table::copy(popEpi::sire)
@@ -175,6 +180,11 @@ na2zero = function(DT, vars = NULL) {
 #' @source
 #' \href{https://stackoverflow.com/questions/3418128/how-to-convert-a-factor-to-an-integer-numeric-without-a-loss-of-information}{Stackoverflow thread}
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' ## this is often not intended
 #' as.numeric(factor(c(5,7))) ## result: c(1,2)
 #' ## but this
@@ -202,6 +212,11 @@ fac2num <- function(x) {
 #'
 #' @param years a vector or column of year values (numeric or integer)
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' ## can be used to assign new columns easily, e.g. a dummy indicator column
 #' df <- data.frame(yrs=c(1900,1904,2005,1995))
 #' df$lyd <- as.integer(is_leap_year(df$yrs))
@@ -264,6 +279,11 @@ is.Date <- function(obj) {
 #' @note
 #' Returns `NULL` if given `num.values` is `NULL`.
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' ## this works
 #' values <- c("1", "3", "5")
 #' values <- robust_values(values)
@@ -419,6 +439,11 @@ lower_bound <- function(cut) {
 #' If `factor = TRUE`, returns a character vector; else returns a numeric
 #' vector.
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #' cut_bound("[1900, 1910)") ## "1900-1909"
 
 cut_bound <- function(t, factor = TRUE) {
@@ -539,6 +564,11 @@ try2int <- function(obj, tol = .Machine$double.eps^0.5) {
 #'
 #'
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN requirement at submission to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' poisson.ci(x = 4, pt = 5, conf.level = 0.95)
 #' @return
