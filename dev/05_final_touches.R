@@ -13,9 +13,6 @@ if (du$ask_yn("Is README.Rmd up-to-date?")) {
     message = "docs: render README.Rmd"
   )
 }
-if (!du$ask_yn("Have you bumped the version number?")) {
-  stop("bump it manually in DESCRIPTION")
-}
 if (!du$ask_yn("Do you have a news item in NEWS.md for the release?")) {
   stop("fix NEWS.md")
 }

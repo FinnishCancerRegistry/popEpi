@@ -5,6 +5,6 @@
 # if the PDF manual fails to build, that is almost certainly a problem
 # of the system you are using and not this R package.
 
-chk <- devtools::check()
+chk <- devtools::check(remote = TRUE)
 
-rdchk <- revdepcheck::revdep_check(bioc = FALSE)
+rdchk <- revdepcheck::revdep_check(bioc = FALSE, num_workers = 4L)
