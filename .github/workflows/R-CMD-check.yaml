@@ -2,8 +2,31 @@
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   push:
-    branches: [main, master]
+    branches:
+      - 'master'
+      - 'main'
+    paths-ignore:
+      - '.github'
+      - 'dev/**'
+      - 'data-raw/**'
+      - 'man-roxygen/**'
+      - 'cran-comments.md'
+      - 'NEWS_OLD.md'
+      - 'README.md'
+      - 'README.Rmd'
   pull_request:
+    branches:
+      - 'master'
+      - 'main'
+    paths-ignore:
+      - '.github'
+      - 'dev/**'
+      - 'data-raw/**'
+      - 'man-roxygen/**'
+      - 'cran-comments.md'
+      - 'NEWS_OLD.md'
+      - 'README.md'
+      - 'README.Rmd'
 
 name: R-CMD-check.yaml
 
