@@ -33,6 +33,7 @@ local({
 # I found that only the "classic" PAT works.
 # If you still struggle, you can trigger this manually on the actions page
 # of the github repo.
+system2("git", "push")
 rhub::rhub_check(platforms = c("linux", "windows", "macos"))
 message(
   "The above triggered checks on Github's servers. See the actions page ",
