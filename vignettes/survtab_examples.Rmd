@@ -14,6 +14,14 @@ vignette: >
   %\usepackage[utf8]{inputenc}
 ---
 
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
+```
+
 # Overview
   
 This vignette aims to clarify the usage of the `survtab_ag` and `survtab` functions included in this package. `survtab_ag` estimates various survival functions and cumulative incidence functions (CIFs) non-parametrically using aggregated data, and `survtab` is a wrapper for `survtab_ag`, to which `Lexis` data is supplied. 
