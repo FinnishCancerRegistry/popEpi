@@ -30,7 +30,7 @@
 #'
 #' @examples
 #' # this data.table::setDTthreads call is included here only to
-#' # conform to the CRAN requirement at submission to only use at most 2
+#' # conform to the CRAN submission requirement to only use at most 2
 #' # threads. you do not need to set this to use popEpi.
 #' # however some long calculations may benefit from using more threads.
 #' data.table::setDTthreads(2L)
@@ -181,7 +181,7 @@ na2zero = function(DT, vars = NULL) {
 #' \href{https://stackoverflow.com/questions/3418128/how-to-convert-a-factor-to-an-integer-numeric-without-a-loss-of-information}{Stackoverflow thread}
 #' @examples
 #' # this data.table::setDTthreads call is included here only to
-#' # conform to the CRAN requirement at submission to only use at most 2
+#' # conform to the CRAN submission requirement to only use at most 2
 #' # threads. you do not need to set this to use popEpi.
 #' # however some long calculations may benefit from using more threads.
 #' data.table::setDTthreads(2L)
@@ -213,7 +213,7 @@ fac2num <- function(x) {
 #' @param years a vector or column of year values (numeric or integer)
 #' @examples
 #' # this data.table::setDTthreads call is included here only to
-#' # conform to the CRAN requirement at submission to only use at most 2
+#' # conform to the CRAN submission requirement to only use at most 2
 #' # threads. you do not need to set this to use popEpi.
 #' # however some long calculations may benefit from using more threads.
 #' data.table::setDTthreads(2L)
@@ -280,7 +280,7 @@ is.Date <- function(obj) {
 #' Returns `NULL` if given `num.values` is `NULL`.
 #' @examples
 #' # this data.table::setDTthreads call is included here only to
-#' # conform to the CRAN requirement at submission to only use at most 2
+#' # conform to the CRAN submission requirement to only use at most 2
 #' # threads. you do not need to set this to use popEpi.
 #' # however some long calculations may benefit from using more threads.
 #' data.table::setDTthreads(2L)
@@ -440,7 +440,7 @@ lower_bound <- function(cut) {
 #' vector.
 #' @examples
 #' # this data.table::setDTthreads call is included here only to
-#' # conform to the CRAN requirement at submission to only use at most 2
+#' # conform to the CRAN submission requirement to only use at most 2
 #' # threads. you do not need to set this to use popEpi.
 #' # however some long calculations may benefit from using more threads.
 #' data.table::setDTthreads(2L)
@@ -565,7 +565,7 @@ try2int <- function(obj, tol = .Machine$double.eps^0.5) {
 #'
 #' @examples
 #' # this data.table::setDTthreads call is included here only to
-#' # conform to the CRAN requirement at submission to only use at most 2
+#' # conform to the CRAN submission requirement to only use at most 2
 #' # threads. you do not need to set this to use popEpi.
 #' # however some long calculations may benefit from using more threads.
 #' data.table::setDTthreads(2L)

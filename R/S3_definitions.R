@@ -167,7 +167,7 @@ print.sirspline <- function(x, ...) {
 #'
 #' @examples
 #' # this data.table::setDTthreads call is included here only to
-#' # conform to the CRAN requirement at submission to only use at most 2
+#' # conform to the CRAN submission requirement to only use at most 2
 #' # threads. you do not need to set this to use popEpi.
 #' # however some long calculations may benefit from using more threads.
 #' data.table::setDTthreads(2L)
@@ -898,7 +898,7 @@ print.survtab <- function(x, subset = NULL, ...) {
 #'
 #' @examples
 #' # this data.table::setDTthreads call is included here only to
-#' # conform to the CRAN requirement at submission to only use at most 2
+#' # conform to the CRAN submission requirement to only use at most 2
 #' # threads. you do not need to set this to use popEpi.
 #' # however some long calculations may benefit from using more threads.
 #' data.table::setDTthreads(2L)
@@ -1252,7 +1252,7 @@ prep_plot_survtab <- function(
 #' `lines.survtab`; e.g. `ylim` can be defined this way
 #' @examples
 #' # this data.table::setDTthreads call is included here only to
-#' # conform to the CRAN requirement at submission to only use at most 2
+#' # conform to the CRAN submission requirement to only use at most 2
 #' # threads. you do not need to set this to use popEpi.
 #' # however some long calculations may benefit from using more threads.
 #' data.table::setDTthreads(2L)
@@ -1387,7 +1387,7 @@ plot.survtab <- function(
 #' e.g. `lwd` can be defined this way
 #' @examples
 #' # this data.table::setDTthreads call is included here only to
-#' # conform to the CRAN requirement at submission to only use at most 2
+#' # conform to the CRAN submission requirement to only use at most 2
 #' # threads. you do not need to set this to use popEpi.
 #' # however some long calculations may benefit from using more threads.
 #' data.table::setDTthreads(2L)
