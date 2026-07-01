@@ -16,6 +16,9 @@ if (du$ask_yn("Is README.Rmd up-to-date?")) {
 if (!du$ask_yn("Do you have a news item in NEWS.md for the release?")) {
   stop("fix NEWS.md")
 }
-if (!du$ask_yn("Have updated cran-comments.md?")) {
+if (!du$ask_yn("Have you updated cran-comments.md?")) {
   stop("fix cran-comments.md")
+}
+if (!du$ask_yn("Have you bumped the package version?")) {
+  stop("Bump package version (with e.g. desc::desc_bump_version or manually)")
 }
