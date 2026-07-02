@@ -6,7 +6,7 @@ on:
       - 'master'
       - 'main'
     paths-ignore:
-      - '.github'
+      - '.github/**'
       - 'dev/**'
       - 'data-raw/**'
       - 'man-roxygen/**'
@@ -19,7 +19,7 @@ on:
       - 'master'
       - 'main'
     paths-ignore:
-      - '.github'
+      - '.github/**'
       - 'dev/**'
       - 'data-raw/**'
       - 'man-roxygen/**'
