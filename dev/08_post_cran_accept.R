@@ -20,3 +20,4 @@ du$git_exe_cmd(c(
   sprintf("\"build: v%s\"", desc::desc_get_version())
 ))
 message("Bumped to development version ", desc::desc_get_version())
+du$git_exe_cmd("push")
