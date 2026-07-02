@@ -174,91 +174,91 @@ lexis_merge_make_harmoniser__ <- function(
   return(out)
 }
 
-#§ @title Merge Data into `Lexis` Object
-#§ @description
-#§ Function(s) to merge data into `Lexis` objects intelligently when merging
-#§ is (partially) based on time scales.
-#§ @name lexis_merge
-#§ @family Lexis_functions
+#' @title Merge Data into `Lexis` Object
+#' @description
+#' Function(s) to merge data into `Lexis` objects intelligently when merging
+#' is (partially) based on time scales.
+#' @name lexis_merge
+#' @family Lexis_functions
 NULL
 
-#§ @eval codedoc::pkg_doc_fun(
-#§   "popEpi::lexis_merge",
-#§   "lexis_merge"
-#§ )
-#§ @examples
-#§ # popEpi::lexis_merge
-#§ lexis <- Epi::Lexis(
-#§   entry = list(ts_fut = 0.0, ts_cal = 2010.3, ts_age = 56.8),
-#§   exit = list(ts_cal = 2024.9999),
-#§   entry.status = 0L,
-#§   exit.status = 0L
-#§ )
-#§ lexis$sex <- 0L
-#§ lexis <- popEpi::splitMulti(
-#§   data = lexis,
-#§   breaks = list(ts_fut = seq(0, 3, 1 / 12))
-#§ )
-#§ my_merge_dt <- data.table::CJ(sex = 0:1, ts_age = 0:100, ts_cal = 2000:2025)
-#§ data.table::set(
-#§   x = my_merge_dt,
-#§   j = "merge_value",
-#§   value = runif(nrow(my_merge_dt))
-#§ )
-#§ # lexis is also a data.table and is modified in-place. no need to keep
-#§ # output of popEpi::lexis_merge call.
-#§ popEpi::lexis_merge(
-#§   lexis = lexis,
-#§   merge_dt = my_merge_dt,
-#§   merge_dt_by = c("sex", "ts_age", "ts_cal")
-#§ )
-#§ stopifnot(
-#§   "merge_value" %in% names(lexis),
-#§   !is.na(lexis[["merge_value"]])
-#§ )
-#§ data.table::set(
-#§   x = lexis,
-#§   j = "merge_value",
-#§   value = NULL
-#§ )
-#§ popEpi::lexis_merge(
-#§   lexis = lexis,
-#§   merge_dt = my_merge_dt,
-#§   merge_dt_by = c("sex", "ts_age", "ts_cal"),
-#§   merge_dt_harmonisers = list(
-#§     ts_cal = quote(as.integer(ts_cal)),
-#§     ts_age = quote(as.integer(ts_age))
-#§   )
-#§ )
-#§ stopifnot(
-#§   "merge_value" %in% names(lexis),
-#§   !is.na(lexis[["merge_value"]])
-#§ )
+#' @eval codedoc::pkg_doc_fun(
+#'   "popEpi::lexis_merge",
+#'   "lexis_merge"
+#' )
+#' @examples
+#' # popEpi::lexis_merge
+#' lexis <- Epi::Lexis(
+#'   entry = list(ts_fut = 0.0, ts_cal = 2010.3, ts_age = 56.8),
+#'   exit = list(ts_cal = 2024.9999),
+#'   entry.status = 0L,
+#'   exit.status = 0L
+#' )
+#' lexis$sex <- 0L
+#' lexis <- popEpi::splitMulti(
+#'   data = lexis,
+#'   breaks = list(ts_fut = seq(0, 3, 1 / 12))
+#' )
+#' my_merge_dt <- data.table::CJ(sex = 0:1, ts_age = 0:100, ts_cal = 2000:2025)
+#' data.table::set(
+#'   x = my_merge_dt,
+#'   j = "merge_value",
+#'   value = runif(nrow(my_merge_dt))
+#' )
+#' # lexis is also a data.table and is modified in-place. no need to keep
+#' # output of popEpi::lexis_merge call.
+#' popEpi::lexis_merge(
+#'   lexis = lexis,
+#'   merge_dt = my_merge_dt,
+#'   merge_dt_by = c("sex", "ts_age", "ts_cal")
+#' )
+#' stopifnot(
+#'   "merge_value" %in% names(lexis),
+#'   !is.na(lexis[["merge_value"]])
+#' )
+#' data.table::set(
+#'   x = lexis,
+#'   j = "merge_value",
+#'   value = NULL
+#' )
+#' popEpi::lexis_merge(
+#'   lexis = lexis,
+#'   merge_dt = my_merge_dt,
+#'   merge_dt_by = c("sex", "ts_age", "ts_cal"),
+#'   merge_dt_harmonisers = list(
+#'     ts_cal = quote(as.integer(ts_cal)),
+#'     ts_age = quote(as.integer(ts_age))
+#'   )
+#' )
+#' stopifnot(
+#'   "merge_value" %in% names(lexis),
+#'   !is.na(lexis[["merge_value"]])
+#' )
 #'
-#§ # special factor columns in merge_dt
-#§ data.table::set(
-#§   x = lexis,
-#§   j = "merge_value",
-#§   value = NULL
-#§ )
-#§ data.table::set(
-#§   x = my_merge_dt,
-#§   j = c("ts_age", "ts_cal"),
-#§   value = list(
-#§     cut(my_merge_dt[["ts_age"]], breaks = 0:101, right = FALSE),
-#§     cut(my_merge_dt[["ts_cal"]], breaks = 2000:2026, right = FALSE,
-#§         dig.lab = 4)
-#§   )
-#§ )
-#§ popEpi::lexis_merge(
-#§   lexis = lexis,
-#§   merge_dt = my_merge_dt,
-#§   merge_dt_by = c("sex", "ts_age", "ts_cal")
-#§ )
-#§ stopifnot(
-#§   "merge_value" %in% names(lexis),
-#§   !is.na(lexis[["merge_value"]])
-#§ )
+#' # special factor columns in merge_dt
+#' data.table::set(
+#'   x = lexis,
+#'   j = "merge_value",
+#'   value = NULL
+#' )
+#' data.table::set(
+#'   x = my_merge_dt,
+#'   j = c("ts_age", "ts_cal"),
+#'   value = list(
+#'     cut(my_merge_dt[["ts_age"]], breaks = 0:101, right = FALSE),
+#'     cut(my_merge_dt[["ts_cal"]], breaks = 2000:2026, right = FALSE,
+#'         dig.lab = 4)
+#'   )
+#' )
+#' popEpi::lexis_merge(
+#'   lexis = lexis,
+#'   merge_dt = my_merge_dt,
+#'   merge_dt_by = c("sex", "ts_age", "ts_cal")
+#' )
+#' stopifnot(
+#'   "merge_value" %in% names(lexis),
+#'   !is.na(lexis[["merge_value"]])
+#' )
 #'
 lexis_merge <- function(
   lexis,
@@ -279,14 +279,14 @@ lexis_merge <- function(
   # @codedoc_comment_block popEpi::lexis_merge
   call_env <- parent.frame(1L)
   eval_env <- environment()
-  #§ @param optional_steps `[NULL, list]` (default `NULL`)
+  #' @param optional_steps `[NULL, list]` (default `NULL`)
   #'
-  #§ Optional steps to perform during the function's run.
+  #' Optional steps to perform during the function's run.
   #'
-  #§ - `NULL`: No additional steps are performed.
-  #§ - `list`: Each element is named and a function. See **Details**
-  #§   For what each functions you can make use of what their arguments should
-  #§   be.
+  #' - `NULL`: No additional steps are performed.
+  #' - `list`: Each element is named and a function. See **Details**
+  #'   For what each functions you can make use of what their arguments should
+  #'   be.
   # @codedoc_comment_block popEpi::lexis_merge
   # - Run
   #   `optional_steps[["on_entry"]](call_env = call_env, eval_env = eval_env)`
@@ -311,30 +311,30 @@ lexis_merge <- function(
       eval_env = eval_env
     ))
   }
-  #§ @param subset `[NULL, logical, integer]` (default `NULL`)
+  #' @param subset `[NULL, logical, integer]` (default `NULL`)
   #'
-  #§ Merge data only into specific rows in `lexis`.
+  #' Merge data only into specific rows in `lexis`.
   #'
-  #§ - `NULL`: All rows.
-  #§ - `logical`: Only rows where this is `TRUE`. Must of length `nrow(lexis)`.
-  #§ - `integer`: Only rows identified by these indices. Every index must be in
-  #§   `1:nrow(lexis)`.
+  #' - `NULL`: All rows.
+  #' - `logical`: Only rows where this is `TRUE`. Must of length `nrow(lexis)`.
+  #' - `integer`: Only rows identified by these indices. Every index must be in
+  #'   `1:nrow(lexis)`.
   need_to_subset <- !identical(substitute(subset), NULL)
   if (need_to_subset) {
     subset <- handle_arg_subset(dataset_nm = "lexis", output_type = "logical")
     need_to_subset <- !all(subset)
   }
 
-  #§ @template param_lexis
+  #' @template param_lexis
   assert_is_arg_lexis(lexis, dt = FALSE)
-  #§ @param merge_dt `[data.table]` (no default)
+  #' @param merge_dt `[data.table]` (no default)
   #'
-  #§ A `data.table` to merge with `lexis`. Usually `lexis` has been split
-  #§ with e.g. `[splitMulti]`.
-  #§ @param merge_dt_by `[character]` (no default)
+  #' A `data.table` to merge with `lexis`. Usually `lexis` has been split
+  #' with e.g. `[splitMulti]`.
+  #' @param merge_dt_by `[character]` (no default)
   #'
-  #§ Names of columns in both `merge_dt` and `lexis` by which `merge_dt` will be
-  #§ merged with ` lexis`.
+  #' Names of columns in both `merge_dt` and `lexis` by which `merge_dt` will be
+  #' merged with ` lexis`.
   assert_is_arg_merge_dt_and_merge_dt_by(
     merge_dt,
     merge_dt_by,
@@ -363,24 +363,24 @@ lexis_merge <- function(
   call_env <- parent.frame(1L)
   lexis_ts_col_nms <- attr(lexis, "time.scales")
   merge_ts_col_nms <- intersect(lexis_ts_col_nms, merge_dt_by)
-  #§ @param merge_dt_harmonisers `[NULL, list]` (default `NULL`)
+  #' @param merge_dt_harmonisers `[NULL, list]` (default `NULL`)
   #'
-  #§ Optional list of quoted expressions which, when evaluated, harmonise
-  #§ data in `lexis` (possibly after splitting) to look the same as the data in
-  #§ `merge_dt`. For example, if `merge_dt` contains expected hazards by
-  #§ calendar year `ts_cal` and 1-year age group `ts_age`, and if `lexis` has
-  #§ been
-  #§ split into monthly survival intervals, then we must somehow find the
-  #§ correct row in `merge_dt` for each row in `lexis`. E.g.
-  #§ `ts_cal = 2010.5323`
-  #§ and `ts_age = 76.4435` need to be harmonised into values found in
-  #§ `merge_dt` such as `ts_cal = 2010` and `ts_age = 76`.
+  #' Optional list of quoted expressions which, when evaluated, harmonise
+  #' data in `lexis` (possibly after splitting) to look the same as the data in
+  #' `merge_dt`. For example, if `merge_dt` contains expected hazards by
+  #' calendar year `ts_cal` and 1-year age group `ts_age`, and if `lexis` has
+  #' been
+  #' split into monthly survival intervals, then we must somehow find the
+  #' correct row in `merge_dt` for each row in `lexis`. E.g.
+  #' `ts_cal = 2010.5323`
+  #' and `ts_age = 76.4435` need to be harmonised into values found in
+  #' `merge_dt` such as `ts_cal = 2010` and `ts_age = 76`.
   #'
-  #§ - `NULL`: This function comes up with reasonable harmonisers if possible.
-  #§   See **Details**.
-  #§ - `list`: Each element must a quoted expression (`[quote]`) and each
-  #§   element must have a name corresponding to a column name in both `lexis`
-  #§   and `merge_dt`. See **Examples**.
+  #' - `NULL`: This function comes up with reasonable harmonisers if possible.
+  #'   See **Details**.
+  #' - `list`: Each element must a quoted expression (`[quote]`) and each
+  #'   element must have a name corresponding to a column name in both `lexis`
+  #'   and `merge_dt`. See **Examples**.
   if (is.null(merge_dt_harmonisers)) {
     # @codedoc_comment_block popEpi::lexis_merge
     # - If `is.null(merge_dt_harmonisers)`, attempt to
