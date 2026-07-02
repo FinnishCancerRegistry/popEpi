@@ -465,6 +465,71 @@ lexis_aggregate_one_stratum__ <- function(
 #§   agdt[["t_at_risk"]] == 0,
 #§   is.na(agdt[["my_stat"]])
 #§ )
+#§
+#§ # handling multiple records for one subject.
+#§ # often in survival analysis we want to use the first record per output stratum.
+#§ # first, the normal behaviour without handling multiples in any way:
+#§ lexis_mult <- popEpi::Lexis_dt(
+#§   entry = list(ts_fut = c(0.0, 0.0, 0.0)),
+#§   exit = list(ts_fut = c(1.5, 4.5, 2.5)),
+#§   entry.status = 0L,
+#§   exit.status = 1L,
+#§   id = c(1L, 1L, 1L),
+#§   data = data.frame(sex = 0L, age_group = c("45-49", "45-49", "50-54"))
+#§ )
+#§ agdt <- popEpi:::lexis_split_merge_aggregate_by_stratum(
+#§   lexis = lexis_mult,
+#§   aggre_by = c("sex", "age_group"),
+#§   breaks = list(ts_fut = c(0, 5)),
+#§   aggre_exprs = c("t_at_risk", "n_at_risk_eff")
+#§ )
+#§ stopifnot(
+#§   nrow(agdt) == 2,
+#§   agdt[["n_at_risk_eff"]] == c(2L, 1L)
+#§ )
+#§
+#§ # take first by lex.id
+#§ agdt <- popEpi:::lexis_split_merge_aggregate_by_stratum(
+#§   lexis = lexis_mult,
+#§   aggre_by = c("sex", "age_group"),
+#§   breaks = list(ts_fut = c(0, 5)),
+#§   aggre_exprs = c("t_at_risk", "n_at_risk_eff"),
+#§   first_record_by = "lex.id"
+#§ )
+#§ stopifnot(
+#§   nrow(agdt) == 2,
+#§   agdt[["n_at_risk_eff"]] == c(1L, 0L)
+#§ )
+#§
+#§ # take first by lex.id and stratum
+#§ agdt <- popEpi:::lexis_split_merge_aggregate_by_stratum(
+#§   lexis = lexis_mult,
+#§   aggre_by = c("sex", "age_group"),
+#§   breaks = list(ts_fut = c(0, 5)),
+#§   aggre_exprs = c("t_at_risk", "n_at_risk_eff"),
+#§   first_record_by = c("lex.id", "sex", "age_group")
+#§ )
+#§ stopifnot(
+#§   nrow(agdt) == 2,
+#§   agdt[["n_at_risk_eff"]] == c(1L, 1L),
+#§   agdt[["t_at_risk"]] == c(2.5, 2.5)
+#§ )
+#§
+#§ # multipleness is handled *after* subsetting --- so we can take the first
+#§ # record within the subset, within the stratum.
+#§ agdt <- popEpi:::lexis_split_merge_aggregate_by_stratum(
+#§   lexis = lexis_mult,
+#§   aggre_by = c("sex", "age_group"),
+#§   breaks = list(ts_fut = c(0, 5)),
+#§   aggre_exprs = c("t_at_risk", "n_at_risk_eff"),
+#§   subset = c(FALSE, TRUE, TRUE),
+#§   first_record_by = c("lex.id", "sex", "age_group")
+#§ )
+#§ stopifnot(
+#§   nrow(agdt) == 2,
+#§   agdt[["n_at_risk_eff"]] == c(1L, 1L),
+#§   agdt[["t_at_risk"]] == c(4.5, 2.5)
+#§ )
 lexis_split_merge_aggregate_by_stratum <- function(
   lexis,
   breaks,
@@ -474,6 +539,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   merge_dt_by = NULL,
   merge_optional_args = NULL,
   subset = NULL,
+  first_record_by = NULL,
   weight_col_nm = NULL,
   split_lexis_column_exprs = NULL,
   breaks_collapse_args = NULL,
@@ -512,7 +578,6 @@ lexis_split_merge_aggregate_by_stratum <- function(
     ]
     subset[not_in_aggre_by_idx] <- FALSE
     rm(list = c("join_dt", "not_in_aggre_by_idx"))
-  }
   }
 
   #§ @param aggre_exprs `[character, list]` (no default)
@@ -632,6 +697,31 @@ lexis_split_merge_aggregate_by_stratum <- function(
   )
   lexis_crop(lexis = lexis_dt, breaks = breaks)
   subset <- subset & !is.na(lexis_dt[["lex.dur"]]) # due to crop
+
+  #§ @param first_record_by `[NULL, character]` (default `NULL`)
+  #§
+  #§ Optional argument to only use each nonduplicate record as identified by
+  #§ these column names. See **Examples**.
+  #§
+  #§ - `NULL`: No handling of multiples.
+  #§ - `character`: Only use the first record as identified by these column
+  #§   names in `lexis`. E.g. `first_record_by = "lex.id"` causes only the first
+  #§   record by `lex.id` to be included in the calculations. Firstness is based
+  #§   on the order of the records as they are in `lexis` and this function does
+  #§   not sort the data first in any way. None of the `Lexis` time scale
+  #§   columns nor `lex.dur` are allowed to be used.
+  stopifnot(
+    inherits(first_record_by, c("NULL", "character")),
+    first_record_by %in% names(lexis),
+    !first_record_by %in% c(Epi::timeScales(lexis), "lex.dur")
+  )
+  if (!is.null(first_record_by)) {
+    subset[subset] <- local({
+      frb_dt <- data.table::setDT(as.list(lexis)[first_record_by])
+      frb_dt <- frb_dt[subset, ]
+      !duplicated(frb_dt, by = first_record_by)
+    })
+  }
 
   #§ @param merge_dt
   #§ Passed to `[lexis_merge]`.
