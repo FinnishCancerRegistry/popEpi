@@ -546,6 +546,11 @@ stratified by sex and contains individually weighted statistics.
 }
 
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 # popEpi::surv_estimate
 dt <- data.table::data.table(
@@ -724,6 +729,11 @@ stopifnot(
   max(abs(sdt_bw[["S_ch_est"]] - sdt_da[["S_ch_est"]])) < 0.01
 )
 
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 # popEpi::surv_collapse_1d
 sdt <- data.table::data.table(
@@ -746,6 +756,11 @@ stopifnot(
   sdt[["ts_fut_stop"]] == c(1.0, 3.0),
   sdt[["t_at_risk"]] == c(1.0, 0.5)
 )
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 # popEpi::surv_collapse_strata_list
 sdt <- data.table::CJ(
@@ -807,6 +822,11 @@ stopifnot(
   identical(unique(sdt_collapsed[["ag"]]), c("1", "2 & 3"))
 )
 
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 # popEpi::surv_brenner_weight_dt
 make_column_icss_ag <- function(age) {
@@ -868,6 +888,11 @@ stopifnot(
   nrow(swdt) == nrow(bwdt),
   bwdt[["weight_brenner"]] > 0
 )
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 # popEpi::surv_individual_weights
 make_column_icss_ag <- function(age) {
@@ -925,6 +950,11 @@ stopifnot(
   iw >= 0.0,
   iw >= iw_bad
 )
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 # popEpi::lexis_breaks_collapse_1d
 lexis <- Epi::Lexis(
@@ -971,6 +1001,11 @@ stopifnot(
   agdt[["t_at_risk"]] > 0.0
 )
 
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 
 # popEpi::surv_lexis
 make_pm <- function() {

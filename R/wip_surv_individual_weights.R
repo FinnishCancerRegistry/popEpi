@@ -3,6 +3,11 @@
 #'   "surv_functions"
 #' )
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN submission requirement to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' # popEpi::surv_brenner_weight_dt
 #' make_column_icss_ag <- function(age) {
@@ -291,6 +296,11 @@ surv_brenner_weight_dt <- function(
 #'   "surv_functions"
 #' )
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN submission requirement to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' # popEpi::surv_individual_weights
 #' make_column_icss_ag <- function(age) {

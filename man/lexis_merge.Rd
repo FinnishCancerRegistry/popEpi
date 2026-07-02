@@ -205,6 +205,11 @@ isntead of producing nonsense results downstream.
 }
 
 \examples{
+# this data.table::setDTthreads call is included here only to
+# conform to the CRAN submission requirement to only use at most 2
+# threads. you do not need to set this to use popEpi.
+# however some long calculations may benefit from using more threads.
+data.table::setDTthreads(2L)
 # popEpi::lexis_merge
 lexis <- Epi::Lexis(
   entry = list(ts_fut = 0.0, ts_cal = 2010.3, ts_age = 56.8),

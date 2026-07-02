@@ -10,6 +10,11 @@ NULL
 #'   "surv_functions"
 #' )
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN submission requirement to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' # popEpi::lexis_breaks_collapse_1d
 #' lexis <- Epi::Lexis(
@@ -233,6 +238,11 @@ surv_lexis_aggre_exprs__ <- function(
 #'   "surv_functions"
 #' )
 #' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN submission requirement to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
 #'
 #' # popEpi::surv_lexis
 #' make_pm <- function() {
