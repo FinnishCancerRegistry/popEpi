@@ -494,26 +494,25 @@ lexis_split_merge_aggregate_by_stratum <- function(
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
   # @codedoc_insert_comment_block popEpi:::handle_arg_subset
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::subset
-  subset <- handle_arg_subset(dataset_nm = "lexis")
+  subset <- handle_arg_subset(dataset_nm = "lexis", output_type = "logical")
 
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::aggre_by
   # @codedoc_insert_comment_block popEpi:::handle_arg_by
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum::aggre_by
   aggre_by <- handle_arg_by(by = aggre_by, dataset = lexis)
   if (data.table::is.data.table(aggre_by)) {
-    subset <- subset &
-      local({
-        join_dt <- data.table::setDT(as.list(lexis)[intersect(
-          names(lexis),
-          names(aggre_by)
-        )])
-        wh <- join_dt[
-          i = aggre_by,
-          on = names(aggre_by),
-          which = TRUE
-        ]
-        seq_len(nrow(join_dt)) %in% wh
-      })
+    join_dt <- data.table::setDT(as.list(lexis)[intersect(
+      names(lexis),
+      names(aggre_by)
+    )])
+    not_in_aggre_by_idx <- join_dt[
+      i = aggre_by,
+      on = names(aggre_by),
+      which = NA
+    ]
+    subset[not_in_aggre_by_idx] <- FALSE
+    rm(list = c("join_dt", "not_in_aggre_by_idx"))
+  }
   }
 
   #§ @param aggre_exprs `[character, list]` (no default)
