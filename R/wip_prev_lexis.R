@@ -262,10 +262,12 @@ prev_lexis <- function(
                   warning(
                     "The survival estimates produced internally by ",
                     "`prev_lexis` had missing values. This occurs when ",
-                    "there are no subjects remaining in follow-up --- an error ",
+                    "there are no subjects remaining in follow-up --- an ",
+                    "error ",
                     "will be produced if such missing values are attempted to ",
                     "be used in the computation of n_prev_eff. In such a case ",
-                    "you will have to adjust the settings of how these internal ",
+                    "you will have to adjust the settings of how these ",
+                    "internal ",
                     "survival estimates are produced or to produce survival ",
                     "estimates yourself."
                   )
