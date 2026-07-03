@@ -11,6 +11,7 @@ prev_lexis(
   stratum_breaks,
   aggre_by = NULL,
   subset = NULL,
+  first_record_by = NULL,
   merge_dt = NULL,
   merge_optional_args = NULL
 )
@@ -59,6 +60,8 @@ Due to the non-standard evaluation method used here, you can make use of
 data in the calling environment as well. E.g. with variable \code{my_value = 1}
 defined and \code{dt} containing column \code{my_column} you can do
 \code{subset = my_column == my_value} if you want.}
+
+\item{first_record_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{merge_dt}{\verb{[NULL, data.table]} (default \code{NULL})
 

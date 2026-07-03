@@ -14,6 +14,7 @@ prev_lexis <- function(
   stratum_breaks,
   aggre_by = NULL,
   subset = NULL,
+  first_record_by = NULL,
   merge_dt = NULL,
   merge_optional_args = NULL
 ) {
@@ -139,6 +140,9 @@ prev_lexis <- function(
         lexis = lexis_dt_obs_tp,
         subset = subset & could_delay_entry,
         breaks = stratum_breaks,
+        #' @param first_record_by
+        #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+        first_record_by = first_record_by,
         aggre_exprs = list(n_prev = quote(.N)),
         aggre_by = aggre_by
       )
@@ -453,7 +457,8 @@ prev_lexis <- function(
                 aggre_exprs = list(
                   n_prev_extrapolated = quote(sum(n_prev_extrapolated))
                 ),
-                aggre_by = aggre_by
+                aggre_by = aggre_by,
+                first_record_by = first_record_by
               )
               na_idx <- which(is.na(agdt_add[["n_prev_extrapolated"]]))
               if (length(na_idx) > 0) {

@@ -663,6 +663,7 @@ surv_lexis <- function(
   merge_dt_by = NULL,
   aggre_by = NULL,
   subset = NULL,
+  first_record_by = NULL,
   split_merge_aggregate_optional_args = NULL,
   estimators = "S_ch",
   conf_methods = "log",
@@ -681,6 +682,9 @@ surv_lexis <- function(
     merge_dt = merge_dt,
     merge_dt_by = merge_dt_by,
     aggre_by = handle_arg_by(by = aggre_by, dataset = lexis),
+    #' @param first_record_by
+    #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+    first_record_by = first_record_by,
     subset = handle_arg_subset(dataset_nm = "lexis")
   )
   surv_estimate_args <- list(

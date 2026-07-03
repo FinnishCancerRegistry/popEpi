@@ -76,6 +76,7 @@ surv_lexis(
   merge_dt_by = NULL,
   aggre_by = NULL,
   subset = NULL,
+  first_record_by = NULL,
   split_merge_aggregate_optional_args = NULL,
   estimators = "S_ch",
   conf_methods = "log",
@@ -256,6 +257,8 @@ are subject to being combined. E.g. \code{list(ts_fut = seq(0, 5, 1 / 12))}.}
 \item{aggre_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{subset}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
+\item{first_record_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{split_merge_aggregate_optional_args}{\verb{[NULL, list]} (default \code{NULL})
 
