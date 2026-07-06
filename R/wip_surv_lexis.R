@@ -698,8 +698,12 @@ surv_lexis <- function(
   #' Weights for adjusting estimates.
   #'
   #' - `NULL`: No adjusting is performed.
-  #' - `data.table`: Passed to `[surv_estimate]`.
-  #' - `character`: Passed to `[lexis_split_merge_aggregate_by_stratum]`.
+  #' - `data.table`: Passed to `[surv_estimate]` arg `weight_dt`.
+  #' - `character`: Passed to `[lexis_split_merge_aggregate_by_stratum]`
+  #'   argument `weight_col_nm`.
+  stopifnot(
+    inherits(weights, c("NULL", "character", "data.table"))
+  )
   if (data.table::is.data.table(weights)) {
     surv_estimate_args[["weight_dt"]] <- weights
     split_merge_aggregate_args[["aggre_by"]] <- handle_arg_by(
@@ -713,7 +717,7 @@ surv_lexis <- function(
       ),
       dataset = lexis
     )
-  } else {
+  } else if (is.character(weights)) {
     split_merge_aggregate_args[["weight_col_nm"]] <- weights
   }
   # @codedoc_comment_block popEpi::surv_lexis

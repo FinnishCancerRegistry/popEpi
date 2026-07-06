@@ -274,8 +274,9 @@ Optional arguments to pass to \verb{[lexis_split_merge_aggregate_by_stratum]}.
 Weights for adjusting estimates.
 \itemize{
 \item \code{NULL}: No adjusting is performed.
-\item \code{data.table}: Passed to \verb{[surv_estimate]}.
-\item \code{character}: Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.
+\item \code{data.table}: Passed to \verb{[surv_estimate]} arg \code{weight_dt}.
+\item \code{character}: Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}
+argument \code{weight_col_nm}.
 }}
 }
 \value{
