@@ -150,15 +150,22 @@ assert_is_arg_weight_dt <- function(
   if (data.table::is.data.table(weight_dt)) {
     stopifnot(
       ncol(weight_dt) >= 2,
-      "weight" %in% names(weight_dt),
-      !duplicated(weight_dt, by = setdiff(names(weight_dt), "weight")),
-
-      !is.na(weight_dt[["weight"]]),
-      weight_dt[["weight"]] >= 0.0
+      any(grepl("^weight", names(weight_dt))),
+      !duplicated(
+        weight_dt,
+        by = names(weight_dt)[!grepl("^weight", names(weight_dt))]
+      )
     )
+    weight_col_nms <- names(weight_dt)[grepl("^weight", names(weight_dt))]
+    for (wcn in weight_col_nms) {
+      eval(substitute(stopifnot(
+        !is.na(weight_dt[[wcn]]),
+        weight_dt[[wcn]] >= 0
+      )))
+    }
     if (!is.null(dt)) {
       stopifnot(
-        setdiff(names(weight_dt), "weight") %in% names(dt)
+        setdiff(names(weight_dt), weight_col_nms) %in% names(dt)
       )
     }
   }
