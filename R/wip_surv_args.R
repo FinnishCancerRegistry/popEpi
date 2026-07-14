@@ -158,10 +158,13 @@ assert_is_arg_weight_dt <- function(
     )
     weight_col_nms <- names(weight_dt)[grepl("^weight", names(weight_dt))]
     for (wcn in weight_col_nms) {
-      eval(substitute(stopifnot(
-        !is.na(weight_dt[[wcn]]),
-        weight_dt[[wcn]] >= 0
-      )))
+      eval(substitute(
+        stopifnot(
+          !is.na(weight_dt[[wcn]]),
+          weight_dt[[wcn]] >= 0
+        ),
+        list(wcn = wcn)
+      ))
     }
     if (!is.null(dt)) {
       stopifnot(

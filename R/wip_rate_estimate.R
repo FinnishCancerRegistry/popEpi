@@ -157,10 +157,13 @@ rate_estimate <- function(
     count_col_nms %in% names(dt)
   )
   for (count_col_nm in count_col_nms) {
-    eval(substitute(stopifnot(
-      !is.na(dt[[count_col_nm]]),
-      dt[[count_col_nm]] >= 0
-    )))
+    eval(substitute(
+      stopifnot(
+        !is.na(dt[[count_col_nm]]),
+        dt[[count_col_nm]] >= 0
+      ),
+      list(count_col_nm = count_col_nm)
+    ))
   }
   rm(count_col_nm)
   # if (
