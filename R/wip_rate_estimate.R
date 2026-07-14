@@ -274,7 +274,11 @@ rate_estimate <- function(
     stratum_col_nms = output_stratum_col_nms,
     adjust_col_nms = adjust_col_nms,
     weights = weight_dt,
+    #' @param conf_lvls
+    #' Passed to `[directadjusting::directly_adjusted_estimates]`.
     conf_lvls = conf_lvls,
+    #' @param conf_methods
+    #' Passed to `[directadjusting::directly_adjusted_estimates]`.
     conf_methods = conf_methods
   )
   add_value_col_nms <- setdiff(names(adt), output_stratum_col_nms)

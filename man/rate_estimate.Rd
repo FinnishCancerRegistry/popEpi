@@ -45,6 +45,10 @@ Optional \code{data.table} of direct adjusting weights passed to
 \verb{[directadjusting::directly_adjusted_estimates]}. The stratifying columns
 of this table must be found also in \code{dt} and will be used for adjusting.
 E.g. \code{data.table::data.table(age_group = 1:18, weight = some_values)}.}
+
+\item{conf_lvls}{Passed to \verb{[directadjusting::directly_adjusted_estimates]}.}
+
+\item{conf_methods}{Passed to \verb{[directadjusting::directly_adjusted_estimates]}.}
 }
 \value{
 Returns a \code{data.table} with columns of strata, counts, rates, and
