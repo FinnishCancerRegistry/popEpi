@@ -301,10 +301,15 @@ rate_estimate <- function(
       sqrt(out[[vcn]])
     })
   )
+  meta[["meta_dt"]][["se_col_nm_w"]] <- sub(
+    "_var$",
+    "_se",
+    meta[["meta_dt"]][["var_col_nm_w"]]
+  )
   data.table::setnames(
     x = out,
     old = meta[["meta_dt"]][["var_col_nm_w"]],
-    new = sub("_var$", "_se", meta[["meta_dt"]][["var_col_nm_w"]])
+    new = meta[["meta_dt"]][["se_col_nm_w"]]
   )
   data.table::setcolorder(
     out,
