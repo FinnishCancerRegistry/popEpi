@@ -17,7 +17,10 @@ prev_lexis <- function(
   first_record_by = NULL,
   merge_dt = NULL,
   merge_optional_args = NULL,
-  n_at_risk_dt = NULL
+  n_at_risk_dt = NULL,
+  weight_dt = NULL,
+  conf_lvls = 0.95,
+  conf_methods = "log"
 ) {
   #' @template param_lexis
   assert_is_arg_lexis(lexis, dt = FALSE)
@@ -71,7 +74,7 @@ prev_lexis <- function(
   #' These survival
   #' estimates are used in the "projection" of prevalence in those
   #' observations
-  #' which have been lost to follow-up. See **Details** for how this
+  #' which have been lost to follow-up. See **Functions** for how this
   #' works and
   #' what you need to have.
   #'
@@ -81,7 +84,7 @@ prev_lexis <- function(
   #'   to `[lexis_merge]` and should conform to its requirements. E.g.
   #'   `data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))`.
   #' - `list`: We produce a table of survival estimates on the fly and
-  #'   these are arguments passed to `[surv_lexis]`. See **Details**.
+  #'   these are arguments passed to `[surv_lexis]`. See **Functions**.
   stopifnot(
     inherits(merge_dt, c("list", "data.table", "NULL"))
   )
@@ -104,7 +107,8 @@ prev_lexis <- function(
   #' @param n_at_risk_dt `[NULL, data.table]` (default `NULL`)
   #'
   #' - `NULL`: No population size data is merged into the output table.
-  #' - `data.table`: Merge data from this table. See **Examples**.
+  #' - `data.table`: Merge data from this table. See **Functions** and
+  #'   **Examples**.
   #'   + It can but does not need to contain as a stratifying column
   #'     the time scale used in argument `observation_time_points`. If it is
   #'     included, then it must be included containing the same exact values,
@@ -132,6 +136,17 @@ prev_lexis <- function(
       names(observation_time_points) %in% names(n_at_risk_dt)
     )
   }
+
+  #' @param weight_dt `[NULL, data.table]` (default `NULL`)
+  #'
+  #' - `NULL`: No direct adjusting is performed.
+  #' - `data.table`: Passed to `[directadjusting::directly_adjusted_estimates]`
+  #'   after some harmonisation. See **Functions** and **Examples**.
+  assert_is_arg_weight_dt(
+    weight_dt,
+    dt = lexis,
+    allowed = c("NULL", "data.table")
+  )
 
   # @codedoc_comment_block popEpi::prev_lexis
   # `popEpi::prev_lexis` can be used to compute numbers of (potentially
@@ -353,15 +368,6 @@ prev_lexis <- function(
                     out
                   },
                   keyby = eval(intersect(names(aggre_by), names(sdt)))
-                  # keyby = eval(intersect(c(
-                  #   names(aggre_by),
-                  #   unlist(lapply(
-                  #     setdiff(ts_col_nms, ts_fut_col_nm),
-                  #     function(ts_col_nm) {
-                  #       paste0(ts_col_nm, c("_start", "_stop"))
-                  #     }
-                  #   ))
-                  # ), names(sdt)))
                 ]
                 data.table::set(
                   x = sdt,
@@ -373,18 +379,6 @@ prev_lexis <- function(
                     round(sdt[[paste0(ts_fut_col_nm, "_stop")]], 11L),
                     "]"
                   ))
-                  # j = ts_col_nms,
-                  # value = lapply(ts_col_nms, function(ts_col_nm) {
-                  #   x <- paste0(
-                  #     "]",
-                  #     round(sdt[[paste0(ts_col_nm, "_start")]], 11L),
-                  #     ", ",
-                  #     round(sdt[[paste0(ts_col_nm, "_stop")]], 11L),
-                  #     "]"
-                  #   )
-                  #   levels <- unique(x)
-                  #   factor(x = x, levels = levels)
-                  # })
                 )
                 data.table::setnames(
                   x = sdt,
@@ -576,7 +570,7 @@ prev_lexis <- function(
       intersect(names(stratum_breaks), names(n_at_risk_dt)),
       function(ts_col_nm) {
         interval_to_bounds_dt <- attr(
-          infer_cut_args__(agdt[[ts_col_nm]]),
+          infer_cut_args__(n_at_risk_dt[[ts_col_nm]]),
           "infer_cut_args_meta"
         )[
           j = .SD,
@@ -622,6 +616,152 @@ prev_lexis <- function(
         ))
       }
     ))
+    agdt <- local({
+      # @codedoc_comment_block popEpi::prev_lexis
+      # - If `weight_dt` was supplied, we harmonise it with the current big
+      #   output table. Similarly to `n_at_risk_dt`, it is possible to include
+      #   time scales from `stratum_breaks` in `weight_dt` as a factor with
+      #   levels which are bracketed intervals, e.g.
+      #    `c("[0,5[", "[5,10[", ..., "[80,85[", "[85,Inf[")`, following the
+      #   format produced by `[cut]`. The lower and upper bounds are extracted
+      #   and matched with the correspoding columns in the current big output
+      #   table, e.g. with `ts_age_start` and `ts_age_stop`.
+      # @codedoc_comment_block popEpi::prev_lexis
+      adjust_col_nms <- ifelse(
+        is.null(weight_dt),
+        NULL,
+        names(weight_dt)[!grepl("^weight", names(weight_dt))]
+      )
+      weight_dt <- dt_independent_frame_dependent_contents(weight_dt)
+      adjust_ts_col_nms <- intersect(names(stratum_breaks), adjust_col_nms)
+      lapply(
+        adjust_ts_col_nms,
+        function(ts_col_nm) {
+          interval_to_bounds_dt <- attr(
+            infer_cut_args__(weight_dt[[ts_col_nm]]),
+            "infer_cut_args_meta"
+          )[
+            #' @importFrom data.table .SD
+            j = .SD,
+            .SDcols = c("level", "lo", "hi")
+          ]
+          data.table::setnames(
+            x = interval_to_bounds_dt,
+            c("level", "lo", "hi"),
+            paste0(ts_col_nm, c("", "_start", "_stop"))
+          )
+          data.table::set(
+            x = interval_to_bounds_dt,
+            j = "id",
+            value = seq_len(nrow(interval_to_bounds_dt))
+          )
+          dt_join_assign(
+            x = interval_to_bounds_dt,
+            i = lexis_box_dt__(breaks = stratum_breaks[ts_col_nm]),
+            on = paste0(ts_col_nm, c("_start", "_stop")),
+            x_col_nms = paste0(ts_col_nm, "_id")
+          )
+          dt_join_assign(
+            x = weight_dt,
+            i = interval_to_bounds_dt,
+            on = ts_col_nm,
+            x_col_nms = paste0(ts_col_nm, "_id")
+          )
+          data.table::set(x = weight_dt, j = ts_col_nm, value = NULL)
+        }
+      )
+      local({
+        # we must reset box_id because it is currently based also on
+        # adjust_ts_col_nms. in the output we want it to be based only on the
+        # output ts strata.
+        output_stratum_box_dt <- lexis_box_dt__(
+          breaks = stratum_breaks[!names(stratum_breaks) %in% adjust_ts_col_nms]
+        )
+        dt_join_assign(
+          x = agdt,
+          i = output_stratum_box_dt,
+          on = setdiff(
+            names(output_stratum_box_dt)[grepl(
+              "_id$",
+              names(output_stratum_box_dt)
+            )],
+            "box_id"
+          ),
+          x_col_nms = "box_id"
+        )
+      })
+      stratum_col_nms <- setdiff(
+        names(agdt),
+        c(unlist(value_meta_dt), "n_at_risk")
+      )
+      adjust_col_nms <- ifelse(
+        is.null(weight_dt),
+        NULL,
+        intersect(stratum_col_nms, names(weight_dt))
+      )
+      stratum_col_nms <- setdiff(
+        stratum_col_nms,
+        paste0(sub("_id$", "", adjust_col_nms), "_", c("start", "stop"))
+      )
+      output_stratum_col_nms <- setdiff(
+        stratum_col_nms,
+        adjust_col_nms
+      )
+      # @codedoc_comment_block popEpi::prev_lexis
+      # - `[directadjusting::directly_adjusted_estimates]` is called to produce
+      #   adjusted estimates of prevalence proportions if `weight_dt` was
+      #   supplied or non-adjusted ones of not. Both `p_prev` and `p_prev_eff`
+      #   are passed to `[directadjusting::directly_adjusted_estimates]`, if
+      #   the latter was estimated.
+      # @codedoc_comment_block popEpi::prev_lexis
+      agdt_adj <- directadjusting::directly_adjusted_estimates(
+        stats_dt = agdt,
+        stat_col_nms = value_meta_dt[["p_col_nm"]],
+        var_col_nms = value_meta_dt[["p_var_col_nm"]],
+        stratum_col_nms = output_stratum_col_nms,
+        adjust_col_nms = adjust_col_nms,
+        conf_lvls = conf_lvls,
+        conf_methods = conf_methods,
+        weights = weight_dt
+      )
+      lapply(
+        attr(agdt_adj, "directly_adjusted_estimates_meta")[["meta_dt"]][[
+          "var_col_nm_w"
+        ]],
+        function(var_col_nm) {
+          data.table::set(
+            x = agdt_adj,
+            j = var_col_nm,
+            value = sqrt(agdt_adj[[var_col_nm]])
+          )
+          data.table::setnames(
+            x = agdt_adj,
+            old = var_col_nm,
+            new = sub("_var$", "_se", var_col_nm)
+          )
+        }
+      )
+
+      # @codedoc_comment_block popEpi::prev_lexis
+      # - Even if adjusting is performed, the output table will contain
+      #   "raw" sums of `n_at_risk`, `n_prev`, and `n_prev_eff` if it was
+      #   computed.
+      # @codedoc_comment_block popEpi::prev_lexis
+      agdt <- agdt[
+        #' @importFrom data.table .SD
+        j = lapply(.SD, sum),
+        .SDcols = c("n_at_risk", value_meta_dt[["n_col_nm"]]),
+        keyby = output_stratum_col_nms
+      ]
+      dt_join_assign(
+        x = agdt,
+        i = agdt_adj,
+        on = output_stratum_col_nms,
+        x_col_nms = setdiff(names(agdt_adj), output_stratum_col_nms)
+      )
+      agdt[]
+    })
+  }
 
   # @codedoc_comment_block return(popEpi::prev_lexis)
   # Returns a `data.table` with
@@ -631,6 +771,15 @@ prev_lexis <- function(
   # - `n_prev`, the number of subjects in follow-up, and
   # - `n_prev_eff`, the above plus the "extrapolated" number in follow-up, if
   #   this was requested.
+  # - `n_at_risk`, the merged values from `n_at_risk_dt` if it was supplied.
+  # - `p_prev`, `n_prev / n_at_risk`, the proportion of prevalent records out of
+  #   `n_at_risk`, if `n_at_risk_dt` was supplied.
+  # - `p_prev_eff`, `n_prev_eff / n_at_risk`, the proportion of the effective
+  #   number of prevalent records out of `n_at_risk`, if `n_at_risk_dt` was
+  #   supplied and `n_prev_eff` was computed.
+  # - For `p_prev` and `p_prev_eff` the additional columns which indicate
+  #   standard error and the lower and upper confidence bounds, identified with
+  #   the suffix `_se`, `_lo`, and `_hi`, respectively.
   # @codedoc_comment_block return(popEpi::prev_lexis)
   return(agdt[])
 }

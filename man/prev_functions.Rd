@@ -14,7 +14,10 @@ prev_lexis(
   first_record_by = NULL,
   merge_dt = NULL,
   merge_optional_args = NULL,
-  n_at_risk_dt = NULL
+  n_at_risk_dt = NULL,
+  weight_dt = NULL,
+  conf_lvls = 0.95,
+  conf_methods = "log"
 )
 }
 \arguments{
@@ -70,7 +73,7 @@ Table containing survival estimates applicable to \code{lexis}.
 These survival
 estimates are used in the "projection" of prevalence in those
 observations
-which have been lost to follow-up. See \strong{Details} for how this
+which have been lost to follow-up. See \strong{Functions} for how this
 works and
 what you need to have.
 \itemize{
@@ -80,7 +83,7 @@ exactly one value column named \code{S}. This table is passed
 to \verb{[lexis_merge]} and should conform to its requirements. E.g.
 \code{data.table(ts_fut = factor(c("[0, 1[", ...)), S = c(0.9, ...))}.
 \item \code{list}: We produce a table of survival estimates on the fly and
-these are arguments passed to \verb{[surv_lexis]}. See \strong{Details}.
+these are arguments passed to \verb{[surv_lexis]}. See \strong{Functions}.
 }}
 
 \item{merge_optional_args}{\verb{[NULL, list]} (default \code{NULL})
@@ -91,7 +94,8 @@ E.g. \code{list(merge_dt_harmonisers = my_harmonisers)}.}
 \item{n_at_risk_dt}{\verb{[NULL, data.table]} (default \code{NULL})
 \itemize{
 \item \code{NULL}: No population size data is merged into the output table.
-\item \code{data.table}: Merge data from this table. See \strong{Examples}.
+\item \code{data.table}: Merge data from this table. See \strong{Functions} and
+\strong{Examples}.
 \itemize{
 \item It can but does not need to contain as a stratifying column
 the time scale used in argument \code{observation_time_points}. If it is
@@ -111,6 +115,13 @@ The lower and upper bounds must match the breaks used in argument
 \code{stratum_breaks}, so for the above example you should have
 \code{stratum_breaks = list(ts_cal = c(0, 5, 10, ..., 80, 85, Inf), ...)}.
 }
+}}
+
+\item{weight_dt}{\verb{[NULL, data.table]} (default \code{NULL})
+\itemize{
+\item \code{NULL}: No direct adjusting is performed.
+\item \code{data.table}: Passed to \verb{[directadjusting::directly_adjusted_estimates]}
+after some harmonisation. See \strong{Functions} and \strong{Examples}.
 }}
 }
 \value{
@@ -238,6 +249,22 @@ the very same columns if one has supplied something like
 \code{stratum_breaks = list(ts_age = c(0, 5, 10, ..., 80, 85, Inf), ...)}.
 Then the merge is straightforward and the big table gains the additional
 column \code{n_at_risk}.
+\item If \code{weight_dt} was supplied, we harmonise it with the current big
+output table. Similarly to \code{n_at_risk_dt}, it is possible to include
+time scales from \code{stratum_breaks} in \code{weight_dt} as a factor with
+levels which are bracketed intervals, e.g.
+\code{c("[0,5[", "[5,10[", ..., "[80,85[", "[85,Inf[")}, following the
+format produced by \verb{[cut]}. The lower and upper bounds are extracted
+and matched with the correspoding columns in the current big output
+table, e.g. with \code{ts_age_start} and \code{ts_age_stop}.
+\item \verb{[directadjusting::directly_adjusted_estimates]} is called to produce
+adjusted estimates of prevalence proportions if \code{weight_dt} was
+supplied or non-adjusted ones of not. Both \code{p_prev} and \code{p_prev_eff}
+are passed to \verb{[directadjusting::directly_adjusted_estimates]}, if
+the latter was estimated.
+\item Even if adjusting is performed, the output table will contain
+"raw" sums of \code{n_at_risk}, \code{n_prev}, and \code{n_prev_eff} if it was
+computed.
 }
 }
 
