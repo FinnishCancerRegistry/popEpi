@@ -720,7 +720,11 @@ prev_lexis <- function(
         var_col_nms = value_meta_dt[["p_var_col_nm"]],
         stratum_col_nms = output_stratum_col_nms,
         adjust_col_nms = adjust_col_nms,
+        #' @param conf_lvls Passed as-is to
+        #' `[directadjusting::directly_adjusted_estimates]`
         conf_lvls = conf_lvls,
+        #' @param conf_methods Passed as-is to
+        #' `[directadjusting::directly_adjusted_estimates]`
         conf_methods = conf_methods,
         weights = weight_dt
       )

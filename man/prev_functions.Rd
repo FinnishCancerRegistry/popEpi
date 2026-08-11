@@ -123,6 +123,12 @@ The lower and upper bounds must match the breaks used in argument
 \item \code{data.table}: Passed to \verb{[directadjusting::directly_adjusted_estimates]}
 after some harmonisation. See \strong{Functions} and \strong{Examples}.
 }}
+
+\item{conf_lvls}{Passed as-is to
+\verb{[directadjusting::directly_adjusted_estimates]}}
+
+\item{conf_methods}{Passed as-is to
+\verb{[directadjusting::directly_adjusted_estimates]}}
 }
 \value{
 \strong{popEpi::prev_lexis}
