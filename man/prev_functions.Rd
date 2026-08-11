@@ -13,7 +13,8 @@ prev_lexis(
   subset = NULL,
   first_record_by = NULL,
   merge_dt = NULL,
-  merge_optional_args = NULL
+  merge_optional_args = NULL,
+  n_at_risk_dt = NULL
 )
 }
 \arguments{
@@ -86,6 +87,31 @@ these are arguments passed to \verb{[surv_lexis]}. See \strong{Details}.
 
 Each element passed to \verb{[lexis_merge]}.
 E.g. \code{list(merge_dt_harmonisers = my_harmonisers)}.}
+
+\item{n_at_risk_dt}{\verb{[NULL, data.table]} (default \code{NULL})
+\itemize{
+\item \code{NULL}: No population size data is merged into the output table.
+\item \code{data.table}: Merge data from this table. See \strong{Examples}.
+\itemize{
+\item It can but does not need to contain as a stratifying column
+the time scale used in argument \code{observation_time_points}. If it is
+included, then it must be included containing the same exact values,
+e.g. with
+\code{observation_time_points = list(ts_cal = 2023.9999)} you must have in
+\code{n_at_risk_dt} rows with \code{ts_cal = 2023.9999}.
+\item It can but does not have to contain
+the time scales used in argument \code{stratum_breaks} as \code{factor} columns
+where the levels must contain the lower and upper bound of each
+interval,
+e.g. the levels of \code{ts_age} might be
+\code{c("[0,5[", "[5,10[", ..., "[80,85[", "[85,Inf[")}.
+The brackets must be included but their directions are ignored.
+The simple way to form a \code{factor} with such levels is \verb{[cut]}.
+The lower and upper bounds must match the breaks used in argument
+\code{stratum_breaks}, so for the above example you should have
+\code{stratum_breaks = list(ts_cal = c(0, 5, 10, ..., 80, 85, Inf), ...)}.
+}
+}}
 }
 \value{
 \strong{popEpi::prev_lexis}
@@ -98,6 +124,15 @@ Returns a \code{data.table} with
 \item \code{n_prev}, the number of subjects in follow-up, and
 \item \code{n_prev_eff}, the above plus the "extrapolated" number in follow-up, if
 this was requested.
+\item \code{n_at_risk}, the merged values from \code{n_at_risk_dt} if it was supplied.
+\item \code{p_prev}, \code{n_prev / n_at_risk}, the proportion of prevalent records out of
+\code{n_at_risk}, if \code{n_at_risk_dt} was supplied.
+\item \code{p_prev_eff}, \code{n_prev_eff / n_at_risk}, the proportion of the effective
+number of prevalent records out of \code{n_at_risk}, if \code{n_at_risk_dt} was
+supplied and \code{n_prev_eff} was computed.
+\item For \code{p_prev} and \code{p_prev_eff} the additional columns which indicate
+standard error and the lower and upper confidence bounds, identified with
+the suffix \verb{_se}, \verb{_lo}, and \verb{_hi}, respectively.
 }
 }
 \description{
@@ -186,8 +221,23 @@ before.
 subjects and the original \code{n_prev} into the first table we
 created.
 }
-\item Collect the observation time point-specific results into one big table and
-return it.
+\item Collect the observation time point-specific results into one big table.
+\item If supplied, merge data from \code{n_at_risk_dt} into the big table. To
+accomplish this, any stratifying time scale columns defined via
+\code{stratum_breaks} and found also in \code{n_at_risk_dt} (the rather usual one
+being age, e.g. \code{ts_age}) is assumed to be a \code{factor} column with levels
+that specify the lower and upper bound of each interval in brackets, e.g.
+\verb{[0, 5[}, though the brackets are ignored. The lower and upper bounds are
+made use of when merging the data from \code{n_at_risk_dt} into the big table,
+as the latter contains the lower and upper bounds as separate columns.
+E.g. column \code{ts_age} in \code{n_at_risk_dt} with levels
+\code{c("[0,5[", "[5,10[", ..., "[80,85[", "[85,Inf[")} is turned into the two
+columns \code{ts_age_start = c(0, 5, 10, ..., 80, 85)} and
+\code{ts_age_stop = c(5, 10, 15, ..., 85, Inf)}. The big output table contains
+the very same columns if one has supplied something like
+\code{stratum_breaks = list(ts_age = c(0, 5, 10, ..., 80, 85, Inf), ...)}.
+Then the merge is straightforward and the big table gains the additional
+column \code{n_at_risk}.
 }
 }
 

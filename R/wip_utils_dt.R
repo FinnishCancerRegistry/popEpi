@@ -34,3 +34,22 @@ dt_join_assign <- function(
   eval(expr)
   return(invisible(x[]))
 }
+
+dt_independent_frame_dependent_contents <- function(
+  dt,
+  select = NULL
+) {
+  # this funtion creates a new data.table without copying any of the underlying
+  # data. so for instance adding a new column into the output of this function
+  # does not influence the original data.table, but modifying (a subset of)
+  # a column does modify the data in the original object as well.
+  stopifnot(
+    is.data.frame(dt),
+    inherits(select, c("NULL", "character"))
+  )
+  if (is.null(select)) {
+    select <- names(dt)
+  }
+  dt <- data.table::setDT(as.list(dt)[select])
+  return(dt[])
+}

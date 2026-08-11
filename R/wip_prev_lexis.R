@@ -16,7 +16,8 @@ prev_lexis <- function(
   subset = NULL,
   first_record_by = NULL,
   merge_dt = NULL,
-  merge_optional_args = NULL
+  merge_optional_args = NULL,
+  n_at_risk_dt = NULL
 ) {
   #' @template param_lexis
   assert_is_arg_lexis(lexis, dt = FALSE)
@@ -99,6 +100,39 @@ prev_lexis <- function(
       names(merge_dt) %in% names(formals(surv_lexis))
     )
   }
+
+  #' @param n_at_risk_dt `[NULL, data.table]` (default `NULL`)
+  #'
+  #' - `NULL`: No population size data is merged into the output table.
+  #' - `data.table`: Merge data from this table. See **Examples**.
+  #'   + It can but does not need to contain as a stratifying column
+  #'     the time scale used in argument `observation_time_points`. If it is
+  #'     included, then it must be included containing the same exact values,
+  #'     e.g. with
+  #'     `observation_time_points = list(ts_cal = 2023.9999)` you must have in
+  #'     `n_at_risk_dt` rows with `ts_cal = 2023.9999`.
+  #'   + It can but does not have to contain
+  #'     the time scales used in argument `stratum_breaks` as `factor` columns
+  #'     where the levels must contain the lower and upper bound of each
+  #'     interval,
+  #'     e.g. the levels of `ts_age` might be
+  #'     `c("[0,5[", "[5,10[", ..., "[80,85[", "[85,Inf[")`.
+  #'     The brackets must be included but their directions are ignored.
+  #'     The simple way to form a `factor` with such levels is `[cut]`.
+  #'     The lower and upper bounds must match the breaks used in argument
+  #'     `stratum_breaks`, so for the above example you should have
+  #'     `stratum_breaks = list(ts_cal = c(0, 5, 10, ..., 80, 85, Inf), ...)`.
+  stopifnot(
+    inherits(n_at_risk_dt, c("NULL", "data.frame"))
+  )
+  if (is.data.frame(n_at_risk_dt)) {
+    stopifnot(
+      "n_at_risk" %in% names(n_at_risk_dt),
+      setdiff(names(n_at_risk_dt), "n_at_risk") %in% names(lexis),
+      names(observation_time_points) %in% names(n_at_risk_dt)
+    )
+  }
+
   # @codedoc_comment_block popEpi::prev_lexis
   # `popEpi::prev_lexis` can be used to compute numbers of (potentially
   # effective numbers of) subjects remaining in follow-up at arbitrary time
@@ -510,14 +544,84 @@ prev_lexis <- function(
     return(agdt_i[])
   })
   # @codedoc_comment_block popEpi::prev_lexis
-  # - Collect the observation time point-specific results into one big table and
-  #   return it.
+  # - Collect the observation time point-specific results into one big table.
   # @codedoc_comment_block popEpi::prev_lexis
   agdt <- data.table::rbindlist(agdt)
   data.table::setkeyv(
     x = agdt,
     cols = setdiff(names(agdt), c("n_prev", "n_prev_eff"))
   )
+
+  # @codedoc_comment_block popEpi::prev_lexis
+  # - If supplied, merge data from `n_at_risk_dt` into the big table. To
+  #   accomplish this, any stratifying time scale columns defined via
+  #   `stratum_breaks` and found also in `n_at_risk_dt` (the rather usual one
+  #   being age, e.g. `ts_age`) is assumed to be a `factor` column with levels
+  #   that specify the lower and upper bound of each interval in brackets, e.g.
+  #   `[0, 5[`, though the brackets are ignored. The lower and upper bounds are
+  #   made use of when merging the data from `n_at_risk_dt` into the big table,
+  #   as the latter contains the lower and upper bounds as separate columns.
+  #   E.g. column `ts_age` in `n_at_risk_dt` with levels
+  #   `c("[0,5[", "[5,10[", ..., "[80,85[", "[85,Inf[")` is turned into the two
+  #   columns `ts_age_start = c(0, 5, 10, ..., 80, 85)` and
+  #   `ts_age_stop = c(5, 10, 15, ..., 85, Inf)`. The big output table contains
+  #   the very same columns if one has supplied something like
+  #   `stratum_breaks = list(ts_age = c(0, 5, 10, ..., 80, 85, Inf), ...)`.
+  #   Then the merge is straightforward and the big table gains the additional
+  #   column `n_at_risk`.
+  # @codedoc_comment_block popEpi::prev_lexis
+  if (!is.null(n_at_risk_dt)) {
+    n_at_risk_dt <- dt_independent_frame_dependent_contents(n_at_risk_dt)
+    lapply(
+      intersect(names(stratum_breaks), names(n_at_risk_dt)),
+      function(ts_col_nm) {
+        interval_to_bounds_dt <- attr(
+          infer_cut_args__(agdt[[ts_col_nm]]),
+          "infer_cut_args_meta"
+        )[
+          j = .SD,
+          .SDcols = c("level", "lo", "hi")
+        ]
+        data.table::setnames(interval_to_bounds_dt, "level", ts_col_nm)
+        dt_join_assign(
+          x = n_at_risk_dt,
+          i = interval_to_bounds_dt,
+          on = ts_col_nm,
+          x_col_nms = paste0(ts_col_nm, c("_start", "_stop")),
+          i_col_nms = c("lo", "hi")
+        )
+      }
+    )
+    dt_join_assign(
+      x = agdt,
+      i = n_at_risk_dt,
+      on = setdiff(intersect(names(n_at_risk_dt), names(agdt)), "n_at_risk"),
+      x_col_nms = "n_at_risk"
+    )
+    value_meta_dt <- data.table::rbindlist(lapply(
+      intersect(names(agdt), c("n_prev", "n_prev_eff")),
+      function(n_col_nm) {
+        p_col_nm <- sub("^n_", "p_", n_col_nm)
+        data.table::set(
+          x = agdt,
+          j = p_col_nm,
+          value = agdt[[n_col_nm]] / agdt[["n_at_risk"]]
+        )
+        p_var_col_nm <- paste0(p_col_nm, "_var")
+        data.table::set(
+          x = agdt,
+          j = p_var_col_nm,
+          value = agdt[[p_col_nm]] *
+            (1 - agdt[[p_col_nm]]) /
+            agdt[["n_at_risk"]]
+        )
+        return(data.table::data.table(
+          n_col_nm = n_col_nm,
+          p_col_nm = p_col_nm,
+          p_var_col_nm = p_var_col_nm
+        ))
+      }
+    ))
 
   # @codedoc_comment_block return(popEpi::prev_lexis)
   # Returns a `data.table` with

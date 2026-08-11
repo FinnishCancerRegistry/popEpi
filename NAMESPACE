@@ -116,12 +116,14 @@ import(grDevices)
 import(graphics)
 import(splines)
 import(stats)
-importFrom(data.table,":=")
-importFrom(data.table,.EACHI)
-importFrom(data.table,.GRP)
-importFrom(data.table,.N)
-importFrom(data.table,.SD)
-importFrom(data.table,copy)
-importFrom(data.table,is.data.table)
-importFrom(data.table,setDT)
-importFrom(data.table,setattr)
+importFrom(data.table,
+  ":=",
+  .EACHI,
+  .GRP,
+  .N,
+  .SD,
+  copy,
+  is.data.table,
+  setDT,
+  setattr
+)
