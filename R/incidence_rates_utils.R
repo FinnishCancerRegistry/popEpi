@@ -12,11 +12,36 @@
 #' See examples.
 #'
 #'
-#' @param x a rate-object, vector of two; rate and standard error or observed and person-years.
-#' @param y a rate-object, vector of two; rate and standard error or observed and person-years.
-#' @param crude set TRUE to use crude rates; default is FALSE.
-#' @param SE.method default TRUE; if `x` and `y` are vectors of observed and
-#' person-years, this must be changed to FALSE.
+#' @param x `[rate, integer, numeric]` (no default)
+#'
+#' Rate data.
+#'
+#' - `rate`: An object as produced by `[rate]`. If one of `x` and `y` is a
+#'   `rate` object then both have to be or an error is raised.
+#' - `integer` / `numeric`: A vector of length two. Here you have two options
+#'   which you can choose using argument `SE.method`:
+#'   + `SE.method = FALSE`: The first element is the number of events and the
+#'     second the at-risk time (Poisson offset). This causes confidence
+#'     intervals to be produced via `[stats::poisson.test]`.
+#'   + `SE.method = TRUE`: The first element is the rate estimate and second
+#'     the standard error. Confidence intervals are produced using the delta
+#'     method with the log-transform.
+#' @param y `[rate, integer, numeric]` (no default)
+#'
+#' See the documentation for argument `x`.
+#'
+#' @param crude `[logical]` (default `NULL`)
+#'
+#' This argument only used when `x` and `y` are `rate` objects as produced by
+#' `[rate]`.
+#'
+#' - `TRUE` causes column `rate` to be used from the output object of `[rate]`.
+#' - `FALSE` causes column `rate.adj` to be used.
+#'
+#' @param SE.method `[logical]` (default `FALSE`)
+#'
+#' Ignored when `x` and `y` are objects of class `rate` as produced by `[rate]`.
+#' See the documention for argument `x`.
 #'
 #' @examples
 #' # this data.table::setDTthreads call is included here only to
@@ -43,11 +68,10 @@
 #' rate_ratio(r_re, r_br, SE.method = TRUE)
 #' }
 #'
-#' # manually set rates (0.003 and 0.005) and SEs (0.001 and 0.002)
-#' # so that x = y = c('rate', 'SE')
+#' # using rates (0.003 and 0.005) and their SEs (0.001 and 0.002)
 #' rate_ratio(x= c(0.003, 0.001), y= c(0.005, 0.002), SE.method = TRUE)
 #'
-#' # observed numbers (10 and 20) and person-years (30000 and 40000):
+#' # using event numbers (10 and 20) and person-years (30000 and 40000)
 #' rate_ratio(x = c(10, 30000), y = c(20, 40000), SE.method = FALSE)
 #'
 #' @seealso `[rate]`
@@ -60,11 +84,28 @@
 #'
 #' @import data.table
 #' @import stats
-rate_ratio <- function(x, y, crude = FALSE, SE.method = TRUE) {
-  if (inherits(x, 'rate') | inherits(y, 'rate')) {
+rate_ratio <- function(x, y, crude = FALSE, SE.method = FALSE) {
+  stopifnot(
+    inherits(x, c("rate", "numeric", "integer")),
+    inherits(y, c("rate", "numeric", "integer")),
+    identical(inherits(x, "rate"), inherits(y, "rate")),
+    inherits(x, "rate") || length(x) == 2,
+    inherits(y, "rate") || length(y) == 2,
+
+    is.logical(crude),
+    length(crude) == 1,
+    !is.na(crude),
+
+    is.logical(SE.method),
+    length(SE.method) == 1,
+    !is.na(SE.method)
+  )
+  if (inherits(x, "rate")) {
     if (!crude & (!'rate.adj' %in% names(x) | !'rate.adj' %in% names(y))) {
-      crude <- TRUE
-      message('Crude rates used')
+      stop(
+        "`crude = FALSE` but column `rate.adj` not present in input ",
+        "object `x` and/or `y` but "
+      )
     }
   }
 
@@ -72,13 +113,12 @@ rate_ratio <- function(x, y, crude = FALSE, SE.method = TRUE) {
   y <- prep.rate.input(y, crude = crude, SE = SE.method)
 
   if (SE.method) {
-    ratio <- x[[1]] / y[[1]]
-
     # delta method for variance
-    v0 <- (1 / x[[1]])^2 * x[[2]]^2 + (1 / y[[1]])^2 * y[[2]]^2
-
-    lo <- ratio - v0 * 1.96 #exp(log(ratio)-log(v0)*1.96)
-    hi <- ratio + v0 * 1.96 #exp(log(ratio)+log(v0)*1.96)
+    rr <- x[[1]] / y[[1]]
+    rr_var <- (1 / x[[1]])^2 * x[[2]]^2 + (1 / y[[1]])^2 * y[[2]]^2
+    z <- qnorm(p = 0.975)
+    lo <- exp(log(rr) - sqrt(rr_var) * z)
+    hi <- exp(log(rr) + sqrt(rr_var) * z)
     out <- round(data.frame(rate_ratio = ratio, lower = lo, upper = hi), 3)
   } else {
     # x and y vector of two:, pyrs
@@ -86,7 +126,7 @@ rate_ratio <- function(x, y, crude = FALSE, SE.method = TRUE) {
     out <- data.frame()
     j <- 1
     for (j in 1:length(x[[1]])) {
-      pt[[j]] <- poisson.test(
+      pt[[j]] <- stats::poisson.test(
         x = c(x[[1]][j], y[[1]][j]),
         T = c(x[[2]][j], y[[2]][j])
       )

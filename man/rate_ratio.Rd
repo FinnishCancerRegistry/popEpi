@@ -4,17 +4,44 @@
 \alias{rate_ratio}
 \title{Confidence intervals for the rate ratios}
 \usage{
-rate_ratio(x, y, crude = FALSE, SE.method = TRUE)
+rate_ratio(x, y, crude = FALSE, SE.method = FALSE)
 }
 \arguments{
-\item{x}{a rate-object, vector of two; rate and standard error or observed and person-years.}
+\item{x}{\verb{[rate, integer, numeric]} (no default)
 
-\item{y}{a rate-object, vector of two; rate and standard error or observed and person-years.}
+Rate data.
+\itemize{
+\item \code{rate}: An object as produced by \verb{[rate]}. If one of \code{x} and \code{y} is a
+\code{rate} object then both have to be or an error is raised.
+\item \code{integer} / \code{numeric}: A vector of length two. Here you have two options
+which you can choose using argument \code{SE.method}:
+\itemize{
+\item \code{SE.method = FALSE}: The first element is the number of events and the
+second the at-risk time (Poisson offset). This causes confidence
+intervals to be produced via \verb{[stats::poisson.test]}.
+\item \code{SE.method = TRUE}: The first element is the rate estimate and second
+the standard error. Confidence intervals are produced using the delta
+method with the log-transform.
+}
+}}
 
-\item{crude}{set TRUE to use crude rates; default is FALSE.}
+\item{y}{\verb{[rate, integer, numeric]} (no default)
 
-\item{SE.method}{default TRUE; if \code{x} and \code{y} are vectors of observed and
-person-years, this must be changed to FALSE.}
+See the documentation for argument \code{x}.}
+
+\item{crude}{\verb{[logical]} (default \code{NULL})
+
+This argument only used when \code{x} and \code{y} are \code{rate} objects as produced by
+\verb{[rate]}.
+\itemize{
+\item \code{TRUE} causes column \code{rate} to be used from the output object of \verb{[rate]}.
+\item \code{FALSE} causes column \code{rate.adj} to be used.
+}}
+
+\item{SE.method}{\verb{[logical]} (default \code{FALSE})
+
+Ignored when \code{x} and \code{y} are objects of class \code{rate} as produced by \verb{[rate]}.
+See the documention for argument \code{x}.}
 }
 \value{
 A vector length of three: rate_ratio, and lower and upper confidence intervals.
@@ -57,11 +84,10 @@ r_br <- rate(br, obs = "from0to1", pyrs = "pyrs")
 rate_ratio(r_re, r_br, SE.method = TRUE)
 }
 
-# manually set rates (0.003 and 0.005) and SEs (0.001 and 0.002)
-# so that x = y = c('rate', 'SE')
+# using rates (0.003 and 0.005) and their SEs (0.001 and 0.002)
 rate_ratio(x= c(0.003, 0.001), y= c(0.005, 0.002), SE.method = TRUE)
 
-# observed numbers (10 and 20) and person-years (30000 and 40000):
+# using event numbers (10 and 20) and person-years (30000 and 40000)
 rate_ratio(x = c(10, 30000), y = c(20, 40000), SE.method = FALSE)
 
 }
