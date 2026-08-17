@@ -113,6 +113,9 @@ rate_ratio <- function(x, y, crude = FALSE, SE.method = FALSE) {
   y <- prep.rate.input(y, crude = crude, SE = SE.method)
 
   if (SE.method) {
+    # @codedoc_comment_block news("popEpi::rate_ratio", "2026-08-17", "0.6.0")
+    # Fixed the confidence interval formula for when `SE.method = TRUE`.
+    # @codedoc_comment_block news("popEpi::rate_ratio", "2026-08-17", "0.6.0")
     # delta method for variance
     rr <- x[[1]] / y[[1]]
     rr_var <- (1 / x[[1]])^2 * x[[2]]^2 + (1 / y[[1]])^2 * y[[2]]^2
