@@ -8,6 +8,329 @@ NULL
 #'   "popEpi::prev_lexis",
 #'   "prev_functions"
 #' )
+#' @examples
+#' # this data.table::setDTthreads call is included here only to
+#' # conform to the CRAN submission requirement to only use at most 2
+#' # threads. you do not need to set this to use popEpi.
+#' # however some long calculations may benefit from using more threads.
+#' data.table::setDTthreads(2L)
+#'
+#' # popEpi::prev_lexis
+#' make_sire <- function() {
+#'   sire <- popEpi::sire
+#'   sire <- sire[
+#'     sire[["dg_date"]] < sire[["ex_date"]] &
+#'       sire[["ex_date"]] >= as.Date("1999-01-01") &
+#'       (get.yrs(sire[["ex_date"]]) - get.yrs(sire[["bi_date"]])) < 100
+#'   ]
+#'   # you can also use popEpi::Lexis_dt
+#'   sire <- Epi::Lexis(
+#'     data = sire,
+#'     entry = list(
+#'       ts_cal = popEpi::get.yrs(dg_date),
+#'       ts_age = popEpi::get.yrs(dg_date) - popEpi::get.yrs(bi_date),
+#'       ts_fut = 0.0
+#'     ),
+#'     duration = popEpi::get.yrs(ex_date) - popEpi::get.yrs(dg_date),
+#'     entry.status = 0L,
+#'     exit.status = status
+#'   )
+#'   return(sire[])
+#' }
+#' sire <- make_sire()
+#'
+#' # observed counts only
+#' pdt <- popEpi::prev_lexis(
+#'   lexis = sire,
+#'   aggre_by = "sex",
+#'   observation_time_points = list(ts_cal = 2011.99),
+#'   stratum_breaks = list(
+#'     ts_age = c(seq(0, 85, 5), Inf),
+#'     ts_fut = c(0, 1, 5, 10, Inf)
+#'   )
+#' )
+#' stopifnot(
+#'   inherits(pdt, "data.table"),
+#'   "sex" %in% names(pdt),
+#'   "n_prev" %in% names(pdt)
+#' )
+#'
+#' # + effective counts with survival table for computing expected counts
+#' sdt <- popEpi::surv_lexis(
+#'   lexis = sire,
+#'   breaks = list(
+#'     # it is best to have smaller intervals initially but they can be rather
+#'     # wide after a while
+#'     ts_fut = c(seq(0, 1, 1 / 12), seq(2, 50, 1))
+#'   ),
+#'   aggre_by = "sex",
+#'   first_record_by = "lex.id",
+#'   split_merge_aggregate_optional_args = list(
+#'     # we allow for collapsing intervals to ensure none are totally empty
+#'     breaks_collapse_args = list(
+#'       test_expr = quote(sum(lex.dur))
+#'     )
+#'   )
+#' )
+#' # sdt goes ultimately to popEpi::lexis_merge, so we massage it a bit first
+#' data.table::set(
+#'   x = sdt,
+#'   j = "ts_fut",
+#'   value = data.table::fctr(paste0(
+#'     "]",
+#'     sdt[["ts_fut_start"]],
+#'     ",",
+#'     sdt[["ts_fut_stop"]],
+#'     "]"
+#'   ))
+#' )
+#' data.table::setnames(x = sdt, "S_ch", "S")
+#' sdt <- data.table::setDT(as.list(sdt)[c(
+#'   "sex",
+#'   "ts_fut",
+#'   "S"
+#' )])
+#' pdt <- popEpi::prev_lexis(
+#'   lexis = sire,
+#'   aggre_by = "sex",
+#'   observation_time_points = list(ts_cal = 2011.99),
+#'   stratum_breaks = list(
+#'     ts_age = c(seq(0, 85, 5), Inf),
+#'     ts_fut = c(0, 1, 5, 10, Inf)
+#'   ),
+#'   merge_dt = sdt
+#' )
+#' stopifnot(
+#'   inherits(pdt, "data.table"),
+#'   "sex" %in% names(pdt),
+#'   c("n_prev", "n_prev_eff") %in% names(pdt),
+#'   !is.na(pdt[["n_prev_eff"]])
+#' )
+#'
+#' # with survival estimated on the fly
+#' surv_lexis_arg_list <- list(
+#'   breaks = list(
+#'     # optional period analysis estimation approach
+#'     ts_cal = c(2001.99, 2011.99),
+#'     # it is best to have smaller intervals initially but they can be rather
+#'     # wide after a while
+#'     ts_fut = c(seq(0, 1, 1 / 12), seq(2, 50, 1))
+#'   ),
+#'   split_merge_aggregate_optional_args = list(
+#'     # we allow for collapsing intervals to ensure none are totally empty
+#'     breaks_collapse_args = list(
+#'       test_expr = quote(sum(lex.dur))
+#'     )
+#'   ),
+#'   estimators = "S_ch"
+#' )
+#' pdt <- popEpi::prev_lexis(
+#'   lexis = sire,
+#'   aggre_by = "sex",
+#'   observation_time_points = list(ts_cal = 2011.99),
+#'   stratum_breaks = list(
+#'     ts_age = c(seq(0, 85, 5), Inf),
+#'     ts_fut = c(0, 1, 5, 10, Inf)
+#'   ),
+#'   merge_dt = surv_lexis_arg_list
+#' )
+#' stopifnot(
+#'   inherits(pdt, "data.table"),
+#'   "sex" %in% names(pdt),
+#'   c("n_prev", "n_prev_eff") %in% names(pdt)
+#' )
+#'
+#' # + prevalence proportions
+#' # first: this is the finnish population size on 2011-12-31
+#' my_n_at_risk_dt <- data.table::data.table(
+#'   sex = 1L,
+#'   ts_age = data.table::fctr(paste0(
+#'     "[",
+#'     seq(0, 85, 5),
+#'     ",",
+#'     c(seq(5, 85, 5), Inf),
+#'     "["
+#'   )),
+#'   ts_cal = 2011.99,
+#'   n_at_risk = c(
+#'     148096L,
+#'     143394L,
+#'     143320L,
+#'     160535L,
+#'     162625L,
+#'     167897L,
+#'     165536L,
+#'     155863L,
+#'     166939L,
+#'     185618L,
+#'     185742L,
+#'     193930L,
+#'     201272L,
+#'     154642L,
+#'     130644L,
+#'     104590L,
+#'     91239L,
+#'     86851L
+#'   )
+#' )
+#' pdt <- popEpi::prev_lexis(
+#'   lexis = sire,
+#'   aggre_by = "sex",
+#'   observation_time_points = list(ts_cal = 2011.99),
+#'   stratum_breaks = list(
+#'     ts_age = c(seq(0, 85, 5), Inf),
+#'     ts_fut = c(0, 1, 5, 10, Inf)
+#'   ),
+#'   merge_dt = surv_lexis_arg_list,
+#'   n_at_risk_dt = my_n_at_risk_dt
+#' )
+#' stopifnot(
+#'   inherits(pdt, "data.table"),
+#'   "sex" %in% names(pdt),
+#'   c("n_prev", "n_prev_eff") %in% names(pdt),
+#'   paste0("p_prev", c("", "_se", "_lo", "_hi")) %in% names(pdt),
+#'   paste0("p_prev_eff", c("", "_se", "_lo", "_hi")) %in% names(pdt)
+#' )
+#'
+#' # same without the effective numbers
+#' pdt <- popEpi::prev_lexis(
+#'   lexis = sire,
+#'   aggre_by = "sex",
+#'   observation_time_points = list(ts_cal = 2011.99),
+#'   stratum_breaks = list(
+#'     ts_age = c(seq(0, 85, 5), Inf),
+#'     ts_fut = c(0, 1, 5, 10, Inf)
+#'   ),
+#'   n_at_risk_dt = my_n_at_risk_dt
+#' )
+#' stopifnot(
+#'   inherits(pdt, "data.table"),
+#'   "sex" %in% names(pdt),
+#'   "n_prev" %in% names(pdt),
+#'   paste0("p_prev", c("", "_se", "_lo", "_hi")) %in% names(pdt),
+#'   nrow(pdt) == 72
+#' )
+#'
+#' # + direct adjusting
+#' # first make a table of weights for direct adjusting.
+#' # this is the finnish population on 2023-12-31.
+#' wdt <- data.table::data.table(
+#'   ts_age = data.table::fctr(paste0(
+#'     "[",
+#'     seq(0, 85, 5),
+#'     ",",
+#'     c(seq(5, 85, 5), Inf),
+#'     "["
+#'   )),
+#'   weight_fi_2023 = c(
+#'     115211L,
+#'     136012L,
+#'     155573L,
+#'     153424L,
+#'     148987L,
+#'     165738L,
+#'     182972L,
+#'     178335L,
+#'     177751L,
+#'     169327L,
+#'     155810L,
+#'     180155L,
+#'     182260L,
+#'     179869L,
+#'     178732L,
+#'     161722L,
+#'     99450L,
+#'     108625L
+#'   )
+#' )
+#' pdt <- popEpi::prev_lexis(
+#'   lexis = sire,
+#'   aggre_by = "sex",
+#'   observation_time_points = list(ts_cal = 2011.99),
+#'   stratum_breaks = list(
+#'     ts_age = c(seq(0, 85, 5), Inf),
+#'     ts_fut = c(0, 1, 5, 10, Inf)
+#'   ),
+#'   n_at_risk_dt = my_n_at_risk_dt,
+#'   weight_dt = wdt
+#' )
+#' stopifnot(
+#'   inherits(pdt, "data.table"),
+#'   "sex" %in% names(pdt),
+#'   "n_prev" %in% names(pdt),
+#'   paste0("p_prev_fi_2023", c("", "_se", "_lo", "_hi")) %in% names(pdt),
+#'   nrow(pdt) == 4
+#' )
+#'
+#' # + effective numbers
+#' pdt <- popEpi::prev_lexis(
+#'   lexis = sire,
+#'   aggre_by = "sex",
+#'   observation_time_points = list(ts_cal = 2011.99),
+#'   stratum_breaks = list(
+#'     ts_age = c(seq(0, 85, 5), Inf),
+#'     ts_fut = c(0, 1, 5, 10, Inf)
+#'   ),
+#'   merge_dt = surv_lexis_arg_list,
+#'   n_at_risk_dt = my_n_at_risk_dt,
+#'   weight_dt = wdt
+#' )
+#' stopifnot(
+#'   inherits(pdt, "data.table"),
+#'   "sex" %in% names(pdt),
+#'   "n_prev" %in% names(pdt),
+#'   paste0("p_prev_fi_2023", c("", "_se", "_lo", "_hi")) %in% names(pdt),
+#'   paste0("p_prev_eff_fi_2023", c("", "_se", "_lo", "_hi")) %in% names(pdt),
+#'   nrow(pdt) == 4
+#' )
+#'
+#'
+#' # + multiple weights
+#' data.table::set(
+#'   x = wdt,
+#'   j = c("weight", "weight_eu_1976"),
+#'   value = list(
+#'     runif(18),
+#'     c(
+#'       # from Waterhouse et al. 1976
+#'       8000L,
+#'       rep(7000L, 10L),
+#'       6000L,
+#'       5000L,
+#'       4000L,
+#'       3000L,
+#'       2000L,
+#'       1000L,
+#'       1000L
+#'     )
+#'   )
+#' )
+#' pdt <- popEpi::prev_lexis(
+#'   lexis = sire,
+#'   aggre_by = "sex",
+#'   observation_time_points = list(ts_cal = 2011.99),
+#'   stratum_breaks = list(
+#'     ts_age = c(seq(0, 85, 5), Inf),
+#'     ts_fut = c(0, 1, 5, 10, Inf)
+#'   ),
+#'   merge_dt = surv_lexis_arg_list,
+#'   n_at_risk_dt = my_n_at_risk_dt,
+#'   weight_dt = wdt
+#' )
+#' stopifnot(
+#'   inherits(pdt, "data.table"),
+#'   "sex" %in% names(pdt),
+#'   "n_prev" %in% names(pdt),
+#'   paste0("p_prev_fi_2023", c("", "_se", "_lo", "_hi")) %in% names(pdt),
+#'   paste0("p_prev_eff_fi_2023", c("", "_se", "_lo", "_hi")) %in% names(pdt),
+#'   paste0("p_prev_eu_1976", c("", "_se", "_lo", "_hi")) %in% names(pdt),
+#'   paste0("p_prev_eff_eu_1976", c("", "_se", "_lo", "_hi")) %in% names(pdt),
+#'   # based on `wdt$weight`
+#'   paste0("p_prev_w", c("", "_se", "_lo", "_hi")) %in% names(pdt),
+#'   paste0("p_prev_eff_w", c("", "_se", "_lo", "_hi")) %in% names(pdt),
+#'   nrow(pdt) == 4
+#' )
+#'
 prev_lexis <- function(
   lexis,
   observation_time_points,
@@ -348,7 +671,7 @@ prev_lexis <- function(
                       length.out = n_interpolate
                     )
                     interpolated_estimates <- surv_interpolate(
-                      estimates = .SD[["S_ch_est"]],
+                      estimates = .SD[["S_ch"]],
                       ts_fut_stops = .SD[[ts_fut_stop_col_nm]],
                       ts_fut_stop_value = ts_fut_interpolation_breaks,
                       estimate_start_value = 1.0,
@@ -363,7 +686,7 @@ prev_lexis <- function(
                     )
                     names(out) <- c(
                       paste0(ts_fut_col_nm, "_", c("start", "stop")),
-                      "S_ch_est"
+                      "S_ch"
                     )
                     out
                   },
@@ -382,7 +705,7 @@ prev_lexis <- function(
                 )
                 data.table::setnames(
                   x = sdt,
-                  old = intersect(c("S_ch_est", "S_lt_est"), names(sdt))[1],
+                  old = intersect(c("S_ch", "S_lt"), names(sdt))[1],
                   new = "S"
                 )
                 sdt <- as.list(sdt)[
@@ -404,9 +727,10 @@ prev_lexis <- function(
               # @codedoc_comment_block popEpi::prev_lexis
               #   + Merge (for the first time) `merge_dt` with the collected
               #     subjects at the original exit time of each
-              #     subject. This yields the survival probability for each subject
-              #     at exit, in math `S(t_e)`
-              #     (starting from zero --- delayed entry is not supported).
+              #     subject. This yields the survival probability for each
+              #     subject at exit, in math we name this `S(t_e)`.
+              #     E.g. subject was censored at `t_e = 2.1` means
+              #     `S(t_e) = S(2.1)`.
               # @codedoc_comment_block popEpi::prev_lexis
               merge_arg_list[["lexis"]] <- lexis_dt_extrapolate
               merge_arg_list[["lex_dur_multiplier"]] <- 1L
@@ -444,7 +768,10 @@ prev_lexis <- function(
               #     current prevalence observation time point such as at
               #     `ts_cal = 2009.999`.
               #     In math this is `S(t_p)` where `t_p` is the prevalence
-              #     observation time point.
+              #     observation time point. For instance for one subject `t_p`
+              #     might be `t_p = 5.7` because they were censored 5.7 years
+              #     before the prevalence observation time point. Then we use
+              #     `S(t_p) = S(5.7)`.
               # @codedoc_comment_block popEpi::prev_lexis
               merge_arg_list[["lex_dur_multiplier"]] <- 0L
               call_with_arg_list__(lexis_merge, merge_arg_list)
@@ -454,12 +781,14 @@ prev_lexis <- function(
                 new = "S_at_obs_tp_i__"
               )
               # @codedoc_comment_block popEpi::prev_lexis
-              #   + With both `S(t_e)` and `S(t_p)` available, our "extrapolated" or
-              #     "effective" number of being in follow-up is between zero and
+              #   + With both `S(t_e)` and `S(t_p)` available, our
+              #     "extrapolated" or
+              #     "effective" for one subject for being in follow-up is
+              #     between zero and
               #     one for each subject and defined simply as the conditional
               #     survival up to `t_p` starting from `t_e`,
               #     `S(t_p|t_e) = S(t_p) / S(t_e)`. E.g.
-              #     `S(t_p) / S(t_e) = 0.8 / 0.9 ~ 0.8888889`.
+              #     `S(t_p) / S(t_e) = S(5.7) / S(2.1) = 0.8 / 0.9 ~ 0.8888889`.
               # @codedoc_comment_block popEpi::prev_lexis
               data.table::set(
                 x = lexis_dt_extrapolate,
@@ -627,12 +956,16 @@ prev_lexis <- function(
       #   and matched with the correspoding columns in the current big output
       #   table, e.g. with `ts_age_start` and `ts_age_stop`.
       # @codedoc_comment_block popEpi::prev_lexis
-      adjust_col_nms <- ifelse(
+      adjust_col_nms <- if_else__(
         is.null(weight_dt),
         NULL,
         names(weight_dt)[!grepl("^weight", names(weight_dt))]
       )
-      weight_dt <- dt_independent_frame_dependent_contents(weight_dt)
+      weight_dt <- if_else__(
+        is.null(weight_dt),
+        NULL,
+        dt_independent_frame_dependent_contents(weight_dt)
+      )
       adjust_ts_col_nms <- intersect(names(stratum_breaks), adjust_col_nms)
       lapply(
         adjust_ts_col_nms,
@@ -694,14 +1027,22 @@ prev_lexis <- function(
         names(agdt),
         c(unlist(value_meta_dt), "n_at_risk")
       )
-      adjust_col_nms <- ifelse(
+      adjust_col_nms <- if_else__(
         is.null(weight_dt),
         NULL,
         intersect(stratum_col_nms, names(weight_dt))
       )
-      stratum_col_nms <- setdiff(
-        stratum_col_nms,
-        paste0(sub("_id$", "", adjust_col_nms), "_", c("start", "stop"))
+      adjust_ts_col_nms <- intersect(
+        sub("_id$", "", adjust_col_nms),
+        Epi::timeScales(lexis)
+      )
+      stratum_col_nms <- if_else__(
+        length(adjust_ts_col_nms) > 0,
+        setdiff(
+          stratum_col_nms,
+          paste0(adjust_ts_col_nms, "_", c("start", "stop"))
+        ),
+        stratum_col_nms
       )
       output_stratum_col_nms <- setdiff(
         stratum_col_nms,
