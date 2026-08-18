@@ -290,8 +290,8 @@ surv_estimate_expression_table__ <- function() {
 #'   conf_methods = "log-log"
 #' )
 #' stopifnot(
-#'   c("h_ch_est", "S_ch_est") %in% names(sdt),
-#'   dt[["my_h_ch"]] == sdt[["h_ch_est"]]
+#'   c("h_ch", "S_ch") %in% names(sdt),
+#'   dt[["my_h_ch"]] == sdt[["h_ch"]]
 #' )
 #' sdt <- popEpi::surv_estimate(
 #'   dt = dt,
@@ -301,7 +301,7 @@ surv_estimate_expression_table__ <- function() {
 #'     "h_ch",
 #'     my_surv = list(
 #'       est = quote(
-#'         exp(-cumsum((ts_fut_stop - ts_fut_start) * h_ch_est))
+#'         exp(-cumsum((ts_fut_stop - ts_fut_start) * h_ch))
 #'       ),
 #'       se = quote(rep(0.0, length(ts_fut_start)))
 #'     )
@@ -309,7 +309,7 @@ surv_estimate_expression_table__ <- function() {
 #'   conf_methods = c("log", "none")
 #' )
 #' stopifnot(
-#'   c("h_ch_est", "my_surv_est") %in% names(sdt)
+#'   c("h_ch", "my_surv") %in% names(sdt)
 #' )
 #' sdt <- popEpi::surv_estimate(
 #'   dt = dt,
@@ -328,7 +328,7 @@ surv_estimate_expression_table__ <- function() {
 #'   )
 #' )
 #' stopifnot(
-#'   c("h_ch_est", "S_ch_est") %in% names(sdt)
+#'   c("h_ch", "S_ch") %in% names(sdt)
 #' )
 #'
 #' # one approach to brenner weighting --- effectively the same as assigning
@@ -427,7 +427,7 @@ surv_estimate_expression_table__ <- function() {
 #'   ),
 #'   value_col_nms = c("n_events", "t_at_risk")
 #' )
-#' stopifnot("S_ch_est" %in% names(sdt_bw), !"ag_icss" %in% names(sdt_bw))
+#' stopifnot("S_ch" %in% names(sdt_bw), !"ag_icss" %in% names(sdt_bw))
 #'
 #' # direct adjusting for comparison
 #' sdt_da <- popEpi::surv_estimate(
@@ -440,10 +440,10 @@ surv_estimate_expression_table__ <- function() {
 #'   ),
 #'   value_col_nms = c("n_events", "t_at_risk")
 #' )
-#' stopifnot("S_ch_est" %in% names(sdt_da), !"ag_icss" %in% names(sdt_da))
+#' stopifnot("S_ch_w" %in% names(sdt_da), !"ag_icss" %in% names(sdt_da))
 #'
 #' stopifnot(
-#'   max(abs(sdt_bw[["S_ch_est"]] - sdt_da[["S_ch_est"]])) < 0.01
+#'   max(abs(sdt_bw[["S_ch"]] - sdt_da[["S_ch_w"]])) < 0.01
 #' )
 #'
 surv_estimate <- function(
@@ -693,8 +693,7 @@ surv_estimate <- function(
     # - Armed with a list of expressions based on `estimates`, called
     #   `expressions`, for each `i`:
     #   + Evaluate each element of `expressions[[i]]` and add the result into
-    #     `dt`. E.g. `S_ch_est` and
-    #     `S_ch_se`.
+    #     `dt`. E.g. `S_ch` and `S_ch_se`.
     # @codedoc_comment_block popEpi::surv_estimate
     for (element_name in names(estimator_dt[["expression_set"]][[i]])) {
       # @codedoc_comment_block popEpi::surv_estimate::estimators
@@ -707,7 +706,11 @@ surv_estimate <- function(
       #   + `se`: Also a quoted R expression. This should produce
       #     the standard errors.
       # @codedoc_comment_block popEpi::surv_estimate::estimators
-      add_col_nm <- sprintf("%s_%s", user_estimator_name, element_name)
+      add_col_nm <- switch(
+        element_name,
+        est = user_estimator_name,
+        sprintf("%s_%s", user_estimator_name, element_name)
+      )
       out[
         #' @importFrom data.table := .SD
         j = (add_col_nm) := eval(
@@ -721,10 +724,7 @@ surv_estimate <- function(
   }
 
   out <- local({
-    estimate_col_nms <- paste0(
-      estimator_dt[["user_estimator_name"]],
-      "_est"
-    )
+    estimate_col_nms <- estimator_dt[["user_estimator_name"]]
     standard_error_col_nms <- paste0(
       estimator_dt[["user_estimator_name"]],
       "_se"
@@ -737,9 +737,9 @@ surv_estimate <- function(
       })
     )
     variance_col_nms <- sub(
-      "_est$",
-      "_variance",
-      estimate_col_nms
+      "_se$",
+      "_var",
+      standard_error_col_nms
     )
     data.table::setnames(out, standard_error_col_nms, variance_col_nms)
     da_stratum_col_nms <- intersect(
@@ -771,7 +771,14 @@ surv_estimate <- function(
       adjust_col_nms = da_adjust_col_nms,
       conf_methods = conf_methods,
       conf_lvls = conf_lvls,
-      weights = weight_dt
+      weights = if (do_direct_adjusting) weight_dt else NULL
+    )
+    sdta_meta <- attr(sdta, "directly_adjusted_estimates_meta")
+    variance_col_nms <- sdta_meta[["meta_dt"]][["var_col_nm_w"]]
+    standard_error_col_nms <- sub(
+      "_var",
+      "_se",
+      variance_col_nms
     )
     data.table::set(
       x = sdta,
@@ -794,7 +801,13 @@ surv_estimate <- function(
         estimate_col_nms,
         standard_error_col_nms,
         variance_col_nms,
-        names(weight_dt)
+        names(weight_dt),
+        sdta_meta[["meta_dt"]][["stat_col_nm"]],
+        sdta_meta[["meta_dt"]][["stat_col_nm_w"]],
+        sdta_meta[["meta_dt"]][["var_col_nm"]],
+        sdta_meta[["meta_dt"]][["var_col_nm_w"]],
+        sdta_meta[["meta_dt"]][["ci_lo_col_nm_w"]],
+        sdta_meta[["meta_dt"]][["ci_hi_col_nm_w"]]
       )
     )
     nonsum_col_nms <- intersect(

@@ -311,47 +311,63 @@ E.g. \code{"S_ch"}.
 Pre-defined estimators with their formulae:
 }\tabular{llll}{
    Name \tab Explanation \tab Estimator \tab Standard Error \cr
-   \verb{h_ch} \tab Constant hazards estimate of... hazard. The most basic hazard estimate where the number of events is Poisson distributed. \tab \verb{n_events/t_at_risk} \tab \verb{sqrt(h_ch_est/t_at_risk)} \cr
-   \verb{H_ch} \tab Cumulative hazard function estimate based on the above. \tab \verb{cumsum(delta_t * h_ch_est)} \tab \verb{sqrt(cumsum(delta_t^2 * h_ch_se^2))} \cr
+   \verb{h_ch} \tab Constant hazards estimate of... hazard. The most basic hazard estimate where the number of events is Poisson distributed. \tab \verb{n_events/t_at_risk} \tab \verb{sqrt(h_ch/t_at_risk)} \cr
+   \verb{H_ch} \tab Cumulative hazard function estimate based on the above. \tab \verb{cumsum(delta_t * h_ch)} \tab \verb{sqrt(cumsum(delta_t^2 * h_ch_se^2))} \cr
    \verb{h_exp_e2_ch} \tab Expected constant hazards estimated by the Ederer II method. \tab \verb{n_events_exp_e2/t_at_risk} \tab \verb{0 + 0} \cr
    \verb{h_exc_e2_ch} \tab Excess hazard, observed - expected. Based on Ederer II expected hazard. \tab \verb{(n_events - n_events_exp_e2)/t_at_risk} \tab \verb{h_ch_se} \cr
-   \verb{S_ch} \tab Observed survival, constant hazards estimator. We estimate the hazard first for each survival interval and derive survival from that. \tab \verb{exp(-cumsum(delta_t * h_ch_est))} \tab \verb{S_ch_est * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
-   \verb{F_ch} \tab The is the cumulative density / distribution function. It is simply \code{1 - S}. Based on constant hazards. \tab \verb{1 - S_ch_est} \tab \verb{S_ch_se} \cr
-   \verb{S_lt} \tab Observed survival, lifetable estimator. We first estimate the (conditional) probabilities of surviving each survival interval and cumulate those. The lifetable estimator in its simplest form assumes that outcomes in an interval are binomially distributed, but we perform corrections on those who were censored etc. See the definition of \code{n_at_risk_eff}. \tab \verb{cumprod(1 - n_events/n_at_risk_eff)} \tab \verb{S_lt_est * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
-   \verb{H_lt} \tab This cumulative hazard estimator is derived from \code{S_lt}. We don't know the standard error formula for this one. \tab \verb{-log(S_lt_est)} \tab \verb{0 + NA_real_} \cr
-   \verb{h_lt} \tab This hazard estimator is derived from \code{S_lt}. We don't know the standard error formula for this one. \tab \verb{diff(c(0, H_lt_est))/delta_t} \tab \verb{0 + NA_real_} \cr
-   \verb{F_lt} \tab This is simply \code{1 - S_lt}. \tab \verb{1 - S_lt_est} \tab \verb{S_lt_se} \cr
+   \verb{S_ch} \tab Observed survival, constant hazards estimator. We estimate the hazard first for each survival interval and derive survival from that. \tab \verb{exp(-H_ch)} \tab \verb{S_ch * sqrt(cumsum((delta_t^2) * n_events/(t_at_risk^2)))} \cr
+   \verb{F_ch} \tab The is the cumulative density / distribution function. It is simply \code{1 - S}. Based on constant hazards. \tab \verb{1 - S_ch} \tab \verb{S_ch_se} \cr
+   \verb{S_lt} \tab Observed survival, lifetable estimator. We first estimate the (conditional) probabilities of surviving each survival interval and cumulate those. The lifetable estimator in its simplest form assumes that outcomes in an interval are binomially distributed, but we perform corrections on those who were censored etc. See the definition of \code{n_at_risk_eff}. \tab \verb{cumprod(1 - n_events/n_at_risk_eff)} \tab \verb{S_lt * sqrt(cumsum(n_events/(n_at_risk_eff * (n_at_risk_eff - n_events))))} \cr
+   \verb{H_lt} \tab This cumulative hazard estimator is derived from \code{S_lt}. We don't know the standard error formula for this one. \tab \verb{-log(S_lt)} \tab \verb{0 + NA_real_} \cr
+   \verb{h_lt} \tab This hazard estimator is derived from \code{S_lt}. We don't know the standard error formula for this one. \tab \verb{diff(c(0, H_lt))/delta_t} \tab \verb{0 + NA_real_} \cr
+   \verb{F_lt} \tab This is simply \code{1 - S_lt}. \tab \verb{1 - S_lt} \tab \verb{S_lt_se} \cr
    \verb{S_exp_e2_lt} \tab Expected Ederer II survival, lifetable estimator. \tab \verb{cumprod(1 - n_events_exp_e2/n_at_risk_eff)} \tab \verb{0 + 0} \cr
-   \verb{S_exp_e2_ch} \tab Expected Ederer II survival, constant hazards estimator. \tab \verb{exp(-cumsum(delta_t * h_exp_e2_ch_est))} \tab \verb{0 + 0} \cr
-   \verb{RS_e2_lt} \tab Relative survival, Ederer II, lifetable estimator. \tab \verb{cumprod(1 - (n_events - n_events_exp_e2)/n_at_risk_eff)} \tab \verb{S_lt_se/S_exp_e2_lt_est} \cr
-   \verb{RS_e2_ch} \tab Relative survival, Ederer II, constant hazards estimator. \tab \verb{exp(-cumsum(delta_t * h_exc_e2_ch_est))} \tab \verb{S_ch_se/S_exp_e2_ch_est} \cr
-   \verb{NS_pp_lt} \tab Net survival, Pohar Perme, constan hazards estimator. The Pohar Perme method is the least biased method for estimating net survival when follow-up is complete but it can have larger uncertainty. Net survival is the hypothetical survival probability in a world where the event of interest is the only event possible, e.g. when estimated using a cohort of cancer patients we get the hypothetical survival probability when cancer is the only thing that kills people. Maja Pohar Perme, Janez Stare, Jacques Esteve, On Estimation in Relative Survival, Biometrics, Volume 68, Issue 1, March 2012, Pages 113-120, https://doi.org/10.1111/j.1541-0420.2011.01640.x; Karri Seppa, Timo Hakulinen, Arun Pokhrel, Choosing the net survival method for cancer survival estimation, European Journal of Cancer, Volume 51, Issue 9, 2015, Pages 1123-1129, ISSN 0959-8049, https://doi.org/10.1016/j.ejca.2013.09.019 \tab \verb{cumprod(1 - (n_events_pp - n_events_exp_pp)/n_at_risk_eff_pp)} \tab \verb{NS_pp_lt_est * sqrt(cumsum(n_events_pp_double_weighted/(n_at_risk_eff^2)))} \cr
-   \verb{NS_pp_ch} \tab Net survival, Pohar Perme, lifetable estimator. The Pohar Perme method is the least biased method for estimating net survival when follow-up is complete but it can have larger uncertainty. Net survival is the hypothetical survival probability in a world where the event of interest is the only event possible, e.g. when estimated using a cohort of cancer patients we get the hypothetical survival probability when cancer is the only thing that kills people. Maja Pohar Perme, Janez Stare, Jacques Esteve, On Estimation in Relative Survival, Biometrics, Volume 68, Issue 1, March 2012, Pages 113-120, https://doi.org/10.1111/j.1541-0420.2011.01640.x; Karri Seppa, Timo Hakulinen, Arun Pokhrel, Choosing the net survival method for cancer survival estimation, European Journal of Cancer, Volume 51, Issue 9, 2015, Pages 1123-1129, ISSN 0959-8049, https://doi.org/10.1016/j.ejca.2013.09.019 \tab \verb{exp(-cumsum(delta_t * (n_events_pp - n_events_exp_pp)/t_at_risk_pp))} \tab \verb{NS_pp_ch_est * sqrt(cumsum((delta_t^2) * n_events_pp_double_weighted/(t_at_risk_pp^2)))} \cr
+   \verb{S_exp_e2_ch} \tab Expected Ederer II survival, constant hazards estimator. \tab \verb{exp(-cumsum(delta_t * h_exp_e2_ch))} \tab \verb{0 + 0} \cr
+   \verb{RS_e2_lt} \tab Relative survival, Ederer II, lifetable estimator. \tab \verb{cumprod(1 - (n_events - n_events_exp_e2)/n_at_risk_eff)} \tab \verb{S_lt_se/S_exp_e2_lt} \cr
+   \verb{RS_e2_ch} \tab Relative survival, Ederer II, constant hazards estimator. \tab \verb{exp(-cumsum(delta_t * h_exc_e2_ch))} \tab \verb{S_ch_se/S_exp_e2_ch} \cr
+   \verb{NS_pp_lt} \tab Net survival, Pohar Perme, constan hazards estimator. The Pohar Perme method is the least biased method for estimating net survival when follow-up is complete but it can have larger uncertainty. Net survival is the hypothetical survival probability in a world where the event of interest is the only event possible, e.g. when estimated using a cohort of cancer patients we get the hypothetical survival probability when cancer is the only thing that kills people. Maja Pohar Perme, Janez Stare, Jacques Esteve, On Estimation in Relative Survival, Biometrics, Volume 68, Issue 1, March 2012, Pages 113-120, https://doi.org/10.1111/j.1541-0420.2011.01640.x; Karri Seppa, Timo Hakulinen, Arun Pokhrel, Choosing the net survival method for cancer survival estimation, European Journal of Cancer, Volume 51, Issue 9, 2015, Pages 1123-1129, ISSN 0959-8049, https://doi.org/10.1016/j.ejca.2013.09.019 \tab \verb{cumprod(1 - (n_events_pp - n_events_exp_pp)/n_at_risk_eff_pp)} \tab \verb{NS_pp_lt * sqrt(cumsum(n_events_pp_double_weighted/(n_at_risk_eff^2)))} \cr
+   \verb{NS_pp_ch} \tab Net survival, Pohar Perme, lifetable estimator. The Pohar Perme method is the least biased method for estimating net survival when follow-up is complete but it can have larger uncertainty. Net survival is the hypothetical survival probability in a world where the event of interest is the only event possible, e.g. when estimated using a cohort of cancer patients we get the hypothetical survival probability when cancer is the only thing that kills people. Maja Pohar Perme, Janez Stare, Jacques Esteve, On Estimation in Relative Survival, Biometrics, Volume 68, Issue 1, March 2012, Pages 113-120, https://doi.org/10.1111/j.1541-0420.2011.01640.x; Karri Seppa, Timo Hakulinen, Arun Pokhrel, Choosing the net survival method for cancer survival estimation, European Journal of Cancer, Volume 51, Issue 9, 2015, Pages 1123-1129, ISSN 0959-8049, https://doi.org/10.1016/j.ejca.2013.09.019 \tab \verb{exp(-cumsum(delta_t * (n_events_pp - n_events_exp_pp)/t_at_risk_pp))} \tab \verb{NS_pp_ch * sqrt(cumsum((delta_t^2) * n_events_pp_double_weighted/(t_at_risk_pp^2)))} \cr
    \verb{h_lt_[x, y]} \tab Cause-specific (transition-specific) hazard, life table estimator, for transitioning from x to y. We don't know the standard error formula for this one. \tab \verb{-log(1 - `n_events_[x, y]`/n_at_risk_eff)} \tab \verb{0 + NA_real_} \cr
-   \verb{h_ch_[x, y]} \tab Cause-specific (transition-specific) hazard, constant hazards estimator, for transitioning from \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}. \tab \verb{`n_events_[x, y]`/t_at_risk} \tab \verb{sqrt(`h_ch_[x, y]_est`/t_at_risk)} \cr
+   \verb{h_ch_[x, y]} \tab Cause-specific (transition-specific) hazard, constant hazards estimator, for transitioning from \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}. \tab \verb{`n_events_[x, y]`/t_at_risk} \tab \verb{sqrt(`h_ch_[x, y]`/t_at_risk)} \cr
    \verb{H_lt_[x, y]} \tab Cumulative version of \code{h_lt_[x, y]}. We don't know the standard error formula for this one. \tab \verb{-log(cumprod(1 - `n_events_[x, y]`/n_at_risk_eff))} \tab \verb{0 + NA_real_} \cr
-   \verb{H_ch_[x, y]} \tab Cumulative version of \code{h_ch_[x, y]}. \tab \verb{cumsum(delta_t * `h_ch_[x, y]_est`)} \tab \verb{sqrt(cumsum(delta_t^2 * `h_ch_[x, y]_se`^2))} \cr
-   \verb{S_lt_[x, y]} \tab Cause-specific (transition-specific) survival, life table estimator, for transitioning from \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}.. Cause-specific survival treats all other events but the one of interest as random censoring. \tab \verb{cumprod(1 - `n_events_[x, y]`/n_at_risk_eff)} \tab \verb{`S_lt_[x, y]_est` * sqrt(cumsum(`n_events_[x, y]`/(n_at_risk_eff * (n_at_risk_eff - `n_events_[x, y]`))))} \cr
-   \verb{S_ch_[x, y]} \tab Cause-specific (transition-specific) survival, constant hazards estimator, for transitioning from \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}.. Cause-specific survival treats all other events but the one of interest as random censoring. \tab \verb{exp(-`H_ch_[x, y]_est`)} \tab \verb{S_ch_est * sqrt(cumsum((delta_t^2) * `n_events_[x, y]`/(t_at_risk^2)))} \cr
+   \verb{H_ch_[x, y]} \tab Cumulative version of \code{h_ch_[x, y]}. \tab \verb{cumsum(delta_t * `h_ch_[x, y]`)} \tab \verb{sqrt(cumsum(delta_t^2 * `h_ch_[x, y]_se`^2))} \cr
+   \verb{S_lt_[x, y]} \tab Cause-specific (transition-specific) survival, life table estimator, for transitioning from \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}.. Cause-specific survival treats all other events but the one of interest as random censoring. \tab \verb{cumprod(1 - `n_events_[x, y]`/n_at_risk_eff)} \tab \verb{`S_lt_[x, y]` * sqrt(cumsum(`n_events_[x, y]`/(n_at_risk_eff * (n_at_risk_eff - `n_events_[x, y]`))))} \cr
+   \verb{S_ch_[x, y]} \tab Cause-specific (transition-specific) survival, constant hazards estimator, for transitioning from \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}.. Cause-specific survival treats all other events but the one of interest as random censoring. \tab \verb{exp(-`H_ch_[x, y]`)} \tab \verb{S_ch * sqrt(cumsum((delta_t^2) * `n_events_[x, y]`/(t_at_risk^2)))} \cr
    \verb{F_lt_[x, y]} \tab Cause-specific (transition-specific) (absolute) risk, lifetable estimator for transitioning from  \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}. Here we use the estimator presented in Prentice et al. We don't know the standard error formula for this one. Prentice RL, Kalbfleisch JD, Peterson AV Jr, Flournoy N, Farewell VT, Breslow NE. The analysis of failure times in the presence of competing risks. Biometrics. 1978 Dec;34(4):541-54. PMID: 373811 \tab \verb{{
-    q <- (1 - S_lt_cond_est) * `n_events_[x, y]`/n_events
-    q[n_events == 0] <- 0
-    cumsum(S_lt_est_lag1 * q)
+  m <- `n_events_[x, y]`/n_events
+  S_lt_interval <- S_lt_cond
+  F_lt_interval <- (1 - S_lt_interval)
+  F_lt_interval[n_events == 0] <- 0
+  `F_lt_interval_[x, y]` <- F_lt_interval * m
+  S_lt_to_interval_start <- S_lt_lag1
+  cumsum(S_lt_to_interval_start * `F_lt_interval_[x, y]`)
 }} \tab \verb{0 + NA_real_} \cr
    \verb{F_ch_[x, y]} \tab Cause-specific (transition-specific) (absolute) risk, constant hazards estimator. Here we use the estimator presented in Prentice et al. We don't know the standard error formula for this one. Prentice RL, Kalbfleisch JD, Peterson AV Jr, Flournoy N, Farewell VT, Breslow NE. The analysis of failure times in the presence of competing risks. Biometrics. 1978 Dec;34(4):541-54. PMID: 373811 \tab \verb{{
-    q <- (1 - S_ch_cond_est) * `n_events_[x, y]`/n_events
-    q[n_events == 0] <- 0
-    cumsum(S_ch_est_lag1 * q)
+  m <- `n_events_[x, y]`/n_events
+  S_ch_interval <- S_ch_cond
+  F_ch_interval <- (1 - S_ch_interval)
+  F_ch_interval[n_events == 0] <- 0
+  `F_ch_interval_[x, y]` <- F_ch_interval * m
+  S_ch_to_interval_start <- S_ch_lag1
+  cumsum(S_ch_to_interval_start * `F_ch_interval_[x, y]`)
 }} \tab \verb{0 + NA_real_} \cr
    \verb{RF_e2_lt} \tab ""Relative"" absolute risk, lifetable estimator. This was proposed by Karri Seppa at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients. We don't know the standard error formula for this one. \tab \verb{{
-    q <- (1 - S_lt_cond_est) * (n_events - n_events_exp_e2)/n_events
-    q[n_events == 0] <- 0
-    cumsum(S_lt_est_lag1 * q)
+  m <- (n_events - n_events_exp_e2)/n_events
+  S_lt_interval <- S_lt_cond
+  F_lt_interval <- (1 - S_lt_interval)
+  F_lt_interval[n_events == 0] <- 0
+  F_ch_exc_interval <- F_lt_interval * m
+  S_lt_to_interval_start <- S_lt_lag1
+  cumsum(S_lt_to_interval_start * F_ch_exc_interval)
 }} \tab \verb{0 + NA_real_} \cr
    \verb{RF_e2_ch} \tab ""Relative"" absolute risk, constant hazards estimator. This was proposed by Karri Seppa at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients. We don't know the standard error formula for this one. \tab \verb{{
-    q <- (1 - S_ch_cond_est) * (n_events - n_events_exp_e2)/n_events
-    q[n_events == 0] <- 0
-    cumsum(S_ch_est_lag1 * q)
+  m <- (n_events - n_events_exp_e2)/n_events
+  S_ch_interval <- S_ch_cond
+  F_ch_interval <- (1 - S_ch_interval)
+  F_ch_interval[n_events == 0] <- 0
+  F_ch_exc_interval <- F_ch_interval * m
+  S_ch_to_interval_start <- S_ch_lag1
+  cumsum(S_ch_to_interval_start * F_ch_exc_interval)
 }} \tab \verb{0 + NA_real_} \cr
 }
 
@@ -376,8 +392,7 @@ columns of the follow-up time scale, e.g. \code{ts_fut_stop - ts_fut_start}.
 \code{expressions}, for each \code{i}:
 \itemize{
 \item Evaluate each element of \code{expressions[[i]]} and add the result into
-\code{dt}. E.g. \code{S_ch_est} and
-\code{S_ch_se}.
+\code{dt}. E.g. \code{S_ch} and \code{S_ch_se}.
 }
 \item Call
 \verb{[directadjusting::directly_adjusted_estimates]}.
@@ -577,8 +592,8 @@ sdt <- popEpi::surv_estimate(
   conf_methods = "log-log"
 )
 stopifnot(
-  c("h_ch_est", "S_ch_est") \%in\% names(sdt),
-  dt[["my_h_ch"]] == sdt[["h_ch_est"]]
+  c("h_ch", "S_ch") \%in\% names(sdt),
+  dt[["my_h_ch"]] == sdt[["h_ch"]]
 )
 sdt <- popEpi::surv_estimate(
   dt = dt,
@@ -588,7 +603,7 @@ sdt <- popEpi::surv_estimate(
     "h_ch",
     my_surv = list(
       est = quote(
-        exp(-cumsum((ts_fut_stop - ts_fut_start) * h_ch_est))
+        exp(-cumsum((ts_fut_stop - ts_fut_start) * h_ch))
       ),
       se = quote(rep(0.0, length(ts_fut_start)))
     )
@@ -596,7 +611,7 @@ sdt <- popEpi::surv_estimate(
   conf_methods = c("log", "none")
 )
 stopifnot(
-  c("h_ch_est", "my_surv_est") \%in\% names(sdt)
+  c("h_ch", "my_surv") \%in\% names(sdt)
 )
 sdt <- popEpi::surv_estimate(
   dt = dt,
@@ -615,7 +630,7 @@ sdt <- popEpi::surv_estimate(
   )
 )
 stopifnot(
-  c("h_ch_est", "S_ch_est") \%in\% names(sdt)
+  c("h_ch", "S_ch") \%in\% names(sdt)
 )
 
 # one approach to brenner weighting --- effectively the same as assigning
@@ -714,7 +729,7 @@ sdt_bw <- popEpi::surv_estimate(
   ),
   value_col_nms = c("n_events", "t_at_risk")
 )
-stopifnot("S_ch_est" \%in\% names(sdt_bw), !"ag_icss" \%in\% names(sdt_bw))
+stopifnot("S_ch" \%in\% names(sdt_bw), !"ag_icss" \%in\% names(sdt_bw))
 
 # direct adjusting for comparison
 sdt_da <- popEpi::surv_estimate(
@@ -727,10 +742,10 @@ sdt_da <- popEpi::surv_estimate(
   ),
   value_col_nms = c("n_events", "t_at_risk")
 )
-stopifnot("S_ch_est" \%in\% names(sdt_da), !"ag_icss" \%in\% names(sdt_da))
+stopifnot("S_ch_w" \%in\% names(sdt_da), !"ag_icss" \%in\% names(sdt_da))
 
 stopifnot(
-  max(abs(sdt_bw[["S_ch_est"]] - sdt_da[["S_ch_est"]])) < 0.01
+  max(abs(sdt_bw[["S_ch"]] - sdt_da[["S_ch_w"]])) < 0.01
 )
 
 # this data.table::setDTthreads call is included here only to
@@ -1115,7 +1130,7 @@ sdt <- popEpi::surv_lexis(
 stopifnot(
   inherits(sdt, "data.table"),
   "my_stratum" \%in\% names(sdt),
-  c("S_ch_est", "S_ch_se", "S_ch_lo", "S_ch_hi") \%in\% names(sdt)
+  c("S_ch", "S_ch_se", "S_ch_lo", "S_ch_hi") \%in\% names(sdt)
 )
 
 # observed survival with direct adjusting
@@ -1129,7 +1144,7 @@ sdt_da <- popEpi::surv_lexis(
 stopifnot(
   inherits(sdt_da, "data.table"),
   "my_stratum" \%in\% names(sdt_da),
-  c("S_ch_est", "S_ch_se", "S_ch_lo", "S_ch_hi") \%in\% names(sdt_da)
+  c("S_ch_w", "S_ch_w_se", "S_ch_w_lo", "S_ch_w_hi") \%in\% names(sdt_da)
 )
 
 # observed survival with individual weighting
@@ -1143,12 +1158,12 @@ sdt_iw <- popEpi::surv_lexis(
 stopifnot(
   inherits(sdt_iw, "data.table"),
   "my_stratum" \%in\% names(sdt_iw),
-  c("S_ch_est", "S_ch_se", "S_ch_lo", "S_ch_hi") \%in\% names(sdt_iw),
+  c("S_ch", "S_ch_se", "S_ch_lo", "S_ch_hi") \%in\% names(sdt_iw),
 
   # direct adjusting and individual weighting produce similar results.
   # the larger the dataset, the smaller the difference between the two.
-  max(abs(sdt_da[["S_ch_est"]] - sdt_iw[["S_ch_est"]])) < 0.02,
-  max(abs(sdt_da[["S_ch_se"]] - sdt_iw[["S_ch_se"]])) < 0.001
+  max(abs(sdt_da[["S_ch_w"]] - sdt_iw[["S_ch"]])) < 0.02,
+  max(abs(sdt_da[["S_ch_w_se"]] - sdt_iw[["S_ch_se"]])) < 0.001
 )
 
 # observed survival with direct adjusting, multiple period estimates
@@ -1165,7 +1180,7 @@ sdt_da <- popEpi::surv_lexis(
 stopifnot(
   inherits(sdt_da, "data.table"),
   c("ts_cal_start", "ts_fut_start") \%in\% names(sdt_da),
-  c("S_ch_est", "S_ch_se", "S_ch_lo", "S_ch_hi") \%in\% names(sdt_da)
+  c("S_ch_w", "S_ch_w_se", "S_ch_w_lo", "S_ch_w_hi") \%in\% names(sdt_da)
 )
 
 # observed survival with individual adjusting, period estimates
@@ -1179,12 +1194,12 @@ sdt_iw <- popEpi::surv_lexis(
 stopifnot(
   inherits(sdt_iw, "data.table"),
   c("ts_cal_start", "ts_fut_start") \%in\% names(sdt_iw),
-  c("S_ch_est", "S_ch_se", "S_ch_lo", "S_ch_hi") \%in\% names(sdt_iw),
+  c("S_ch", "S_ch_se", "S_ch_lo", "S_ch_hi") \%in\% names(sdt_iw),
 
   # direct adjusting and individual weighting produce similar results.
   # the larger the dataset, the smaller the difference between the two.
-  max(abs(sdt_da[["S_ch_est"]] - sdt_iw[["S_ch_est"]])) < 0.03,
-  max(abs(sdt_da[["S_ch_se"]] - sdt_iw[["S_ch_se"]])) < 0.006
+  max(abs(sdt_da[["S_ch_w"]] - sdt_iw[["S_ch"]])) < 0.03,
+  max(abs(sdt_da[["S_ch_w_se"]] - sdt_iw[["S_ch_se"]])) < 0.006
 )
 
 # a few common survival time function estimates
@@ -1202,7 +1217,7 @@ sdt <- popEpi::surv_lexis(
 )
 stopifnot(
   inherits(sdt, "data.table"),
-  c("S_ch_est", "RS_e2_ch_est", "NS_pp_ch_est") \%in\% names(sdt)
+  c("S_ch", "RS_e2_ch", "NS_pp_ch") \%in\% names(sdt)
 )
 
 # your very own estimator (the example `se` is made up)
@@ -1215,13 +1230,13 @@ sdt <- popEpi::surv_lexis(
   estimators = list(
     my_estimator = list(
       est = quote(n_events / n_events_exp_e2),
-      se = quote(sqrt(n_events / (n_events_exp_e2 ^ 2)))
+      se = quote(sqrt(n_events / (n_events_exp_e2^2)))
     )
   ),
   conf_method = "identity"
 )
 stopifnot(
-  c("my_estimator_est", "my_estimator_se") \%in\% names(sdt)
+  c("my_estimator", "my_estimator_se") \%in\% names(sdt)
 )
 
 # your very own estimator with direct adjusting
@@ -1234,14 +1249,14 @@ sdt <- popEpi::surv_lexis(
   estimators = list(
     my_estimator = list(
       est = quote(n_events / n_events_exp_e2),
-      se = quote(sqrt(n_events / (n_events_exp_e2 ^ 2)))
+      se = quote(sqrt(n_events / (n_events_exp_e2^2)))
     )
   ),
   conf_method = "identity",
   weights = wdt
 )
 stopifnot(
-  c("my_estimator_est", "my_estimator_se") \%in\% names(sdt)
+  c("my_estimator_w", "my_estimator_w_se") \%in\% names(sdt)
 )
 
 # your very own estimator with individual weighting
@@ -1254,14 +1269,14 @@ sdt <- popEpi::surv_lexis(
   estimators = list(
     my_estimator = list(
       est = quote(n_events / n_events_exp_e2),
-      se = quote(sqrt(n_events / (n_events_exp_e2 ^ 2)))
+      se = quote(sqrt(n_events / (n_events_exp_e2^2)))
     )
   ),
   conf_method = "identity",
   weights = "individual_weight"
 )
 stopifnot(
-  c("my_estimator_est", "my_estimator_se") \%in\% names(sdt)
+  c("my_estimator", "my_estimator_se") \%in\% names(sdt)
 )
 
 # your very own method of confidence interval estimation
@@ -1314,39 +1329,39 @@ sdt <- popEpi::surv_lexis(
 stopifnot(
   # hazard is additive.
   all.equal(
-    sdt[["h_ch_est"]],
-    sdt[["h_ch_[0, 1]_est"]] + sdt[["h_ch_[0, 2]_est"]]
+    sdt[["h_ch"]],
+    sdt[["h_ch_[0, 1]"]] + sdt[["h_ch_[0, 2]"]]
   ),
   # cumulative hazard is additive.
   all.equal(
-    sdt[["H_ch_est"]],
-    sdt[["H_ch_[0, 1]_est"]] + sdt[["H_ch_[0, 2]_est"]]
+    sdt[["H_ch"]],
+    sdt[["H_ch_[0, 1]"]] + sdt[["H_ch_[0, 2]"]]
   ),
   # competing risks cdf is additive. in epidemiology the cdf is often called
   # the cumulative incidence function.
   all.equal(
-    sdt[["F_ch_est"]],
-    sdt[["F_ch_[0, 1]_est"]] + sdt[["F_ch_[0, 2]_est"]]
+    sdt[["F_ch"]],
+    sdt[["F_ch_[0, 1]"]] + sdt[["F_ch_[0, 2]"]]
   ),
 
   # competing risks survival is NOT additive!
-  sdt[["S_ch_[0, 1]_est"]] + sdt[["S_ch_[0, 2]_est"]] > 1,
+  sdt[["S_ch_[0, 1]"]] + sdt[["S_ch_[0, 2]"]] > 1,
 
   # you can define multiple states in the cause-specific transition.
   # this one covers all exit statuses and is therefore the same as overall
   # survival by definition.
-  sdt[["S_ch_[0, 1:2]_est"]] == sdt[["S_ch_est"]]#,
+  sdt[["S_ch_[0, 1:2]"]] == sdt[["S_ch"]] #,
 
   # the different estimation methods produce about the same results.
-  # abs(sdt[["S_ch_est"]] - sdt[["S_lt_est"]]) < 0.01,
-  # abs(sdt[["H_ch_est"]] - sdt[["H_lt_est"]]) < 0.01,
+  # abs(sdt[["S_ch"]] - sdt[["S_lt"]]) < 0.01,
+  # abs(sdt[["H_ch"]] - sdt[["H_lt"]]) < 0.01,
 
   # net survival is approximately the same as cause-specific survival in this
   # rather ideal dataset.
-  # abs(sdt[["S_ch_[0, 1]_est"]] - sdt[["NS_pp_ch_est"]]) < 0.01,
+  # abs(sdt[["S_ch_[0, 1]"]] - sdt[["NS_pp_ch"]]) < 0.01,
   # the ederer 2 based "relative cdf" is approximately the same as
   # cause-specific cdf in this rather ideal dataset.
-  # abs(sdt[["F_ch_[0, 1]_est"]] - sdt[["RF_e2_ch_est"]]) < 0.01
+  # abs(sdt[["F_ch_[0, 1]"]] - sdt[["RF_e2_ch"]]) < 0.01
 )
 
 # factor status
@@ -1381,7 +1396,7 @@ sdt <- popEpi::surv_lexis(
 stopifnot(
   # produces the estimates as intended. maybe these are not too pretty but
   # you could use shorter factor labels such as c("a", "dc", "do").
-  "F_ch_['alive', 'dead from cancer']_est" \%in\% names(sdt)
+  "F_ch_['alive', 'dead from cancer']" \%in\% names(sdt)
 )
 
 # TRUE/FALSE status
@@ -1406,9 +1421,9 @@ sdt <- popEpi::surv_lexis(
   )
 )
 stopifnot(
-  "F_ch_[F, T]_est" \%in\% names(sdt),
+  "F_ch_[F, T]" \%in\% names(sdt),
 
-  max(abs(sdt[["F_ch_[F, T]_est"]] - sdt[["F_ch_est"]])) < 1e-15
+  max(abs(sdt[["F_ch_[F, T]"]] - sdt[["F_ch"]])) < 1e-15
 )
 
 # more arguments to popEpi::lexis_split_merge_aggregate_by_stratum
@@ -1423,4 +1438,5 @@ sdt <- popEpi::surv_lexis(
 stopifnot(
   1:5 \%in\% sdt[["ts_fut_stop"]]
 )
+
 }

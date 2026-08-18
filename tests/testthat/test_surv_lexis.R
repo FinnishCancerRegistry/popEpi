@@ -16,7 +16,7 @@ testthat::test_that("surv_lexis & survival produce comparable results", {
     stratum_col_nms = "my_stratum"
   )
   testthat::expect_true(all.equal(
-    obs[["S_ch_est"]],
+    obs[["S_ch"]],
     exp[["est"]],
     scale = 1L,
     tolerance = 0.001
@@ -48,7 +48,7 @@ testthat::test_that("surv_lexis & relsurv produce comparable results", {
     method = "ederer2"
   )
   testthat::expect_true(
-    max(abs(obs[["RS_e2_ch_est"]] - exp[["est"]])) < 0.026
+    max(abs(obs[["RS_e2_ch"]] - exp[["est"]])) < 0.026
   )
   testthat::expect_true(
     max(abs(obs[["RS_e2_ch_se"]] - exp[["se"]])) < 0.001
@@ -60,7 +60,7 @@ testthat::test_that("surv_lexis & relsurv produce comparable results", {
     method = "pohar-perme"
   )
   testthat::expect_true(
-    max(abs(obs[["NS_pp_ch_est"]] - exp[["est"]])) < 0.028
+    max(abs(obs[["NS_pp_ch"]] - exp[["est"]])) < 0.028
   )
   testthat::expect_true(
     max(abs(obs[["NS_pp_ch_se"]] - exp[["se"]])) < 0.001

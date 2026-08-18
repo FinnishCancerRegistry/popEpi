@@ -348,7 +348,7 @@ surv_lexis_aggre_exprs__ <- function(
 #' stopifnot(
 #'   inherits(sdt, "data.table"),
 #'   "my_stratum" %in% names(sdt),
-#'   c("S_ch_est", "S_ch_se", "S_ch_lo", "S_ch_hi") %in% names(sdt)
+#'   c("S_ch", "S_ch_se", "S_ch_lo", "S_ch_hi") %in% names(sdt)
 #' )
 #'
 #' # observed survival with direct adjusting
@@ -362,7 +362,7 @@ surv_lexis_aggre_exprs__ <- function(
 #' stopifnot(
 #'   inherits(sdt_da, "data.table"),
 #'   "my_stratum" %in% names(sdt_da),
-#'   c("S_ch_est", "S_ch_se", "S_ch_lo", "S_ch_hi") %in% names(sdt_da)
+#'   c("S_ch_w", "S_ch_w_se", "S_ch_w_lo", "S_ch_w_hi") %in% names(sdt_da)
 #' )
 #'
 #' # observed survival with individual weighting
@@ -376,12 +376,12 @@ surv_lexis_aggre_exprs__ <- function(
 #' stopifnot(
 #'   inherits(sdt_iw, "data.table"),
 #'   "my_stratum" %in% names(sdt_iw),
-#'   c("S_ch_est", "S_ch_se", "S_ch_lo", "S_ch_hi") %in% names(sdt_iw),
+#'   c("S_ch", "S_ch_se", "S_ch_lo", "S_ch_hi") %in% names(sdt_iw),
 #'
 #'   # direct adjusting and individual weighting produce similar results.
 #'   # the larger the dataset, the smaller the difference between the two.
-#'   max(abs(sdt_da[["S_ch_est"]] - sdt_iw[["S_ch_est"]])) < 0.02,
-#'   max(abs(sdt_da[["S_ch_se"]] - sdt_iw[["S_ch_se"]])) < 0.001
+#'   max(abs(sdt_da[["S_ch_w"]] - sdt_iw[["S_ch"]])) < 0.02,
+#'   max(abs(sdt_da[["S_ch_w_se"]] - sdt_iw[["S_ch_se"]])) < 0.001
 #' )
 #'
 #' # observed survival with direct adjusting, multiple period estimates
@@ -398,7 +398,7 @@ surv_lexis_aggre_exprs__ <- function(
 #' stopifnot(
 #'   inherits(sdt_da, "data.table"),
 #'   c("ts_cal_start", "ts_fut_start") %in% names(sdt_da),
-#'   c("S_ch_est", "S_ch_se", "S_ch_lo", "S_ch_hi") %in% names(sdt_da)
+#'   c("S_ch_w", "S_ch_w_se", "S_ch_w_lo", "S_ch_w_hi") %in% names(sdt_da)
 #' )
 #'
 #' # observed survival with individual adjusting, period estimates
@@ -412,12 +412,12 @@ surv_lexis_aggre_exprs__ <- function(
 #' stopifnot(
 #'   inherits(sdt_iw, "data.table"),
 #'   c("ts_cal_start", "ts_fut_start") %in% names(sdt_iw),
-#'   c("S_ch_est", "S_ch_se", "S_ch_lo", "S_ch_hi") %in% names(sdt_iw),
+#'   c("S_ch", "S_ch_se", "S_ch_lo", "S_ch_hi") %in% names(sdt_iw),
 #'
 #'   # direct adjusting and individual weighting produce similar results.
 #'   # the larger the dataset, the smaller the difference between the two.
-#'   max(abs(sdt_da[["S_ch_est"]] - sdt_iw[["S_ch_est"]])) < 0.03,
-#'   max(abs(sdt_da[["S_ch_se"]] - sdt_iw[["S_ch_se"]])) < 0.006
+#'   max(abs(sdt_da[["S_ch_w"]] - sdt_iw[["S_ch"]])) < 0.03,
+#'   max(abs(sdt_da[["S_ch_w_se"]] - sdt_iw[["S_ch_se"]])) < 0.006
 #' )
 #'
 #' # a few common survival time function estimates
@@ -435,7 +435,7 @@ surv_lexis_aggre_exprs__ <- function(
 #' )
 #' stopifnot(
 #'   inherits(sdt, "data.table"),
-#'   c("S_ch_est", "RS_e2_ch_est", "NS_pp_ch_est") %in% names(sdt)
+#'   c("S_ch", "RS_e2_ch", "NS_pp_ch") %in% names(sdt)
 #' )
 #'
 #' # your very own estimator (the example `se` is made up)
@@ -448,13 +448,13 @@ surv_lexis_aggre_exprs__ <- function(
 #'   estimators = list(
 #'     my_estimator = list(
 #'       est = quote(n_events / n_events_exp_e2),
-#'       se = quote(sqrt(n_events / (n_events_exp_e2 ^ 2)))
+#'       se = quote(sqrt(n_events / (n_events_exp_e2^2)))
 #'     )
 #'   ),
 #'   conf_method = "identity"
 #' )
 #' stopifnot(
-#'   c("my_estimator_est", "my_estimator_se") %in% names(sdt)
+#'   c("my_estimator", "my_estimator_se") %in% names(sdt)
 #' )
 #'
 #' # your very own estimator with direct adjusting
@@ -467,14 +467,14 @@ surv_lexis_aggre_exprs__ <- function(
 #'   estimators = list(
 #'     my_estimator = list(
 #'       est = quote(n_events / n_events_exp_e2),
-#'       se = quote(sqrt(n_events / (n_events_exp_e2 ^ 2)))
+#'       se = quote(sqrt(n_events / (n_events_exp_e2^2)))
 #'     )
 #'   ),
 #'   conf_method = "identity",
 #'   weights = wdt
 #' )
 #' stopifnot(
-#'   c("my_estimator_est", "my_estimator_se") %in% names(sdt)
+#'   c("my_estimator_w", "my_estimator_w_se") %in% names(sdt)
 #' )
 #'
 #' # your very own estimator with individual weighting
@@ -487,14 +487,14 @@ surv_lexis_aggre_exprs__ <- function(
 #'   estimators = list(
 #'     my_estimator = list(
 #'       est = quote(n_events / n_events_exp_e2),
-#'       se = quote(sqrt(n_events / (n_events_exp_e2 ^ 2)))
+#'       se = quote(sqrt(n_events / (n_events_exp_e2^2)))
 #'     )
 #'   ),
 #'   conf_method = "identity",
 #'   weights = "individual_weight"
 #' )
 #' stopifnot(
-#'   c("my_estimator_est", "my_estimator_se") %in% names(sdt)
+#'   c("my_estimator", "my_estimator_se") %in% names(sdt)
 #' )
 #'
 #' # your very own method of confidence interval estimation
@@ -547,39 +547,39 @@ surv_lexis_aggre_exprs__ <- function(
 #' stopifnot(
 #'   # hazard is additive.
 #'   all.equal(
-#'     sdt[["h_ch_est"]],
-#'     sdt[["h_ch_[0, 1]_est"]] + sdt[["h_ch_[0, 2]_est"]]
+#'     sdt[["h_ch"]],
+#'     sdt[["h_ch_[0, 1]"]] + sdt[["h_ch_[0, 2]"]]
 #'   ),
 #'   # cumulative hazard is additive.
 #'   all.equal(
-#'     sdt[["H_ch_est"]],
-#'     sdt[["H_ch_[0, 1]_est"]] + sdt[["H_ch_[0, 2]_est"]]
+#'     sdt[["H_ch"]],
+#'     sdt[["H_ch_[0, 1]"]] + sdt[["H_ch_[0, 2]"]]
 #'   ),
 #'   # competing risks cdf is additive. in epidemiology the cdf is often called
 #'   # the cumulative incidence function.
 #'   all.equal(
-#'     sdt[["F_ch_est"]],
-#'     sdt[["F_ch_[0, 1]_est"]] + sdt[["F_ch_[0, 2]_est"]]
+#'     sdt[["F_ch"]],
+#'     sdt[["F_ch_[0, 1]"]] + sdt[["F_ch_[0, 2]"]]
 #'   ),
 #'
 #'   # competing risks survival is NOT additive!
-#'   sdt[["S_ch_[0, 1]_est"]] + sdt[["S_ch_[0, 2]_est"]] > 1,
+#'   sdt[["S_ch_[0, 1]"]] + sdt[["S_ch_[0, 2]"]] > 1,
 #'
 #'   # you can define multiple states in the cause-specific transition.
 #'   # this one covers all exit statuses and is therefore the same as overall
 #'   # survival by definition.
-#'   sdt[["S_ch_[0, 1:2]_est"]] == sdt[["S_ch_est"]]#,
+#'   sdt[["S_ch_[0, 1:2]"]] == sdt[["S_ch"]] #,
 #'
 #'   # the different estimation methods produce about the same results.
-#'   # abs(sdt[["S_ch_est"]] - sdt[["S_lt_est"]]) < 0.01,
-#'   # abs(sdt[["H_ch_est"]] - sdt[["H_lt_est"]]) < 0.01,
+#'   # abs(sdt[["S_ch"]] - sdt[["S_lt"]]) < 0.01,
+#'   # abs(sdt[["H_ch"]] - sdt[["H_lt"]]) < 0.01,
 #'
 #'   # net survival is approximately the same as cause-specific survival in this
 #'   # rather ideal dataset.
-#'   # abs(sdt[["S_ch_[0, 1]_est"]] - sdt[["NS_pp_ch_est"]]) < 0.01,
+#'   # abs(sdt[["S_ch_[0, 1]"]] - sdt[["NS_pp_ch"]]) < 0.01,
 #'   # the ederer 2 based "relative cdf" is approximately the same as
 #'   # cause-specific cdf in this rather ideal dataset.
-#'   # abs(sdt[["F_ch_[0, 1]_est"]] - sdt[["RF_e2_ch_est"]]) < 0.01
+#'   # abs(sdt[["F_ch_[0, 1]"]] - sdt[["RF_e2_ch"]]) < 0.01
 #' )
 #'
 #' # factor status
@@ -614,7 +614,7 @@ surv_lexis_aggre_exprs__ <- function(
 #' stopifnot(
 #'   # produces the estimates as intended. maybe these are not too pretty but
 #'   # you could use shorter factor labels such as c("a", "dc", "do").
-#'   "F_ch_['alive', 'dead from cancer']_est" %in% names(sdt)
+#'   "F_ch_['alive', 'dead from cancer']" %in% names(sdt)
 #' )
 #'
 #' # TRUE/FALSE status
@@ -639,9 +639,9 @@ surv_lexis_aggre_exprs__ <- function(
 #'   )
 #' )
 #' stopifnot(
-#'   "F_ch_[F, T]_est" %in% names(sdt),
+#'   "F_ch_[F, T]" %in% names(sdt),
 #'
-#'   max(abs(sdt[["F_ch_[F, T]_est"]] - sdt[["F_ch_est"]])) < 1e-15
+#'   max(abs(sdt[["F_ch_[F, T]"]] - sdt[["F_ch"]])) < 1e-15
 #' )
 #'
 #' # more arguments to popEpi::lexis_split_merge_aggregate_by_stratum
@@ -656,6 +656,7 @@ surv_lexis_aggre_exprs__ <- function(
 #' stopifnot(
 #'   1:5 %in% sdt[["ts_fut_stop"]]
 #' )
+#'
 surv_lexis <- function(
   lexis,
   breaks,
