@@ -7,22 +7,16 @@
 rate_ratio(x, y, crude = FALSE, SE.method = FALSE)
 }
 \arguments{
-\item{x}{\verb{[rate, integer, numeric]} (no default)
+\item{x}{\verb{[rate, integer, numeric, list]} (no default)
 
 Rate data.
 \itemize{
 \item \code{rate}: An object as produced by \verb{[rate]}. If one of \code{x} and \code{y} is a
 \code{rate} object then both have to be or an error is raised.
-\item \code{integer} / \code{numeric}: A vector of length two. Here you have two options
-which you can choose using argument \code{SE.method}:
-\itemize{
-\item \code{SE.method = FALSE}: The first element is the number of events and the
-second the at-risk time (Poisson offset). This causes confidence
-intervals to be produced via \verb{[stats::poisson.test]}.
-\item \code{SE.method = TRUE}: The first element is the rate estimate and second
-the standard error. Confidence intervals are produced using the delta
-method with the log-transform.
-}
+\item \code{integer} / \code{numeric}: A vector of length two. For what the elements should
+be, see the documentation for argument \code{SE.method}.
+\item \code{list}: A \code{list} of length two. Each element is a vector of of numbers,
+whose intended contents depend on argument \code{SE.method}.
 }}
 
 \item{y}{\verb{[rate, integer, numeric]} (no default)
@@ -38,26 +32,33 @@ This argument only used when \code{x} and \code{y} are \code{rate} objects as pr
 \item \code{FALSE} causes column \code{rate.adj} to be used.
 }}
 
-\item{SE.method}{\verb{[logical]} (default \code{FALSE})
+\item{SE.method}{\verb{[logical, character]} (default \code{FALSE})
 
 Ignored when \code{x} and \code{y} are objects of class \code{rate} as produced by \verb{[rate]}.
-See the documention for argument \code{x}.}
+\itemize{
+\item \code{FALSE} / \verb{"poisson.test": The first element of }x\code{and}y\verb{is the number of events and the second the at-risk time (Poisson offset). This causes confidence intervals to be produced via}\link[stats:poisson.test]{stats::poisson.test}`.
+\item \code{TRUE} / \code{"se_delta_method"}:
+The first element is the rate estimate and second
+the standard error. Confidence intervals are produced using the delta
+method with the log-transform.
+\item \code{SE.method = "glm"}: \code{x} and \code{y} contain event numbers and at-risk times.
+We fit a tiny Poisson regression model using
+\verb{[stats::glm]} to compute exact confidence intervals. This is the most
+efficient and accurate method.
+}}
 }
 \value{
 A vector length of three: rate_ratio, and lower and upper confidence intervals.
 }
 \description{
-Calculate rate ratio with confidence intervals for rate objects or observations and person-years.
+Estimate the rate ratio.
 }
 \details{
-Calculate rate ratio of two age standardized rate objects (see \verb{[rate]}).
-Multiple rates for each objects is supported if there are an equal number of rates.
-Another option is to set \code{x} and \code{y} as a vector of two.
-\enumerate{
-\item rate and its standard error, and  set \code{SE.method = TRUE}.
-\item observations and person-year, and  set \code{SE.method = FALSE}.
-}
-See examples.
+\code{rate_ratio} was originally written for the purpose of estimating the
+rate ratio when only the rates and their standard errors are known
+(\code{SE.method = TRUE}). For instance one could estimate the rate ratio of two
+age-adjusted rates in this manner. However, we have also implemented the
+possibility of estimating the rate ratio from count data.
 }
 \examples{
 # this data.table::setDTthreads call is included here only to
@@ -85,10 +86,35 @@ rate_ratio(r_re, r_br, SE.method = TRUE)
 }
 
 # using rates (0.003 and 0.005) and their SEs (0.001 and 0.002)
-rate_ratio(x= c(0.003, 0.001), y= c(0.005, 0.002), SE.method = TRUE)
+# the CIs come from the delta method
+rate_ratio(x = c(0.003, 0.001), y = c(0.005, 0.002),
+           SE.method = TRUE)
+rate_ratio(x = c(0.003, 0.001), y = c(0.005, 0.002),
+           SE.method = "se_delta_method")
+rate_ratio(
+  x = list(c(0.003, 0.004), c(0.001, 0.001)),
+  y = list(c(0.005, 0.006), c(0.002, 0.002)),
+  SE.method = "se_delta_method"
+)
+
 
 # using event numbers (10 and 20) and person-years (30000 and 40000)
 rate_ratio(x = c(10, 30000), y = c(20, 40000), SE.method = FALSE)
+rate_ratio(x = c(10, 30000), y = c(20, 40000), SE.method = "poisson.test")
+rate_ratio(
+  x = list(c(10, 20), c(30000, 30000)),
+  y = list(c(20, 30), c(40000, 40000)),
+  SE.method = "poisson.test"
+)
+
+# using event numbers (10 and 20) and person-years (30000 and 40000)
+# and exact confidence intevals
+rate_ratio(x = c(10, 30000), y = c(20, 40000), SE.method = "glm")
+rate_ratio(
+  x = list(c(10, 20), c(30000, 30000)),
+  y = list(c(20, 30), c(40000, 40000)),
+  SE.method = "glm"
+)
 
 }
 \seealso{
