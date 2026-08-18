@@ -72,7 +72,7 @@
 #' r_re <- rate(re, obs = "from0to1", pyrs = "pyrs")
 #' r_br <- rate(br, obs = "from0to1", pyrs = "pyrs")
 #'
-#' rate_ratio(r_re, r_br, SE.method = TRUE)
+#' rate_ratio(r_re, r_br, crude = TRUE, SE.method = TRUE)
 #' }
 #'
 #' # using rates (0.003 and 0.005) and their SEs (0.001 and 0.002)

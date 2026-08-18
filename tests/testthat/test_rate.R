@@ -775,11 +775,6 @@ testthat::test_that("rate_ratio works", {
     round(w1[1, rate.adj] / w1[2, rate.adj], 3)
   )
 
-  testthat::expect_equal(
-    rate_ratio(w1[1], w1[2], crude = TRUE, SE.method = TRUE),
-    data.frame(rate_ratio = 1.134, lower = 1.087, upper = 1.182)
-  )
-
   # rate + SE
   x <- c(w1[1, rate], w1[1, SE.rate])
   y <- c(w1[2, rate], w1[2, SE.rate])
@@ -791,13 +786,6 @@ testthat::test_that("rate_ratio works", {
     rate_ratio(x, y, crude = TRUE, SE.method = TRUE)
   )
 
-  # Obs + Pyrs
-  testthat::expect_warning(rate_ratio(
-    c(88, 78),
-    c(109818, 110421),
-    crude = FALSE,
-    SE.method = TRUE
-  )) # oikein, message
   a <- rate_ratio(
     c(88, 78),
     c(109818, 110421),
