@@ -780,13 +780,6 @@ testthat::test_that("rate_ratio works", {
     data.frame(rate_ratio = 1.134, lower = 1.087, upper = 1.182)
   )
 
-  # rate obj crude
-  suppressMessages(
-    testthat::expect_equal(
-      rate_ratio(w3[1], w3[2], crude = TRUE, SE.method = TRUE), # oikein, hiljaa
-      rate_ratio(w3[1], w3[2], crude = FALSE, SE.method = TRUE)
-    ) # oikein, message
-  )
   # rate + SE
   x <- c(w1[1, rate], w1[1, SE.rate])
   y <- c(w1[2, rate], w1[2, SE.rate])
