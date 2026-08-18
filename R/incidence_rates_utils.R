@@ -167,7 +167,6 @@ rate_ratio <- function(x, y, crude = FALSE, SE.method = FALSE) {
       )
     }))
   } else if (SE.method == "glm") {
-    browser()
     out <- rate_ratio_glm__(
       d1 = x[[1]],
       y1 = x[[2]],
