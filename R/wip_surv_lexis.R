@@ -362,7 +362,7 @@ surv_lexis_aggre_exprs__ <- function(
 #' stopifnot(
 #'   inherits(sdt_da, "data.table"),
 #'   "my_stratum" %in% names(sdt_da),
-#'   c("S_ch_w", "S_ch_w_se", "S_ch_w_lo", "S_ch_w_hi") %in% names(sdt_da)
+#'   c("S_ch_da", "S_ch_da_se", "S_ch_da_lo", "S_ch_da_hi") %in% names(sdt_da)
 #' )
 #'
 #' # observed survival with individual weighting
@@ -376,12 +376,12 @@ surv_lexis_aggre_exprs__ <- function(
 #' stopifnot(
 #'   inherits(sdt_iw, "data.table"),
 #'   "my_stratum" %in% names(sdt_iw),
-#'   c("S_ch", "S_ch_se", "S_ch_lo", "S_ch_hi") %in% names(sdt_iw),
+#'   c("S_ch_bw", "S_ch_bw_se", "S_ch_bw_lo", "S_ch_bw_hi") %in% names(sdt_iw),
 #'
 #'   # direct adjusting and individual weighting produce similar results.
 #'   # the larger the dataset, the smaller the difference between the two.
-#'   max(abs(sdt_da[["S_ch_w"]] - sdt_iw[["S_ch"]])) < 0.02,
-#'   max(abs(sdt_da[["S_ch_w_se"]] - sdt_iw[["S_ch_se"]])) < 0.001
+#'   max(abs(sdt_da[["S_ch_da"]] - sdt_iw[["S_ch_bw"]])) < 0.02,
+#'   max(abs(sdt_da[["S_ch_da_se"]] - sdt_iw[["S_ch_bw_se"]])) < 0.001
 #' )
 #'
 #' # observed survival with direct adjusting, multiple period estimates
@@ -398,7 +398,7 @@ surv_lexis_aggre_exprs__ <- function(
 #' stopifnot(
 #'   inherits(sdt_da, "data.table"),
 #'   c("ts_cal_start", "ts_fut_start") %in% names(sdt_da),
-#'   c("S_ch_w", "S_ch_w_se", "S_ch_w_lo", "S_ch_w_hi") %in% names(sdt_da)
+#'   c("S_ch_da", "S_ch_da_se", "S_ch_da_lo", "S_ch_da_hi") %in% names(sdt_da)
 #' )
 #'
 #' # observed survival with individual adjusting, period estimates
@@ -412,12 +412,12 @@ surv_lexis_aggre_exprs__ <- function(
 #' stopifnot(
 #'   inherits(sdt_iw, "data.table"),
 #'   c("ts_cal_start", "ts_fut_start") %in% names(sdt_iw),
-#'   c("S_ch", "S_ch_se", "S_ch_lo", "S_ch_hi") %in% names(sdt_iw),
+#'   c("S_ch_bw", "S_ch_bw_se", "S_ch_bw_lo", "S_ch_bw_hi") %in% names(sdt_iw),
 #'
 #'   # direct adjusting and individual weighting produce similar results.
 #'   # the larger the dataset, the smaller the difference between the two.
-#'   max(abs(sdt_da[["S_ch_w"]] - sdt_iw[["S_ch"]])) < 0.03,
-#'   max(abs(sdt_da[["S_ch_w_se"]] - sdt_iw[["S_ch_se"]])) < 0.006
+#'   max(abs(sdt_da[["S_ch_da"]] - sdt_iw[["S_ch_bw"]])) < 0.03,
+#'   max(abs(sdt_da[["S_ch_da_se"]] - sdt_iw[["S_ch_bw_se"]])) < 0.006
 #' )
 #'
 #' # a few common survival time function estimates
@@ -474,10 +474,10 @@ surv_lexis_aggre_exprs__ <- function(
 #'   weights = wdt
 #' )
 #' stopifnot(
-#'   c("my_estimator_w", "my_estimator_w_se") %in% names(sdt)
+#'   c("my_estimator_da", "my_estimator_da_se") %in% names(sdt)
 #' )
 #'
-#' # your very own estimator with individual weighting
+#' # your very own estimator with individual brenner weighting
 #' sdt <- popEpi::surv_lexis(
 #'   lexis = sire,
 #'   breaks = bl,
@@ -494,7 +494,7 @@ surv_lexis_aggre_exprs__ <- function(
 #'   weights = "individual_weight"
 #' )
 #' stopifnot(
-#'   c("my_estimator", "my_estimator_se") %in% names(sdt)
+#'   c("my_estimator_bw", "my_estimator_bw_se") %in% names(sdt)
 #' )
 #'
 #' # your very own method of confidence interval estimation
@@ -510,7 +510,7 @@ surv_lexis_aggre_exprs__ <- function(
 #'   weights = "individual_weight"
 #' )
 #' stopifnot(
-#'   c("S_ch_lo", "S_ch_hi") %in% names(sdt)
+#'   c("S_ch_bw_lo", "S_ch_bw_hi") %in% names(sdt)
 #' )
 #'
 #' # a bunch of estimators, cause-specific ones from state 0 to 1 or 2
@@ -705,6 +705,7 @@ surv_lexis <- function(
   stopifnot(
     inherits(weights, c("NULL", "character", "data.table"))
   )
+  do_individual_brenner_weighting <- FALSE
   if (data.table::is.data.table(weights)) {
     surv_estimate_args[["weight_dt"]] <- weights
     split_merge_aggregate_args[["aggre_by"]] <- handle_arg_by(
@@ -719,6 +720,7 @@ surv_lexis <- function(
       dataset = lexis
     )
   } else if (is.character(weights)) {
+    do_individual_brenner_weighting <- TRUE
     split_merge_aggregate_args[["weight_col_nm"]] <- weights
   }
   # @codedoc_comment_block popEpi::surv_lexis
@@ -815,6 +817,34 @@ surv_lexis <- function(
     surv_estimate,
     surv_estimate_args
   )
+  # @codedoc_comment_block popEpi::surv_lexis
+  # - If Brenner weighting was used, rename columns containing estimates,
+  #   standard error, and confidence bounds to contain the identifier
+  #   `_bw`.
+  # @codedoc_comment_block popEpi::surv_lexis
+  if (do_individual_brenner_weighting) {
+    sdta_meta <- attr(sdt, "directly_adjusted_estimates_meta")
+    lapply(
+      sdta_meta[["meta_dt"]][["stat_col_nm"]],
+      function(nm) {
+        data.table::setnames(
+          x = sdt,
+          old = names(sdt),
+          new = sub(paste0("^", nm), sprintf("%s_bw", nm), names(sdt))
+        )
+      }
+    )
+    data.table::set(
+      x = sdta_meta[["meta_dt"]],
+      j = "stat_col_nm_w",
+      value = paste0(sdta_meta[["meta_dt"]][["stat_col_nm"]], "_bw")
+    )
+    data.table::setattr(
+      x = sdt,
+      name = "directly_adjusted_estimates_meta",
+      value = sdta_meta
+    )
+  }
 
   # @codedoc_comment_block return(popEpi::surv_lexis)
   # Returns a `data.table` as produced by `surv_estimate`.

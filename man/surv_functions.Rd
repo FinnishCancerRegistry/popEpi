@@ -401,6 +401,9 @@ produces the confidence intervals.
 \item If direct adjusting was performed, the summary statistics such as
 \code{n_events} are summed over the adjusting strata and will be included
 in the output. These are not weighted averages/sums but simple sums.
+\item If Brenner weighting was used, rename columns containing estimates,
+standard error, and confidence bounds to contain the identifier
+\verb{_bw}.
 \item Return a \code{data.table} containing all columns in \code{dt} (unless direct
 adjusting was performed --- then the adjusting column(s) are not present)
 and additional columns of estimates, standard errors, and confidence
@@ -561,6 +564,9 @@ stratified by both \code{aggre_by} and by any stratifying columns found in
 \verb{weight_dt if a }data.table\verb{was supplied as that argument. E.g. with}aggre_by = "sex"\code{and}weight_dt = data.table::data.table(ag = 1:3, weight = c(100, 150, 200))\verb{, the statistics table is stratified by both }sex\code{and}ag\verb{. With }aggre_by = "sex"\code{and}weights = "individual_weight"` the table is
 stratified by sex and contains individually weighted statistics.
 \item Call \code{surv_estimate}.
+\item If Brenner weighting was used, rename columns containing estimates,
+standard error, and confidence bounds to contain the identifier
+\verb{_bw}.
 }
 }
 
@@ -729,7 +735,7 @@ sdt_bw <- popEpi::surv_estimate(
   ),
   value_col_nms = c("n_events", "t_at_risk")
 )
-stopifnot("S_ch" \%in\% names(sdt_bw), !"ag_icss" \%in\% names(sdt_bw))
+stopifnot("S_ch_bw" \%in\% names(sdt_bw), !"ag_icss" \%in\% names(sdt_bw))
 
 # direct adjusting for comparison
 sdt_da <- popEpi::surv_estimate(
@@ -742,10 +748,10 @@ sdt_da <- popEpi::surv_estimate(
   ),
   value_col_nms = c("n_events", "t_at_risk")
 )
-stopifnot("S_ch_w" \%in\% names(sdt_da), !"ag_icss" \%in\% names(sdt_da))
+stopifnot("S_ch_da" \%in\% names(sdt_da), !"ag_icss" \%in\% names(sdt_da))
 
 stopifnot(
-  max(abs(sdt_bw[["S_ch"]] - sdt_da[["S_ch_w"]])) < 0.01
+  max(abs(sdt_bw[["S_ch_bw"]] - sdt_da[["S_ch_da"]])) < 0.01
 )
 
 # this data.table::setDTthreads call is included here only to
@@ -1144,7 +1150,7 @@ sdt_da <- popEpi::surv_lexis(
 stopifnot(
   inherits(sdt_da, "data.table"),
   "my_stratum" \%in\% names(sdt_da),
-  c("S_ch_w", "S_ch_w_se", "S_ch_w_lo", "S_ch_w_hi") \%in\% names(sdt_da)
+  c("S_ch_da", "S_ch_da_se", "S_ch_da_lo", "S_ch_da_hi") \%in\% names(sdt_da)
 )
 
 # observed survival with individual weighting
@@ -1158,12 +1164,12 @@ sdt_iw <- popEpi::surv_lexis(
 stopifnot(
   inherits(sdt_iw, "data.table"),
   "my_stratum" \%in\% names(sdt_iw),
-  c("S_ch", "S_ch_se", "S_ch_lo", "S_ch_hi") \%in\% names(sdt_iw),
+  c("S_ch_bw", "S_ch_bw_se", "S_ch_bw_lo", "S_ch_bw_hi") \%in\% names(sdt_iw),
 
   # direct adjusting and individual weighting produce similar results.
   # the larger the dataset, the smaller the difference between the two.
-  max(abs(sdt_da[["S_ch_w"]] - sdt_iw[["S_ch"]])) < 0.02,
-  max(abs(sdt_da[["S_ch_w_se"]] - sdt_iw[["S_ch_se"]])) < 0.001
+  max(abs(sdt_da[["S_ch_da"]] - sdt_iw[["S_ch_bw"]])) < 0.02,
+  max(abs(sdt_da[["S_ch_da_se"]] - sdt_iw[["S_ch_bw_se"]])) < 0.001
 )
 
 # observed survival with direct adjusting, multiple period estimates
@@ -1180,7 +1186,7 @@ sdt_da <- popEpi::surv_lexis(
 stopifnot(
   inherits(sdt_da, "data.table"),
   c("ts_cal_start", "ts_fut_start") \%in\% names(sdt_da),
-  c("S_ch_w", "S_ch_w_se", "S_ch_w_lo", "S_ch_w_hi") \%in\% names(sdt_da)
+  c("S_ch_da", "S_ch_da_se", "S_ch_da_lo", "S_ch_da_hi") \%in\% names(sdt_da)
 )
 
 # observed survival with individual adjusting, period estimates
@@ -1194,12 +1200,12 @@ sdt_iw <- popEpi::surv_lexis(
 stopifnot(
   inherits(sdt_iw, "data.table"),
   c("ts_cal_start", "ts_fut_start") \%in\% names(sdt_iw),
-  c("S_ch", "S_ch_se", "S_ch_lo", "S_ch_hi") \%in\% names(sdt_iw),
+  c("S_ch_bw", "S_ch_bw_se", "S_ch_bw_lo", "S_ch_bw_hi") \%in\% names(sdt_iw),
 
   # direct adjusting and individual weighting produce similar results.
   # the larger the dataset, the smaller the difference between the two.
-  max(abs(sdt_da[["S_ch_w"]] - sdt_iw[["S_ch"]])) < 0.03,
-  max(abs(sdt_da[["S_ch_w_se"]] - sdt_iw[["S_ch_se"]])) < 0.006
+  max(abs(sdt_da[["S_ch_da"]] - sdt_iw[["S_ch_bw"]])) < 0.03,
+  max(abs(sdt_da[["S_ch_da_se"]] - sdt_iw[["S_ch_bw_se"]])) < 0.006
 )
 
 # a few common survival time function estimates
@@ -1256,10 +1262,10 @@ sdt <- popEpi::surv_lexis(
   weights = wdt
 )
 stopifnot(
-  c("my_estimator_w", "my_estimator_w_se") \%in\% names(sdt)
+  c("my_estimator_da", "my_estimator_da_se") \%in\% names(sdt)
 )
 
-# your very own estimator with individual weighting
+# your very own estimator with individual brenner weighting
 sdt <- popEpi::surv_lexis(
   lexis = sire,
   breaks = bl,
@@ -1276,7 +1282,7 @@ sdt <- popEpi::surv_lexis(
   weights = "individual_weight"
 )
 stopifnot(
-  c("my_estimator", "my_estimator_se") \%in\% names(sdt)
+  c("my_estimator_bw", "my_estimator_bw_se") \%in\% names(sdt)
 )
 
 # your very own method of confidence interval estimation
@@ -1292,7 +1298,7 @@ sdt <- popEpi::surv_lexis(
   weights = "individual_weight"
 )
 stopifnot(
-  c("S_ch_lo", "S_ch_hi") \%in\% names(sdt)
+  c("S_ch_bw_lo", "S_ch_bw_hi") \%in\% names(sdt)
 )
 
 # a bunch of estimators, cause-specific ones from state 0 to 1 or 2

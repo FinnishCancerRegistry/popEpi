@@ -598,8 +598,8 @@ stopifnot(
   paste0("p_prev_eu_1976", c("", "_se", "_lo", "_hi")) \%in\% names(pdt),
   paste0("p_prev_eff_eu_1976", c("", "_se", "_lo", "_hi")) \%in\% names(pdt),
   # based on `wdt$weight`
-  paste0("p_prev_w", c("", "_se", "_lo", "_hi")) \%in\% names(pdt),
-  paste0("p_prev_eff_w", c("", "_se", "_lo", "_hi")) \%in\% names(pdt),
+  paste0("p_prev_da", c("", "_se", "_lo", "_hi")) \%in\% names(pdt),
+  paste0("p_prev_eff_da", c("", "_se", "_lo", "_hi")) \%in\% names(pdt),
   nrow(pdt) == 4
 )
 

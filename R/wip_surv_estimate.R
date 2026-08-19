@@ -427,7 +427,7 @@ surv_estimate_expression_table__ <- function() {
 #'   ),
 #'   value_col_nms = c("n_events", "t_at_risk")
 #' )
-#' stopifnot("S_ch" %in% names(sdt_bw), !"ag_icss" %in% names(sdt_bw))
+#' stopifnot("S_ch_bw" %in% names(sdt_bw), !"ag_icss" %in% names(sdt_bw))
 #'
 #' # direct adjusting for comparison
 #' sdt_da <- popEpi::surv_estimate(
@@ -440,10 +440,10 @@ surv_estimate_expression_table__ <- function() {
 #'   ),
 #'   value_col_nms = c("n_events", "t_at_risk")
 #' )
-#' stopifnot("S_ch_w" %in% names(sdt_da), !"ag_icss" %in% names(sdt_da))
+#' stopifnot("S_ch_da" %in% names(sdt_da), !"ag_icss" %in% names(sdt_da))
 #'
 #' stopifnot(
-#'   max(abs(sdt_bw[["S_ch"]] - sdt_da[["S_ch_w"]])) < 0.01
+#'   max(abs(sdt_bw[["S_ch_bw"]] - sdt_da[["S_ch_da"]])) < 0.01
 #' )
 #'
 surv_estimate <- function(
@@ -839,11 +839,32 @@ surv_estimate <- function(
       j = add_col_nms,
       value = as.list(sdta)[add_col_nms]
     )
-    ci_col_nms <- names(sum_dt)[grepl("(_lo$)|(_hi$)", names(sum_dt))]
-    data.table::setnames(
-      sum_dt,
-      ci_col_nms,
-      sub("_est_", "_", ci_col_nms)
+    if (do_brenner_weighting) {
+      # @codedoc_comment_block popEpi::surv_estimate
+      # - If Brenner weighting was used, rename columns containing estimates,
+      #   standard error, and confidence bounds to contain the identifier
+      #   `_bw`.
+      # @codedoc_comment_block popEpi::surv_estimate
+      lapply(
+        sdta_meta[["meta_dt"]][["stat_col_nm"]],
+        function(nm) {
+          data.table::setnames(
+            x = sum_dt,
+            old = names(sum_dt),
+            new = sub(paste0("^", nm), sprintf("%s_bw", nm), names(sum_dt))
+          )
+        }
+      )
+      data.table::set(
+        x = sdta_meta[["meta_dt"]],
+        j = "stat_col_nm_w",
+        value = paste0(sdta_meta[["meta_dt"]][["stat_col_nm"]], "_bw")
+      )
+    }
+    data.table::setattr(
+      x = sum_dt,
+      name = "directly_adjusted_estimates_meta",
+      value = sdta_meta
     )
     sum_dt[]
   })

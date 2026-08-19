@@ -587,7 +587,7 @@ agdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
   aggre_exprs = list(
     "t_at_risk",
     "my_stat" = quote(sum(lex.dur ^ 2)),
-    "t_at_risk_squaredd" = quote(sum(lex.dur ^ 2))
+    "t_at_risk_squared" = quote(sum(lex.dur ^ 2))
   )
 )
 stopifnot(
