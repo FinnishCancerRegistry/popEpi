@@ -576,13 +576,18 @@ lexis_split_merge_aggregate_by_stratum <- function(
       names(lexis),
       names(aggre_by)
     )])
-    not_in_aggre_by_idx <- join_dt[
+    join_dt[
+      #' @importFrom data.table :=
+      j = "__in_aggre_by__" := FALSE
+    ]
+    join_dt[
       i = aggre_by,
       on = names(aggre_by),
-      which = NA
+      #' @importFrom data.table :=
+      j = "__in_aggre_by__" := TRUE
     ]
-    subset[not_in_aggre_by_idx] <- FALSE
-    rm(list = c("join_dt", "not_in_aggre_by_idx"))
+    subset <- subset & join_dt[["__in_aggre_by__"]]
+    rm(list = "join_dt")
   }
 
   #' @param aggre_exprs `[character, list]` (no default)
