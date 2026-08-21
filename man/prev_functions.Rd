@@ -187,22 +187,34 @@ then we end the extrapolation step early and simply use
 \code{n_prev_eff = n_prev}. Otherwise proceed as described below.
 \item If \code{inherits(merge_dt, "list")}, collect arguments from
 \code{merge_dt} to call \verb{[surv_lexis]}.
-Arguments \code{lexis}, \code{subset}, and \code{aggre_by} are assigned
+\item However, arguments \code{lexis}, \code{subset}, and \code{estimators = "S_ch"}
+are assigned
 internally to the respective arguments supplied to \code{prev_lexis}
-except \code{subset} additionally is used to detect only those cases
-who entered follow-up (any time) before the current
-observation time point. It may be worth emphasizing that \code{lexis}
-really is the input argument \code{lexis} and not only those whose
-follow-up we need to "extrapolate".
-We also set \code{estimators = "S_ch"}.
-Any arguments that are passed via
-\code{merge_dt} override even the internally set arguments.
-The arguments not set internally or supplied by the user via
-\code{merge_dt} make use of the defaults of \verb{[surv_lexis]}.
-E.g.
-\code{merge_dt = list(aggre_by = NULL, breaks = list(ts_fut = futs))}
-are both passed to \verb{[surv_lexis]} despite what \code{aggre_by} was
-for \code{prev_lexis}.
+and cannot be overridden.
+\item Note that \code{lexis} is the input argument \code{lexis} and not only
+those whose
+follow-up we need to "extrapolate". So estimation of survival
+is based on all subjects (in the \code{subset}).
+\item We set as overrideable defaults
+\itemize{
+\item \code{aggre_by} as-is,
+\item \code{breaks} as monthly intervals up to 5 years of follow-up
+and thereafter as annual intervals. Note that this
+default only works correctly if your time scales are
+specified in fractional years so that e.g.
+\code{lex.dur = 5.1} means 5.1 years of follow-up.
+The last interval ends where the longest
+"extrapolation" ends, e.g. for observation time point
+2021.99 and the earliest extrapolatable observation
+starting at \code{ts_cal = 1995.53} the last interval
+is \verb{]26, 27]}. From \code{ts_cal = 2020.13} the last interval
+is \verb{]1.83333, 1.91667]}.
+\item \code{split_merge_aggregate_optional_args} contains element
+\code{breaks_collapse_args} with value
+\code{list(test_expr = quote(sum(lex.dur)))}.
+Therefore by default we re-aggregate survival intervals
+to avoid empty ones.
+}
 \item If \code{inherits(merge_dt, "list")}, we also interpolate survival
 estimates in the table we have just produced so that there
 are always 1000 intervals starting from zero and ending where
@@ -213,6 +225,26 @@ survival estimates are for one-year intervals due to sparsity,
 we get a reasonable survival estimate for a subject who was
 censored at 1.01 --- from somewhere close to 1.01 instead from
 2.0.
+\item If you passed \code{breaks} via \code{merge_dt} with multiple time
+scales (e.g. for period analysis), the time scales other
+than the survival time one are removed from the table of
+survival estimates if the time scale only defined one
+interval. For instance if you used
+\code{ts_cal = c(2020, 2022.9999)} then the table of survival
+estimates contains only one period and we discard the
+\code{ts_cal_start} and \code{ts_cal_stop} columns. This is to
+enable computing e.g. period analysis survival and then
+allowing those results to be applied to observations
+outside of the period. Otherwise e.g. period analysis
+survival estimates for \code{ts_cal = c(2020, 2022.9999)}
+would not be merged to an extrapolateable observation at
+\code{ts_cal = 2019.5}. But if multiple intervals are defined
+then those are kept, e.g.
+\code{ts_cal = c(2020, 2023, 2026)} leads to the period
+estimates \code{2020-2022} and \code{2023-2025}. If you do period
+analysis here, you must make sure to only use one period
+or the ensure that the estimated multiple periods cover
+all the extrapolateable observations.
 \item Merge (for the first time) \code{merge_dt} with the collected
 subjects at the original exit time of each
 subject. This yields the survival probability for each

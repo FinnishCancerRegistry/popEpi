@@ -592,33 +592,72 @@ prev_lexis <- function(
           # @codedoc_comment_block popEpi::prev_lexis
           #   + If `inherits(merge_dt, "list")`, collect arguments from
           #     `merge_dt` to call `[surv_lexis]`.
-          #     Arguments `lexis`, `subset`, and `aggre_by` are assigned
+          #   + However, arguments `lexis`, `subset`, and `estimators = "S_ch"`
+          #     are assigned
           #     internally to the respective arguments supplied to `prev_lexis`
-          #     except `subset` additionally is used to detect only those cases
-          #     who entered follow-up (any time) before the current
-          #     observation time point. It may be worth emphasizing that `lexis`
-          #     really is the input argument `lexis` and not only those whose
-          #     follow-up we need to "extrapolate".
-          #     We also set `estimators = "S_ch"`.
-          #     Any arguments that are passed via
-          #     `merge_dt` override even the internally set arguments.
-          #     The arguments not set internally or supplied by the user via
-          #     `merge_dt` make use of the defaults of `[surv_lexis]`.
-          #     E.g.
-          #     `merge_dt = list(aggre_by = NULL, breaks = list(ts_fut = futs))`
-          #     are both passed to `[surv_lexis]` despite what `aggre_by` was
-          #     for `prev_lexis`.
+          #     and cannot be overridden.
+          #   + Note that `lexis` is the input argument `lexis` and not only
+          #     those whose
+          #     follow-up we need to "extrapolate". So estimation of survival
+          #     is based on all subjects (in the `subset`).
           # @codedoc_comment_block popEpi::prev_lexis
           merge_arg_list[["merge_dt"]] <- local({
+            ts_fut_col_nm <- names(stratum_breaks)[length(stratum_breaks)]
+            subset <- subset & lexis[[obs_ts_col_nm]] < obs_tp_i
             surv_lexis_arg_list <- c(
               list(
                 lexis = lexis,
-                subset = subset & lexis[[obs_ts_col_nm]] < obs_tp_i,
+                subset = subset,
                 estimators = "S_ch"
               ),
               merge_dt,
               list(
-                aggre_by = aggre_by
+                # @codedoc_comment_block popEpi::prev_lexis
+                #   + We set as overrideable defaults
+                #     * `aggre_by` as-is,
+                # @codedoc_comment_block popEpi::prev_lexis
+                aggre_by = aggre_by,
+                # @codedoc_comment_block popEpi::prev_lexis
+                #     * `breaks` as monthly intervals up to 5 years of follow-up
+                #       and thereafter as annual intervals. Note that this
+                #       default only works correctly if your time scales are
+                #       specified in fractional years so that e.g.
+                #       `lex.dur = 5.1` means 5.1 years of follow-up.
+                #       The last interval ends where the longest
+                #       "extrapolation" ends, e.g. for observation time point
+                #       2021.99 and the earliest extrapolatable observation
+                #       starting at `ts_cal = 1995.53` the last interval
+                #       is `]26, 27]`. From `ts_cal = 2020.13` the last interval
+                #       is `]1.83333, 1.91667]`.
+                # @codedoc_comment_block popEpi::prev_lexis
+                breaks = local({
+                  ts_fut_max <- max(
+                    obs_tp_i,
+                    lexis_dt_extrapolate[[obs_ts_col_nm]]
+                  )
+                  bl <- list(
+                    ts_fut = c(seq(0, 5, 1 / 12), 6:200)
+                  )
+                  diff <- bl[["ts_fut"]] - ts_fut_max
+                  diff <- data.table::fifelse(diff < 0, Inf, diff)
+                  bl[["ts_fut"]] <- bl[["ts_fut"]][
+                    seq(1L, which.min(diff))
+                  ]
+                  names(bl) <- ts_fut_col_nm
+                  bl
+                }),
+                # @codedoc_comment_block popEpi::prev_lexis
+                #     * `split_merge_aggregate_optional_args` contains element
+                #       `breaks_collapse_args` with value
+                #       `list(test_expr = quote(sum(lex.dur)))`.
+                #       Therefore by default we re-aggregate survival intervals
+                #       to avoid empty ones.
+                # @codedoc_comment_block popEpi::prev_lexis
+                split_merge_aggregate_optional_args = list(
+                  breaks_collapse_args = list(
+                    test_expr = quote(sum(lex.dur))
+                  )
+                )
               )
             )
             surv_lexis_arg_list <- surv_lexis_arg_list[
@@ -703,9 +742,28 @@ prev_lexis <- function(
                   )]]) ==
                     1
               ) {
-                # we assume that the intention was to effectively perform
-                # a subset of the data for survival estimation but allow it
-                # to be used without limitation along this time scale.
+                # @codedoc_comment_block popEpi::prev_lexis
+                #   + If you passed `breaks` via `merge_dt` with multiple time
+                #     scales (e.g. for period analysis), the time scales other
+                #     than the survival time one are removed from the table of
+                #     survival estimates if the time scale only defined one
+                #     interval. For instance if you used
+                #     `ts_cal = c(2020, 2022.9999)` then the table of survival
+                #     estimates contains only one period and we discard the
+                #     `ts_cal_start` and `ts_cal_stop` columns. This is to
+                #     enable computing e.g. period analysis survival and then
+                #     allowing those results to be applied to observations
+                #     outside of the period. Otherwise e.g. period analysis
+                #     survival estimates for `ts_cal = c(2020, 2022.9999)`
+                #     would not be merged to an extrapolateable observation at
+                #     `ts_cal = 2019.5`. But if multiple intervals are defined
+                #     then those are kept, e.g.
+                #     `ts_cal = c(2020, 2023, 2026)` leads to the period
+                #     estimates `2020-2022` and `2023-2025`. If you do period
+                #     analysis here, you must make sure to only use one period
+                #     or the ensure that the estimated multiple periods cover
+                #     all the extrapolateable observations.
+                # @codedoc_comment_block popEpi::prev_lexis
                 data.table::set(
                   x = sdt,
                   j = paste0(sdt_ts_col_nm, c("_start", "_stop")),
