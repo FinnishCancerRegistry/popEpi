@@ -185,6 +185,8 @@ were found.
 \item \code{"message"}: Emit a message with \verb{[message]}
 \item \code{"collapse"}: Call \code{popEpi::surv_collapse_1d} before estimation
 silently.
+\item \code{"nothing"}: Estimation is performed normally and silently.
+Some estimates will be \code{NA}.
 }}
 
 \item{test_expr}{\verb{[NULL, call]} (default \code{NULL})

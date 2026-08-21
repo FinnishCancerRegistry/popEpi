@@ -621,8 +621,11 @@ surv_estimate <- function(
   #' - `"message"`: Emit a message with `[message]`
   #' - `"collapse"`: Call `popEpi::surv_collapse_1d` before estimation
   #'   silently.
+  #' - `"nothing"`: Estimation is performed normally and silently.
+  #'   Some estimates will be `NA`.
   stopifnot(
-    empty_interval_action %in% c("warning", "error", "message", "collapse")
+    empty_interval_action %in%
+      c("warning", "error", "message", "collapse", "nothing")
   )
 
   # @codedoc_comment_block popEpi::surv_estimate
@@ -728,6 +731,9 @@ surv_estimate <- function(
         )
         out <- switch(
           empty_interval_action,
+          nothing = {
+            out
+          },
           warning = {
             warning(simpleWarning(msg, call = surv_estimate_call))
             out
