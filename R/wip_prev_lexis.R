@@ -657,7 +657,11 @@ prev_lexis <- function(
                   breaks_collapse_args = list(
                     test_expr = quote(sum(lex.dur))
                   )
-                )
+                ),
+                # @codedoc_comment_block popEpi::prev_lexis
+                #     * `empty_interval_action = "collapse"`.
+                # @codedoc_comment_block popEpi::prev_lexis
+                empty_interval_action = "collapse"
               )
             )
             surv_lexis_arg_list <- surv_lexis_arg_list[

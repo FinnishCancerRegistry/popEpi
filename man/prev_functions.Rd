@@ -214,6 +214,7 @@ is \verb{]1.83333, 1.91667]}.
 \code{list(test_expr = quote(sum(lex.dur)))}.
 Therefore by default we re-aggregate survival intervals
 to avoid empty ones.
+\item \code{empty_interval_action = "collapse"}.
 }
 \item If \code{inherits(merge_dt, "list")}, we also interpolate survival
 estimates in the table we have just produced so that there
