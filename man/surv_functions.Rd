@@ -21,7 +21,8 @@ surv_estimate(
   estimators = "S_ch",
   weight_dt = NULL,
   conf_methods = "log",
-  conf_lvls = 0.95
+  conf_lvls = 0.95,
+  empty_interval_action = "warning"
 )
 
 surv_collapse_1d(
@@ -170,6 +171,21 @@ allowed.
 
 \item{conf_lvls}{Passed one at a time to
 \verb{[directadjusting::directly_adjusted_estimates]}.}
+
+\item{empty_interval_action}{\verb{[character]}
+
+What to do when \code{dt} contains an empty survival interval --- one where
+\code{t_at_risk} or \code{n_at_risk_eff} is empty. Conceptually a survival estimate
+is not defined for an empty interval --- if no subjects are in follow-up,
+there is no observed survival. Must be one of the following:
+\itemize{
+\item \code{"warning"}: Emit a warning with \verb{[warning]} if any empty intervals
+were found.
+\item \code{"error"}: Raise an error with \verb{[stop]}.
+\item \code{"message"}: Emit a message with \verb{[message]}
+\item \code{"collapse"}: Call \code{popEpi::surv_collapse_1d} before estimation
+silently.
+}}
 
 \item{test_expr}{\verb{[NULL, call]} (default \code{NULL})
 
@@ -385,7 +401,8 @@ strata only (and not maybe some continuous variable).
 \item Check columns \code{t_at_risk}, \code{n_at_risk_eff} for zeroes/NAs if they are in
 \code{dt}. Intervals with e.g. \code{t_at_risk == 0} have no survival probability
 defined for them which causes \code{NA} values (i.e. zero divided by zero
-is not defined). Throw a warning if such intervals are found.
+is not defined). The action taken depends on argument
+\code{empty_interval_action}.
 \item Add column \code{delta_t} as the difference between the \verb{_stop} and \verb{_start}
 columns of the follow-up time scale, e.g. \code{ts_fut_stop - ts_fut_start}.
 \item Armed with a list of expressions based on \code{estimates}, called
@@ -752,6 +769,38 @@ stopifnot("S_ch_da" \%in\% names(sdt_da), !"ag_icss" \%in\% names(sdt_da))
 
 stopifnot(
   max(abs(sdt_bw[["S_ch_bw"]] - sdt_da[["S_ch_da"]])) < 0.01
+)
+
+# automatic handling of empty intervals
+sdt1 <- popEpi::surv_estimate(
+  dt = data.table::data.table(
+    box_id = 1:2,
+    ts_fut_start = c(0.0, 1.0),
+    ts_fut_stop = c(1.0, 2.0),
+    t_at_risk = c(10.0, 0.0),
+    n_events = c(1, 0)
+  ),
+  estimators = "S_ch",
+  ts_fut_col_nm = "ts_fut",
+  empty_interval_action = "collapse"
+)
+stopifnot(nrow(sdt1) == 1)
+sdt2 <- popEpi::surv_estimate(
+  dt = data.table::data.table(
+    box_id = 1L,
+    ts_fut_start = 0.0,
+    ts_fut_stop = 2.0,
+    t_at_risk = 10.0,
+    n_events = 1
+  ),
+  estimators = "S_ch",
+  ts_fut_col_nm = "ts_fut",
+  empty_interval_action = "collapse"
+)
+stopifnot(
+  nrow(sdt2) == 1,
+  all.equal(sdt1[["S_ch"]], sdt2[["S_ch"]]),
+  all.equal(sdt1[["S_ch_se"]], sdt2[["S_ch_se"]])
 )
 
 # this data.table::setDTthreads call is included here only to

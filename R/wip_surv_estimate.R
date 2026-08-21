@@ -446,6 +446,38 @@ surv_estimate_expression_table__ <- function() {
 #'   max(abs(sdt_bw[["S_ch_bw"]] - sdt_da[["S_ch_da"]])) < 0.01
 #' )
 #'
+#' # automatic handling of empty intervals
+#' sdt1 <- popEpi::surv_estimate(
+#'   dt = data.table::data.table(
+#'     box_id = 1:2,
+#'     ts_fut_start = c(0.0, 1.0),
+#'     ts_fut_stop = c(1.0, 2.0),
+#'     t_at_risk = c(10.0, 0.0),
+#'     n_events = c(1, 0)
+#'   ),
+#'   estimators = "S_ch",
+#'   ts_fut_col_nm = "ts_fut",
+#'   empty_interval_action = "collapse"
+#' )
+#' stopifnot(nrow(sdt1) == 1)
+#' sdt2 <- popEpi::surv_estimate(
+#'   dt = data.table::data.table(
+#'     box_id = 1L,
+#'     ts_fut_start = 0.0,
+#'     ts_fut_stop = 2.0,
+#'     t_at_risk = 10.0,
+#'     n_events = 1
+#'   ),
+#'   estimators = "S_ch",
+#'   ts_fut_col_nm = "ts_fut",
+#'   empty_interval_action = "collapse"
+#' )
+#' stopifnot(
+#'   nrow(sdt2) == 1,
+#'   all.equal(sdt1[["S_ch"]], sdt2[["S_ch"]]),
+#'   all.equal(sdt1[["S_ch_se"]], sdt2[["S_ch_se"]])
+#' )
+#'
 surv_estimate <- function(
   dt,
   ts_fut_col_nm,
@@ -454,7 +486,8 @@ surv_estimate <- function(
   estimators = "S_ch",
   weight_dt = NULL,
   conf_methods = "log",
-  conf_lvls = 0.95
+  conf_lvls = 0.95,
+  empty_interval_action = "warning"
 ) {
   #' @param dt `[data.table]` (no default)
   #'
@@ -575,6 +608,23 @@ surv_estimate <- function(
     )
   }
 
+  #' @param empty_interval_action `[character]`
+  #'
+  #' What to do when `dt` contains an empty survival interval --- one where
+  #' `t_at_risk` or `n_at_risk_eff` is empty. Conceptually a survival estimate
+  #' is not defined for an empty interval --- if no subjects are in follow-up,
+  #' there is no observed survival. Must be one of the following:
+  #'
+  #' - `"warning"`: Emit a warning with `[warning]` if any empty intervals
+  #'   were found.
+  #' - `"error"`: Raise an error with `[stop]`.
+  #' - `"message"`: Emit a message with `[message]`
+  #' - `"collapse"`: Call `popEpi::surv_collapse_1d` before estimation
+  #'   silently.
+  stopifnot(
+    empty_interval_action %in% c("warning", "error", "message", "collapse")
+  )
+
   # @codedoc_comment_block popEpi::surv_estimate
   # Compute survival time function estimates. Performs the following steps:
   #
@@ -596,8 +646,7 @@ surv_estimate <- function(
   }
   names(conf_lvls) <- estimator_dt[["user_estimator_name"]]
 
-  out <- data.table::setDT(as.list(dt))
-  data.table::setkeyv(out, data.table::key(dt))
+  out <- data.table::setDT(data.table::copy(dt))
 
   estimate_stratum_col_nms <- stratum_col_nms
   do_direct_adjusting <- data.table::is.data.table(weight_dt) &&
@@ -656,25 +705,66 @@ surv_estimate <- function(
   # - Check columns `t_at_risk`, `n_at_risk_eff` for zeroes/NAs if they are in
   #   `dt`. Intervals with e.g. `t_at_risk == 0` have no survival probability
   #   defined for them which causes `NA` values (i.e. zero divided by zero
-  #   is not defined). Throw a warning if such intervals are found.
+  #   is not defined). The action taken depends on argument
+  #   `empty_interval_action`.
   # @codedoc_comment_block popEpi::surv_estimate
   surv_estimate_call <- match.call()
-  lapply(intersect(names(dt), c("t_at_risk", "n_at_risk_eff")), function(nm) {
-    is_bad <- dt[[nm]] %in% c(NA, 0L)
-    if (any(is_bad)) {
-      warning(simpleWarning(
-        paste0(
-          "There were ",
+  out <- local({
+    test_col_nms <- intersect(c("t_at_risk", "n_at_risk_eff"), names(dt))
+    if (length(test_col_nms) > 0) {
+      is_bad <- FALSE
+      for (test_col_nm in test_col_nms) {
+        is_bad <- is_bad | dt[[test_col_nm]] == 0L
+      }
+      if (any(is_bad)) {
+        msg <- paste0(
+          "Problem when running popEpi::surv_estimate: There were ",
           sum(is_bad),
-          " intervals in `dt` where `dt$",
-          nm,
-          "` ",
-          "was zero/NA. No survival probability can be estimated for such ",
+          " intervals in `dt` where column(s) ",
+          paste0("`dt$", test_col_nms, "`", collapse = ", "),
+          " ",
+          "were zero. No survival probability can be estimated for such ",
           "intervals."
-        ),
-        call = surv_estimate_call
-      ))
+        )
+        out <- switch(
+          empty_interval_action,
+          warning = {
+            warning(simpleWarning(msg, call = surv_estimate_call))
+            out
+          },
+          # idk if simpleMessage benefits anything but its harmless.
+          message = {
+            message(simpleMessage(msg, call = surv_estimate_call))
+            out
+          },
+          error = {
+            stop(simpleError(msg, call = surv_estimate_call))
+            out
+          },
+          collapse = {
+            out <- surv_collapse_1d(
+              dt = out,
+              ts_fut_col_nm = ts_fut_col_nm,
+              stratum_col_nms = stratum_col_nms,
+              value_col_nms = value_col_nms,
+              test_expr = substitute(
+                sum(value > 0),
+                list(value = str2lang(test_col_nms[1]))
+              )
+            )
+            out
+          },
+          stop(
+            "Internal error: No action defined for ",
+            "`empty_interval_action = ",
+            deparse1(empty_interval_action),
+            "`. ",
+            "If you see this error, please report it to the package maintainer."
+          )
+        )
+      }
     }
+    out[]
   })
 
   # @codedoc_comment_block popEpi::surv_estimate
