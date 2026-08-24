@@ -669,7 +669,8 @@ surv_lexis <- function(
   estimators = "S_ch",
   conf_methods = "log",
   conf_lvls = 0.95,
-  weights = NULL
+  weights = NULL,
+  surv_estimate_optional_args = NULL
 ) {
   #' @template param_lexis
   assert_is_arg_lexis(lexis, dt = FALSE)
@@ -687,6 +688,18 @@ surv_lexis <- function(
     #' Passed to `[lexis_split_merge_aggregate_by_stratum]`.
     first_record_by = first_record_by,
     subset = handle_arg_subset(dataset_nm = "lexis")
+  )
+  #' @param surv_estimate_optional_args `[NULL, list]`
+  #'
+  #' Optional additional arguments to pass to `[surv_estimate]`.
+  #' Arguments passed via `surv_estimate_optional_args` override internally
+  #' defined ones. See section **Functions**.
+  #'
+  #' - `NULL`: No additional arguments are passed.
+  #' - `list`: Pass these arguments. E.g.
+  #'   `list(empty_interval_action = "collapse")`.
+  stopifnot(
+    inherits(surv_estimate_optional_args, c("NULL", "list"))
   )
   surv_estimate_args <- list(
     ts_fut_col_nm = utils::tail(names(breaks), 1),
@@ -810,6 +823,13 @@ surv_lexis <- function(
     }
     scn
   })
+  # @codedoc_comment_block popEpi::surv_lexis
+  # - Add `surv_estimate_optional_args` to a list of internally defined
+  #   arguments. The arguments passed this way override internally defined ones.
+  # @codedoc_comment_block popEpi::surv_lexis
+  surv_estimate_args[names(
+    surv_estimate_optional_args
+  )] <- surv_estimate_optional_args
   # @codedoc_comment_block popEpi::surv_lexis
   # - Call `surv_estimate`.
   # @codedoc_comment_block popEpi::surv_lexis

@@ -82,7 +82,8 @@ surv_lexis(
   estimators = "S_ch",
   conf_methods = "log",
   conf_lvls = 0.95,
-  weights = NULL
+  weights = NULL,
+  surv_estimate_optional_args = NULL
 )
 }
 \arguments{
@@ -295,6 +296,17 @@ Weights for adjusting estimates.
 \item \code{data.table}: Passed to \verb{[surv_estimate]} arg \code{weight_dt}.
 \item \code{character}: Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}
 argument \code{weight_col_nm}.
+}}
+
+\item{surv_estimate_optional_args}{\verb{[NULL, list]}
+
+Optional additional arguments to pass to \verb{[surv_estimate]}.
+Arguments passed via \code{surv_estimate_optional_args} override internally
+defined ones. See section \strong{Functions}.
+\itemize{
+\item \code{NULL}: No additional arguments are passed.
+\item \code{list}: Pass these arguments. E.g.
+\code{list(empty_interval_action = "collapse")}.
 }}
 }
 \value{
@@ -582,6 +594,8 @@ The resulting table of aggregated data is
 stratified by both \code{aggre_by} and by any stratifying columns found in
 \verb{weight_dt if a }data.table\verb{was supplied as that argument. E.g. with}aggre_by = "sex"\code{and}weight_dt = data.table::data.table(ag = 1:3, weight = c(100, 150, 200))\verb{, the statistics table is stratified by both }sex\code{and}ag\verb{. With }aggre_by = "sex"\code{and}weights = "individual_weight"` the table is
 stratified by sex and contains individually weighted statistics.
+\item Add \code{surv_estimate_optional_args} to a list of internally defined
+arguments. The arguments passed this way override internally defined ones.
 \item Call \code{surv_estimate}.
 \item If Brenner weighting was used, rename columns containing estimates,
 standard error, and confidence bounds to contain the identifier
