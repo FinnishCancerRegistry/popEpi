@@ -3,7 +3,7 @@
 %   R/wip_surv_individual_weights.R, R/wip_surv_lexis.R
 \name{surv_estimate}
 \alias{surv_estimate}
-\alias{surv_collapse_1d}
+\alias{surv_collapse_ts_1d}
 \alias{surv_collapse_strata_list}
 \alias{surv_collapse_strata_1d}
 \alias{surv_brenner_weight_dt}
@@ -25,7 +25,7 @@ surv_estimate(
   empty_interval_action = "warning"
 )
 
-surv_collapse_1d(
+surv_collapse_ts_1d(
   dt,
   ts_fut_col_nm,
   stratum_col_nms = NULL,
@@ -184,7 +184,7 @@ there is no observed survival. Must be one of the following:
 were found.
 \item \code{"error"}: Raise an error with \verb{[stop]}.
 \item \code{"message"}: Emit a message with \verb{[message]}
-\item \code{"collapse"}: Call \code{popEpi::surv_collapse_1d} before estimation
+\item \code{"collapse"}: Call \code{popEpi::surv_collapse_ts_1d} before estimation
 silently.
 \item \code{"nothing"}: Estimation is performed normally and silently.
 Some estimates will be \code{NA}.
@@ -825,7 +825,7 @@ stopifnot(
 # however some long calculations may benefit from using more threads.
 data.table::setDTthreads(2L)
 
-# popEpi::surv_collapse_1d
+# popEpi::surv_collapse_ts_1d
 sdt <- data.table::data.table(
   box_id = 1:3,
   ts_fut_id = 1:3,
@@ -834,7 +834,7 @@ sdt <- data.table::data.table(
   t_at_risk = c(1.0, 0.0, 0.5),
   n_events = 0L
 )
-sdt <- surv_collapse_1d(
+sdt <- surv_collapse_ts_1d(
   dt = sdt,
   ts_fut_col_nm = "ts_fut",
   value_col_nms = c("t_at_risk", "n_events"),

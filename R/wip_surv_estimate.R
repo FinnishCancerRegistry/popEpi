@@ -457,7 +457,7 @@ surv_estimate_expression_table__ <- function() {
 #'   ),
 #'   estimators = "S_ch",
 #'   ts_fut_col_nm = "ts_fut",
-#'   empty_interval_action = "collapse"
+#'   empty_interval_action = "surv_collapse_ts_1d"
 #' )
 #' stopifnot(nrow(sdt1) == 1)
 #' sdt2 <- popEpi::surv_estimate(
@@ -470,7 +470,7 @@ surv_estimate_expression_table__ <- function() {
 #'   ),
 #'   estimators = "S_ch",
 #'   ts_fut_col_nm = "ts_fut",
-#'   empty_interval_action = "collapse"
+#'   empty_interval_action = "surv_collapse_ts_1d"
 #' )
 #' stopifnot(
 #'   nrow(sdt2) == 1,
@@ -1212,7 +1212,7 @@ surv_lexis_S_exp_e1_ch_mean <- function(
 }
 
 #' @eval codedoc::pkg_doc_fun(
-#'   "popEpi::surv_collapse_1d",
+#'   "popEpi::surv_collapse_ts_1d",
 #'   "surv_functions"
 #' )
 #' @examples
@@ -1222,7 +1222,7 @@ surv_lexis_S_exp_e1_ch_mean <- function(
 #' # however some long calculations may benefit from using more threads.
 #' data.table::setDTthreads(2L)
 #'
-#' # popEpi::surv_collapse_1d
+#' # popEpi::surv_collapse_ts_1d
 #' sdt <- data.table::data.table(
 #'   box_id = 1:3,
 #'   ts_fut_id = 1:3,
@@ -1231,7 +1231,7 @@ surv_lexis_S_exp_e1_ch_mean <- function(
 #'   t_at_risk = c(1.0, 0.0, 0.5),
 #'   n_events = 0L
 #' )
-#' sdt <- surv_collapse_1d(
+#' sdt <- surv_collapse_ts_1d(
 #'   dt = sdt,
 #'   ts_fut_col_nm = "ts_fut",
 #'   value_col_nms = c("t_at_risk", "n_events"),
@@ -1243,7 +1243,7 @@ surv_lexis_S_exp_e1_ch_mean <- function(
 #'   sdt[["ts_fut_stop"]] == c(1.0, 3.0),
 #'   sdt[["t_at_risk"]] == c(1.0, 0.5)
 #' )
-surv_collapse_1d <- function(
+surv_collapse_ts_1d <- function(
   dt,
   ts_fut_col_nm,
   stratum_col_nms = NULL,
@@ -1294,7 +1294,7 @@ surv_collapse_1d <- function(
   }
   if (!is.null(stratum_col_nms)) {
     return(dt[
-      j = surv_collapse_1d(
+      j = surv_collapse_ts_1d(
         dt = .SD,
         ts_fut_col_nm = ts_fut_col_nm,
         stratum_col_nms = NULL,
@@ -1322,7 +1322,7 @@ surv_collapse_1d <- function(
   interval_id_lo <- 1L
   interval_id_hi <- 1L
   while (TRUE) {
-    need_to_combine <- !surv_collapse_1d_eval_test_expr__(
+    need_to_combine <- !surv_collapse_ts_1d_eval_test_expr__(
       test_expr = test_expr,
       dt = dt,
       subset_idx = substitute(

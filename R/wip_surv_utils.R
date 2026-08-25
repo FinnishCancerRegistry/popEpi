@@ -150,7 +150,7 @@ surv_interpolate <- function(
   return(out)
 }
 
-surv_collapse_1d_eval_test_expr__ <- function(
+surv_collapse_ts_1d_eval_test_expr__ <- function(
   test_expr,
   dt,
   subset_idx = NULL,

@@ -217,7 +217,7 @@ surv_brenner_weight_dt <- function(
             j = collapse_stratum_col_nms,
             value = NULL
           )
-          collapsed_dt <- surv_collapse_1d(
+          collapsed_dt <- surv_collapse_ts_1d(
             dt = sub_dt,
             ts_fut_col_nm = "collapse_stratum",
             value_col_nms = c("weight_standard", "weight_observed"),
