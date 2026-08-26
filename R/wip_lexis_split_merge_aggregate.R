@@ -849,7 +849,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
         if (!is.null(breaks_collapse_args)) {
           breaks_collapse_args <- as.list(breaks_collapse_args)
           breaks_collapse_args[["lexis"]] <- lexis_stratum_subset
-          breaks_collapse_args[["breaks"]] <- stratum_box_breaks[
+          breaks_collapse_args[["breaks_1d"]] <- stratum_box_breaks[
             split_ts_col_nm
           ]
           stratum_box_breaks[[split_ts_col_nm]] <- call_with_arg_list__(

@@ -697,7 +697,7 @@ surv_lexis <- function(
   #'
   #' - `NULL`: No additional arguments are passed.
   #' - `list`: Pass these arguments. E.g.
-  #'   `list(empty_interval_action = "collapse")`.
+  #'   `list(empty_interval_action = "surv_collapse_ts_1d")`.
   stopifnot(
     inherits(surv_estimate_optional_args, c("NULL", "list"))
   )
@@ -827,9 +827,8 @@ surv_lexis <- function(
   # - Add `surv_estimate_optional_args` to a list of internally defined
   #   arguments. The arguments passed this way override internally defined ones.
   # @codedoc_comment_block popEpi::surv_lexis
-  surv_estimate_args[names(
+  surv_estimate_args[names(surv_estimate_optional_args)] <-
     surv_estimate_optional_args
-  )] <- surv_estimate_optional_args
   # @codedoc_comment_block popEpi::surv_lexis
   # - Call `surv_estimate`.
   # @codedoc_comment_block popEpi::surv_lexis

@@ -660,10 +660,10 @@ prev_lexis <- function(
                 ),
                 # @codedoc_comment_block popEpi::prev_lexis
                 #     * `surv_estimate_optional_args` as
-                #       `list(empty_interval_action = "collapse")`.
+                #       `list(empty_interval_action = "surv_collapse_ts_1d")`.
                 # @codedoc_comment_block popEpi::prev_lexis
                 surv_estimate_optional_args = list(
-                  empty_interval_action = "collapse"
+                  empty_interval_action = "surv_collapse_ts_1d"
                 )
               )
             )

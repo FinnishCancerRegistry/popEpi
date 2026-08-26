@@ -219,7 +219,7 @@ surv_brenner_weight_dt <- function(
           )
           collapsed_dt <- surv_collapse_ts_1d(
             dt = sub_dt,
-            ts_fut_col_nm = "collapse_stratum",
+            ts_col_nm = "collapse_stratum",
             value_col_nms = c("weight_standard", "weight_observed"),
             test_expr = quote(!(weight_observed == 0 & weight_standard != 0))
           )

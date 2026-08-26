@@ -27,7 +27,7 @@ surv_estimate(
 
 surv_collapse_ts_1d(
   dt,
-  ts_fut_col_nm,
+  ts_col_nm,
   stratum_col_nms = NULL,
   value_col_nms = NULL,
   test_expr = NULL,
@@ -173,22 +173,37 @@ allowed.
 \item{conf_lvls}{Passed one at a time to
 \verb{[directadjusting::directly_adjusted_estimates]}.}
 
-\item{empty_interval_action}{\verb{[character]}
+\item{empty_interval_action}{\verb{[character, list]}
 
-What to do when \code{dt} contains an empty survival interval --- one where
-\code{t_at_risk} or \code{n_at_risk_eff} is empty. Conceptually a survival estimate
-is not defined for an empty interval --- if no subjects are in follow-up,
+What to do when \code{dt} contains an empty survival interval --- one
+where
+\code{t_at_risk} or \code{n_at_risk_eff} is empty. Conceptually a survival
+estimate
+is not defined for an empty interval --- if no subjects are in
+follow-up,
 there is no observed survival. Must be one of the following:
 \itemize{
+\item \code{list}: arguments to pass to either \verb{[surv_collapse_ts_1d]} or to
+\verb{[surv_collapse_strata_1d]}. The function in question is defined
+with the named element \code{function_name} which must be either
+\code{"surv_collapse_ts_1d"} or \code{"surv_collapse_strata_1d"}.
+E.g.
+\code{list(function_name = "surv_collapse_strata_1d", collapse_stratum_col_nm = "age_group")}.
 \item \code{"warning"}: Emit a warning with \verb{[warning]} if any empty intervals
 were found.
 \item \code{"error"}: Raise an error with \verb{[stop]}.
 \item \code{"message"}: Emit a message with \verb{[message]}
-\item \code{"collapse"}: Call \code{popEpi::surv_collapse_ts_1d} before estimation
-silently.
+\item \code{"surv_collapse_ts_1d"}: Call \code{popEpi::surv_collapse_ts_1d}
+before estimation silently.
 \item \code{"nothing"}: Estimation is performed normally and silently.
 Some estimates will be \code{NA}.
 }}
+
+\item{ts_col_nm}{\verb{[character]} (no default)
+
+Name of time scale column whose intervals are possibly collapsed.
+This does not need to be the follow-up time scale itself although it
+usually is. E.g. \code{ts_col_nm = "ts_fut"}.}
 
 \item{test_expr}{\verb{[NULL, call]} (default \code{NULL})
 
@@ -306,7 +321,7 @@ defined ones. See section \strong{Functions}.
 \itemize{
 \item \code{NULL}: No additional arguments are passed.
 \item \code{list}: Pass these arguments. E.g.
-\code{list(empty_interval_action = "collapse")}.
+\code{list(empty_interval_action = "surv_collapse_ts_1d")}.
 }}
 }
 \value{
@@ -798,7 +813,7 @@ sdt1 <- popEpi::surv_estimate(
   ),
   estimators = "S_ch",
   ts_fut_col_nm = "ts_fut",
-  empty_interval_action = "collapse"
+  empty_interval_action = "surv_collapse_ts_1d"
 )
 stopifnot(nrow(sdt1) == 1)
 sdt2 <- popEpi::surv_estimate(
@@ -811,7 +826,7 @@ sdt2 <- popEpi::surv_estimate(
   ),
   estimators = "S_ch",
   ts_fut_col_nm = "ts_fut",
-  empty_interval_action = "collapse"
+  empty_interval_action = "surv_collapse_ts_1d"
 )
 stopifnot(
   nrow(sdt2) == 1,
@@ -836,7 +851,7 @@ sdt <- data.table::data.table(
 )
 sdt <- surv_collapse_ts_1d(
   dt = sdt,
-  ts_fut_col_nm = "ts_fut",
+  ts_col_nm = "ts_fut",
   value_col_nms = c("t_at_risk", "n_events"),
   test_expr = quote(t_at_risk > 0.0)
 )
@@ -845,6 +860,40 @@ stopifnot(
   sdt[["ts_fut_start"]] == c(0.0, 1.0),
   sdt[["ts_fut_stop"]] == c(1.0, 3.0),
   sdt[["t_at_risk"]] == c(1.0, 0.5)
+)
+
+# table with multiple time scales and we collapse along one of them
+dt <- local({
+  dt <- data.table::data.table(
+    ts_age_id = 1:4,
+    ts_age_start = c(0, 40, 50, 60),
+    ts_age_stop = c(40, 50, 60, Inf)
+  )
+  dt_fut <- data.table::data.table(
+    ts_fut_id = 1:5,
+    ts_fut_start = 0:4,
+    ts_fut_stop = 1:5
+  )
+  idx_df <- merge(seq_len(nrow(dt)), seq_len(nrow(dt_fut)))
+  dt <- cbind(dt[idx_df[[1]]], dt_fut[idx_df[[2]]])
+  data.table::set(
+    x = dt,
+    j = c("box_id", "t_at_risk"),
+    value = list(seq_len(nrow(dt)), c(0.0, rep(100.0, nrow(dt) - 1L)))
+  )
+  dt[]
+})
+dt_collapsed <- popEpi::surv_collapse_ts_1d(
+  dt = dt,
+  ts_col_nm = "ts_age",
+  stratum_col_nms = c("ts_fut_id", "ts_fut_start", "ts_fut_stop"),
+  value_col_nms = "t_at_risk",
+  test_expr = quote(sum(t_at_risk) > 10.0)
+)
+stopifnot(
+  nrow(dt_collapsed) == nrow(dt) - 1L,
+  dt[["ts_age_stop"]][1] == 40,
+  dt_collapsed[["ts_age_stop"]][1] == 50
 )
 # this data.table::setDTthreads call is included here only to
 # conform to the CRAN submission requirement to only use at most 2

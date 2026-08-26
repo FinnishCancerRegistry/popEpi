@@ -215,7 +215,7 @@ is \verb{]1.83333, 1.91667]}.
 Therefore by default we re-aggregate survival intervals
 to avoid empty ones.
 \item \code{surv_estimate_optional_args} as
-\code{list(empty_interval_action = "collapse")}.
+\code{list(empty_interval_action = "surv_collapse_ts_1d")}.
 }
 \item If \code{inherits(merge_dt, "list")}, we also interpolate survival
 estimates in the table we have just produced so that there
