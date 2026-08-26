@@ -116,38 +116,83 @@ surv_interpolate <- function(
 ) {
   stopifnot(
     estimate_start_value %in% 0:1,
-    method %in% c("linear", "geometric_mean", "hazard")
+    method %in% c("linear", "geometric_mean", "hazard"),
+    ts_fut_stops[1] != 0.0,
+    length(estimates) == length(ts_fut_stops)
   )
-  ts_fut_breaks <- c(0.0, ts_fut_stops)
-  interval_idx <- cut(
-    ts_fut_stop_value,
-    breaks = ts_fut_breaks,
-    labels = FALSE,
-    right = FALSE
+  # I added the extra interval ]-1.0, 0.0] to get an estimate for ts_fut = 0.0.
+  interval_dt <- data.table::setDT(list(
+    ts_fut_start = c(-1.0, 0.0, ts_fut_stops[-length(ts_fut_stops)]),
+    ts_fut_stop = c(0.0, ts_fut_stops),
+    est_start = c(1.0, 1.0, estimates[-length(estimates)]),
+    est_stop = c(1.0, estimates)
+  ))
+  out <- data.table::setDT(list(
+    ts_fut = ts_fut_stop_value,
+    interval = cut(
+      ts_fut_stop_value,
+      breaks = c(
+        interval_dt[["ts_fut_start"]][1L],
+        interval_dt[["ts_fut_stop"]]
+      ),
+      # labels = FALSE,
+      right = TRUE
+    )
+  ))
+  data.table::set(out, j = "interval_id", value = as.integer(out[["interval"]]))
+  data.table::set(
+    x = out,
+    j = c("ts_fut_start", "ts_fut_stop", "est_start", "est_stop"),
+    value = list(
+      interval_dt[["ts_fut_start"]][out[["interval_id"]]],
+      interval_dt[["ts_fut_stop"]][out[["interval_id"]]],
+      interval_dt[["est_start"]][out[["interval_id"]]],
+      interval_dt[["est_stop"]][out[["interval_id"]]]
+    )
   )
-  interval_start <- ts_fut_breaks[interval_idx]
-  interval_stop <- ts_fut_breaks[interval_idx + 1L]
-  estimates <- c(estimate_start_value, estimates)
-  interval_start_estimate <- estimates[interval_idx]
-  interval_stop_estimate <- estimates[interval_idx + 1L]
-  # first we take conditional survival
-  conditional_stop_estimate <- interval_stop_estimate / interval_start_estimate
-  interval_width <- interval_stop - interval_start
-  ts_fut_stop_value_in_interval <- (ts_fut_stop_value - interval_start)
-  w <- ts_fut_stop_value_in_interval / interval_width
+  data.table::set(
+    x = out,
+    j = "interval_width",
+    value = out[["ts_fut_stop"]] - out[["ts_fut_start"]]
+  )
+  data.table::set(
+    x = out,
+    # distance from the start of the interval to the interpolation point
+    j = "delta",
+    value = out[["ts_fut"]] - out[["ts_fut_start"]]
+  )
+  data.table::set(
+    x = out,
+    # distance from the start of the interval to the interpolation point
+    j = "w",
+    value = out[["delta"]] / out[["interval_width"]]
+  )
   # we interpolate it.
   # these methods in fact produce exactly the same result --- the linear
   # interpolation.
-  out <- switch(
-    method,
-    "linear" = (1 - w) * estimate_start_value + w * conditional_stop_estimate,
-    "geometric_mean" = conditional_stop_estimate^w,
-    "hazard" = exp(-(-log(conditional_stop_estimate) * w))
+  data.table::set(
+    x = out,
+    j = "est_cond",
+    value = out[["est_stop"]] / out[["est_start"]]
   )
-  # then we un-conditionalise it
-  out <- out * interval_start_estimate
+  data.table::set(
+    x = out,
+    j = "est_interpolated",
+    value = switch(
+      method,
+      "linear" = (1 - out[["w"]]) *
+        out[["est_start"]] +
+        out[["w"]] * out[["est_stop"]],
+      "geometric_mean" = out[["est_start"]] * out[["est_cond"]]^out[["w"]],
+      "hazard" = out[["est_start"]] *
+        exp(-(-log(out[["est_cond"]]) * out[["w"]]))
+    )
+  )
+  if (any(out[["est_interpolated"]] < 0)) {
+    browser()
+  }
   # the result is interpolated unconditional survival at ts_fut_stop_value
-  return(out)
+  return(out[["est_interpolated"]])
 }
 
 surv_collapse_ts_1d_eval_test_expr__ <- function(
