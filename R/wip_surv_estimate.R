@@ -853,7 +853,11 @@ surv_estimate <- function(
     value = out[[paste0(ts_fut_col_nm, "_stop")]] -
       out[[paste0(ts_fut_col_nm, "_start")]]
   )
-  for (i in seq_len(nrow(estimator_dt))) {
+  data.table::setkeyv(
+    out,
+    c(estimate_stratum_col_nms, paste0(ts_fut_col_nm, "_id"))
+  )
+  lapply(seq_len(nrow(estimator_dt)), function(i) {
     user_estimator_name <- estimator_dt[["user_estimator_name"]][i]
     # @codedoc_comment_block popEpi::surv_estimate
     # - Armed with a list of expressions based on `estimates`, called
@@ -861,7 +865,8 @@ surv_estimate <- function(
     #   + Evaluate each element of `expressions[[i]]` and add the result into
     #     `dt`. E.g. `S_ch` and `S_ch_se`.
     # @codedoc_comment_block popEpi::surv_estimate
-    for (element_name in names(estimator_dt[["expression_set"]][[i]])) {
+    expression_set_i <- estimator_dt[["expression_set"]][[i]]
+    lapply(names(expression_set_i), function(element_name) {
       # @codedoc_comment_block popEpi::surv_estimate::estimators
       # - `list`: Each element must be a list with named elements
       #   + `est`: Quoted ([quote]) R expression which when evaluated with
@@ -877,17 +882,18 @@ surv_estimate <- function(
         est = user_estimator_name,
         sprintf("%s_%s", user_estimator_name, element_name)
       )
+      expr <- expression_set_i[[element_name]]
       out[
         #' @importFrom data.table := .SD
         j = (add_col_nm) := eval(
-          estimator_dt[["expression_set"]][[i]][[element_name]],
+          expr = expr,
           envir = .SD,
           enclos = call_env
         ),
         by = eval(estimate_stratum_col_nms)
       ]
-    }
-  }
+    })
+  })
 
   out <- local({
     estimate_col_nms <- estimator_dt[["user_estimator_name"]]
