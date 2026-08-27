@@ -1858,7 +1858,8 @@ surv_collapse_strata_1d <- function(
       keyby = eval(noncollapse_stratum_col_nms)
     ]
     data.table::setcolorder(out, names(dt))
-    data.table::setkeyv(out, data.table::key(dt))
+    # also sets correct key.
+    out <- box_all_id_reset__(out)
     return(out[])
   }
   expr <- match.call()
