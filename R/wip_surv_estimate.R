@@ -1071,6 +1071,10 @@ surv_estimate <- function(
       name = "directly_adjusted_estimates_meta",
       value = sdta_meta
     )
+    data.table::setkeyv(
+      sum_dt,
+      c(da_stratum_col_nms, paste0(ts_fut_col_nm, c("_id", "_start", "_stop")))
+    )
     sum_dt[]
   })
 
