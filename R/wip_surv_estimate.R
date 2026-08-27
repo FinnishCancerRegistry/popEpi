@@ -1071,16 +1071,7 @@ surv_estimate <- function(
       name = "directly_adjusted_estimates_meta",
       value = sdta_meta
     )
-    data.table::setkeyv(
-      sum_dt,
-      intersect(
-        c(
-          da_stratum_col_nms,
-          paste0(ts_fut_col_nm, c("_id", "_start", "_stop"))
-        ),
-        names(sum_dt)
-      )
-    )
+    sum_dt <- box_all_id_reset__(sum_dt)
     sum_dt[]
   })
 
@@ -1910,6 +1901,6 @@ surv_collapse_strata_1d <- function(
     keyby = eval(setdiff(names(out), cl[["value_col_nms"]]))
   ]
   data.table::setcolorder(out, names(dt))
-  data.table::setkeyv(out, data.table::key(dt))
+  out <- box_all_id_reset__(out)
   return(out[])
 }

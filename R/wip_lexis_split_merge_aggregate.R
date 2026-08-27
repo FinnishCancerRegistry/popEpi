@@ -989,7 +989,6 @@ lexis_split_merge_aggregate_by_stratum <- function(
       }
     }
   })
-  out <- box_all_id_reset__(out)
 
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - Set proper `data.table`
@@ -1000,13 +999,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
   out <- as.list(out)
   attributes(out) <- attributes(out)["names"]
   data.table::setDT(out)
-  data.table::setkeyv(
-    x = out,
-    cols = c(
-      names(aggre_by),
-      paste0(rep(names(breaks), each = 3), c("_start", "_stop", "_id"))
-    )
-  )
+  out <- box_all_id_reset__(out)
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - Store as metadata a list with names `stratum_col_nms`, `ts_col_nms`, and
   #   `value_col_nms` into the attribute named
