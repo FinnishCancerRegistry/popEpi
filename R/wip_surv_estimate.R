@@ -499,6 +499,7 @@ surv_estimate <- function(
   #' `[lexis_split_merge_aggregate_by_stratum]`.
   assert_is_arg_dt(dt, lexis = FALSE)
   stopifnot(
+    "box_id" %in% names(dt),
     #' @param ts_fut_col_nm `[character]` (no default)
     #'
     #' Name of time scale column over which survival estimates will be computed.
@@ -663,7 +664,24 @@ surv_estimate <- function(
   out <- data.table::copy(data.table::setDT(as.list(dt)))
   out <- box_all_id_reset__(out)
 
-  estimate_stratum_col_nms <- stratum_col_nms
+  estimate_stratum_col_nms <- local({
+    stratum_ts_col_nms <- setdiff(
+      box_dt_detect_ts_col_nms__(out),
+      ts_fut_col_nm
+    )
+    stratum_ts_info_col_nms <- paste0(
+      rep(stratum_ts_col_nms, each = 3L),
+      rep(c("_id", "_start", "_stop"), times = length(stratum_ts_col_nms))
+    )
+    estimate_stratum_col_nms <- intersect(
+      union(
+        stratum_col_nms,
+        stratum_ts_info_col_nms
+      ),
+      names(dt)
+    )
+    estimate_stratum_col_nms
+  })
   do_direct_adjusting <- data.table::is.data.table(weight_dt) &&
     "weight" %in% names(weight_dt)
   if (do_direct_adjusting) {
@@ -855,7 +873,7 @@ surv_estimate <- function(
   )
   data.table::setkeyv(
     out,
-    c(estimate_stratum_col_nms, paste0(ts_fut_col_nm, "_id"))
+    c(estimate_stratum_col_nms, paste0(ts_fut_col_nm, c("_start", "_stop")))
   )
   lapply(seq_len(nrow(estimator_dt)), function(i) {
     user_estimator_name <- estimator_dt[["user_estimator_name"]][i]
