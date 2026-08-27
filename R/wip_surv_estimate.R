@@ -1073,7 +1073,13 @@ surv_estimate <- function(
     )
     data.table::setkeyv(
       sum_dt,
-      c(da_stratum_col_nms, paste0(ts_fut_col_nm, c("_id", "_start", "_stop")))
+      intersect(
+        c(
+          da_stratum_col_nms,
+          paste0(ts_fut_col_nm, c("_id", "_start", "_stop"))
+        ),
+        names(sum_dt)
+      )
     )
     sum_dt[]
   })
