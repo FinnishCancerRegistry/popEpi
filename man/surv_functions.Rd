@@ -98,8 +98,8 @@ column \code{box_id}, a running number like the one produced by
 
 Name of time scale column over which survival estimates will be computed.
 E.g. \code{"ts_fut"}. \code{dt} must contain columns named
-\code{paste0(ts_fut_col_nm, "_", c("start", "stop"))}, e.g.
-\code{c("ts_fut_start", "ts_fut_stop")}.}
+\code{paste0(ts_fut_col_nm, "_", c("id", "start", "stop"))}, e.g.
+\code{c("ts_fut_id", "ts_fut_start", "ts_fut_stop")}.}
 
 \item{stratum_col_nms}{\verb{[NULL, character]} (default \code{NULL})
 
@@ -628,6 +628,7 @@ data.table::setDTthreads(2L)
 # popEpi::surv_estimate
 dt <- data.table::data.table(
   box_id = 1:60,
+  ts_fut_id = 1:60,
   ts_fut_start = seq(0, 5 - 1 / 12, 1 / 12),
   ts_fut_stop = seq(1 / 12, 5, 1 / 12),
   n_events = rpois(n = 60, lambda = 60:1),
@@ -806,6 +807,7 @@ stopifnot(
 sdt1 <- popEpi::surv_estimate(
   dt = data.table::data.table(
     box_id = 1:2,
+    ts_fut_id = 1:2,
     ts_fut_start = c(0.0, 1.0),
     ts_fut_stop = c(1.0, 2.0),
     t_at_risk = c(10.0, 0.0),
@@ -819,14 +821,14 @@ stopifnot(nrow(sdt1) == 1)
 sdt2 <- popEpi::surv_estimate(
   dt = data.table::data.table(
     box_id = 1L,
+    ts_fut_id = 1L,
     ts_fut_start = 0.0,
     ts_fut_stop = 2.0,
     t_at_risk = 10.0,
     n_events = 1
   ),
   estimators = "S_ch",
-  ts_fut_col_nm = "ts_fut",
-  empty_interval_action = "surv_collapse_ts_1d"
+  ts_fut_col_nm = "ts_fut"
 )
 stopifnot(
   nrow(sdt2) == 1,
@@ -906,6 +908,13 @@ sdt <- data.table::CJ(
   ag = 1:3,
   box_id = 1:5
 )
+box_dt <- data.table::data.table(
+  box_id = 1:5,
+  ts_fut_id = 1:5,
+  ts_fut_start = as.numeric(0:4),
+  ts_fut_stop = as.numeric(1:5)
+)
+sdt <- box_dt[sdt, on = "box_id"]
 sdt[
   i = sdt[["ag"]] == 1,
   j = "t_at_risk" := 0.0

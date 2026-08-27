@@ -272,6 +272,7 @@ surv_estimate_expression_table__ <- function() {
 #' # popEpi::surv_estimate
 #' dt <- data.table::data.table(
 #'   box_id = 1:60,
+#'   ts_fut_id = 1:60,
 #'   ts_fut_start = seq(0, 5 - 1 / 12, 1 / 12),
 #'   ts_fut_stop = seq(1 / 12, 5, 1 / 12),
 #'   n_events = rpois(n = 60, lambda = 60:1),
@@ -450,6 +451,7 @@ surv_estimate_expression_table__ <- function() {
 #' sdt1 <- popEpi::surv_estimate(
 #'   dt = data.table::data.table(
 #'     box_id = 1:2,
+#'     ts_fut_id = 1:2,
 #'     ts_fut_start = c(0.0, 1.0),
 #'     ts_fut_stop = c(1.0, 2.0),
 #'     t_at_risk = c(10.0, 0.0),
@@ -463,14 +465,14 @@ surv_estimate_expression_table__ <- function() {
 #' sdt2 <- popEpi::surv_estimate(
 #'   dt = data.table::data.table(
 #'     box_id = 1L,
+#'     ts_fut_id = 1L,
 #'     ts_fut_start = 0.0,
 #'     ts_fut_stop = 2.0,
 #'     t_at_risk = 10.0,
 #'     n_events = 1
 #'   ),
 #'   estimators = "S_ch",
-#'   ts_fut_col_nm = "ts_fut",
-#'   empty_interval_action = "surv_collapse_ts_1d"
+#'   ts_fut_col_nm = "ts_fut"
 #' )
 #' stopifnot(
 #'   nrow(sdt2) == 1,
@@ -497,16 +499,14 @@ surv_estimate <- function(
   #' `[lexis_split_merge_aggregate_by_stratum]`.
   assert_is_arg_dt(dt, lexis = FALSE)
   stopifnot(
-    "box_id" %in% names(dt),
-
     #' @param ts_fut_col_nm `[character]` (no default)
     #'
     #' Name of time scale column over which survival estimates will be computed.
     #' E.g. `"ts_fut"`. `dt` must contain columns named
-    #' `paste0(ts_fut_col_nm, "_", c("start", "stop"))`, e.g.
-    #' `c("ts_fut_start", "ts_fut_stop")`.
+    #' `paste0(ts_fut_col_nm, "_", c("id", "start", "stop"))`, e.g.
+    #' `c("ts_fut_id", "ts_fut_start", "ts_fut_stop")`.
     length(ts_fut_col_nm) == 1,
-    paste0(ts_fut_col_nm, "_", c("start", "stop")) %in% names(dt),
+    paste0(ts_fut_col_nm, "_", c("id", "start", "stop")) %in% names(dt),
 
     # @codedoc_comment_block popEpi::surv_estimate::conf_methods
     # @param conf_methods `[character, list]` (default `"log"`)
@@ -543,7 +543,11 @@ surv_estimate <- function(
       x = dt,
       by = intersect(
         names(dt),
-        c(stratum_col_nms, names(weight_dt), paste0(ts_fut_col_nm, "_start"))
+        c(
+          stratum_col_nms,
+          names(weight_dt),
+          paste0(ts_fut_col_nm, c("_start", "_stop"))
+        )
       )
     )
   )
@@ -608,25 +612,32 @@ surv_estimate <- function(
     )
   }
 
-  #' @param empty_interval_action `[character]`
-  #'
-  #' What to do when `dt` contains an empty survival interval --- one where
-  #' `t_at_risk` or `n_at_risk_eff` is empty. Conceptually a survival estimate
-  #' is not defined for an empty interval --- if no subjects are in follow-up,
-  #' there is no observed survival. Must be one of the following:
-  #'
-  #' - `"warning"`: Emit a warning with `[warning]` if any empty intervals
-  #'   were found.
-  #' - `"error"`: Raise an error with `[stop]`.
-  #' - `"message"`: Emit a message with `[message]`
-  #' - `"collapse"`: Call `popEpi::surv_collapse_1d` before estimation
-  #'   silently.
-  #' - `"nothing"`: Estimation is performed normally and silently.
-  #'   Some estimates will be `NA`.
+  # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+  # @param empty_interval_action `[character, list]`
+  #
+  # What to do when `dt` contains an empty survival interval --- one
+  # where
+  # `t_at_risk` or `n_at_risk_eff` is empty. Conceptually a survival
+  # estimate
+  # is not defined for an empty interval --- if no subjects are in
+  # follow-up,
+  # there is no observed survival. Must be one of the following:
+  # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
   stopifnot(
-    empty_interval_action %in%
-      c("warning", "error", "message", "collapse", "nothing")
+    inherits(empty_interval_action, c("list", "character"))
   )
+  if (is.character(empty_interval_action)) {
+    stopifnot(
+      empty_interval_action %in%
+        c("warning", "error", "message", "surv_collapse_ts_1d", "nothing")
+    )
+  } else {
+    stopifnot(
+      "function_name" %in% names(empty_interval_action),
+      empty_interval_action[["function_name"]] %in%
+        c("surv_collapse_ts_1d", "surv_collapse_strata_1d")
+    )
+  }
 
   # @codedoc_comment_block popEpi::surv_estimate
   # Compute survival time function estimates. Performs the following steps:
@@ -649,7 +660,8 @@ surv_estimate <- function(
   }
   names(conf_lvls) <- estimator_dt[["user_estimator_name"]]
 
-  out <- data.table::setDT(data.table::copy(dt))
+  out <- data.table::copy(data.table::setDT(as.list(dt)))
+  out <- box_all_id_reset__(out)
 
   estimate_stratum_col_nms <- stratum_col_nms
   do_direct_adjusting <- data.table::is.data.table(weight_dt) &&
@@ -698,7 +710,7 @@ surv_estimate <- function(
       j = lapply(.SD, sum),
       .SDcols = value_col_nms,
       keyby = eval(setdiff(
-        names(dt),
+        names(out),
         c(value_col_nms, setdiff(names(weight_dt), stratum_col_nms))
       ))
     ]
@@ -729,35 +741,93 @@ surv_estimate <- function(
           "were zero. No survival probability can be estimated for such ",
           "intervals."
         )
+        # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+        # @param empty_interval_action `[character, list]`
+        #
+        # What to do when `dt` contains an empty survival interval --- one
+        # where
+        # `t_at_risk` or `n_at_risk_eff` is empty. Conceptually a survival
+        # estimate
+        # is not defined for an empty interval --- if no subjects are in
+        # follow-up,
+        # there is no observed survival. Must be one of the following:
+        #
+        # - `list`: arguments to pass to either `[surv_collapse_ts_1d]` or to
+        #   `[surv_collapse_strata_1d]`. The function in question is defined
+        #   with the named element `function_name` which must be either
+        #   `"surv_collapse_ts_1d"` or `"surv_collapse_strata_1d"`.
+        #   E.g.
+        #   `list(function_name = "surv_collapse_strata_1d", collapse_stratum_col_nm = "age_group")`.
+        # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+        collapse_arg_list <- list(
+          dt = out,
+          ts_col_nm = ts_fut_col_nm,
+          stratum_col_nms = NULL,
+          value_col_nms = value_col_nms,
+          test_expr = substitute(
+            sum(value > 0),
+            list(value = str2lang(test_col_nms[1]))
+          )
+        )
+        if (is.character(empty_interval_action)) {
+          action_name <- empty_interval_action
+        } else {
+          action_name <- empty_interval_action[["function_name"]]
+          add_collapse_arg_nms <- setdiff(
+            names(empty_interval_action),
+            "funtion_name"
+          )
+          collapse_arg_list[add_collapse_arg_nms] <- empty_interval_action[
+            add_collapse_arg_nms
+          ]
+          collapse_arg_list <- collapse_arg_list[intersect(
+            names(formals(match.fun(collapse_arg_list[["function_name"]]))),
+            names(collapse_arg_list)
+          )]
+        }
         out <- switch(
-          empty_interval_action,
-          nothing = {
+          action_name,
+          warning = {
+            # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+            # - `"warning"`: Emit a warning with `[warning]` if any empty intervals
+            #   were found.
+            # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+            warning(simpleWarning(msg, call = surv_estimate_call))
             out
           },
-          warning = {
-            warning(simpleWarning(msg, call = surv_estimate_call))
+          error = {
+            # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+            # - `"error"`: Raise an error with `[stop]`.
+            # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+            stop(simpleError(msg, call = surv_estimate_call))
             out
           },
           # idk if simpleMessage benefits anything but its harmless.
           message = {
+            # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+            # - `"message"`: Emit a message with `[message]`
+            # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
             message(simpleMessage(msg, call = surv_estimate_call))
             out
           },
-          error = {
-            stop(simpleError(msg, call = surv_estimate_call))
-            out
+          surv_collapse_ts_1d = {
+            # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+            # - `"surv_collapse_ts_1d"`: Call `popEpi::surv_collapse_ts_1d`
+            #   before estimation silently.
+            # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+            call_with_arg_list__(surv_collapse_ts_1d, collapse_arg_list)
           },
-          collapse = {
-            out <- surv_collapse_1d(
-              dt = out,
-              ts_fut_col_nm = ts_fut_col_nm,
-              stratum_col_nms = stratum_col_nms,
-              value_col_nms = value_col_nms,
-              test_expr = substitute(
-                sum(value > 0),
-                list(value = str2lang(test_col_nms[1]))
-              )
-            )
+          surv_collapse_strata_1d = {
+            # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+            # - `"error"`: Raise an error with `[stop]`.
+            # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+            call_with_arg_list__(surv_collapse_strata_1d, collapse_arg_list)
+          },
+          nothing = {
+            # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
+            # - `"nothing"`: Estimation is performed normally and silently.
+            #   Some estimates will be `NA`.
+            # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
             out
           },
           stop(
@@ -838,9 +908,13 @@ surv_estimate <- function(
       standard_error_col_nms
     )
     data.table::setnames(out, standard_error_col_nms, variance_col_nms)
+    da_ts_col_nms <- box_dt_detect_ts_col_nms__(out)
     da_stratum_col_nms <- intersect(
-      names(out),
-      c(stratum_col_nms, "box_id")
+      c(
+        stratum_col_nms,
+        paste0(rep(da_ts_col_nms, each = 3L), c("_id", "_start", "_stop"))
+      ),
+      names(out)
     )
     da_adjust_col_nms <- character(0)
     if (do_direct_adjusting) {
@@ -859,7 +933,7 @@ surv_estimate <- function(
     #   If no weights were given for direct adjusting then this step simply
     #   produces the confidence intervals.
     # @codedoc_comment_block popEpi::surv_estimate
-    sdta <- directadjusting::directly_adjusted_estimates(
+    sdt_da <- directadjusting::directly_adjusted_estimates(
       stats_dt = out,
       stratum_col_nms = da_stratum_col_nms,
       stat_col_nms = estimate_col_nms,
@@ -869,7 +943,7 @@ surv_estimate <- function(
       conf_lvls = conf_lvls,
       weights = if (do_direct_adjusting) weight_dt else NULL
     )
-    sdta_meta <- attr(sdta, "directly_adjusted_estimates_meta")
+    sdta_meta <- attr(sdt_da, "directly_adjusted_estimates_meta")
     variance_col_nms <- sdta_meta[["meta_dt"]][["var_col_nm_w"]]
     standard_error_col_nms <- sub(
       "_var",
@@ -877,13 +951,13 @@ surv_estimate <- function(
       variance_col_nms
     )
     data.table::set(
-      x = sdta,
+      x = sdt_da,
       j = variance_col_nms,
       value = lapply(variance_col_nms, function(vcn) {
-        sqrt(sdta[[vcn]])
+        sqrt(sdt_da[[vcn]])
       })
     )
-    data.table::setnames(sdta, variance_col_nms, standard_error_col_nms)
+    data.table::setnames(sdt_da, variance_col_nms, standard_error_col_nms)
 
     # @codedoc_comment_block popEpi::surv_estimate
     # - If direct adjusting was performed, the summary statistics such as
@@ -893,6 +967,7 @@ surv_estimate <- function(
     nonsum_col_nms <- setdiff(
       names(out),
       c(
+        "box_id",
         value_col_nms,
         estimate_col_nms,
         standard_error_col_nms,
@@ -927,14 +1002,24 @@ surv_estimate <- function(
       ]
     }
     add_col_nms <- setdiff(
-      names(sdta),
+      names(sdt_da),
       names(sum_dt)
     )
+    data.table::setkeyv(
+      sum_dt,
+      c(da_stratum_col_nms, paste0(ts_fut_col_nm, c("_start", "_stop")))
+    )
+    data.table::setkeyv(
+      sdt_da,
+      c(da_stratum_col_nms, paste0(ts_fut_col_nm, c("_start", "_stop")))
+    )
+    stopifnot(nrow(sum_dt) == nrow(sdt_da))
     data.table::set(
       x = sum_dt,
       j = add_col_nms,
-      value = as.list(sdta)[add_col_nms]
+      value = as.list(sdt_da)[add_col_nms]
     )
+    sum_dt <- box_all_id_reset__(sum_dt)
     if (do_brenner_weighting) {
       # @codedoc_comment_block popEpi::surv_estimate
       # - If Brenner weighting was used, rename columns containing estimates,
@@ -1233,7 +1318,7 @@ surv_lexis_S_exp_e1_ch_mean <- function(
 #' )
 #' sdt <- surv_collapse_ts_1d(
 #'   dt = sdt,
-#'   ts_fut_col_nm = "ts_fut",
+#'   ts_col_nm = "ts_fut",
 #'   value_col_nms = c("t_at_risk", "n_events"),
 #'   test_expr = quote(t_at_risk > 0.0)
 #' )
@@ -1243,9 +1328,43 @@ surv_lexis_S_exp_e1_ch_mean <- function(
 #'   sdt[["ts_fut_stop"]] == c(1.0, 3.0),
 #'   sdt[["t_at_risk"]] == c(1.0, 0.5)
 #' )
+#'
+#' # table with multiple time scales and we collapse along one of them
+#' dt <- local({
+#'   dt <- data.table::data.table(
+#'     ts_age_id = 1:4,
+#'     ts_age_start = c(0, 40, 50, 60),
+#'     ts_age_stop = c(40, 50, 60, Inf)
+#'   )
+#'   dt_fut <- data.table::data.table(
+#'     ts_fut_id = 1:5,
+#'     ts_fut_start = 0:4,
+#'     ts_fut_stop = 1:5
+#'   )
+#'   idx_df <- merge(seq_len(nrow(dt)), seq_len(nrow(dt_fut)))
+#'   dt <- cbind(dt[idx_df[[1]]], dt_fut[idx_df[[2]]])
+#'   data.table::set(
+#'     x = dt,
+#'     j = c("box_id", "t_at_risk"),
+#'     value = list(seq_len(nrow(dt)), c(0.0, rep(100.0, nrow(dt) - 1L)))
+#'   )
+#'   dt[]
+#' })
+#' dt_collapsed <- popEpi::surv_collapse_ts_1d(
+#'   dt = dt,
+#'   ts_col_nm = "ts_age",
+#'   stratum_col_nms = c("ts_fut_id", "ts_fut_start", "ts_fut_stop"),
+#'   value_col_nms = "t_at_risk",
+#'   test_expr = quote(sum(t_at_risk) > 10.0)
+#' )
+#' stopifnot(
+#'   nrow(dt_collapsed) == nrow(dt) - 1L,
+#'   dt[["ts_age_stop"]][1] == 40,
+#'   dt_collapsed[["ts_age_stop"]][1] == 50
+#' )
 surv_collapse_ts_1d <- function(
   dt,
-  ts_fut_col_nm,
+  ts_col_nm,
   stratum_col_nms = NULL,
   value_col_nms = NULL,
   test_expr = NULL,
@@ -1265,8 +1384,12 @@ surv_collapse_ts_1d <- function(
   }
   stopifnot(
     data.table::is.data.table(dt),
-    paste0(ts_fut_col_nm, c("_start", "_stop")) %in% names(dt),
-    !duplicated(dt, by = c(stratum_col_nms, paste0(ts_fut_col_nm, "_start"))),
+    #' @param ts_col_nm `[character]` (no default)
+    #'
+    #' Name of time scale column whose intervals are possibly collapsed.
+    #' This does not need to be the follow-up time scale itself although it
+    #' usually is. E.g. `ts_col_nm = "ts_fut"`.
+    paste0(ts_col_nm, c("_start", "_stop")) %in% names(dt),
     value_col_nms %in% names(dt),
     is.null(test_expr) || is.language(test_expr)
   )
@@ -1292,22 +1415,52 @@ surv_collapse_ts_1d <- function(
       list(col = str2lang(test_col_nms[1]))
     )
   }
-  if (!is.null(stratum_col_nms)) {
-    return(dt[
+  if (is.null(stratum_col_nms)) {
+    stratum_col_nms <- setdiff(names(dt), value_col_nms)
+    if (length(stratum_col_nms) == 0) {
+      stratum_col_nms <- NULL
+    }
+  } else {
+    stopifnot(
+      !duplicated(
+        dt,
+        by = union(
+          stratum_col_nms,
+          paste0(ts_col_nm, c("_id", "_start", "_stop"))
+        )
+      )
+    )
+  }
+  stratum_col_nms <- setdiff(
+    stratum_col_nms,
+    c("box_id", paste0(ts_col_nm, c("_id", "_start", "_stop")))
+  )
+  dt <- data.table::setDT(as.list(dt))
+  dt <- box_all_id_reset__(dt)
+  if (length(stratum_col_nms) > 0) {
+    out <- dt[
       j = surv_collapse_ts_1d(
         dt = .SD,
-        ts_fut_col_nm = ts_fut_col_nm,
-        stratum_col_nms = NULL,
+        ts_col_nm = ts_col_nm,
+        # NULL causes automatic determination, character(0) doesnt
+        stratum_col_nms = character(0L),
         value_col_nms = value_col_nms,
         test_expr = test_expr,
         mandatory_breaks = mandatory_breaks
       ),
+      .SDcols = intersect(
+        names(dt),
+        c(paste0(ts_col_nm, c("_id", "_start", "_stop")), value_col_nms)
+      ),
       keyby = eval(stratum_col_nms)
-    ])
+    ]
+    out <- box_all_id_reset__(out)
+    data.table::setcolorder(out, names(dt), skip_absent = TRUE)
+    return(out[])
   }
 
-  ts_start_col_nm <- paste0(ts_fut_col_nm, "_start")
-  ts_stop_col_nm <- paste0(ts_fut_col_nm, "_stop")
+  ts_start_col_nm <- paste0(ts_col_nm, "_start")
+  ts_stop_col_nm <- paste0(ts_col_nm, "_stop")
 
   br_dt <- data.table::setDT(list(
     br = c(dt[[ts_start_col_nm]], dt[[ts_stop_col_nm]][nrow(dt)])
@@ -1363,18 +1516,12 @@ surv_collapse_ts_1d <- function(
     }
   }
   collapsed_grp_ids <- cumsum(!duplicated(collapsed_grp_ids))
-  ts_id_col_nm <- paste0(ts_fut_col_nm, "_id")
+  ts_id_col_nm <- paste0(ts_col_nm, "_id")
   dt <- data.table::copy(data.table::setDT(as.list(dt)))
   data.table::set(
     x = dt,
     j = ts_id_col_nm,
     value = collapsed_grp_ids
-  )
-  ts_id_col_nms <- setdiff(names(dt)[grepl("_id$", names(dt))], "box_id")
-  data.table::set(
-    x = dt,
-    j = "box_id",
-    value = cumsum(!duplicated(dt, by = ts_id_col_nms))
   )
   data.table::set(
     x = dt,
@@ -1390,6 +1537,7 @@ surv_collapse_ts_1d <- function(
     ),
     by = ts_id_col_nm
   ]
+  dt <- box_all_id_reset__(dt)
   dt <- dt[
     #' @importFrom data.table .SD
     j = lapply(.SD, sum, na.rm = TRUE),
@@ -1415,6 +1563,13 @@ surv_collapse_ts_1d <- function(
 #'   ag = 1:3,
 #'   box_id = 1:5
 #' )
+#' box_dt <- data.table::data.table(
+#'   box_id = 1:5,
+#'   ts_fut_id = 1:5,
+#'   ts_fut_start = as.numeric(0:4),
+#'   ts_fut_stop = as.numeric(1:5)
+#' )
+#' sdt <- box_dt[sdt, on = "box_id"]
 #' sdt[
 #'   i = sdt[["ag"]] == 1,
 #'   j = "t_at_risk" := 0.0
@@ -1650,8 +1805,9 @@ surv_collapse_strata_1d <- function(
     stratum_col_nms,
     collapse_stratum_col_nm
   )
+  dt <- data.table::setDT(as.list(dt))
+  dt <- box_all_id_reset__(dt)
   if (length(noncollapse_stratum_col_nms) > 0) {
-    dt <- data.table::setDT(as.list(dt))
     data.table::set(
       x = dt,
       j = collapse_stratum_col_nm,

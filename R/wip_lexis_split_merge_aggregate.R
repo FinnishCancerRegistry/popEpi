@@ -989,24 +989,7 @@ lexis_split_merge_aggregate_by_stratum <- function(
       }
     }
   })
-  local({
-    # we have to reset the id columns here because the aggregation above is
-    # performed one time scale stratum box at a time, e.g. one period at a time,
-    # and that leads to e.g. ts_cal_id being the same for every period.
-    lapply(names(breaks), function(ts_col_nm) {
-      out[
-        #' @importFrom data.table := .GRP
-        j = (paste0(ts_col_nm, "_id")) := .GRP,
-        by = eval(paste0(ts_col_nm, "_", c("start", "stop")))
-      ]
-      NULL
-    })
-    out[
-      #' @importFrom data.table := .GRP
-      j = "box_id" := .GRP,
-      by = eval(paste0(names(breaks), "_id"))
-    ]
-  })
+  out <- box_all_id_reset__(out)
 
   # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
   # - Set proper `data.table`

@@ -416,7 +416,7 @@ prev_lexis <- function(
     stopifnot(
       "S" %in% names(merge_dt),
       !is.na(merge_dt[["S"]]),
-      merge_dt[["S"]] > 0,
+      merge_dt[["S"]] >= 0,
       setdiff(names(merge_dt), "S") %in% names(lexis)
     )
     merge_dt_by <- setdiff(names(merge_dt), "S")
