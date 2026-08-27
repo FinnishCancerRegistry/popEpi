@@ -303,6 +303,7 @@ box_all_id_reset__ <- function(dt, ts_col_nms = NULL) {
     dt,
     c(pre, setdiff(names(dt), pre))
   )
+  data.table::setkeyv(dt, union(pre, data.table::key(dt)))
   return(dt[])
 }
 
