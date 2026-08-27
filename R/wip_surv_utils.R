@@ -118,7 +118,9 @@ surv_interpolate <- function(
     estimate_start_value %in% 0:1,
     method %in% c("linear", "geometric_mean", "hazard"),
     ts_fut_stops[1] != 0.0,
-    length(estimates) == length(ts_fut_stops)
+    length(estimates) == length(ts_fut_stops),
+    !duplicated(ts_fut_stops),
+    isTRUE(all.equal(ts_fut_stops, sort(ts_fut_stops)))
   )
   # I added the extra interval ]-1.0, 0.0] to get an estimate for ts_fut = 0.0.
   interval_dt <- data.table::setDT(list(
@@ -127,6 +129,7 @@ surv_interpolate <- function(
     est_start = c(1.0, 1.0, estimates[-length(estimates)]),
     est_stop = c(1.0, estimates)
   ))
+  data.table::setkeyv(interval_dt, c("ts_fut_start", "ts_fut_stop"))
   out <- data.table::setDT(list(
     ts_fut = ts_fut_stop_value,
     interval = cut(
