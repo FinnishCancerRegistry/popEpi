@@ -23,37 +23,49 @@ NS_pp_ch,"Net survival, Pohar Perme, lifetable estimator. The Pohar Perme method
 "S_ch_[x, y]","Cause-specific (transition-specific) survival, constant hazards estimator, for transitioning from `x` to `y`. Both `x` and `y` can be sets of statuses, e.g. `x = 1:2`.. Cause-specific survival treats all other events but the one of interest as random censoring.","exp(-`H_ch_[x, y]`)","S_ch * sqrt(cumsum((delta_t^2) * `n_events_[x, y]`/(t_at_risk^2)))"
 "F_lt_[x, y]","Cause-specific (transition-specific) (absolute) risk, lifetable estimator for transitioning from  `x` to `y`. Both `x` and `y` can be sets of statuses, e.g. `x = 1:2`. Here we use the estimator presented in Prentice et al. We don't know the standard error formula for this one. Prentice RL, Kalbfleisch JD, Peterson AV Jr, Flournoy N, Farewell VT, Breslow NE. The analysis of failure times in the presence of competing risks. Biometrics. 1978 Dec;34(4):541-54. PMID: 373811","{
   m <- `n_events_[x, y]`/n_events
-  S_lt_interval <- S_lt_cond
-  F_lt_interval <- (1 - S_lt_interval)
+  F_lt_interval <- n_events / n_at_risk_eff
+  S_lt_interval <- 1 - S_lt_interval
   F_lt_interval[n_events == 0] <- 0
   `F_lt_interval_[x, y]` <- F_lt_interval * m
-  S_lt_to_interval_start <- S_lt_lag1
+  S_lt_to_interval_start <- c(
+    1.00,
+    cumprod(S_lt_interval)[-length(n_events)]
+  )
   cumsum(S_lt_to_interval_start * `F_lt_interval_[x, y]`)
 }",0 + NA_real_
 "F_ch_[x, y]","Cause-specific (transition-specific) (absolute) risk, constant hazards estimator. Here we use the estimator presented in Prentice et al. We don't know the standard error formula for this one. Prentice RL, Kalbfleisch JD, Peterson AV Jr, Flournoy N, Farewell VT, Breslow NE. The analysis of failure times in the presence of competing risks. Biometrics. 1978 Dec;34(4):541-54. PMID: 373811","{
   m <- `n_events_[x, y]`/n_events
-  S_ch_interval <- S_ch_cond
+  S_ch_interval <- exp(-delta_t * h_ch)
   F_ch_interval <- (1 - S_ch_interval)
   F_ch_interval[n_events == 0] <- 0
   `F_ch_interval_[x, y]` <- F_ch_interval * m
-  S_ch_to_interval_start <- S_ch_lag1
+  S_ch_to_interval_start <- c(
+    1.00,
+    cumprod(S_ch_interval)[-length(n_events)]
+  )
   cumsum(S_ch_to_interval_start * `F_ch_interval_[x, y]`)
 }",0 + NA_real_
 RF_e2_lt,"""Relative"" absolute risk, lifetable estimator. This was proposed by Karri Seppa at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients. We don't know the standard error formula for this one.","{
-  m <- (n_events - n_events_exp_e2)/n_events
-  S_lt_interval <- S_lt_cond
-  F_lt_interval <- (1 - S_lt_interval)
+  m <- (n_events - n_events_exp_e2) / n_events
+  F_lt_interval <- n_events / n_at_risk_eff
+  S_lt_interval <- 1 - F_lt_interval
   F_lt_interval[n_events == 0] <- 0
-  F_ch_exc_interval <- F_lt_interval * m
-  S_lt_to_interval_start <- S_lt_lag1
-  cumsum(S_lt_to_interval_start * F_ch_exc_interval)
+  F_lt_exc_interval <- F_lt_interval * m
+  S_lt_to_interval_start <- c(
+    1.00,
+    cumprod(S_lt_interval)[-length(n_events)]
+  )
+  cumsum(S_lt_to_interval_start * F_lt_exc_interval)
 }",0 + NA_real_
 RF_e2_ch,"""Relative"" absolute risk, constant hazards estimator. This was proposed by Karri Seppa at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients. We don't know the standard error formula for this one.","{
   m <- (n_events - n_events_exp_e2)/n_events
-  S_ch_interval <- S_ch_cond
+  S_ch_interval <- exp(-delta_t * h_ch)
   F_ch_interval <- (1 - S_ch_interval)
   F_ch_interval[n_events == 0] <- 0
   F_ch_exc_interval <- F_ch_interval * m
-  S_ch_to_interval_start <- S_ch_lag1
+  S_ch_to_interval_start <- c(
+    1.00,
+    cumprod(S_ch_interval)[-length(n_events)]
+  )
   cumsum(S_ch_to_interval_start * F_ch_exc_interval)
 }",0 + NA_real_
