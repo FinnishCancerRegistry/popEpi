@@ -1,3 +1,37 @@
+lexis_col_nms__ <- function(lexis) {
+  return(c(
+    "lex.id",
+    Epi::timeScales(lexis),
+    "lex.dur",
+    "lex.Cst",
+    "lex.Xst"
+  ))
+}
+
+lexis_in_breaks__ <- function(lexis, breaks, only_nonlate = FALSE) {
+  assert_is_arg_lexis(lexis, dt = FALSE)
+  assert_is_arg_breaks(breaks, lexis)
+  out <- data.table::data.table(
+    in_breaks = rep(TRUE, nrow(lexis))
+  )
+  lapply(names(breaks), function(ts_col_nm) {
+    lo <- min(breaks[[ts_col_nm]])
+    hi <- max(breaks[[ts_col_nm]])
+    data.table::set(
+      x = out,
+      j = "in_breaks",
+      value = out[["in_breaks"]] &
+        if_else__(
+          only_nonlate,
+          lexis[[ts_col_nm]] < hi & lexis[[ts_col_nm]] >= lo,
+          lexis[[ts_col_nm]] < hi
+        ) &
+        lexis[[ts_col_nm]] + lexis[["lex.dur"]] >= lo
+    )
+  })
+  return(out[["in_breaks"]])
+}
+
 lexis_dt_set__ <- function(lexis, lexis_ts_col_nms = NULL) {
   if (inherits(lexis, "Lexis")) {
     data.table::setDT(lexis)
