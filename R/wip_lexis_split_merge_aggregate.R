@@ -232,10 +232,6 @@ lexis_aggregate_one_stratum__ <- function(
 #'     data = sire
 #'   )
 #'   sire[["icss_ag"]] <- make_column_icss_ag(sire[["dg_age"]])
-#'   sire[["individual_weight"]] <- popEpi::surv_individual_weights(
-#'     df = sire,
-#'     standard_weight_dt = wdt
-#'   )
 #'   sire
 #' }
 #'

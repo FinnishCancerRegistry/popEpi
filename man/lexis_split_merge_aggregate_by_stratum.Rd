@@ -180,25 +180,44 @@ use of \verb{ * iw} in the expression if individual weights are not used.
 }
 }\tabular{lll}{
    Name \tab Explanation \tab Expression \cr
-   \verb{n_in_follow_up_at_interval_start} \tab Number of Lexis subjects in follow-up at the start of a follow-up time scale interval. \tab \verb{sum(in_follow_up_at_interval_start)} \cr
-   \verb{n_entered_late_during_interval} \tab Number of Lexis subjects who entered a follow-up time scale interval late. \tab \verb{sum(entered_late_during_interval)} \cr
-   \verb{n_left_early_during_interval} \tab Number of Lexis subjects who left a follow-up time scale interval early. \tab \verb{sum(left_early_during_interval)} \cr
-   \verb{n_at_risk_eff} \tab Effective number of subjects at risk. Whereas in the Kaplan-Meier (product-limit) estimator of survival we simply estimate the conditional survival probabilities as \code{n_events / n_at_risk} at each event time point, in the actuarial approach we estimate the conditional survival probabilities of follow-up time intervals such as \verb{]0, 0.1]}. Using the number at risk at the start of the interval is problematic because subjects may enter late, leave early, or both. We adjust our number at risk in each of these special cases to arrive out our effective number. The \code{iw} in the expression stands for the individual weight and is included to allow for individual weighting. \tab \verb{sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & 
+   \verb{n_at_risk_eff} \tab Effective number of subjects at risk. Whereas in the Kaplan-Meier (product-limit) estimator of survival we simply estimate the conditional survival probabilities as \code{n_events / n_at_risk} at each event time point, in the actuarial approach we estimate the conditional survival probabilities of follow-up time intervals such as \verb{]0, 0.1]}. Using the number at risk at the start of the interval is problematic because subjects may enter late, leave early, or both. We adjust our number at risk in each of these special cases to arrive out our effective number. \tab \verb{sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & 
+    !left_early_during_interval) + 0.25 * (entered_late_during_interval & 
+    left_early_during_interval) - 0.5 * (!entered_late_during_interval & 
+    left_early_during_interval)))} \cr
+   \verb{n_at_risk_eff_bw} \tab Effective number of subjects at risk. Whereas in the Kaplan-Meier (product-limit) estimator of survival we simply estimate the conditional survival probabilities as \code{n_events / n_at_risk} at each event time point, in the actuarial approach we estimate the conditional survival probabilities of follow-up time intervals such as \verb{]0, 0.1]}. Using the number at risk at the start of the interval is problematic because subjects may enter late, leave early, or both. We adjust our number at risk in each of these special cases to arrive out our effective number. The \code{iw} in the expression stands for the individual weight. \tab \verb{sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & 
     !left_early_during_interval) + 0.25 * (entered_late_during_interval & 
     left_early_during_interval) - 0.5 * (!entered_late_during_interval & 
     left_early_during_interval)) * iw)} \cr
-   \verb{n_events} \tab Number of events, i.e. the total number of all kinds of transitions. The \code{iw} in the expression stands for the individual weight and is included to allow for individual weighting. \tab \verb{sum((lex.Xst != lex.Cst) * iw)} \cr
-   \verb{t_at_risk} \tab Total time at risk. The \code{iw} in the expression stands for the individual weight and is included to allow for individual weighting. \tab \verb{sum(lex.dur * iw)} \cr
-   \verb{n_events_exp_e2} \tab Number of expected events according to the Ederer II method. Well, there is only one formula for the expected number of events, \code{h_exp * t_at_risk}, but this name is reserved for the Ederer II method and is used with observed data (as opposed to extrapolated data according to the Ederer I method). The \code{iw} in the expression stands for the individual weight and is included to allow for individual weighting. \tab \verb{sum(lex.dur * h_exp * iw)} \cr
-   \verb{n_events_pp} \tab The same \code{n_events} but with Pohar Perme weighting. \tab \verb{sum((lex.Xst != lex.Cst) * pp * iw)} \cr
-   \verb{n_events_pp_double_weighted} \tab The same as \code{n_events} but with Pohar Perme weighting where the weights are squared. \tab \verb{sum((lex.Xst != lex.Cst) * pp * pp * iw)} \cr
-   \verb{n_events_exp_pp} \tab The number of expected events with Pohar Perme weighting. The \code{iw} in the expression stands for the individual weight and is included to allow for individual weighting. \tab \verb{sum(lex.dur * h_exp * pp * iw)} \cr
    \verb{n_at_risk_eff_pp} \tab The same as \code{n_at_risk_eff} but with Pohar Perme weighting. \tab \verb{sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & 
     !left_early_during_interval) + 0.25 * (entered_late_during_interval & 
     left_early_during_interval) - 0.5 * (!entered_late_during_interval & 
+    left_early_during_interval)) * pp)} \cr
+   \verb{n_at_risk_eff_pp_bw} \tab The same as \code{n_at_risk_eff} but with Pohar Perme weighting. The \code{iw} in the expression stands for the individual weight. \tab \verb{sum((in_follow_up_at_interval_start + 0.5 * (entered_late_during_interval & 
+    !left_early_during_interval) + 0.25 * (entered_late_during_interval & 
+    left_early_during_interval) - 0.5 * (!entered_late_during_interval & 
     left_early_during_interval)) * pp * iw)} \cr
-   \verb{t_at_risk_pp} \tab The same as \code{t_at_risk} but with Pohar Perme weighting. \tab \verb{sum(lex.dur * pp * iw)} \cr
-   \verb{n_events_[x, y]} \tab The number of transitions from \code{x} to \code{y}. The \code{iw} in the expression stands for the individual weight and is included to allow for individual weighting. \tab \verb{sum((lex.Cst \%in\% x & lex.Xst \%in\% y) * iw)} \cr
+   \verb{n_entered_late_during_interval} \tab Number of Lexis subjects who entered a follow-up time scale interval late. \tab \verb{sum(entered_late_during_interval)} \cr
+   \verb{n_entered_late_during_interval_bw} \tab Number of Lexis subjects who entered a follow-up time scale interval late. The \code{iw} in the expression stands for the individual weight. \tab \verb{sum(entered_late_during_interval * iw)} \cr
+   \verb{n_events} \tab Number of events, i.e. the total number of all kinds of transitions. \tab \verb{sum((lex.Xst != lex.Cst))} \cr
+   \verb{n_events_[x, y]} \tab The number of transitions from \code{x} to \code{y}. \tab \verb{sum((lex.Cst \%in\% x & lex.Xst \%in\% y))} \cr
+   \verb{n_events_[x, y]_bw} \tab The number of transitions from \code{x} to \code{y}. The \code{iw} in the expression stands for the individual weight. \tab \verb{sum((lex.Cst \%in\% x & lex.Xst \%in\% y) * iw)} \cr
+   \verb{n_events_bw} \tab Number of events, i.e. the total number of all kinds of transitions. The \code{iw} in the expression stands for the individual weight. \tab \verb{sum((lex.Xst != lex.Cst) * iw)} \cr
+   \verb{n_events_exp_e2} \tab Number of expected events according to the Ederer II method. Well, there is only one formula for the expected number of events, \code{h_exp * t_at_risk}, but this name is reserved for the Ederer II method and is used with observed data (as opposed to extrapolated data according to the Ederer I method). \tab \verb{sum(lex.dur * h_exp)} \cr
+   \verb{n_events_exp_e2_bw} \tab Number of expected events according to the Ederer II method. Well, there is only one formula for the expected number of events, \code{h_exp * t_at_risk}, but this name is reserved for the Ederer II method and is used with observed data (as opposed to extrapolated data according to the Ederer I method). The \code{iw} in the expression stands for the individual weight. \tab \verb{sum(lex.dur * h_exp * iw)} \cr
+   \verb{n_events_exp_pp} \tab The number of expected events with Pohar Perme weighting. \tab \verb{sum(lex.dur * h_exp * pp)} \cr
+   \verb{n_events_exp_pp_bw} \tab The number of expected events with Pohar Perme weighting. The \code{iw} in the expression stands for the individual weight. \tab \verb{sum(lex.dur * h_exp * pp * iw)} \cr
+   \verb{n_events_pp} \tab The same \code{n_events} but with Pohar Perme weighting. \tab \verb{sum((lex.Xst != lex.Cst) * pp)} \cr
+   \verb{n_events_pp_bw} \tab The same \code{n_events} but with Pohar Perme weighting. The \code{iw} in the expression stands for the individual weight. \tab \verb{sum((lex.Xst != lex.Cst) * pp * iw)} \cr
+   \verb{n_events_pp_double_weighted} \tab The same as \code{n_events} but with Pohar Perme weighting where the weights are squared. \tab \verb{sum((lex.Xst != lex.Cst) * pp * pp)} \cr
+   \verb{n_events_pp_double_weighted_bw} \tab The same as \code{n_events} but with Pohar Perme weighting where the weights are squared. The \code{iw} in the expression stands for the individual weight. \tab \verb{sum((lex.Xst != lex.Cst) * pp * pp * iw)} \cr
+   \verb{n_in_follow_up_at_interval_start} \tab Number of Lexis subjects in follow-up at the start of a follow-up time scale interval. \tab \verb{sum(in_follow_up_at_interval_start)} \cr
+   \verb{n_in_follow_up_at_interval_start_bw} \tab Number of Lexis subjects in follow-up at the start of a follow-up time scale interval. The \code{iw} in the expression stands for the individual weight. \tab \verb{sum(in_follow_up_at_interval_start * iw)} \cr
+   \verb{n_left_early_during_interval} \tab Number of Lexis subjects who left a follow-up time scale interval early. \tab \verb{sum(left_early_during_interval)} \cr
+   \verb{n_left_early_during_interval_bw} \tab Number of Lexis subjects who left a follow-up time scale interval early. The \code{iw} in the expression stands for the individual weight. \tab \verb{sum(left_early_during_interval * iw)} \cr
+   \verb{t_at_risk} \tab Total time at risk. \tab \verb{sum(lex.dur)} \cr
+   \verb{t_at_risk_bw} \tab Total time at risk. The \code{iw} in the expression stands for the individual weight. \tab \verb{sum(lex.dur * iw)} \cr
+   \verb{t_at_risk_pp} \tab The same as \code{t_at_risk} but with Pohar Perme weighting. \tab \verb{sum(lex.dur * pp)} \cr
+   \verb{t_at_risk_pp_bw} \tab The same as \code{t_at_risk} but with Pohar Perme weighting. The \code{iw} in the expression stands for the individual weight. \tab \verb{sum(lex.dur * pp * iw)} \cr
 }
 
 \itemize{
@@ -392,10 +411,6 @@ make_sire <- function() {
     data = sire
   )
   sire[["icss_ag"]] <- make_column_icss_ag(sire[["dg_age"]])
-  sire[["individual_weight"]] <- popEpi::surv_individual_weights(
-    df = sire,
-    standard_weight_dt = wdt
-  )
   sire
 }
 
