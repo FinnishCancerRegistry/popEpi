@@ -6,6 +6,7 @@
 \alias{surv_collapse_ts_1d}
 \alias{surv_collapse_strata_list}
 \alias{surv_collapse_strata_1d}
+\alias{surv_observed_weight_dt}
 \alias{surv_brenner_weight_dt}
 \alias{surv_individual_weights}
 \alias{surv_functions}
@@ -50,6 +51,8 @@ surv_collapse_strata_1d(
   test_expr = quote(min(t_at_risk) > 0)
 )
 
+surv_observed_weight_dt(lexis, aggre_by, subset = NULL, breaks = NULL)
+
 surv_brenner_weight_dt(
   standard_weight_dt,
   observed_weight_dt = NULL,
@@ -57,10 +60,12 @@ surv_brenner_weight_dt(
 )
 
 surv_individual_weights(
-  df,
+  lexis,
   standard_weight_dt,
   observed_weight_dt = NULL,
-  collapse_stratum_col_nms = NULL
+  collapse_stratum_col_nms = NULL,
+  subset = NULL,
+  breaks = NULL
 )
 
 lexis_breaks_collapse_1d(
@@ -136,16 +141,11 @@ One or more names of estimators whose estimates will be computed into
 \item \code{character}: Causes formulae defined internally into \code{popEpi} to be
 used to compute the estimates and their standard errors. For available
 options see \strong{Details}.
-\item \code{list}: Each element must be a list with named elements
-\itemize{
-\item \code{est}: Quoted (\link{quote}) R expression which when evaluated with
-\code{eval(expr, .SD, call_env)} produces the estimates. Here \code{expr}
-is the expression, \code{.SD} is the subset of \code{dt} for one stratum, and
-\code{call_env} is the environment from which this
-functions was called.
-\item \code{se}: Also a quoted R expression. This should produce
-the standard errors.
-}
+\item \code{list}: Each named element must be a quoted
+(see \link{quote} / \link{substitute} / \link{str2lang} / etc)
+R expression, which when evaluated produces the estimates (\code{est})
+and standard errors (\code{se}). E.g.
+\code{list(est = quote(n_events / t_at_risk), se = quote(...))}.
 }}
 
 \item{weight_dt}{\verb{[NULL, data.table]} (default \code{NULL})
@@ -219,7 +219,8 @@ which all pass \code{test_expr}.}
 
 \item{collapse_stratum_col_nms}{\verb{[NULL, character]} (default \code{NULL})
 
-Optional names of stratum column names in both \code{df} and
+Optional argument of names of stratum column names in both
+\code{observed_weight_dt} and
 \code{standard_weight_dt}. If this argument is supplied, strata defined by
 these columns are attempted to be combined with their neighbours in the
 event of a zero in the corresponding \code{observed_weight_dt$weight} value.
@@ -239,6 +240,16 @@ As the \code{collapse_stratum_col_nms} argument of
 \code{popEpi::surv_collapse_strata_list} --- and passed to it, as that argument
 --- but must be of length one.}
 
+\item{lexis}{\verb{[Lexis]} (no default)
+
+A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
+
+\item{aggre_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
+\item{subset}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
+\item{breaks}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
+
 \item{standard_weight_dt}{\verb{[data.table]} (no default)
 
 Table of standardisation weights, e.g. ICSS weights.
@@ -256,7 +267,7 @@ allowed.
 
 Table of weights in your dataset.
 \itemize{
-\item \code{NULL}: Weights are computed using \code{df}. See \strong{Details}.
+\item \code{NULL}: Weights are computed using \code{surv_observed_weight_dt}.
 \item \code{data.table}: Must be a valid table of weights.
 }
 
@@ -269,28 +280,14 @@ e.g. the same age group twice in a table stratified by age group only.
 allowed.
 }}
 
-\item{df}{\verb{[data.frame, data.table]} (no default)
-
-Dataset containing stratum columns also found in \code{standard_weight_dt}.}
-
-\item{lexis}{\verb{[Lexis]} (no default)
-
-A \code{Lexis} dataset (\verb{[Epi::Lexis]} / \verb{[Lexis_dt]}).}
-
 \item{breaks_1d}{\verb{[list]} (no default)
 
 List of breaks with one element. These define the initial intervals which
 are subject to being combined. E.g. \code{list(ts_fut = seq(0, 5, 1 / 12))}.}
 
-\item{breaks}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
-
 \item{merge_dt}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{merge_dt_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
-
-\item{aggre_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
-
-\item{subset}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
 \item{first_record_by}{Passed to \verb{[lexis_split_merge_aggregate_by_stratum]}.}
 
@@ -334,7 +331,7 @@ intervals.
 
 \strong{popEpi::surv_individual_weights}
 
-Returns a vector of weights.
+Returns a vector of weights of length \code{nrow(lexis)}.
 
 \strong{popEpi::surv_lexis}
 
@@ -380,38 +377,120 @@ Pre-defined estimators with their formulae:
    \verb{S_ch_[x, y]} \tab Cause-specific (transition-specific) survival, constant hazards estimator, for transitioning from \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}.. Cause-specific survival treats all other events but the one of interest as random censoring. \tab \verb{exp(-`H_ch_[x, y]`)} \tab \verb{S_ch * sqrt(cumsum((delta_t^2) * `n_events_[x, y]`/(t_at_risk^2)))} \cr
    \verb{F_lt_[x, y]} \tab Cause-specific (transition-specific) (absolute) risk, lifetable estimator for transitioning from  \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}. Here we use the estimator presented in Prentice et al. We don't know the standard error formula for this one. Prentice RL, Kalbfleisch JD, Peterson AV Jr, Flournoy N, Farewell VT, Breslow NE. The analysis of failure times in the presence of competing risks. Biometrics. 1978 Dec;34(4):541-54. PMID: 373811 \tab \verb{{
   m <- `n_events_[x, y]`/n_events
-  S_lt_interval <- S_lt_cond
-  F_lt_interval <- (1 - S_lt_interval)
+  F_lt_interval <- n_events / n_at_risk_eff
+  S_lt_interval <- 1 - S_lt_interval
   F_lt_interval[n_events == 0] <- 0
   `F_lt_interval_[x, y]` <- F_lt_interval * m
-  S_lt_to_interval_start <- S_lt_lag1
+  S_lt_to_interval_start <- c(
+    1.00,
+    cumprod(S_lt_interval)[-length(n_events)]
+  )
   cumsum(S_lt_to_interval_start * `F_lt_interval_[x, y]`)
 }} \tab \verb{0 + NA_real_} \cr
    \verb{F_ch_[x, y]} \tab Cause-specific (transition-specific) (absolute) risk, constant hazards estimator. Here we use the estimator presented in Prentice et al. We don't know the standard error formula for this one. Prentice RL, Kalbfleisch JD, Peterson AV Jr, Flournoy N, Farewell VT, Breslow NE. The analysis of failure times in the presence of competing risks. Biometrics. 1978 Dec;34(4):541-54. PMID: 373811 \tab \verb{{
   m <- `n_events_[x, y]`/n_events
-  S_ch_interval <- S_ch_cond
+  S_ch_interval <- exp(-delta_t * h_ch)
   F_ch_interval <- (1 - S_ch_interval)
   F_ch_interval[n_events == 0] <- 0
   `F_ch_interval_[x, y]` <- F_ch_interval * m
-  S_ch_to_interval_start <- S_ch_lag1
+  S_ch_to_interval_start <- c(
+    1.00,
+    cumprod(S_ch_interval)[-length(n_events)]
+  )
   cumsum(S_ch_to_interval_start * `F_ch_interval_[x, y]`)
 }} \tab \verb{0 + NA_real_} \cr
    \verb{RF_e2_lt} \tab ""Relative"" absolute risk, lifetable estimator. This was proposed by Karri Seppa at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients. We don't know the standard error formula for this one. \tab \verb{{
-  m <- (n_events - n_events_exp_e2)/n_events
-  S_lt_interval <- S_lt_cond
-  F_lt_interval <- (1 - S_lt_interval)
+  m <- (n_events - n_events_exp_e2) / n_events
+  F_lt_interval <- n_events / n_at_risk_eff
+  S_lt_interval <- 1 - F_lt_interval
   F_lt_interval[n_events == 0] <- 0
-  F_ch_exc_interval <- F_lt_interval * m
-  S_lt_to_interval_start <- S_lt_lag1
-  cumsum(S_lt_to_interval_start * F_ch_exc_interval)
+  F_lt_exc_interval <- F_lt_interval * m
+  S_lt_to_interval_start <- c(
+    1.00,
+    cumprod(S_lt_interval)[-length(n_events)]
+  )
+  cumsum(S_lt_to_interval_start * F_lt_exc_interval)
 }} \tab \verb{0 + NA_real_} \cr
    \verb{RF_e2_ch} \tab ""Relative"" absolute risk, constant hazards estimator. This was proposed by Karri Seppa at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients. We don't know the standard error formula for this one. \tab \verb{{
   m <- (n_events - n_events_exp_e2)/n_events
-  S_ch_interval <- S_ch_cond
+  S_ch_interval <- exp(-delta_t * h_ch)
   F_ch_interval <- (1 - S_ch_interval)
   F_ch_interval[n_events == 0] <- 0
   F_ch_exc_interval <- F_ch_interval * m
-  S_ch_to_interval_start <- S_ch_lag1
+  S_ch_to_interval_start <- c(
+    1.00,
+    cumprod(S_ch_interval)[-length(n_events)]
+  )
+  cumsum(S_ch_to_interval_start * F_ch_exc_interval)
+}} \tab \verb{0 + NA_real_} \cr
+   \verb{h_ch_bw} \tab Constant hazards estimate of... hazard. The most basic hazard estimate where the number of events is Poisson distributed. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{n_events_bw/t_at_risk_bw} \tab \verb{sqrt(h_ch_bw/t_at_risk_bw)} \cr
+   \verb{H_ch_bw} \tab Cumulative hazard function estimate based on the above. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{cumsum(delta_t * h_ch_bw)} \tab \verb{sqrt(cumsum(delta_t^2 * h_ch_se^2))} \cr
+   \verb{h_exp_e2_ch_bw} \tab Expected constant hazards estimated by the Ederer II method. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{n_events_exp_e2_bw/t_at_risk_bw} \tab \verb{0 + 0} \cr
+   \verb{h_exc_e2_ch_bw} \tab Excess hazard, observed - expected. Based on Ederer II expected hazard. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{(n_events_bw - n_events_exp_e2_bw)/t_at_risk_bw} \tab \verb{h_ch_se} \cr
+   \verb{S_ch_bw} \tab Observed survival, constant hazards estimator. We estimate the hazard first for each survival interval and derive survival from that. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{exp(-H_ch_bw)} \tab \verb{S_ch_bw * sqrt(cumsum((delta_t^2) * n_events_bw/(t_at_risk_bw^2)))} \cr
+   \verb{F_ch_bw} \tab The is the cumulative density / distribution function. It is simply \code{1 - S}. Based on constant hazards. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{1 - S_ch_bw} \tab \verb{S_ch_se} \cr
+   \verb{S_lt_bw} \tab Observed survival, lifetable estimator. We first estimate the (conditional) probabilities of surviving each survival interval and cumulate those. The lifetable estimator in its simplest form assumes that outcomes in an interval are binomially distributed, but we perform corrections on those who were censored etc. See the definition of \code{n_at_risk_eff}. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{cumprod(1 - n_events_bw/n_at_risk_eff_bw)} \tab \verb{S_lt_bw * sqrt(cumsum(n_events_bw/(n_at_risk_eff_bw * (n_at_risk_eff_bw - n_events_bw))))} \cr
+   \verb{H_lt_bw} \tab This cumulative hazard estimator is derived from \code{S_lt}. We don't know the standard error formula for this one. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{-log(S_lt_bw)} \tab \verb{0 + NA_real_} \cr
+   \verb{h_lt_bw} \tab This hazard estimator is derived from \code{S_lt}. We don't know the standard error formula for this one. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{diff(c(0, H_lt_bw))/delta_t} \tab \verb{0 + NA_real_} \cr
+   \verb{F_lt_bw} \tab This is simply \code{1 - S_lt}. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{1 - S_lt_bw} \tab \verb{S_lt_se} \cr
+   \verb{S_exp_e2_lt_bw} \tab Expected Ederer II survival, lifetable estimator. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{cumprod(1 - n_events_exp_e2_bw/n_at_risk_eff_bw)} \tab \verb{0 + 0} \cr
+   \verb{S_exp_e2_ch_bw} \tab Expected Ederer II survival, constant hazards estimator.  The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{exp(-cumsum(delta_t * h_exp_e2_ch_bw))} \tab \verb{0 + 0} \cr
+   \verb{RS_e2_lt_bw} \tab Relative survival, Ederer II, lifetable estimator. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{cumprod(1 - (n_events_bw - n_events_exp_e2_bw)/n_at_risk_eff_bw)} \tab \verb{S_lt_se/S_exp_e2_lt_bw} \cr
+   \verb{RS_e2_ch_bw} \tab Relative survival, Ederer II, constant hazards estimator. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{exp(-cumsum(delta_t * h_exc_e2_ch_bw))} \tab \verb{S_ch_se/S_exp_e2_ch_bw} \cr
+   \verb{NS_pp_lt_bw} \tab Net survival, Pohar Perme, constan hazards estimator. The Pohar Perme method is the least biased method for estimating net survival when follow-up is complete but it can have larger uncertainty. Net survival is the hypothetical survival probability in a world where the event of interest is the only event possible, e.g. when estimated using a cohort of cancer patients we get the hypothetical survival probability when cancer is the only thing that kills people. Maja Pohar Perme, Janez Stare, Jacques Esteve, On Estimation in Relative Survival, Biometrics, Volume 68, Issue 1, March 2012, Pages 113-120, https://doi.org/10.1111/j.1541-0420.2011.01640.x; Karri Seppa, Timo Hakulinen, Arun Pokhrel, Choosing the net survival method for cancer survival estimation, European Journal of Cancer, Volume 51, Issue 9, 2015, Pages 1123-1129, ISSN 0959-8049, https://doi.org/10.1016/j.ejca.2013.09.019 The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{cumprod(1 - (n_events_pp_bw - n_events_exp_pp_bw)/n_at_risk_eff_pp_bw)} \tab \verb{NS_pp_lt_bw * sqrt(cumsum(n_events_pp_double_weighted_bw/(n_at_risk_eff_bw^2)))} \cr
+   \verb{NS_pp_ch_bw} \tab Net survival, Pohar Perme, lifetable estimator. The Pohar Perme method is the least biased method for estimating net survival when follow-up is complete but it can have larger uncertainty. Net survival is the hypothetical survival probability in a world where the event of interest is the only event possible, e.g. when estimated using a cohort of cancer patients we get the hypothetical survival probability when cancer is the only thing that kills people. Maja Pohar Perme, Janez Stare, Jacques Esteve, On Estimation in Relative Survival, Biometrics, Volume 68, Issue 1, March 2012, Pages 113-120, https://doi.org/10.1111/j.1541-0420.2011.01640.x; Karri Seppa, Timo Hakulinen, Arun Pokhrel, Choosing the net survival method for cancer survival estimation, European Journal of Cancer, Volume 51, Issue 9, 2015, Pages 1123-1129, ISSN 0959-8049, https://doi.org/10.1016/j.ejca.2013.09.019 The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{exp(-cumsum(delta_t * (n_events_pp_bw - n_events_exp_pp_bw)/t_at_risk_pp_bw))} \tab \verb{NS_pp_ch_bw * sqrt(cumsum((delta_t^2) * n_events_pp_double_weighted_bw/(t_at_risk_pp_bw^2)))} \cr
+   \verb{h_lt_[x, y]_bw} \tab Cause-specific (transition-specific) hazard, life table estimator, for transitioning from x to y. We don't know the standard error formula for this one. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{-log(1 - `n_events_[x, y]_bw`/n_at_risk_eff_bw)} \tab \verb{0 + NA_real_} \cr
+   \verb{h_ch_[x, y]_bw} \tab Cause-specific (transition-specific) hazard, constant hazards estimator, for transitioning from \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{`n_events_[x, y]_bw`/t_at_risk_bw} \tab \verb{sqrt(`h_ch_[x, y]_bw`/t_at_risk_bw)} \cr
+   \verb{H_lt_[x, y]_bw} \tab Cumulative version of \code{h_lt_[x, y]}. We don't know the standard error formula for this one. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{-log(cumprod(1 - `n_events_[x, y]_bw`/n_at_risk_eff_bw))} \tab \verb{0 + NA_real_} \cr
+   \verb{H_ch_[x, y]_bw} \tab Cumulative version of \code{h_ch_[x, y]}. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{cumsum(delta_t * `h_ch_[x, y]_bw`)} \tab \verb{sqrt(cumsum(delta_t^2 * `h_ch_[x, y]_se`^2))} \cr
+   \verb{S_lt_[x, y]_bw} \tab Cause-specific (transition-specific) survival, life table estimator, for transitioning from \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}.. Cause-specific survival treats all other events but the one of interest as random censoring. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{cumprod(1 - `n_events_[x, y]_bw`/n_at_risk_eff_bw)} \tab \verb{`S_lt_[x, y]_bw` * sqrt(cumsum(`n_events_[x, y]_bw`/(n_at_risk_eff_bw * (n_at_risk_eff_bw - `n_events_[x, y]_bw`))))} \cr
+   \verb{S_ch_[x, y]_bw} \tab Cause-specific (transition-specific) survival, constant hazards estimator, for transitioning from \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}.. Cause-specific survival treats all other events but the one of interest as random censoring. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{exp(-`H_ch_[x, y]_bw`)} \tab \verb{S_ch_bw * sqrt(cumsum((delta_t^2) * `n_events_[x, y]_bw`/(t_at_risk_bw^2)))} \cr
+   \verb{F_lt_[x, y]_bw} \tab Cause-specific (transition-specific) (absolute) risk, lifetable estimator for transitioning from  \code{x} to \code{y}. Both \code{x} and \code{y} can be sets of statuses, e.g. \code{x = 1:2}. Here we use the estimator presented in Prentice et al. We don't know the standard error formula for this one. Prentice RL, Kalbfleisch JD, Peterson AV Jr, Flournoy N, Farewell VT, Breslow NE. The analysis of failure times in the presence of competing risks. Biometrics. 1978 Dec;34(4):541-54. PMID: 373811 The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{{
+  m <- `n_events_[x, y]_bw`/n_events_bw
+  F_lt_interval <- n_events_bw / n_at_risk_eff_bw
+  S_lt_interval <- 1 - S_lt_interval
+  F_lt_interval[n_events_bw == 0] <- 0
+  `F_lt_interval_[x, y]` <- F_lt_interval * m
+  S_lt_to_interval_start <- c(
+    1.00,
+    cumprod(S_lt_interval)[-length(n_events_bw)]
+  )
+  cumsum(S_lt_to_interval_start * `F_lt_interval_[x, y]`)
+}} \tab \verb{0 + NA_real_} \cr
+   \verb{F_ch_[x, y]_bw} \tab Cause-specific (transition-specific) (absolute) risk, constant hazards estimator. Here we use the estimator presented in Prentice et al. We don't know the standard error formula for this one. Prentice RL, Kalbfleisch JD, Peterson AV Jr, Flournoy N, Farewell VT, Breslow NE. The analysis of failure times in the presence of competing risks. Biometrics. 1978 Dec;34(4):541-54. PMID: 373811 The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{{
+  m <- `n_events_[x, y]_bw`/n_events_bw
+  S_ch_interval <- exp(-delta_t * h_ch_bw)
+  F_ch_interval <- (1 - S_ch_interval)
+  F_ch_interval[n_events_bw == 0] <- 0
+  `F_ch_interval_[x, y]` <- F_ch_interval * m
+  S_ch_to_interval_start <- c(
+    1.00,
+    cumprod(S_ch_interval)[-length(n_events_bw)]
+  )
+  cumsum(S_ch_to_interval_start * `F_ch_interval_[x, y]`)
+}} \tab \verb{0 + NA_real_} \cr
+   \verb{RF_e2_lt_bw} \tab ""Relative"" absolute risk, lifetable estimator. This was proposed by Karri Seppa at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients. We don't know the standard error formula for this one. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{{
+  m <- (n_events_bw - n_events_exp_e2_bw) / n_events_bw
+  F_lt_interval <- n_events_bw / n_at_risk_eff_bw
+  S_lt_interval <- 1 - F_lt_interval
+  F_lt_interval[n_events_bw == 0] <- 0
+  F_lt_exc_interval <- F_lt_interval * m
+  S_lt_to_interval_start <- c(
+    1.00,
+    cumprod(S_lt_interval)[-length(n_events_bw)]
+  )
+  cumsum(S_lt_to_interval_start * F_lt_exc_interval)
+}} \tab \verb{0 + NA_real_} \cr
+   \verb{RF_e2_ch_bw} \tab ""Relative"" absolute risk, constant hazards estimator. This was proposed by Karri Seppa at the Finnish Cancer Registry. It is a modification of the method presented in Prentice et al above. There is no publication for this. Based on our testing it is very close to the cause-specific estimator of cancer death in cancer patients. We don't know the standard error formula for this one. The suffix \verb{_bw} implies that the estimates are based on Brenner weighted statistics such as \code{t_at_risk_bw}. \tab \verb{{
+  m <- (n_events_bw - n_events_exp_e2_bw)/n_events_bw
+  S_ch_interval <- exp(-delta_t * h_ch_bw)
+  F_ch_interval <- (1 - S_ch_interval)
+  F_ch_interval[n_events_bw == 0] <- 0
+  F_ch_exc_interval <- F_ch_interval * m
+  S_ch_to_interval_start <- c(
+    1.00,
+    cumprod(S_ch_interval)[-length(n_events_bw)]
+  )
   cumsum(S_ch_to_interval_start * F_ch_exc_interval)
 }} \tab \verb{0 + NA_real_} \cr
 }
@@ -431,7 +510,8 @@ strata only (and not maybe some continuous variable).
 \code{dt}. Intervals with e.g. \code{t_at_risk == 0} have no survival probability
 defined for them which causes \code{NA} values (i.e. zero divided by zero
 is not defined). The action taken depends on argument
-\code{empty_interval_action}.
+\code{empty_interval_action}. \code{t_at_risk_bw} and \code{n_at_risk_eff_bw}
+are used instead of the \verb{_bw}-less versions if found.
 \item Add column \code{delta_t} as the difference between the \verb{_stop} and \verb{_start}
 columns of the follow-up time scale, e.g. \code{ts_fut_stop - ts_fut_start}.
 \item Armed with a list of expressions based on \code{estimates}, called
@@ -447,9 +527,6 @@ produces the confidence intervals.
 \item If direct adjusting was performed, the summary statistics such as
 \code{n_events} are summed over the adjusting strata and will be included
 in the output. These are not weighted averages/sums but simple sums.
-\item If Brenner weighting was used, rename columns containing estimates,
-standard error, and confidence bounds to contain the identifier
-\verb{_bw}.
 \item Return a \code{data.table} containing all columns in \code{dt} (unless direct
 adjusting was performed --- then the adjusting column(s) are not present)
 and additional columns of estimates, standard errors, and confidence
@@ -553,7 +630,7 @@ strata in the combination.):
 
 \strong{popEpi::surv_individual_weights}
 
-Produce a vector of weights, one weight for each row in \code{df}.
+Produce a vector of weights, one weight for each row in \code{lexis}.
 These weights have been called individual weights, Brenner weights,
 (Brenner et al 2004, https://doi.org/10.1016/j.ejca.2004.07.007),
 pre-weights, and maybe even others. A beloved child has many names.
@@ -571,12 +648,13 @@ This function makes producing these weights easier. It performs the
 following steps:
 \itemize{
 \item If \code{is.null(observed_weight_dt)}, \code{observed_weight_dt} is computed
-by \code{surv_individual_weights} by simply counting the number of cases
-in each stratum in \code{standard_weight_dt}.
+by calling \code{surv_observed_weight_dt}. In this case \code{lexis} is mandatory.
+We also pass \code{subset} and \code{breaks}. \code{aggre_by} is supplied as the
+stratum columns in \code{standard_weight_dt}.
 \item Call \code{popEpi::surv_brenner_weight_dt} to form Brenner weights.
-\item Using left-join, produce a vector of length \code{nrow(df)} where each row in
-\code{df} gets an individual weight based on its stratum.
-\item Return a vector of weights.
+\item Using left-join, produce a vector of length \code{nrow(lexis)} where each row in
+\code{lexis} gets an individual weight based on its stratum.
+\item Return a vector of weights of length \code{nrow(lexis)}.
 }
 
 
@@ -612,10 +690,7 @@ stratified by sex and contains individually weighted statistics.
 \item Add \code{surv_estimate_optional_args} to a list of internally defined
 arguments. The arguments passed this way override internally defined ones.
 \item Call \code{surv_estimate}.
-\item If Brenner weighting was used, rename columns containing estimates,
-standard error, and confidence bounds to contain the identifier
-\verb{_bw}.
-}
+}- If Brenner weighting was used, rename columns containing estimates,standard error, and confidence bounds to contain the identifier_bw.
 }
 
 \examples{
@@ -624,7 +699,6 @@ standard error, and confidence bounds to contain the identifier
 # threads. you do not need to set this to use popEpi.
 # however some long calculations may benefit from using more threads.
 data.table::setDTthreads(2L)
-
 # popEpi::surv_estimate
 dt <- data.table::data.table(
   box_id = 1:60,
@@ -687,7 +761,6 @@ sdt <- popEpi::surv_estimate(
 stopifnot(
   c("h_ch", "S_ch") \%in\% names(sdt)
 )
-
 # one approach to brenner weighting --- effectively the same as assigning
 # a weight for each individual using strata.
 make_column_ag_icss <- function(age) {
@@ -698,7 +771,6 @@ make_column_ag_icss <- function(age) {
     labels = c("0-59", "60-69", "70-79", "80+")
   )
 }
-
 make_sire <- function() {
   sire <- popEpi::sire
   sire <- sire[
@@ -731,9 +803,7 @@ make_sire <- function() {
   sire[["ag_icss"]] <- make_column_ag_icss(sire[["dg_age"]])
   sire
 }
-
 sire <- make_sire()
-
 make_weight_dt <- function() {
   wdt <- popEpi::ICSS[
     j = list(
@@ -764,28 +834,27 @@ make_weight_dt <- function() {
   wdt[i = is.na(wdt[["brenner_weight"]]), j = "brenner_weight" := 0.0]
   return(wdt[])
 }
-
 wdt <- make_weight_dt()
-
 sdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
   lexis = sire,
   breaks = list(ts_fut = seq(0, 5, 1 / 12)),
   aggre_exprs = c("t_at_risk", "n_events"),
   aggre_by = "ag_icss"
 )
-
 sdt_bw <- popEpi::surv_estimate(
   dt = sdt,
   ts_fut_col_nm = "ts_fut",
-  estimators = "S_ch",
+  estimators = c("S_ch_bw", "S_ch"),
   weight_dt = data.table::data.table(
     ag_icss = wdt[["ag_icss"]],
     brenner_weight = wdt[["brenner_weight"]]
   ),
   value_col_nms = c("n_events", "t_at_risk")
 )
-stopifnot("S_ch_bw" \%in\% names(sdt_bw), !"ag_icss" \%in\% names(sdt_bw))
-
+stopifnot(
+  c("S_ch_bw", "S_ch") \%in\% names(sdt_bw),
+  !"ag_icss" \%in\% names(sdt_bw)
+)
 # direct adjusting for comparison
 sdt_da <- popEpi::surv_estimate(
   dt = sdt,
@@ -798,11 +867,9 @@ sdt_da <- popEpi::surv_estimate(
   value_col_nms = c("n_events", "t_at_risk")
 )
 stopifnot("S_ch_da" \%in\% names(sdt_da), !"ag_icss" \%in\% names(sdt_da))
-
 stopifnot(
   max(abs(sdt_bw[["S_ch_bw"]] - sdt_da[["S_ch_da"]])) < 0.01
 )
-
 # automatic handling of empty intervals
 sdt1 <- popEpi::surv_estimate(
   dt = data.table::data.table(
@@ -1076,7 +1143,7 @@ swdt <- make_standard_weight_dt()
 warn_env <- new.env()
 warn_env[["w"]] <- NULL
 iw_bad <- suppressWarnings(withCallingHandlers(popEpi::surv_individual_weights(
-  df = lexis,
+  lexis = lexis,
   standard_weight_dt = swdt
 ), warning = function(w) warn_env[["w"]] <- w))
 stopifnot(
@@ -1089,7 +1156,7 @@ stopifnot(
 # weight increases but the observed weight remains the same. the same
 # observations serve "double duty" now for multiple original strata.
 iw <- popEpi::surv_individual_weights(
-  df = lexis,
+  lexis = lexis,
   standard_weight_dt = swdt,
   collapse_stratum_col_nms = "icss_ag"
 )
@@ -1223,10 +1290,6 @@ make_sire <- function() {
     exit.status = status
   )
   sire[["icss_ag"]] <- make_column_icss_ag(sire[["dg_age"]])
-  sire[["individual_weight"]] <- popEpi::surv_individual_weights(
-    df = sire,
-    standard_weight_dt = wdt
-  )
   return(sire[])
 }
 
@@ -1277,11 +1340,16 @@ stopifnot(
 )
 
 # observed survival with individual weighting
+sire[["individual_weight"]] <- popEpi::surv_individual_weights(
+  lexis = sire,
+  standard_weight_dt = wdt,
+  breaks = bl["ts_cal"]
+)
 sdt_iw <- popEpi::surv_lexis(
   lexis = sire,
   breaks = bl,
   aggre_by = "my_stratum",
-  estimators = "S_ch",
+  estimators = c("S_ch_bw", "S_ch"),
   weights = "individual_weight"
 )
 stopifnot(
@@ -1291,8 +1359,41 @@ stopifnot(
 
   # direct adjusting and individual weighting produce similar results.
   # the larger the dataset, the smaller the difference between the two.
-  max(abs(sdt_da[["S_ch_da"]] - sdt_iw[["S_ch_bw"]])) < 0.02,
+  max(abs(sdt_da[["S_ch_da"]] - sdt_iw[["S_ch_bw"]])) < 0.012,
   max(abs(sdt_da[["S_ch_da_se"]] - sdt_iw[["S_ch_bw_se"]])) < 0.001
+)
+
+# observed survival with brenner weighting applied on the aggregated data.
+# the result is identical to individual weighting.
+wdt_obs <- popEpi::surv_observed_weight_dt(
+  lexis = sire,
+  aggre_by = data.table::setDT(list(icss_ag = wdt[["icss_ag"]])),
+  breaks = bl["ts_cal"]
+)
+wdt_bw <- popEpi::surv_brenner_weight_dt(
+  standard_weight_dt = wdt,
+  observed_weight_dt = wdt_obs
+)
+wdt_bw <- data.table::setDT(list(
+  icss_ag = wdt_bw[["icss_ag"]],
+  brenner_weight = wdt_bw[["weight_brenner"]]
+))
+sdt_bw <- popEpi::surv_lexis(
+  lexis = sire,
+  breaks = bl,
+  aggre_by = "my_stratum",
+  estimators = c("S_ch_bw", "S_ch"),
+  weights = wdt_bw
+)
+stopifnot(
+  inherits(sdt_bw, "data.table"),
+  "my_stratum" \%in\% names(sdt_bw),
+  c("S_ch_bw", "S_ch_bw_se", "S_ch_bw_lo", "S_ch_bw_hi") \%in\% names(sdt_bw),
+
+  all.equal(sdt_bw[["t_at_risk_bw"]], sdt_iw[["t_at_risk_bw"]]),
+  all.equal(sdt_bw[["n_events_bw"]], sdt_iw[["n_events_bw"]]),
+  all.equal(sdt_bw[["S_ch_bw"]], sdt_iw[["S_ch_bw"]]),
+  all.equal(sdt_bw[["S_ch_bw_se"]], sdt_iw[["S_ch_bw_se"]])
 )
 
 # observed survival with direct adjusting, multiple period estimates
@@ -1317,7 +1418,7 @@ sdt_iw <- popEpi::surv_lexis(
   lexis = sire,
   breaks = bl_multi_period,
   aggre_by = "my_stratum",
-  estimators = "S_ch",
+  estimators = "S_ch_bw",
   weights = "individual_weight"
 )
 stopifnot(
@@ -1399,6 +1500,10 @@ sdt <- popEpi::surv_lexis(
     my_estimator = list(
       est = quote(n_events / n_events_exp_e2),
       se = quote(sqrt(n_events / (n_events_exp_e2^2)))
+    ),
+    my_estimator_bw = list(
+      est = quote(n_events_bw / n_events_exp_e2_bw),
+      se = quote(sqrt(n_events_bw / (n_events_exp_e2_bw^2)))
     )
   ),
   conf_method = "identity",
@@ -1412,7 +1517,7 @@ stopifnot(
 sdt <- popEpi::surv_lexis(
   lexis = sire,
   breaks = bl,
-  estimators = c("S_ch", "S_lt"),
+  estimators = c("S_ch_bw", "S_lt_bw"),
   conf_methods = list(list(
     g = quote(qnorm(theta)),
     g_inv = quote(pnorm(g))

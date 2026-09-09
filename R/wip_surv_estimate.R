@@ -268,7 +268,6 @@ surv_estimate_expression_table__ <- function() {
 #' # threads. you do not need to set this to use popEpi.
 #' # however some long calculations may benefit from using more threads.
 #' data.table::setDTthreads(2L)
-#'
 #' # popEpi::surv_estimate
 #' dt <- data.table::data.table(
 #'   box_id = 1:60,
@@ -331,7 +330,6 @@ surv_estimate_expression_table__ <- function() {
 #' stopifnot(
 #'   c("h_ch", "S_ch") %in% names(sdt)
 #' )
-#'
 #' # one approach to brenner weighting --- effectively the same as assigning
 #' # a weight for each individual using strata.
 #' make_column_ag_icss <- function(age) {
@@ -342,7 +340,6 @@ surv_estimate_expression_table__ <- function() {
 #'     labels = c("0-59", "60-69", "70-79", "80+")
 #'   )
 #' }
-#'
 #' make_sire <- function() {
 #'   sire <- popEpi::sire
 #'   sire <- sire[
@@ -375,9 +372,7 @@ surv_estimate_expression_table__ <- function() {
 #'   sire[["ag_icss"]] <- make_column_ag_icss(sire[["dg_age"]])
 #'   sire
 #' }
-#'
 #' sire <- make_sire()
-#'
 #' make_weight_dt <- function() {
 #'   wdt <- popEpi::ICSS[
 #'     j = list(
@@ -408,28 +403,27 @@ surv_estimate_expression_table__ <- function() {
 #'   wdt[i = is.na(wdt[["brenner_weight"]]), j = "brenner_weight" := 0.0]
 #'   return(wdt[])
 #' }
-#'
 #' wdt <- make_weight_dt()
-#'
 #' sdt <- popEpi::lexis_split_merge_aggregate_by_stratum(
 #'   lexis = sire,
 #'   breaks = list(ts_fut = seq(0, 5, 1 / 12)),
 #'   aggre_exprs = c("t_at_risk", "n_events"),
 #'   aggre_by = "ag_icss"
 #' )
-#'
 #' sdt_bw <- popEpi::surv_estimate(
 #'   dt = sdt,
 #'   ts_fut_col_nm = "ts_fut",
-#'   estimators = "S_ch",
+#'   estimators = c("S_ch_bw", "S_ch"),
 #'   weight_dt = data.table::data.table(
 #'     ag_icss = wdt[["ag_icss"]],
 #'     brenner_weight = wdt[["brenner_weight"]]
 #'   ),
 #'   value_col_nms = c("n_events", "t_at_risk")
 #' )
-#' stopifnot("S_ch_bw" %in% names(sdt_bw), !"ag_icss" %in% names(sdt_bw))
-#'
+#' stopifnot(
+#'   c("S_ch_bw", "S_ch") %in% names(sdt_bw),
+#'   !"ag_icss" %in% names(sdt_bw)
+#' )
 #' # direct adjusting for comparison
 #' sdt_da <- popEpi::surv_estimate(
 #'   dt = sdt,
@@ -442,11 +436,9 @@ surv_estimate_expression_table__ <- function() {
 #'   value_col_nms = c("n_events", "t_at_risk")
 #' )
 #' stopifnot("S_ch_da" %in% names(sdt_da), !"ag_icss" %in% names(sdt_da))
-#'
 #' stopifnot(
 #'   max(abs(sdt_bw[["S_ch_bw"]] - sdt_da[["S_ch_da"]])) < 0.01
 #' )
-#'
 #' # automatic handling of empty intervals
 #' sdt1 <- popEpi::surv_estimate(
 #'   dt = data.table::data.table(
@@ -661,35 +653,63 @@ surv_estimate <- function(
   }
   names(conf_lvls) <- estimator_dt[["user_estimator_name"]]
 
-  out <- data.table::copy(data.table::setDT(as.list(dt)))
-  out <- box_all_id_reset__(out)
-
+  adjust_col_nms <- NULL
+  if (!is.null(weight_dt)) {
+    adjust_col_nms <- intersect(names(dt), names(weight_dt))
+  }
+  adjusting_type <- "none"
+  if (data.table::is.data.table(weight_dt)) {
+    if ("brenner_weight" %in% names(weight_dt)) {
+      adjusting_type <- "brenner"
+    } else {
+      adjusting_type <- "direct"
+    }
+  }
   estimate_stratum_col_nms <- local({
     stratum_ts_col_nms <- setdiff(
-      box_dt_detect_ts_col_nms__(out),
+      box_dt_detect_ts_col_nms__(dt),
       ts_fut_col_nm
     )
     stratum_ts_info_col_nms <- paste0(
-      rep(stratum_ts_col_nms, each = 3L),
-      rep(c("_id", "_start", "_stop"), times = length(stratum_ts_col_nms))
+      rep(stratum_ts_col_nms, each = 2L),
+      rep(c("_start", "_stop"), times = length(stratum_ts_col_nms))
     )
     estimate_stratum_col_nms <- intersect(
-      union(
+      c(
         stratum_col_nms,
+        adjust_col_nms,
         stratum_ts_info_col_nms
       ),
       names(dt)
     )
+    estimate_stratum_col_nms <- switch(
+      adjusting_type,
+      brenner = setdiff(estimate_stratum_col_nms, adjust_col_nms),
+      estimate_stratum_col_nms
+    )
     estimate_stratum_col_nms
   })
-  do_direct_adjusting <- data.table::is.data.table(weight_dt) &&
-    "weight" %in% names(weight_dt)
-  if (do_direct_adjusting) {
-    estimate_stratum_col_nms <- union(
-      stratum_col_nms,
-      setdiff(names(weight_dt), "weight")
-    )
-  }
+  output_stratum_col_nms <- setdiff(
+    estimate_stratum_col_nms,
+    adjust_col_nms
+  )
+  estimate_stratum_col_nms_plus_ts_fut_col_nms <- union(
+    estimate_stratum_col_nms,
+    paste0(ts_fut_col_nm, c("_start", "_stop"))
+  )
+  output_stratum_col_nms_plus_ts_fut_col_nms <- union(
+    output_stratum_col_nms,
+    paste0(ts_fut_col_nm, c("_start", "_stop"))
+  )
+  work_dt <- dt[
+    j = lapply(.SD, sum),
+    .SDcols = value_col_nms,
+    keyby = eval(union(
+      adjust_col_nms,
+      estimate_stratum_col_nms_plus_ts_fut_col_nms
+    ))
+  ]
+
   # @codedoc_comment_block popEpi::surv_estimate
   # - If `weight_dt` is a `data.table` with column `"brenner_weight"`, we
   #   merge the weights into `dt`, multiply all `value_col_nms` with the
@@ -702,48 +722,52 @@ surv_estimate <- function(
   #   splitting and aggregating when the individual weights are based on
   #   strata only (and not maybe some continuous variable).
   # @codedoc_comment_block popEpi::surv_estimate
-  do_brenner_weighting <- data.table::is.data.table(weight_dt) &&
-    "brenner_weight" %in% names(weight_dt)
-  if (do_brenner_weighting) {
+  if (adjusting_type == "brenner") {
     dt_join_assign(
-      x = out,
+      x = work_dt,
       i = weight_dt,
-      on = intersect(names(out), names(weight_dt)),
+      on = intersect(names(work_dt), names(weight_dt)),
       x_col_nms = "__brenner_weight__",
       i_col_nms = "brenner_weight"
     )
     invisible(lapply(value_col_nms, function(value_col_nm) {
       data.table::set(
-        x = out,
-        j = value_col_nm,
-        value = out[[value_col_nm]] * out[["__brenner_weight__"]]
+        x = work_dt,
+        j = paste0(value_col_nm, "_bw"),
+        value = work_dt[[value_col_nm]] * work_dt[["__brenner_weight__"]]
       )
     }))
+    value_col_nms <- c(
+      value_col_nms,
+      paste0(value_col_nms, "_bw")
+    )
     data.table::set(
-      x = out,
+      x = work_dt,
       j = "__brenner_weight__",
       value = NULL
     )
-    out <- out[
+    work_dt <- work_dt[
       j = lapply(.SD, sum),
       .SDcols = value_col_nms,
-      keyby = eval(setdiff(
-        names(out),
-        c(value_col_nms, setdiff(names(weight_dt), stratum_col_nms))
-      ))
+      keyby = eval(estimate_stratum_col_nms_plus_ts_fut_col_nms)
     ]
-    estimate_stratum_col_nms <- intersect(estimate_stratum_col_nms, names(out))
+    adjust_col_nms <- NULL
   }
   # @codedoc_comment_block popEpi::surv_estimate
   # - Check columns `t_at_risk`, `n_at_risk_eff` for zeroes/NAs if they are in
   #   `dt`. Intervals with e.g. `t_at_risk == 0` have no survival probability
   #   defined for them which causes `NA` values (i.e. zero divided by zero
   #   is not defined). The action taken depends on argument
-  #   `empty_interval_action`.
+  #   `empty_interval_action`. `t_at_risk_bw` and `n_at_risk_eff_bw`
+  #   are used instead of the `_bw`-less versions if found.
   # @codedoc_comment_block popEpi::surv_estimate
   surv_estimate_call <- match.call()
-  out <- local({
-    test_col_nms <- intersect(c("t_at_risk", "n_at_risk_eff"), names(dt))
+  work_dt <- local({
+    test_col_nms <- intersect(
+      c("t_at_risk_bw", "n_at_risk_eff_bw", "t_at_risk", "n_at_risk_eff"),
+      names(dt)
+    )
+    test_col_nms <- test_col_nms[!duplicated(sub("_bw$", "", test_col_nms))]
     if (length(test_col_nms) > 0) {
       is_bad <- FALSE
       for (test_col_nm in test_col_nms) {
@@ -778,7 +802,7 @@ surv_estimate <- function(
         #   `list(function_name = "surv_collapse_strata_1d", collapse_stratum_col_nm = "age_group")`.
         # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
         collapse_arg_list <- list(
-          dt = out,
+          dt = work_dt,
           ts_col_nm = ts_fut_col_nm,
           stratum_col_nms = NULL,
           value_col_nms = value_col_nms,
@@ -803,7 +827,7 @@ surv_estimate <- function(
             names(collapse_arg_list)
           )]
         }
-        out <- switch(
+        work_dt <- switch(
           action_name,
           warning = {
             # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
@@ -811,14 +835,14 @@ surv_estimate <- function(
             #   were found.
             # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
             warning(simpleWarning(msg, call = surv_estimate_call))
-            out
+            work_dt
           },
           error = {
             # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
             # - `"error"`: Raise an error with `[stop]`.
             # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
             stop(simpleError(msg, call = surv_estimate_call))
-            out
+            work_dt
           },
           # idk if simpleMessage benefits anything but its harmless.
           message = {
@@ -826,7 +850,7 @@ surv_estimate <- function(
             # - `"message"`: Emit a message with `[message]`
             # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
             message(simpleMessage(msg, call = surv_estimate_call))
-            out
+            work_dt
           },
           surv_collapse_ts_1d = {
             # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
@@ -846,7 +870,7 @@ surv_estimate <- function(
             # - `"nothing"`: Estimation is performed normally and silently.
             #   Some estimates will be `NA`.
             # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
-            out
+            work_dt
           },
           stop(
             "Internal error: No action defined for ",
@@ -858,22 +882,23 @@ surv_estimate <- function(
         )
       }
     }
-    out[]
+    work_dt[]
   })
 
+  output_dt <- work_dt[
+    j = lapply(.SD, sum),
+    .SD = value_col_nms,
+    keyby = eval(output_stratum_col_nms_plus_ts_fut_col_nms)
+  ]
   # @codedoc_comment_block popEpi::surv_estimate
   # - Add column `delta_t` as the difference between the `_stop` and `_start`
   #   columns of the follow-up time scale, e.g. `ts_fut_stop - ts_fut_start`.
   # @codedoc_comment_block popEpi::surv_estimate
   data.table::set(
-    x = out,
+    x = work_dt,
     j = "delta_t",
-    value = out[[paste0(ts_fut_col_nm, "_stop")]] -
-      out[[paste0(ts_fut_col_nm, "_start")]]
-  )
-  data.table::setkeyv(
-    out,
-    c(estimate_stratum_col_nms, paste0(ts_fut_col_nm, c("_start", "_stop")))
+    value = work_dt[[paste0(ts_fut_col_nm, "_stop")]] -
+      work_dt[[paste0(ts_fut_col_nm, "_start")]]
   )
   lapply(seq_len(nrow(estimator_dt)), function(i) {
     user_estimator_name <- estimator_dt[["user_estimator_name"]][i]
@@ -886,14 +911,11 @@ surv_estimate <- function(
     expression_set_i <- estimator_dt[["expression_set"]][[i]]
     lapply(names(expression_set_i), function(element_name) {
       # @codedoc_comment_block popEpi::surv_estimate::estimators
-      # - `list`: Each element must be a list with named elements
-      #   + `est`: Quoted ([quote]) R expression which when evaluated with
-      #     `eval(expr, .SD, call_env)` produces the estimates. Here `expr`
-      #     is the expression, `.SD` is the subset of `dt` for one stratum, and
-      #     `call_env` is the environment from which this
-      #     functions was called.
-      #   + `se`: Also a quoted R expression. This should produce
-      #     the standard errors.
+      # - `list`: Each named element must be a quoted
+      #   (see [quote] / [substitute] / [str2lang] / etc)
+      #    R expression, which when evaluated produces the estimates (`est`)
+      #    and standard errors (`se`). E.g.
+      #    `list(est = quote(n_events / t_at_risk), se = quote(...))`.
       # @codedoc_comment_block popEpi::surv_estimate::estimators
       add_col_nm <- switch(
         element_name,
@@ -901,7 +923,7 @@ surv_estimate <- function(
         sprintf("%s_%s", user_estimator_name, element_name)
       )
       expr <- expression_set_i[[element_name]]
-      out[
+      work_dt[
         #' @importFrom data.table := .SD
         j = (add_col_nm) := eval(
           expr = expr,
@@ -913,17 +935,17 @@ surv_estimate <- function(
     })
   })
 
-  out <- local({
+  output_dt <- local({
     estimate_col_nms <- estimator_dt[["user_estimator_name"]]
     standard_error_col_nms <- paste0(
       estimator_dt[["user_estimator_name"]],
       "_se"
     )
     data.table::set(
-      out,
+      work_dt,
       j = standard_error_col_nms,
       value = lapply(standard_error_col_nms, function(secn) {
-        out[[secn]]^2
+        work_dt[[secn]]^2
       })
     )
     variance_col_nms <- sub(
@@ -931,20 +953,7 @@ surv_estimate <- function(
       "_var",
       standard_error_col_nms
     )
-    data.table::setnames(out, standard_error_col_nms, variance_col_nms)
-    da_ts_col_nms <- box_dt_detect_ts_col_nms__(out)
-    da_stratum_col_nms <- intersect(
-      c(
-        stratum_col_nms,
-        paste0(rep(da_ts_col_nms, each = 3L), c("_id", "_start", "_stop"))
-      ),
-      names(out)
-    )
-    da_adjust_col_nms <- character(0)
-    if (do_direct_adjusting) {
-      da_adjust_col_nms <- setdiff(names(weight_dt), "weight")
-      da_stratum_col_nms <- setdiff(da_stratum_col_nms, da_adjust_col_nms)
-    }
+    data.table::setnames(work_dt, standard_error_col_nms, variance_col_nms)
     #' @param conf_lvls
     #' Passed one at a time to
     #' `[directadjusting::directly_adjusted_estimates]`.
@@ -958,14 +967,14 @@ surv_estimate <- function(
     #   produces the confidence intervals.
     # @codedoc_comment_block popEpi::surv_estimate
     sdt_da <- directadjusting::directly_adjusted_estimates(
-      stats_dt = out,
-      stratum_col_nms = da_stratum_col_nms,
+      stats_dt = work_dt,
+      stratum_col_nms = output_stratum_col_nms_plus_ts_fut_col_nms,
       stat_col_nms = estimate_col_nms,
       var_col_nms = variance_col_nms,
-      adjust_col_nms = da_adjust_col_nms,
+      adjust_col_nms = adjust_col_nms,
       conf_methods = conf_methods,
       conf_lvls = conf_lvls,
-      weights = if (do_direct_adjusting) weight_dt else NULL
+      weights = if (adjusting_type == "direct") weight_dt else NULL
     )
     sdta_meta <- attr(sdt_da, "directly_adjusted_estimates_meta")
     variance_col_nms <- sdta_meta[["meta_dt"]][["var_col_nm_w"]]
@@ -988,91 +997,31 @@ surv_estimate <- function(
     #   `n_events` are summed over the adjusting strata and will be included
     #   in the output. These are not weighted averages/sums but simple sums.
     # @codedoc_comment_block popEpi::surv_estimate
-    nonsum_col_nms <- setdiff(
-      names(out),
-      c(
-        "box_id",
-        value_col_nms,
-        estimate_col_nms,
-        standard_error_col_nms,
-        variance_col_nms,
-        names(weight_dt),
-        sdta_meta[["meta_dt"]][["stat_col_nm"]],
-        sdta_meta[["meta_dt"]][["stat_col_nm_w"]],
-        sdta_meta[["meta_dt"]][["var_col_nm"]],
-        sdta_meta[["meta_dt"]][["var_col_nm_w"]],
-        sdta_meta[["meta_dt"]][["ci_lo_col_nm_w"]],
-        sdta_meta[["meta_dt"]][["ci_hi_col_nm_w"]]
-      )
-    )
-    nonsum_col_nms <- intersect(
-      names(out),
-      union(nonsum_col_nms, stratum_col_nms)
-    )
-    if (length(value_col_nms) > 0) {
-      sum_dt <- out[
-        #' @importFrom data.table .SD
-        j = lapply(.SD, sum),
-        .SDcols = value_col_nms,
-        #' @importFrom data.table .EACHI
-        keyby = eval(nonsum_col_nms)
-      ]
-    } else {
-      sum_dt <- out[
-        i = !duplicated(out, by = nonsum_col_nms),
-        #' @importFrom data.table .SD
-        j = .SD,
-        .SDcols = eval(nonsum_col_nms)
-      ]
-    }
     add_col_nms <- setdiff(
       names(sdt_da),
-      names(sum_dt)
+      names(output_dt)
     )
     data.table::setkeyv(
-      sum_dt,
-      c(da_stratum_col_nms, paste0(ts_fut_col_nm, c("_start", "_stop")))
+      output_dt,
+      c(output_stratum_col_nms, paste0(ts_fut_col_nm, c("_start", "_stop")))
     )
     data.table::setkeyv(
       sdt_da,
-      c(da_stratum_col_nms, paste0(ts_fut_col_nm, c("_start", "_stop")))
+      c(output_stratum_col_nms, paste0(ts_fut_col_nm, c("_start", "_stop")))
     )
-    stopifnot(nrow(sum_dt) == nrow(sdt_da))
+    stopifnot(nrow(output_dt) == nrow(sdt_da))
     data.table::set(
-      x = sum_dt,
+      x = output_dt,
       j = add_col_nms,
       value = as.list(sdt_da)[add_col_nms]
     )
-    sum_dt <- box_all_id_reset__(sum_dt)
-    if (do_brenner_weighting) {
-      # @codedoc_comment_block popEpi::surv_estimate
-      # - If Brenner weighting was used, rename columns containing estimates,
-      #   standard error, and confidence bounds to contain the identifier
-      #   `_bw`.
-      # @codedoc_comment_block popEpi::surv_estimate
-      lapply(
-        sdta_meta[["meta_dt"]][["stat_col_nm"]],
-        function(nm) {
-          data.table::setnames(
-            x = sum_dt,
-            old = names(sum_dt),
-            new = sub(paste0("^", nm), sprintf("%s_bw", nm), names(sum_dt))
-          )
-        }
-      )
-      data.table::set(
-        x = sdta_meta[["meta_dt"]],
-        j = "stat_col_nm_w",
-        value = paste0(sdta_meta[["meta_dt"]][["stat_col_nm"]], "_bw")
-      )
-    }
     data.table::setattr(
-      x = sum_dt,
+      x = output_dt,
       name = "directly_adjusted_estimates_meta",
       value = sdta_meta
     )
-    sum_dt <- box_all_id_reset__(sum_dt)
-    sum_dt[]
+    output_dt <- box_all_id_reset__(output_dt)
+    output_dt[]
   })
 
   # @codedoc_comment_block popEpi::surv_estimate
@@ -1087,7 +1036,7 @@ surv_estimate <- function(
   # and additional columns of estimates, standard errors, and confidence
   # intervals.
   # @codedoc_comment_block return(popEpi::surv_estimate)
-  return(out[])
+  return(output_dt[])
 }
 
 surv_lexis_S_exp_e1_ch_mean <- function(

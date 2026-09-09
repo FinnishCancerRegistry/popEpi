@@ -1,4 +1,52 @@
 #' @eval codedoc::pkg_doc_fun(
+#'   "popEpi::surv_observed_weight_dt",
+#'   "surv_functions"
+#' )
+surv_observed_weight_dt <- function(
+  lexis,
+  aggre_by,
+  subset = NULL,
+  breaks = NULL
+) {
+  assert_is_arg_lexis(lexis, dt = FALSE)
+  aggre_by <- handle_arg_by(aggre_by, dataset = lexis)
+  #' @param subset `[NULL, logical, integer, data.table]`
+  #'
+  #' - `NULL`: No effect.
+  #' - Others: Only compute the observed weights in this subset.
+  subset <- handle_arg_subset(dataset_nm = "lexis", output_type = "logical")
+  #' @param breaks `[NULL, list]`
+  #'
+  #' - `NULL`: No effect.
+  #' - `list`: Only compute the observed weights using records with follow-wp
+  #     within the limits of these breaks. E.g. with
+  #     `list(ts_cal = c(2004, 2009, 2013))` we only use records that had
+  #     some follow-up in the interval `[2004, 2013[`.
+  if (!is.null(breaks)) {
+    subset <- subset & lexis_in_breaks__(lexis, breaks, only_nonlate = TRUE)
+  }
+  stratum_dt <- data.table::setDT(as.list(lexis)[names(aggre_by)])
+  if (!all(subset)) {
+    stratum_dt <- stratum_dt[subset, ]
+  }
+  observed_weight_dt <- stratum_dt[
+    i = aggre_by,
+    on = names(aggre_by),
+    #' @importFrom data.table .N
+    j = list(weight = .N),
+    #' @importFrom data.table .EACHI
+    keyby = .EACHI
+  ]
+  data.table::set(
+    x = observed_weight_dt,
+    j = "weight",
+    value = observed_weight_dt[["weight"]] / sum(observed_weight_dt[["weight"]])
+  )
+  return(observed_weight_dt[])
+}
+
+
+#' @eval codedoc::pkg_doc_fun(
 #'   "popEpi::surv_brenner_weight_dt",
 #'   "surv_functions"
 #' )
@@ -130,7 +178,8 @@ surv_brenner_weight_dt <- function(
   if (length(bad_row_nos) > 0) {
     #' @param collapse_stratum_col_nms `[NULL, character]` (default `NULL`)
     #'
-    #' Optional names of stratum column names in both `df` and
+    #' Optional argument of names of stratum column names in both
+    #' `observed_weight_dt` and
     #' `standard_weight_dt`. If this argument is supplied, strata defined by
     #' these columns are attempted to be combined with their neighbours in the
     #' event of a zero in the corresponding `observed_weight_dt$weight` value.
@@ -336,7 +385,7 @@ surv_brenner_weight_dt <- function(
 #' warn_env <- new.env()
 #' warn_env[["w"]] <- NULL
 #' iw_bad <- suppressWarnings(withCallingHandlers(popEpi::surv_individual_weights(
-#'   df = lexis,
+#'   lexis = lexis,
 #'   standard_weight_dt = swdt
 #' ), warning = function(w) warn_env[["w"]] <- w))
 #' stopifnot(
@@ -349,7 +398,7 @@ surv_brenner_weight_dt <- function(
 #' # weight increases but the observed weight remains the same. the same
 #' # observations serve "double duty" now for multiple original strata.
 #' iw <- popEpi::surv_individual_weights(
-#'   df = lexis,
+#'   lexis = lexis,
 #'   standard_weight_dt = swdt,
 #'   collapse_stratum_col_nms = "icss_ag"
 #' )
@@ -359,18 +408,21 @@ surv_brenner_weight_dt <- function(
 #'   iw >= iw_bad
 #' )
 surv_individual_weights <- function(
-  df,
+  lexis,
   standard_weight_dt,
   observed_weight_dt = NULL,
-  collapse_stratum_col_nms = NULL
+  collapse_stratum_col_nms = NULL,
+  subset = NULL,
+  breaks = NULL
 ) {
-  #' @param df `[data.frame, data.table]` (no default)
+  #' @param lexis `[Lexis]` (no default)
   #'
-  #' Dataset containing stratum columns also found in `standard_weight_dt`.
+  #' `Lexis` dataset containing stratum columns also found in
+  #' `standard_weight_dt`.
+  assert_is_arg_lexis(lexis, dt = FALSE)
   stopifnot(
-    is.data.frame(df),
     is.null(collapse_stratum_col_nms) ||
-      (all(collapse_stratum_col_nms %in% names(df)) &&
+      (all(collapse_stratum_col_nms %in% names(lexis)) &&
         all(collapse_stratum_col_nms %in% names(standard_weight_dt)))
   )
   # @codedoc_comment_block popEpi::surv_individual_weights::standard_weight_dt
@@ -380,12 +432,11 @@ surv_individual_weights <- function(
   #
   # @codedoc_insert_comment_block popEpi:::assert_is_arg_weight_dt
   # @codedoc_comment_block popEpi::surv_individual_weights::standard_weight_dt
-  assert_is_arg_weight_dt(standard_weight_dt, df)
+  assert_is_arg_weight_dt(standard_weight_dt, lexis)
 
   stratum_col_nms <- setdiff(names(standard_weight_dt), "weight")
-  dt <- data.table::setDT(as.list(df)[stratum_col_nms])
   # @codedoc_comment_block popEpi::surv_individual_weights
-  # Produce a vector of weights, one weight for each row in `df`.
+  # Produce a vector of weights, one weight for each row in `lexis`.
   # These weights have been called individual weights, Brenner weights,
   # (Brenner et al 2004, https://doi.org/10.1016/j.ejca.2004.07.007),
   # pre-weights, and maybe even others. A beloved child has many names.
@@ -407,32 +458,30 @@ surv_individual_weights <- function(
   #
   # Table of weights in your dataset.
   #
-  # - `NULL`: Weights are computed using `df`. See **Details**.
+  # - `NULL`: Weights are computed using `surv_observed_weight_dt`.
   # - `data.table`: Must be a valid table of weights.
   #
   # @codedoc_insert_comment_block popEpi:::assert_is_arg_weight_dt
   # @codedoc_comment_block popEpi::surv_individual_weights::observed_weight_dt
-  assert_is_arg_weight_dt(observed_weight_dt, dt)
+
+  join_dt <- data.table::setDT(as.list(lexis)[stratum_col_nms])
+  assert_is_arg_weight_dt(observed_weight_dt, join_dt)
   if (is.null(observed_weight_dt)) {
     # @codedoc_comment_block popEpi::surv_individual_weights
     # - If `is.null(observed_weight_dt)`, `observed_weight_dt` is computed
-    #   by `surv_individual_weights` by simply counting the number of cases
-    #   in each stratum in `standard_weight_dt`.
+    #   by calling `surv_observed_weight_dt`. In this case `lexis` is mandatory.
+    #   We also pass `subset` and `breaks`. `aggre_by` is supplied as the
+    #   stratum columns in `standard_weight_dt`.
     # @codedoc_comment_block popEpi::surv_individual_weights
-    if (!data.table::is.data.table(dt)) {
-      dt <- data.table::setDT(lapply(stratum_col_nms, function(col_nm) {
-        dt[[col_nm]]
-      }))
-      data.table::setnames(dt, stratum_col_nms)
-    }
-    observed_weight_dt <- dt[
-      i = standard_weight_dt,
-      on = stratum_col_nms,
-      #' @importFrom data.table .N
-      j = list(weight = .N),
-      #' @importFrom data.table .EACHI
-      keyby = .EACHI
-    ]
+    observed_weight_dt <- surv_observed_weight_dt(
+      lexis = lexis,
+      aggre_by = dt_independent_frame_dependent_contents(
+        standard_weight_dt,
+        select = setdiff(names(standard_weight_dt), "weight")
+      ),
+      subset = subset,
+      breaks = breaks
+    )
   }
   # @codedoc_comment_block popEpi::surv_individual_weights
   # - Call `popEpi::surv_brenner_weight_dt` to form Brenner weights.
@@ -444,21 +493,21 @@ surv_individual_weights <- function(
   )
 
   # @codedoc_comment_block popEpi::surv_individual_weights
-  # - Using left-join, produce a vector of length `nrow(df)` where each row in
-  #   `df` gets an individual weight based on its stratum.
+  # - Using left-join, produce a vector of length `nrow(lexis)` where each row in
+  #   `lexis` gets an individual weight based on its stratum.
   # @codedoc_comment_block popEpi::surv_individual_weights
   out <- weight_dt[
-    i = dt,
+    i = join_dt,
     on = stratum_col_nms,
     j = .SD,
     .SDcols = "weight_brenner"
   ]
 
   # @codedoc_comment_block popEpi::surv_individual_weights
-  # - Return a vector of weights.
+  # - Return a vector of weights of length `nrow(lexis)`.
   # @codedoc_comment_block popEpi::surv_individual_weights
   # @codedoc_comment_block return(popEpi::surv_individual_weights)
-  # Returns a vector of weights.
+  # Returns a vector of weights of length `nrow(lexis)`.
   # @codedoc_comment_block return(popEpi::surv_individual_weights)
   return(out[["weight_brenner"]])
 }
