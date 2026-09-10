@@ -20,6 +20,7 @@ surv_estimate(
   stratum_col_nms = NULL,
   value_col_nms = NULL,
   estimators = "S_ch",
+  adjust_col_nms = NULL,
   weight_dt = NULL,
   conf_methods = "log",
   conf_lvls = 0.95,
@@ -146,6 +147,19 @@ options see \strong{Details}.
 R expression, which when evaluated produces the estimates (\code{est})
 and standard errors (\code{se}). E.g.
 \code{list(est = quote(n_events / t_at_risk), se = quote(...))}.
+}}
+
+\item{adjust_col_nms}{\verb{[NULL, character]} (default \code{NULL})
+
+Names of stratifying columns in \code{dt} by which the estimates should be
+adjusted. No adjusting is performed if this argument is \code{NULL} or
+\code{character(0)}, the latter whether supplied or inferred.
+\itemize{
+\item \code{NULL}: Take \code{intersect(names(dt), names(weight_dt))}.
+\item \code{character}: Adjust by these column names. Must be found in
+\code{names(dt)}, \code{names(weight_dt)}, and \code{stratum_col_nms}.
+This can actually be a subset of the stratifying
+columns of \code{weight_dt}. See below how this works.
 }}
 
 \item{weight_dt}{\verb{[NULL, data.table]} (default \code{NULL})

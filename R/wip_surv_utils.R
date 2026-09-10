@@ -191,9 +191,6 @@ surv_interpolate <- function(
         exp(-(-log(out[["est_cond"]]) * out[["w"]]))
     )
   )
-  if (any(out[["est_interpolated"]] < 0)) {
-    browser()
-  }
   # the result is interpolated unconditional survival at ts_fut_stop_value
   return(out[["est_interpolated"]])
 }

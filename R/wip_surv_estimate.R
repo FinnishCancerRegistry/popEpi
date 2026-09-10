@@ -478,6 +478,7 @@ surv_estimate <- function(
   stratum_col_nms = NULL,
   value_col_nms = NULL,
   estimators = "S_ch",
+  adjust_col_nms = NULL,
   weight_dt = NULL,
   conf_methods = "log",
   conf_lvls = 0.95,
@@ -605,6 +606,30 @@ surv_estimate <- function(
     )
   }
 
+  #' @param adjust_col_nms `[NULL, character]` (default `NULL`)
+  #'
+  #' Names of stratifying columns in `dt` by which the estimates should be
+  #' adjusted. No adjusting is performed if this argument is `NULL` or
+  #' `character(0)`, the latter whether supplied or inferred.
+  #'
+  #' - `NULL`: Take `intersect(names(dt), names(weight_dt))`.
+  #' - `character`: Adjust by these column names. Must be found in
+  #'   `names(dt)`, `names(weight_dt)`, and `stratum_col_nms`.
+  #'   This can actually be a subset of the stratifying
+  #'   columns of `weight_dt`. See below how this works.
+  stopifnot(
+    inherits(adjust_col_nms, c("NULL", "character"))
+  )
+  if (is.null(adjust_col_nms)) {
+    adjust_col_nms <- intersect(names(dt), names(weight_dt))
+  } else {
+    stopifnot(
+      adjust_col_nms %in% stratum_col_nms,
+      adjust_col_nms %in% names(dt),
+      adjust_col_nms %in% names(weight_dt)
+    )
+  }
+
   # @codedoc_comment_block popEpi::surv_estimate::empty_interval_action
   # @param empty_interval_action `[character, list]`
   #
@@ -653,10 +678,6 @@ surv_estimate <- function(
   }
   names(conf_lvls) <- estimator_dt[["user_estimator_name"]]
 
-  adjust_col_nms <- NULL
-  if (!is.null(weight_dt)) {
-    adjust_col_nms <- intersect(names(dt), names(weight_dt))
-  }
   adjusting_type <- "none"
   if (data.table::is.data.table(weight_dt)) {
     if ("brenner_weight" %in% names(weight_dt)) {

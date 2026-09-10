@@ -252,47 +252,20 @@ lexis_box_id__ <- function(
 
 box_dt_detect_ts_col_nms__ <- function(dt) {
   start_col_nms <- names(dt)[grepl("_start$", names(dt))]
+  start_col_nms <- setdiff(
+    start_col_nms,
+    names(popEpi:::lexis_aggre_expr_list__)
+  )
   stop_col_nms <- names(dt)[grepl("_stop$", names(dt))]
-  id_col_nms <- names(dt)[grepl("_id$", names(dt))]
+  stop_col_nms <- setdiff(
+    stop_col_nms,
+    names(popEpi:::lexis_aggre_expr_list__)
+  )
   ts_col_nms <- intersect(
     sub("_start$", "", start_col_nms),
     sub("_stop$", "", stop_col_nms)
   )
-  ts_col_nms <- intersect(
-    ts_col_nms,
-    sub("_id$", "", id_col_nms)
-  )
   return(ts_col_nms)
-}
-
-box_id_reset__ <- function(dt, ts_col_nms = NULL) {
-  if (is.null(ts_col_nms)) {
-    ts_col_nms <- box_dt_detect_ts_col_nms__(dt)
-  }
-  dt[
-    #' @importFrom data.table := .GRP
-    j = "box_id" := .GRP,
-    by = eval(paste0(
-      rep(ts_col_nms, each = 2L),
-      rep(c("_start", "_stop"), times = length(ts_col_nms))
-    ))
-  ]
-  pos <- which(
-    names(dt) %in%
-      paste0(
-        rep(ts_col_nms, each = 3L),
-        rep(c("_start", "_stop", "_id"), times = length(ts_col_nms))
-      )
-  )[1L]
-  if (is.na(pos)) {
-    pos <- 1L
-  }
-  pre <- union(names(dt)[seq_len(pos - 1L)], "box_id")
-  data.table::setcolorder(
-    dt,
-    c(pre, setdiff(names(dt), pre))
-  )
-  return(invisible(dt[]))
 }
 
 box_all_id_reset__ <- function(dt, ts_col_nms = NULL) {
