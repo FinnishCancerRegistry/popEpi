@@ -266,6 +266,10 @@ surv_brenner_weight_dt <- function(
             j = collapse_stratum_col_nms,
             value = NULL
           )
+          data.table::setcolorder(
+            sub_dt,
+            c("collapse_stratum_start", "collapse_stratum_stop")
+          )
           collapsed_dt <- surv_collapse_ts_1d(
             dt = sub_dt,
             ts_col_nm = "collapse_stratum",
