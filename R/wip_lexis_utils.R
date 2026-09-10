@@ -254,12 +254,12 @@ box_dt_detect_ts_col_nms__ <- function(dt) {
   start_col_nms <- names(dt)[grepl("_start$", names(dt))]
   start_col_nms <- setdiff(
     start_col_nms,
-    names(popEpi:::lexis_aggre_expr_list__)
+    names(lexis_aggre_expr_list__)
   )
   stop_col_nms <- names(dt)[grepl("_stop$", names(dt))]
   stop_col_nms <- setdiff(
     stop_col_nms,
-    names(popEpi:::lexis_aggre_expr_list__)
+    names(lexis_aggre_expr_list__)
   )
   ts_col_nms <- intersect(
     sub("_start$", "", start_col_nms),
