@@ -277,6 +277,8 @@ before.
 \item Add column \code{n_prev_eff} as the sum of the number of extrapolated
 subjects and the original \code{n_prev} into the first table we
 created.
+\item Add column \code{n_cens} as the number of records
+which we had to extrapolate for.
 }
 \item Collect the observation time point-specific results into one big table.
 \item If supplied, merge data from \code{n_at_risk_dt} into the big table. To
@@ -328,6 +330,16 @@ make_sire <- function() {
     sire[["dg_date"]] < sire[["ex_date"]] &
       sire[["ex_date"]] >= as.Date("1999-01-01") &
       (get.yrs(sire[["ex_date"]]) - get.yrs(sire[["bi_date"]])) < 100
+  ]
+  # censor a few cases for testing
+  set.seed(1337)
+  censor_idx <- sample(
+    which(sire[["ex_date"]] == max(sire[["ex_date"]])),
+    size = 100
+  )
+  sire[
+    i = censor_idx,
+    j = "ex_date" := dg_date + as.integer((ex_date - dg_date) * runif(n = .N))
   ]
   # you can also use popEpi::Lexis_dt
   sire <- Epi::Lexis(
@@ -409,8 +421,9 @@ pdt <- popEpi::prev_lexis(
 stopifnot(
   inherits(pdt, "data.table"),
   "sex" \%in\% names(pdt),
-  c("n_prev", "n_prev_eff") \%in\% names(pdt),
-  !is.na(pdt[["n_prev_eff"]])
+  c("n_prev", "n_prev_eff", "n_cens") \%in\% names(pdt),
+  !is.na(pdt[["n_prev_eff"]]),
+  pdt[["n_prev_eff"]] <= pdt[["n_prev"]] + pdt[["n_cens"]]
 )
 
 # with survival estimated on the fly
@@ -443,7 +456,8 @@ pdt <- popEpi::prev_lexis(
 stopifnot(
   inherits(pdt, "data.table"),
   "sex" \%in\% names(pdt),
-  c("n_prev", "n_prev_eff") \%in\% names(pdt)
+  c("n_prev", "n_prev_eff", "n_cens") \%in\% names(pdt),
+  pdt[["n_prev_eff"]] <= pdt[["n_prev"]] + pdt[["n_cens"]]
 )
 
 # + prevalence proportions
@@ -493,9 +507,10 @@ pdt <- popEpi::prev_lexis(
 stopifnot(
   inherits(pdt, "data.table"),
   "sex" \%in\% names(pdt),
-  c("n_prev", "n_prev_eff") \%in\% names(pdt),
+  c("n_prev", "n_prev_eff", "n_cens") \%in\% names(pdt),
   paste0("p_prev", c("", "_se", "_lo", "_hi")) \%in\% names(pdt),
-  paste0("p_prev_eff", c("", "_se", "_lo", "_hi")) \%in\% names(pdt)
+  paste0("p_prev_eff", c("", "_se", "_lo", "_hi")) \%in\% names(pdt),
+  pdt[["n_prev_eff"]] <= pdt[["n_prev"]] + pdt[["n_cens"]]
 )
 
 # same without the effective numbers

@@ -23,6 +23,16 @@ NULL
 #'       sire[["ex_date"]] >= as.Date("1999-01-01") &
 #'       (get.yrs(sire[["ex_date"]]) - get.yrs(sire[["bi_date"]])) < 100
 #'   ]
+#'   # censor a few cases for testing
+#'   set.seed(1337)
+#'   censor_idx <- sample(
+#'     which(sire[["ex_date"]] == max(sire[["ex_date"]])),
+#'     size = 100
+#'   )
+#'   sire[
+#'     i = censor_idx,
+#'     j = "ex_date" := dg_date + as.integer((ex_date - dg_date) * runif(n = .N))
+#'   ]
 #'   # you can also use popEpi::Lexis_dt
 #'   sire <- Epi::Lexis(
 #'     data = sire,
@@ -103,8 +113,9 @@ NULL
 #' stopifnot(
 #'   inherits(pdt, "data.table"),
 #'   "sex" %in% names(pdt),
-#'   c("n_prev", "n_prev_eff") %in% names(pdt),
-#'   !is.na(pdt[["n_prev_eff"]])
+#'   c("n_prev", "n_prev_eff", "n_cens") %in% names(pdt),
+#'   !is.na(pdt[["n_prev_eff"]]),
+#'   pdt[["n_prev_eff"]] <= pdt[["n_prev"]] + pdt[["n_cens"]]
 #' )
 #'
 #' # with survival estimated on the fly
@@ -137,7 +148,8 @@ NULL
 #' stopifnot(
 #'   inherits(pdt, "data.table"),
 #'   "sex" %in% names(pdt),
-#'   c("n_prev", "n_prev_eff") %in% names(pdt)
+#'   c("n_prev", "n_prev_eff", "n_cens") %in% names(pdt),
+#'   pdt[["n_prev_eff"]] <= pdt[["n_prev"]] + pdt[["n_cens"]]
 #' )
 #'
 #' # + prevalence proportions
@@ -187,9 +199,10 @@ NULL
 #' stopifnot(
 #'   inherits(pdt, "data.table"),
 #'   "sex" %in% names(pdt),
-#'   c("n_prev", "n_prev_eff") %in% names(pdt),
+#'   c("n_prev", "n_prev_eff", "n_cens") %in% names(pdt),
 #'   paste0("p_prev", c("", "_se", "_lo", "_hi")) %in% names(pdt),
-#'   paste0("p_prev_eff", c("", "_se", "_lo", "_hi")) %in% names(pdt)
+#'   paste0("p_prev_eff", c("", "_se", "_lo", "_hi")) %in% names(pdt),
+#'   pdt[["n_prev_eff"]] <= pdt[["n_prev"]] + pdt[["n_cens"]]
 #' )
 #'
 #' # same without the effective numbers
@@ -581,8 +594,8 @@ prev_lexis <- function(
       if (nrow(lexis_dt_extrapolate) == 0) {
         data.table::set(
           x = agdt_i,
-          j = "n_prev_eff",
-          value = agdt_i[["n_prev"]]
+          j = c("n_prev_eff", "n_cens"),
+          value = list(agdt_i[["n_prev"]], 0L)
         )
       } else {
         merge_arg_list <- as.list(merge_optional_args)
@@ -900,29 +913,39 @@ prev_lexis <- function(
             lexis = lexis_dt_extrapolate,
             breaks = stratum_breaks,
             aggre_exprs = list(
+              n_cens = quote(.N),
               n_prev_extrapolated = quote(sum(n_prev_extrapolated))
             ),
             aggre_by = aggre_by,
             first_record_by = first_record_by
           )
-          na_idx <- which(is.na(agdt_add[["n_prev_extrapolated"]]))
-          if (length(na_idx) > 0) {
-            data.table::set(
-              x = agdt_add,
-              i = na_idx,
-              j = "n_prev_extrapolated",
-              value = 0.0
+          data.table::set(
+            x = agdt_add,
+            j = "n_prev_extrapolated",
+            value = data.table::fifelse(
+              is.na(agdt_add[["n_prev_extrapolated"]]),
+              0.0,
+              agdt_add[["n_prev_extrapolated"]]
             )
-          }
+          )
           # @codedoc_comment_block popEpi::prev_lexis
           #   + Add column `n_prev_eff` as the sum of the number of extrapolated
           #     subjects and the original `n_prev` into the first table we
           #     created.
           # @codedoc_comment_block popEpi::prev_lexis
+          # @codedoc_comment_block popEpi::prev_lexis
+          #   + Add column `n_cens` as the number of records
+          #     which we had to extrapolate for.
+          # @codedoc_comment_block popEpi::prev_lexis
           data.table::set(
             x = agdt_i,
             j = "n_prev_eff",
             value = agdt_i[["n_prev"]] + agdt_add[["n_prev_extrapolated"]]
+          )
+          data.table::set(
+            x = agdt_i,
+            j = "n_cens",
+            value = agdt_add[["n_cens"]]
           )
         })
       }
@@ -937,7 +960,10 @@ prev_lexis <- function(
         nrow(agdt_i)
       )
     )
-    value_col_nms <- intersect(names(agdt_i), c("n_prev", "n_prev_eff"))
+    value_col_nms <- intersect(
+      names(agdt_i),
+      c("n_prev", "n_prev_eff", "n_cens")
+    )
     agdt_i[
       j = (value_col_nms) := lapply(.SD, cumsum),
       .SDcols = value_col_nms,
@@ -1007,7 +1033,7 @@ prev_lexis <- function(
       x_col_nms = "n_at_risk"
     )
     value_meta_dt <- data.table::rbindlist(lapply(
-      intersect(names(agdt), c("n_prev", "n_prev_eff")),
+      intersect(names(agdt), c("n_prev", "n_prev_eff", "n_cens")),
       function(n_col_nm) {
         p_col_nm <- sub("^n_", "p_", n_col_nm)
         data.table::set(
