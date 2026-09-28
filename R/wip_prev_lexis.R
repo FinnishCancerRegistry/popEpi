@@ -1035,6 +1035,13 @@ prev_lexis <- function(
     value_meta_dt <- data.table::rbindlist(lapply(
       intersect(names(agdt), c("n_prev", "n_prev_eff", "n_cens")),
       function(n_col_nm) {
+        if (n_col_nm == "n_cens") {
+          return(data.table::data.table(
+            n_col_nm = n_col_nm,
+            p_col_nm = NA_character_,
+            p_var_col_nm = NA_character_
+          ))
+        }
         p_col_nm <- sub("^n_", "p_", n_col_nm)
         data.table::set(
           x = agdt,
@@ -1168,8 +1175,12 @@ prev_lexis <- function(
       # @codedoc_comment_block popEpi::prev_lexis
       agdt_adj <- directadjusting::directly_adjusted_estimates(
         stats_dt = agdt,
-        stat_col_nms = value_meta_dt[["p_col_nm"]],
-        var_col_nms = value_meta_dt[["p_var_col_nm"]],
+        stat_col_nms = value_meta_dt[["p_col_nm"]][
+          !is.na(value_meta_dt[["p_col_nm"]])
+        ],
+        var_col_nms = value_meta_dt[["p_var_col_nm"]][
+          !is.na(value_meta_dt[["p_col_nm"]])
+        ],
         stratum_col_nms = output_stratum_col_nms,
         adjust_col_nms = adjust_col_nms,
         #' @param conf_lvls Passed as-is to
