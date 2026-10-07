@@ -486,11 +486,11 @@ lexis_subset <- function(
       i = tmp_dt_idx, # no copy
       j = "keep",
       # e.g. if max(breaks[[ts_col_nm]]) = 60 and
-      # (lexis[[ts_col_nm]] + lexis[["lex.dur"]]) = 60 then that case _does_
-      # belong in the subset. that record would have lex.dur > 0 in the
+      # lexis[[ts_col_nm]] = 60 then that case does not
+      # belong in the subset. that record would have zero lex.dur in the
       # interval that ends in 60.
       value = tmp_dt[["keep"]] &
-        lexis[[ts_col_nm]] <= max(breaks[[ts_col_nm]])
+        lexis[[ts_col_nm]] < max(breaks[[ts_col_nm]])
     )
   }
   return(tmp_dt[["keep"]])
