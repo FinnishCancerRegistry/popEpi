@@ -1480,9 +1480,9 @@ surv_collapse_ts_1d <- function(
       call_env = parent.frame(1L)
     )
     if (need_to_combine) {
-      can_combine_with_next <- interval_id_hi < nrow(dt) &&
-        !br_dt[["in_mandatory_breaks"]][interval_id_lo]
       can_combine_with_previous <- interval_id_lo > 1 &&
+        !br_dt[["in_mandatory_breaks"]][interval_id_lo]
+      can_combine_with_next <- interval_id_hi < nrow(dt) &&
         !br_dt[["in_mandatory_breaks"]][interval_id_hi + 1L]
       can_combine <- can_combine_with_next || can_combine_with_previous
       # can combine and need to combine
