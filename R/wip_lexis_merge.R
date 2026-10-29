@@ -522,14 +522,26 @@ lexis_merge <- function(
       is_missing[!subset] <- FALSE
     }
     if (any(is_missing)) {
+      message("`lexis` before harmonisation:")
       print(data.table::setDT(lexis[is_missing, ]))
+      message("`lexis` after harmonisation:")
       print(data.table::setDT(join_dt[is_missing, ]))
+      message("`merge_dt`:")
+      print(data.table::setDT(merge_dt))
       stop(
-        "Merging `merge_dt` into split (subset of) `lexis` produced NA ",
-        "values in column `lexis$",
-        merge_value_col_nm,
-        "`. ",
-        "See the `lexis` and its harmonised form printed above."
+        "You attempted to join data (`merge_dt`, e.g. a lifetable) into ",
+        "object `lexis` but this failed for ",
+        sum(is_missing),
+        " records out of ",
+        nrow(lexis),
+        " records in `lexis`. ",
+        "This is typically caused by `merge_dt` not having data for ",
+        "some records. Perhaps some strata or years are not covered. ",
+        "See the split `Lexis` object and its harmonised form printed above ",
+        "this error message. Also `merge_dt` is printed. The join was ",
+        "attempted on `merge_dt_by = ",
+        deparse1(merge_dt_by),
+        "`."
       )
     }
   }
