@@ -485,12 +485,14 @@ lexis_merge <- function(
     .SDcols = merge_value_col_nms
   ]
   if (data.table::is.data.table(lexis)) {
-    data.table::set(
-      x = lexis,
-      i = if (need_to_subset) which(subset) else NULL,
-      j = merge_value_col_nms,
-      value = join_result
-    )
+    lapply(merge_value_col_nms, function(merge_value_col_nm) {
+      data.table::set(
+        x = lexis,
+        i = if (need_to_subset) which(subset) else NULL,
+        j = merge_value_col_nm,
+        value = join_result[[merge_value_col_nm]]
+      )
+    })
   } else {
     lexis[subset, merge_value_col_nms] <- join_result
   }
