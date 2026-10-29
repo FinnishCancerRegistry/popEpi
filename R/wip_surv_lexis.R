@@ -132,7 +132,6 @@ lexis_breaks_collapse_1d <- function(
       local({
         data.table::set(
           x = lexis_dt,
-          i = seq_len(nrow(lexis_dt)), # avoids allocating more memory
           j = c(ts_col_nm, "lex.dur", "lex.Cst", "lex.Xst"),
           value = list(
             lexis[[ts_col_nm]],
@@ -143,7 +142,8 @@ lexis_breaks_collapse_1d <- function(
         )
         lexis_crop(
           lexis = lexis_dt,
-          breaks = structure(list(c(break_lo, break_hi)), names = ts_col_nm)
+          breaks = structure(list(c(break_lo, break_hi)), names = ts_col_nm),
+          inplace = TRUE
         )
         expr <- substitute(
           lexis_dt[i = !is.na(lex.dur), j = test_expr],
