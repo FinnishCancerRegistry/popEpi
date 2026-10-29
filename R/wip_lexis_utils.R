@@ -355,22 +355,41 @@ lexis_delay_entry <- function(lexis, ts_col_new_entry, ts_col_nm) {
 
 lexis_crop <- function(lexis, breaks, inplace = FALSE) {
   assert_is_arg_lexis(lexis, dt = FALSE)
-  delay_entry <- call_with_arg_list__(
-    pmax,
-    lapply(names(breaks), function(ts_col_nm) {
-      entry <- lexis[[ts_col_nm]]
-      cropped_entry <- min(breaks[[ts_col_nm]])
-      pmax(entry, cropped_entry) - entry
-    })
-  )
-  earlify_exit <- call_with_arg_list__(
-    pmax,
-    lapply(names(breaks), function(ts_col_nm) {
-      exit <- lexis[[ts_col_nm]] + lexis[["lex.dur"]]
-      cropped_exit <- max(breaks[[ts_col_nm]])
-      exit - pmin(exit, cropped_exit)
-    })
-  )
+  if (isFALSE(inplace)) {
+    lexis_orig <- lexis
+    if (data.table::is.data.table(lexis)) {
+      #' @importFrom data.table .SD
+      lexis <- lexis[j = .SD, .SDcols = lexis_col_nms__(lexis)]
+      lexis <- data.table::copy(lexis)
+      data.table::set(
+        x = lexis,
+        j = setdiff(names(lexis_orig), names(lexis)),
+        value = as.list(lexis_orig)[setdiff(names(lexis_orig), names(lexis))]
+      )
+    } else {
+      lexis <- lexis[, names(lexis)]
+    }
+  }
+  delay_entry <- local({
+    delay_entry <- rep(0L, nrow(lexis))
+    for (ts_col_nm in names(breaks)) {
+      actual_entry <- lexis[[ts_col_nm]]
+      maybe_earlier_entry <- min(breaks[[ts_col_nm]])
+      maybe_earlified_entry <- pmax(actual_entry, maybe_earlier_entry)
+      delay_entry[] <- pmax(delay_entry, maybe_earlified_entry - actual_entry)
+    }
+    delay_entry
+  })
+  earlify_exit <- local({
+    earlify_exit <- rep(0L, nrow(lexis))
+    for (ts_col_nm in names(breaks)) {
+      actual_exit <- lexis[[ts_col_nm]] + lexis[["lex.dur"]]
+      maybe_earlier_exit <- max(breaks[[ts_col_nm]])
+      maybe_earlified_exit <- pmin(actual_exit, maybe_earlier_exit)
+      earlify_exit[] <- pmax(earlify_exit, actual_exit - maybe_earlified_exit)
+    }
+    earlify_exit
+  })
   idx <- NULL
   if (inplace) {
     idx <- seq_len(nrow(lexis))
@@ -390,7 +409,7 @@ lexis_crop <- function(lexis, breaks, inplace = FALSE) {
     value = lexis[["lex.dur"]] - delay_entry - earlify_exit
   )
   copied_statuses <- FALSE
-  na_idx <- which(lexis[["lex.dur"]] < 0)
+  na_idx <- which(lexis[["lex.dur"]] <= 0)
   if (length(na_idx) > 0) {
     copied_statuses <- is.null(idx)
     data.table::set(
@@ -423,6 +442,12 @@ lexis_crop <- function(lexis, breaks, inplace = FALSE) {
     )
   }
   return(invisible(lexis[]))
+}
+
+lexis_crop_and_drop <- function(lexis, breaks) {
+  lexis <- lexis_crop(lexis = lexis, breaks = breaks, inplace = FALSE)
+  lexis <- lexis[!is.na(lexis[["lex.dur"]]), ]
+  return(lexis[])
 }
 
 lexis_immortalise <- function(lexis, breaks = NULL, crop = TRUE) {
@@ -458,65 +483,4 @@ lexis_immortalise <- function(lexis, breaks = NULL, crop = TRUE) {
     )
   )
   return(invisible(lexis[]))
-}
-
-lexis_subset <- function(
-  lexis,
-  breaks
-) {
-  assert_is_arg_lexis(lexis, dt = FALSE)
-  assert_is_arg_breaks(breaks, lexis)
-
-  tmp_dt <- data.table::setDT(list(keep = rep(TRUE, nrow(lexis))))
-  tmp_dt_idx <- seq_len(nrow(tmp_dt))
-  for (ts_col_nm in names(breaks)) {
-    data.table::set(
-      x = tmp_dt,
-      i = tmp_dt_idx, # no copy
-      j = "keep",
-      # e.g. if min(breaks[[ts_col_nm]]) = 50 and
-      # (lexis[[ts_col_nm]] + lexis[["lex.dur"]]) = 50 then that case does not
-      # belong in the subset. that record would have zero lex.dur in the
-      # interval that starts with 50.
-      value = tmp_dt[["keep"]] &
-        (lexis[[ts_col_nm]] + lexis[["lex.dur"]]) > min(breaks[[ts_col_nm]])
-    )
-    data.table::set(
-      x = tmp_dt,
-      i = tmp_dt_idx, # no copy
-      j = "keep",
-      # e.g. if max(breaks[[ts_col_nm]]) = 60 and
-      # lexis[[ts_col_nm]] = 60 then that case does not
-      # belong in the subset. that record would have zero lex.dur in the
-      # interval that ends in 60.
-      value = tmp_dt[["keep"]] &
-        lexis[[ts_col_nm]] < max(breaks[[ts_col_nm]])
-    )
-  }
-  return(tmp_dt[["keep"]])
-}
-
-lexis_drop <- function(
-  lexis,
-  breaks,
-  subset = NULL,
-  select = NULL
-) {
-  assert_is_arg_lexis(lexis, dt = FALSE)
-  assert_is_arg_breaks(breaks, lexis)
-  subset <- handle_arg_subset(dataset_nm = "lexis", output_type = "logical")
-  select <- handle_arg_select(select, lexis)
-
-  subset <- subset & lexis_subset(lexis = lexis, breaks = breaks)
-  if (data.table::is.data.table(lexis)) {
-    out <- lexis[
-      i = (subset),
-      #' @importFrom data.table .SD
-      j = .SD,
-      .SDcols = select
-    ]
-  } else {
-    out <- lexis[subset, select, drop = FALSE]
-  }
-  return(out[])
 }

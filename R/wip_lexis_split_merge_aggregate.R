@@ -817,14 +817,9 @@ lexis_split_merge_aggregate_by_stratum <- function(
           )
         })
         names(stratum_box_breaks) <- names(breaks)
-        lexis_stratum_subset <- lexis_drop(
+        lexis_stratum_subset <- lexis_crop_and_drop(
           lexis = lexis_stratum_subset,
           breaks = stratum_box_breaks
-        )
-        lexis_stratum_subset <- lexis_crop(
-          lexis = lexis_stratum_subset,
-          breaks = stratum_box_breaks,
-          inplace = TRUE
         )
         stratum_box_breaks[[split_ts_col_nm]] <- breaks[[split_ts_col_nm]]
         # @codedoc_comment_block popEpi::lexis_split_merge_aggregate_by_stratum
