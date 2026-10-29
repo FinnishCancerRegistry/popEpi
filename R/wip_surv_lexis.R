@@ -222,17 +222,6 @@ surv_lexis_aggre_exprs__ <- function(
   return(var_nm_set)
 }
 
-# SURV_LEXIS_ADD_COL_EXPRS__ <- list(
-#   S_exp_e1_ch_mean = quote(surv_lexis_S_exp_e1_ch_mean(
-#     lexis = surv_lexis_eval_env[["lexis_dt"]],
-#     breaks = surv_lexis_eval_env[["breaks"]],
-#     merge_dt = surv_lexis_eval_env[["merge_dt"]],
-#     merge_dt_by = surv_lexis_eval_env[["merge_dt_by"]],
-#     aggre_by = surv_lexis_eval_env[["aggre_by"]],
-#     weight_col_nm = surv_lexis_eval_env[["weight_col_nm"]]
-#   ))
-# )
-
 #' @eval codedoc::pkg_doc_fun(
 #'   "popEpi::surv_lexis",
 #'   "surv_functions"
@@ -889,34 +878,6 @@ surv_lexis <- function(
     surv_estimate,
     surv_estimate_args
   )
-  # # @codedoc_comment_block popEpi::surv_lexis
-  # # - If Brenner weighting was used, rename columns containing estimates,
-  # #   standard error, and confidence bounds to contain the identifier
-  # #   `_bw`.
-  # # @codedoc_comment_block popEpi::surv_lexis
-  # if (do_individual_brenner_weighting) {
-  #   sdta_meta <- attr(sdt, "directly_adjusted_estimates_meta")
-  #   lapply(
-  #     sdta_meta[["meta_dt"]][["stat_col_nm"]],
-  #     function(nm) {
-  #       data.table::setnames(
-  #         x = sdt,
-  #         old = names(sdt),
-  #         new = sub(paste0("^", nm), sprintf("%s_bw", nm), names(sdt))
-  #       )
-  #     }
-  #   )
-  #   data.table::set(
-  #     x = sdta_meta[["meta_dt"]],
-  #     j = "stat_col_nm_w",
-  #     value = paste0(sdta_meta[["meta_dt"]][["stat_col_nm"]], "_bw")
-  #   )
-  #   data.table::setattr(
-  #     x = sdt,
-  #     name = "directly_adjusted_estimates_meta",
-  #     value = sdta_meta
-  #   )
-  # }
 
   # @codedoc_comment_block return(popEpi::surv_lexis)
   # Returns a `data.table` as produced by `surv_estimate`.

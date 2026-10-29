@@ -72,7 +72,7 @@ lexis_aggregate_one_stratum__ <- function(
     #
     #        + Table of expressions which create new columns into split data:
     #
-    # ${paste0(knitr::kable(lexis_split_column_expr_table_doc__()), collapse = "\n")}
+    # ${paste0(knitr::kable(popEpi:::lexis_split_column_expr_table_doc__()), collapse = "\n")}
     # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
     lexis_split_column_expr_list__ <-
       get_internal_dataset("lexis_split_column_expr_list__")
