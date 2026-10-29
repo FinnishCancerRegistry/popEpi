@@ -128,20 +128,25 @@ lexis_aggregate_one_stratum__ <- function(
   if (nrow(work_dt) == 0) {
     data.table::set(
       x = out,
-      j = setdiff(names(out), names(box_dt)),
-      value = NA
+      j = setdiff(names(aggre_exprs), names(out)),
+      value = NA_integer_
     )
   }
   # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
   #        + It can happen that e.g. a survival interval has absolutely no data in
   #          it. Especially in sparse data and with delayed entry. For the
   #          pre-specified aggregation expressions such as `n_events` we ensure
-  #          that empty time scale boxes have value zero. Your custom aggregation
-  #          expressions will result in `NA` values in empty time scale boxes.
+  #          that empty time scale boxes have value zero. Additionally any value
+  #          column that starts with `n_` or `t_` is set to zero when `NA`.
   # @codedoc_comment_block popEpi:::lexis_aggregate_one_stratum__
-  lexis_aggre_expr_list__ <- get_internal_dataset("lexis_aggre_expr_list__")
   lapply(
-    intersect(names(out), names(lexis_aggre_expr_list__)),
+    intersect(
+      names(out),
+      union(
+        names(get_internal_dataset("lexis_aggre_expr_list__")),
+        names(aggre_exprs)[grepl("(^t_)|(^n_)|(^nd_)", names(aggre_exprs))]
+      )
+    ),
     function(col_nm) {
       data.table::set(
         x = out,
@@ -919,7 +924,8 @@ lexis_split_merge_aggregate_by_stratum <- function(
         }
         out[]
       })
-      data.table::rbindlist(out)
+      out <- data.table::rbindlist(out)
+      out[]
     },
     .SDcols = names(lexis_dt),
     keyby = eval(names(aggre_by))
