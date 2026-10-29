@@ -314,8 +314,8 @@ of the \code{aggre_exprs}. See below for the table.
 \if{html}{\out{<div class="sourceCode">}}\preformatted{   + It can happen that e.g. a survival interval has absolutely no data in
      it. Especially in sparse data and with delayed entry. For the
      pre-specified aggregation expressions such as `n_events` we ensure
-     that empty time scale boxes have value zero. Your custom aggregation
-     expressions will result in `NA` values in empty time scale boxes.
+     that empty time scale boxes have value zero. Additionally any value
+     column that starts with `n_` or `t_` is set to zero when `NA`.
 * Run
   `optional_steps[["stratum_post_aggregation"]](stratum_eval_env = stratum_eval_env, eval_env = eval_env, call_env = call_env)`
   if that `optional_steps` element exists.
