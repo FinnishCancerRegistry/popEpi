@@ -537,7 +537,7 @@ lexis_merge <- function(
         " records in `lexis`. ",
         "This is typically caused by `merge_dt` not having data for ",
         "some records. Perhaps some strata or years are not covered. ",
-        "See the split `Lexis` object and its harmonised form printed above ",
+        "See `lexis` and its harmonised form printed above ",
         "this error message. Also `merge_dt` is printed. The join was ",
         "attempted on `merge_dt_by = ",
         deparse1(merge_dt_by),
