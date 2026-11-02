@@ -514,7 +514,7 @@ lexis_merge <- function(
   #   This usually occurs if `merge_dt` does not contain data for all data in
   #   `lexis`. For instance it only covers years 1950-2020 but `lexis` contains
   #   also data for 2021. This error helps you to spot those problems early
-  #   isntead of producing nonsense results downstream.
+  #   instead of producing nonsense results downstream.
   # @codedoc_comment_block popEpi::lexis_merge
   for (merge_value_col_nm in merge_value_col_nms) {
     is_missing <- is.na(lexis[[merge_value_col_nm]])

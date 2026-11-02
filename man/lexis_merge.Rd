@@ -198,7 +198,7 @@ are inspected for missing values. If there are any, an error is raised.
 This usually occurs if \code{merge_dt} does not contain data for all data in
 \code{lexis}. For instance it only covers years 1950-2020 but \code{lexis} contains
 also data for 2021. This error helps you to spot those problems early
-isntead of producing nonsense results downstream.
+instead of producing nonsense results downstream.
 \item Returns \code{lexis} after adding value columns from
 \code{merge_dt} into \code{lexis}.
 }
