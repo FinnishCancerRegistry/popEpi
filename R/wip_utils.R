@@ -239,6 +239,9 @@ handle_arg_subset <- function(
       logical = rep(TRUE, nrow(eval_env[[dataset_nm]]))
     )
   }
+  if (is.logical(subset_value)) {
+    subset_value[is.na(subset_value)] <- FALSE
+  }
   return(subset_value)
 }
 
