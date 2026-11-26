@@ -351,6 +351,9 @@ intelliDrop <- function(
       "to the package maintainer"
     )
   }
+  if (nrow(x) == 0 || (is.logical(subset) && !any(subset))) {
+    return(x)
+  }
   checkBreaksList(x = x, breaks = breaks)
   breaks[unlist(lapply(breaks, length)) < 2] <- NULL
   timeScales <- names(breaks)
